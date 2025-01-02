@@ -7,9 +7,4 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.CLASS)
-public @interface BuilderForDtos {
-
-  Class<?> type();
-
-  String id();
-}
+public @interface BuilderForDtos {}
