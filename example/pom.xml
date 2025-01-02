@@ -9,5 +9,33 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.release>17</maven.compiler.release>
     <exec.mainClass>org.javahelpers.simple.builders.SimpleBuilderGenerator</exec.mainClass>
+    <builder-generator.version>0.1.0</builder-generator.version>
   </properties>
+  
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>3.14.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.javahelpers</groupId>
+      <artifactId>simple-builder-generator</artifactId>
+      <version>${builder-generator.version}</version>
+    </dependency>
+  </dependencies>
+
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.8.1</version>
+        <configuration>
+          <generatedSourcesDirectory>${project.build.directory}/generated-sources/annotations</generatedSourcesDirectory>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>
