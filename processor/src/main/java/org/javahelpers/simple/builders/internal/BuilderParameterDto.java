@@ -4,7 +4,7 @@ import javax.lang.model.element.Name;
 
 public class BuilderParameterDto {
   private Name parameterName;
-  private Name parameterTypeName;
+  private String parameterTypeName;
 
   public Name getParameterName() {
     return parameterName;
@@ -14,11 +14,11 @@ public class BuilderParameterDto {
     this.parameterName = parameterName;
   }
 
-  public Name getParameterTypeName() {
+  public String getParameterTypeName() {
     return parameterTypeName;
   }
 
-  public void setParameterTypeName(Name parameterTypeName) {
+  public void setParameterTypeName(String parameterTypeName) {
     this.parameterTypeName = parameterTypeName;
   }
 }
