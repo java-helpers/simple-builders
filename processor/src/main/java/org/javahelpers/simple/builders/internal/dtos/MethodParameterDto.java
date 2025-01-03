@@ -1,8 +1,8 @@
-package org.javahelpers.simple.builders.internal;
+package org.javahelpers.simple.builders.internal.dtos;
 
 import javax.lang.model.element.Name;
 
-public class BuilderParameterDto {
+public class MethodParameterDto {
   private Name parameterName;
   private String parameterTypeName;
 

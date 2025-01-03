@@ -13,16 +13,19 @@ import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import org.apache.commons.lang3.StringUtils;
+import org.javahelpers.simple.builders.internal.dtos.BuilderDefinitionDto;
+import org.javahelpers.simple.builders.internal.dtos.MethodDto;
+import org.javahelpers.simple.builders.internal.dtos.MethodParameterDto;
 
 public class ElementToBuilderPropsDtoMapper {
   private static final String BUILDER_SUFFIX = "Builder";
 
-  public static BuilderPropsDto extractFromElement(
+  public static BuilderDefinitionDto extractFromElement(
       Element annotatedElement, Elements elementUtils, Types typeUtils) throws BuilderException {
     validateAnnotatedElement(annotatedElement);
     TypeElement annotatedType = (TypeElement) annotatedElement;
 
-    BuilderPropsDto result = new BuilderPropsDto();
+    BuilderDefinitionDto result = new BuilderDefinitionDto();
     result.setClazzForBuilder(null); // TODO
     result.setPackageName(elementUtils.getPackageOf(annotatedType).getQualifiedName());
     result.setBuilderClassName(annotatedElement.getSimpleName() + BUILDER_SUFFIX);
@@ -32,7 +35,7 @@ public class ElementToBuilderPropsDtoMapper {
 
     for (ExecutableElement mth : methods) {
       if (isNoMethodOfObjectClass(mth) && hasNoThrowablesDeclared(mth) && hasNoReturnValue(mth)) {
-        result.addMember(mapFromElement(mth, elementUtils, typeUtils));
+        result.addMethod(mapFromElement(mth, elementUtils, typeUtils));
       }
     }
 
@@ -53,17 +56,17 @@ public class ElementToBuilderPropsDtoMapper {
     return mth.getReturnType().getKind() == VOID;
   }
 
-  private static MemberDto mapFromElement(
+  private static MethodDto mapFromElement(
       ExecutableElement mth, Elements elementUtils, Types typeUtils) {
-    MemberDto result = new MemberDto();
+    MethodDto result = new MethodDto();
     result.setMemberName(mth.getSimpleName());
     List<? extends VariableElement> parameters = mth.getParameters();
     parameters.stream().map(v -> mapMethodParameter(v)).forEach(result::addParameter);
     return result;
   }
 
-  private static BuilderParameterDto mapMethodParameter(VariableElement param) {
-    BuilderParameterDto result = new BuilderParameterDto();
+  private static MethodParameterDto mapMethodParameter(VariableElement param) {
+    MethodParameterDto result = new MethodParameterDto();
     result.setParameterName(param.getSimpleName());
     TypeMirror typeOfParameter = param.asType();
     result.setParameterTypeName(typeOfParameter.toString());

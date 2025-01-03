@@ -19,7 +19,7 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import org.javahelpers.simple.builders.annotations.BuilderForDtos;
 import org.javahelpers.simple.builders.internal.BuilderException;
-import org.javahelpers.simple.builders.internal.BuilderPropsDto;
+import org.javahelpers.simple.builders.internal.dtos.BuilderDefinitionDto;
 
 @AutoService(Processor.class)
 @SupportedSourceVersion(SourceVersion.RELEASE_17)
@@ -53,6 +53,6 @@ public class BuilderProcessor extends AbstractProcessor {
 
   private void process(Element annotatedElement) throws BuilderException {
 
-    BuilderPropsDto builderProbs = extractFromElement(annotatedElement, elementUtils, typeUtils);
+    BuilderDefinitionDto builderDef = extractFromElement(annotatedElement, elementUtils, typeUtils);
   }
 }

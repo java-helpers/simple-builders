@@ -1,13 +1,13 @@
-package org.javahelpers.simple.builders.internal;
+package org.javahelpers.simple.builders.internal.dtos;
 
 import java.util.LinkedList;
 import javax.lang.model.element.Name;
 
-public class BuilderPropsDto {
+public class BuilderDefinitionDto {
   private Class<?> clazzForBuilder;
   private String builderClassName;
   private Name packageName;
-  private final LinkedList<MemberDto> membersForBuilder = new LinkedList<>();
+  private final LinkedList<MethodDto> methodsForBuilder = new LinkedList<>();
 
   public Class<?> getClazzForBuilder() {
     return clazzForBuilder;
@@ -33,11 +33,11 @@ public class BuilderPropsDto {
     this.packageName = packageName;
   }
 
-  public void addMember(MemberDto member) {
-    membersForBuilder.add(member);
+  public void addMethod(MethodDto member) {
+    methodsForBuilder.add(member);
   }
 
-  public LinkedList<MemberDto> getMembersForBuilder() {
-    return membersForBuilder;
+  public LinkedList<MethodDto> getMethodsForBuilder() {
+    return methodsForBuilder;
   }
 }
