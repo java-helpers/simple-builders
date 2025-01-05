@@ -3,6 +3,5 @@ updates:
   - package-ecosystem: "maven" # See documentation for possible values
     directories:
       - "/"
-      - "/processor"
     schedule:
       interval: "weekly"
