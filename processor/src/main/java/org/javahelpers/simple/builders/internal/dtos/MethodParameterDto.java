@@ -4,7 +4,7 @@ import javax.lang.model.element.Name;
 
 public class MethodParameterDto {
   private Name parameterName;
-  private String parameterTypeName;
+  private TypeName parameterType;
 
   public Name getParameterName() {
     return parameterName;
@@ -14,11 +14,11 @@ public class MethodParameterDto {
     this.parameterName = parameterName;
   }
 
-  public String getParameterTypeName() {
-    return parameterTypeName;
+  public TypeName getParameterType() {
+    return parameterType;
   }
 
-  public void setParameterTypeName(String parameterTypeName) {
-    this.parameterTypeName = parameterTypeName;
+  public void setParameterTypeName(TypeName parameterType) {
+    this.parameterType = parameterType;
   }
 }

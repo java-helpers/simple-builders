@@ -16,6 +16,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.internal.dtos.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.internal.dtos.MethodDto;
 import org.javahelpers.simple.builders.internal.dtos.MethodParameterDto;
+import org.javahelpers.simple.builders.internal.dtos.TypeName;
 
 public class ElementToBuilderPropsDtoMapper {
   private static final String BUILDER_SUFFIX = "Builder";
@@ -26,14 +27,17 @@ public class ElementToBuilderPropsDtoMapper {
     TypeElement annotatedType = (TypeElement) annotatedElement;
 
     BuilderDefinitionDto result = new BuilderDefinitionDto();
-    result.setClazzForBuilder(null); // TODO
-    result.setPackageName(elementUtils.getPackageOf(annotatedType).getQualifiedName());
-    result.setBuilderClassName(annotatedElement.getSimpleName() + BUILDER_SUFFIX);
+    String packageName = elementUtils.getPackageOf(annotatedType).getQualifiedName().toString();
+    String simpleClassName =
+        StringUtils.removeStart(annotatedElement.getSimpleName().toString(), packageName + ".");
+    result.setBuilderTypeName(new TypeName(packageName, simpleClassName + BUILDER_SUFFIX));
+    result.setBuildingTargetTypeName(new TypeName(packageName, simpleClassName));
 
     List<? extends Element> allMembers = elementUtils.getAllMembers(annotatedType);
     List<ExecutableElement> methods = ElementFilter.methodsIn(allMembers);
 
     for (ExecutableElement mth : methods) {
+      // nur public
       if (isNoMethodOfObjectClass(mth) && hasNoThrowablesDeclared(mth) && hasNoReturnValue(mth)) {
         result.addMethod(mapFromElement(mth, elementUtils, typeUtils));
       }
@@ -61,15 +65,18 @@ public class ElementToBuilderPropsDtoMapper {
     MethodDto result = new MethodDto();
     result.setMemberName(mth.getSimpleName());
     List<? extends VariableElement> parameters = mth.getParameters();
-    parameters.stream().map(v -> mapMethodParameter(v)).forEach(result::addParameter);
+    parameters.stream().map(v -> mapMethodParameter(v, elementUtils)).forEach(result::addParameter);
     return result;
   }
 
-  private static MethodParameterDto mapMethodParameter(VariableElement param) {
+  private static MethodParameterDto mapMethodParameter(
+      VariableElement param, Elements elementUtils) {
     MethodParameterDto result = new MethodParameterDto();
     result.setParameterName(param.getSimpleName());
     TypeMirror typeOfParameter = param.asType();
-    result.setParameterTypeName(typeOfParameter.toString());
+    String packageName = elementUtils.getPackageOf(param).getQualifiedName().toString();
+    String simpleClassName = StringUtils.removeStart(typeOfParameter.toString(), packageName + ".");
+    result.setParameterTypeName(new TypeName(packageName, simpleClassName));
     // TODO Builder erkennen
     return result;
   }

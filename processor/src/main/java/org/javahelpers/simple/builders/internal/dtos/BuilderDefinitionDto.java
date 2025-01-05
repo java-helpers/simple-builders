@@ -1,36 +1,26 @@
 package org.javahelpers.simple.builders.internal.dtos;
 
 import java.util.LinkedList;
-import javax.lang.model.element.Name;
 
 public class BuilderDefinitionDto {
-  private Class<?> clazzForBuilder;
-  private String builderClassName;
-  private Name packageName;
+  private TypeName buildingTargetTypeName;
+  private TypeName builderTypeName;
   private final LinkedList<MethodDto> methodsForBuilder = new LinkedList<>();
 
-  public Class<?> getClazzForBuilder() {
-    return clazzForBuilder;
+  public TypeName getBuilderTypeName() {
+    return builderTypeName;
   }
 
-  public void setClazzForBuilder(Class<?> clazzForBuilder) {
-    this.clazzForBuilder = clazzForBuilder;
+  public void setBuilderTypeName(TypeName builderClassName) {
+    this.builderTypeName = builderClassName;
   }
 
-  public String getBuilderClassName() {
-    return builderClassName;
+  public TypeName getBuildingTargetTypeName() {
+    return buildingTargetTypeName;
   }
 
-  public void setBuilderClassName(String builderClassName) {
-    this.builderClassName = builderClassName;
-  }
-
-  public Name getPackageName() {
-    return packageName;
-  }
-
-  public void setPackageName(Name packageName) {
-    this.packageName = packageName;
+  public void setBuildingTargetTypeName(TypeName buildingTargetTypeName) {
+    this.buildingTargetTypeName = buildingTargetTypeName;
   }
 
   public void addMethod(MethodDto member) {

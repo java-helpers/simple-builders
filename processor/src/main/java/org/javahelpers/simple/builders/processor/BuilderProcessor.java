@@ -19,6 +19,7 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import org.javahelpers.simple.builders.annotations.BuilderForDtos;
 import org.javahelpers.simple.builders.internal.BuilderException;
+import org.javahelpers.simple.builders.internal.JavaCodeGenerator;
 import org.javahelpers.simple.builders.internal.dtos.BuilderDefinitionDto;
 
 @AutoService(Processor.class)
@@ -29,6 +30,7 @@ public class BuilderProcessor extends AbstractProcessor {
   private Elements elementUtils;
   private Filer filer;
   private Messager messager;
+  private JavaCodeGenerator codeGenerator;
 
   @Override
   public synchronized void init(ProcessingEnvironment processingEnv) {
@@ -37,6 +39,7 @@ public class BuilderProcessor extends AbstractProcessor {
     this.elementUtils = processingEnv.getElementUtils();
     this.filer = processingEnv.getFiler();
     this.messager = processingEnv.getMessager();
+    this.codeGenerator = new JavaCodeGenerator(filer);
   }
 
   @Override
@@ -54,5 +57,6 @@ public class BuilderProcessor extends AbstractProcessor {
   private void process(Element annotatedElement) throws BuilderException {
 
     BuilderDefinitionDto builderDef = extractFromElement(annotatedElement, elementUtils, typeUtils);
+    codeGenerator.generateBuilder(builderDef);
   }
 }
