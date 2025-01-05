@@ -12,6 +12,7 @@ import com.palantir.javapoet.ParameterizedTypeName;
 import com.palantir.javapoet.TypeSpec;
 import java.io.IOException;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Generated;
 import javax.lang.model.element.Modifier;
@@ -48,6 +49,7 @@ public class JavaCodeGenerator {
 
     for (FieldDto fieldDto : builderDef.getSetterFieldsForBuilder()) {
       classBuilder.addMethod(generateFieldMethod(fieldDto, builderClassName));
+      classBuilder.addMethod(generateFieldSupplier(fieldDto, builderClassName));
       if (fieldDto.getFieldBuilderType().isPresent()) {
         classBuilder.addMethod(generateFieldMethodWithBuilder(fieldDto, builderClassName));
       }
@@ -172,6 +174,27 @@ public class JavaCodeGenerator {
         """,
         parameterType,
         fieldDto.getFieldSetterName());
+    return methodBuilder.build();
+  }
+
+  private MethodSpec generateFieldSupplier(FieldDto fieldDto, ClassName builderClassName) {
+    MethodSpec.Builder methodBuilder =
+        MethodSpec.methodBuilder(fieldDto.getFieldName()).returns(builderClassName);
+    fieldDto.getModifier().ifPresent(methodBuilder::addModifiers);
+    ClassName parameterType =
+        ClassName.get(fieldDto.getFieldType().packageName(), fieldDto.getFieldType().className());
+    ParameterizedTypeName supplierType =
+        ParameterizedTypeName.get(ClassName.get(Supplier.class), parameterType);
+    String fieldSupplier = fieldDto.getFieldName() + "Supplier";
+    methodBuilder.addParameter(supplierType, fieldSupplier);
+
+    methodBuilder.addCode(
+        """
+        instance.$1N($2N.get());
+        return this;
+        """,
+        fieldDto.getFieldSetterName(),
+        fieldSupplier);
     return methodBuilder.build();
   }
 
