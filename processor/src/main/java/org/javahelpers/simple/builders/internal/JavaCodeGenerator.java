@@ -11,6 +11,10 @@ import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.ParameterizedTypeName;
 import com.palantir.javapoet.TypeSpec;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javax.annotation.processing.Filer;
@@ -50,9 +54,7 @@ public class JavaCodeGenerator {
     for (FieldDto fieldDto : builderDef.getSetterFieldsForBuilder()) {
       classBuilder.addMethod(generateFieldMethod(fieldDto, builderClassName));
       classBuilder.addMethod(generateFieldSupplier(fieldDto, builderClassName));
-      if (fieldDto.getFieldBuilderType().isPresent()) {
-        classBuilder.addMethod(generateFieldMethodWithBuilder(fieldDto, builderClassName));
-      }
+      generateFieldConsumer(fieldDto, builderClassName).ifPresent(classBuilder::addMethod);
     }
 
     classBuilder.addMethod(generateBuildMethod(buildingTargetClassName));
@@ -155,7 +157,36 @@ public class JavaCodeGenerator {
     return methodBuilder.build();
   }
 
-  private MethodSpec generateFieldMethodWithBuilder(FieldDto fieldDto, ClassName builderClassName) {
+  private Optional<MethodSpec> generateFieldConsumer(
+      FieldDto fieldDto, ClassName builderClassName) {
+    switch (fieldDto.getSupplierType()) {
+      case BUILDER -> {
+        return Optional.of(generateFieldConsumerWithBuilder(fieldDto, builderClassName));
+      }
+      case ARRAYLIST -> {
+        return Optional.of(
+            generateFieldConsumerWithGenericConstructor(
+                fieldDto, builderClassName, ArrayList.class));
+      }
+      case HASHSET -> {
+        return Optional.of(
+            generateFieldConsumerWithGenericConstructor(fieldDto, builderClassName, HashSet.class));
+      }
+      case HASHMAP -> {
+        return Optional.of(
+            generateFieldConsumerWithGenericConstructor(fieldDto, builderClassName, HashMap.class));
+      }
+      case FIELDTYPE_EMPTY_CONSTRUCTOR -> {
+        return Optional.of(generateFieldConsumerWithConstructor(fieldDto, builderClassName));
+      }
+      default -> {
+        return Optional.empty();
+      }
+    }
+  }
+
+  private MethodSpec generateFieldConsumerWithBuilder(
+      FieldDto fieldDto, ClassName builderClassName) {
     TypeName fieldBuilderType = fieldDto.getFieldBuilderType().get();
     MethodSpec.Builder methodBuilder =
         MethodSpec.methodBuilder(fieldDto.getFieldName()).returns(builderClassName);
@@ -174,6 +205,62 @@ public class JavaCodeGenerator {
         """,
         parameterType,
         fieldDto.getFieldSetterName());
+    return methodBuilder.build();
+  }
+
+  private MethodSpec generateFieldConsumerWithConstructor(
+      FieldDto fieldDto, ClassName builderClassName) {
+    MethodSpec.Builder methodBuilder =
+        MethodSpec.methodBuilder(fieldDto.getFieldName()).returns(builderClassName);
+    fieldDto.getModifier().ifPresent(methodBuilder::addModifiers);
+    ClassName parameterType =
+        ClassName.get(fieldDto.getFieldType().packageName(), fieldDto.getFieldType().className());
+    ParameterizedTypeName supplierType =
+        ParameterizedTypeName.get(ClassName.get(Consumer.class), parameterType);
+    String fieldSupplier = fieldDto.getFieldName() + "Consumer";
+    methodBuilder.addParameter(supplierType, fieldSupplier);
+    ClassName constructorClassName = parameterType;
+
+    methodBuilder.addCode(
+        """
+        $1T $2N = new $5T();
+        $3N.accept($2N);
+        instance.$4N($2N);
+        return this;
+        """,
+        parameterType,
+        fieldDto.getFieldName(),
+        fieldSupplier,
+        fieldDto.getFieldSetterName(),
+        constructorClassName);
+    return methodBuilder.build();
+  }
+
+  private MethodSpec generateFieldConsumerWithGenericConstructor(
+      FieldDto fieldDto, ClassName builderClassName, Class<?> constructorClass) {
+    ClassName constructorClassName = ClassName.get(constructorClass);
+    MethodSpec.Builder methodBuilder =
+        MethodSpec.methodBuilder(fieldDto.getFieldName()).returns(builderClassName);
+    fieldDto.getModifier().ifPresent(methodBuilder::addModifiers);
+    ClassName parameterType =
+        ClassName.get(fieldDto.getFieldType().packageName(), fieldDto.getFieldType().className());
+    ParameterizedTypeName supplierType =
+        ParameterizedTypeName.get(ClassName.get(Consumer.class), parameterType);
+    String fieldSupplier = fieldDto.getFieldName() + "Consumer";
+    methodBuilder.addParameter(supplierType, fieldSupplier);
+
+    methodBuilder.addCode(
+        """
+        $1T $2N = new $5T<>();
+        $3N.accept($2N);
+        instance.$4N($2N);
+        return this;
+        """,
+        parameterType,
+        fieldDto.getFieldName(),
+        fieldSupplier,
+        fieldDto.getFieldSetterName(),
+        constructorClassName);
     return methodBuilder.build();
   }
 

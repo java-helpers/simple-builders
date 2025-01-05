@@ -1,5 +1,7 @@
 package org.javahelpers.simple.builders.internal.dtos;
 
+import static org.javahelpers.simple.builders.internal.dtos.SupplierTypes.NONE;
+
 import java.util.Optional;
 import javax.lang.model.element.Modifier;
 
@@ -9,6 +11,7 @@ public class FieldDto {
   private String fieldSetterName;
   private TypeName fieldType;
   private TypeName fieldBuilderType;
+  private SupplierTypes supplierType = NONE;
 
   public String getFieldName() {
     return fieldName;
@@ -48,5 +51,17 @@ public class FieldDto {
 
   public void setFieldBuilderType(TypeName fieldBuilderType) {
     this.fieldBuilderType = fieldBuilderType;
+    this.supplierType = SupplierTypes.BUILDER;
+  }
+
+  public SupplierTypes getSupplierType() {
+    return supplierType;
+  }
+
+  public void setSupplierType(SupplierTypes supplierType) {
+    if (supplierType != SupplierTypes.BUILDER) {
+      this.fieldBuilderType = null;
+    }
+    this.supplierType = supplierType;
   }
 }

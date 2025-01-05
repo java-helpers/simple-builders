@@ -9,6 +9,7 @@ import static org.javahelpers.simple.builders.internal.AnnotationValidator.valid
 
 import java.lang.annotation.Annotation;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import javax.lang.model.element.AnnotationMirror;
@@ -17,6 +18,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
@@ -27,6 +29,7 @@ import org.javahelpers.simple.builders.internal.dtos.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.internal.dtos.FieldDto;
 import org.javahelpers.simple.builders.internal.dtos.MethodDto;
 import org.javahelpers.simple.builders.internal.dtos.MethodParameterDto;
+import org.javahelpers.simple.builders.internal.dtos.SupplierTypes;
 import org.javahelpers.simple.builders.internal.dtos.TypeName;
 
 public class ElementToBuilderPropsDtoMapper {
@@ -116,6 +119,7 @@ public class ElementToBuilderPropsDtoMapper {
     MethodParameterDto parameter = mapMethodParameter(parameters.get(0), elementUtils, typeUtils);
     result.setFieldType(parameter.getParameterType());
     result.setModifier(mapRelevantModifier(mth.getModifiers()));
+    result.setSupplierType(estimatePossibleSupplier(parameters.get(0), elementUtils, typeUtils));
     parameter.getBuilderType().ifPresent(result::setFieldBuilderType);
     return result;
   }
@@ -137,6 +141,7 @@ public class ElementToBuilderPropsDtoMapper {
       VariableElement param, Elements elementUtils, Types typeUtils) {
     MethodParameterDto result = new MethodParameterDto();
     result.setParameterName(param.getSimpleName().toString());
+
     TypeMirror typeOfParameter = param.asType();
     String packageName = elementUtils.getPackageOf(param).getQualifiedName().toString();
     String simpleClassName = StringUtils.removeStart(typeOfParameter.toString(), packageName + ".");
@@ -145,10 +150,61 @@ public class ElementToBuilderPropsDtoMapper {
     Element elementOfParameter = typeUtils.asElement(typeOfParameter);
     Optional<AnnotationMirror> foundBuilderAnnotation =
         findAnnotation(elementOfParameter, BuilderForDtos.class);
-    if (foundBuilderAnnotation.isPresent()) {
+    boolean isClassWithoutGenerics = StringUtils.containsNone(simpleClassName, "<");
+    if (foundBuilderAnnotation.isPresent() && isClassWithoutGenerics) {
       result.setBuilderType(new TypeName(packageName, simpleClassName + BUILDER_SUFFIX));
     }
     return result;
+  }
+
+  private static SupplierTypes estimatePossibleSupplier(
+      VariableElement param, Elements elementUtils, Types typeUtils) {
+    TypeMirror typeMirror = param.asType();
+    TypeElement typeElement = (TypeElement) typeUtils.asElement(typeMirror);
+    String packageName = elementUtils.getPackageOf(typeElement).toString();
+
+    // No supplier for primitive kinds
+    if (typeMirror.getKind().isPrimitive()) {
+      return SupplierTypes.NONE;
+    }
+
+    boolean isNotJavaClass = !StringUtils.startsWith(packageName, "java");
+    if (hasEmptyConstructor(typeElement, elementUtils) && isNotJavaClass) {
+      return SupplierTypes.FIELDTYPE_EMPTY_CONSTRUCTOR;
+    }
+
+    if (implementsInterface(typeMirror, List.class, elementUtils, typeUtils)) {
+      return SupplierTypes.ARRAYLIST;
+    }
+
+    if (implementsInterface(typeMirror, Set.class, elementUtils, typeUtils)) {
+      return SupplierTypes.HASHSET;
+    }
+
+    if (implementsInterface(typeMirror, Map.class, elementUtils, typeUtils)) {
+      return SupplierTypes.HASHMAP;
+    }
+
+    return SupplierTypes.NONE;
+  }
+
+  private static boolean implementsInterface(
+      TypeMirror typeMirror, Class<?> interfaceClass, Elements elementUtils, Types typeUtils) {
+    TypeElement infType = elementUtils.getTypeElement(interfaceClass.getCanonicalName());
+    DeclaredType infTypeWithWildcard =
+        (interfaceClass.getTypeParameters().length == 1)
+            ? typeUtils.getDeclaredType(infType, typeUtils.getWildcardType(null, null))
+            : typeUtils.getDeclaredType(
+                infType,
+                typeUtils.getWildcardType(null, null),
+                typeUtils.getWildcardType(null, null));
+    return typeUtils.isAssignable(typeMirror, infTypeWithWildcard);
+  }
+
+  private static boolean hasEmptyConstructor(TypeElement typeElement, Elements elementUtils) {
+    List<ExecutableElement> constructors =
+        ElementFilter.constructorsIn(elementUtils.getAllMembers(typeElement));
+    return constructors.stream().anyMatch(c -> c.getParameters().isEmpty());
   }
 
   private static Optional<AnnotationMirror> findAnnotation(
