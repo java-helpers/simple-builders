@@ -4,27 +4,26 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 
 import java.util.LinkedList;
 import javax.lang.model.element.Modifier;
-import javax.lang.model.element.Name;
 
 public class MethodDto {
   private Modifier modifier = PUBLIC;
-  private Name memberName;
-  private Name fullQualifiedType;
+  private String methodName;
+  private String fullQualifiedType;
   private final LinkedList<MethodParameterDto> parameters = new LinkedList<>();
 
-  public Name getMemberName() {
-    return memberName;
+  public String getMethodName() {
+    return methodName;
   }
 
-  public void setMemberName(Name memberName) {
-    this.memberName = memberName;
+  public void setMethodName(String methodName) {
+    this.methodName = methodName;
   }
 
-  public Name getFullQualifiedType() {
+  public String getFullQualifiedType() {
     return fullQualifiedType;
   }
 
-  public void setFullQualifiedType(Name fullQualifiedType) {
+  public void setFullQualifiedType(String fullQualifiedType) {
     this.fullQualifiedType = fullQualifiedType;
   }
 

@@ -3,14 +3,14 @@ package org.javahelpers.simple.builders.internal.dtos;
 import javax.lang.model.element.Name;
 
 public class MethodParameterDto {
-  private Name parameterName;
+  private String parameterName;
   private TypeName parameterType;
 
-  public Name getParameterName() {
+  public String getParameterName() {
     return parameterName;
   }
 
-  public void setParameterName(Name parameterName) {
+  public void setParameterName(String parameterName) {
     this.parameterName = parameterName;
   }
 

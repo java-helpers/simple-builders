@@ -53,28 +53,31 @@ public class JavaCodeGenerator {
         .returns(returnType)
         .addCode(
             """
-                                                                                       return instance;
-                                                                                       """)
+            $1T instance = new $1T();
+            return new $2T(instance);
+            """,
+            buildTargetType,
+            builderType)
         .build();
   }
 
   private MethodSpec generateMethod(MethodDto methodDto, ClassName returnType) {
     MethodSpec.Builder methodBuilder =
-        MethodSpec.methodBuilder(methodDto.getMemberName().toString())
+        MethodSpec.methodBuilder(methodDto.getMethodName())
             .addModifiers(methodDto.getModifier())
             .returns(returnType);
     for (MethodParameterDto paramDto : methodDto.getParameters()) {
       ClassName parameterType =
           ClassName.get(
               paramDto.getParameterType().packageName(), paramDto.getParameterType().className());
-      methodBuilder.addParameter(parameterType, paramDto.getParameterName().toString());
+      methodBuilder.addParameter(parameterType, paramDto.getParameterName());
     }
     methodBuilder.addCode(
         """
         instance.$1N($2N);
         return this;
         """,
-        methodDto.getMemberName(),
+        methodDto.getMethodName(),
         methodDto.getParameters().get(0).getParameterName());
     return methodBuilder.build();
   }
