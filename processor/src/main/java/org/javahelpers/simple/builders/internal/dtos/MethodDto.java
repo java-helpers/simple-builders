@@ -1,12 +1,12 @@
 package org.javahelpers.simple.builders.internal.dtos;
 
-import static javax.lang.model.element.Modifier.PUBLIC;
 
 import java.util.LinkedList;
+import java.util.Optional;
 import javax.lang.model.element.Modifier;
 
 public class MethodDto {
-  private Modifier modifier = PUBLIC;
+  private Optional<Modifier> modifier = Optional.empty();
   private String methodName;
   private String fullQualifiedType;
   private final LinkedList<MethodParameterDto> parameters = new LinkedList<>();
@@ -35,11 +35,11 @@ public class MethodDto {
     return parameters;
   }
 
-  public Modifier getModifier() {
+  public Optional<Modifier> getModifier() {
     return modifier;
   }
 
   public void setModifier(Modifier modifier) {
-    this.modifier = modifier;
+    this.modifier = Optional.ofNullable(modifier);
   }
 }

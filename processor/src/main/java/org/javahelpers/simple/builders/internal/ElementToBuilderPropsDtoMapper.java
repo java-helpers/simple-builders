@@ -1,13 +1,17 @@
 package org.javahelpers.simple.builders.internal;
 
+import static javax.lang.model.element.Modifier.PRIVATE;
+import static javax.lang.model.element.Modifier.PROTECTED;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.type.TypeKind.VOID;
 import static org.javahelpers.simple.builders.internal.AnnotationValidator.validateAnnotatedElement;
 
 import java.util.List;
+import java.util.Set;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
@@ -52,7 +56,7 @@ public class ElementToBuilderPropsDtoMapper {
     return isNoMethodOfObjectClass(mth)
         && hasNoThrowablesDeclared(mth)
         && hasNoReturnValue(mth)
-        && isPublic(mth)
+        && isNotPrivate(mth)
         && isNotStatic(mth);
   }
 
@@ -70,8 +74,8 @@ public class ElementToBuilderPropsDtoMapper {
     return mth.getReturnType().getKind() == VOID;
   }
 
-  private static boolean isPublic(ExecutableElement mth) {
-    return mth.getModifiers().contains(PUBLIC);
+  private static boolean isNotPrivate(ExecutableElement mth) {
+    return !mth.getModifiers().contains(PRIVATE);
   }
 
   private static boolean isNotStatic(ExecutableElement mth) {
@@ -85,6 +89,7 @@ public class ElementToBuilderPropsDtoMapper {
 
     MethodDto result = new MethodDto();
     result.setMethodName(methodName);
+    result.setModifier(mapRelevantModifier(mth.getModifiers()));
     parameters.stream().map(v -> mapMethodParameter(v, elementUtils)).forEach(result::addParameter);
     return result;
   }
@@ -92,6 +97,15 @@ public class ElementToBuilderPropsDtoMapper {
   private static boolean isSimpleSetter(
       String methodName, List<? extends VariableElement> parameters) {
     return StringUtils.startsWith(methodName, "set") && parameters.size() == 1;
+  }
+
+  private static Modifier mapRelevantModifier(Set<Modifier> modifier) {
+    if (modifier.contains(PUBLIC)) {
+      return PUBLIC;
+    } else if (modifier.contains(PROTECTED)) {
+      return PROTECTED;
+    }
+    return null;
   }
 
   private static MethodParameterDto mapMethodParameter(
