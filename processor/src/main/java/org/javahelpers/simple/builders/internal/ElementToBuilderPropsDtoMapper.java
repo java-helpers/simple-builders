@@ -20,6 +20,7 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.internal.dtos.BuilderDefinitionDto;
+import org.javahelpers.simple.builders.internal.dtos.FieldDto;
 import org.javahelpers.simple.builders.internal.dtos.MethodDto;
 import org.javahelpers.simple.builders.internal.dtos.MethodParameterDto;
 import org.javahelpers.simple.builders.internal.dtos.TypeName;
@@ -45,7 +46,11 @@ public class ElementToBuilderPropsDtoMapper {
     for (ExecutableElement mth : methods) {
       // nur public
       if (isMethodRelevantForBuilder(mth)) {
-        result.addMethod(mapFromElement(mth, elementUtils, typeUtils));
+        if (isSimpleSetter(mth)) {
+          result.addField(mapFieldFromElement(mth, elementUtils, typeUtils));
+        } else {
+          result.addMethod(mapMethodFromElement(mth, elementUtils, typeUtils));
+        }
       }
     }
 
@@ -82,7 +87,7 @@ public class ElementToBuilderPropsDtoMapper {
     return !mth.getModifiers().contains(STATIC);
   }
 
-  private static MethodDto mapFromElement(
+  private static MethodDto mapMethodFromElement(
       ExecutableElement mth, Elements elementUtils, Types typeUtils) {
     String methodName = mth.getSimpleName().toString();
     List<? extends VariableElement> parameters = mth.getParameters();
@@ -94,9 +99,22 @@ public class ElementToBuilderPropsDtoMapper {
     return result;
   }
 
-  private static boolean isSimpleSetter(
-      String methodName, List<? extends VariableElement> parameters) {
-    return StringUtils.startsWith(methodName, "set") && parameters.size() == 1;
+  private static FieldDto mapFieldFromElement(
+      ExecutableElement mth, Elements elementUtils, Types typeUtils) {
+    String methodName = mth.getSimpleName().toString();
+    List<? extends VariableElement> parameters = mth.getParameters();
+
+    FieldDto result = new FieldDto();
+    result.setFieldName(StringUtils.uncapitalize(StringUtils.removeStart(methodName, "set")));
+    result.setFieldSetterName(methodName);
+    MethodParameterDto parameter = mapMethodParameter(parameters.get(0), elementUtils);
+    result.setFieldType(parameter.getParameterType());
+    result.setModifier(mapRelevantModifier(mth.getModifiers()));
+    return result;
+  }
+
+  private static boolean isSimpleSetter(ExecutableElement mth) {
+    return StringUtils.startsWith(mth.getSimpleName(), "set") && mth.getParameters().size() == 1;
   }
 
   private static Modifier mapRelevantModifier(Set<Modifier> modifier) {

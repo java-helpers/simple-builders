@@ -17,6 +17,7 @@ import javax.lang.model.element.Modifier;
 import org.javahelpers.simple.builders.annotations.BuilderImplementation;
 import org.javahelpers.simple.builders.interfaces.IBuilderBase;
 import org.javahelpers.simple.builders.internal.dtos.BuilderDefinitionDto;
+import org.javahelpers.simple.builders.internal.dtos.FieldDto;
 import org.javahelpers.simple.builders.internal.dtos.MethodDto;
 import org.javahelpers.simple.builders.internal.dtos.MethodParameterDto;
 import org.javahelpers.simple.builders.internal.dtos.TypeName;
@@ -43,6 +44,11 @@ public class JavaCodeGenerator {
     for (MethodDto methodDto : builderDef.getMethodsForBuilder()) {
       classBuilder.addMethod(generateMethod(methodDto, builderClassName));
     }
+
+    for (FieldDto fieldDto : builderDef.getSetterFieldsForBuilder()) {
+      classBuilder.addMethod(generateFieldMethod(fieldDto, builderClassName));
+    }
+
     classBuilder.addMethod(generateBuildMethod(buildingTargetClassName));
     classBuilder.addMethod(
         generateCreateMethodWithoutParameters(builderClassName, buildingTargetClassName));
@@ -107,9 +113,8 @@ public class JavaCodeGenerator {
 
   private MethodSpec generateMethod(MethodDto methodDto, ClassName returnType) {
     MethodSpec.Builder methodBuilder =
-        MethodSpec.methodBuilder(methodDto.getMethodName())
-            .addModifiers(methodDto.getModifier())
-            .returns(returnType);
+        MethodSpec.methodBuilder(methodDto.getMethodName()).returns(returnType);
+    methodDto.getModifier().ifPresent(methodBuilder::addModifiers);
     for (MethodParameterDto paramDto : methodDto.getParameters()) {
       ClassName parameterType =
           ClassName.get(
@@ -123,6 +128,24 @@ public class JavaCodeGenerator {
         """,
         methodDto.getMethodName(),
         methodDto.getParameters().get(0).getParameterName());
+    return methodBuilder.build();
+  }
+
+  private MethodSpec generateFieldMethod(FieldDto fieldDto, ClassName builderClassName) {
+    MethodSpec.Builder methodBuilder =
+        MethodSpec.methodBuilder(fieldDto.getFieldName()).returns(builderClassName);
+    fieldDto.getModifier().ifPresent(methodBuilder::addModifiers);
+    ClassName parameterType =
+        ClassName.get(fieldDto.getFieldType().packageName(), fieldDto.getFieldType().className());
+    methodBuilder.addParameter(parameterType, fieldDto.getFieldName());
+
+    methodBuilder.addCode(
+        """
+        instance.$1N($2N);
+        return this;
+        """,
+        fieldDto.getFieldSetterName(),
+        fieldDto.getFieldName());
     return methodBuilder.build();
   }
 
