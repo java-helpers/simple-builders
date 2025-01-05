@@ -2,11 +2,12 @@ package org.javahelpers.simple.builders.example.goal;
 
 import java.util.function.Consumer;
 import javax.annotation.processing.Generated;
+import org.javahelpers.simple.builders.annotations.BuilderImplementation;
 import org.javahelpers.simple.builders.example.MannschaftDto;
 import org.javahelpers.simple.builders.example.PersonDto;
 
 @Generated("org.javahelpers.simple.builders.processor")
-//todo @BuilderImplementation(forClass=PersonDto.class)
+@BuilderImplementation(forClass=PersonDto.class)
 public class PersonDtoBuilder {
   private final PersonDto instance = new PersonDto();
 
