@@ -10,7 +10,7 @@
   <name>annotation-processor-demo</name>
   <modules>
     <module>processor</module>
-    <module>user</module>
+    <module>example</module>
   </modules>
 
   <properties>
