@@ -1,6 +1,5 @@
 package org.javahelpers.simple.builders.internal.dtos;
 
-
 import java.util.LinkedList;
 import java.util.Optional;
 import javax.lang.model.element.Modifier;

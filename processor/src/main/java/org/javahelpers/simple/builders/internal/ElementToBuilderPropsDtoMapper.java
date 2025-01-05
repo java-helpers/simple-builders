@@ -7,8 +7,11 @@ import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.type.TypeKind.VOID;
 import static org.javahelpers.simple.builders.internal.AnnotationValidator.validateAnnotatedElement;
 
+import java.lang.annotation.Annotation;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
@@ -19,6 +22,7 @@ import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import org.apache.commons.lang3.StringUtils;
+import org.javahelpers.simple.builders.annotations.BuilderForDtos;
 import org.javahelpers.simple.builders.internal.dtos.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.internal.dtos.FieldDto;
 import org.javahelpers.simple.builders.internal.dtos.MethodDto;
@@ -95,7 +99,9 @@ public class ElementToBuilderPropsDtoMapper {
     MethodDto result = new MethodDto();
     result.setMethodName(methodName);
     result.setModifier(mapRelevantModifier(mth.getModifiers()));
-    parameters.stream().map(v -> mapMethodParameter(v, elementUtils)).forEach(result::addParameter);
+    parameters.stream()
+        .map(v -> mapMethodParameter(v, elementUtils, typeUtils))
+        .forEach(result::addParameter);
     return result;
   }
 
@@ -107,9 +113,10 @@ public class ElementToBuilderPropsDtoMapper {
     FieldDto result = new FieldDto();
     result.setFieldName(StringUtils.uncapitalize(StringUtils.removeStart(methodName, "set")));
     result.setFieldSetterName(methodName);
-    MethodParameterDto parameter = mapMethodParameter(parameters.get(0), elementUtils);
+    MethodParameterDto parameter = mapMethodParameter(parameters.get(0), elementUtils, typeUtils);
     result.setFieldType(parameter.getParameterType());
     result.setModifier(mapRelevantModifier(mth.getModifiers()));
+    parameter.getBuilderType().ifPresent(result::setFieldBuilderType);
     return result;
   }
 
@@ -127,14 +134,35 @@ public class ElementToBuilderPropsDtoMapper {
   }
 
   private static MethodParameterDto mapMethodParameter(
-      VariableElement param, Elements elementUtils) {
+      VariableElement param, Elements elementUtils, Types typeUtils) {
     MethodParameterDto result = new MethodParameterDto();
     result.setParameterName(param.getSimpleName().toString());
     TypeMirror typeOfParameter = param.asType();
     String packageName = elementUtils.getPackageOf(param).getQualifiedName().toString();
     String simpleClassName = StringUtils.removeStart(typeOfParameter.toString(), packageName + ".");
     result.setParameterTypeName(new TypeName(packageName, simpleClassName));
-    // TODO Builder erkennen
+
+    Element elementOfParameter = typeUtils.asElement(typeOfParameter);
+    Optional<AnnotationMirror> foundBuilderAnnotation =
+        findAnnotation(elementOfParameter, BuilderForDtos.class);
+    if (foundBuilderAnnotation.isPresent()) {
+      result.setBuilderType(new TypeName(packageName, simpleClassName + BUILDER_SUFFIX));
+    }
     return result;
+  }
+
+  private static Optional<AnnotationMirror> findAnnotation(
+      Element abstractMethodElement, Class<? extends Annotation> annotationClass) {
+
+    for (AnnotationMirror annotationMirror : abstractMethodElement.getAnnotationMirrors()) {
+      if (annotationMirror
+          .getAnnotationType()
+          .toString()
+          .equals(annotationClass.getCanonicalName())) {
+        return Optional.of(annotationMirror);
+      }
+    }
+
+    return Optional.empty();
   }
 }

@@ -11,6 +11,7 @@ import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.ParameterizedTypeName;
 import com.palantir.javapoet.TypeSpec;
 import java.io.IOException;
+import java.util.function.Consumer;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Generated;
 import javax.lang.model.element.Modifier;
@@ -47,6 +48,9 @@ public class JavaCodeGenerator {
 
     for (FieldDto fieldDto : builderDef.getSetterFieldsForBuilder()) {
       classBuilder.addMethod(generateFieldMethod(fieldDto, builderClassName));
+      if (fieldDto.getFieldBuilderType().isPresent()) {
+        classBuilder.addMethod(generateFieldMethodWithBuilder(fieldDto, builderClassName));
+      }
     }
 
     classBuilder.addMethod(generateBuildMethod(buildingTargetClassName));
@@ -146,6 +150,28 @@ public class JavaCodeGenerator {
         """,
         fieldDto.getFieldSetterName(),
         fieldDto.getFieldName());
+    return methodBuilder.build();
+  }
+
+  private MethodSpec generateFieldMethodWithBuilder(FieldDto fieldDto, ClassName builderClassName) {
+    TypeName fieldBuilderType = fieldDto.getFieldBuilderType().get();
+    MethodSpec.Builder methodBuilder =
+        MethodSpec.methodBuilder(fieldDto.getFieldName()).returns(builderClassName);
+    fieldDto.getModifier().ifPresent(methodBuilder::addModifiers);
+    ClassName parameterType =
+        ClassName.get(fieldBuilderType.packageName(), fieldBuilderType.className());
+    methodBuilder.addParameter(
+        ParameterizedTypeName.get(ClassName.get(Consumer.class), parameterType), "builderConsumer");
+
+    methodBuilder.addCode(
+        """
+        $1T builder = $1T.create();
+        builderConsumer.accept(builder);
+        instance.$2N(builder.build());
+        return this;
+        """,
+        parameterType,
+        fieldDto.getFieldSetterName());
     return methodBuilder.build();
   }
 
