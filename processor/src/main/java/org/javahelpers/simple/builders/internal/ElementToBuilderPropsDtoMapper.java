@@ -9,7 +9,6 @@ import static org.javahelpers.simple.builders.internal.AnnotationValidator.valid
 
 import java.lang.annotation.Annotation;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import javax.lang.model.element.AnnotationMirror;
@@ -168,37 +167,25 @@ public class ElementToBuilderPropsDtoMapper {
       return SupplierTypes.NONE;
     }
 
-    boolean isNotJavaClass = !StringUtils.startsWith(packageName, "java");
+    boolean isNotJavaClass = !StringUtils.startsWith(packageName, "java.lang");
     if (hasEmptyConstructor(typeElement, elementUtils) && isNotJavaClass) {
       return SupplierTypes.FIELDTYPE_EMPTY_CONSTRUCTOR;
     }
 
-    if (implementsInterface(typeMirror, List.class, elementUtils, typeUtils)) {
+    String classNameWithoutGenerics = typeElement.getQualifiedName().toString();
+    if (StringUtils.equals(classNameWithoutGenerics, "java.util.List")) {
       return SupplierTypes.ARRAYLIST;
     }
 
-    if (implementsInterface(typeMirror, Set.class, elementUtils, typeUtils)) {
+    if (StringUtils.equals(classNameWithoutGenerics, "java.util.Set")) {
       return SupplierTypes.HASHSET;
     }
 
-    if (implementsInterface(typeMirror, Map.class, elementUtils, typeUtils)) {
+    if (StringUtils.equals(classNameWithoutGenerics, "java.util.Map")) {
       return SupplierTypes.HASHMAP;
     }
 
     return SupplierTypes.NONE;
-  }
-
-  private static boolean implementsInterface(
-      TypeMirror typeMirror, Class<?> interfaceClass, Elements elementUtils, Types typeUtils) {
-    TypeElement infType = elementUtils.getTypeElement(interfaceClass.getCanonicalName());
-    DeclaredType infTypeWithWildcard =
-        (interfaceClass.getTypeParameters().length == 1)
-            ? typeUtils.getDeclaredType(infType, typeUtils.getWildcardType(null, null))
-            : typeUtils.getDeclaredType(
-                infType,
-                typeUtils.getWildcardType(null, null),
-                typeUtils.getWildcardType(null, null));
-    return typeUtils.isAssignable(typeMirror, infTypeWithWildcard);
   }
 
   private static boolean hasEmptyConstructor(TypeElement typeElement, Elements elementUtils) {
