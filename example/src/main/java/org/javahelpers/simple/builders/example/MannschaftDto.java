@@ -6,7 +6,7 @@ import org.javahelpers.simple.builders.annotations.BuilderForDtos;
 @BuilderForDtos
 public class MannschaftDto {
   private String name;
-  private List<String> sponsoren;
+  private List<SponsorDto> sponsoren;
 
   public String getName() {
     return name;
@@ -16,11 +16,11 @@ public class MannschaftDto {
     this.name = name;
   }
 
-  public List<String> getSponsoren() {
+  public List<SponsorDto> getSponsoren() {
     return sponsoren;
   }
 
-  public void setSponsoren(List<String> sponsoren) {
+  public void setSponsoren(List<SponsorDto> sponsoren) {
     this.sponsoren = sponsoren;
   }
   

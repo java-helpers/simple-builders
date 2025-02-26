@@ -1,6 +1,7 @@
 package org.javahelpers.simple.builders.example;
 
 import java.time.LocalDate;
+import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import org.junit.jupiter.api.Test;
@@ -12,6 +13,7 @@ public class PersonDtoBuilderTest {
     PersonDto personDto = PersonDtoBuilder
             .create()
             .birthdate(LocalDate.now())
+            .nickNames(List.of("Test1","Test2"))
             .mannschaft(mb -> mb.name("Testmannschaft"))
             .name(this::nameSupplier).build();
     assertNotNull(personDto);
