@@ -13,11 +13,15 @@ public class PersonDtoBuilderTest {
             .create()
             .birthdate(LocalDate.now())
             .mannschaft(mb -> mb.name("Testmannschaft"))
-            .name("Testname").build();
+            .name(this::nameSupplier).build();
     assertNotNull(personDto);
     assertNotNull(personDto.getBirthdate());
     assertEquals("Testname", personDto.getName());
     assertNotNull(personDto.getMannschaft());
     assertEquals("Testmannschaft", personDto.getMannschaft().getName());
+  }
+  
+  private String nameSupplier(){
+    return "Testname";
   }
 }
