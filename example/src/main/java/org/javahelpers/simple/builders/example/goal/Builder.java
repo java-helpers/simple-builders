@@ -1,12 +1,14 @@
 package org.javahelpers.simple.builders.example.goal;
 
-import org.javahelpers.simple.builders.example.PersonDto;
-
 public class Builder {
 
   private Builder(){}
 
-  public static PersonDtoBuilder forClass(Class<PersonDto> targetClass){
+  public static PersonDtoBuilder forPersonDto(){
     return PersonDtoBuilder.create();
+  }
+  
+  public static MannschaftDtoBuilder forMannschaftDto(){
+    return MannschaftDtoBuilder.create();
   }
 }
