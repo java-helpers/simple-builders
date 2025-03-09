@@ -14,6 +14,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -123,11 +125,13 @@ public class JavaCodeGenerator {
     MethodSpec.Builder methodBuilder =
         MethodSpec.methodBuilder(methodDto.getMethodName()).returns(returnType);
     methodDto.getModifier().ifPresent(methodBuilder::addModifiers);
+    List<String> parametersInInnerCall = new LinkedList<>();
     for (MethodParameterDto paramDto : methodDto.getParameters()) {
       ClassName parameterType =
           ClassName.get(
               paramDto.getParameterType().packageName(), paramDto.getParameterType().className());
       methodBuilder.addParameter(parameterType, paramDto.getParameterName());
+      parametersInInnerCall.add(paramDto.getParameterName());
     }
     methodBuilder.addCode(
         """
@@ -135,7 +139,7 @@ public class JavaCodeGenerator {
         return this;
         """,
         methodDto.getMethodName(),
-        methodDto.getParameters().get(0).getParameterName());
+        String.join(", ", parametersInInnerCall));
     return methodBuilder.build();
   }
 
