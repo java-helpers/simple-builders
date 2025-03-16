@@ -44,6 +44,8 @@ public class JavaCodeGenerator {
     classBuilder.addField(
         FieldSpec.builder(buildingTargetClassName, "instance", Modifier.PRIVATE, Modifier.FINAL)
             .build());
+    
+    //TODO: Constructors sollten in der BuilderDefinitionDto definiert werden, nur für Klassen mit leerem Constructor ist auch ein Builder mit leerem Constructor möglich
     classBuilder.addMethod(generateConstructor(buildingTargetClassName));
     classBuilder.addMethod(generateEmptyConstructor(buildingTargetClassName));
 

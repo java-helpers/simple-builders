@@ -159,6 +159,7 @@ public class ElementToBuilderPropsDtoMapper {
                   "ArrayListBuilder",
                   fieldType.getInnerType().get())),
           fieldName + "BuilderConsumer");
+      // TODO: auch eine FieldType... Variante im Builder anbieten
     } else if (isMap(fieldType)) {
       // TODO MAP (having 2 inner classes, TypeNameGeneric is not able to adress that yet)
     } else if (isSet(fieldType)) {
@@ -172,6 +173,7 @@ public class ElementToBuilderPropsDtoMapper {
                   "HashSetBuilder",
                   fieldType.getInnerType().get())),
           fieldName + "BuilderConsumer");
+      // TODO: auch eine FieldType... Variante im Builder anbieten
     }
 
     // setting value by supplier
