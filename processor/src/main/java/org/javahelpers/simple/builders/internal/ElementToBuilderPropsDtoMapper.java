@@ -141,11 +141,13 @@ public class ElementToBuilderPropsDtoMapper {
       result.addFieldConsumerByBuilder(
           fieldName,
           new TypeNameGeneric("java.util.function", "Consumer", builderType),
-          fieldName + BUILDER_SUFFIX);
+          fieldName + BUILDER_SUFFIX + "Consumer");
     } else if (!isJavaClass(fieldType) && hasEmptyConstructor(fieldTypeElement, elementUtils)) {
       // TODO: Consumer funktioniett nur, wenn Klasse kein Interface/Enum/Abstrakte Classe/Record
       result.addFieldConsumer(
-          fieldName, new TypeNameGeneric("java.util.function", "Consumer", fieldType), fieldName);
+          fieldName,
+          new TypeNameGeneric("java.util.function", "Consumer", fieldType),
+          fieldName + "Consumer");
     } else if (isList(fieldType)) {
       result.addFieldConsumerByBuilder(
           fieldName,
@@ -156,7 +158,7 @@ public class ElementToBuilderPropsDtoMapper {
                   "org.javahelpers.simple.builders.common",
                   "ArrayListBuilder",
                   fieldType.getInnerType().get())),
-          fieldName);
+          fieldName + "BuilderConsumer");
     } else if (isMap(fieldType)) {
       // TODO MAP (having 2 inner classes, TypeNameGeneric is not able to adress that yet)
     } else if (isSet(fieldType)) {
@@ -169,12 +171,14 @@ public class ElementToBuilderPropsDtoMapper {
                   "org.javahelpers.simple.builders.common",
                   "HashSetBuilder",
                   fieldType.getInnerType().get())),
-          fieldName);
+          fieldName + "BuilderConsumer");
     }
 
     // setting value by supplier
     result.addFieldSupplier(
-        fieldName, new TypeNameGeneric("java.util.function", "Supplier", fieldType), fieldName);
+        fieldName,
+        new TypeNameGeneric("java.util.function", "Supplier", fieldType),
+        fieldName + "Supplier");
 
     return result;
   }
