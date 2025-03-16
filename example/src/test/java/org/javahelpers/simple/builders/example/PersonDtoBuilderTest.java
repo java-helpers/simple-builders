@@ -13,8 +13,9 @@ public class PersonDtoBuilderTest {
     PersonDto personDto = PersonDtoBuilder
             .create()
             .birthdate(LocalDate.now())
-            .nickNames(List.of("Test1","Test2"))
-            .mannschaft(mb -> mb.name("Testmannschaft"))
+            .nickNames(b -> b.add("Test1").add("Test2"))
+            .mannschaft(mb -> mb.name("Testmannschaft").sponsoren(
+                    sb -> sb.add(SponsorDtoBuilder.create().name("TestSponsor").build())))
             .name(this::nameSupplier).build();
     assertNotNull(personDto);
     assertNotNull(personDto.getBirthdate());
@@ -22,8 +23,8 @@ public class PersonDtoBuilderTest {
     assertNotNull(personDto.getMannschaft());
     assertEquals("Testmannschaft", personDto.getMannschaft().getName());
   }
-  
-  private String nameSupplier(){
+
+  private String nameSupplier() {
     return "Testname";
   }
 }

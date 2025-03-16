@@ -2,23 +2,20 @@ package org.javahelpers.simple.builders.internal;
 
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
+import static org.javahelpers.simple.builders.internal.dtos.MethodTypes.CONSUMER;
 
 import com.palantir.javapoet.AnnotationSpec;
 import com.palantir.javapoet.ClassName;
+import com.palantir.javapoet.CodeBlock;
 import com.palantir.javapoet.FieldSpec;
 import com.palantir.javapoet.JavaFile;
 import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.ParameterizedTypeName;
 import com.palantir.javapoet.TypeSpec;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Generated;
 import javax.lang.model.element.Modifier;
@@ -48,15 +45,17 @@ public class JavaCodeGenerator {
         FieldSpec.builder(buildingTargetClassName, "instance", Modifier.PRIVATE, Modifier.FINAL)
             .build());
     classBuilder.addMethod(generateConstructor(buildingTargetClassName));
+    classBuilder.addMethod(generateEmptyConstructor(buildingTargetClassName));
 
+    // Generate Methods in Builder without being setter or getter
     for (MethodDto methodDto : builderDef.getMethodsForBuilder()) {
       classBuilder.addMethod(generateMethod(methodDto, builderClassName));
     }
 
+    // Generate Fields and Fieldspecific funtions in Builder
     for (FieldDto fieldDto : builderDef.getSetterFieldsForBuilder()) {
-      classBuilder.addMethod(generateFieldMethod(fieldDto, builderClassName));
-      classBuilder.addMethod(generateFieldSupplier(fieldDto, builderClassName));
-      generateFieldConsumer(fieldDto, builderClassName).ifPresent(classBuilder::addMethod);
+      List<MethodSpec> methodSpecs = generateSetterMethodsForField(fieldDto, builderClassName);
+      classBuilder.addMethods(methodSpecs);
     }
 
     classBuilder.addMethod(generateBuildMethod(buildingTargetClassName));
@@ -78,7 +77,7 @@ public class JavaCodeGenerator {
 
     TypeSpec typeSpec = classBuilder.build();
     try {
-      JavaFile.builder(builderDef.getBuilderTypeName().packageName(), typeSpec)
+      JavaFile.builder(builderDef.getBuilderTypeName().getPackageName(), typeSpec)
           .build()
           .writeTo(filer);
     } catch (IOException ex) {
@@ -106,6 +105,13 @@ public class JavaCodeGenerator {
         .build();
   }
 
+  private MethodSpec generateEmptyConstructor(ClassName buildTargetType) {
+    return MethodSpec.constructorBuilder()
+        .addModifiers(PUBLIC)
+        .addStatement("this.instance = new $1T()", buildTargetType)
+        .build();
+  }
+
   private MethodSpec generateCreateMethodWithoutParameters(
       ClassName builderType, ClassName buildTargetType) {
     return MethodSpec.methodBuilder("create")
@@ -127,169 +133,116 @@ public class JavaCodeGenerator {
     methodDto.getModifier().ifPresent(methodBuilder::addModifiers);
     List<String> parametersInInnerCall = new LinkedList<>();
     for (MethodParameterDto paramDto : methodDto.getParameters()) {
-      ClassName parameterType =
-          ClassName.get(
-              paramDto.getParameterType().packageName(), paramDto.getParameterType().className());
+      com.palantir.javapoet.TypeName parameterType = mapParameterType(paramDto.getParameterType());
       methodBuilder.addParameter(parameterType, paramDto.getParameterName());
       parametersInInnerCall.add(paramDto.getParameterName());
     }
-    methodBuilder.addCode(
+    CodeBlock codeBlock =
+        switch (methodDto.getMethodType()) {
+          case PROXY -> createInnerCodeForMethodProxy(methodDto, parametersInInnerCall);
+          case CONSUMER -> createInnerCodeForConsumer(methodDto);
+          case CONSUMER_BY_BUILDER -> createInnerCodeForConsumerByBuilder(methodDto);
+          case SUPPLIER -> createInnerCodeForSupplier(methodDto);
+            // TODO reiner Builder ohne Consumer
+        };
+    methodBuilder.addCode(codeBlock);
+    return methodBuilder.build();
+  }
+
+  private CodeBlock createInnerCodeForMethodProxy(
+      MethodDto methodDto, List<String> parametersInInnerCall) {
+    return CodeBlock.of(
         """
         instance.$1N($2N);
         return this;
         """,
-        methodDto.getMethodName(),
+        methodDto.getFieldSetterMethodName(),
         String.join(", ", parametersInInnerCall));
-    return methodBuilder.build();
   }
 
-  private MethodSpec generateFieldMethod(FieldDto fieldDto, ClassName builderClassName) {
-    MethodSpec.Builder methodBuilder =
-        MethodSpec.methodBuilder(fieldDto.getFieldName()).returns(builderClassName);
-    fieldDto.getModifier().ifPresent(methodBuilder::addModifiers);
-    ClassName parameterType =
-        ClassName.get(fieldDto.getFieldType().packageName(), fieldDto.getFieldType().className());
-    methodBuilder.addParameter(parameterType, fieldDto.getFieldName());
-
-    methodBuilder.addCode(
-        """
-        instance.$1N($2N);
-        return this;
-        """,
-        fieldDto.getFieldSetterName(),
-        fieldDto.getFieldName());
-    return methodBuilder.build();
-  }
-
-  private Optional<MethodSpec> generateFieldConsumer(
-      FieldDto fieldDto, ClassName builderClassName) {
-    switch (fieldDto.getSupplierType()) {
-      case BUILDER -> {
-        return Optional.of(generateFieldConsumerWithBuilder(fieldDto, builderClassName));
-      }
-      case ARRAYLIST -> {
-        return Optional.of(
-            generateFieldConsumerWithGenericConstructor(
-                fieldDto, builderClassName, ArrayList.class));
-      }
-      case HASHSET -> {
-        return Optional.of(
-            generateFieldConsumerWithGenericConstructor(fieldDto, builderClassName, HashSet.class));
-      }
-      case HASHMAP -> {
-        return Optional.of(
-            generateFieldConsumerWithGenericConstructor(fieldDto, builderClassName, HashMap.class));
-      }
-      case FIELDTYPE_EMPTY_CONSTRUCTOR -> {
-        return Optional.of(generateFieldConsumerWithConstructor(fieldDto, builderClassName));
-      }
-      default -> {
-        return Optional.empty();
-      }
+  private CodeBlock createInnerCodeForConsumer(MethodDto methodDto) {
+    // TODO: CollectionUtils
+    if (methodDto.getParameters().isEmpty()) {
+      // TODO Error
+      return null;
     }
+    MethodParameterDto consumerParameter = methodDto.getParameters().get(0);
+    Optional<TypeName> innerTypeOpt = consumerParameter.getParameterType().getInnerType();
+    if (innerTypeOpt.isEmpty()) {
+      // TODO Error
+      return null;
+    }
+    return CodeBlock.of(
+        """
+        $1T consumer = new $1T();
+        $2N.accept(consumer);
+        instance.$3N(consumer);
+        return this;
+        """,
+        createClassNameByTypeName(consumerParameter.getParameterType().getInnerType().get()),
+        consumerParameter.getParameterName(),
+        methodDto.getFieldSetterMethodName());
   }
 
-  private MethodSpec generateFieldConsumerWithBuilder(
+  private CodeBlock createInnerCodeForConsumerByBuilder(MethodDto methodDto) {
+    // TODO: CollectionUtils
+    if (methodDto.getParameters().isEmpty()) {
+      // TODO Error
+      return null;
+    }
+    MethodParameterDto consumerParameter = methodDto.getParameters().get(0);
+    Optional<TypeName> innerTypeOpt = consumerParameter.getParameterType().getInnerType();
+    if (innerTypeOpt.isEmpty()) {
+      // TODO Error
+      return null;
+    }
+    // TODO: der generierte Code arbeitet nicht mit dem generischen Typ des Builders
+    return CodeBlock.of(
+        """
+        $1T builder = new $1T();
+        $2N.accept(builder);
+        instance.$3N(builder.build());
+        return this;
+        """,
+        createClassNameByTypeName(consumerParameter.getParameterType().getInnerType().get()),
+        consumerParameter.getParameterName(),
+        methodDto.getFieldSetterMethodName());
+  }
+
+  private CodeBlock createInnerCodeForSupplier(MethodDto methodDto) {
+    // TODO: CollectionUtils
+    if (methodDto.getParameters().isEmpty()) {
+      // TODO Error
+      return null;
+    }
+    MethodParameterDto consumerParameter = methodDto.getParameters().get(0);
+    return CodeBlock.of(
+        """
+          instance.$1N($2N.get());
+          return this;
+        """,
+        methodDto.getFieldSetterMethodName(),
+        consumerParameter.getParameterName());
+  }
+
+  private com.palantir.javapoet.TypeName mapParameterType(TypeName parameterType) {
+    ClassName classNameParameter =
+        ClassName.get(parameterType.getPackageName(), parameterType.getClassName());
+    if (parameterType.getInnerType().isPresent()) {
+      return ParameterizedTypeName.get(
+          classNameParameter, mapParameterType(parameterType.getInnerType().get()));
+    }
+    return classNameParameter;
+  }
+
+  private List<MethodSpec> generateSetterMethodsForField(
       FieldDto fieldDto, ClassName builderClassName) {
-    TypeName fieldBuilderType = fieldDto.getFieldBuilderType().get();
-    MethodSpec.Builder methodBuilder =
-        MethodSpec.methodBuilder(fieldDto.getFieldName()).returns(builderClassName);
-    fieldDto.getModifier().ifPresent(methodBuilder::addModifiers);
-    ClassName parameterType =
-        ClassName.get(fieldBuilderType.packageName(), fieldBuilderType.className());
-    methodBuilder.addParameter(
-        ParameterizedTypeName.get(ClassName.get(Consumer.class), parameterType), "builderConsumer");
-
-    methodBuilder.addCode(
-        """
-        $1T builder = $1T.create();
-        builderConsumer.accept(builder);
-        instance.$2N(builder.build());
-        return this;
-        """,
-        parameterType,
-        fieldDto.getFieldSetterName());
-    return methodBuilder.build();
-  }
-
-  private MethodSpec generateFieldConsumerWithConstructor(
-      FieldDto fieldDto, ClassName builderClassName) {
-    MethodSpec.Builder methodBuilder =
-        MethodSpec.methodBuilder(fieldDto.getFieldName()).returns(builderClassName);
-    fieldDto.getModifier().ifPresent(methodBuilder::addModifiers);
-    ClassName parameterType =
-        ClassName.get(fieldDto.getFieldType().packageName(), fieldDto.getFieldType().className());
-    ParameterizedTypeName supplierType =
-        ParameterizedTypeName.get(ClassName.get(Consumer.class), parameterType);
-    String fieldSupplier = fieldDto.getFieldName() + "Consumer";
-    methodBuilder.addParameter(supplierType, fieldSupplier);
-    ClassName constructorClassName = parameterType;
-
-    methodBuilder.addCode(
-        """
-        $1T $2N = new $5T();
-        $3N.accept($2N);
-        instance.$4N($2N);
-        return this;
-        """,
-        parameterType,
-        fieldDto.getFieldName(),
-        fieldSupplier,
-        fieldDto.getFieldSetterName(),
-        constructorClassName);
-    return methodBuilder.build();
-  }
-
-  private MethodSpec generateFieldConsumerWithGenericConstructor(
-      FieldDto fieldDto, ClassName builderClassName, Class<?> constructorClass) {
-    ClassName constructorClassName = ClassName.get(constructorClass);
-    MethodSpec.Builder methodBuilder =
-        MethodSpec.methodBuilder(fieldDto.getFieldName()).returns(builderClassName);
-    fieldDto.getModifier().ifPresent(methodBuilder::addModifiers);
-    ClassName parameterType =
-        ClassName.get(fieldDto.getFieldType().packageName(), fieldDto.getFieldType().className());
-    ParameterizedTypeName supplierType =
-        ParameterizedTypeName.get(ClassName.get(Consumer.class), parameterType);
-    String fieldSupplier = fieldDto.getFieldName() + "Consumer";
-    methodBuilder.addParameter(supplierType, fieldSupplier);
-
-    methodBuilder.addCode(
-        """
-        $1T $2N = new $5T<>();
-        $3N.accept($2N);
-        instance.$4N($2N);
-        return this;
-        """,
-        parameterType,
-        fieldDto.getFieldName(),
-        fieldSupplier,
-        fieldDto.getFieldSetterName(),
-        constructorClassName);
-    return methodBuilder.build();
-  }
-
-  private MethodSpec generateFieldSupplier(FieldDto fieldDto, ClassName builderClassName) {
-    MethodSpec.Builder methodBuilder =
-        MethodSpec.methodBuilder(fieldDto.getFieldName()).returns(builderClassName);
-    fieldDto.getModifier().ifPresent(methodBuilder::addModifiers);
-    ClassName parameterType =
-        ClassName.get(fieldDto.getFieldType().packageName(), fieldDto.getFieldType().className());
-    ParameterizedTypeName supplierType =
-        ParameterizedTypeName.get(ClassName.get(Supplier.class), parameterType);
-    String fieldSupplier = fieldDto.getFieldName() + "Supplier";
-    methodBuilder.addParameter(supplierType, fieldSupplier);
-
-    methodBuilder.addCode(
-        """
-        instance.$1N($2N.get());
-        return this;
-        """,
-        fieldDto.getFieldSetterName(),
-        fieldSupplier);
-    return methodBuilder.build();
+    return fieldDto.getFieldSetterMethodsList().stream()
+        .map(m -> generateMethod(m, builderClassName))
+        .toList();
   }
 
   private ClassName createClassNameByTypeName(TypeName typeName) {
-    return ClassName.get(typeName.packageName(), typeName.className());
+    return ClassName.get(typeName.getPackageName(), typeName.getClassName());
   }
 }

@@ -8,6 +8,7 @@ import static javax.lang.model.type.TypeKind.VOID;
 import static org.javahelpers.simple.builders.internal.AnnotationValidator.validateAnnotatedElement;
 
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -21,6 +22,7 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
+import javax.lang.model.util.SimpleTypeVisitor14;
 import javax.lang.model.util.Types;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.annotations.BuilderForDtos;
@@ -28,8 +30,8 @@ import org.javahelpers.simple.builders.internal.dtos.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.internal.dtos.FieldDto;
 import org.javahelpers.simple.builders.internal.dtos.MethodDto;
 import org.javahelpers.simple.builders.internal.dtos.MethodParameterDto;
-import org.javahelpers.simple.builders.internal.dtos.SupplierTypes;
 import org.javahelpers.simple.builders.internal.dtos.TypeName;
+import org.javahelpers.simple.builders.internal.dtos.TypeNameGeneric;
 
 public class ElementToBuilderPropsDtoMapper {
   private static final String BUILDER_SUFFIX = "Builder";
@@ -110,17 +112,99 @@ public class ElementToBuilderPropsDtoMapper {
   private static FieldDto mapFieldFromElement(
       ExecutableElement mth, Elements elementUtils, Types typeUtils) {
     String methodName = mth.getSimpleName().toString();
-    List<? extends VariableElement> parameters = mth.getParameters();
+    String fieldName = StringUtils.uncapitalize(StringUtils.removeStart(methodName, "set"));
 
     FieldDto result = new FieldDto();
-    result.setFieldName(StringUtils.uncapitalize(StringUtils.removeStart(methodName, "set")));
-    result.setFieldSetterName(methodName);
-    MethodParameterDto parameter = mapMethodParameter(parameters.get(0), elementUtils, typeUtils);
-    result.setFieldType(parameter.getParameterType());
-    result.setModifier(mapRelevantModifier(mth.getModifiers()));
-    result.setSupplierType(estimatePossibleSupplier(parameters.get(0), elementUtils, typeUtils));
-    parameter.getBuilderType().ifPresent(result::setFieldBuilderType);
+    result.setFieldName(fieldName);
+    List<? extends VariableElement> parameters = mth.getParameters();
+    if (parameters.size() != 1) {
+      // Sollte eigentlich nie vorkommen, da das vorher raus gefiltert wurde
+      return null;
+    }
+    VariableElement fieldParameter = parameters.get(0);
+    TypeMirror fieldTypeMirror = fieldParameter.asType();
+    TypeElement fieldTypeElement = (TypeElement) typeUtils.asElement(fieldTypeMirror);
+
+    // extracting type of field
+    MethodParameterDto fieldParameterDto =
+        mapMethodParameter(fieldParameter, elementUtils, typeUtils);
+    TypeName fieldType = fieldParameterDto.getParameterType();
+
+    // simple setter
+    result.addFieldSetter(fieldName, fieldType, fieldName);
+
+    // setting value by builder
+    Optional<TypeName> builderTypeOpt = findBuilderType(fieldParameter, elementUtils, typeUtils);
+    if (builderTypeOpt.isPresent()) {
+      TypeName builderType = builderTypeOpt.get();
+      // TODO: Hier extra Type
+      result.addFieldConsumerByBuilder(
+          fieldName,
+          new TypeNameGeneric("java.util.function", "Consumer", builderType),
+          fieldName + BUILDER_SUFFIX);
+    } else if (!isJavaClass(fieldType) && hasEmptyConstructor(fieldTypeElement, elementUtils)) {
+      // TODO: Consumer funktioniett nur, wenn Klasse kein Interface/Enum/Abstrakte Classe/Record
+      result.addFieldConsumer(
+          fieldName, new TypeNameGeneric("java.util.function", "Consumer", fieldType), fieldName);
+    } else if (isList(fieldType)) {
+      result.addFieldConsumerByBuilder(
+          fieldName,
+          new TypeNameGeneric(
+              "java.util.function",
+              "Consumer",
+              new TypeNameGeneric(
+                  "org.javahelpers.simple.builders.common",
+                  "ArrayListBuilder",
+                  fieldType.getInnerType().get())),
+          fieldName);
+    } else if (isMap(fieldType)) {
+      // TODO MAP (having 2 inner classes, TypeNameGeneric is not able to adress that yet)
+    } else if (isSet(fieldType)) {
+      result.addFieldConsumerByBuilder(
+          fieldName,
+          new TypeNameGeneric(
+              "java.util.function",
+              "Consumer",
+              new TypeNameGeneric(
+                  "org.javahelpers.simple.builders.common",
+                  "HashSetBuilder",
+                  fieldType.getInnerType().get())),
+          fieldName);
+    }
+
+    // setting value by supplier
+    result.addFieldSupplier(
+        fieldName, new TypeNameGeneric("java.util.function", "Supplier", fieldType), fieldName);
+
     return result;
+  }
+
+  private static boolean isJavaClass(TypeName typeName) {
+    return StringUtils.equalsAny(typeName.getPackageName(), "java.lang", "java.time", "java.util");
+  }
+
+  private static boolean isList(TypeName typeName) {
+    if (typeName.getInnerType().isEmpty()) {
+      return false;
+    }
+    return StringUtils.equalsIgnoreCase(typeName.getPackageName(), "java.util")
+        && StringUtils.equalsIgnoreCase(typeName.getClassName(), "List");
+  }
+
+  private static boolean isMap(TypeName typeName) {
+    if (typeName.getInnerType().isEmpty()) {
+      return false;
+    }
+    return StringUtils.equalsIgnoreCase(typeName.getPackageName(), "java.util")
+        && StringUtils.equalsIgnoreCase(typeName.getClassName(), "Map");
+  }
+
+  private static boolean isSet(TypeName typeName) {
+    if (typeName.getInnerType().isEmpty()) {
+      return false;
+    }
+    return StringUtils.equalsIgnoreCase(typeName.getPackageName(), "java.util")
+        && StringUtils.equalsIgnoreCase(typeName.getClassName(), "Set");
   }
 
   private static boolean isSimpleSetter(ExecutableElement mth) {
@@ -140,52 +224,56 @@ public class ElementToBuilderPropsDtoMapper {
       VariableElement param, Elements elementUtils, Types typeUtils) {
     MethodParameterDto result = new MethodParameterDto();
     result.setParameterName(param.getSimpleName().toString());
-
     TypeMirror typeOfParameter = param.asType();
-    String packageName = elementUtils.getPackageOf(param).getQualifiedName().toString();
-    String simpleClassName = StringUtils.removeStart(typeOfParameter.toString(), packageName + ".");
-    result.setParameterTypeName(new TypeName(packageName, simpleClassName));
+    result.setParameterTypeName(extractType(typeOfParameter, elementUtils, typeUtils));
+    return result;
+  }
 
+  private static TypeName extractType(
+      TypeMirror typeOfParameter, Elements elementUtils, Types typeUtils) {
+    TypeElement elementOfParameter = (TypeElement) typeUtils.asElement(typeOfParameter);
+    String simpleClassName = elementOfParameter.getSimpleName().toString();
+    String packageName =
+        elementUtils.getPackageOf(elementOfParameter).getQualifiedName().toString();
+
+    final List<TypeMirror> typesExtracted = new ArrayList<>();
+    typeOfParameter.accept(
+        new SimpleTypeVisitor14<Void, Void>() {
+          @Override
+          public Void visitDeclared(DeclaredType t, Void p) {
+            List<? extends TypeMirror> typeArguments = t.getTypeArguments();
+            if (!typeArguments.isEmpty()) {
+              typesExtracted.addAll(typeArguments);
+            }
+            return null;
+          }
+        },
+        null);
+
+    if (typesExtracted.size() == 1) {
+      return new TypeNameGeneric(
+          packageName,
+          simpleClassName,
+          extractType(typesExtracted.get(0), elementUtils, typeUtils));
+    } else {
+      return new TypeName(packageName, simpleClassName);
+    }
+  }
+
+  private static Optional<TypeName> findBuilderType(
+      VariableElement param, Elements elementUtils, Types typeUtils) {
+    TypeMirror typeOfParameter = param.asType();
     Element elementOfParameter = typeUtils.asElement(typeOfParameter);
+    String simpleClassName = elementOfParameter.getSimpleName().toString();
+    String packageName =
+        elementUtils.getPackageOf(elementOfParameter).getQualifiedName().toString();
     Optional<AnnotationMirror> foundBuilderAnnotation =
         findAnnotation(elementOfParameter, BuilderForDtos.class);
     boolean isClassWithoutGenerics = StringUtils.containsNone(simpleClassName, "<");
     if (foundBuilderAnnotation.isPresent() && isClassWithoutGenerics) {
-      result.setBuilderType(new TypeName(packageName, simpleClassName + BUILDER_SUFFIX));
+      return Optional.of(new TypeName(packageName, simpleClassName + BUILDER_SUFFIX));
     }
-    return result;
-  }
-
-  private static SupplierTypes estimatePossibleSupplier(
-      VariableElement param, Elements elementUtils, Types typeUtils) {
-    TypeMirror typeMirror = param.asType();
-    TypeElement typeElement = (TypeElement) typeUtils.asElement(typeMirror);
-    String packageName = elementUtils.getPackageOf(typeElement).toString();
-
-    // No supplier for primitive kinds
-    if (typeMirror.getKind().isPrimitive()) {
-      return SupplierTypes.NONE;
-    }
-
-    boolean isNotJavaClass = !StringUtils.startsWith(packageName, "java.lang");
-    if (hasEmptyConstructor(typeElement, elementUtils) && isNotJavaClass) {
-      return SupplierTypes.FIELDTYPE_EMPTY_CONSTRUCTOR;
-    }
-
-    String classNameWithoutGenerics = typeElement.getQualifiedName().toString();
-    if (StringUtils.equals(classNameWithoutGenerics, "java.util.List")) {
-      return SupplierTypes.ARRAYLIST;
-    }
-
-    if (StringUtils.equals(classNameWithoutGenerics, "java.util.Set")) {
-      return SupplierTypes.HASHSET;
-    }
-
-    if (StringUtils.equals(classNameWithoutGenerics, "java.util.Map")) {
-      return SupplierTypes.HASHMAP;
-    }
-
-    return SupplierTypes.NONE;
+    return Optional.empty();
   }
 
   private static boolean hasEmptyConstructor(TypeElement typeElement, Elements elementUtils) {

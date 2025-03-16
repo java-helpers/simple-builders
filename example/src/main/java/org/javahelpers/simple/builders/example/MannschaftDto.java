@@ -1,12 +1,13 @@
 package org.javahelpers.simple.builders.example;
 
 import java.util.List;
+import java.util.Set;
 import org.javahelpers.simple.builders.annotations.BuilderForDtos;
 
 @BuilderForDtos
 public class MannschaftDto {
   private String name;
-  private List<SponsorDto> sponsoren;
+  private Set<SponsorDto> sponsoren;
 
   public String getName() {
     return name;
@@ -16,11 +17,11 @@ public class MannschaftDto {
     this.name = name;
   }
 
-  public List<SponsorDto> getSponsoren() {
+  public Set<SponsorDto> getSponsoren() {
     return sponsoren;
   }
 
-  public void setSponsoren(List<SponsorDto> sponsoren) {
+  public void setSponsoren(Set<SponsorDto> sponsoren) {
     this.sponsoren = sponsoren;
   }
   

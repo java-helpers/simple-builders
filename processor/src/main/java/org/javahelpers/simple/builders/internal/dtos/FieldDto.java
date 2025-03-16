@@ -1,17 +1,13 @@
 package org.javahelpers.simple.builders.internal.dtos;
 
-import static org.javahelpers.simple.builders.internal.dtos.SupplierTypes.NONE;
-
-import java.util.Optional;
+import java.util.ArrayList;
+import java.util.List;
 import javax.lang.model.element.Modifier;
 
 public class FieldDto {
-  private Optional<Modifier> modifier = Optional.empty();
   private String fieldName;
-  private String fieldSetterName;
   private TypeName fieldType;
-  private TypeName fieldBuilderType;
-  private SupplierTypes supplierType = NONE;
+  private final List<MethodDto> fieldSetterMethodsList = new ArrayList<>();
 
   public String getFieldName() {
     return fieldName;
@@ -19,14 +15,6 @@ public class FieldDto {
 
   public void setFieldName(String fieldName) {
     this.fieldName = fieldName;
-  }
-
-  public String getFieldSetterName() {
-    return fieldSetterName;
-  }
-
-  public void setFieldSetterName(String fieldSetterName) {
-    this.fieldSetterName = fieldSetterName;
   }
 
   public TypeName getFieldType() {
@@ -37,31 +25,60 @@ public class FieldDto {
     this.fieldType = fieldType;
   }
 
-  public Optional<Modifier> getModifier() {
-    return modifier;
+  public List<MethodDto> getFieldSetterMethodsList() {
+    return fieldSetterMethodsList;
   }
 
-  public void setModifier(Modifier modifier) {
-    this.modifier = Optional.ofNullable(modifier);
+  public void addFieldSetter(String methodName, TypeName parameterType, String parameterName) {
+    MethodParameterDto parameter = new MethodParameterDto();
+    parameter.setParameterName(parameterName);
+    parameter.setParameterTypeName(parameterType);
+    MethodDto methodDto = new MethodDto();
+    methodDto.setMethodName(methodName);
+    methodDto.addParameter(parameter);
+    methodDto.setModifier(Modifier.PUBLIC);
+    methodDto.setMethodType(MethodTypes.PROXY);
+    addFieldSetterMethodDto(methodDto);
   }
 
-  public Optional<TypeName> getFieldBuilderType() {
-    return Optional.ofNullable(fieldBuilderType);
+  public void addFieldConsumer(String methodName, TypeName parameterType, String parameterName) {
+    MethodParameterDto parameter = new MethodParameterDto();
+    parameter.setParameterName(parameterName);
+    parameter.setParameterTypeName(parameterType);
+    MethodDto methodDto = new MethodDto();
+    methodDto.setMethodName(methodName);
+    methodDto.addParameter(parameter);
+    methodDto.setModifier(Modifier.PUBLIC);
+    methodDto.setMethodType(MethodTypes.CONSUMER);
+    addFieldSetterMethodDto(methodDto);
   }
 
-  public void setFieldBuilderType(TypeName fieldBuilderType) {
-    this.fieldBuilderType = fieldBuilderType;
-    this.supplierType = SupplierTypes.BUILDER;
+  public void addFieldConsumerByBuilder(
+      String methodName, TypeName parameterType, String parameterName) {
+    MethodParameterDto parameter = new MethodParameterDto();
+    parameter.setParameterName(parameterName);
+    parameter.setParameterTypeName(parameterType);
+    MethodDto methodDto = new MethodDto();
+    methodDto.setMethodName(methodName);
+    methodDto.addParameter(parameter);
+    methodDto.setModifier(Modifier.PUBLIC);
+    methodDto.setMethodType(MethodTypes.CONSUMER_BY_BUILDER);
+    addFieldSetterMethodDto(methodDto);
   }
 
-  public SupplierTypes getSupplierType() {
-    return supplierType;
+  public void addFieldSupplier(String methodName, TypeName parameterType, String parameterName) {
+    MethodParameterDto parameter = new MethodParameterDto();
+    parameter.setParameterName(parameterName);
+    parameter.setParameterTypeName(parameterType);
+    MethodDto methodDto = new MethodDto();
+    methodDto.setMethodName(methodName);
+    methodDto.addParameter(parameter);
+    methodDto.setModifier(Modifier.PUBLIC);
+    methodDto.setMethodType(MethodTypes.SUPPLIER);
+    addFieldSetterMethodDto(methodDto);
   }
 
-  public void setSupplierType(SupplierTypes supplierType) {
-    if (supplierType != SupplierTypes.BUILDER) {
-      this.fieldBuilderType = null;
-    }
-    this.supplierType = supplierType;
+  public void addFieldSetterMethodDto(MethodDto methodDto) {
+    this.fieldSetterMethodsList.add(methodDto);
   }
 }
