@@ -5,13 +5,19 @@
 * [What is Simple Builders?](#what-is-simple-builders)
 * [Requirements](#requirements)
 * [Using Simple Builders](#using-simple-builders)
- * [Maven](#maven)
+  * [Configuration with Maven](#configuration-with-maven)
 * [Links](#links)
 * [Licensing](#licensing)
 
 ## What is Simple Builders?
 
 Simple Builders is a Java [annotation processor](https://docs.oracle.com/en/java/javase/17/docs/specs/man/javac.html#annotation-processing) designed to generate type-safe and high-performance builders for Java classes.
+
+## Requirements
+
+Simple Builders requires Java 17 or later.
+
+## Using Simple Builders
 
 For generation of a builder for a class, just add the `SimpleBuilder` annotation to it:
 
@@ -175,11 +181,7 @@ class PersonDtoBuilder implements IBuilderBase<PersonDto> {
 }
 ```
 
-## Requirements
-
-Simple Builders requires Java 17 or later.
-
-### Maven
+### Configuration with Maven
 
 For Maven-based projects, add the following to your POM file in order to use MapStruct (the dependencies are available at Maven Central):
 
