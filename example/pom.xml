@@ -2,12 +2,15 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.javahelpers</groupId>
-  <artifactId>simple-builder-example</artifactId>
-  <version>1.0</version>
+  <artifactId>simple-builders-example</artifactId>
+  <version>0.1.0</version>
+  <name>Simple Builders - Example</name>
   <packaging>jar</packaging>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <builder-generator.version>0.1.0</builder-generator.version>
+    
+    <org.simple-builders.version>${project.version}</org.simple-builders.version>
+    <code-format.version>2.25</code-format.version>
     
     <java.version>17</java.version>
     <maven.compiler.source>${java.version}</maven.compiler.source>
@@ -21,17 +24,18 @@
       <artifactId>commons-lang3</artifactId>
       <version>3.17.0</version>
     </dependency>
+    
     <dependency>
       <groupId>org.javahelpers</groupId>
-      <artifactId>simple-builder-generator</artifactId>
-      <version>${builder-generator.version}</version>
+      <artifactId>simple-builders-core</artifactId>
+      <version>${org.simple-builders.version}</version>
     </dependency>
     
     <dependency>
-        <groupId>org.junit.jupiter</groupId>
-        <artifactId>junit-jupiter-api</artifactId>
-        <version>5.11.4</version>
-        <scope>test</scope>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+      <version>5.11.4</version>
+      <scope>test</scope>
     </dependency>
 
   </dependencies>
@@ -45,6 +49,13 @@
         <version>3.13.0</version>
         <configuration>
           <generatedSourcesDirectory>${project.build.directory}/generated-sources/annotations</generatedSourcesDirectory>
+          <annotationProcessorPaths>
+            <path>
+              <groupId>org.javahelpers</groupId>
+              <artifactId>simple-builders-processor</artifactId>
+              <version>${org.simple-builders.version}</version>
+            </path>
+          </annotationProcessorPaths>
         </configuration>
       </plugin>
     </plugins>

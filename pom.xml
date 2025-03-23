@@ -5,11 +5,11 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>org.javahelpers</groupId>
-  <artifactId>simple-builder</artifactId>
+  <artifactId>simple-builders</artifactId>
   <version>1.0</version>
   <packaging>pom</packaging>
 
-  <name>Simple Builder</name>
+  <name>Simple Builders</name>
   <description>Simple Builder is a utility package for generating builders for dtos in maven generate-sources phase.</description>
   
   <licenses>
