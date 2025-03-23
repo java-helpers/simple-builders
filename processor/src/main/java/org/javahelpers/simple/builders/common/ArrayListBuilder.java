@@ -27,19 +27,44 @@ package org.javahelpers.simple.builders.common;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Generic Builder for Lists. Helperclass for being able to provide functional interfaces in
+ * extending lists. Using ArrayLists inside.
+ *
+ * @param <T> the type of elements in the targeting list
+ */
 public class ArrayListBuilder<T> {
   private final List<T> mList = new ArrayList<>();
 
+  /**
+   * Appends the element to the end of the internal list. Calling add-function on inner ArrayList
+   * field.
+   *
+   * @param element Element to be appended
+   * @return current instance of ArrayListBuilder for using in stream-notation
+   */
   public ArrayListBuilder<T> add(T element) {
     mList.add(element);
     return this;
   }
 
+  /**
+   * Appends a list of elements to the end of the internal list. Calling addAll-function on inner
+   * ArrayList field.
+   *
+   * @param elements list of Elements to be appended
+   * @return current instance of ArrayListBuilder for using in stream-notation
+   */
   public ArrayListBuilder<T> addAll(List<T> elements) {
     mList.addAll(elements);
     return this;
   }
 
+  /**
+   * Builds a new list based on the elements appended by the other functions.
+   *
+   * @return new ArrayList holding all elements which have been added before
+   */
   public List<T> build() {
     return new ArrayList(mList);
   }

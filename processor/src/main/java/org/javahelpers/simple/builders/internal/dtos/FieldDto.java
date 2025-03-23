@@ -28,27 +28,62 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.lang.model.element.Modifier;
 
+/**
+ * Definition of a field. Containing all information to generate methods in builder to set or modify
+ * that field.
+ */
 public class FieldDto {
+  /** Name of field. */
   private String fieldName;
+
+  /** Type of field. Containing generic, name of package and class */
   private TypeName fieldType;
+
+  /** List of all methods in builder, which change the field. */
   private final List<MethodDto> fieldSetterMethodsList = new ArrayList<>();
 
+  /**
+   * Getting name of field.
+   *
+   * @return
+   */
   public String getFieldName() {
     return fieldName;
   }
 
+  /**
+   * Setting name of field.
+   *
+   * @param fieldName
+   */
   public void setFieldName(String fieldName) {
     this.fieldName = fieldName;
   }
 
+  /**
+   * Getting type of field.
+   *
+   * @return {@code org.javahelpers.simple.builders.internal.dtos.Typename} of field
+   */
   public TypeName getFieldType() {
     return fieldType;
   }
 
+  /**
+   * Setting type of field.
+   *
+   * @param fieldType field of type {@code org.javahelpers.simple.builders.internal.dtos.Typename}
+   */
   public void setFieldType(TypeName fieldType) {
     this.fieldType = fieldType;
   }
 
+  /**
+   * Getting list of methods to modify that field.
+   *
+   * @return list of methods with type {@code
+   *     org.javahelpers.simple.builders.internal.dtos.MethodDto}
+   */
   public List<MethodDto> getFieldSetterMethodsList() {
     return fieldSetterMethodsList;
   }

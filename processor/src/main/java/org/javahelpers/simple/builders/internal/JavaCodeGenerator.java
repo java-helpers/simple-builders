@@ -51,13 +51,28 @@ import org.javahelpers.simple.builders.internal.dtos.MethodDto;
 import org.javahelpers.simple.builders.internal.dtos.MethodParameterDto;
 import org.javahelpers.simple.builders.internal.dtos.TypeName;
 
+/** JavaCodeGenerator generates with BuilderDefinitionDto JavaCode for the builder. */
 public class JavaCodeGenerator {
+  /** Util class for source code generation of type {@code javax.annotation.processing.Filer}. */
   private final Filer filer;
 
+  /**
+   * Constructor for JavaCodeGenerator.
+   *
+   * @param filer Util class for source code generation of type {@code
+   *     javax.annotation.processing.Filer}
+   */
   public JavaCodeGenerator(Filer filer) {
     this.filer = filer;
   }
 
+  /**
+   * Generating source code file for builder. Creation of source code files is done by {@code
+   * javax.annotation.processing.Filer}.
+   *
+   * @param builderDef dto of all information to create the builder
+   * @throws BuilderException if there is an error in source code generation
+   */
   public void generateBuilder(BuilderDefinitionDto builderDef) throws BuilderException {
     ClassName builderClassName = createClassNameByTypeName(builderDef.getBuilderTypeName());
     TypeSpec.Builder classBuilder = TypeSpec.classBuilder(builderClassName);

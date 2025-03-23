@@ -57,9 +57,19 @@ import org.javahelpers.simple.builders.internal.dtos.MethodParameterDto;
 import org.javahelpers.simple.builders.internal.dtos.TypeName;
 import org.javahelpers.simple.builders.internal.dtos.TypeNameGeneric;
 
+/** Mapper for creation of a specific BuilderDefinitionDto for a DTO class. */
 public class ElementToBuilderPropsDtoMapper {
   private static final String BUILDER_SUFFIX = "Builder";
 
+  /**
+   * Retrieving definition of builder from annotated element.
+   *
+   * @param annotatedElement annotated elment which is target of builder creation
+   * @param elementUtils {@code javax.lang.model.util.Elements} utils
+   * @param typeUtils {@code javax.lang.model.util.Types} utils
+   * @return definition of builder
+   * @throws BuilderException if validation or generation failed
+   */
   public static BuilderDefinitionDto extractFromElement(
       Element annotatedElement, Elements elementUtils, Types typeUtils) throws BuilderException {
     validateAnnotatedElement(annotatedElement);

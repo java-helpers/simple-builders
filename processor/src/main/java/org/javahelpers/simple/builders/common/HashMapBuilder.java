@@ -27,24 +27,62 @@ package org.javahelpers.simple.builders.common;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Generic Builder for Maps. Helperclass for being able to provide functional interfaces in
+ * extending maps. Using HashMap inside.
+ *
+ * @param <K> the type of keys in the targeting map
+ * @param <V> the type of values in the targeting map
+ */
 public class HashMapBuilder<K, V> {
   private final Map<K, V> mMap = new HashMap<>();
 
+  /**
+   * Associates the specified value with the specified key in this map. Using an inner HashMap
+   * implementation. If the key already exists in the map, the old value is replaced.
+   *
+   * @param key key with which the specified value is to be associated
+   * @param value value to be associated with the specified key
+   * @return Current instance of HashMapBuilder for using in stream-notation
+   */
   public HashMapBuilder<K, V> put(K key, V value) {
     mMap.put(key, value);
     return this;
   }
 
+  /**
+   * Associates the specified value with the specified key in this map, if the specified key is not
+   * already associated. Using an inner HashMap implementation. If {@code null} is associated with
+   * the specific key, it will be replaced.
+   *
+   * @param key key with which the specified value is to be associated
+   * @param value value to be associated with the specified key
+   * @return Current instance of HashMapBuilder for using in stream-notation
+   */
   public HashMapBuilder<K, V> putIfAbsent(K key, V value) {
     mMap.putIfAbsent(key, value);
     return this;
   }
 
+  /**
+   * Copies all of the mappings from the specified map to the inner map of Builder. Using an inner
+   * HashMap implementation. These mappings will replace any mappings that the inner map of
+   * HashMapBuilder had before.
+   *
+   * @param pMap mappings to be added to HashMapBuilder
+   * @throws NullPointerException if the specified map is null
+   * @return
+   */
   public HashMapBuilder<K, V> putAll(Map<K, V> pMap) {
     mMap.putAll(pMap);
     return this;
   }
 
+  /**
+   * Builds a new Map based on the mappings defined by the other functions.
+   *
+   * @return new HashMap holding all mappings which have been defined before
+   */
   public Map<K, V> build() {
     return new HashMap<>(mMap);
   }

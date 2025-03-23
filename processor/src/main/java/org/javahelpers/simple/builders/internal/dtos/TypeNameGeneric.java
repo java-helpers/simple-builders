@@ -28,9 +28,17 @@ import static java.util.Objects.requireNonNull;
 
 import java.util.Optional;
 
+/** TypeNameGeneric extends TypeName with one specific generic type. */
 public class TypeNameGeneric extends TypeName {
   private final TypeName innerType;
 
+  /**
+   * Constructor for generic types, having just one generic inner type.
+   *
+   * @param packageName name of package
+   * @param className name of class
+   * @param innerType inner type of generic
+   */
   public TypeNameGeneric(String packageName, String className, TypeName innerType) {
     super(packageName, className);
     requireNonNull(innerType);

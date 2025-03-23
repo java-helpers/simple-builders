@@ -28,17 +28,39 @@ import javax.annotation.processing.Messager;
 import javax.lang.model.element.Element;
 import javax.tools.Diagnostic;
 
+/**
+ * Logger for all messages during annotation processing. Providing util-functions for posting
+ * messages easily. Using a {@code javax.annotation.processing.Messager} inside to publish the
+ * messages.
+ */
 public class ProcessingLogger {
+  /** Util class for exposing messages of type {@code javax.annotation.processing.Messager}. */
   private final Messager messager;
 
+  /**
+   * Constructor for ProcessingLogger with instance of messager.
+   *
+   * @param messager
+   */
   public ProcessingLogger(Messager messager) {
     this.messager = messager;
   }
 
+  /**
+   * Posting an error with elment and message.
+   *
+   * @param e element on which the error happened
+   * @param message message to be posted to messager
+   */
   public void error(Element e, String message) {
     messager.printMessage(Diagnostic.Kind.ERROR, message, e);
   }
 
+  /**
+   * Posting a simple information message.
+   *
+   * @param message message to be posted to messager
+   */
   public void log(String message) {
     messager.printMessage(Diagnostic.Kind.NOTE, message);
   }

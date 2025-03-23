@@ -29,6 +29,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/** Annotation to be placed on all classes, for which a builder should be generated. */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.CLASS)
 public @interface BuilderForDtos {}

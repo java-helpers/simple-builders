@@ -24,6 +24,11 @@
 
 package org.javahelpers.simple.builders.interfaces;
 
+/**
+ * Interface for all generated builders.
+ *
+ * @param <T> the type of build instances
+ */
 public interface IBuilderBase<T> {
   T build();
 }

@@ -46,6 +46,11 @@ import org.javahelpers.simple.builders.internal.BuilderException;
 import org.javahelpers.simple.builders.internal.JavaCodeGenerator;
 import org.javahelpers.simple.builders.internal.dtos.BuilderDefinitionDto;
 
+/**
+ * BuilderProcessor is an annotation processor for execution in generate-sources phase. The
+ * BuilderProcessor using the Java way for generating builders, by implementing {@cod
+ * javax.annotation.processing.AbstractProcessor}.
+ */
 @AutoService(Processor.class)
 @SupportedSourceVersion(SourceVersion.RELEASE_17)
 @SupportedAnnotationTypes("org.javahelpers.simple.builders.annotations.BuilderForDtos")
@@ -79,7 +84,6 @@ public class BuilderProcessor extends AbstractProcessor {
   }
 
   private void process(Element annotatedElement) throws BuilderException {
-
     BuilderDefinitionDto builderDef = extractFromElement(annotatedElement, elementUtils, typeUtils);
     codeGenerator.generateBuilder(builderDef);
   }

@@ -26,19 +26,40 @@ package org.javahelpers.simple.builders.internal;
 
 import javax.lang.model.element.Element;
 
+/** Special exception for errors in processing of annotations. */
 public class BuilderException extends Exception {
   private final Element element;
 
+  /**
+   * Creating an exception with location element, message and parameters.
+   *
+   * @param element {@code javax.lang.model.element} the element on which the processing led to an
+   *     error
+   * @param cause root cause of current exception, containing stacktrace
+   */
   public BuilderException(Element element, Throwable cause) {
     super(cause.getMessage(), cause);
     this.element = element;
   }
 
+  /**
+   * Creating an exception with location element, message and parameters.
+   *
+   * @param element {@code javax.lang.model.element} the element on which the processing led to an
+   *     error
+   * @param message A specific message, supports String.format arguments
+   * @param args Arguments for Stringlformat on message
+   */
   public BuilderException(Element element, String message, Object... args) {
     super(String.format(message, args));
     this.element = element;
   }
 
+  /**
+   * Returns the element where processing
+   *
+   * @return {@code javax.lang.model.element} the element on which the processing led to an error
+   */
   public Element getElement() {
     return element;
   }

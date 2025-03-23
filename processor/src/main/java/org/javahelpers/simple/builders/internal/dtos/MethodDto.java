@@ -31,29 +31,66 @@ import java.util.Optional;
 import javax.lang.model.element.Modifier;
 import org.apache.commons.lang3.StringUtils;
 
+/** MethodDto containing all information to generate a method in builder. */
 public class MethodDto {
+  /** Access modifier for method. */
   private Optional<Modifier> modifier = Optional.empty();
+
+  /**
+   * Type of method for source code generation. Default is proxy, so just calling the same method on
+   * DTO with same parameters and returning builder.
+   */
   private MethodTypes methodType = PROXY;
+
+  /** Name of method. */
   private String methodName;
   private String fullQualifiedType;
+
+  /** List of parameters of Method. */
   private final LinkedList<MethodParameterDto> parameters = new LinkedList<>();
 
+  /**
+   * Getting type of method for source code generation. Defaults to {@code
+   * org.javahelpers.simple.builders.internal.dtos.MethodTypes.PROXY}.
+   *
+   * @return Enum value for method type - {@code
+   *     org.javahelpers.simple.builders.internal.dtos.MethodTypes}.
+   */
   public MethodTypes getMethodType() {
     return methodType;
   }
 
+  /**
+   * Setting type of method for source code generation. If not changed, it defaults to {@code
+   * org.javahelpers.simple.builders.internal.dtos.MethodTypes.PROXY}.
+   *
+   * @param methodType Enum value for method type - {@code
+   *     org.javahelpers.simple.builders.internal.dtos.MethodTypes}
+   */
   public void setMethodType(MethodTypes methodType) {
     this.methodType = methodType;
   }
 
+  /**
+   * Getting name of method.
+   *
+   * @return name with type {@code java.lang.String}
+   */
   public String getMethodName() {
     return methodName;
   }
 
+  /** Helper function to generate a name for setter method.Is used for applying generated values to fields on builder target.
+   * @return returning name of field-setter method */
   public String getFieldSetterMethodName() {
     return "set" + StringUtils.capitalize(this.getMethodName());
   }
 
+  /**
+   * Setting name of method.
+   *
+   * @param methodName name with type {@code java.lang.String}
+   */
   public void setMethodName(String methodName) {
     this.methodName = methodName;
   }
@@ -66,18 +103,41 @@ public class MethodDto {
     this.fullQualifiedType = fullQualifiedType;
   }
 
+  /**
+   * Adding a further parameter of method.
+   *
+   * @param paramDto parameter to be added of type {@code
+   *     rg.javahelpers.simple.builders.internal.dtos.MethodParameterDto}
+   */
   public void addParameter(MethodParameterDto paramDto) {
     this.parameters.add(paramDto);
   }
 
+  /**
+   * Getting a list of parameters of method.
+   *
+   * @return List of parameters of type {@code
+   *     rg.javahelpers.simple.builders.internal.dtos.MethodParameterDto}
+   */
   public LinkedList<MethodParameterDto> getParameters() {
     return parameters;
   }
 
+  /**
+   * Getting the access modifier for method. Optional for usage in stream-notation.
+   *
+   * @return modifier {@code java.util.Optional} access modifier of type {@code
+   *     javax.lang.model.element.Modifier}
+   */
   public Optional<Modifier> getModifier() {
     return modifier;
   }
 
+  /**
+   * Setting the access modifier for method.
+   *
+   * @param modifier access modifier of type {@code javax.lang.model.element.Modifier}
+   */
   public void setModifier(Modifier modifier) {
     this.modifier = Optional.ofNullable(modifier);
   }

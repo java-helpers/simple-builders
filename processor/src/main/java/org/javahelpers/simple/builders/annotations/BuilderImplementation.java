@@ -29,8 +29,14 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/** Annotation for all generated Builders. */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.CLASS)
 public @interface BuilderImplementation {
+  /**
+   * Target Class for the generated builder target.
+   *
+   * @return the class of the building target of the builder
+   */
   Class<?> forClass();
 }

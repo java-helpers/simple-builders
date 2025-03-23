@@ -29,10 +29,20 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
 import org.javahelpers.simple.builders.annotations.BuilderForDtos;
 
+/**
+ * AnnotationValidator validates the positions of annotations. Responsible for throwing exceptions
+ * if annotations are used in a wrong way.
+ */
 public class AnnotationValidator {
 
   private AnnotationValidator() {}
 
+  /**
+   * Validate annotated elements.
+   *
+   * @param annotatedElement annotated element to be validated
+   * @throws BuilderException if annotation-target does not match supported types
+   */
   public static void validateAnnotatedElement(Element annotatedElement) throws BuilderException {
     if (annotatedElement.getKind() != ElementKind.CLASS) {
       throw new BuilderException(
