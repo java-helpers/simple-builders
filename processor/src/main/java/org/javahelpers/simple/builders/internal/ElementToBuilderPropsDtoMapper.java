@@ -49,13 +49,13 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.SimpleTypeVisitor14;
 import javax.lang.model.util.Types;
 import org.apache.commons.lang3.StringUtils;
-import org.javahelpers.simple.builders.annotations.BuilderForDtos;
 import org.javahelpers.simple.builders.internal.dtos.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.internal.dtos.FieldDto;
 import org.javahelpers.simple.builders.internal.dtos.MethodDto;
 import org.javahelpers.simple.builders.internal.dtos.MethodParameterDto;
 import org.javahelpers.simple.builders.internal.dtos.TypeName;
 import org.javahelpers.simple.builders.internal.dtos.TypeNameGeneric;
+import org.javahelpers.simple.builders.annotations.SimpleBuilder;
 
 /** Mapper for creation of a specific BuilderDefinitionDto for a DTO class. */
 public class ElementToBuilderPropsDtoMapper {
@@ -308,7 +308,7 @@ public class ElementToBuilderPropsDtoMapper {
     String packageName =
         elementUtils.getPackageOf(elementOfParameter).getQualifiedName().toString();
     Optional<AnnotationMirror> foundBuilderAnnotation =
-        findAnnotation(elementOfParameter, BuilderForDtos.class);
+        findAnnotation(elementOfParameter, SimpleBuilder.class);
     boolean isClassWithoutGenerics = StringUtils.containsNone(simpleClassName, "<");
     if (foundBuilderAnnotation.isPresent() && isClassWithoutGenerics) {
       return Optional.of(new TypeName(packageName, simpleClassName + BUILDER_SUFFIX));

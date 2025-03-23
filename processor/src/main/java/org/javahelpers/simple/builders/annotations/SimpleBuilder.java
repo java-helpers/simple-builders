@@ -32,4 +32,4 @@ import java.lang.annotation.Target;
 /** Annotation to be placed on all classes, for which a builder should be generated. */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.CLASS)
-public @interface BuilderForDtos {}
+public @interface SimpleBuilder {}

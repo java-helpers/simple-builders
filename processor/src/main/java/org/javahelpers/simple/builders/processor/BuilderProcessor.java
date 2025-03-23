@@ -41,10 +41,10 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
-import org.javahelpers.simple.builders.annotations.BuilderForDtos;
 import org.javahelpers.simple.builders.internal.BuilderException;
 import org.javahelpers.simple.builders.internal.JavaCodeGenerator;
 import org.javahelpers.simple.builders.internal.dtos.BuilderDefinitionDto;
+import org.javahelpers.simple.builders.annotations.SimpleBuilder;
 
 /**
  * BuilderProcessor is an annotation processor for execution in generate-sources phase. The
@@ -73,7 +73,7 @@ public class BuilderProcessor extends AbstractProcessor {
 
   @Override
   public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-    for (Element annotatedElement : roundEnv.getElementsAnnotatedWith(BuilderForDtos.class)) {
+    for (Element annotatedElement : roundEnv.getElementsAnnotatedWith(SimpleBuilder.class)) {
       try {
         process(annotatedElement);
       } catch (BuilderException ex) {

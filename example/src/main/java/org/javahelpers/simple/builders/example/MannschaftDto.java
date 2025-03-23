@@ -26,9 +26,9 @@ package org.javahelpers.simple.builders.example;
 
 import java.util.List;
 import java.util.Set;
-import org.javahelpers.simple.builders.annotations.BuilderForDtos;
+import org.javahelpers.simple.builders.annotations.SimpleBuilder;
 
-@BuilderForDtos
+@SimpleBuilder
 public class MannschaftDto {
   private String name;
   private Set<SponsorDto> sponsoren;

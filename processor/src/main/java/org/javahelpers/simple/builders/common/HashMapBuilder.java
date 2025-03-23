@@ -65,6 +65,21 @@ public class HashMapBuilder<K, V> {
   }
 
   /**
+   * Associates the specified value with the specified key in this map, if the specified value is
+   * not null. Using an inner HashMap implementation.
+   *
+   * @param key key with which the specified value is to be associated
+   * @param value value to be associated with the specified key
+   * @return Current instance of HashMapBuilder for using in stream-notation
+   */
+  public HashMapBuilder<K, V> putIfValueNotNull(K key, V value) {
+    if (value != null) {
+      mMap.put(key, value);
+    }
+    return this;
+  }
+
+  /**
    * Copies all of the mappings from the specified map to the inner map of Builder. Using an inner
    * HashMap implementation. These mappings will replace any mappings that the inner map of
    * HashMapBuilder had before.

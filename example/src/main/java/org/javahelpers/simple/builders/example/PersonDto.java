@@ -26,9 +26,9 @@ package org.javahelpers.simple.builders.example;
 
 import java.time.LocalDate;
 import java.util.List;
-import org.javahelpers.simple.builders.annotations.BuilderForDtos;
+import org.javahelpers.simple.builders.annotations.SimpleBuilder;
 
-@BuilderForDtos
+@SimpleBuilder
 public class PersonDto{
   private String name;
   private List<String> nickNames;

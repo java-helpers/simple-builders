@@ -44,7 +44,6 @@ public class MethodDto {
 
   /** Name of method. */
   private String methodName;
-  private String fullQualifiedType;
 
   /** List of parameters of Method. */
   private final LinkedList<MethodParameterDto> parameters = new LinkedList<>();
@@ -93,14 +92,6 @@ public class MethodDto {
    */
   public void setMethodName(String methodName) {
     this.methodName = methodName;
-  }
-
-  public String getFullQualifiedType() {
-    return fullQualifiedType;
-  }
-
-  public void setFullQualifiedType(String fullQualifiedType) {
-    this.fullQualifiedType = fullQualifiedType;
   }
 
   /**
