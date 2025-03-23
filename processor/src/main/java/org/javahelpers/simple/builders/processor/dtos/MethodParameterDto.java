@@ -22,26 +22,49 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.internal.dtos;
+package org.javahelpers.simple.builders.processor.dtos;
 
-/** Types of methods. Each type matches a specific way body of generated methods. */
-public enum MethodTypes {
-  /** Simple Proxy. Just calling the method on the inner instance. */
-  PROXY,
+/** MethodParameterDto contains all information for generating parameters in method headers. */
+public class MethodParameterDto {
+  /** Name of parameter. */
+  private String parameterName;
+
+  /** Type of parameter. */
+  private TypeName parameterType;
+
   /**
-   * Supplier-Pattern. Following supplier pattern and calling the setter-function on inner instance
-   * by supplier-result.
+   * Getting name of parameter
+   *
+   * @return name of parameter
    */
-  SUPPLIER,
+  public String getParameterName() {
+    return parameterName;
+  }
+
   /**
-   * Consumer-Pattern. Creating an instance of parameter and providing a consumer for the caller.
-   * The provided instance is afterwards applied to builder target.
+   * Setting name of parameter
+   *
+   * @param parameterName parameter name
    */
-  CONSUMER,
+  public void setParameterName(String parameterName) {
+    this.parameterName = parameterName;
+  }
+
   /**
-   * Consumer-Pattern with builder. Creating an instance of a builder and providing that to the
-   * caller. The build-function of that builder is executed afterwards and applied to builder
-   * target.
+   * Getting type of parameter
+   *
+   * @return type of parameter
    */
-  CONSUMER_BY_BUILDER;
+  public TypeName getParameterType() {
+    return parameterType;
+  }
+
+  /**
+   * Setting type of parameter
+   *
+   * @param parameterType type of parameter
+   */
+  public void setParameterTypeName(TypeName parameterType) {
+    this.parameterType = parameterType;
+  }
 }

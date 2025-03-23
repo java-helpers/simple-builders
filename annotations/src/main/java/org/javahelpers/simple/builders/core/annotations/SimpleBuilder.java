@@ -22,17 +22,14 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.interfaces;
+package org.javahelpers.simple.builders.core.annotations;
 
-/**
- * Interface for all generated builders.
- *
- * @param <T> the type of build instances
- */
-public interface IBuilderBase<T> {
-  /**
-   * Baseinterface for all builders.
-   * @return building target of builder
-   */
-  T build();
-}
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+/** Annotation to be placed on all classes, for which a builder should be generated. */
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.CLASS)
+public @interface SimpleBuilder {}

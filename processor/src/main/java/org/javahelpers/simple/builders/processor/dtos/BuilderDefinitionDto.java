@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.internal.dtos;
+package org.javahelpers.simple.builders.processor.dtos;
 
 import java.util.LinkedList;
 

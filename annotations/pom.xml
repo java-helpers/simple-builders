@@ -2,14 +2,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.javahelpers</groupId>
-  <artifactId>simple-builder-generator</artifactId>
+  <artifactId>simple-builders-core</artifactId>
   <version>0.1.0</version>
   <packaging>jar</packaging>
+  <name>Simple Builders - Core</name>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <auto-service.version>1.1.1</auto-service.version>
-    <javapoet.version>0.6.0</javapoet.version>
     
     <java.version>17</java.version>
     <maven.compiler.source>${java.version}</maven.compiler.source>
@@ -20,29 +19,6 @@
   </properties>
 
   <dependencies>
-    <dependency>
-      <groupId>org.javahelpers</groupId>
-      <artifactId>simple-builders-core</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-lang3</artifactId>
-      <version>3.17.0</version>
-    </dependency>
-    <!-- Utility for generate service file -->
-    <dependency>
-      <groupId>com.google.auto.service</groupId>
-      <artifactId>auto-service</artifactId>
-      <version>${auto-service.version}</version>
-      <optional>true</optional>
-    </dependency>
-    <!-- Utility library for generate java code -->
-    <dependency>
-      <groupId>com.palantir.javapoet</groupId>
-      <artifactId>javapoet</artifactId>
-      <version>${javapoet.version}</version>
-    </dependency>
   </dependencies>
     
   <build>

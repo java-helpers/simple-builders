@@ -45,6 +45,7 @@
   </developers>
   
   <modules>
+    <module>annotations</module>
     <module>processor</module>
     <module>example</module>
   </modules>

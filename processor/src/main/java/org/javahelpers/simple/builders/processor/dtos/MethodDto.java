@@ -22,9 +22,9 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.internal.dtos;
+package org.javahelpers.simple.builders.processor.dtos;
 
-import static org.javahelpers.simple.builders.internal.dtos.MethodTypes.PROXY;
+import static org.javahelpers.simple.builders.processor.dtos.MethodTypes.PROXY;
 
 import java.util.LinkedList;
 import java.util.Optional;
@@ -79,8 +79,12 @@ public class MethodDto {
     return methodName;
   }
 
-  /** Helper function to generate a name for setter method.Is used for applying generated values to fields on builder target.
-   * @return returning name of field-setter method */
+  /**
+   * Helper function to generate a name for setter method.Is used for applying generated values to
+   * fields on builder target.
+   *
+   * @return returning name of field-setter method
+   */
   public String getFieldSetterMethodName() {
     return "set" + StringUtils.capitalize(this.getMethodName());
   }

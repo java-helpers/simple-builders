@@ -22,31 +22,62 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.internal.dtos;
+package org.javahelpers.simple.builders.processor.dtos;
 
 import static java.util.Objects.requireNonNull;
 
 import java.util.Optional;
 
-/** TypeNameGeneric extends TypeName with one specific generic type. */
-public class TypeNameGeneric extends TypeName {
-  private final TypeName innerType;
+/**
+ * TypeName is the unambiguously definition of a type. Holding name of class and package. Could be
+ * extended to be a type with generic parts.
+ */
+public class TypeName {
+  /** Name of package. */
+  private final String packageName;
+
+  /** Name of class. */
+  private final String className;
 
   /**
-   * Constructor for generic types, having just one generic inner type.
+   * Constructor for TypeName.
    *
    * @param packageName name of package
-   * @param className name of class
-   * @param innerType inner type of generic
+   * @param className name of class, could not be null
+   * @throws NullPointerException if classname is null
    */
-  public TypeNameGeneric(String packageName, String className, TypeName innerType) {
-    super(packageName, className);
-    requireNonNull(innerType);
-    this.innerType = innerType;
+  public TypeName(String packageName, String className) {
+    requireNonNull(className);
+    this.packageName = packageName;
+    this.className = className;
   }
 
-  @Override
+  /**
+   * Returns name of package
+   *
+   * @return package name of type {@code java.lang.String}
+   */
+  public String getPackageName() {
+    return packageName;
+  }
+
+  /**
+   * Returns name of class
+   *
+   * @return class name of type {@code java.lang.String}
+   */
+  public String getClassName() {
+    return className;
+  }
+
+  /**
+   * Helper function to hold a specific inner type.Is empty if this is a class without generic parts
+   * or a class has multiple generics.
+   *
+   * @return {@code java.util.Optional<TypeName>} if there is a single inner generic type, otherwise
+   *     {@code java.util.Optional.EMPTY}
+   */
   public Optional<TypeName> getInnerType() {
-    return Optional.of(innerType);
+    return Optional.empty();
   }
 }

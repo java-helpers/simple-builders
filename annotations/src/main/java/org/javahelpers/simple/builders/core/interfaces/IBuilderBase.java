@@ -22,49 +22,18 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.internal.dtos;
+package org.javahelpers.simple.builders.core.interfaces;
 
-/** MethodParameterDto contains all information for generating parameters in method headers. */
-public class MethodParameterDto {
-  /** Name of parameter. */
-  private String parameterName;
-
-  /** Type of parameter. */
-  private TypeName parameterType;
-
+/**
+ * Interface for all generated builders.
+ *
+ * @param <T> the type of build instances
+ */
+public interface IBuilderBase<T> {
   /**
-   * Getting name of parameter
+   * Baseinterface for all builders.
    *
-   * @return name of parameter
+   * @return building target of builder
    */
-  public String getParameterName() {
-    return parameterName;
-  }
-
-  /**
-   * Setting name of parameter
-   *
-   * @param parameterName parameter name
-   */
-  public void setParameterName(String parameterName) {
-    this.parameterName = parameterName;
-  }
-
-  /**
-   * Getting type of parameter
-   *
-   * @return type of parameter
-   */
-  public TypeName getParameterType() {
-    return parameterType;
-  }
-
-  /**
-   * Setting type of parameter
-   *
-   * @param parameterType type of parameter
-   */
-  public void setParameterTypeName(TypeName parameterType) {
-    this.parameterType = parameterType;
-  }
+  T build();
 }

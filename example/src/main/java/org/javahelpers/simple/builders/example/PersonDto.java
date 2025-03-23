@@ -26,7 +26,7 @@ package org.javahelpers.simple.builders.example;
 
 import java.time.LocalDate;
 import java.util.List;
-import org.javahelpers.simple.builders.annotations.SimpleBuilder;
+import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 
 @SimpleBuilder
 public class PersonDto{

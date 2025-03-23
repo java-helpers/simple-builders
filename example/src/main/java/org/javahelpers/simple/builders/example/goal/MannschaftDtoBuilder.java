@@ -25,7 +25,7 @@
 package org.javahelpers.simple.builders.example.goal;
 
 import javax.annotation.processing.Generated;
-import org.javahelpers.simple.builders.annotations.BuilderImplementation;
+import org.javahelpers.simple.builders.core.annotations.BuilderImplementation;
 import org.javahelpers.simple.builders.example.MannschaftDto;
 
 @Generated("org.javahelpers.simple.builders.processor")

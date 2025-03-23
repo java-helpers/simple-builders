@@ -22,14 +22,14 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.internal;
+package org.javahelpers.simple.builders.processor.util;
 
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PROTECTED;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.type.TypeKind.VOID;
-import static org.javahelpers.simple.builders.internal.AnnotationValidator.validateAnnotatedElement;
+import static org.javahelpers.simple.builders.processor.util.AnnotationValidator.validateAnnotatedElement;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -49,13 +49,14 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.SimpleTypeVisitor14;
 import javax.lang.model.util.Types;
 import org.apache.commons.lang3.StringUtils;
-import org.javahelpers.simple.builders.internal.dtos.BuilderDefinitionDto;
-import org.javahelpers.simple.builders.internal.dtos.FieldDto;
-import org.javahelpers.simple.builders.internal.dtos.MethodDto;
-import org.javahelpers.simple.builders.internal.dtos.MethodParameterDto;
-import org.javahelpers.simple.builders.internal.dtos.TypeName;
-import org.javahelpers.simple.builders.internal.dtos.TypeNameGeneric;
-import org.javahelpers.simple.builders.annotations.SimpleBuilder;
+import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+import org.javahelpers.simple.builders.processor.dtos.BuilderDefinitionDto;
+import org.javahelpers.simple.builders.processor.dtos.FieldDto;
+import org.javahelpers.simple.builders.processor.dtos.MethodDto;
+import org.javahelpers.simple.builders.processor.dtos.MethodParameterDto;
+import org.javahelpers.simple.builders.processor.dtos.TypeName;
+import org.javahelpers.simple.builders.processor.dtos.TypeNameGeneric;
+import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 
 /** Mapper for creation of a specific BuilderDefinitionDto for a DTO class. */
 public class ElementToBuilderPropsDtoMapper {
@@ -189,7 +190,7 @@ public class ElementToBuilderPropsDtoMapper {
               "java.util.function",
               "Consumer",
               new TypeNameGeneric(
-                  "org.javahelpers.simple.builders.common",
+                  "org.javahelpers.simple.builders.core.builders",
                   "ArrayListBuilder",
                   fieldType.getInnerType().get())),
           fieldName + "BuilderConsumer");
@@ -203,7 +204,7 @@ public class ElementToBuilderPropsDtoMapper {
               "java.util.function",
               "Consumer",
               new TypeNameGeneric(
-                  "org.javahelpers.simple.builders.common",
+                  "org.javahelpers.simple.builders.core.builders",
                   "HashSetBuilder",
                   fieldType.getInnerType().get())),
           fieldName + "BuilderConsumer");

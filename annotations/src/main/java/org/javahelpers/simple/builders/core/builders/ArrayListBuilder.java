@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.common;
+package org.javahelpers.simple.builders.core.builders;
 
 import java.util.ArrayList;
 import java.util.List;

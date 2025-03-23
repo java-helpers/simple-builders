@@ -24,7 +24,7 @@
 
 package org.javahelpers.simple.builders.example;
 
-import org.javahelpers.simple.builders.annotations.SimpleBuilder;
+import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 
 @SimpleBuilder
 public class SponsorDto {

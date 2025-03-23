@@ -24,7 +24,7 @@
 
 package org.javahelpers.simple.builders.processor;
 
-import static org.javahelpers.simple.builders.internal.ElementToBuilderPropsDtoMapper.extractFromElement;
+import static org.javahelpers.simple.builders.processor.util.ElementToBuilderPropsDtoMapper.extractFromElement;
 
 import com.google.auto.service.AutoService;
 import java.util.Set;
@@ -41,10 +41,10 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
-import org.javahelpers.simple.builders.internal.BuilderException;
-import org.javahelpers.simple.builders.internal.JavaCodeGenerator;
-import org.javahelpers.simple.builders.internal.dtos.BuilderDefinitionDto;
-import org.javahelpers.simple.builders.annotations.SimpleBuilder;
+import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+import org.javahelpers.simple.builders.processor.dtos.BuilderDefinitionDto;
+import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
+import org.javahelpers.simple.builders.processor.util.JavaCodeGenerator;
 
 /**
  * BuilderProcessor is an annotation processor for execution in generate-sources phase. The
@@ -53,7 +53,7 @@ import org.javahelpers.simple.builders.annotations.SimpleBuilder;
  */
 @AutoService(Processor.class)
 @SupportedSourceVersion(SourceVersion.RELEASE_17)
-@SupportedAnnotationTypes("org.javahelpers.simple.builders.annotations.BuilderForDtos")
+@SupportedAnnotationTypes("org.javahelpers.simple.builders.core.annotations.SimpleBuilder")
 public class BuilderProcessor extends AbstractProcessor {
   private Types typeUtils;
   private Elements elementUtils;

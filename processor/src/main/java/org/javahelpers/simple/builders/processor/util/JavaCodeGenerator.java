@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.internal;
+package org.javahelpers.simple.builders.processor.util;
 
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
-import static org.javahelpers.simple.builders.internal.dtos.MethodTypes.CONSUMER;
+import static org.javahelpers.simple.builders.processor.dtos.MethodTypes.CONSUMER;
 
 import com.palantir.javapoet.AnnotationSpec;
 import com.palantir.javapoet.ClassName;
@@ -43,13 +43,14 @@ import java.util.Optional;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Generated;
 import javax.lang.model.element.Modifier;
-import org.javahelpers.simple.builders.annotations.BuilderImplementation;
-import org.javahelpers.simple.builders.interfaces.IBuilderBase;
-import org.javahelpers.simple.builders.internal.dtos.BuilderDefinitionDto;
-import org.javahelpers.simple.builders.internal.dtos.FieldDto;
-import org.javahelpers.simple.builders.internal.dtos.MethodDto;
-import org.javahelpers.simple.builders.internal.dtos.MethodParameterDto;
-import org.javahelpers.simple.builders.internal.dtos.TypeName;
+import org.javahelpers.simple.builders.core.annotations.BuilderImplementation;
+import org.javahelpers.simple.builders.core.interfaces.IBuilderBase;
+import org.javahelpers.simple.builders.processor.dtos.BuilderDefinitionDto;
+import org.javahelpers.simple.builders.processor.dtos.FieldDto;
+import org.javahelpers.simple.builders.processor.dtos.MethodDto;
+import org.javahelpers.simple.builders.processor.dtos.MethodParameterDto;
+import org.javahelpers.simple.builders.processor.dtos.TypeName;
+import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 
 /** JavaCodeGenerator generates with BuilderDefinitionDto JavaCode for the builder. */
 public class JavaCodeGenerator {

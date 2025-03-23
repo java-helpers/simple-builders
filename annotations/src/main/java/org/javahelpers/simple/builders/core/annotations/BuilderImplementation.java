@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.annotations;
+package org.javahelpers.simple.builders.core.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

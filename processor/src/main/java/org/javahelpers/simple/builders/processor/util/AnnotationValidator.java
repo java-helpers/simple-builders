@@ -22,12 +22,13 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.internal;
+package org.javahelpers.simple.builders.processor.util;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
-import org.javahelpers.simple.builders.annotations.SimpleBuilder;
+import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 
 /**
  * AnnotationValidator validates the positions of annotations. Responsible for throwing exceptions

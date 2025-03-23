@@ -26,7 +26,7 @@ package org.javahelpers.simple.builders.example;
 
 import java.util.List;
 import java.util.Set;
-import org.javahelpers.simple.builders.annotations.SimpleBuilder;
+import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 
 @SimpleBuilder
 public class MannschaftDto {

@@ -26,7 +26,7 @@ package org.javahelpers.simple.builders.example.goal;
 
 import java.util.function.Consumer;
 import javax.annotation.processing.Generated;
-import org.javahelpers.simple.builders.annotations.BuilderImplementation;
+import org.javahelpers.simple.builders.core.annotations.BuilderImplementation;
 import org.javahelpers.simple.builders.example.MannschaftDto;
 import org.javahelpers.simple.builders.example.PersonDto;
 

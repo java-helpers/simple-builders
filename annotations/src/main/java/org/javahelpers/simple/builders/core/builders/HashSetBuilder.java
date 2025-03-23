@@ -22,46 +22,45 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.internal;
+package org.javahelpers.simple.builders.core.builders;
 
-import javax.annotation.processing.Messager;
-import javax.lang.model.element.Element;
-import javax.tools.Diagnostic;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
- * Logger for all messages during annotation processing. Providing util-functions for posting
- * messages easily. Using a {@code javax.annotation.processing.Messager} inside to publish the
- * messages.
+ * Generic Builder for Sets. Helperclass for being able to provide stream-notation interfaces in
+ * extending setws. Using HashSet inside.
+ *
+ * @param <T> the type of elements in the targeting Set
  */
-public class ProcessingLogger {
-  /** Util class for exposing messages of type {@code javax.annotation.processing.Messager}. */
-  private final Messager messager;
+public class HashSetBuilder<T> {
+  private final Set<T> mSet = new HashSet<>();
 
   /**
-   * Constructor for ProcessingLogger with instance of messager.
+   * Adds the specified element to this set if it is not already present. Calling add-function on
+   * inner HashSet field.
    *
-   * @param messager
+   * @param element element to be appended
+   * @return current instance of ArrayListBuilder for using in stream-notation
    */
-  public ProcessingLogger(Messager messager) {
-    this.messager = messager;
+  public HashSetBuilder<T> add(T element) {
+    mSet.add(element);
+    return this;
   }
 
   /**
-   * Posting an error with elment and message.
+   * Appends a list of elements to the end of the internal list. Calling addAll-function on inner
+   * HashSet field.
    *
-   * @param e element on which the error happened
-   * @param message message to be posted to messager
+   * @param elements Set of elements to be appended
+   * @return current instance of HashSetBuilder for using in stream-notation
    */
-  public void error(Element e, String message) {
-    messager.printMessage(Diagnostic.Kind.ERROR, message, e);
+  public HashSetBuilder<T> addAll(Set<T> elements) {
+    mSet.addAll(elements);
+    return this;
   }
 
-  /**
-   * Posting a simple information message.
-   *
-   * @param message message to be posted to messager
-   */
-  public void log(String message) {
-    messager.printMessage(Diagnostic.Kind.NOTE, message);
+  public Set<T> build() {
+    return new HashSet(mSet);
   }
 }

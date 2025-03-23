@@ -22,45 +22,26 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.common;
+package org.javahelpers.simple.builders.processor.dtos;
 
-import java.util.HashSet;
-import java.util.Set;
-
-/**
- * Generic Builder for Sets. Helperclass for being able to provide stream-notation interfaces in
- * extending setws. Using HashSet inside.
- *
- * @param <T> the type of elements in the targeting Set
- */
-public class HashSetBuilder<T> {
-  private final Set<T> mSet = new HashSet<>();
-
+/** Types of methods. Each type matches a specific way body of generated methods. */
+public enum MethodTypes {
+  /** Simple Proxy. Just calling the method on the inner instance. */
+  PROXY,
   /**
-   * Adds the specified element to this set if it is not already present. Calling add-function on
-   * inner HashSet field.
-   *
-   * @param element element to be appended
-   * @return current instance of ArrayListBuilder for using in stream-notation
+   * Supplier-Pattern. Following supplier pattern and calling the setter-function on inner instance
+   * by supplier-result.
    */
-  public HashSetBuilder<T> add(T element) {
-    mSet.add(element);
-    return this;
-  }
-
+  SUPPLIER,
   /**
-   * Appends a list of elements to the end of the internal list. Calling addAll-function on inner
-   * HashSet field.
-   *
-   * @param elements Set of elements to be appended
-   * @return current instance of HashSetBuilder for using in stream-notation
+   * Consumer-Pattern. Creating an instance of parameter and providing a consumer for the caller.
+   * The provided instance is afterwards applied to builder target.
    */
-  public HashSetBuilder<T> addAll(Set<T> elements) {
-    mSet.addAll(elements);
-    return this;
-  }
-
-  public Set<T> build() {
-    return new HashSet(mSet);
-  }
+  CONSUMER,
+  /**
+   * Consumer-Pattern with builder. Creating an instance of a builder and providing that to the
+   * caller. The build-function of that builder is executed afterwards and applied to builder
+   * target.
+   */
+  CONSUMER_BY_BUILDER;
 }

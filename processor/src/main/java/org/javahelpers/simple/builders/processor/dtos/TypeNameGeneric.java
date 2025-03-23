@@ -22,14 +22,31 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.annotations;
+package org.javahelpers.simple.builders.processor.dtos;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import static java.util.Objects.requireNonNull;
 
-/** Annotation to be placed on all classes, for which a builder should be generated. */
-@Target(ElementType.TYPE)
-@Retention(RetentionPolicy.CLASS)
-public @interface SimpleBuilder {}
+import java.util.Optional;
+
+/** TypeNameGeneric extends TypeName with one specific generic type. */
+public class TypeNameGeneric extends TypeName {
+  private final TypeName innerType;
+
+  /**
+   * Constructor for generic types, having just one generic inner type.
+   *
+   * @param packageName name of package
+   * @param className name of class
+   * @param innerType inner type of generic
+   */
+  public TypeNameGeneric(String packageName, String className, TypeName innerType) {
+    super(packageName, className);
+    requireNonNull(innerType);
+    this.innerType = innerType;
+  }
+
+  @Override
+  public Optional<TypeName> getInnerType() {
+    return Optional.of(innerType);
+  }
+}
