@@ -1,11 +1,6 @@
 # Simple Builders - Java builder generation just on compile
 
-TODO: Latest stable version
-TODO: Latest version
 [![License](https://img.shields.io/badge/License-MIT%202.0-yellowgreen.svg)](https://github.com/java-helpers/simple-builders/blob/main/LICENSE.txt)
-
-[![Build Status](https://github.com/java-helpers/simple-builders/workflows/CI/badge.svg?branch=main)](https://github.com/java-helpers/simple-builders/actions?query=branch%3Amain+workflow%3ACI)
-TODO: Coverage
 
 * [What is Simple Builders?](#what-is-simple-builders)
 * [Requirements](#requirements)
