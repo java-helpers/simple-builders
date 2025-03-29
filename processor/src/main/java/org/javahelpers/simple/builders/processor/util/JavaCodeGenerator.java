@@ -209,7 +209,6 @@ public class JavaCodeGenerator {
           case CONSUMER -> createInnerCodeForConsumer(methodDto);
           case CONSUMER_BY_BUILDER -> createInnerCodeForConsumerByBuilder(methodDto);
           case SUPPLIER -> createInnerCodeForSupplier(methodDto);
-            // TODO reiner Builder ohne Consumer
         };
     methodBuilder.addCode(codeBlock);
     return methodBuilder.build();
@@ -227,7 +226,6 @@ public class JavaCodeGenerator {
   }
 
   private CodeBlock createInnerCodeForConsumer(MethodDto methodDto) {
-    // TODO: CollectionUtils
     if (methodDto.getParameters().isEmpty()) {
       // TODO Error
       return null;
@@ -251,7 +249,6 @@ public class JavaCodeGenerator {
   }
 
   private CodeBlock createInnerCodeForConsumerByBuilder(MethodDto methodDto) {
-    // TODO: CollectionUtils
     if (methodDto.getParameters().isEmpty()) {
       // TODO Error
       return null;
@@ -276,7 +273,6 @@ public class JavaCodeGenerator {
   }
 
   private CodeBlock createInnerCodeForSupplier(MethodDto methodDto) {
-    // TODO: CollectionUtils
     if (methodDto.getParameters().isEmpty()) {
       // TODO Error
       return null;
