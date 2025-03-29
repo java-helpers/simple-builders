@@ -38,7 +38,6 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
 import org.apache.commons.lang3.StringUtils;
-import org.javahelpers.simple.builders.processor.dtos.TypeName;
 
 /** Helperclass for extrating specific information from existing classes. */
 public final class JavaLangAnalyser {
@@ -118,58 +117,6 @@ public final class JavaLangAnalyser {
     List<ExecutableElement> constructors =
         ElementFilter.constructorsIn(elementUtils.getAllMembers(typeElement));
     return constructors.stream().anyMatch(c -> c.getParameters().isEmpty());
-  }
-
-  /**
-   * Helper to check if the type is a java-base class. Check is done by comparing the package name.
-   *
-   * @param typeName Type to be validated
-   * @return {@code true}, if type is a java-base class
-   */
-  public static boolean isJavaClass(TypeName typeName) {
-    return StringUtils.equalsAny(typeName.getPackageName(), "java.lang", "java.time", "java.util");
-  }
-
-  /**
-   * Helper to check if the type is a {@code java.util.List}.
-   *
-   * @param typeName Type to be validated
-   * @return {@code true}, if it is a {@code java.util.List}
-   */
-  public static boolean isList(TypeName typeName) {
-    if (typeName.getInnerType().isEmpty()) {
-      return false;
-    }
-    return StringUtils.equalsIgnoreCase(typeName.getPackageName(), "java.util")
-        && StringUtils.equalsIgnoreCase(typeName.getClassName(), "List");
-  }
-
-  /**
-   * Helper to check if the type is a {@code java.util.Map}.
-   *
-   * @param typeName Type to be validated
-   * @return {@code true}, if it is a {@code java.util.Map}
-   */
-  public static boolean isMap(TypeName typeName) {
-    if (typeName.getInnerType().isEmpty()) {
-      return false;
-    }
-    return StringUtils.equalsIgnoreCase(typeName.getPackageName(), "java.util")
-        && StringUtils.equalsIgnoreCase(typeName.getClassName(), "Map");
-  }
-
-  /**
-   * Helper to check if the type is a {@code java.util.Set}.
-   *
-   * @param typeName Type to be validated
-   * @return {@code true}, if it is a {@code java.util.Set}
-   */
-  public static boolean isSet(TypeName typeName) {
-    if (typeName.getInnerType().isEmpty()) {
-      return false;
-    }
-    return StringUtils.equalsIgnoreCase(typeName.getPackageName(), "java.util")
-        && StringUtils.equalsIgnoreCase(typeName.getClassName(), "Set");
   }
 
   /**

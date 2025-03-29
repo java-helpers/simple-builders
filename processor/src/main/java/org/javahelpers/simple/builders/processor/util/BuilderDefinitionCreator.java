@@ -29,6 +29,7 @@ import static org.javahelpers.simple.builders.processor.util.JavaLangAnalyser.*;
 import static org.javahelpers.simple.builders.processor.util.JavaLangMapper.map2MethodParameter;
 import static org.javahelpers.simple.builders.processor.util.JavaLangMapper.map2TypeName;
 import static org.javahelpers.simple.builders.processor.util.JavaLangMapper.mapRelevantModifier;
+import static org.javahelpers.simple.builders.processor.util.TypeNameAnalyser.*;
 
 import java.util.List;
 import java.util.Optional;
