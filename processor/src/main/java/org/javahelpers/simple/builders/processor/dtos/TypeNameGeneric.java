@@ -35,6 +35,18 @@ public class TypeNameGeneric extends TypeName {
   /**
    * Constructor for generic types, having just one generic inner type.
    *
+   * @param outerType outer type of generic
+   * @param innerType inner type of generic
+   */
+  public TypeNameGeneric(TypeName outerType, TypeName innerType) {
+    super(outerType.getPackageName(), outerType.getClassName());
+    requireNonNull(innerType);
+    this.innerType = innerType;
+  }
+
+  /**
+   * Constructor for generic types, having just one generic inner type.
+   *
    * @param packageName name of package
    * @param className name of class
    * @param innerType inner type of generic

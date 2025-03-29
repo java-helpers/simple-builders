@@ -182,9 +182,7 @@ public class JavaCodeGenerator {
   }
 
   private List<MethodSpec> createFieldMethods(FieldDto fieldDto, ClassName builderClassName) {
-    return fieldDto.getFieldSetterMethodsList().stream()
-        .map(m -> createMethod(m, builderClassName))
-        .toList();
+    return fieldDto.getMethods().stream().map(m -> createMethod(m, builderClassName)).toList();
   }
 
   private MethodSpec createMethod(MethodDto methodDto, ClassName returnType) {

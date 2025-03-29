@@ -26,7 +26,6 @@ package org.javahelpers.simple.builders.processor.dtos;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.lang.model.element.Modifier;
 
 /**
  * Definition of a field. Containing all information to generate methods in builder to set or modify
@@ -84,60 +83,11 @@ public class FieldDto {
    * @return list of methods with type {@code
    *     org.javahelpers.simple.builders.internal.dtos.MethodDto}
    */
-  public List<MethodDto> getFieldSetterMethodsList() {
+  public List<MethodDto> getMethods() {
     return fieldSetterMethodsList;
   }
 
-  public void addFieldSetter(String methodName, TypeName parameterType, String parameterName) {
-    MethodParameterDto parameter = new MethodParameterDto();
-    parameter.setParameterName(parameterName);
-    parameter.setParameterTypeName(parameterType);
-    MethodDto methodDto = new MethodDto();
-    methodDto.setMethodName(methodName);
-    methodDto.addParameter(parameter);
-    methodDto.setModifier(Modifier.PUBLIC);
-    methodDto.setMethodType(MethodTypes.PROXY);
-    addFieldSetterMethodDto(methodDto);
-  }
-
-  public void addFieldConsumer(String methodName, TypeName parameterType, String parameterName) {
-    MethodParameterDto parameter = new MethodParameterDto();
-    parameter.setParameterName(parameterName);
-    parameter.setParameterTypeName(parameterType);
-    MethodDto methodDto = new MethodDto();
-    methodDto.setMethodName(methodName);
-    methodDto.addParameter(parameter);
-    methodDto.setModifier(Modifier.PUBLIC);
-    methodDto.setMethodType(MethodTypes.CONSUMER);
-    addFieldSetterMethodDto(methodDto);
-  }
-
-  public void addFieldConsumerByBuilder(
-      String methodName, TypeName parameterType, String parameterName) {
-    MethodParameterDto parameter = new MethodParameterDto();
-    parameter.setParameterName(parameterName);
-    parameter.setParameterTypeName(parameterType);
-    MethodDto methodDto = new MethodDto();
-    methodDto.setMethodName(methodName);
-    methodDto.addParameter(parameter);
-    methodDto.setModifier(Modifier.PUBLIC);
-    methodDto.setMethodType(MethodTypes.CONSUMER_BY_BUILDER);
-    addFieldSetterMethodDto(methodDto);
-  }
-
-  public void addFieldSupplier(String methodName, TypeName parameterType, String parameterName) {
-    MethodParameterDto parameter = new MethodParameterDto();
-    parameter.setParameterName(parameterName);
-    parameter.setParameterTypeName(parameterType);
-    MethodDto methodDto = new MethodDto();
-    methodDto.setMethodName(methodName);
-    methodDto.addParameter(parameter);
-    methodDto.setModifier(Modifier.PUBLIC);
-    methodDto.setMethodType(MethodTypes.SUPPLIER);
-    addFieldSetterMethodDto(methodDto);
-  }
-
-  public void addFieldSetterMethodDto(MethodDto methodDto) {
+  public void addMethod(MethodDto methodDto) {
     this.fieldSetterMethodsList.add(methodDto);
   }
 }
