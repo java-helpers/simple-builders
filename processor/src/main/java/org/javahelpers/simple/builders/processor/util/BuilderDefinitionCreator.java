@@ -32,6 +32,7 @@ import static org.javahelpers.simple.builders.processor.util.JavaLangMapper.mapR
 import static org.javahelpers.simple.builders.processor.util.TypeNameAnalyser.*;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -90,7 +91,7 @@ public class BuilderDefinitionCreator {
       // nur public
       if (isMethodRelevantForBuilder(mth)) {
         if (isSetterForField(mth)) {
-          result.addField(createFieldDto(mth, elementUtils, typeUtils));
+          createFieldDto(mth, elementUtils, typeUtils).ifPresent(result::addField);
         } else {
           result.addMethod(createMethodDto(mth, elementUtils, typeUtils));
         }
@@ -118,11 +119,12 @@ public class BuilderDefinitionCreator {
     result.setModifier(mapRelevantModifier(mth.getModifiers()));
     parameters.stream()
         .map(v -> map2MethodParameter(v, elementUtils, typeUtils))
+        .filter(Objects::nonNull)
         .forEach(result::addParameter);
     return result;
   }
 
-  private static FieldDto createFieldDto(
+  private static Optional<FieldDto> createFieldDto(
       ExecutableElement mth, Elements elementUtils, Types typeUtils) {
     String methodName = mth.getSimpleName().toString();
     String fieldName = StringUtils.uncapitalize(StringUtils.removeStart(methodName, "set"));
@@ -132,7 +134,7 @@ public class BuilderDefinitionCreator {
     List<? extends VariableElement> parameters = mth.getParameters();
     if (parameters.size() != 1) {
       // Sollte eigentlich nie vorkommen, da das vorher raus gefiltert wurde
-      return null;
+      return Optional.empty();
     }
     VariableElement fieldParameter = parameters.get(0);
     TypeMirror fieldTypeMirror = fieldParameter.asType();
@@ -141,6 +143,9 @@ public class BuilderDefinitionCreator {
     // extracting type of field
     MethodParameterDto fieldParameterDto =
         map2MethodParameter(fieldParameter, elementUtils, typeUtils);
+    if (fieldParameterDto == null) {
+      return Optional.empty();
+    }
     TypeName fieldType = fieldParameterDto.getParameterType();
 
     // simple setter
@@ -172,7 +177,7 @@ public class BuilderDefinitionCreator {
     // setting value by supplier
     result.addMethod(createSupplier(fieldName, fieldType));
 
-    return result;
+    return Optional.of(result);
   }
 
   private static MethodDto createSetter(String fieldName, TypeName fieldType) {

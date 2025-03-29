@@ -85,14 +85,21 @@ public final class JavaLangMapper {
       VariableElement param, Elements elementUtils, Types typeUtils) {
     MethodParameterDto result = new MethodParameterDto();
     result.setParameterName(param.getSimpleName().toString());
-    TypeMirror typeOfParameter = param.asType();
-    result.setParameterTypeName(extractType(typeOfParameter, elementUtils, typeUtils));
+    TypeMirror typeMirror = param.asType();
+    TypeName typeName = extractType(typeMirror, elementUtils, typeUtils);
+    if (typeName == null) {
+      return null;
+    }
+    result.setParameterTypeName(typeName);
     return result;
   }
 
   private static TypeName extractType(
       TypeMirror typeOfParameter, Elements elementUtils, Types typeUtils) {
     TypeElement elementOfParameter = (TypeElement) typeUtils.asElement(typeOfParameter);
+    if (elementOfParameter == null) {
+      return null;
+    }
     String simpleClassName = elementOfParameter.getSimpleName().toString();
     String packageName =
         elementUtils.getPackageOf(elementOfParameter).getQualifiedName().toString();

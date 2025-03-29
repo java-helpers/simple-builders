@@ -31,6 +31,7 @@ import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 @SimpleBuilder
 public class PersonDto {
   private String name;
+  private int groesse;
   private List<String> nickNames;
   private java.time.LocalDate birthdate;
   private MannschaftDto mannschaft;
@@ -41,6 +42,14 @@ public class PersonDto {
 
   public void setName(String name) {
     this.name = name;
+  }
+
+  public int getGroesse() {
+    return groesse;
+  }
+
+  public void setGroesse(int groesse) {
+    this.groesse = groesse;
   }
 
   public List<String> getNickNames() {
