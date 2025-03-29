@@ -24,9 +24,11 @@
 
 package org.javahelpers.simple.builders.processor.util;
 
+import com.palantir.javapoet.ArrayTypeName;
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.ParameterizedTypeName;
 import com.palantir.javapoet.TypeName;
+import org.javahelpers.simple.builders.processor.dtos.TypeNameArray;
 
 /** Helper functions to create JavaPoet types from DTOs of simple builder. */
 public final class JavapoetMapper {
@@ -37,7 +39,9 @@ public final class JavapoetMapper {
       org.javahelpers.simple.builders.processor.dtos.TypeName parameterType) {
     ClassName classNameParameter =
         ClassName.get(parameterType.getPackageName(), parameterType.getClassName());
-    if (parameterType.getInnerType().isPresent()) {
+    if (parameterType instanceof TypeNameArray parameterTypeArray) {
+      return ArrayTypeName.of(map2ParameterType(parameterTypeArray.getTypeOfArray()));
+    } else if (parameterType.getInnerType().isPresent()) {
       return ParameterizedTypeName.get(
           classNameParameter, map2ParameterType(parameterType.getInnerType().get()));
     }

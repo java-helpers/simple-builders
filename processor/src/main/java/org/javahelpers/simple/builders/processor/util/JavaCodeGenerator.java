@@ -46,11 +46,7 @@ import javax.annotation.processing.Generated;
 import javax.lang.model.element.Modifier;
 import org.javahelpers.simple.builders.core.annotations.BuilderImplementation;
 import org.javahelpers.simple.builders.core.interfaces.IBuilderBase;
-import org.javahelpers.simple.builders.processor.dtos.BuilderDefinitionDto;
-import org.javahelpers.simple.builders.processor.dtos.FieldDto;
-import org.javahelpers.simple.builders.processor.dtos.MethodDto;
-import org.javahelpers.simple.builders.processor.dtos.MethodParameterDto;
-import org.javahelpers.simple.builders.processor.dtos.TypeName;
+import org.javahelpers.simple.builders.processor.dtos.*;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 
 /** JavaCodeGenerator generates with BuilderDefinitionDto JavaCode for the builder. */
@@ -190,10 +186,22 @@ public class JavaCodeGenerator {
         MethodSpec.methodBuilder(methodDto.getMethodName()).returns(returnType);
     methodDto.getModifier().ifPresent(methodBuilder::addModifiers);
     List<String> parametersInInnerCall = new LinkedList<>();
-    for (MethodParameterDto paramDto : methodDto.getParameters()) {
+    int maxIndexParameters = methodDto.getParameters().size() - 1;
+    for (int i = 0; i <= maxIndexParameters; i++) {
+      MethodParameterDto paramDto = methodDto.getParameters().get(i);
       com.palantir.javapoet.TypeName parameterType = map2ParameterType(paramDto.getParameterType());
       methodBuilder.addParameter(parameterType, paramDto.getParameterName());
-      parametersInInnerCall.add(paramDto.getParameterName());
+      if (i == maxIndexParameters
+          && paramDto.getParameterType() instanceof TypeNameArray paramArrayType) {
+        methodBuilder.varargs(); // Arrays should be mapped to be generics
+        String listOfParam =
+            paramArrayType.isFillingSet()
+                ? "Set.of(" + paramDto.getParameterName() + ")"
+                : "List.of(" + paramDto.getParameterName() + ")";
+        parametersInInnerCall.add(listOfParam);
+      } else {
+        parametersInInnerCall.add(paramDto.getParameterName());
+      }
     }
     CodeBlock codeBlock =
         switch (methodDto.getMethodType()) {

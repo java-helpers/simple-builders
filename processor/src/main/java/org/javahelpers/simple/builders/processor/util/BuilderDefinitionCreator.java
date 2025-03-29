@@ -50,13 +50,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 import org.javahelpers.simple.builders.core.builders.ArrayListBuilder;
 import org.javahelpers.simple.builders.core.builders.HashSetBuilder;
-import org.javahelpers.simple.builders.processor.dtos.BuilderDefinitionDto;
-import org.javahelpers.simple.builders.processor.dtos.FieldDto;
-import org.javahelpers.simple.builders.processor.dtos.MethodDto;
-import org.javahelpers.simple.builders.processor.dtos.MethodParameterDto;
-import org.javahelpers.simple.builders.processor.dtos.MethodTypes;
-import org.javahelpers.simple.builders.processor.dtos.TypeName;
-import org.javahelpers.simple.builders.processor.dtos.TypeNameGeneric;
+import org.javahelpers.simple.builders.processor.dtos.*;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 
 /** Class for creating a specific BuilderDefinitionDto for an annotated DTO class. */
@@ -160,7 +154,6 @@ public class BuilderDefinitionCreator {
     Optional<TypeName> builderTypeOpt = findBuilderType(fieldParameter, elementUtils, typeUtils);
     if (builderTypeOpt.isPresent()) {
       TypeName builderType = builderTypeOpt.get();
-      // TODO: Hier extra Type
       result.addMethod(createConsumerWithBuilder(fieldName, builderType));
     } else if (!isJavaClass(fieldType) && hasEmptyConstructor(fieldTypeElement, elementUtils)) {
       // TODO: Consumer funktioniet nur, wenn Klasse kein Interface/Enum/Abstrakte Classe/Record
@@ -169,14 +162,16 @@ public class BuilderDefinitionCreator {
       result.addMethod(
           createConsumerWithBuilder(
               fieldName, map2TypeName(ArrayListBuilder.class), fieldType.getInnerType().get()));
-      // TODO: auch eine FieldType... Variante im Builder anbieten
+      result.addMethod(
+          createSetter(fieldName, new TypeNameArray(fieldType.getInnerType().get(), false)));
     } else if (isMap(fieldType)) {
       // TODO MAP (having 2 inner classes, TypeNameGeneric is not able to adress that yet)
     } else if (isSet(fieldType)) {
       result.addMethod(
           createConsumerWithBuilder(
               fieldName, map2TypeName(HashSetBuilder.class), fieldType.getInnerType().get()));
-      // TODO: auch eine FieldType... Variante im Builder anbieten
+      result.addMethod(
+          createSetter(fieldName, new TypeNameArray(fieldType.getInnerType().get(), true)));
     }
 
     // setting value by supplier
