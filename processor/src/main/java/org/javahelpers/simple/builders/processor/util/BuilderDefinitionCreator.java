@@ -93,7 +93,7 @@ public class BuilderDefinitionCreator {
         if (isSetterForField(mth)) {
           createFieldDto(mth, elementUtils, typeUtils).ifPresent(result::addField);
         } else {
-          result.addMethod(createMethodDto(mth, elementUtils, typeUtils));
+          createMethodDto(mth, elementUtils, typeUtils).ifPresent(result::addMethod);
         }
       }
     }
@@ -109,7 +109,7 @@ public class BuilderDefinitionCreator {
         && isNotStatic(mth);
   }
 
-  private static MethodDto createMethodDto(
+  private static Optional<MethodDto> createMethodDto(
       ExecutableElement mth, Elements elementUtils, Types typeUtils) {
     String methodName = mth.getSimpleName().toString();
     List<? extends VariableElement> parameters = mth.getParameters();
@@ -119,9 +119,12 @@ public class BuilderDefinitionCreator {
     result.setModifier(mapRelevantModifier(mth.getModifiers()));
     parameters.stream()
         .map(v -> map2MethodParameter(v, elementUtils, typeUtils))
-        .filter(Objects::nonNull)
         .forEach(result::addParameter);
-    return result;
+    if (result.getParameters().stream().anyMatch(Objects::isNull)) {
+      // TODO: Logging
+      return Optional.empty();
+    }
+    return Optional.of(result);
   }
 
   private static Optional<FieldDto> createFieldDto(
@@ -133,6 +136,7 @@ public class BuilderDefinitionCreator {
     result.setFieldName(fieldName);
     List<? extends VariableElement> parameters = mth.getParameters();
     if (parameters.size() != 1) {
+      // TODO: Logging
       // Sollte eigentlich nie vorkommen, da das vorher raus gefiltert wurde
       return Optional.empty();
     }
@@ -144,6 +148,7 @@ public class BuilderDefinitionCreator {
     MethodParameterDto fieldParameterDto =
         map2MethodParameter(fieldParameter, elementUtils, typeUtils);
     if (fieldParameterDto == null) {
+      // TODO: Logging
       return Optional.empty();
     }
     TypeName fieldType = fieldParameterDto.getParameterType();
