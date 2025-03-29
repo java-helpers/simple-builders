@@ -48,7 +48,7 @@ public class PersonDto {
     return groesse;
   }
 
-  public void setGroesse(int groesse) {
+  public void aendereGroesse(int groesse) {
     this.groesse = groesse;
   }
 
