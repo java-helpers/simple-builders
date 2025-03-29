@@ -23,6 +23,7 @@
  */
 package org.javahelpers.simple.builders.processor.util;
 
+import static javax.lang.model.element.Modifier.DEFAULT;
 import static javax.lang.model.element.Modifier.PROTECTED;
 import static javax.lang.model.element.Modifier.PUBLIC;
 
@@ -44,19 +45,42 @@ import org.javahelpers.simple.builders.processor.dtos.TypeNameGeneric;
 /** Helper functions to create simple builder types from java.lang types. */
 public final class JavaLangMapper {
 
+  /**
+   * Mapper for {@code java.util.Set<javax.lang.model.element.Modifier>} to extract the relevant
+   * modifier. If there is a public modifier, this is returned. If there is a protected modifier,
+   * this will be returned. Default is returned in all other cases.
+   *
+   * @param modifier Set of modifiers to be checked
+   * @return DEFAULT, PUBLIC or PROTECTED
+   */
   public static Modifier mapRelevantModifier(Set<Modifier> modifier) {
     if (modifier.contains(PUBLIC)) {
       return PUBLIC;
     } else if (modifier.contains(PROTECTED)) {
       return PROTECTED;
     }
-    return null;
+    return DEFAULT;
   }
 
+  /**
+   * Mapping a Java-Class to a TypeName. This method does not expact sealed or annonymous classes.
+   *
+   * @param clazz Class to be mapped
+   * @return Typename
+   */
   public static TypeName map2TypeName(Class<?> clazz) {
     return new TypeName(clazz.getPackageName(), clazz.getSimpleName());
   }
 
+  /**
+   * Mapping a method parameter to {@code
+   * org.javahelpers.simple.builders.processor.dtos.MethodParameterDto}.
+   *
+   * @param param Parameter variable to be mapped
+   * @param elementUtils Instance of helper for elements
+   * @param typeUtils Instance of helper for types
+   * @return MethodParameterDto holding the information of the param.
+   */
   public static MethodParameterDto map2MethodParameter(
       VariableElement param, Elements elementUtils, Types typeUtils) {
     MethodParameterDto result = new MethodParameterDto();
