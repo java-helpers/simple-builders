@@ -24,7 +24,7 @@
 
 package org.javahelpers.simple.builders.processor;
 
-import static org.javahelpers.simple.builders.processor.util.ElementToBuilderPropsDtoMapper.extractFromElement;
+import static org.javahelpers.simple.builders.processor.util.BuilderDefinitionCreator.extractFromElement;
 
 import com.google.auto.service.AutoService;
 import java.util.Set;

@@ -24,29 +24,22 @@
 
 package org.javahelpers.simple.builders.processor.util;
 
-import static javax.lang.model.element.Modifier.PRIVATE;
-import static javax.lang.model.element.Modifier.PROTECTED;
-import static javax.lang.model.element.Modifier.PUBLIC;
-import static javax.lang.model.element.Modifier.STATIC;
-import static javax.lang.model.type.TypeKind.VOID;
 import static org.javahelpers.simple.builders.processor.util.AnnotationValidator.validateAnnotatedElement;
+import static org.javahelpers.simple.builders.processor.util.JavaLangAnalyser.*;
+import static org.javahelpers.simple.builders.processor.util.JavaLangMapper.map2MethodParameter;
+import static org.javahelpers.simple.builders.processor.util.JavaLangMapper.mapRelevantModifier;
 
-import java.lang.annotation.Annotation;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
-import javax.lang.model.util.SimpleTypeVisitor14;
 import javax.lang.model.util.Types;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
@@ -54,12 +47,13 @@ import org.javahelpers.simple.builders.processor.dtos.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.dtos.FieldDto;
 import org.javahelpers.simple.builders.processor.dtos.MethodDto;
 import org.javahelpers.simple.builders.processor.dtos.MethodParameterDto;
+import org.javahelpers.simple.builders.processor.dtos.MethodTypes;
 import org.javahelpers.simple.builders.processor.dtos.TypeName;
 import org.javahelpers.simple.builders.processor.dtos.TypeNameGeneric;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 
 /** Mapper for creation of a specific BuilderDefinitionDto for a DTO class. */
-public class ElementToBuilderPropsDtoMapper {
+public class BuilderDefinitionCreator {
   private static final String BUILDER_SUFFIX = "Builder";
 
   /**
@@ -90,9 +84,9 @@ public class ElementToBuilderPropsDtoMapper {
       // nur public
       if (isMethodRelevantForBuilder(mth)) {
         if (isSimpleSetter(mth)) {
-          result.addField(mapFieldFromElement(mth, elementUtils, typeUtils));
+          result.addField(createFieldDto(mth, elementUtils, typeUtils));
         } else {
-          result.addMethod(mapMethodFromElement(mth, elementUtils, typeUtils));
+          result.addMethod(createMethodDto(mth, elementUtils, typeUtils));
         }
       }
     }
@@ -108,29 +102,7 @@ public class ElementToBuilderPropsDtoMapper {
         && isNotStatic(mth);
   }
 
-  private static boolean isNoMethodOfObjectClass(ExecutableElement mth) {
-    String simpleNameOfParent = mth.getEnclosingElement().getSimpleName().toString();
-    return !(StringUtils.equals("java.lang.Object", simpleNameOfParent)
-        || StringUtils.equals("Object", simpleNameOfParent));
-  }
-
-  private static boolean hasNoThrowablesDeclared(ExecutableElement mth) {
-    return mth.getThrownTypes().isEmpty();
-  }
-
-  private static boolean hasNoReturnValue(ExecutableElement mth) {
-    return mth.getReturnType().getKind() == VOID;
-  }
-
-  private static boolean isNotPrivate(ExecutableElement mth) {
-    return !mth.getModifiers().contains(PRIVATE);
-  }
-
-  private static boolean isNotStatic(ExecutableElement mth) {
-    return !mth.getModifiers().contains(STATIC);
-  }
-
-  private static MethodDto mapMethodFromElement(
+  private static MethodDto createMethodDto(
       ExecutableElement mth, Elements elementUtils, Types typeUtils) {
     String methodName = mth.getSimpleName().toString();
     List<? extends VariableElement> parameters = mth.getParameters();
@@ -139,12 +111,12 @@ public class ElementToBuilderPropsDtoMapper {
     result.setMethodName(methodName);
     result.setModifier(mapRelevantModifier(mth.getModifiers()));
     parameters.stream()
-        .map(v -> mapMethodParameter(v, elementUtils, typeUtils))
+        .map(v -> map2MethodParameter(v, elementUtils, typeUtils))
         .forEach(result::addParameter);
     return result;
   }
 
-  private static FieldDto mapFieldFromElement(
+  private static FieldDto createFieldDto(
       ExecutableElement mth, Elements elementUtils, Types typeUtils) {
     String methodName = mth.getSimpleName().toString();
     String fieldName = StringUtils.uncapitalize(StringUtils.removeStart(methodName, "set"));
@@ -162,7 +134,7 @@ public class ElementToBuilderPropsDtoMapper {
 
     // extracting type of field
     MethodParameterDto fieldParameterDto =
-        mapMethodParameter(fieldParameter, elementUtils, typeUtils);
+        map2MethodParameter(fieldParameter, elementUtils, typeUtils);
     TypeName fieldType = fieldParameterDto.getParameterType();
 
     // simple setter
@@ -178,7 +150,7 @@ public class ElementToBuilderPropsDtoMapper {
           new TypeNameGeneric("java.util.function", "Consumer", builderType),
           fieldName + BUILDER_SUFFIX + "Consumer");
     } else if (!isJavaClass(fieldType) && hasEmptyConstructor(fieldTypeElement, elementUtils)) {
-      // TODO: Consumer funktioniett nur, wenn Klasse kein Interface/Enum/Abstrakte Classe/Record
+      // TODO: Consumer funktioniet nur, wenn Klasse kein Interface/Enum/Abstrakte Classe/Record
       result.addFieldConsumer(
           fieldName,
           new TypeNameGeneric("java.util.function", "Consumer", fieldType),
@@ -220,87 +192,22 @@ public class ElementToBuilderPropsDtoMapper {
     return result;
   }
 
-  private static boolean isJavaClass(TypeName typeName) {
-    return StringUtils.equalsAny(typeName.getPackageName(), "java.lang", "java.time", "java.util");
-  }
-
-  private static boolean isList(TypeName typeName) {
-    if (typeName.getInnerType().isEmpty()) {
-      return false;
-    }
-    return StringUtils.equalsIgnoreCase(typeName.getPackageName(), "java.util")
-        && StringUtils.equalsIgnoreCase(typeName.getClassName(), "List");
-  }
-
-  private static boolean isMap(TypeName typeName) {
-    if (typeName.getInnerType().isEmpty()) {
-      return false;
-    }
-    return StringUtils.equalsIgnoreCase(typeName.getPackageName(), "java.util")
-        && StringUtils.equalsIgnoreCase(typeName.getClassName(), "Map");
-  }
-
-  private static boolean isSet(TypeName typeName) {
-    if (typeName.getInnerType().isEmpty()) {
-      return false;
-    }
-    return StringUtils.equalsIgnoreCase(typeName.getPackageName(), "java.util")
-        && StringUtils.equalsIgnoreCase(typeName.getClassName(), "Set");
-  }
-
-  private static boolean isSimpleSetter(ExecutableElement mth) {
-    return StringUtils.startsWith(mth.getSimpleName(), "set") && mth.getParameters().size() == 1;
-  }
-
-  private static Modifier mapRelevantModifier(Set<Modifier> modifier) {
-    if (modifier.contains(PUBLIC)) {
-      return PUBLIC;
-    } else if (modifier.contains(PROTECTED)) {
-      return PROTECTED;
-    }
+  private static MethodDto createConsumer(String fieldName, TypeName fieldType){
+    //TODO
     return null;
   }
+  
 
-  private static MethodParameterDto mapMethodParameter(
-      VariableElement param, Elements elementUtils, Types typeUtils) {
-    MethodParameterDto result = new MethodParameterDto();
-    result.setParameterName(param.getSimpleName().toString());
-    TypeMirror typeOfParameter = param.asType();
-    result.setParameterTypeName(extractType(typeOfParameter, elementUtils, typeUtils));
-    return result;
+  private static MethodDto createConsumerWithBuilder(String fieldName, TypeName builderType, TypeName fieldType){
+    //TODO
+    return null;
   }
-
-  private static TypeName extractType(
-      TypeMirror typeOfParameter, Elements elementUtils, Types typeUtils) {
-    TypeElement elementOfParameter = (TypeElement) typeUtils.asElement(typeOfParameter);
-    String simpleClassName = elementOfParameter.getSimpleName().toString();
-    String packageName =
-        elementUtils.getPackageOf(elementOfParameter).getQualifiedName().toString();
-
-    final List<TypeMirror> typesExtracted = new ArrayList<>();
-    typeOfParameter.accept(
-        new SimpleTypeVisitor14<Void, Void>() {
-          @Override
-          public Void visitDeclared(DeclaredType t, Void p) {
-            List<? extends TypeMirror> typeArguments = t.getTypeArguments();
-            if (!typeArguments.isEmpty()) {
-              typesExtracted.addAll(typeArguments);
-            }
-            return null;
-          }
-        },
-        null);
-
-    if (typesExtracted.size() == 1) {
-      return new TypeNameGeneric(
-          packageName,
-          simpleClassName,
-          extractType(typesExtracted.get(0), elementUtils, typeUtils));
-    } else {
-      return new TypeName(packageName, simpleClassName);
-    }
+  
+  private static MethodDto createSupplier(String fieldName, TypeName fieldType){
+    //TODO
+    return null;
   }
-
+  
   private static Optional<TypeName> findBuilderType(
       VariableElement param, Elements elementUtils, Types typeUtils) {
     TypeMirror typeOfParameter = param.asType();
@@ -314,27 +221,6 @@ public class ElementToBuilderPropsDtoMapper {
     if (foundBuilderAnnotation.isPresent() && isClassWithoutGenerics) {
       return Optional.of(new TypeName(packageName, simpleClassName + BUILDER_SUFFIX));
     }
-    return Optional.empty();
-  }
-
-  private static boolean hasEmptyConstructor(TypeElement typeElement, Elements elementUtils) {
-    List<ExecutableElement> constructors =
-        ElementFilter.constructorsIn(elementUtils.getAllMembers(typeElement));
-    return constructors.stream().anyMatch(c -> c.getParameters().isEmpty());
-  }
-
-  private static Optional<AnnotationMirror> findAnnotation(
-      Element abstractMethodElement, Class<? extends Annotation> annotationClass) {
-
-    for (AnnotationMirror annotationMirror : abstractMethodElement.getAnnotationMirrors()) {
-      if (annotationMirror
-          .getAnnotationType()
-          .toString()
-          .equals(annotationClass.getCanonicalName())) {
-        return Optional.of(annotationMirror);
-      }
-    }
-
     return Optional.empty();
   }
 }
