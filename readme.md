@@ -6,6 +6,7 @@
 * [Requirements](#requirements)
 * [Using Simple Builders](#using-simple-builders)
   * [Configuration with Maven](#configuration-with-maven)
+* [Used libraries](#used-libraries)
 * [Links](#links)
 * [Licensing](#licensing)
 
@@ -239,6 +240,12 @@ For Maven-based projects, add the following to your POM file in order to use Map
 ```
 
 If you don't work with a dependency management tool, you can obtain a distribution bundle from [Releases page](https://github.com/java-helpers/simple-builders/releases).
+
+## Used libraries
+
+* [Apache Common Lang](https://github.com/apache/commons-lang)
+* [Plantir's Javapoet](https://github.com/palantir/javapoet)
+* [Google's AutoService](https://github.com/google/auto/tree/main/service)
 
 ## Links
 
