@@ -107,7 +107,7 @@ public class JavaCodeGenerator {
 
   private void writeClassToFile(String packageName, TypeSpec typeSpec) throws BuilderException {
     try {
-      JavaFile.builder(packageName, typeSpec).build().writeTo(filer);
+      JavaFile.builder(packageName, typeSpec).skipJavaLangImports(true).build().writeTo(filer);
     } catch (IOException ex) {
       throw new BuilderException(null, ex);
     }
