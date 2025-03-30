@@ -73,10 +73,12 @@ public class JavaCodeGenerator {
    */
   public void generateBuilder(BuilderDefinitionDto builderDef) throws BuilderException {
     ClassName builderClass = map2ClassName(builderDef.getBuilderTypeName());
-    TypeSpec.Builder classBuilder = TypeSpec.classBuilder(builderClass);
     ClassName dtoClass = map2ClassName(builderDef.getBuildingTargetTypeName());
-    classBuilder.addSuperinterface(createInterfaceBuilderBase(dtoClass));
-    classBuilder.addField(createFieldDtoInstance(dtoClass));
+    TypeSpec.Builder classBuilder =
+        TypeSpec.classBuilder(builderClass)
+            .addJavadoc(createJavadocForClass(dtoClass))
+            .addSuperinterface(createInterfaceBuilderBase(dtoClass))
+            .addField(createFieldDtoInstance(dtoClass));
 
     // TODO: Constructors sollten in der BuilderDefinitionDto definiert werden, nur für Klassen mit
     // leerem Constructor ist auch ein Builder mit leerem Constructor möglich
@@ -113,6 +115,10 @@ public class JavaCodeGenerator {
     }
   }
 
+  private CodeBlock createJavadocForClass(ClassName dtoClass) {
+    return CodeBlock.of("Builder for {@code $1N.$2T}.", dtoClass.packageName(), dtoClass);
+  }
+
   private ParameterizedTypeName createInterfaceBuilderBase(ClassName dtoClass) {
     return ParameterizedTypeName.get(ClassName.get(IBuilderBase.class), dtoClass);
   }
@@ -133,12 +139,20 @@ public class JavaCodeGenerator {
   }
 
   private FieldSpec createFieldDtoInstance(ClassName dtoClassName) {
-    return FieldSpec.builder(dtoClassName, "instance", Modifier.PRIVATE, Modifier.FINAL).build();
+    return FieldSpec.builder(dtoClassName, "instance", Modifier.PRIVATE, Modifier.FINAL)
+        .addJavadoc("Inner instance of builder.")
+        .build();
   }
 
   private MethodSpec createEmptyConstructor(ClassName dtoClass) {
     return MethodSpec.constructorBuilder()
         .addModifiers(Modifier.PUBLIC)
+        .addJavadoc(
+            """
+            Empty constructor of builder for {@code $1N.$2T}.
+            """,
+            dtoClass.packageName(),
+            dtoClass)
         .addStatement("this.instance = new $1T()", dtoClass)
         .build();
   }
@@ -148,6 +162,14 @@ public class JavaCodeGenerator {
         .addModifiers(Modifier.PUBLIC)
         .addParameter(dtoClass, "instance")
         .addStatement("this.instance = instance")
+        .addJavadoc(
+            """
+            Initialisation of builder for {@code $1N.$2T} by a instance.
+
+            @param instance object instance for initialisiation
+            """,
+            dtoClass.packageName(),
+            dtoClass)
         .build();
   }
 
@@ -167,6 +189,14 @@ public class JavaCodeGenerator {
     return MethodSpec.methodBuilder("create")
         .addModifiers(STATIC, PUBLIC)
         .returns(builderType)
+        .addJavadoc(
+            """
+            Creating a new builder for {@code $1N.$2T}.
+
+            @return builder for {@code $1N.$2T}
+            """,
+            buildTargetType.packageName(),
+            buildTargetType)
         .addCode(
             """
             $1T instance = new $1T();
@@ -187,6 +217,27 @@ public class JavaCodeGenerator {
     methodDto.getModifier().ifPresent(methodBuilder::addModifiers);
     List<String> parametersInInnerCall = new LinkedList<>();
     int maxIndexParameters = methodDto.getParameters().size() - 1;
+
+    // Adding javadoc for method
+    switch (methodDto.getMethodType()) {
+      case PROXY ->
+          methodBuilder.addJavadoc(
+              "Calling <code>$1N</code> on dto-instance with parameters.\n",
+              methodDto.getFieldSetterMethodName());
+      case CONSUMER ->
+          methodBuilder.addJavadoc(
+              "Calling <code>$1N</code> on dto-instance with value after executing consumer.\n",
+              methodDto.getFieldSetterMethodName());
+      case CONSUMER_BY_BUILDER ->
+          methodBuilder.addJavadoc(
+              "Calling <code>$1N</code> on dto-instance with builder result value.\n",
+              methodDto.getFieldSetterMethodName());
+      case SUPPLIER ->
+          methodBuilder.addJavadoc(
+              "Calling <code>$1N</code> on instance with value of supplier.\n",
+              methodDto.getFieldSetterMethodName());
+    }
+
     for (int i = 0; i <= maxIndexParameters; i++) {
       MethodParameterDto paramDto = methodDto.getParameters().get(i);
       com.palantir.javapoet.TypeName parameterType = map2ParameterType(paramDto.getParameterType());
@@ -202,6 +253,27 @@ public class JavaCodeGenerator {
       } else {
         parametersInInnerCall.add(paramDto.getParameterName());
       }
+
+      // Extending Javadoc with parameters
+      switch (methodDto.getMethodType()) {
+        case PROXY ->
+            methodBuilder.addJavadoc("\n@param $1N value for $1N.", paramDto.getParameterName());
+        case CONSUMER ->
+            methodBuilder.addJavadoc(
+                "\n@param $1N consumer providing instance of field <code>$2N</code>.",
+                paramDto.getParameterName(),
+                methodDto.getMethodName());
+        case CONSUMER_BY_BUILDER ->
+            methodBuilder.addJavadoc(
+                "\n@param $1N consumer providing instance of a builder for field <code>$2N</code>.",
+                paramDto.getParameterName(),
+                methodDto.getMethodName());
+        case SUPPLIER ->
+            methodBuilder.addJavadoc(
+                "\n@param $1N supplier for field <code>$2N</code>.",
+                paramDto.getParameterName(),
+                methodDto.getMethodName());
+      }
     }
     CodeBlock codeBlock =
         switch (methodDto.getMethodType()) {
@@ -210,7 +282,7 @@ public class JavaCodeGenerator {
           case CONSUMER_BY_BUILDER -> createInnerCodeForConsumerByBuilder(methodDto);
           case SUPPLIER -> createInnerCodeForSupplier(methodDto);
         };
-    methodBuilder.addCode(codeBlock);
+    methodBuilder.addCode(codeBlock).addJavadoc("\n@return current instance of builder");
     return methodBuilder.build();
   }
 
