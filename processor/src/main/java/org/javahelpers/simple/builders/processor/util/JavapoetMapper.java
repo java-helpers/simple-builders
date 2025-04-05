@@ -28,8 +28,14 @@ import static org.javahelpers.simple.builders.processor.dtos.TypeNamePrimitive.P
 
 import com.palantir.javapoet.ArrayTypeName;
 import com.palantir.javapoet.ClassName;
+import com.palantir.javapoet.CodeBlock;
 import com.palantir.javapoet.ParameterizedTypeName;
 import com.palantir.javapoet.TypeName;
+import java.util.Map;
+import java.util.stream.Collectors;
+import org.javahelpers.simple.builders.processor.dtos.MethodCodePlaceholderInterface;
+import org.javahelpers.simple.builders.processor.dtos.MethodCodeStringPlaceholder;
+import org.javahelpers.simple.builders.processor.dtos.MethodCodeTypePlaceholder;
 import org.javahelpers.simple.builders.processor.dtos.TypeNameArray;
 import org.javahelpers.simple.builders.processor.dtos.TypeNamePrimitive;
 
@@ -66,5 +72,25 @@ public final class JavapoetMapper {
   public static ClassName map2ClassName(
       org.javahelpers.simple.builders.processor.dtos.TypeName typeName) {
     return ClassName.get(typeName.getPackageName(), typeName.getClassName());
+  }
+
+  public static CodeBlock map2CodeBlock(
+      org.javahelpers.simple.builders.processor.dtos.MethodCodeDto codeDto) {
+    Map<String, Object> arguments =
+        codeDto.getCodeArguments().stream()
+            .collect(
+                Collectors.toMap(
+                    MethodCodePlaceholderInterface::getLabel, JavapoetMapper::toCodeblockValue));
+    return CodeBlock.builder().addNamed(codeDto.getCodeFormat(), arguments).build();
+  }
+
+  private static Object toCodeblockValue(MethodCodePlaceholderInterface placeHolderValue) {
+    if (placeHolderValue instanceof MethodCodeStringPlaceholder stringPlaceholder) {
+      return stringPlaceholder.getValue();
+    } else if (placeHolderValue instanceof MethodCodeTypePlaceholder typePlaceholder) {
+      return map2ParameterType(typePlaceholder.getValue());
+    } else {
+      throw new UnsupportedOperationException("");
+    }
   }
 }

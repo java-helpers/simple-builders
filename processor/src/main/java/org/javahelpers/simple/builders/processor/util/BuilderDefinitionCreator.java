@@ -24,6 +24,7 @@
 
 package org.javahelpers.simple.builders.processor.util;
 
+import static javax.lang.model.type.TypeKind.ARRAY;
 import static org.javahelpers.simple.builders.processor.util.AnnotationValidator.validateAnnotatedElement;
 import static org.javahelpers.simple.builders.processor.util.JavaLangAnalyser.*;
 import static org.javahelpers.simple.builders.processor.util.JavaLangMapper.map2MethodParameter;
@@ -118,6 +119,18 @@ public class BuilderDefinitionCreator {
       // TODO: Logging
       return Optional.empty();
     }
+
+    List<String> paramList =
+        result.getParameters().stream().map(MethodParameterDto::getParameterName).toList();
+    String paramListJoin = String.join(",", paramList);
+    result.setCode(
+        """
+        instance.$dtoMethod:N($dtoMethodParams:N);
+        return this;
+        """);
+    result.addArgument("dtoMethod", methodName);
+    result.addArgument("dtoMethodParams", paramListJoin);
+
     return Optional.of(result);
   }
 
@@ -148,39 +161,48 @@ public class BuilderDefinitionCreator {
     TypeName fieldType = fieldParameterDto.getParameterType();
 
     // simple setter
-    result.addMethod(createSetter(fieldName, fieldType));
+    result.addMethod(createFieldSetter(fieldName, fieldType));
 
     // setting value by builder
     Optional<TypeName> builderTypeOpt = findBuilderType(fieldParameter, elementUtils, typeUtils);
     if (builderTypeOpt.isPresent()) {
       TypeName builderType = builderTypeOpt.get();
-      result.addMethod(createConsumerWithBuilder(fieldName, builderType));
+      result.addMethod(
+          BuilderDefinitionCreator.createFieldConsumerWithBuilder(fieldName, builderType));
     } else if (!isJavaClass(fieldType) && hasEmptyConstructor(fieldTypeElement, elementUtils)) {
       // TODO: Consumer funktioniet nur, wenn Klasse kein Interface/Enum/Abstrakte Classe/Record
-      result.addMethod(createConsumer(fieldName, fieldType));
+      result.addMethod(createFieldConsumer(fieldName, fieldType));
     } else if (isList(fieldType)) {
       result.addMethod(
-          createConsumerWithBuilder(
+          createFieldConsumerWithBuilder(
               fieldName, map2TypeName(ArrayListBuilder.class), fieldType.getInnerType().get()));
       result.addMethod(
-          createSetter(fieldName, new TypeNameArray(fieldType.getInnerType().get(), false)));
+          createFieldSetterWithTransform(
+              fieldName, "List.of(%s)", new TypeNameArray(fieldType.getInnerType().get(), false)));
     } else if (isMap(fieldType)) {
       // TODO MAP (having 2 inner classes, TypeNameGeneric is not able to adress that yet)
     } else if (isSet(fieldType)) {
       result.addMethod(
-          createConsumerWithBuilder(
+          createFieldConsumerWithBuilder(
               fieldName, map2TypeName(HashSetBuilder.class), fieldType.getInnerType().get()));
       result.addMethod(
-          createSetter(fieldName, new TypeNameArray(fieldType.getInnerType().get(), true)));
+          createFieldSetterWithTransform(
+              fieldName, "Set.of(%s)", new TypeNameArray(fieldType.getInnerType().get(), true)));
     }
 
     // setting value by supplier
-    result.addMethod(createSupplier(fieldName, fieldType));
+    result.addMethod(createFieldSupplier(fieldName, fieldType));
 
     return Optional.of(result);
   }
 
-  private static MethodDto createSetter(String fieldName, TypeName fieldType) {
+  private static MethodDto createFieldSetter(String fieldName, TypeName fieldType) {
+    return createFieldSetterWithTransform(fieldName, null, fieldType);
+  }
+
+  private static MethodDto createFieldSetterWithTransform(
+      String fieldName, String transform, TypeName fieldType) {
+    String fieldSetterMethodName = "set" + StringUtils.capitalize(fieldName);
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName(fieldName);
     parameter.setParameterTypeName(fieldType);
@@ -189,10 +211,24 @@ public class BuilderDefinitionCreator {
     methodDto.addParameter(parameter);
     methodDto.setModifier(Modifier.PUBLIC);
     methodDto.setMethodType(MethodTypes.PROXY);
+    String params;
+    if (StringUtils.isBlank(transform)) {
+      params = parameter.getParameterName();
+    } else {
+      params = String.format(transform, parameter.getParameterName());
+    }
+    methodDto.setCode(
+        """
+        instance.$dtoMethod:N($dtoMethodParams:N);
+        return this;
+        """);
+    methodDto.addArgument("dtoMethod", fieldSetterMethodName);
+    methodDto.addArgument("dtoMethodParams", params);
     return methodDto;
   }
 
-  private static MethodDto createConsumer(String fieldName, TypeName fieldType) {
+  private static MethodDto createFieldConsumer(String fieldName, TypeName fieldType) {
+    String fieldSetterMethodName = "set" + StringUtils.capitalize(fieldName);
     TypeNameGeneric consumerType = new TypeNameGeneric(map2TypeName(Consumer.class), fieldType);
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName(fieldName + "Consumer");
@@ -202,16 +238,27 @@ public class BuilderDefinitionCreator {
     methodDto.addParameter(parameter);
     methodDto.setModifier(Modifier.PUBLIC);
     methodDto.setMethodType(MethodTypes.CONSUMER);
+    methodDto.setCode(
+        """
+        $helperType:T consumer = new $helperType:T();
+        $dtoMethodParam:N.accept(consumer);
+        instance.$dtoMethod:N(consumer);
+        return this;
+        """);
+    methodDto.addArgument("dtoMethod", fieldSetterMethodName);
+    methodDto.addArgument("dtoMethodParam", parameter.getParameterName());
+    methodDto.addArgument("helperType", fieldType);
     return methodDto;
   }
 
-  private static MethodDto createConsumerWithBuilder(
+  private static MethodDto createFieldConsumerWithBuilder(
       String fieldName, TypeName builderType, TypeName builderTargetType) {
     TypeNameGeneric builderTypeGeneric = new TypeNameGeneric(builderType, builderTargetType);
-    return createConsumerWithBuilder(fieldName, builderTypeGeneric);
+    return BuilderDefinitionCreator.createFieldConsumerWithBuilder(fieldName, builderTypeGeneric);
   }
 
-  private static MethodDto createConsumerWithBuilder(String fieldName, TypeName builderType) {
+  private static MethodDto createFieldConsumerWithBuilder(String fieldName, TypeName builderType) {
+    String fieldSetterMethodName = "set" + StringUtils.capitalize(fieldName);
     TypeNameGeneric consumerType = new TypeNameGeneric(map2TypeName(Consumer.class), builderType);
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName(fieldName + BUILDER_SUFFIX + "Consumer");
@@ -221,10 +268,21 @@ public class BuilderDefinitionCreator {
     methodDto.addParameter(parameter);
     methodDto.setModifier(Modifier.PUBLIC);
     methodDto.setMethodType(MethodTypes.CONSUMER_BY_BUILDER);
+    methodDto.setCode(
+        """
+        $helperType:T builder = new $helperType:T();
+        $dtoMethodParam:N.accept(builder);
+        instance.$dtoMethod:N(builder.build());
+        return this;
+        """);
+    methodDto.addArgument("dtoMethod", fieldSetterMethodName);
+    methodDto.addArgument("dtoMethodParam", parameter.getParameterName());
+    methodDto.addArgument("helperType", builderType);
     return methodDto;
   }
 
-  private static MethodDto createSupplier(String fieldName, TypeName fieldType) {
+  private static MethodDto createFieldSupplier(String fieldName, TypeName fieldType) {
+    String fieldSetterMethodName = "set" + StringUtils.capitalize(fieldName);
     TypeNameGeneric supplierType = new TypeNameGeneric(map2TypeName(Supplier.class), fieldType);
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName(fieldName + "Supplier");
@@ -234,12 +292,22 @@ public class BuilderDefinitionCreator {
     methodDto.addParameter(parameter);
     methodDto.setModifier(Modifier.PUBLIC);
     methodDto.setMethodType(MethodTypes.SUPPLIER);
+    methodDto.setCode(
+        """
+        instance.$dtoMethod:N($dtoMethodParam:N.get());
+        return this;
+        """);
+    methodDto.addArgument("dtoMethod", fieldSetterMethodName);
+    methodDto.addArgument("dtoMethodParam", parameter.getParameterName());
     return methodDto;
   }
 
   private static Optional<TypeName> findBuilderType(
       VariableElement param, Elements elementUtils, Types typeUtils) {
     TypeMirror typeOfParameter = param.asType();
+    if (typeOfParameter.getKind() == ARRAY) {
+      return Optional.empty();
+    }
     Element elementOfParameter = typeUtils.asElement(typeOfParameter);
     String simpleClassName = elementOfParameter.getSimpleName().toString();
     String packageName =

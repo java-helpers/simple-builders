@@ -52,6 +52,11 @@ public class PersonDto {
     this.groesse = groesse;
   }
 
+  public void aendereGroesseAndNicks(int groesse, String[] nickNames) {
+    this.groesse = groesse;
+    this.nickNames = List.of(nickNames);
+  }
+  
   public List<String> getNickNames() {
     return nickNames;
   }
@@ -60,6 +65,10 @@ public class PersonDto {
     this.nickNames = nickNames;
   }
 
+  public void setNickNames2(String[] nickNames) {
+    this.nickNames = List.of(nickNames);
+  }
+  
   public LocalDate getBirthdate() {
     return birthdate;
   }

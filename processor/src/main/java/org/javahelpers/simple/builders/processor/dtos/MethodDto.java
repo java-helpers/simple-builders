@@ -48,6 +48,8 @@ public class MethodDto {
   /** List of parameters of Method. */
   private final LinkedList<MethodParameterDto> parameters = new LinkedList<>();
 
+  private final MethodCodeDto methodCodeDto = new MethodCodeDto();
+
   /**
    * Getting type of method for source code generation. Defaults to {@code
    * org.javahelpers.simple.builders.internal.dtos.MethodTypes.PROXY}.
@@ -68,6 +70,22 @@ public class MethodDto {
    */
   public void setMethodType(MethodTypes methodType) {
     this.methodType = methodType;
+  }
+
+  public void setCode(String codeFormat) {
+    methodCodeDto.setCodeFormat(codeFormat);
+  }
+
+  public void addArgument(String name, String value) {
+    methodCodeDto.addArgument(name, value);
+  }
+
+  public void addArgument(String name, TypeName value) {
+    methodCodeDto.addArgument(name, value);
+  }
+
+  public MethodCodeDto getMethodCodeDto() {
+    return methodCodeDto;
   }
 
   /**

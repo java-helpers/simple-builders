@@ -38,9 +38,7 @@ import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.ParameterizedTypeName;
 import com.palantir.javapoet.TypeSpec;
 import java.io.IOException;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Generated;
 import javax.lang.model.element.Modifier;
@@ -215,7 +213,6 @@ public class JavaCodeGenerator {
     MethodSpec.Builder methodBuilder =
         MethodSpec.methodBuilder(methodDto.getMethodName()).returns(returnType);
     methodDto.getModifier().ifPresent(methodBuilder::addModifiers);
-    List<String> parametersInInnerCall = new LinkedList<>();
     int maxIndexParameters = methodDto.getParameters().size() - 1;
 
     // Adding javadoc for method
@@ -243,15 +240,8 @@ public class JavaCodeGenerator {
       com.palantir.javapoet.TypeName parameterType = map2ParameterType(paramDto.getParameterType());
       methodBuilder.addParameter(parameterType, paramDto.getParameterName());
       if (i == maxIndexParameters
-          && paramDto.getParameterType() instanceof TypeNameArray paramArrayType) {
+          && paramDto.getParameterType() instanceof TypeNameArray) {
         methodBuilder.varargs(); // Arrays should be mapped to be generics
-        String listOfParam =
-            paramArrayType.isFillingSet()
-                ? "Set.of(" + paramDto.getParameterName() + ")"
-                : "List.of(" + paramDto.getParameterName() + ")";
-        parametersInInnerCall.add(listOfParam);
-      } else {
-        parametersInInnerCall.add(paramDto.getParameterName());
       }
 
       // Extending Javadoc with parameters
@@ -275,87 +265,8 @@ public class JavaCodeGenerator {
                 methodDto.getMethodName());
       }
     }
-    CodeBlock codeBlock =
-        switch (methodDto.getMethodType()) {
-          case PROXY -> createInnerCodeForMethodProxy(methodDto, parametersInInnerCall);
-          case CONSUMER -> createInnerCodeForConsumer(methodDto);
-          case CONSUMER_BY_BUILDER -> createInnerCodeForConsumerByBuilder(methodDto);
-          case SUPPLIER -> createInnerCodeForSupplier(methodDto);
-        };
+    CodeBlock codeBlock = map2CodeBlock(methodDto.getMethodCodeDto());
     methodBuilder.addCode(codeBlock).addJavadoc("\n@return current instance of builder");
     return methodBuilder.build();
-  }
-
-  private CodeBlock createInnerCodeForMethodProxy(
-      MethodDto methodDto, List<String> parametersInInnerCall) {
-    return CodeBlock.of(
-        """
-        instance.$1N($2N);
-        return this;
-        """,
-        methodDto.getFieldSetterMethodName(),
-        String.join(", ", parametersInInnerCall));
-  }
-
-  private CodeBlock createInnerCodeForConsumer(MethodDto methodDto) {
-    if (methodDto.getParameters().isEmpty()) {
-      // TODO Error
-      return null;
-    }
-    MethodParameterDto consumerParameter = methodDto.getParameters().get(0);
-    Optional<TypeName> innerTypeOpt = consumerParameter.getParameterType().getInnerType();
-    if (innerTypeOpt.isEmpty()) {
-      // TODO Error
-      return null;
-    }
-    return CodeBlock.of(
-        """
-        $1T consumer = new $1T();
-        $2N.accept(consumer);
-        instance.$3N(consumer);
-        return this;
-        """,
-        map2ClassName(consumerParameter.getParameterType().getInnerType().get()),
-        consumerParameter.getParameterName(),
-        methodDto.getFieldSetterMethodName());
-  }
-
-  private CodeBlock createInnerCodeForConsumerByBuilder(MethodDto methodDto) {
-    if (methodDto.getParameters().isEmpty()) {
-      // TODO Error
-      return null;
-    }
-    MethodParameterDto consumerParameter = methodDto.getParameters().get(0);
-    Optional<TypeName> innerTypeOpt = consumerParameter.getParameterType().getInnerType();
-    if (innerTypeOpt.isEmpty()) {
-      // TODO Error
-      return null;
-    }
-    // TODO: der generierte Code arbeitet nicht mit dem generischen Typ des Builders
-    return CodeBlock.of(
-        """
-        $1T builder = new $1T();
-        $2N.accept(builder);
-        instance.$3N(builder.build());
-        return this;
-        """,
-        map2ClassName(consumerParameter.getParameterType().getInnerType().get()),
-        consumerParameter.getParameterName(),
-        methodDto.getFieldSetterMethodName());
-  }
-
-  private CodeBlock createInnerCodeForSupplier(MethodDto methodDto) {
-    if (methodDto.getParameters().isEmpty()) {
-      // TODO Error
-      return null;
-    }
-    MethodParameterDto consumerParameter = methodDto.getParameters().get(0);
-    return CodeBlock.of(
-        """
-          instance.$1N($2N.get());
-          return this;
-        """,
-        methodDto.getFieldSetterMethodName(),
-        consumerParameter.getParameterName());
   }
 }
