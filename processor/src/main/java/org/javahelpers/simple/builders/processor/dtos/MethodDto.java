@@ -48,6 +48,9 @@ public class MethodDto {
   /** List of parameters of Method. */
   private final LinkedList<MethodParameterDto> parameters = new LinkedList<>();
 
+  /** Definition of inner implementation for method. */
+  private final MethodCodeDto methodCodeDto = new MethodCodeDto();
+
   /**
    * Getting type of method for source code generation. Defaults to {@code
    * org.javahelpers.simple.builders.internal.dtos.MethodTypes.PROXY}.
@@ -71,6 +74,45 @@ public class MethodDto {
   }
 
   /**
+   * Setting the inner implementation of a method. Supports placeholders which has to be set by
+   * addArgument.
+   *
+   * @param codeFormat Codeformat with placeholders
+   */
+  public void setCode(String codeFormat) {
+    methodCodeDto.setCodeFormat(codeFormat);
+  }
+
+  /**
+   * Adding the value for a text - placeholder.
+   *
+   * @param name name of placeholder
+   * @param value dynamic value of placeholder
+   */
+  public void addArgument(String name, String value) {
+    methodCodeDto.addArgument(name, value);
+  }
+
+  /**
+   * Adding the value for a type - placeholder.
+   *
+   * @param name name of placeholder
+   * @param value dynamic value of placeholder
+   */
+  public void addArgument(String name, TypeName value) {
+    methodCodeDto.addArgument(name, value);
+  }
+
+  /**
+   * Getter for inner implementation of method.
+   *
+   * @return {@code MethodCodeDto} containing definition of implementation
+   */
+  public MethodCodeDto getMethodCodeDto() {
+    return methodCodeDto;
+  }
+
+  /**
    * Getting name of method.
    *
    * @return name with type {@code java.lang.String}
@@ -80,12 +122,11 @@ public class MethodDto {
   }
 
   /**
-   * Helper function to generate a name for setter method.Is used for applying generated values to
-   * fields on builder target.
+   * Helper function to generate a name for setter method. Does not work on non-field methods.
    *
    * @return returning name of field-setter method
    */
-  public String getFieldSetterMethodName() {
+  public String createFieldSetterMethodName() {
     return "set" + StringUtils.capitalize(this.getMethodName());
   }
 

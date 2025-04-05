@@ -87,6 +87,11 @@ public class FieldDto {
     return fieldSetterMethodsList;
   }
 
+  /**
+   * Adds a method to field-definition.
+   *
+   * @param methodDto method definition
+   */
   public void addMethod(MethodDto methodDto) {
     this.fieldSetterMethodsList.add(methodDto);
   }

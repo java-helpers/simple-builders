@@ -24,23 +24,46 @@
 
 package org.javahelpers.simple.builders.processor.util;
 
+import static org.javahelpers.simple.builders.processor.dtos.TypeNamePrimitive.PrimitiveTypeEnum.BOOLEAN;
+
 import com.palantir.javapoet.ArrayTypeName;
 import com.palantir.javapoet.ClassName;
+import com.palantir.javapoet.CodeBlock;
 import com.palantir.javapoet.ParameterizedTypeName;
 import com.palantir.javapoet.TypeName;
-import org.javahelpers.simple.builders.processor.dtos.TypeNameArray;
+import java.util.Map;
+import java.util.stream.Collectors;
+import org.javahelpers.simple.builders.processor.dtos.*;
 
 /** Helper functions to create JavaPoet types from DTOs of simple builder. */
 public final class JavapoetMapper {
 
   private JavapoetMapper() {}
 
+  /**
+   * Mapper for parameterType. Maps into javapoet classes.
+   *
+   * @param parameterType simple-builder dto to be mapped
+   * @return javapoet TypeName
+   */
   public static TypeName map2ParameterType(
       org.javahelpers.simple.builders.processor.dtos.TypeName parameterType) {
     ClassName classNameParameter =
         ClassName.get(parameterType.getPackageName(), parameterType.getClassName());
     if (parameterType instanceof TypeNameArray parameterTypeArray) {
       return ArrayTypeName.of(map2ParameterType(parameterTypeArray.getTypeOfArray()));
+    } else if (parameterType instanceof TypeNamePrimitive parameterTypePrim) {
+      return switch (parameterTypePrim.getType()) {
+        case BOOLEAN -> TypeName.BOOLEAN;
+        case BYTE -> TypeName.BYTE;
+        case CHAR -> TypeName.CHAR;
+        case DOUBLE -> TypeName.DOUBLE;
+        case FLOAT -> TypeName.FLOAT;
+        case INT -> TypeName.INT;
+        case LONG -> TypeName.LONG;
+        case SHORT -> TypeName.SHORT;
+        default -> null;
+      };
     } else if (parameterType.getInnerType().isPresent()) {
       return ParameterizedTypeName.get(
           classNameParameter, map2ParameterType(parameterType.getInnerType().get()));
@@ -48,8 +71,40 @@ public final class JavapoetMapper {
     return classNameParameter;
   }
 
+  /**
+   * Mapper for typename. Maps into javapoet classes.
+   *
+   * @param typeName simple-builder dto to be mapped
+   * @return javapoet TypeName
+   */
   public static ClassName map2ClassName(
       org.javahelpers.simple.builders.processor.dtos.TypeName typeName) {
     return ClassName.get(typeName.getPackageName(), typeName.getClassName());
+  }
+
+  /**
+   * CodeBlock creating by definition in {@code MethodCodeDto}.
+   *
+   * @param codeDto code definition
+   * @return {@CodeBlock} of javapoet
+   */
+  public static CodeBlock map2CodeBlock(
+      org.javahelpers.simple.builders.processor.dtos.MethodCodeDto codeDto) {
+    Map<String, Object> arguments =
+        codeDto.getCodeArguments().stream()
+            .collect(
+                Collectors.toMap(
+                    MethodCodePlaceholder::getLabel, JavapoetMapper::toCodeblockValue));
+    return CodeBlock.builder().addNamed(codeDto.getCodeFormat(), arguments).build();
+  }
+
+  private static Object toCodeblockValue(MethodCodePlaceholder placeHolderValue) {
+    if (placeHolderValue instanceof MethodCodeStringPlaceholder stringPlaceholder) {
+      return stringPlaceholder.getValue();
+    } else if (placeHolderValue instanceof MethodCodeTypePlaceholder typePlaceholder) {
+      return map2ParameterType(typePlaceholder.getValue());
+    } else {
+      throw new UnsupportedOperationException("");
+    }
   }
 }
