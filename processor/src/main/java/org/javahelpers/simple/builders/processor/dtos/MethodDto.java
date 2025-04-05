@@ -72,18 +72,41 @@ public class MethodDto {
     this.methodType = methodType;
   }
 
+  /**
+   * Setting the inner implementation of a method. Supports placeholders which has to be set by
+   * addArgument.
+   *
+   * @param codeFormat Codeformat with placeholders
+   */
   public void setCode(String codeFormat) {
     methodCodeDto.setCodeFormat(codeFormat);
   }
 
+  /**
+   * Adding the value for a text - placeholder.
+   *
+   * @param name name of placeholder
+   * @param value dynamic value of placeholder
+   */
   public void addArgument(String name, String value) {
     methodCodeDto.addArgument(name, value);
   }
 
+  /**
+   * Adding the value for a type - placeholder.
+   *
+   * @param name name of placeholder
+   * @param value dynamic value of placeholder
+   */
   public void addArgument(String name, TypeName value) {
     methodCodeDto.addArgument(name, value);
   }
 
+  /**
+   * Getter for inner implementation of method.
+   *
+   * @return {@code MethodCodeDto} containing definition of implementation
+   */
   public MethodCodeDto getMethodCodeDto() {
     return methodCodeDto;
   }
