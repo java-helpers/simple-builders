@@ -48,6 +48,7 @@ public class MethodDto {
   /** List of parameters of Method. */
   private final LinkedList<MethodParameterDto> parameters = new LinkedList<>();
 
+  /** Definition of inner implementation for method. */
   private final MethodCodeDto methodCodeDto = new MethodCodeDto();
 
   /**
