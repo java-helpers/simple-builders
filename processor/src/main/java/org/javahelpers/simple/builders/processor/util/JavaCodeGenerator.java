@@ -220,27 +220,26 @@ public class JavaCodeGenerator {
       case PROXY ->
           methodBuilder.addJavadoc(
               "Calling <code>$1N</code> on dto-instance with parameters.\n",
-              methodDto.getFieldSetterMethodName());
+              methodDto.getMethodName());
       case CONSUMER ->
           methodBuilder.addJavadoc(
               "Calling <code>$1N</code> on dto-instance with value after executing consumer.\n",
-              methodDto.getFieldSetterMethodName());
+              methodDto.createFieldSetterMethodName());
       case CONSUMER_BY_BUILDER ->
           methodBuilder.addJavadoc(
               "Calling <code>$1N</code> on dto-instance with builder result value.\n",
-              methodDto.getFieldSetterMethodName());
+              methodDto.createFieldSetterMethodName());
       case SUPPLIER ->
           methodBuilder.addJavadoc(
               "Calling <code>$1N</code> on instance with value of supplier.\n",
-              methodDto.getFieldSetterMethodName());
+              methodDto.createFieldSetterMethodName());
     }
 
     for (int i = 0; i <= maxIndexParameters; i++) {
       MethodParameterDto paramDto = methodDto.getParameters().get(i);
       com.palantir.javapoet.TypeName parameterType = map2ParameterType(paramDto.getParameterType());
       methodBuilder.addParameter(parameterType, paramDto.getParameterName());
-      if (i == maxIndexParameters
-          && paramDto.getParameterType() instanceof TypeNameArray) {
+      if (i == maxIndexParameters && paramDto.getParameterType() instanceof TypeNameArray) {
         methodBuilder.varargs(); // Arrays should be mapped to be generics
       }
 

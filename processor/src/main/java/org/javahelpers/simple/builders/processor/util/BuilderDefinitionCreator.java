@@ -202,7 +202,6 @@ public class BuilderDefinitionCreator {
 
   private static MethodDto createFieldSetterWithTransform(
       String fieldName, String transform, TypeName fieldType) {
-    String fieldSetterMethodName = "set" + StringUtils.capitalize(fieldName);
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName(fieldName);
     parameter.setParameterTypeName(fieldType);
@@ -222,13 +221,12 @@ public class BuilderDefinitionCreator {
         instance.$dtoMethod:N($dtoMethodParams:N);
         return this;
         """);
-    methodDto.addArgument("dtoMethod", fieldSetterMethodName);
+    methodDto.addArgument("dtoMethod", methodDto.createFieldSetterMethodName());
     methodDto.addArgument("dtoMethodParams", params);
     return methodDto;
   }
 
   private static MethodDto createFieldConsumer(String fieldName, TypeName fieldType) {
-    String fieldSetterMethodName = "set" + StringUtils.capitalize(fieldName);
     TypeNameGeneric consumerType = new TypeNameGeneric(map2TypeName(Consumer.class), fieldType);
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName(fieldName + "Consumer");
@@ -245,7 +243,7 @@ public class BuilderDefinitionCreator {
         instance.$dtoMethod:N(consumer);
         return this;
         """);
-    methodDto.addArgument("dtoMethod", fieldSetterMethodName);
+    methodDto.addArgument("dtoMethod", methodDto.createFieldSetterMethodName());
     methodDto.addArgument("dtoMethodParam", parameter.getParameterName());
     methodDto.addArgument("helperType", fieldType);
     return methodDto;
@@ -258,7 +256,6 @@ public class BuilderDefinitionCreator {
   }
 
   private static MethodDto createFieldConsumerWithBuilder(String fieldName, TypeName builderType) {
-    String fieldSetterMethodName = "set" + StringUtils.capitalize(fieldName);
     TypeNameGeneric consumerType = new TypeNameGeneric(map2TypeName(Consumer.class), builderType);
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName(fieldName + BUILDER_SUFFIX + "Consumer");
@@ -275,14 +272,13 @@ public class BuilderDefinitionCreator {
         instance.$dtoMethod:N(builder.build());
         return this;
         """);
-    methodDto.addArgument("dtoMethod", fieldSetterMethodName);
+    methodDto.addArgument("dtoMethod", methodDto.createFieldSetterMethodName());
     methodDto.addArgument("dtoMethodParam", parameter.getParameterName());
     methodDto.addArgument("helperType", builderType);
     return methodDto;
   }
 
   private static MethodDto createFieldSupplier(String fieldName, TypeName fieldType) {
-    String fieldSetterMethodName = "set" + StringUtils.capitalize(fieldName);
     TypeNameGeneric supplierType = new TypeNameGeneric(map2TypeName(Supplier.class), fieldType);
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName(fieldName + "Supplier");
@@ -297,7 +293,7 @@ public class BuilderDefinitionCreator {
         instance.$dtoMethod:N($dtoMethodParam:N.get());
         return this;
         """);
-    methodDto.addArgument("dtoMethod", fieldSetterMethodName);
+    methodDto.addArgument("dtoMethod", methodDto.createFieldSetterMethodName());
     methodDto.addArgument("dtoMethodParam", parameter.getParameterName());
     return methodDto;
   }
