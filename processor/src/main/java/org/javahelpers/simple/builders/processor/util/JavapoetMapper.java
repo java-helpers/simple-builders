@@ -33,17 +33,19 @@ import com.palantir.javapoet.ParameterizedTypeName;
 import com.palantir.javapoet.TypeName;
 import java.util.Map;
 import java.util.stream.Collectors;
-import org.javahelpers.simple.builders.processor.dtos.MethodCodePlaceholderInterface;
-import org.javahelpers.simple.builders.processor.dtos.MethodCodeStringPlaceholder;
-import org.javahelpers.simple.builders.processor.dtos.MethodCodeTypePlaceholder;
-import org.javahelpers.simple.builders.processor.dtos.TypeNameArray;
-import org.javahelpers.simple.builders.processor.dtos.TypeNamePrimitive;
+import org.javahelpers.simple.builders.processor.dtos.*;
 
 /** Helper functions to create JavaPoet types from DTOs of simple builder. */
 public final class JavapoetMapper {
 
   private JavapoetMapper() {}
 
+  /**
+   * Mapper for parameterType. Maps into javapoet classes.
+   *
+   * @param parameterType simple-builder dto to be mapped
+   * @return javapoet TypeName
+   */
   public static TypeName map2ParameterType(
       org.javahelpers.simple.builders.processor.dtos.TypeName parameterType) {
     ClassName classNameParameter =
@@ -69,22 +71,34 @@ public final class JavapoetMapper {
     return classNameParameter;
   }
 
+  /**
+   * Mapper for typename. Maps into javapoet classes.
+   *
+   * @param typeName simple-builder dto to be mapped
+   * @return javapoet TypeName
+   */
   public static ClassName map2ClassName(
       org.javahelpers.simple.builders.processor.dtos.TypeName typeName) {
     return ClassName.get(typeName.getPackageName(), typeName.getClassName());
   }
 
+  /**
+   * CodeBlock creating by definition in {@code MethodCodeDto}.
+   *
+   * @param codeDto code definition
+   * @return {@CodeBlock} of javapoet
+   */
   public static CodeBlock map2CodeBlock(
       org.javahelpers.simple.builders.processor.dtos.MethodCodeDto codeDto) {
     Map<String, Object> arguments =
         codeDto.getCodeArguments().stream()
             .collect(
                 Collectors.toMap(
-                    MethodCodePlaceholderInterface::getLabel, JavapoetMapper::toCodeblockValue));
+                    MethodCodePlaceholder::getLabel, JavapoetMapper::toCodeblockValue));
     return CodeBlock.builder().addNamed(codeDto.getCodeFormat(), arguments).build();
   }
 
-  private static Object toCodeblockValue(MethodCodePlaceholderInterface placeHolderValue) {
+  private static Object toCodeblockValue(MethodCodePlaceholder placeHolderValue) {
     if (placeHolderValue instanceof MethodCodeStringPlaceholder stringPlaceholder) {
       return stringPlaceholder.getValue();
     } else if (placeHolderValue instanceof MethodCodeTypePlaceholder typePlaceholder) {

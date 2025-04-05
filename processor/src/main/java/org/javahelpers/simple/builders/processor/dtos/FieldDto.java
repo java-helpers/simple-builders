@@ -89,6 +89,7 @@ public class FieldDto {
 
   /**
    * Adds a method to field-definition.
+   *
    * @param methodDto method definition
    */
   public void addMethod(MethodDto methodDto) {

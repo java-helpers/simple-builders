@@ -1,8 +1,8 @@
 package org.javahelpers.simple.builders.processor.dtos;
 
 /**
- * Placeholder value for text contents. Implements {@code MethodCodePlaceholderInterface} to support
- * a generic mapping of placeholders.
+ * Placeholder value for text contents.Implements {@code MethodCodePlaceholder} to support a generic
+ * mapping of placeholders.
  */
 public class MethodCodeStringPlaceholder extends MethodCodePlaceholder<String> {
 

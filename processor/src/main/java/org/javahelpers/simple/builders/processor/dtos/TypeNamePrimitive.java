@@ -36,13 +36,24 @@ public class TypeNamePrimitive extends TypeName {
   public static final TypeNamePrimitive FLOAT = type(PrimitiveTypeEnum.FLOAT);
   public static final TypeNamePrimitive DOUBLE = type(PrimitiveTypeEnum.DOUBLE);
 
+  /** Type of primitive. */
   private final PrimitiveTypeEnum type;
 
+  /**
+   * Constructor for TypeName by primitive type enum.
+   *
+   * @param primitiveType primitive enum type
+   */
   protected TypeNamePrimitive(PrimitiveTypeEnum primitiveType) {
     super("", primitiveType.name().toLowerCase());
     this.type = primitiveType;
   }
 
+  /**
+   * Getter for type of primitive.
+   *
+   * @return {@code PrimitiveTypeEnum} of primitive
+   */
   public PrimitiveTypeEnum getType() {
     return type;
   }
@@ -51,6 +62,7 @@ public class TypeNamePrimitive extends TypeName {
     return new TypeNamePrimitive(typeEnum);
   }
 
+  /** Enum with supported primitives types. */
   public enum PrimitiveTypeEnum {
     VOID,
     BOOLEAN,

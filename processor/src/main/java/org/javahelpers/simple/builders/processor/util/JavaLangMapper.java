@@ -26,14 +26,7 @@ package org.javahelpers.simple.builders.processor.util;
 import static javax.lang.model.element.Modifier.DEFAULT;
 import static javax.lang.model.element.Modifier.PROTECTED;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static javax.lang.model.type.TypeKind.BOOLEAN;
-import static javax.lang.model.type.TypeKind.BYTE;
-import static javax.lang.model.type.TypeKind.CHAR;
-import static javax.lang.model.type.TypeKind.DOUBLE;
-import static javax.lang.model.type.TypeKind.FLOAT;
-import static javax.lang.model.type.TypeKind.INT;
-import static javax.lang.model.type.TypeKind.LONG;
-import static javax.lang.model.type.TypeKind.SHORT;
+import static javax.lang.model.type.TypeKind.*;
 
 import java.util.ArrayList;
 import java.util.List;
