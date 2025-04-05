@@ -4,7 +4,7 @@ package org.javahelpers.simple.builders.processor.dtos;
  * Placeholder value for text contents. Implements {@code MethodCodePlaceholderInterface} to support
  * a generic mapping of placeholders.
  */
-public class MethodCodeStringPlaceholder extends MethodCodePlaceholderInterface<String> {
+public class MethodCodeStringPlaceholder extends MethodCodePlaceholder<String> {
 
   /**
    * Constructor for placeholders.

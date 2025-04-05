@@ -5,7 +5,7 @@ package org.javahelpers.simple.builders.processor.dtos;
  *
  * @param <T> Generic type for the dynamic value
  */
-public class MethodCodePlaceholderInterface<T> {
+public abstract class MethodCodePlaceholder<T> {
   private final String label;
   private final T value;
 
@@ -15,7 +15,7 @@ public class MethodCodePlaceholderInterface<T> {
    * @param label name of placeholder
    * @param value dynamic value for placeholder
    */
-  public MethodCodePlaceholderInterface(String label, T value) {
+  public MethodCodePlaceholder(String label, T value) {
     this.label = label;
     this.value = value;
   }
