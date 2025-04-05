@@ -24,11 +24,14 @@
 
 package org.javahelpers.simple.builders.processor.util;
 
+import static org.javahelpers.simple.builders.processor.dtos.TypeNamePrimitive.PrimitiveTypeEnum.BOOLEAN;
+
 import com.palantir.javapoet.ArrayTypeName;
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.ParameterizedTypeName;
 import com.palantir.javapoet.TypeName;
 import org.javahelpers.simple.builders.processor.dtos.TypeNameArray;
+import org.javahelpers.simple.builders.processor.dtos.TypeNamePrimitive;
 
 /** Helper functions to create JavaPoet types from DTOs of simple builder. */
 public final class JavapoetMapper {
@@ -41,6 +44,18 @@ public final class JavapoetMapper {
         ClassName.get(parameterType.getPackageName(), parameterType.getClassName());
     if (parameterType instanceof TypeNameArray parameterTypeArray) {
       return ArrayTypeName.of(map2ParameterType(parameterTypeArray.getTypeOfArray()));
+    } else if (parameterType instanceof TypeNamePrimitive parameterTypePrim) {
+      return switch (parameterTypePrim.getType()) {
+        case BOOLEAN -> TypeName.BOOLEAN;
+        case BYTE -> TypeName.BYTE;
+        case CHAR -> TypeName.CHAR;
+        case DOUBLE -> TypeName.DOUBLE;
+        case FLOAT -> TypeName.FLOAT;
+        case INT -> TypeName.INT;
+        case LONG -> TypeName.LONG;
+        case SHORT -> TypeName.SHORT;
+        default -> null;
+      };
     } else if (parameterType.getInnerType().isPresent()) {
       return ParameterizedTypeName.get(
           classNameParameter, map2ParameterType(parameterType.getInnerType().get()));
