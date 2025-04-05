@@ -157,6 +157,12 @@ public final class JavaLangMapper {
           }
 
           @Override
+          public TypeNameArray visitArray(ArrayType t, Void _p) {
+            return new TypeNameArray(
+                extractType(t.getComponentType(), elementUtils, typeUtils), false);
+          }
+
+          @Override
           protected TypeName defaultAction(TypeMirror e, Void _p) {
             throw new IllegalArgumentException("Unexpected type mirror: " + e);
           }
