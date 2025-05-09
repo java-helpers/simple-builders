@@ -38,13 +38,13 @@ public class BuilderDefinitionDto {
    * List of all methods of target DTO which are supported by builder and not targeting a specific
    * DTO field.
    */
-  private final LinkedList<MethodDto> methodsForBuilder = new LinkedList<>();
+  private final LinkedList<MethodDto> methods = new LinkedList<>();
 
   /**
    * List of all fields of target DTO which are supported by builder. A field could be supported by
    * multiple functions in builder.
    */
-  private final LinkedList<FieldDto> setterFieldsForBuilder = new LinkedList<>();
+  private final LinkedList<FieldDto> fields = new LinkedList<>();
 
   /**
    * Getting type of builder.
@@ -90,7 +90,7 @@ public class BuilderDefinitionDto {
    * @param member {@code org.javahelpers.simple.builders.internal.dtos.MethodDto} to be added
    */
   public void addMethod(MethodDto member) {
-    methodsForBuilder.add(member);
+    methods.add(member);
   }
 
   /**
@@ -100,7 +100,7 @@ public class BuilderDefinitionDto {
    *     org.javahelpers.simple.builders.internal.dtos.MethodDto}
    */
   public LinkedList<MethodDto> getMethodsForBuilder() {
-    return methodsForBuilder;
+    return methods;
   }
 
   /**
@@ -109,7 +109,7 @@ public class BuilderDefinitionDto {
    * @param field {@code org.javahelpers.simple.builders.internal.dtos.FieldDto} to be added
    */
   public void addField(FieldDto field) {
-    setterFieldsForBuilder.add(field);
+    fields.add(field);
   }
 
   /**
@@ -118,6 +118,6 @@ public class BuilderDefinitionDto {
    * @return list of fields with type {@code org.javahelpers.simple.builders.internal.dtos.FieldDto}
    */
   public LinkedList<FieldDto> getSetterFieldsForBuilder() {
-    return setterFieldsForBuilder;
+    return fields;
   }
 }
