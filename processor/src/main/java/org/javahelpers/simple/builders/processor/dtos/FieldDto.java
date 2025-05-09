@@ -41,7 +41,7 @@ public class FieldDto {
   /** Name of setter in target object. Entry may be {@code null} if field is only been set via constructor */ 
   private final String setterName; 
 
-  /** List of all methods in builder, which change the field. */
+  /** List of all methods in builder, which provide helpers to change the field. */
   private final List<MethodDto> fieldSetterMethodsList = new ArrayList<>();
 
   /**
