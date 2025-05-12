@@ -17,7 +17,7 @@
     <maven.compiler.target>${java.version}</maven.compiler.target>
     <maven.compiler.release>${java.version}</maven.compiler.release>
     
-    <code-format.version>2.25</code-format.version>
+    <code-format.version>2.27</code-format.version>
   </properties>
 
   <dependencies>
