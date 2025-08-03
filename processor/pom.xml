@@ -9,15 +9,19 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    
     <auto-service.version>1.1.1</auto-service.version>
     <javapoet.version>0.6.0</javapoet.version>
+    <commons-lang.version>3.17.0</commons-lang.version>
     
     <java.version>17</java.version>
     <maven.compiler.source>${java.version}</maven.compiler.source>
     <maven.compiler.target>${java.version}</maven.compiler.target>
     <maven.compiler.release>${java.version}</maven.compiler.release>
     
-    <code-format.version>2.25</code-format.version>
+    <plugin.code-format.version>2.25</plugin.code-format.version>
+    <plugin.maven.compiler.version>3.14.0</plugin.maven.compiler.version>
+    <plugin.maven.source.version>3.3.1</plugin.maven.source.version>
   </properties>
 
   <dependencies>
@@ -30,7 +34,7 @@
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
-      <version>3.17.0</version>
+      <version>${commons-lang.version}</version>
     </dependency>
     <!-- Utility for generate service file -->
     <dependency>
@@ -52,7 +56,7 @@
       <plugin>
         <groupId>com.spotify.fmt</groupId>
         <artifactId>fmt-maven-plugin</artifactId>
-        <version>${code-format.version}</version>
+        <version>${plugin.code-format.version}</version>
         <executions>
           <execution>
             <goals>
@@ -65,7 +69,22 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.14.0</version>
+        <version>${plugin.maven.compiler.version}</version>
+      </plugin>
+      
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>${plugin.maven.source.version}</version>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
