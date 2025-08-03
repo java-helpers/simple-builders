@@ -11,6 +11,7 @@
 
   <name>Simple Builders</name>
   <description>Simple Builder is a utility package for generating builders for dtos in maven generate-sources phase.</description>
+  <url>https://github.com/java-helpers/simple-builders</url>
   
   <licenses>
     <license>
@@ -37,9 +38,10 @@
     <developer>
       <name>Andreas Igel</name>
       <id>aigel</id>
-      <email>Andreas.Igel@Computacenter.com</email>
+      <email>Andreas.Igel@gmx.com</email>
       <roles>
         <role>Java Developer</role>
+        <role>Java Architect</role>
       </roles>
     </developer>
   </developers>
