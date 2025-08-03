@@ -23,16 +23,22 @@
   
   <inceptionYear>2025</inceptionYear>
   
+  <scm>
+    <connection>scm:git:git://github.com/java-helpers/simple-builders.git</connection>
+    <developerConnection>scm:git:ssh://github.com/java-helpers/simple-builders.git</developerConnection>
+    <url>https://github.com/java-helpers/simple-builders/tree/main</url>
+    <tag>HEAD</tag>
+  </scm>
+  
   <issueManagement>
     <system>GitHub</system>
     <url>https://github.com/java-helpers/simple-builders/issues</url>
   </issueManagement>
-  
-  <scm>
-    <connection>scm:git:https://github.com/java-helpers/simple-builders.git</connection>
-    <developerConnection>scm:git:https://github.com/java-helpers/simple-builders.git</developerConnection>
-    <url>https://github.com/java-helpers/simple-builders/simple-builders</url>
-  </scm>
+
+  <ciManagement>
+    <system>Github Actions</system>
+    <url>https://github.com/java-helpers/simple-builders/actions</url>
+  </ciManagement>
 
   <developers>
     <developer>
