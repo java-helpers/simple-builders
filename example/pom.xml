@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>io.github.java-helpers</groupId>
-    <artifactId>simple-builders</artifactId>
-    <version>0.1.0</version>
-  </parent>
+  
+  <groupId>io.github.java-helpers</groupId>
   <artifactId>simple-builders-example</artifactId>
+  <version>0.1.0</version>
   <name>Simple Builders - Example</name>
   <packaging>jar</packaging>
   <description>Example usage of Simple Builders - not meant for deployment</description>
+  <url>https://github.com/java-helpers/simple-builders</url>
+  <inceptionYear>2025</inceptionYear>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     
-    <org.simple-builders.version>${project.version}</org.simple-builders.version>
+    <org.simple-builders.version>0.1.0</org.simple-builders.version>
     <code-format.version>2.25</code-format.version>
     
     <java.version>17</java.version>
@@ -30,9 +30,16 @@
     </dependency>
     
     <dependency>
-      <groupId>org.javahelpers</groupId>
+      <groupId>io.github.java-helpers</groupId>
       <artifactId>simple-builders-core</artifactId>
       <version>${org.simple-builders.version}</version>
+    </dependency>
+    
+    <dependency>
+      <groupId>io.github.java-helpers</groupId>
+      <artifactId>simple-builders-processor</artifactId>
+      <version>${org.simple-builders.version}</version>
+      <scope>provided</scope>
     </dependency>
     
     <dependency>
@@ -55,15 +62,19 @@
           <skip>true</skip>
         </configuration>
       </plugin>
+      
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.13.0</version>
         <configuration>
+          <source>${java.version}</source>
+          <target>${java.version}</target>
+          <release>${java.version}</release>
           <generatedSourcesDirectory>${project.build.directory}/generated-sources/annotations</generatedSourcesDirectory>
           <annotationProcessorPaths>
             <path>
-              <groupId>org.javahelpers</groupId>
+              <groupId>io.github.java-helpers</groupId>
               <artifactId>simple-builders-processor</artifactId>
               <version>${org.simple-builders.version}</version>
             </path>
