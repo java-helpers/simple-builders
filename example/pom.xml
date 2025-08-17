@@ -12,9 +12,10 @@
   <inceptionYear>2025</inceptionYear>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    
-    <org.simple-builders.version>0.1.0</org.simple-builders.version>
+
     <code-format.version>2.25</code-format.version>
+    <maven.compiler.plugin.version>3.13.0</maven.compiler.plugin.version>
+    <maven.deploy.plugin.version>3.1.1</maven.deploy.plugin.version>
     
     <java.version>17</java.version>
     <maven.compiler.source>${java.version}</maven.compiler.source>
@@ -32,14 +33,7 @@
     <dependency>
       <groupId>io.github.java-helpers</groupId>
       <artifactId>simple-builders-core</artifactId>
-      <version>${org.simple-builders.version}</version>
-    </dependency>
-    
-    <dependency>
-      <groupId>io.github.java-helpers</groupId>
-      <artifactId>simple-builders-processor</artifactId>
-      <version>${org.simple-builders.version}</version>
-      <scope>provided</scope>
+      <version>${project.version}</version>
     </dependency>
     
     <dependency>
@@ -58,6 +52,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-deploy-plugin</artifactId>
+        <version>${maven.deploy.plugin.version}</version>
         <configuration>
           <skip>true</skip>
         </configuration>
@@ -66,7 +61,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.13.0</version>
+        <version>${maven.compiler.plugin.version}</version>
         <configuration>
           <source>${java.version}</source>
           <target>${java.version}</target>
@@ -76,7 +71,7 @@
             <path>
               <groupId>io.github.java-helpers</groupId>
               <artifactId>simple-builders-processor</artifactId>
-              <version>${org.simple-builders.version}</version>
+              <version>${project.version}</version>
             </path>
           </annotationProcessorPaths>
         </configuration>
