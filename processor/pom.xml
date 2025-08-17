@@ -55,7 +55,7 @@
     <!-- Dependency Versions -->
     <auto-service.version>1.1.1</auto-service.version>
     <javapoet.version>0.6.0</javapoet.version>
-    <commons-lang.version>3.17.0</commons-lang.version>
+    <commons-lang.version>3.18.0</commons-lang.version>
     
     <!-- Java and Compiler Properties -->
     <java.version>17</java.version>
@@ -71,7 +71,7 @@
     <plugin.maven.install.version>3.1.2</plugin.maven.install.version>
     <plugin.maven.site.version>3.21.0</plugin.maven.site.version>
     <plugin.central.publishing.version>0.8.0</plugin.central.publishing.version>
-    <plugin.code-format.version>2.25</plugin.code-format.version>
+    <plugin.code-format.version>2.27</plugin.code-format.version>
   </properties>
 
   <dependencies>
