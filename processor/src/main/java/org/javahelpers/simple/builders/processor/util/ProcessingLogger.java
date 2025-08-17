@@ -38,28 +38,31 @@ public class ProcessingLogger {
   private final Messager messager;
 
   /**
-   * Constructor for ProcessingLogger with instance of messager.
+   * Constructs a new ProcessingLogger with the specified Messager instance. The Messager is used to
+   * report errors, warnings, and other notices during annotation processing.
    *
-   * @param messager
+   * @param messager the Messager instance to use for reporting messages, must not be null
    */
   public ProcessingLogger(Messager messager) {
     this.messager = messager;
   }
 
   /**
-   * Posting an error with elment and message.
+   * Reports an error at the location of the given element with the specified message. The error
+   * will be reported to the underlying Messager instance.
    *
-   * @param e element on which the error happened
-   * @param message message to be posted to messager
+   * @param e the element where the error occurred, used for location information
+   * @param message the error message to be reported
    */
   public void error(Element e, String message) {
     messager.printMessage(Diagnostic.Kind.ERROR, message, e);
   }
 
   /**
-   * Posting a simple information message.
+   * Posts an informational note message to the underlying Messager. This is typically used for
+   * non-critical information during processing.
    *
-   * @param message message to be posted to messager
+   * @param message the informational message to be posted
    */
   public void log(String message) {
     messager.printMessage(Diagnostic.Kind.NOTE, message);
