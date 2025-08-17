@@ -35,7 +35,6 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
-import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
@@ -52,7 +51,6 @@ import org.javahelpers.simple.builders.processor.util.JavaCodeGenerator;
  * javax.annotation.processing.AbstractProcessor}.
  */
 @AutoService(Processor.class)
-@SupportedSourceVersion(SourceVersion.RELEASE_17)
 @SupportedAnnotationTypes("org.javahelpers.simple.builders.core.annotations.SimpleBuilder")
 public class BuilderProcessor extends AbstractProcessor {
   private Types typeUtils;
@@ -81,6 +79,11 @@ public class BuilderProcessor extends AbstractProcessor {
       }
     }
     return true;
+  }
+
+  @Override
+  public SourceVersion getSupportedSourceVersion() {
+    return SourceVersion.latestSupported();
   }
 
   private void process(Element annotatedElement) throws BuilderException {

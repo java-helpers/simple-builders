@@ -65,8 +65,13 @@ public final class JavapoetMapper {
         default -> null;
       };
     } else if (parameterType.getInnerType().isPresent()) {
-      return ParameterizedTypeName.get(
-          classNameParameter, map2ParameterType(parameterType.getInnerType().get()));
+      TypeName inner = map2ParameterType(parameterType.getInnerType().get());
+      // Box primitives when used as type arguments, e.g., Consumer<Integer> instead of
+      // Consumer<int>
+      if (inner.isPrimitive()) {
+        inner = inner.box();
+      }
+      return ParameterizedTypeName.get(classNameParameter, inner);
     }
     return classNameParameter;
   }

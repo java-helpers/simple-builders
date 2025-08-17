@@ -49,17 +49,23 @@ class BuilderProcessorTest extends AbstractBuilderProcessorTest {
         ProcessorTestUtils.assertSucceededAndGetGenerated(compilation, builderClassName);
 
     // Verify the generated code contains expected methods
-    Assertions.assertTrue(
-        generatedCode.contains("public " + className + " build()"), "build() method missing");
-    Assertions.assertTrue(
-        generatedCode.contains("public " + builderClassName + " name(String name)"),
-        "name(String) setter missing");
-    Assertions.assertTrue(
-        generatedCode.contains("public " + builderClassName + " age(int age)"),
-        "age(int) setter missing");
-    Assertions.assertTrue(
-        generatedCode.contains("public static " + builderClassName + " create()"),
-        "static create() missing");
+    Assertions.assertAll(
+        () ->
+            Assertions.assertTrue(
+                generatedCode.contains("public " + className + " build()"),
+                "build() method missing"),
+        () ->
+            Assertions.assertTrue(
+                generatedCode.contains("public " + builderClassName + " name(String name)"),
+                "name(String) setter missing"),
+        () ->
+            Assertions.assertTrue(
+                generatedCode.contains("public " + builderClassName + " age(int age)"),
+                "age(int) setter missing"),
+        () ->
+            Assertions.assertTrue(
+                generatedCode.contains("public static " + builderClassName + " create()"),
+                "static create() missing"));
   }
 
   @Test
@@ -81,10 +87,84 @@ class BuilderProcessorTest extends AbstractBuilderProcessorTest {
         ProcessorTestUtils.assertSucceededAndGetGenerated(compilation, builderClassName);
 
     // Verify the generated code contains expected methods
-    Assertions.assertTrue(
-        generatedCode.contains("public " + className + " build()"), "build() method missing");
-    Assertions.assertTrue(
-        generatedCode.contains("public static " + builderClassName + " create()"),
-        "static create() missing");
+    Assertions.assertAll(
+        () ->
+            Assertions.assertTrue(
+                generatedCode.contains("public " + className + " build()"),
+                "build() method missing"),
+        () ->
+            Assertions.assertTrue(
+                generatedCode.contains("public static " + builderClassName + " create()"),
+                "static create() missing"));
+  }
+
+  @Test
+  void shouldGenerateBuilderForPrimitiveOnlyClass() {
+    // Given
+    String packageName = "test";
+    String className = "Numbers";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            List.of(
+                "    private int a;",
+                "",
+                "    public int getA() { return a; }",
+                "    public void setA(int a) { this.a = a; }"));
+
+    // When
+    Compilation compilation = compile(sourceFile);
+
+    // Then
+    String generatedCode =
+        ProcessorTestUtils.assertSucceededAndGetGenerated(compilation, builderClassName);
+
+    Assertions.assertAll(
+        () ->
+            Assertions.assertTrue(
+                generatedCode.contains("public " + className + " build()"),
+                "build() method missing"),
+        () ->
+            Assertions.assertTrue(
+                generatedCode.contains("public " + builderClassName + " a(int a)"),
+                "a(int) setter missing"));
+  }
+
+  @Test
+  void shouldHandleListField() {
+    // Given
+    String packageName = "test";
+    String className = "HasList";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            List.of(
+                "    private java.util.List<String> names;",
+                "",
+                "    public java.util.List<String> getNames() { return names; }",
+                "    public void setNames(java.util.List<String> names) { this.names = names; }"));
+
+    // When
+    Compilation compilation = compile(sourceFile);
+
+    // Then
+    String generatedCode =
+        ProcessorTestUtils.assertSucceededAndGetGenerated(compilation, builderClassName);
+
+    Assertions.assertAll(
+        () ->
+            Assertions.assertTrue(
+                generatedCode.contains("public " + className + " build()"),
+                "build() method missing"),
+        () ->
+            Assertions.assertTrue(
+                generatedCode.contains("public static " + builderClassName + " create()"),
+                "static create() missing"));
   }
 }
