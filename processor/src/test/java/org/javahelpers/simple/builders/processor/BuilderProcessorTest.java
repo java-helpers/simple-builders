@@ -48,23 +48,22 @@ class BuilderProcessorTest extends AbstractBuilderProcessorTest {
     String generatedCode =
         ProcessorTestUtils.assertSucceededAndGetGenerated(compilation, builderClassName);
 
-    // Verify the generated code contains expected methods
+    // Verify the generated code contains expected methods (use explicit strings for readability)
     Assertions.assertAll(
         () ->
             Assertions.assertTrue(
-                generatedCode.contains("public " + className + " build()"),
-                "build() method missing"),
+                generatedCode.contains("public Person build()"), "build() method missing"),
         () ->
             Assertions.assertTrue(
-                generatedCode.contains("public " + builderClassName + " name(String name)"),
+                generatedCode.contains("public PersonBuilder name(String name)"),
                 "name(String) setter missing"),
         () ->
             Assertions.assertTrue(
-                generatedCode.contains("public " + builderClassName + " age(int age)"),
+                generatedCode.contains("public PersonBuilder age(int age)"),
                 "age(int) setter missing"),
         () ->
             Assertions.assertTrue(
-                generatedCode.contains("public static " + builderClassName + " create()"),
+                generatedCode.contains("public static PersonBuilder create()"),
                 "static create() missing"));
   }
 
@@ -94,11 +93,10 @@ class BuilderProcessorTest extends AbstractBuilderProcessorTest {
     Assertions.assertAll(
         () ->
             Assertions.assertTrue(
-                generatedCode.contains("public " + className + " build()"),
-                "build() method missing"),
+                generatedCode.contains("public EmptyClass build()"), "build() method missing"),
         () ->
             Assertions.assertTrue(
-                generatedCode.contains("public static " + builderClassName + " create()"),
+                generatedCode.contains("public static EmptyClassBuilder create()"),
                 "static create() missing"));
   }
 
@@ -130,12 +128,10 @@ class BuilderProcessorTest extends AbstractBuilderProcessorTest {
     Assertions.assertAll(
         () ->
             Assertions.assertTrue(
-                generatedCode.contains("public " + className + " build()"),
-                "build() method missing"),
+                generatedCode.contains("public Numbers build()"), "build() method missing"),
         () ->
             Assertions.assertTrue(
-                generatedCode.contains("public " + builderClassName + " a(int a)"),
-                "a(int) setter missing"));
+                generatedCode.contains("public NumbersBuilder a(int a)"), "a(int) setter missing"));
   }
 
   @Test
@@ -166,11 +162,120 @@ class BuilderProcessorTest extends AbstractBuilderProcessorTest {
     Assertions.assertAll(
         () ->
             Assertions.assertTrue(
-                generatedCode.contains("public " + className + " build()"),
-                "build() method missing"),
+                generatedCode.contains("public HasList build()"), "build() method missing"),
         () ->
             Assertions.assertTrue(
-                generatedCode.contains("public static " + builderClassName + " create()"),
+                generatedCode.contains("public static HasListBuilder create()"),
                 "static create() missing"));
+  }
+
+  @Test
+  void shouldHandleMapField() {
+    // Given
+    String packageName = "test";
+    String className = "HasMap";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private java.util.Map<String, Integer> map;
+
+                public java.util.Map<String, Integer> getMap() { return map; }
+                public void setMap(java.util.Map<String, Integer> map) { this.map = map; }
+                """);
+
+    // When
+    Compilation compilation = compile(sourceFile);
+
+    // Then
+    String generatedCode =
+        ProcessorTestUtils.assertSucceededAndGetGenerated(compilation, builderClassName);
+
+    // Verify essential methods exist
+    Assertions.assertAll(
+        () ->
+            Assertions.assertTrue(
+                generatedCode.contains("public HasMap build()"), "build() method missing"),
+        () ->
+            Assertions.assertTrue(
+                generatedCode.contains("public static HasMapBuilder create()"),
+                "static create() missing"));
+  }
+
+  @Test
+  void shouldHandleArrayField() {
+    // Given
+    String packageName = "test";
+    String className = "HasArray";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private int[] values;
+
+                public int[] getValues() { return values; }
+                public void setValues(int[] values) { this.values = values; }
+                """);
+
+    // When
+    Compilation compilation = compile(sourceFile);
+
+    // Then
+    String generatedCode =
+        ProcessorTestUtils.assertSucceededAndGetGenerated(compilation, builderClassName);
+
+    Assertions.assertAll(
+        () ->
+            Assertions.assertTrue(
+                generatedCode.contains("public HasArray build()"), "build() method missing"),
+        () ->
+            Assertions.assertTrue(
+                generatedCode.contains("public static HasArrayBuilder create()"),
+                "static create() missing"));
+  }
+
+  @Test
+  void shouldBoxPrimitiveTypeArgumentsInGenerics() {
+    // Given
+    String packageName = "test";
+    String className = "HasConsumer";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private java.util.function.Consumer<Integer> consumer;
+
+                public java.util.function.Consumer<Integer> getConsumer() { return consumer; }
+                public void setConsumer(java.util.function.Consumer<Integer> consumer) { this.consumer = consumer; }
+                """);
+
+    // When
+    Compilation compilation = compile(sourceFile);
+
+    // Then
+    String generatedCode =
+        ProcessorTestUtils.assertSucceededAndGetGenerated(compilation, builderClassName);
+
+    // Ensure builder compiles and does not use primitive type argument like <int>
+    Assertions.assertAll(
+        () ->
+            Assertions.assertTrue(
+                generatedCode.contains("public HasConsumer build()"), "build() method missing"),
+        () ->
+            Assertions.assertTrue(
+                generatedCode.contains("public static HasConsumerBuilder create()"),
+                "static create() missing"),
+        () ->
+            Assertions.assertFalse(
+                generatedCode.contains("<int>"), "Should not use <int> in generics"));
   }
 }
