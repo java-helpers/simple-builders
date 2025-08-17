@@ -37,7 +37,6 @@ public class TypeNameArray extends TypeName {
    * @param packageName name of package
    * @param className name of class, could not be null
    * @param isSet {@code true} if this array represents a set
-   * @throws NullPointerException if classname is null
    */
   public TypeNameArray(String packageName, String className, boolean isSet) {
     super(packageName, className);
@@ -50,7 +49,6 @@ public class TypeNameArray extends TypeName {
    *
    * @param innerType name of package
    * @param isSet {@code true} if this array represents a set
-   * @throws NullPointerException if classname is null
    */
   public TypeNameArray(TypeName innerType, boolean isSet) {
     super(innerType.getPackageName(), innerType.getClassName());

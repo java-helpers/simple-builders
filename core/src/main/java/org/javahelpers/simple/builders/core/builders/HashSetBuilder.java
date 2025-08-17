@@ -60,6 +60,12 @@ public class HashSetBuilder<T> {
     return this;
   }
 
+  /**
+   * Builds a new Set containing all elements that have been added to this builder. The returned Set
+   * is a new instance, so subsequent modifications to the builder will not affect the returned Set.
+   *
+   * @return a new HashSet containing all elements added to this builder
+   */
   public Set<T> build() {
     return new HashSet(mSet);
   }
