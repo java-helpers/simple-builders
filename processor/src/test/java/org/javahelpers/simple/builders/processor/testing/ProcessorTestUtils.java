@@ -1,7 +1,5 @@
 package org.javahelpers.simple.builders.processor.testing;
 
-import static com.google.testing.compile.CompilationSubject.assertThat;
-
 import com.google.testing.compile.Compilation;
 import com.google.testing.compile.JavaFileObjects;
 import java.util.List;
@@ -51,14 +49,10 @@ public final class ProcessorTestUtils {
   }
 
   /**
-   * Asserts compilation succeeded without warnings and returns the generated builder source code
-   * for the provided simple builder class name (simple name, without package), e.g.
-   * "PersonBuilder".
+   * Load the generated builder source code by simple name from the given compilation. No assertions
+   * are performed here; callers should assert separately.
    */
-  public static String assertSucceededAndGetGenerated(
-      Compilation compilation, String builderSimpleName) {
-    assertThat(compilation).succeededWithoutWarnings();
-
+  public static String loadGeneratedSource(Compilation compilation, String builderSimpleName) {
     JavaFileObject file =
         compilation.generatedFiles().stream()
             .filter(f -> f.getKind() == JavaFileObject.Kind.SOURCE)
@@ -66,13 +60,15 @@ public final class ProcessorTestUtils {
             .findFirst()
             .orElseThrow(
                 () -> new AssertionError("Generated source file not found: " + builderSimpleName));
-
     try {
       return file.getCharContent(true).toString();
     } catch (Exception e) {
       throw new RuntimeException("Failed to read generated source for: " + builderSimpleName, e);
     }
   }
+
+  // Assertion helpers moved to ProcessorAsserts; this class now only provides source building
+  // utilities.
 
   private static String[] buildSourceLines(
       String packageName, String className, List<String> bodyLines) {
