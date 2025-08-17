@@ -52,21 +52,26 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     
+    <!-- Dependency Versions -->
     <auto-service.version>1.1.1</auto-service.version>
     <javapoet.version>0.6.0</javapoet.version>
     <commons-lang.version>3.17.0</commons-lang.version>
     
+    <!-- Java and Compiler Properties -->
     <java.version>17</java.version>
     <maven.compiler.source>${java.version}</maven.compiler.source>
     <maven.compiler.target>${java.version}</maven.compiler.target>
     <maven.compiler.release>${java.version}</maven.compiler.release>
     
-    <plugin.code-format.version>2.25</plugin.code-format.version>
+    <!-- Plugin Versions -->
     <plugin.maven.compiler.version>3.14.0</plugin.maven.compiler.version>
     <plugin.maven.source.version>3.3.1</plugin.maven.source.version>
-    <plugin.maven.gpg.version>3.2.7</plugin.maven.gpg.version>
     <plugin.maven.javadoc.version>3.11.2</plugin.maven.javadoc.version>
+    <plugin.maven.gpg.version>3.2.7</plugin.maven.gpg.version>
+    <plugin.maven.install.version>3.1.2</plugin.maven.install.version>
+    <plugin.maven.site.version>3.21.0</plugin.maven.site.version>
     <plugin.central.publishing.version>0.8.0</plugin.central.publishing.version>
+    <plugin.code-format.version>2.25</plugin.code-format.version>
   </properties>
 
   <dependencies>
@@ -98,55 +103,7 @@
     
   <build>
     <plugins>
-      <!-- Source JAR -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-source-plugin</artifactId>
-        <version>${plugin.maven.source.version}</version>
-        <executions>
-          <execution>
-            <id>attach-sources</id>
-            <goals>
-              <goal>jar-no-fork</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-
-      <!-- JavaDoc Generation -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <version>${plugin.maven.javadoc.version}</version>
-        <executions>
-        <execution>
-          <id>attach-javadocs</id>
-          <goals>
-            <goal>jar</goal>
-          </goals>
-        </execution>
-      </executions>
-      <configuration>
-        <doclint>none</doclint>
-        <source>${java.version}</source>
-      </configuration>
-    </plugin>
-
-      <!-- GPG Signing -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-gpg-plugin</artifactId>
-        <version>${plugin.maven.gpg.version}</version>
-        <executions>
-          <execution>
-            <id>sign-artifacts</id>
-            <phase>verify</phase>
-            <goals>
-              <goal>sign</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
+      <!-- Code Formatting -->
       <plugin>
         <groupId>com.spotify.fmt</groupId>
         <artifactId>fmt-maven-plugin</artifactId>
@@ -159,13 +116,32 @@
           </execution>
         </executions>
       </plugin>
-      
+
+      <!-- Compiler Plugin -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <version>${plugin.maven.compiler.version}</version>
+        <configuration>
+          <source>${java.version}</source>
+          <target>${java.version}</target>
+          <release>${java.version}</release>
+        </configuration>
       </plugin>
       
+      <!-- Site Plugin -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-site-plugin</artifactId>
+        <version>${plugin.maven.site.version}</version>
+      </plugin>
+      
+      <!-- Install Plugin -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-install-plugin</artifactId>
+        <version>${plugin.maven.install.version}</version>
+      </plugin>
     </plugins>
   </build>
 
@@ -198,6 +174,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-source-plugin</artifactId>
+            <version>${plugin.maven.source.version}</version>
             <executions>
               <execution>
                 <id>attach-sources</id>
@@ -206,6 +183,23 @@
                 </goals>
               </execution>
             </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <version>${plugin.maven.javadoc.version}</version>
+            <executions>
+              <execution>
+                <id>attach-javadocs</id>
+                <goals>
+                  <goal>jar</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <doclint>none</doclint>
+              <source>${java.version}</source>
+            </configuration>
           </plugin>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>

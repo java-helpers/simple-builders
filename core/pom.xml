@@ -1,18 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  
+
   <groupId>io.github.java-helpers</groupId>
   <artifactId>simple-builders-core</artifactId>
   <version>0.1.0</version>
-  
+
   <packaging>jar</packaging>
-  
+
   <name>Simple Builders - Core</name>
   <description>API components for result Simple Builders, needs to be a dependency of using project to have access to annotations and default builders.</description>
   <url>https://github.com/java-helpers/simple-builders/</url>
   <inceptionYear>2025</inceptionYear>
-  
+
   <licenses>
     <license>
       <name>MIT License</name>
@@ -20,14 +22,14 @@
       <distribution>repo</distribution>
     </license>
   </licenses>
-  
+
   <scm>
     <connection>scm:git:git://github.com/java-helpers/simple-builders.git</connection>
     <developerConnection>scm:git:ssh://github.com/java-helpers/simple-builders.git</developerConnection>
     <url>https://github.com/java-helpers/simple-builders/tree/main</url>
     <tag>HEAD</tag>
   </scm>
-  
+
   <issueManagement>
     <system>GitHub</system>
     <url>https://github.com/java-helpers/simple-builders/issues</url>
@@ -52,26 +54,30 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    
+
+    <!-- Java and Compiler Properties -->
     <java.version>17</java.version>
     <maven.compiler.source>${java.version}</maven.compiler.source>
     <maven.compiler.target>${java.version}</maven.compiler.target>
     <maven.compiler.release>${java.version}</maven.compiler.release>
     
-    <plugin.code-format.version>2.25</plugin.code-format.version>
+    <!-- Plugin Versions -->
     <plugin.maven.compiler.version>3.14.0</plugin.maven.compiler.version>
-    <plugin.maven.gpg.version>3.2.7</plugin.maven.gpg.version>
-    <plugin.maven.javadoc.version>3.11.2</plugin.maven.javadoc.version>
     <plugin.maven.source.version>3.3.1</plugin.maven.source.version>
-    <plugin.maven.side.version>3.21.0</plugin.maven.side.version>
+    <plugin.maven.javadoc.version>3.11.2</plugin.maven.javadoc.version>
+    <plugin.maven.gpg.version>3.2.7</plugin.maven.gpg.version>
+    <plugin.maven.install.version>3.1.2</plugin.maven.install.version>
+    <plugin.maven.site.version>3.21.0</plugin.maven.site.version>
     <plugin.central.publishing.version>0.8.0</plugin.central.publishing.version>
+    <plugin.code-format.version>2.25</plugin.code-format.version>
   </properties>
 
   <dependencies>
   </dependencies>
-    
+
   <build>
     <plugins>
+      <!-- Code Formatting -->
       <plugin>
         <groupId>com.spotify.fmt</groupId>
         <artifactId>fmt-maven-plugin</artifactId>
@@ -84,84 +90,27 @@
           </execution>
         </executions>
       </plugin>
-      
+
+      <!-- Compiler Plugin -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <version>${plugin.maven.compiler.version}</version>
       </plugin>
       
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-source-plugin</artifactId>
-        <version>${plugin.maven.source.version}</version>
-        <executions>
-          <execution>
-            <id>attach-sources</id>
-            <goals>
-              <goal>jar-no-fork</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-
-      <!-- JavaDoc Generation -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <version>${plugin.maven.javadoc.version}</version>
-        <executions>
-        <execution>
-          <id>attach-javadocs</id>
-          <goals>
-            <goal>jar</goal>
-          </goals>
-        </execution>
-      </executions>
-      <configuration>
-        <doclint>none</doclint>
-        <source>${java.version}</source>
-      </configuration>
-    </plugin>
-      
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-gpg-plugin</artifactId>
-        <version>${plugin.maven.gpg.version}</version>
-        <configuration>
-          <!--keyname>${gpg.keyname}</keyname>
-          <passphraseServerId>${gpg.keyname}</passphraseServerId-->
-          <executable>/usr/local/bin/gpg</executable>
-          <gpgArguments>
-            <arg>--pinentry-mode</arg>
-            <arg>loopback</arg>
-          </gpgArguments>
-        </configuration>
-        <executions>
-          <execution>
-            <id>sign-artifacts</id>
-            <phase>verify</phase>
-            <goals>
-              <goal>sign</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      
+      <!-- Site Plugin -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-site-plugin</artifactId>
-        <version>${plugin.maven.side.version}</version>
+        <version>${plugin.maven.site.version}</version>
       </plugin>
       
-      
+      <!-- Install Plugin -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-install-plugin</artifactId>
-        <version>3.1.2</version>
+        <version>${plugin.maven.install.version}</version>
       </plugin>
-      
-
     </plugins>
   </build>
 
@@ -176,7 +125,7 @@
       <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
     </repository>
   </distributionManagement>
-  
+
   <profiles>
     <profile>
       <id>release</id>
@@ -188,12 +137,13 @@
             <version>0.8.0</version>
             <extensions>true</extensions>
             <configuration>
-            <publishingServerId>central</publishingServerId>
-          </configuration>
-        </plugin>
+              <publishingServerId>central</publishingServerId>
+            </configuration>
+          </plugin>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-source-plugin</artifactId>
+            <version>${plugin.maven.source.version}</version>
             <executions>
               <execution>
                 <id>attach-sources</id>
@@ -202,6 +152,25 @@
                 </goals>
               </execution>
             </executions>
+          </plugin>
+          
+          <!-- JavaDoc Generation -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <version>${plugin.maven.javadoc.version}</version>
+            <executions>
+              <execution>
+                <id>attach-javadocs</id>
+                <goals>
+                  <goal>jar</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <doclint>none</doclint>
+              <source>${java.version}</source>
+            </configuration>
           </plugin>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
