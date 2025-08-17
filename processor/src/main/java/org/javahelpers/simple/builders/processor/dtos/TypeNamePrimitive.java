@@ -24,19 +24,40 @@
 
 package org.javahelpers.simple.builders.processor.dtos;
 
-/** TypeNamePrimitive is the unambiguously definition of a primitive type. */
+/**
+ * Represents a primitive type in the Java language. This class provides type-safe constants for all
+ * Java primitive types and serves as a way to unambiguously identify primitive types during
+ * annotation processing.
+ */
 public class TypeNamePrimitive extends TypeName {
+  /** Represents the {@code void} primitive type. */
   public static final TypeNamePrimitive VOID = type(PrimitiveTypeEnum.VOID);
+
+  /** Represents the {@code boolean} primitive type. */
   public static final TypeNamePrimitive BOOLEAN = type(PrimitiveTypeEnum.BOOLEAN);
+
+  /** Represents the {@code byte} primitive type. */
   public static final TypeNamePrimitive BYTE = type(PrimitiveTypeEnum.BYTE);
+
+  /** Represents the {@code short} primitive type. */
   public static final TypeNamePrimitive SHORT = type(PrimitiveTypeEnum.SHORT);
+
+  /** Represents the {@code int} primitive type. */
   public static final TypeNamePrimitive INT = type(PrimitiveTypeEnum.INT);
+
+  /** Represents the {@code long} primitive type. */
   public static final TypeNamePrimitive LONG = type(PrimitiveTypeEnum.LONG);
+
+  /** Represents the {@code char} primitive type. */
   public static final TypeNamePrimitive CHAR = type(PrimitiveTypeEnum.CHAR);
+
+  /** Represents the {@code float} primitive type. */
   public static final TypeNamePrimitive FLOAT = type(PrimitiveTypeEnum.FLOAT);
+
+  /** Represents the {@code double} primitive type. */
   public static final TypeNamePrimitive DOUBLE = type(PrimitiveTypeEnum.DOUBLE);
 
-  /** Type of primitive. */
+  /** The primitive type represented by this instance. */
   private final PrimitiveTypeEnum type;
 
   /**
@@ -58,11 +79,20 @@ public class TypeNamePrimitive extends TypeName {
     return type;
   }
 
+  /**
+   * Factory method to create a new TypeNamePrimitive instance for the specified primitive type.
+   *
+   * @param typeEnum the primitive type enum value
+   * @return a new TypeNamePrimitive instance representing the specified primitive type
+   */
   protected static TypeNamePrimitive type(PrimitiveTypeEnum typeEnum) {
     return new TypeNamePrimitive(typeEnum);
   }
 
-  /** Enum with supported primitives types. */
+  /**
+   * Enumerates all primitive types supported by the Java language. Each enum constant represents a
+   * specific primitive type that can be used during annotation processing.
+   */
   public enum PrimitiveTypeEnum {
     VOID,
     BOOLEAN,
