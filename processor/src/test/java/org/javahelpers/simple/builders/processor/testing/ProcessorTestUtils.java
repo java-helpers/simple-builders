@@ -27,6 +27,30 @@ public final class ProcessorTestUtils {
   }
 
   /**
+   * Creates a {@link JavaFileObject} using a single body string (ideal for Java text blocks """ ...
+   * """). The body is placed inside the annotated class.
+   */
+  public static JavaFileObject simpleBuilderClass(
+      String packageName, String className, String body) {
+    String fqcn = packageName + "." + className;
+    String source =
+        "package "
+            + packageName
+            + ";\n\n"
+            + "import "
+            + org.javahelpers.simple.builders.core.annotations.SimpleBuilder.class.getName()
+            + ";\n\n"
+            + "@SimpleBuilder\n"
+            + "public class "
+            + className
+            + " {\n"
+            + body
+            + (body.endsWith("\n") ? "" : "\n")
+            + "}\n";
+    return JavaFileObjects.forSourceString(fqcn, source);
+  }
+
+  /**
    * Asserts compilation succeeded without warnings and returns the generated builder source code
    * for the provided simple builder class name (simple name, without package), e.g.
    * "PersonBuilder".

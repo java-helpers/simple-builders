@@ -1,7 +1,6 @@
 package org.javahelpers.simple.builders.processor;
 
 import com.google.testing.compile.Compilation;
-import java.util.List;
 import javax.tools.JavaFileObject;
 import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
 import org.junit.jupiter.api.Assertions;
@@ -21,25 +20,26 @@ class BuilderProcessorTest extends AbstractBuilderProcessorTest {
         ProcessorTestUtils.simpleBuilderClass(
             packageName,
             className,
-            List.of(
-                "    private String name;",
-                "    private int age;",
-                "",
-                "    public String getName() {",
-                "        return name;",
-                "    }",
-                "",
-                "    public void setName(String name) {",
-                "        this.name = name;",
-                "    }",
-                "",
-                "    public int getAge() {",
-                "        return age;",
-                "    }",
-                "",
-                "    public void setAge(int age) {",
-                "        this.age = age;",
-                "    }"));
+            """
+                private String name;
+                private int age;
+
+                public String getName() {
+                    return name;
+                }
+
+                public void setName(String name) {
+                    this.name = name;
+                }
+
+                public int getAge() {
+                    return age;
+                }
+
+                public void setAge(int age) {
+                    this.age = age;
+                }
+                """);
 
     // When
     Compilation compilation = compile(sourceFile);
@@ -77,7 +77,11 @@ class BuilderProcessorTest extends AbstractBuilderProcessorTest {
 
     JavaFileObject sourceFile =
         ProcessorTestUtils.simpleBuilderClass(
-            packageName, className, List.of("    // No fields or methods"));
+            packageName,
+            className,
+            """
+                // No fields or methods
+                """);
 
     // When
     Compilation compilation = compile(sourceFile);
@@ -109,11 +113,12 @@ class BuilderProcessorTest extends AbstractBuilderProcessorTest {
         ProcessorTestUtils.simpleBuilderClass(
             packageName,
             className,
-            List.of(
-                "    private int a;",
-                "",
-                "    public int getA() { return a; }",
-                "    public void setA(int a) { this.a = a; }"));
+            """
+                private int a;
+
+                public int getA() { return a; }
+                public void setA(int a) { this.a = a; }
+                """);
 
     // When
     Compilation compilation = compile(sourceFile);
@@ -144,11 +149,12 @@ class BuilderProcessorTest extends AbstractBuilderProcessorTest {
         ProcessorTestUtils.simpleBuilderClass(
             packageName,
             className,
-            List.of(
-                "    private java.util.List<String> names;",
-                "",
-                "    public java.util.List<String> getNames() { return names; }",
-                "    public void setNames(java.util.List<String> names) { this.names = names; }"));
+            """
+                private java.util.List<String> names;
+
+                public java.util.List<String> getNames() { return names; }
+                public void setNames(java.util.List<String> names) { this.names = names; }
+                """);
 
     // When
     Compilation compilation = compile(sourceFile);
