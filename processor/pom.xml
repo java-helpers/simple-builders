@@ -71,7 +71,7 @@
     <plugin.maven.install.version>3.1.2</plugin.maven.install.version>
     <plugin.maven.site.version>3.21.0</plugin.maven.site.version>
     <plugin.central.publishing.version>0.8.0</plugin.central.publishing.version>
-    <plugin.code-format.version>2.25</plugin.code-format.version>
+    <plugin.code-format.version>2.27</plugin.code-format.version>
   </properties>
 
   <dependencies>
