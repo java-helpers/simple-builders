@@ -171,8 +171,10 @@ public class BuilderDefinitionCreator {
           BuilderDefinitionCreator.createFieldConsumerWithBuilder(fieldName, builderType));
     } else if (!isJavaClass(fieldType)
         && fieldTypeElement != null
+        && fieldTypeElement.getKind() == javax.lang.model.element.ElementKind.CLASS
+        && !fieldTypeElement.getModifiers().contains(Modifier.ABSTRACT)
         && hasEmptyConstructor(fieldTypeElement, elementUtils)) {
-      // TODO: Consumer funktioniet nur, wenn Klasse kein Interface/Enum/Abstrakte Classe/Record
+      // Only generate a Consumer for concrete classes with an accessible empty constructor
       result.addMethod(createFieldConsumer(fieldName, fieldType));
     } else if (isList(fieldType)) {
       result.addMethod(

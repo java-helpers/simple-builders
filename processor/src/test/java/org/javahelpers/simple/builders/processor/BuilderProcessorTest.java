@@ -71,8 +71,7 @@ class BuilderProcessorTest {
         contains("instance.setTags(Set.of(tags));"),
         contains("public WithCollectionsBuilder map(Map<String, Integer> map)"),
         contains("public WithCollectionsBuilder map(Supplier<Map<String, Integer>> mapSupplier)"),
-        contains("instance.setMap(map);")
-        );
+        contains("instance.setMap(map);"));
   }
 
   @Test
