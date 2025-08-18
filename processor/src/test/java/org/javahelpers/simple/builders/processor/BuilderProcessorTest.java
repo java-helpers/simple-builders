@@ -26,6 +26,350 @@ class BuilderProcessorTest {
   }
 
   @Test
+  void shouldDeclareInstanceFieldAsPrivateFinalWithJavadoc() {
+    // Given
+    String packageName = "test";
+    String className = "FieldDoc";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private int x; public int getX(){return x;} public void setX(int x){this.x=x;}
+                """);
+
+    // When
+    Compilation compilation = compile(sourceFile);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains("Inner instance of builder."),
+        contains("private final FieldDoc instance;"));
+  }
+
+  @Test
+  void shouldGenerateCreateMethodWithModifiersAndJavadoc() {
+    // Given
+    String packageName = "test";
+    String className = "CreateDoc";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private int x; public int getX(){return x;} public void setX(int x){this.x=x;}
+                """);
+
+    // When
+    Compilation compilation = compile(sourceFile);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains("public static CreateDocBuilder create()"),
+        contains("Creating a new builder for {"),
+        contains("@return builder for {"));
+  }
+
+  @Test
+  void shouldGenerateBuildOverrideAndReturnInstance() {
+    // Given
+    String packageName = "test";
+    String className = "BuildDoc";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private int x; public int getX(){return x;} public void setX(int x){this.x=x;}
+                """);
+
+    // When
+    Compilation compilation = compile(sourceFile);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains("@Override"),
+        contains("public BuildDoc build()"),
+        contains("return instance;"));
+  }
+
+  @Test
+  void shouldReturnThisFromFluentMethods() {
+    // Given
+    String packageName = "test";
+    String className = "FluentReturn";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private String name; public String getName(){return name;} public void setName(String name){this.name=name;}
+                """);
+
+    // When
+    Compilation compilation = compile(sourceFile);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    ProcessorAsserts.assertingResult(
+        generatedCode, contains("instance.setName(name);"), contains("return this;"));
+  }
+
+  @Test
+  void shouldContainReturnJavadocForConsumerSupplierAndConsumerByBuilder() {
+    // Given
+    String packageName = "test";
+    String className = "ReturnDoc";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject dto =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private String name;
+                private HelperAnno helper;
+                private HelperPlain helperPlain;
+                public String getName() { return name; }
+                public void setName(String name) { this.name = name; }
+                public void setHelper(HelperAnno helper) { this.helper = helper; }
+                public void setHelperPlain(HelperPlain helperPlain) { this.helperPlain = helperPlain; }
+                """);
+
+    JavaFileObject helperAnno =
+        JavaFileObjects.forSourceString(
+            packageName + ".HelperAnno",
+            "package "
+                + packageName
+                + ";\n"
+                + "import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;\n"
+                + "@SimpleBuilder\n"
+                + "public class HelperAnno { public HelperAnno() {} }\n");
+
+    JavaFileObject helperPlain =
+        JavaFileObjects.forSourceString(
+            packageName + ".HelperPlain",
+            "package "
+                + packageName
+                + ";\n"
+                + "public class HelperPlain { public HelperPlain() {} }\n");
+
+    // When
+    Compilation compilation = compile(dto, helperAnno, helperPlain);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    // '@return current instance of builder' should be present for all method types
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains("helperBuilderConsumer"),
+        contains("@return current instance of builder"),
+        contains("helperPlainConsumer"),
+        contains("@return current instance of builder"),
+        contains("nameSupplier"),
+        contains("@return current instance of builder"));
+  }
+
+  @Test
+  void shouldGenerateProxyWithMixedParamsAndArrayVarargs() {
+    // Given
+    String packageName = "test";
+    String className = "MixedProxy";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                public void doMixed(int a, String b, int[] nums) { /* no-op */ }
+                """);
+
+    // When
+    Compilation compilation = compile(sourceFile);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    // Expect last parameter mapped to varargs in builder signature and proper call
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains("doMixed(int a, String b, int... nums)"),
+        contains("instance.doMixed(a,b,nums);"));
+  }
+
+  @Test
+  void shouldIncludeNestedPackageInClassJavadoc() {
+    // Given
+    String packageName = "test.nested";
+    String className = "NestedDoc";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private int x; public int getX(){return x;} public void setX(int x){this.x=x;}
+                """);
+
+    // When
+    Compilation compilation = compile(sourceFile);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    // Javadoc line should contain the nested package name and the class indicator
+    ProcessorAsserts.assertingResult(
+        generatedCode, contains("Builder for {"), contains("test.nested"));
+  }
+
+  @Test
+  void shouldGenerateClassJavadocAndBaseInterface() {
+    // Given
+    String packageName = "test";
+    String className = "DocTarget";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private int n;
+
+                public int getN() { return n; }
+                public void setN(int n) { this.n = n; }
+                """);
+
+    // When
+    Compilation compilation = compile(sourceFile);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    // Class javadoc and interface
+    ProcessorAsserts.assertingResult(
+        generatedCode, contains("Builder for {"), contains("implements IBuilderBase<DocTarget>"));
+  }
+
+  @Test
+  void shouldGenerateBothConstructorsWithJavadocs() {
+    // Given
+    String packageName = "test";
+    String className = "CtorDoc";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private String x;
+                public String getX() { return x; }
+                public void setX(String x) { this.x = x; }
+                """);
+
+    // When
+    Compilation compilation = compile(sourceFile);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains("Empty constructor of builder for"),
+        contains("Initialisation of builder for"),
+        contains("@param instance object instance for initialisiation"),
+        contains("this.instance = instance;"),
+        contains("this.instance = new CtorDoc();"));
+  }
+
+  @Test
+  void shouldGenerateMethodJavadocsForAllMethodTypes() {
+    // Given
+    String packageName = "test";
+    String className = "JavadocTarget";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject dto =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private String name;
+                private HelperPlain helperPlain;
+                public String getName() { return name; }
+                public void setName(String name) { this.name = name; }
+                public void setHelperPlain(HelperPlain helperPlain) { this.helperPlain = helperPlain; }
+                public void doSomething(int a, String b) { /* no-op */ }
+                """);
+
+    JavaFileObject helper =
+        JavaFileObjects.forSourceString(
+            packageName + ".HelperPlain",
+            "package "
+                + packageName
+                + ";\n"
+                + "public class HelperPlain {\n"
+                + "  public HelperPlain() {}\n"
+                + "}\n");
+
+    // When
+    Compilation compilation = compile(dto, helper);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    // PROXY method javadoc has @param for each parameter and @return
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains("Calling <code>doSomething</code> on dto-instance with parameters."),
+        contains("@param a value for a."),
+        contains("@param b value for b."),
+        contains("@return current instance of builder"));
+
+    // SUPPLIER method javadoc and code
+    ProcessorAsserts.assertingResult(
+        generatedCode, contains("supplier for field"), contains("nameSupplier"));
+
+    // CONSUMER method javadoc and code
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains("consumer providing instance of field"),
+        contains("helperPlainConsumer"));
+  }
+
+  @Test
   void shouldGenerateConsumerByBuilderForAnnotatedField() {
     // Given
     String packageName = "test";
