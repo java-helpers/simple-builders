@@ -132,7 +132,7 @@ class ReadmeExampleTest {
         contains("public ProjectBuilder name(String name)"),
         contains(
             "public ProjectBuilder tasks(Consumer<ArrayListBuilder<Task>> tasksBuilderConsumer)"),
-        contains("public ProjectBuilder metadata(Map metadata)"),
+        contains("public ProjectBuilder metadata(Map<String, String> metadata)"),
         contains("public ProjectBuilder status(ProjectStatus status)"),
         contains("public Project build()"));
 

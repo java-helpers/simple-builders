@@ -68,10 +68,10 @@ class BuilderProcessorTest {
         contains("public WithCollectionsBuilder tags(Set<String> tags)"),
         contains("public WithCollectionsBuilder tags(Supplier<Set<String>> tagsSupplier)"),
         contains("public WithCollectionsBuilder tags(String... tags)"),
-        contains("instance.setTags(Set.of(tags));")
-        // TODO:    contains("public WithCollectionsBuilder map(Map<String, Integer> map)"),
-        // TODO:    contains("public WithCollectionsBuilder map(Supplier<Map<String, Integer>>
-        // mapSupplier)")
+        contains("instance.setTags(Set.of(tags));"),
+        contains("public WithCollectionsBuilder map(Map<String, Integer> map)"),
+        contains("public WithCollectionsBuilder map(Supplier<Map<String, Integer>> mapSupplier)"),
+        contains("instance.setMap(map);")
         );
   }
 
