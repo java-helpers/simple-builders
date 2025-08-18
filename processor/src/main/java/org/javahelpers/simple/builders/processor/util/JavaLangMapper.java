@@ -46,6 +46,7 @@ import org.javahelpers.simple.builders.processor.dtos.MethodParameterDto;
 import org.javahelpers.simple.builders.processor.dtos.TypeName;
 import org.javahelpers.simple.builders.processor.dtos.TypeNameArray;
 import org.javahelpers.simple.builders.processor.dtos.TypeNameGeneric;
+import org.javahelpers.simple.builders.processor.dtos.TypeNameParameterized;
 import org.javahelpers.simple.builders.processor.dtos.TypeNamePrimitive;
 
 /** Helper functions to create simple builder types from java.lang types. */
@@ -140,12 +141,13 @@ public final class JavaLangMapper {
             List<TypeMirror> typesExtracted = new ArrayList<>(t.getTypeArguments());
             if (typesExtracted.isEmpty()) {
               return rawType;
-            } else if (typesExtracted.size() == 1) {
-              return new TypeNameGeneric(
-                  rawType, extractType(typesExtracted.get(0), elementUtils, typeUtils));
             } else {
-              // TODO: Multi-Type not supported yet
-              return rawType;
+              List<TypeName> argTypes = new ArrayList<>(typesExtracted.size());
+              for (TypeMirror tm : typesExtracted) {
+                argTypes.add(extractType(tm, elementUtils, typeUtils));
+              }
+              // Represent all generics uniformly
+              return new TypeNameParameterized(rawType, argTypes);
             }
           }
 

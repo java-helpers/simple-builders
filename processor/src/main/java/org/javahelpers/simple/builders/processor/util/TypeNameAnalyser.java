@@ -38,9 +38,6 @@ public class TypeNameAnalyser {
    * @return {@code true}, if it is a {@code java.util.Map}
    */
   public static boolean isMap(TypeName typeName) {
-    if (typeName.getInnerType().isEmpty()) {
-      return false;
-    }
     return StringUtils.equalsIgnoreCase(typeName.getPackageName(), "java.util")
         && StringUtils.equalsIgnoreCase(typeName.getClassName(), "Map");
   }
@@ -62,9 +59,6 @@ public class TypeNameAnalyser {
    * @return {@code true}, if it is a {@code java.util.Set}
    */
   public static boolean isSet(TypeName typeName) {
-    if (typeName.getInnerType().isEmpty()) {
-      return false;
-    }
     return StringUtils.equalsIgnoreCase(typeName.getPackageName(), "java.util")
         && StringUtils.equalsIgnoreCase(typeName.getClassName(), "Set");
   }
@@ -76,9 +70,6 @@ public class TypeNameAnalyser {
    * @return {@code true}, if it is a {@code java.util.List}
    */
   public static boolean isList(TypeName typeName) {
-    if (typeName.getInnerType().isEmpty()) {
-      return false;
-    }
     return StringUtils.equalsIgnoreCase(typeName.getPackageName(), "java.util")
         && StringUtils.equalsIgnoreCase(typeName.getClassName(), "List");
   }

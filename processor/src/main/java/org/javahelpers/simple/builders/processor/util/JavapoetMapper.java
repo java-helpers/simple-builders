@@ -64,6 +64,14 @@ public final class JavapoetMapper {
         case SHORT -> TypeName.SHORT;
         default -> null;
       };
+    } else if (parameterType instanceof TypeNameParameterized param) {
+      java.util.List<com.palantir.javapoet.TypeName> args = new java.util.ArrayList<>();
+      for (org.javahelpers.simple.builders.processor.dtos.TypeName tn : param.getTypeArguments()) {
+        TypeName mapped = map2ParameterType(tn);
+        if (mapped.isPrimitive()) mapped = mapped.box();
+        args.add(mapped);
+      }
+      return ParameterizedTypeName.get(classNameParameter, args.toArray(new TypeName[0]));
     } else if (parameterType.getInnerType().isPresent()) {
       TypeName inner = map2ParameterType(parameterType.getInnerType().get());
       // Box primitives when used as type arguments, e.g., Consumer<Integer> instead of
