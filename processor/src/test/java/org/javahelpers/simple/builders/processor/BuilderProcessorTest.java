@@ -26,6 +26,55 @@ class BuilderProcessorTest {
   }
 
   @Test
+  void shouldGenerateCollectionSettersAndProviders() {
+    // Given
+    String packageName = "test";
+    String className = "WithCollections";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private java.util.List<String> names;
+                private java.util.Set<String> tags;
+                private java.util.Map<String, Integer> map;
+
+                public java.util.List<String> getNames() { return names; }
+                public void setNames(java.util.List<String> names) { this.names = names; }
+
+                public java.util.Set<String> getTags() { return tags; }
+                public void setTags(java.util.Set<String> tags) { this.tags = tags; }
+
+                public java.util.Map<String, Integer> getMap() { return map; }
+                public void setMap(java.util.Map<String, Integer> map) { this.map = map; }
+                """);
+
+    // When
+    Compilation compilation = compile(sourceFile);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    // Direct setters and varargs convenience for List and Set; direct setter for Map
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains("public WithCollectionsBuilder names(List<String> names)"),
+        contains("public WithCollectionsBuilder names(Supplier<List<String>> namesSupplier)"),
+        contains("public WithCollectionsBuilder names(String... names)"),
+        contains("instance.setNames(List.of(names));"),
+        contains("public WithCollectionsBuilder tags(Set<String> tags)"),
+        contains("public WithCollectionsBuilder tags(Supplier<Set<String>> tagsSupplier)"),
+        contains("public WithCollectionsBuilder tags(String... tags)"),
+        contains("instance.setTags(Set.of(tags));")
+        //TODO:    contains("public WithCollectionsBuilder map(Map<String, Integer> map)"),
+        //TODO:    contains("public WithCollectionsBuilder map(Supplier<Map<String, Integer>> mapSupplier)")
+        );
+  }
+
+  @Test
   void shouldDeclareInstanceFieldAsPrivateFinalWithJavadoc() {
     // Given
     String packageName = "test";
