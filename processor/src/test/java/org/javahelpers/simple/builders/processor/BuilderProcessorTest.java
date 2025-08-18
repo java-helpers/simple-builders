@@ -11,7 +11,6 @@ import javax.tools.JavaFileObject;
 import org.javahelpers.simple.builders.processor.testing.ProcessorAsserts;
 import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 /** Tests for the {@link BuilderProcessor} class. */
@@ -76,7 +75,6 @@ class BuilderProcessorTest {
         contains("public PersonBuilder age(int age)"));
   }
 
-  @Disabled("Setter generation for Set<String> not implemented yet")
   @Test
   void shouldGenerateSetterForSetOfStrings_whenImplemented() {
     // Given
@@ -102,7 +100,7 @@ class BuilderProcessorTest {
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
     ProcessorAsserts.assertingResult(
-        generatedCode, contains("public HasSetStringBuilder tags(java.util.Set<String> tags)"));
+        generatedCode, contains("public HasSetStringBuilder tags(Set<String> tags)"));
   }
 
   @Test
@@ -129,10 +127,9 @@ class BuilderProcessorTest {
     // Then
     assertGenerationSucceeded(
         compilation, builderClassName, loadGeneratedSource(compilation, builderClassName));
-    // Currently no positive assertion; future expectation covered by @Disabled test below
+    // Currently no positive assertion; future expectation covered by test below
   }
 
-  @Disabled("Setter generation for cross-package type not implemented yet")
   @Test
   void shouldGenerateSetterForHelperInDifferentPackage_whenImplemented() {
     // Given
@@ -164,7 +161,7 @@ class BuilderProcessorTest {
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
     ProcessorAsserts.assertingResult(
         generatedCode,
-        contains("public UsesOtherPackageHelperBuilder helper(otherpkg.Helper helper)"));
+        contains("public UsesOtherPackageHelperBuilder helper(Helper helper)"));
   }
 
   @Test
@@ -204,7 +201,6 @@ class BuilderProcessorTest {
     // build/create are checked centrally; positive setter check covered by @Disabled test below
   }
 
-  @Disabled("Setter generation for Set<Helper> not implemented yet")
   @Test
   void shouldGenerateSetterForSetOfCustomType_whenImplemented() {
     // Given
@@ -241,7 +237,7 @@ class BuilderProcessorTest {
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
     ProcessorAsserts.assertingResult(
         generatedCode,
-        contains("public HasSetCustomBuilder helpers(java.util.Set<Helper> helpers)"));
+        contains("public HasSetCustomBuilder helpers(Set<Helper> helpers)"));
   }
 
   @Test
@@ -303,7 +299,6 @@ class BuilderProcessorTest {
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
   }
 
-  @Disabled("Setter generation for java.time types not implemented yet")
   @Test
   void shouldGenerateSetterForJavaTime_whenImplemented() {
     // Given
@@ -329,7 +324,7 @@ class BuilderProcessorTest {
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
     ProcessorAsserts.assertingResult(
-        generatedCode, contains("public HasLocalDateBuilder date(java.time.LocalDate date)"));
+        generatedCode, contains("public HasLocalDateBuilder date(LocalDate date)"));
   }
 
   @Test
