@@ -783,6 +783,169 @@ class BuilderProcessorTest {
   }
 
   @Test
+  void shouldFilterOutNonRelevantMethods() {
+    // Given
+    String packageName = "test";
+    String className = "HasVariousMethods";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                // valid proxy candidate
+                public void ok() {}
+
+                // should be filtered
+                private void hidden() {}
+                public static void util() {}
+                public void risky() throws Exception {}
+                public int returnsInt() { return 42; }
+                """);
+
+    // When
+    Compilation compilation = compile(sourceFile);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+    // Expect only ok() proxy to be present
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains("public HasVariousMethodsBuilder ok()"),
+        contains("instance.ok();"),
+        contains("return this;"));
+    ProcessorAsserts.assertNotContaining(
+        generatedCode,
+        ProcessorAsserts.notContains("hidden()"),
+        ProcessorAsserts.notContains("util()"),
+        ProcessorAsserts.notContains("risky()"),
+        ProcessorAsserts.notContains("returnsInt("));
+  }
+
+  @Test
+  void shouldNotGenerateConsumersForPrimitiveAndArrayFields() {
+    // Given
+    String packageName = "test";
+    String className = "PrimAndArray";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private int count;
+                private String[] names;
+
+                public int getCount() { return count; }
+                public void setCount(int count) { this.count = count; }
+
+                public String[] getNames() { return names; }
+                public void setNames(String[] names) { this.names = names; }
+                """);
+
+    // When
+    Compilation compilation = compile(sourceFile);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+    // Expect simple setters and suppliers only; no consumer methods for primitive/array
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains("public PrimAndArrayBuilder count("),
+        contains("countSupplier)"),
+        contains("public PrimAndArrayBuilder names("),
+        contains("namesSupplier)"));
+    ProcessorAsserts.assertNotContaining(
+        generatedCode,
+        ProcessorAsserts.notContains("countConsumer"),
+        ProcessorAsserts.notContains("namesConsumer"),
+        ProcessorAsserts.notContains("countBuilderConsumer"),
+        ProcessorAsserts.notContains("namesBuilderConsumer"));
+  }
+
+  @Test
+  void shouldNotGenerateSpecialMethodsForMapBeyondSetterAndSupplier() {
+    // Given
+    String packageName = "test";
+    String className = "HasMap";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private java.util.Map<String, Integer> map;
+
+                public java.util.Map<String, Integer> getMap() { return map; }
+                public void setMap(java.util.Map<String, Integer> map) { this.map = map; }
+                """);
+
+    // When
+    Compilation compilation = compile(sourceFile);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    // Expect only direct setter and supplier; no varargs/consumer for Map
+    ProcessorAsserts.assertingResult(
+        generatedCode, contains("public HasMapBuilder map("), contains("mapSupplier)"));
+    ProcessorAsserts.assertNotContaining(
+        generatedCode,
+        ProcessorAsserts.notContains("map(String..."),
+        ProcessorAsserts.notContains("map(java.lang.String..."),
+        ProcessorAsserts.notContains("mapBuilderConsumer"),
+        ProcessorAsserts.notContains("mapConsumer"));
+  }
+
+  @Test
+  void shouldNotGenerateConsumerForAbstractHelper() {
+    // Given
+    String packageName = "test";
+    String className = "UsesAbstract";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject dto =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private HelperAbs helperAbs;
+
+                public HelperAbs getHelperAbs() { return helperAbs; }
+                public void setHelperAbs(HelperAbs helperAbs) { this.helperAbs = helperAbs; }
+                """);
+
+    JavaFileObject helperAbs =
+        JavaFileObjects.forSourceString(
+            packageName + ".HelperAbs",
+            "package "
+                + packageName
+                + ";\n"
+                + "public abstract class HelperAbs {\n"
+                + "  public HelperAbs() {}\n"
+                + "}\n");
+
+    // When
+    Compilation compilation = compile(dto, helperAbs);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    // No consumer method should be generated for abstract helper type
+    ProcessorAsserts.assertNotContaining(
+        generatedCode,
+        ProcessorAsserts.notContains("helperAbsConsumer"),
+        ProcessorAsserts.notContains("helperAbsBuilderConsumer"));
+  }
+
+  @Test
   void shouldGenerateAnnotationsAndCreateBuildMethods() {
     // Given
     String packageName = "test";
