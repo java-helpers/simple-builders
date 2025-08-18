@@ -25,6 +25,125 @@ class BuilderProcessorTest {
     compiler = Compiler.javac().withProcessors(processor);
   }
 
+  @Test
+  void shouldGenerateConsumerByBuilderForAnnotatedField() {
+    // Given
+    String packageName = "test";
+    String className = "UsesAnnotatedHelper";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject dto =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private HelperAnno helper;
+
+                public HelperAnno getHelper() { return helper; }
+                public void setHelper(HelperAnno helper) { this.helper = helper; }
+                """);
+
+    JavaFileObject helper =
+        JavaFileObjects.forSourceString(
+            packageName + ".HelperAnno",
+            "package "
+                + packageName
+                + ";\n"
+                + "import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;\n"
+                + "@SimpleBuilder\n"
+                + "public class HelperAnno {\n"
+                + "  public HelperAnno() {}\n"
+                + "}\n");
+
+    // When
+    Compilation compilation = compile(dto, helper);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    // Expect consumer-by-builder method using HelperAnnoBuilder and builder.build()
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains("helperBuilderConsumer"),
+        contains("HelperAnnoBuilder builder = new HelperAnnoBuilder();"),
+        contains("helperBuilderConsumer.accept(builder);"),
+        contains("instance.setHelper(builder.build());"));
+  }
+
+  @Test
+  void shouldGenerateConsumerForCustomTypeWithEmptyConstructor() {
+    // Given
+    String packageName = "test";
+    String className = "UsesPlainHelper";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject dto =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private HelperPlain helperPlain;
+
+                public HelperPlain getHelperPlain() { return helperPlain; }
+                public void setHelperPlain(HelperPlain helperPlain) { this.helperPlain = helperPlain; }
+                """);
+
+    JavaFileObject helper =
+        JavaFileObjects.forSourceString(
+            packageName + ".HelperPlain",
+            "package "
+                + packageName
+                + ";\n"
+                + "public class HelperPlain {\n"
+                + "  public HelperPlain() {}\n"
+                + "}\n");
+
+    // When
+    Compilation compilation = compile(dto, helper);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    // Expect consumer method with local var named 'consumer' of HelperPlain
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains("HelperPlain consumer = new HelperPlain();"),
+        contains("helperPlainConsumer.accept(consumer);"),
+        contains("instance.setHelperPlain(consumer);"));
+  }
+
+  @Test
+  void shouldGenerateSupplierMethodForField() {
+    // Given
+    String packageName = "test";
+    String className = "HasSupplier";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private String name;
+
+                public String getName() { return name; }
+                public void setName(String name) { this.name = name; }
+                """);
+
+    // When
+    Compilation compilation = compile(sourceFile);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    // Expect supplier-based setter usage
+    ProcessorAsserts.assertingResult(
+        generatedCode, contains("nameSupplier"), contains("instance.setName(nameSupplier.get());"));
+  }
+
   protected Compilation compile(JavaFileObject... sourceFiles) {
     return compiler.compile(sourceFiles);
   }
@@ -160,8 +279,7 @@ class BuilderProcessorTest {
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
     ProcessorAsserts.assertingResult(
-        generatedCode,
-        contains("public UsesOtherPackageHelperBuilder helper(Helper helper)"));
+        generatedCode, contains("public UsesOtherPackageHelperBuilder helper(Helper helper)"));
   }
 
   @Test
@@ -236,8 +354,7 @@ class BuilderProcessorTest {
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
     ProcessorAsserts.assertingResult(
-        generatedCode,
-        contains("public HasSetCustomBuilder helpers(Set<Helper> helpers)"));
+        generatedCode, contains("public HasSetCustomBuilder helpers(Set<Helper> helpers)"));
   }
 
   @Test
@@ -270,6 +387,107 @@ class BuilderProcessorTest {
     assertGenerationSucceeded(
         compilation, builderClassName, loadGeneratedSource(compilation, builderClassName));
     // build/create are checked centrally; no additional builder setter checks here
+  }
+
+  @Test
+  void shouldGenerateAnnotationsAndCreateBuildMethods() {
+    // Given
+    String packageName = "test";
+    String className = "AnnoTarget";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private int a;
+                public int getA() { return a; }
+                public void setA(int a) { this.a = a; }
+                """);
+
+    // When
+    Compilation compilation = compile(sourceFile);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains("@Generated("),
+        contains("@BuilderImplementation("),
+        contains("public static AnnoTargetBuilder create()"),
+        contains("return new AnnoTargetBuilder(instance);"),
+        contains("public AnnoTarget build()"),
+        contains("return instance;"));
+  }
+
+  @Test
+  void shouldGenerateVarargsConvenienceForCollections() {
+    // Given
+    String packageName = "test";
+    String className = "HasCollectionsConvenience";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private java.util.List<String> names;
+                private java.util.Set<String> tags;
+
+                public java.util.List<String> getNames() { return names; }
+                public void setNames(java.util.List<String> names) { this.names = names; }
+
+                public java.util.Set<String> getTags() { return tags; }
+                public void setTags(java.util.Set<String> tags) { this.tags = tags; }
+                """);
+
+    // When
+    Compilation compilation = compile(sourceFile);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains("public HasCollectionsConvenienceBuilder names(String... names)"),
+        contains("instance.setNames(List.of(names));"),
+        contains("public HasCollectionsConvenienceBuilder tags(String... tags)"),
+        contains("instance.setTags(Set.of(tags));"));
+  }
+
+  @Test
+  void shouldGenerateProxyMethodIncludingVarargsParameters() {
+    // Given
+    String packageName = "test";
+    String className = "HasActionMethods";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                public void reset(int level, String[] notes) {}
+                public void clearAll() {}
+                """);
+
+    // When
+    Compilation compilation = compile(sourceFile);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+    // Method proxies return builder and forward to instance, last array parameter becomes varargs
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains("public HasActionMethodsBuilder reset(int level, String... notes)"),
+        contains("instance.reset(level,notes);"),
+        contains("public HasActionMethodsBuilder clearAll()"),
+        contains("instance.clearAll();"),
+        contains("return this;"));
   }
 
   @Test
