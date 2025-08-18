@@ -100,6 +100,19 @@ public final class JavaLangMapper {
     return result;
   }
 
+  /**
+   * Maps a list of {@code TypeMirror} to a list of simple-builder {@code TypeName}s using {@link
+   * #extractType(TypeMirror, Elements, Types)}.
+   */
+  private static List<TypeName> extractTypeForList(
+      List<TypeMirror> typeMirrors, Elements elementUtils, Types typeUtils) {
+    List<TypeName> result = new ArrayList<>(typeMirrors.size());
+    for (TypeMirror tm : typeMirrors) {
+      result.add(extractType(tm, elementUtils, typeUtils));
+    }
+    return result;
+  }
+
   private static TypeName extractType(
       TypeMirror typeOfParameter, Elements elementUtils, Types typeUtils) {
     return typeOfParameter.accept(
@@ -141,10 +154,7 @@ public final class JavaLangMapper {
             if (typesExtracted.isEmpty()) {
               return rawType;
             } else {
-              List<TypeName> argTypes = new ArrayList<>(typesExtracted.size());
-              for (TypeMirror tm : typesExtracted) {
-                argTypes.add(extractType(tm, elementUtils, typeUtils));
-              }
+              List<TypeName> argTypes = extractTypeForList(typesExtracted, elementUtils, typeUtils);
               // Represent all generics uniformly
               return new TypeNameGeneric(rawType, argTypes);
             }
