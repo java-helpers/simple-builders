@@ -80,12 +80,15 @@ class ReadmeExampleTest {
               private String name;
               private List<Task> tasks;
               private Map<String, String> metadata;
+              private ProjectStatus status;
               public String getName() { return name; }
               public void setName(String name) { this.name = name; }
               public List<Task> getTasks() { return tasks; }
               public void setTasks(List<Task> tasks) { this.tasks = tasks; }
               public Map<String, String> getMetadata() { return metadata; }
               public void setMetadata(Map<String, String> metadata) { this.metadata = metadata; }
+              public ProjectStatus getStatus() { return status; }
+              public void setStatus(ProjectStatus status) { this.status = status; }
             }
             """);
 
@@ -109,7 +112,15 @@ class ReadmeExampleTest {
             }
             """);
 
-    Compilation compilation = compiler.compile(project, task);
+    JavaFileObject statusEnum =
+        JavaFileObjects.forSourceString(
+            packageName + ".ProjectStatus",
+            """
+            package readme;
+            public enum ProjectStatus { PLANNING, IN_PROGRESS, COMPLETED, ON_HOLD }
+            """);
+
+    Compilation compilation = compiler.compile(project, task, statusEnum);
 
     String projectBuilder = loadGeneratedSource(compilation, "ProjectBuilder");
     assertGenerationSucceeded(compilation, "ProjectBuilder", projectBuilder);
@@ -119,8 +130,10 @@ class ReadmeExampleTest {
         projectBuilder,
         contains("public static ProjectBuilder create()"),
         contains("public ProjectBuilder name(String name)"),
-        contains("public ProjectBuilder tasks(Consumer<ArrayListBuilder<Task>> tasksBuilderConsumer)"),
+        contains(
+            "public ProjectBuilder tasks(Consumer<ArrayListBuilder<Task>> tasksBuilderConsumer)"),
         contains("public ProjectBuilder metadata(Map metadata)"),
+        contains("public ProjectBuilder status(ProjectStatus status)"),
         contains("public Project build()"));
 
     // Also validate TaskBuilder exists and typical fluent API

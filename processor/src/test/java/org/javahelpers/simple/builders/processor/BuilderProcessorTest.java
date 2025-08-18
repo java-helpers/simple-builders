@@ -69,8 +69,9 @@ class BuilderProcessorTest {
         contains("public WithCollectionsBuilder tags(Supplier<Set<String>> tagsSupplier)"),
         contains("public WithCollectionsBuilder tags(String... tags)"),
         contains("instance.setTags(Set.of(tags));")
-        //TODO:    contains("public WithCollectionsBuilder map(Map<String, Integer> map)"),
-        //TODO:    contains("public WithCollectionsBuilder map(Supplier<Map<String, Integer>> mapSupplier)")
+        // TODO:    contains("public WithCollectionsBuilder map(Map<String, Integer> map)"),
+        // TODO:    contains("public WithCollectionsBuilder map(Supplier<Map<String, Integer>>
+        // mapSupplier)")
         );
   }
 
