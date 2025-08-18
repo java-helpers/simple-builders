@@ -206,6 +206,14 @@
             <goals>
               <goal>report</goal>
             </goals>
+            <configuration>
+              <excludes>
+                <!-- Exclude mapper utilities from coverage -->
+                <exclude>**/*Mapper*.class</exclude>
+                <!-- Exclude DTOs package from coverage -->
+                <exclude>**/processor/dtos/**</exclude>
+              </excludes>
+            </configuration>
           </execution>
         </executions>
         <configuration>
