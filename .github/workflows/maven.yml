@@ -51,9 +51,11 @@ jobs:
 
     - name: Upload coverage to Codecov
       if: always()
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v5
       with:
+        fail_ci_if_error: true
         files: processor/target/site/jacoco/jacoco.xml
         flags: processor
-        fail_ci_if_error: true
+        name: codecov-upload
         verbose: true
+        token: ${{ secrets.CODECOV_TOKEN }}
