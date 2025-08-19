@@ -1,5 +1,6 @@
 package org.javahelpers.simple.builders.processor;
 
+import static com.google.testing.compile.CompilationSubject.assertThat;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.assertGenerationSucceeded;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.contains;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils.loadGeneratedSource;
@@ -617,6 +618,31 @@ class BuilderProcessorTest {
 
   protected Compilation compile(JavaFileObject... sourceFiles) {
     return compiler.compile(sourceFiles);
+  }
+
+  @Test
+  void shouldFailCompilationOnLowerReleaseOption() {
+    // Given: a minimal @SimpleBuilder-annotated class
+    JavaFileObject source =
+        JavaFileObjects.forSourceString(
+            "test.ForcedOldRelease",
+            "package test;\n"
+                + "import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;\n"
+                + "@SimpleBuilder\n"
+                + "public class ForcedOldRelease { public ForcedOldRelease() {} }\n");
+
+    // When: compile with a lower language level to simulate older Java (no production code change)
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new BuilderProcessor())
+            .withOptions("--release", "11")
+            .compile(source);
+
+    // Then: compilation must fail with the expected error
+    assertThat(compilation).failed();
+    assertThat(compilation)
+        .hadErrorContaining(
+            "simple-builders requires Java 17 or higher for annotation processing.");
   }
 
   @Test
