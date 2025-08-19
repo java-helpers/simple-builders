@@ -101,7 +101,6 @@ class BuilderProcessorTest {
         contains("instance.setName(name);"),
         contains("public PersonRecordBuilder age(int age)"),
         contains("instance.setAge(age);"));
-
   }
 
   @Test
