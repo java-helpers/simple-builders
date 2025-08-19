@@ -26,6 +26,82 @@ class BuilderProcessorTest {
   }
 
   @Test
+  void shouldIgnoreConstructorParametersAndOnlyUseSetters() {
+    // Given
+    String packageName = "test";
+    String className = "CtorAndSetter";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private int a; // has no setter, only in constructor
+                private String name; // will be set via setter
+
+                public CtorAndSetter() {}
+                public CtorAndSetter(int a) { this.a = a; }
+
+                public String getName() { return name; }
+                public void setName(String name) { this.name = name; }
+                // a has no setter intentionally
+                """);
+
+    // When
+    Compilation compilation = compile(sourceFile);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+    // Setter-based API should appear (name) and Constructor params (a)
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains("public CtorAndSetterBuilder a(int a)"),
+        contains("instance.setA(a);"),
+        contains("public CtorAndSetterBuilder name(String name)"),
+        contains("instance.setName(name);"));
+  }
+
+  @Test
+  void shouldHandleRecordWithoutGeneratingBuilder() {
+    // Given
+    String packageName = "test";
+    String recordName = "PersonRecord";
+    String builderClassName = recordName + "Builder";
+
+    String source =
+        """
+        package test;
+
+        import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+        @SimpleBuilder
+        public record PersonRecord(String name, int age) {
+          public String upperName() { return name.toUpperCase(); }
+        }
+        """;
+
+    JavaFileObject recordFile =
+        JavaFileObjects.forSourceString(packageName + "." + recordName, source);
+
+    // When
+    Compilation compilation = compile(recordFile);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+    // Setter-based API should support record Constructor params (name, age)
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains("public PersonRecordBuilder name(String name)"),
+        contains("instance.setName(name);"),
+        contains("public PersonRecordBuilder age(int age)"),
+        contains("instance.setAge(age);"));
+
+  }
+
+  @Test
   void shouldGenerateCollectionSettersAndProviders() {
     // Given
     String packageName = "test";
