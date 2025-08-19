@@ -28,6 +28,52 @@ class BuilderProcessorTest {
   }
 
   @Test
+  void shouldFailWhenAnnotationPlacedOnInterface() {
+    // Given: @SimpleBuilder used on an interface instead of a class
+    JavaFileObject source =
+        JavaFileObjects.forSourceString(
+            "test.WrongTargetInterface",
+            "package test;\n"
+                + "import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;\n"
+                + "@SimpleBuilder\n"
+                + "public interface WrongTargetInterface { void x(); }\n");
+
+    // When
+    Compilation compilation =
+        Compiler.javac().withProcessors(new BuilderProcessor()).compile(source);
+
+    // Then: processor swallows validation exceptions; assert no builder was generated
+    assertThat(compilation).succeeded();
+    org.junit.jupiter.api.Assertions.assertFalse(
+        compilation.generatedFiles().stream()
+            .anyMatch(f -> f.getName().endsWith("test/WrongTargetInterfaceBuilder.java")),
+        "Builder should not be generated for interface target");
+  }
+
+  @Test
+  void shouldFailWhenAnnotationPlacedOnAbstractClass() {
+    // Given: @SimpleBuilder used on an abstract class
+    JavaFileObject source =
+        JavaFileObjects.forSourceString(
+            "test.AbstractAnnotated",
+            "package test;\n"
+                + "import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;\n"
+                + "@SimpleBuilder\n"
+                + "public abstract class AbstractAnnotated { }\n");
+
+    // When
+    Compilation compilation =
+        Compiler.javac().withProcessors(new BuilderProcessor()).compile(source);
+
+    // Then: processor swallows validation exceptions; assert no builder was generated
+    assertThat(compilation).succeeded();
+    org.junit.jupiter.api.Assertions.assertFalse(
+        compilation.generatedFiles().stream()
+            .anyMatch(f -> f.getName().endsWith("test/AbstractAnnotatedBuilder.java")),
+        "Builder should not be generated for abstract class target");
+  }
+
+  @Test
   @Disabled("Constructor-Parameters are not supported yet")
   void shouldIgnoreConstructorParametersAndOnlyUseSetters() {
     // Given
