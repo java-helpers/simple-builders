@@ -21,44 +21,77 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
 package org.javahelpers.simple.builders.processor.dtos;
 
-import static java.util.Objects.requireNonNull;
-
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
-/** TypeNameGeneric extends TypeName with one specific generic type. */
+/**
+ * Represents a declared type that may carry one or more generic type arguments.
+ *
+ * <p>Examples:
+ *
+ * <ul>
+ *   <li>List<T> -> outer: {@code java.util.List}, inner: {@code T}
+ *   <li>Map<K,V> -> outer: {@code java.util.Map}, inner: {@code K}, {@code V}
+ *   <li>Optional<Person> -> outer: {@code java.util.Optional}, inner: {@code Person}
+ * </ul>
+ *
+ * This class is used throughout the processor to model parameterized Java types in a uniform way.
+ */
 public class TypeNameGeneric extends TypeName {
-  private final TypeName innerType;
+  private final List<TypeName> innerTypeArguments;
 
   /**
-   * Constructor for generic types, having just one generic inner type.
-   *
-   * @param outerType outer type of generic
-   * @param innerType inner type of generic
+   * Creates a {@code TypeNameGeneric} based on another {@code TypeName} as outer type and a list of
+   * inner type arguments.
    */
-  public TypeNameGeneric(TypeName outerType, TypeName innerType) {
+  public TypeNameGeneric(TypeName outerType, List<TypeName> innerTypeArguments) {
     super(outerType.getPackageName(), outerType.getClassName());
-    requireNonNull(innerType);
-    this.innerType = innerType;
+    this.innerTypeArguments = List.copyOf(innerTypeArguments);
   }
 
   /**
-   * Constructor for generic types, having just one generic inner type.
-   *
-   * @param packageName name of package
-   * @param className name of class
-   * @param innerType inner type of generic
+   * Creates a {@code TypeNameGeneric} for the given package/class and a list of inner type
+   * arguments.
    */
-  public TypeNameGeneric(String packageName, String className, TypeName innerType) {
+  public TypeNameGeneric(String packageName, String className, List<TypeName> innerTypeArguments) {
     super(packageName, className);
-    requireNonNull(innerType);
-    this.innerType = innerType;
+    this.innerTypeArguments = List.copyOf(innerTypeArguments);
+  }
+
+  /**
+   * Creates a {@code TypeNameGeneric} with Varargs convenience constructor with an outer {@code
+   * TypeName} and any number of inner type arguments.
+   */
+  public TypeNameGeneric(TypeName outerType, TypeName... innerTypeArguments) {
+    super(outerType.getPackageName(), outerType.getClassName());
+    this.innerTypeArguments = List.of(innerTypeArguments);
+  }
+
+  /**
+   * Varargs convenience constructor with package/class names and any number of inner type
+   * arguments.
+   */
+  public TypeNameGeneric(String packageName, String className, TypeName... innerTypeArguments) {
+    super(packageName, className);
+    this.innerTypeArguments = List.of(innerTypeArguments);
+  }
+
+  public List<TypeName> getInnerTypeArguments() {
+    return Collections.unmodifiableList(innerTypeArguments);
+  }
+
+  public boolean hasMultipleInnerTypes() {
+    return innerTypeArguments.size() > 1;
   }
 
   @Override
   public Optional<TypeName> getInnerType() {
-    return Optional.of(innerType);
+    // Backward compatibility: expose the first type arg when exactly one is present
+    return innerTypeArguments.size() == 1
+        ? Optional.of(innerTypeArguments.get(0))
+        : Optional.empty();
   }
 }

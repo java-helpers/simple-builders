@@ -62,14 +62,14 @@
     <maven.compiler.release>${java.version}</maven.compiler.release>
     
     <!-- Plugin Versions -->
+    <plugin.central.publishing.version>0.8.0</plugin.central.publishing.version>
+    <plugin.code-format.version>2.27</plugin.code-format.version>
     <plugin.maven.compiler.version>3.14.0</plugin.maven.compiler.version>
     <plugin.maven.source.version>3.3.1</plugin.maven.source.version>
     <plugin.maven.javadoc.version>3.11.2</plugin.maven.javadoc.version>
     <plugin.maven.gpg.version>3.2.7</plugin.maven.gpg.version>
     <plugin.maven.install.version>3.1.2</plugin.maven.install.version>
     <plugin.maven.site.version>3.21.0</plugin.maven.site.version>
-    <plugin.central.publishing.version>0.8.0</plugin.central.publishing.version>
-    <plugin.code-format.version>2.27</plugin.code-format.version>
   </properties>
 
   <dependencies>
@@ -134,7 +134,7 @@
           <plugin>
             <groupId>org.sonatype.central</groupId>
             <artifactId>central-publishing-maven-plugin</artifactId>
-            <version>0.8.0</version>
+            <version>${plugin.maven.central.publishing.version}</version>
             <extensions>true</extensions>
             <configuration>
               <publishingServerId>central</publishingServerId>

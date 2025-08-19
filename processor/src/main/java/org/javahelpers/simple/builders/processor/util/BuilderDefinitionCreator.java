@@ -169,8 +169,12 @@ public class BuilderDefinitionCreator {
       TypeName builderType = builderTypeOpt.get();
       result.addMethod(
           BuilderDefinitionCreator.createFieldConsumerWithBuilder(fieldName, builderType));
-    } else if (!isJavaClass(fieldType) && hasEmptyConstructor(fieldTypeElement, elementUtils)) {
-      // TODO: Consumer funktioniet nur, wenn Klasse kein Interface/Enum/Abstrakte Classe/Record
+    } else if (!isJavaClass(fieldType)
+        && fieldTypeElement != null
+        && fieldTypeElement.getKind() == javax.lang.model.element.ElementKind.CLASS
+        && !fieldTypeElement.getModifiers().contains(Modifier.ABSTRACT)
+        && hasEmptyConstructor(fieldTypeElement, elementUtils)) {
+      // Only generate a Consumer for concrete classes with an accessible empty constructor
       result.addMethod(createFieldConsumer(fieldName, fieldType));
     } else if (isList(fieldType)) {
       result.addMethod(
@@ -301,10 +305,14 @@ public class BuilderDefinitionCreator {
   private static Optional<TypeName> findBuilderType(
       VariableElement param, Elements elementUtils, Types typeUtils) {
     TypeMirror typeOfParameter = param.asType();
-    if (typeOfParameter.getKind() == ARRAY) {
+    if (typeOfParameter.getKind() == ARRAY || typeOfParameter.getKind().isPrimitive()) {
       return Optional.empty();
     }
     Element elementOfParameter = typeUtils.asElement(typeOfParameter);
+    if (elementOfParameter == null) {
+      // Can happen for primitives or certain compiler-internal types; nothing to build
+      return Optional.empty();
+    }
     String simpleClassName = elementOfParameter.getSimpleName().toString();
     String packageName =
         elementUtils.getPackageOf(elementOfParameter).getQualifiedName().toString();

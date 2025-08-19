@@ -11,13 +11,16 @@
   <url>https://github.com/java-helpers/simple-builders</url>
   <inceptionYear>2025</inceptionYear>
   <properties>
+    <java.version>17</java.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <code-format.version>2.25</code-format.version>
-    <maven.compiler.plugin.version>3.13.0</maven.compiler.plugin.version>
-    <maven.deploy.plugin.version>3.1.1</maven.deploy.plugin.version>
-    
-    <java.version>17</java.version>
+    <commons-lang.version>3.18.0</commons-lang.version>
+    <junit-jupiter.version>5.11.4</junit-jupiter.version>
+
+    <plugin.maven.compiler.version>3.13.0</plugin.maven.compiler.version>
+    <plugin.maven.deploy.version>3.1.1</plugin.maven.deploy.version>
+
     <maven.compiler.source>${java.version}</maven.compiler.source>
     <maven.compiler.target>${java.version}</maven.compiler.target>
     <maven.compiler.release>${java.version}</maven.compiler.release>
@@ -27,7 +30,7 @@
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
-      <version>3.18.0</version>
+      <version>${commons-lang.version}</version>
     </dependency>
     
     <dependency>
@@ -39,7 +42,7 @@
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-api</artifactId>
-      <version>5.11.4</version>
+      <version>${junit-jupiter.version}</version>
       <scope>test</scope>
     </dependency>
 
@@ -52,7 +55,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-deploy-plugin</artifactId>
-        <version>${maven.deploy.plugin.version}</version>
+        <version>${plugin.maven.deploy.version}</version>
         <configuration>
           <skip>true</skip>
         </configuration>
@@ -61,7 +64,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>${maven.compiler.plugin.version}</version>
+        <version>${plugin.maven.compiler.version}</version>
         <configuration>
           <source>${java.version}</source>
           <target>${java.version}</target>
