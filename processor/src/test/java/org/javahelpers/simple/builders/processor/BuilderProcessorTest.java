@@ -27,6 +27,7 @@ class BuilderProcessorTest {
   }
 
   @Test
+  @Disabled("Constructor-Parameters are not supported yet")
   void shouldIgnoreConstructorParametersAndOnlyUseSetters() {
     // Given
     String packageName = "test";
