@@ -100,6 +100,7 @@ public class BuilderDefinitionCreator {
     return isNoMethodOfObjectClass(mth)
         && hasNoThrowablesDeclared(mth)
         && hasNoReturnValue(mth)
+        && hasNotAnnotation(IgnoreOnBuilder.class, mth)
         && isNotPrivate(mth)
         && isNotStatic(mth);
   }

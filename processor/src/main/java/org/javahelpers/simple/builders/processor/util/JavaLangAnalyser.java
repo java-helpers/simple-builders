@@ -55,6 +55,17 @@ public final class JavaLangAnalyser {
     return !(StringUtils.equals("java.lang.Object", simpleNameOfParent)
         || StringUtils.equals("Object", simpleNameOfParent));
   }
+  
+  /**
+   * Helper function to filter methods with specific annotations.
+   *
+   * @param annotationClass is the class of an annotation to be searched on executable
+   * @param mth ExecutableElement to be validated
+   * @return {@code true}, if it the specified annotation is not set on this method
+   */
+  public static <A extends Annotation> boolean hasNotAnnotation(Class<A> annotationClass, ExecutableElement mth) {
+    return mth.getAnnotation(annotationClass) != null;
+  }
 
   /**
    * Helper function to filter methods which throw exceptions.
