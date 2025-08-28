@@ -48,8 +48,25 @@ class ReadmeExampleTest {
               public void setEmailAddresses(List<String> emailAddresses) { this.emailAddresses = emailAddresses; }
             }
             """);
+            
+     JavaFileObject usage =
+        JavaFileObjects.forSourceString(
+            packageName + ".Usage",
+            """
+            package readme;
+            public class Usage {
+              public static void main(){
+                Person person = PersonBuilder.create()
+                           .name("John Doe")
+                           .age(30)
+                           .emailAddresses("john@example.com", "j.doe@example.com")
+                           .build();
+              }
+            }
+            """);
 
     Compilation compilation = compiler.compile(person);
+    Compilation compilationWithUsage = compiler.compile(person, usage);
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
 
@@ -61,6 +78,9 @@ class ReadmeExampleTest {
         contains("public PersonBuilder age(int age)"),
         contains("public PersonBuilder emailAddresses(String... emailAddresses)"),
         contains("public Person build()"));
+        
+     // Validate the full usage too
+     assertGenerationSucceeded(compilationWithUsage);
   }
 
   @Test
@@ -119,8 +139,36 @@ class ReadmeExampleTest {
             package readme;
             public enum ProjectStatus { PLANNING, IN_PROGRESS, COMPLETED, ON_HOLD }
             """);
+            
+    JavaFileObject usage =
+        JavaFileObjects.forSourceString(
+            packageName + ".Usage",
+            """
+            package readme;
+            import java.util.Map;
+            public class Usage {
+              public static void main(){
+                Project project = ProjectBuilder.create()
+                    .name("Simple Builders with a bit of complexity")
+                    .status(ProjectStatus.IN_PROGRESS)
+                    .tasks(tasks -> tasks
+                        .add(TaskBuilder.create()
+                            .title("Implement core functionality")
+                            .completed(true)
+                            .build())
+                        .add(TaskBuilder.create()
+                            .title("Add documentation")
+                            .description("Update README and add Javadocs")
+                            .build())
+                    )
+                    .metadata(Map.of("version", "1.0.0", "owner", "dev-team"))
+                    .build();
+              }
+            }
+            """);
 
     Compilation compilation = compiler.compile(project, task, statusEnum);
+    Compilation compilationWithUsage = compiler.compile(project, task, statusEnum, usage);
 
     String projectBuilder = loadGeneratedSource(compilation, "ProjectBuilder");
     assertGenerationSucceeded(compilation, "ProjectBuilder", projectBuilder);
@@ -132,7 +180,7 @@ class ReadmeExampleTest {
         contains("public ProjectBuilder name(String name)"),
         contains(
             "public ProjectBuilder tasks(Consumer<ArrayListBuilder<Task>> tasksBuilderConsumer)"),
-        contains("public ProjectBuilder metadata(Map<String, String> metadata)"),
+        contains("public ProjectBuilder metadata(HashMapBuilder<String, String> metadataBuilder)"),
         contains("public ProjectBuilder status(ProjectStatus status)"),
         contains("public Project build()"));
 
@@ -146,5 +194,8 @@ class ReadmeExampleTest {
         contains("public TaskBuilder description(String description)"),
         contains("public TaskBuilder completed(boolean completed)"),
         contains("public Task build()"));
+    
+     // Validate the full usage too
+     assertGenerationSucceeded(compilationWithUsage);
   }
 }
