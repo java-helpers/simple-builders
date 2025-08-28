@@ -74,8 +74,7 @@ class BuilderProcessorTest {
   }
 
   @Test
-  @Disabled("Constructor-Parameters are not supported yet")
-  void shouldIgnoreConstructorParametersAndOnlyUseSetters() {
+  void shouldUseConstructorParameters() {
     // Given
     String packageName = "test";
     String className = "CtorAndSetter";
@@ -86,7 +85,7 @@ class BuilderProcessorTest {
             packageName,
             className,
             """
-                private int a; // has no setter, only in constructor
+                private final int a; // has no setter, only in constructor
                 private String name; // will be set via setter
 
                 public CtorAndSetter() {}
@@ -107,14 +106,15 @@ class BuilderProcessorTest {
     ProcessorAsserts.assertingResult(
         generatedCode,
         contains("public CtorAndSetterBuilder a(int a)"),
-        contains("instance.setA(a);"),
+        contains("this.a = a;"),
         contains("public CtorAndSetterBuilder name(String name)"),
-        contains("instance.setName(name);"));
+        contains("this.name = name;"),
+        contains("CtorAndSetter instance = new CtorAndSetter(this.a);"),
+        contains("instance.setName(this.name);"));
   }
 
   @Test
-  @Disabled("Records are not supported for builder generation yet")
-  void shouldHandleRecordWithoutGeneratingBuilder() {
+  void shouldHandleRecordWithBuilder() {
     // Given
     String packageName = "test";
     String recordName = "PersonRecord";
@@ -145,9 +145,10 @@ class BuilderProcessorTest {
     ProcessorAsserts.assertingResult(
         generatedCode,
         contains("public PersonRecordBuilder name(String name)"),
-        contains("instance.setName(name);"),
+        contains("this.name = name;"),
         contains("public PersonRecordBuilder age(int age)"),
-        contains("instance.setAge(age);"));
+        contains("this.age = age;"),
+        contains("PersonRecord instance = new PersonRecord(this.name,this.age);"));
   }
 
   @Test
@@ -189,18 +190,18 @@ class BuilderProcessorTest {
         contains("public WithCollectionsBuilder names(List<String> names)"),
         contains("public WithCollectionsBuilder names(Supplier<List<String>> namesSupplier)"),
         contains("public WithCollectionsBuilder names(String... names)"),
-        contains("instance.setNames(List.of(names));"),
+        contains("this.names = List.of(names);"),
         contains("public WithCollectionsBuilder tags(Set<String> tags)"),
         contains("public WithCollectionsBuilder tags(Supplier<Set<String>> tagsSupplier)"),
         contains("public WithCollectionsBuilder tags(String... tags)"),
-        contains("instance.setTags(Set.of(tags));"),
+        contains("this.tags = Set.of(tags);"),
         contains("public WithCollectionsBuilder map(Map<String, Integer> map)"),
         contains("public WithCollectionsBuilder map(Supplier<Map<String, Integer>> mapSupplier)"),
-        contains("instance.setMap(map);"));
+        contains("this.map = map;"));
   }
 
   @Test
-  void shouldDeclareInstanceFieldAsPrivateFinalWithJavadoc() {
+  void shouldDeclareFieldAsBuilderFieldsWithJavadoc() {
     // Given
     String packageName = "test";
     String className = "FieldDoc";
@@ -211,8 +212,11 @@ class BuilderProcessorTest {
             packageName,
             className,
             """
-                private int x; public int getX(){return x;} public void setX(int x){this.x=x;}
-                """);
+                /** Field X is an example for having javadoc **/
+                private int x; 
+                public int getX(){return x;}
+                public void setX(int x){this.x=x;}
+            """);
 
     // When
     Compilation compilation = compile(sourceFile);
@@ -223,8 +227,8 @@ class BuilderProcessorTest {
 
     ProcessorAsserts.assertingResult(
         generatedCode,
-        contains("Inner instance of builder."),
-        contains("private final FieldDoc instance;"));
+        contains("Field X is an example for having javadoc"),
+        contains("private int x;"));
   }
 
   @Test
@@ -239,8 +243,10 @@ class BuilderProcessorTest {
             packageName,
             className,
             """
-                private int x; public int getX(){return x;} public void setX(int x){this.x=x;}
-                """);
+                private int x;
+                public int getX(){return x;}
+                public void setX(int x){this.x=x;}
+            """);
 
     // When
     Compilation compilation = compile(sourceFile);
@@ -252,8 +258,8 @@ class BuilderProcessorTest {
     ProcessorAsserts.assertingResult(
         generatedCode,
         contains("public static CreateDocBuilder create()"),
-        contains("Creating a new builder for {"),
-        contains("@return builder for {"));
+        contains("Creating a new builder for {@code CreateDoc}"),
+        contains("@return builder for {@code CreateDoc}"));
   }
 
   @Test
@@ -268,8 +274,10 @@ class BuilderProcessorTest {
             packageName,
             className,
             """
-                private int x; public int getX(){return x;} public void setX(int x){this.x=x;}
-                """);
+                private int x;
+                public int getX(){return x;}
+                public void setX(int x){this.x=x;}
+            """);
 
     // When
     Compilation compilation = compile(sourceFile);
@@ -308,7 +316,10 @@ class BuilderProcessorTest {
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
 
     ProcessorAsserts.assertingResult(
-        generatedCode, contains("instance.setName(name);"), contains("return this;"));
+        generatedCode,
+        contains("public FluentReturnBuilder name(String name)"),
+        contains("this.name = name;"),
+        contains("return this;"));
   }
 
   @Test
@@ -369,7 +380,7 @@ class BuilderProcessorTest {
   }
 
   @Test
-  void shouldGenerateProxyWithMixedParamsAndArrayVarargs() {
+  void nonSetterMethodsShouldNotBeInBuilder() {
     // Given
     String packageName = "test";
     String className = "MixedProxy";
@@ -380,6 +391,8 @@ class BuilderProcessorTest {
             packageName,
             className,
             """
+                private String name;
+                public String getName(){return name;} public void setName(String name){this.name=name;}
                 public void doMixed(int a, String b, int[] nums) { /* no-op */ }
                 """);
 
@@ -393,8 +406,9 @@ class BuilderProcessorTest {
     // Expect last parameter mapped to varargs in builder signature and proper call
     ProcessorAsserts.assertingResult(
         generatedCode,
-        contains("doMixed(int a, String b, int... nums)"),
-        contains("instance.doMixed(a,b,nums);"));
+        contains("public MixedProxyBuilder name(String name)"),
+        containsNot("doMixed(int a, String b, int... nums)"),
+        containsNot("instance.doMixed(a,b,nums);"));
   }
 
   @Test
@@ -483,8 +497,7 @@ class BuilderProcessorTest {
         contains("Empty constructor of builder for"),
         contains("Initialisation of builder for"),
         contains("@param instance object instance for initialisiation"),
-        contains("this.instance = instance;"),
-        contains("this.instance = new CtorDoc();"));
+        contains("this.x = instance.getX();"));
   }
 
   @Test
@@ -524,13 +537,10 @@ class BuilderProcessorTest {
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
 
-    // PROXY method javadoc has @param for each parameter and @return
+    // PROXY method is not in builder
     ProcessorAsserts.assertingResult(
         generatedCode,
-        contains("Calling <code>doSomething</code> on dto-instance with parameters."),
-        contains("@param a value for a."),
-        contains("@param b value for b."),
-        contains("@return current instance of builder"));
+        containsNot("doSomething"));
 
     // SUPPLIER method javadoc and code
     ProcessorAsserts.assertingResult(
@@ -586,7 +596,7 @@ class BuilderProcessorTest {
         contains("helperBuilderConsumer"),
         contains("HelperAnnoBuilder builder = new HelperAnnoBuilder();"),
         contains("helperBuilderConsumer.accept(builder);"),
-        contains("instance.setHelper(builder.build());"));
+        contains("this.helper = builder.build();"));
   }
 
   @Test
@@ -627,9 +637,9 @@ class BuilderProcessorTest {
     // Expect consumer method with local var named 'consumer' of HelperPlain
     ProcessorAsserts.assertingResult(
         generatedCode,
-        contains("HelperPlain consumer = new HelperPlain();"),
-        contains("helperPlainConsumer.accept(consumer);"),
-        contains("instance.setHelperPlain(consumer);"));
+        contains("HelperPlain consumerInstance = new HelperPlain();"),
+        contains("helperPlainConsumer.accept(consumerInstance);"),
+        contains("this.helperPlain = consumerInstance;"));
   }
 
   @Test
@@ -659,7 +669,7 @@ class BuilderProcessorTest {
 
     // Expect supplier-based setter usage
     ProcessorAsserts.assertingResult(
-        generatedCode, contains("nameSupplier"), contains("instance.setName(nameSupplier.get());"));
+        generatedCode, contains("nameSupplier"), contains("this.name = nameSupplier.get();"));
   }
 
   protected Compilation compile(JavaFileObject... sourceFiles) {
@@ -733,11 +743,18 @@ class BuilderProcessorTest {
     // Verify the generated code contains builder methods (build/create are checked centrally)
     ProcessorAsserts.assertingResult(
         generatedCode,
+        contains("private String name;"),
+        contains("private int age;"),
         contains("public PersonBuilder name(String name)"),
-        contains("public PersonBuilder age(int age)"));
+        contains("public PersonBuilder age(int age)"),
+        contains("public Person build()"),
+        contains("Person instance = new Person();"),
+        contains("instance.setName(this.name);"),
+        contains("instance.setAge(this.age);"));
   }
 
   @Test
+  //Todo: what should that test validate?
   void shouldGenerateSetterForSetOfStrings_whenImplemented() {
     // Given
     String packageName = "test";
@@ -766,6 +783,7 @@ class BuilderProcessorTest {
   }
 
   @Test
+  //Todo: what should that test validate?
   void shouldHandleSetOfStrings() {
     // Given
     String packageName = "test";
@@ -825,7 +843,8 @@ class BuilderProcessorTest {
         generatedCode, contains("public UsesOtherPackageHelperBuilder helper(Helper helper)"));
   }
 
-  @Test
+  @Test 
+  //Todo: what should that test validate?
   void shouldHandleSetOfCustomType() {
     // Given
     String packageName = "test";
@@ -944,14 +963,15 @@ class BuilderProcessorTest {
             packageName,
             className,
             """
-                // valid proxy candidate
-                public void ok() {}
+                // valid setter
+                public void setOk(int ok) {}
 
                 // should be filtered
-                private void hidden() {}
-                public static void util() {}
-                public void risky() throws Exception {}
+                private void setHidden(int hidden) {}
+                public static void setUtil(int util) {}
+                public void setRisky(int risk) throws Exception {}
                 public int returnsInt() { return 42; }
+                public int getJustGetter() { return 25; }
                 """);
 
     // When
@@ -963,15 +983,15 @@ class BuilderProcessorTest {
     // Expect only ok() proxy to be present
     ProcessorAsserts.assertingResult(
         generatedCode,
-        contains("public HasVariousMethodsBuilder ok()"),
-        contains("instance.ok();"),
-        contains("return this;"));
+        contains("public HasVariousMethodsBuilder ok(int ok)"),
+        contains("this.ok = ok;"));
     ProcessorAsserts.assertNotContaining(
         generatedCode,
-        ProcessorAsserts.notContains("hidden()"),
-        ProcessorAsserts.notContains("util()"),
-        ProcessorAsserts.notContains("risky()"),
-        ProcessorAsserts.notContains("returnsInt("));
+        ProcessorAsserts.notContains("hidden"),
+        ProcessorAsserts.notContains("util"),
+        ProcessorAsserts.notContains("risky"),
+        ProcessorAsserts.notContains("returnsInt"),
+        ProcessorAsserts.notContains("justGetter"));
   }
 
   @Test
@@ -1005,16 +1025,12 @@ class BuilderProcessorTest {
     // Expect simple setters and suppliers only; no consumer methods for primitive/array
     ProcessorAsserts.assertingResult(
         generatedCode,
-        contains("public PrimAndArrayBuilder count("),
-        contains("countSupplier)"),
-        contains("public PrimAndArrayBuilder names("),
-        contains("namesSupplier)"));
+        contains("public PrimAndArrayBuilder count(Supplier<Integer> countSupplier"),
+        contains("public PrimAndArrayBuilder names(Supplier<List<String>> namesSupplier"));
     ProcessorAsserts.assertNotContaining(
         generatedCode,
-        ProcessorAsserts.notContains("countConsumer"),
-        ProcessorAsserts.notContains("namesConsumer"),
-        ProcessorAsserts.notContains("countBuilderConsumer"),
-        ProcessorAsserts.notContains("namesBuilderConsumer"));
+        ProcessorAsserts.notContains("public PrimAndArrayBuilder count(Consumer"),
+        ProcessorAsserts.notContains("public PrimAndArrayBuilder names(Consumer"));
   }
 
   @Test
@@ -1123,7 +1139,7 @@ class BuilderProcessorTest {
         contains("@Generated("),
         contains("@BuilderImplementation("),
         contains("public static AnnoTargetBuilder create()"),
-        contains("return new AnnoTargetBuilder(instance);"),
+        contains("return new AnnoTargetBuilder();"),
         contains("public AnnoTarget build()"),
         contains("return instance;"));
   }
@@ -1159,41 +1175,9 @@ class BuilderProcessorTest {
     ProcessorAsserts.assertingResult(
         generatedCode,
         contains("public HasCollectionsConvenienceBuilder names(String... names)"),
-        contains("instance.setNames(List.of(names));"),
+        contains("this.names = List.of(names);"),
         contains("public HasCollectionsConvenienceBuilder tags(String... tags)"),
-        contains("instance.setTags(Set.of(tags));"));
-  }
-
-  @Test
-  void shouldGenerateProxyMethodIncludingVarargsParameters() {
-    // Given
-    String packageName = "test";
-    String className = "HasActionMethods";
-    String builderClassName = className + "Builder";
-
-    JavaFileObject sourceFile =
-        ProcessorTestUtils.simpleBuilderClass(
-            packageName,
-            className,
-            """
-                public void reset(int level, String[] notes) {}
-                public void clearAll() {}
-                """);
-
-    // When
-    Compilation compilation = compile(sourceFile);
-
-    // Then
-    String generatedCode = loadGeneratedSource(compilation, builderClassName);
-    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-    // Method proxies return builder and forward to instance, last array parameter becomes varargs
-    ProcessorAsserts.assertingResult(
-        generatedCode,
-        contains("public HasActionMethodsBuilder reset(int level, String... notes)"),
-        contains("instance.reset(level,notes);"),
-        contains("public HasActionMethodsBuilder clearAll()"),
-        contains("instance.clearAll();"),
-        contains("return this;"));
+        contains("this.tags = Set.of(tags);"));
   }
 
   @Test
@@ -1219,36 +1203,12 @@ class BuilderProcessorTest {
 
     // Then
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
-    // Currently no positive assertion; future expectation covered by @Disabled test below
-    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-  }
-
-  @Test
-  void shouldGenerateSetterForJavaTime_whenImplemented() {
-    // Given
-    String packageName = "test";
-    String className = "HasLocalDate";
-    String builderClassName = className + "Builder";
-
-    JavaFileObject sourceFile =
-        ProcessorTestUtils.simpleBuilderClass(
-            packageName,
-            className,
-            """
-                private java.time.LocalDate date;
-
-                public java.time.LocalDate getDate() { return date; }
-                public void setDate(java.time.LocalDate date) { this.date = date; }
-                """);
-
-    // When
-    Compilation compilation = compile(sourceFile);
-
-    // Then
-    String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
     ProcessorAsserts.assertingResult(
-        generatedCode, contains("public HasLocalDateBuilder date(LocalDate date)"));
+        generatedCode,
+        contains("private LocalDate date;"),
+        contains("public HasLocalDateBuilder date(LocalDate date)"),
+        contsins("this.date = date;"));
   }
 
   @Test
@@ -1291,7 +1251,7 @@ class BuilderProcessorTest {
     // Then
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-    // build/create are checked centrally; no additional builder setter checks here
+    // TODO add asserts here for fields and build method
   }
 
   @Test
@@ -1318,7 +1278,7 @@ class BuilderProcessorTest {
     // Then
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-    // build/create are checked centrally; no additional builder setter checks here
+    // TODO: check test is needed?
   }
 
   @Test
@@ -1347,6 +1307,7 @@ class BuilderProcessorTest {
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
     // Even without setters, builder should exist (build/create checked centrally). No extra
     // asserts.
+    // TODO Without Setters or Constructors there is no need for a builder. we should have a warning in build
   }
 
   @Test
@@ -1370,7 +1331,7 @@ class BuilderProcessorTest {
     // Then
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-    // No setters expected; build/create checked centrally.
+    // TODO Without Setters or Constructors there is no need for a builder. we should have a warning in build
   }
 
   @Test
@@ -1424,10 +1385,11 @@ class BuilderProcessorTest {
     // Then
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-    // build/create are checked centrally; no additional builder setter checks here
+    // TODO: add assterts
   }
 
   @Test
+  //TODO: class code does not match testname
   void shouldBoxPrimitiveTypeArgumentsInGenerics() {
     // Given
     String packageName = "test";
@@ -1494,7 +1456,7 @@ class BuilderProcessorTest {
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
 
-    // build/create are checked centrally; no additional builder setter checks here
+    // TODO: add asserts
   }
 
   @Test
@@ -1535,8 +1497,10 @@ class BuilderProcessorTest {
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
 
-    // build/create are checked centrally; no additional builder setter checks here
+    //TODO: sdd asserts, because of missing empty constructor there could be no consumer
   }
+
+//TODO adding list of custom types without empty constructor
 
   @Test
   void shouldHandleListOfCustomType() {
@@ -1574,7 +1538,7 @@ class BuilderProcessorTest {
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
 
-    // build/create are checked centrally; no additional builder setter checks here
+    // TODO: Adding asserts
   }
 
   @Test
@@ -1613,6 +1577,6 @@ class BuilderProcessorTest {
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
 
-    // build/create are checked centrally; no additional builder setter checks here
+    // TODO: Adding asserts
   }
 }
