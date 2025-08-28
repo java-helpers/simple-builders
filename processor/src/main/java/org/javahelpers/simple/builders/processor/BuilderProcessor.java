@@ -35,12 +35,12 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
-import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+import javax.tools.Diagnostic;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 import org.javahelpers.simple.builders.processor.dtos.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
@@ -52,7 +52,6 @@ import org.javahelpers.simple.builders.processor.util.JavaCodeGenerator;
  * javax.annotation.processing.AbstractProcessor}.
  */
 @AutoService(Processor.class)
-@SupportedSourceVersion(SourceVersion.RELEASE_17)
 @SupportedAnnotationTypes("org.javahelpers.simple.builders.core.annotations.SimpleBuilder")
 public class BuilderProcessor extends AbstractProcessor {
   private Types typeUtils;
@@ -60,6 +59,7 @@ public class BuilderProcessor extends AbstractProcessor {
   private Filer filer;
   private Messager messager;
   private JavaCodeGenerator codeGenerator;
+  private boolean supportedJdk = true;
 
   @Override
   public synchronized void init(ProcessingEnvironment processingEnv) {
@@ -69,10 +69,25 @@ public class BuilderProcessor extends AbstractProcessor {
     this.filer = processingEnv.getFiler();
     this.messager = processingEnv.getMessager();
     this.codeGenerator = new JavaCodeGenerator(filer);
+
+    // Enforce minimum Java version (17+) for the processor
+    SourceVersion current = processingEnv.getSourceVersion();
+    this.supportedJdk = isAtLeastJava17(current);
+    if (!this.supportedJdk) {
+      messager.printMessage(
+          Diagnostic.Kind.ERROR,
+          "simple-builders requires Java 17 or higher for annotation processing. Detected: "
+              + String.valueOf(current)
+              + ". Please upgrade to JDK 17+ or disable the processor.");
+    }
   }
 
   @Override
   public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+    if (!supportedJdk) {
+      // Fail fast: we already emitted an error in init(); do not attempt any processing.
+      return true;
+    }
     for (Element annotatedElement : roundEnv.getElementsAnnotatedWith(SimpleBuilder.class)) {
       try {
         process(annotatedElement);
@@ -83,8 +98,26 @@ public class BuilderProcessor extends AbstractProcessor {
     return true;
   }
 
+  @Override
+  public SourceVersion getSupportedSourceVersion() {
+    return SourceVersion.latestSupported();
+  }
+
   private void process(Element annotatedElement) throws BuilderException {
     BuilderDefinitionDto builderDef = extractFromElement(annotatedElement, elementUtils, typeUtils);
     codeGenerator.generateBuilder(builderDef);
+  }
+
+  /**
+   * Checks whether the provided SourceVersion is at least Java 17 in a backwards compatible way.
+   */
+  private static boolean isAtLeastJava17(SourceVersion current) {
+    try {
+      SourceVersion seventeen = SourceVersion.valueOf("RELEASE_17");
+      return current.ordinal() >= seventeen.ordinal();
+    } catch (IllegalArgumentException ex) {
+      // Running on a JDK where RELEASE_17 does not exist (e.g., JDK 8)
+      return false;
+    }
   }
 }

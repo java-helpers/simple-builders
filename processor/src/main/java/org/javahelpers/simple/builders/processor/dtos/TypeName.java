@@ -44,7 +44,6 @@ public class TypeName {
    *
    * @param packageName name of package
    * @param className name of class, could not be null
-   * @throws NullPointerException if classname is null
    */
   public TypeName(String packageName, String className) {
     requireNonNull(className);

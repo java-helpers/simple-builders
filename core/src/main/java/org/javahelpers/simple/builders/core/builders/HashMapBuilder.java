@@ -85,8 +85,7 @@ public class HashMapBuilder<K, V> {
    * HashMapBuilder had before.
    *
    * @param pMap mappings to be added to HashMapBuilder
-   * @throws NullPointerException if the specified map is null
-   * @return
+   * @return Current instance of HashMapBuilder for method chaining
    */
   public HashMapBuilder<K, V> putAll(Map<K, V> pMap) {
     mMap.putAll(pMap);

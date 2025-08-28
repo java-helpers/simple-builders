@@ -1,28 +1,87 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.javahelpers</groupId>
+  
+  <groupId>io.github.java-helpers</groupId>
   <artifactId>simple-builders-processor</artifactId>
   <version>0.1.0</version>
   <packaging>jar</packaging>
+  
   <name>Simple Builders - Processor</name>
+  <description>Java annotation processor designed to generate type-safe and high-performance builders for Java classes.</description>
+  <url>https://github.com/java-helpers/simple-builders</url>
+  <inceptionYear>2025</inceptionYear>
+  
+  <licenses>
+    <license>
+      <name>MIT License</name>
+      <url>http://www.opensource.org/licenses/mit-license.php</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  
+  <scm>
+    <connection>scm:git:git://github.com/java-helpers/simple-builders.git</connection>
+    <developerConnection>scm:git:ssh://github.com/java-helpers/simple-builders.git</developerConnection>
+    <url>https://github.com/java-helpers/simple-builders/tree/main</url>
+    <tag>HEAD</tag>
+  </scm>
+  
+  <issueManagement>
+    <system>GitHub</system>
+    <url>https://github.com/java-helpers/simple-builders/issues</url>
+  </issueManagement>
+
+  <ciManagement>
+    <system>Github Actions</system>
+    <url>https://github.com/java-helpers/simple-builders/actions</url>
+  </ciManagement>
+
+  <developers>
+    <developer>
+      <name>Andreas Igel</name>
+      <id>aigel</id>
+      <email>Andreas.Igel@gmx.com</email>
+      <roles>
+        <role>Java Developer</role>
+        <role>Java Architect</role>
+      </roles>
+    </developer>
+  </developers>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <auto-service.version>1.1.1</auto-service.version>
-    <javapoet.version>0.7.0</javapoet.version>
     
+    <!-- Dependency Versions -->
+    <auto-service.version>1.1.1</auto-service.version>
+    <javapoet.version>0.6.0</javapoet.version>
+    <commons-lang.version>3.18.0</commons-lang.version>
+    <junit-jupiter.version>5.13.4</junit-jupiter.version>
+    <google-compile-testing.version>0.21.0</google-compile-testing.version>
+    
+    <!-- Java and Compiler Properties -->
     <java.version>17</java.version>
     <maven.compiler.source>${java.version}</maven.compiler.source>
     <maven.compiler.target>${java.version}</maven.compiler.target>
     <maven.compiler.release>${java.version}</maven.compiler.release>
     
-    <code-format.version>2.25</code-format.version>
+    <!-- Plugin Versions -->
+    <plugin.maven.central.publishing.version>0.8.0</plugin.maven.central.publishing.version>
+    <plugin.maven.compiler.version>3.14.0</plugin.maven.compiler.version>
+    <plugin.maven.source.version>3.3.1</plugin.maven.source.version>
+    <plugin.maven.javadoc.version>3.11.3</plugin.maven.javadoc.version>
+    <plugin.maven.gpg.version>3.2.7</plugin.maven.gpg.version>
+    <plugin.maven.install.version>3.1.4</plugin.maven.install.version>
+    <plugin.maven.resources.version>3.3.1</plugin.maven.resources.version>
+    <plugin.maven.site.version>3.21.0</plugin.maven.site.version>
+    <plugin.maven.surefire.version>3.2.5</plugin.maven.surefire.version>
+    <plugin.code-format.version>2.27</plugin.code-format.version>
+    <plugin.jacoco.version>0.8.12</plugin.jacoco.version>
   </properties>
 
   <dependencies>
     <dependency>
-      <groupId>org.javahelpers</groupId>
+      <groupId>io.github.java-helpers</groupId>
       <artifactId>simple-builders-core</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -30,7 +89,7 @@
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
-      <version>3.17.0</version>
+      <version>${commons-lang.version}</version>
     </dependency>
     <!-- Utility for generate service file -->
     <dependency>
@@ -45,14 +104,57 @@
       <artifactId>javapoet</artifactId>
       <version>${javapoet.version}</version>
     </dependency>
+    
+    <!-- Test Dependencies -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+      <version>${junit-jupiter.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-params</artifactId>
+      <version>${junit-jupiter.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-engine</artifactId>
+      <version>${junit-jupiter.version}</version>
+      <scope>test</scope>
+    </dependency>
+    
+    <!-- Google Compile Testing for annotation processor testing -->
+    <dependency>
+      <groupId>com.google.testing.compile</groupId>
+      <artifactId>compile-testing</artifactId>
+      <version>${google-compile-testing.version}</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
     
   <build>
     <plugins>
+      <!-- Code Formatting -->
+      <!-- Test Resources Plugin - Ensures test resources are processed -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>${plugin.maven.resources.version}</version>
+      </plugin>
+      
+      <!-- Surefire Plugin for running tests -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>${plugin.maven.surefire.version}</version>
+      </plugin>
+
       <plugin>
         <groupId>com.spotify.fmt</groupId>
         <artifactId>fmt-maven-plugin</artifactId>
-        <version>${code-format.version}</version>
+        <version>${plugin.code-format.version}</version>
         <executions>
           <execution>
             <goals>
@@ -61,12 +163,151 @@
           </execution>
         </executions>
       </plugin>
-      
+
+      <!-- Compiler Plugin -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.14.0</version>
+        <version>${plugin.maven.compiler.version}</version>
+        <configuration>
+          <source>${java.version}</source>
+          <target>${java.version}</target>
+          <release>${java.version}</release>
+        </configuration>
+      </plugin>
+      
+      <!-- Site Plugin -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-site-plugin</artifactId>
+        <version>${plugin.maven.site.version}</version>
+      </plugin>
+      
+      <!-- Install Plugin -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-install-plugin</artifactId>
+        <version>${plugin.maven.install.version}</version>
+      </plugin>
+
+      <!-- JaCoCo Code Coverage (processor module only) -->
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>${plugin.jacoco.version}</version>
+        <executions>
+          <execution>
+            <id>prepare-agent</id>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>report</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+            <configuration>
+              <excludes>
+                <!-- Exclude mapper utilities from coverage -->
+                <exclude>**/*Mapper*.class</exclude>
+                <!-- Exclude DTOs package from coverage -->
+                <exclude>**/processor/dtos/**</exclude>
+              </excludes>
+            </configuration>
+          </execution>
+        </executions>
+        <configuration>
+          <!-- Only cover main sources of this module -->
+          <dataFile>${project.build.directory}/jacoco.exec</dataFile>
+          <outputDirectory>${project.reporting.outputDirectory}/jacoco</outputDirectory>
+          <reports>
+            <report>html</report>
+            <report>xml</report>
+            <report>csv</report>
+          </reports>
+          <excludes>
+            <!-- exclude any generated sources or test utilities if they ever get packaged under main -->
+            <exclude>**/generated/**</exclude>
+          </excludes>
+        </configuration>
       </plugin>
     </plugins>
   </build>
+
+  <!-- Distribution management for Maven Central -->
+  <distributionManagement>
+    <snapshotRepository>
+      <id>central</id>
+      <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+    </snapshotRepository>
+    <repository>
+      <id>central</id>
+      <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+    </repository>
+  </distributionManagement>
+  
+  <profiles>
+    <profile>
+      <id>release</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.sonatype.central</groupId>
+            <artifactId>central-publishing-maven-plugin</artifactId>
+            <version>${plugin.central.publishing.version}</version>
+            <extensions>true</extensions>
+            <configuration>
+              <publishingServerId>central</publishingServerId>
+            </configuration>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+            <version>${plugin.maven.source.version}</version>
+            <executions>
+              <execution>
+                <id>attach-sources</id>
+                <goals>
+                  <goal>jar-no-fork</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <version>${plugin.maven.javadoc.version}</version>
+            <executions>
+              <execution>
+                <id>attach-javadocs</id>
+                <goals>
+                  <goal>jar</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <doclint>none</doclint>
+              <source>${java.version}</source>
+            </configuration>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
 </project>
