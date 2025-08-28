@@ -71,7 +71,7 @@
     <plugin.maven.source.version>3.3.1</plugin.maven.source.version>
     <plugin.maven.javadoc.version>3.11.2</plugin.maven.javadoc.version>
     <plugin.maven.gpg.version>3.2.7</plugin.maven.gpg.version>
-    <plugin.maven.install.version>3.1.2</plugin.maven.install.version>
+    <plugin.maven.install.version>3.1.4</plugin.maven.install.version>
     <plugin.maven.resources.version>3.3.1</plugin.maven.resources.version>
     <plugin.maven.site.version>3.21.0</plugin.maven.site.version>
     <plugin.maven.surefire.version>3.2.5</plugin.maven.surefire.version>
