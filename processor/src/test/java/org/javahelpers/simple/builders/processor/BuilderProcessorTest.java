@@ -30,53 +30,6 @@ class BuilderProcessorTest {
   }
 
   @Test
-  void shouldHandleListOfCustomTypeWithoutEmptyConstructor() {
-    // Given
-    String packageName = "test";
-    String className = "HasListNoEmpty";
-    String builderClassName = className + "Builder";
-
-    JavaFileObject sourceFile =
-        ProcessorTestUtils.simpleBuilderClass(
-            packageName,
-            className,
-            """
-                private java.util.List<HelperNoEmpty> helpers;
-
-                public java.util.List<HelperNoEmpty> getHelpers() { return helpers; }
-                public void setHelpers(java.util.List<HelperNoEmpty> helpers) { this.helpers = helpers; }
-            """);
-
-    // And a top-level HelperNoEmpty class referenced by the list, without empty constructor
-    JavaFileObject helperSource =
-        ProcessorTestUtils.forSource(
-            """
-                package test;
-                public class HelperNoEmpty {
-                  private final int x;
-                  public HelperNoEmpty(int x) { this.x = x; }
-                  public int getX() { return x; }
-                }
-            """);
-
-    // When
-    Compilation compilation = compile(sourceFile, helperSource);
-
-    // Then
-    String generatedCode = loadGeneratedSource(compilation, builderClassName);
-    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-    // Expect direct setter, varargs, supplier and consumer builder method
-    ProcessorAsserts.assertingResult(
-        generatedCode,
-        contains("public HasListNoEmptyBuilder helpers(List<HelperNoEmpty> helpers)"),
-        contains("public HasListNoEmptyBuilder helpers(HelperNoEmpty... helpers)"),
-        contains(
-            "public HasListNoEmptyBuilder helpers(Supplier<List<HelperNoEmpty>> helpersSupplier)"),
-        contains(
-            "public HasListNoEmptyBuilder helpers( Consumer<ArrayListBuilder<HelperNoEmpty>> helpersBuilderConsumer)"));
-  }
-
-  @Test
   void shouldFailWhenAnnotationPlacedOnInterface() {
     // Given: @SimpleBuilder used on an interface instead of a class
     JavaFileObject source =
@@ -1571,7 +1524,52 @@ class BuilderProcessorTest {
             "public OuterWithNoEmptyHelperBuilder helper(Consumer<HelperNoEmpty> helperConsumer)"));
   }
 
-  // TODO adding list of custom types without empty constructor
+  @Test
+  void shouldHandleListOfCustomTypeWithoutEmptyConstructor() {
+    // Given
+    String packageName = "test";
+    String className = "HasListNoEmpty";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private java.util.List<HelperNoEmpty> helpers;
+
+                public java.util.List<HelperNoEmpty> getHelpers() { return helpers; }
+                public void setHelpers(java.util.List<HelperNoEmpty> helpers) { this.helpers = helpers; }
+            """);
+
+    // And a top-level HelperNoEmpty class referenced by the list, without empty constructor
+    JavaFileObject helperSource =
+        ProcessorTestUtils.forSource(
+            """
+                package test;
+                public class HelperNoEmpty {
+                  private final int x;
+                  public HelperNoEmpty(int x) { this.x = x; }
+                  public int getX() { return x; }
+                }
+            """);
+
+    // When
+    Compilation compilation = compile(sourceFile, helperSource);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+    // Expect direct setter, varargs, supplier and consumer builder method
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains("public HasListNoEmptyBuilder helpers(List<HelperNoEmpty> helpers)"),
+        contains("public HasListNoEmptyBuilder helpers(HelperNoEmpty... helpers)"),
+        contains(
+            "public HasListNoEmptyBuilder helpers(Supplier<List<HelperNoEmpty>> helpersSupplier)"),
+        contains(
+            "public HasListNoEmptyBuilder helpers( Consumer<ArrayListBuilder<HelperNoEmpty>> helpersBuilderConsumer)"));
+  }
 
   @Test
   void shouldHandleListOfCustomType() {
