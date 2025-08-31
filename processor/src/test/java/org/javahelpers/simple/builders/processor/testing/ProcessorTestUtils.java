@@ -67,9 +67,6 @@ public final class ProcessorTestUtils {
     }
   }
 
-  // Assertion helpers moved to ProcessorAsserts; this class now only provides source building
-  // utilities.
-
   private static String[] buildSourceLines(
       String packageName, String className, List<String> bodyLines) {
     // Build lines with imports + annotation + class skeleton

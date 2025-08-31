@@ -2,6 +2,8 @@ package org.javahelpers.simple.builders.processor;
 
 import static com.google.testing.compile.CompilationSubject.assertThat;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.assertGenerationSucceeded;
+import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.contains;
+import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.notContains;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils.loadGeneratedSource;
 
 import com.google.testing.compile.Compilation;
@@ -959,14 +961,17 @@ class BuilderProcessorTest {
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
     // Expect only ok() proxy to be present
-    ProcessorAsserts.assertContaining(
+    ProcessorAsserts.assertingResult(
         generatedCode,
-        "public HasVariousMethodsBuilder ok()",
-        "instance.ok();",
-        "public HasVariousMethodsBuilder ok(int ok)",
-        "instance.setOk(ok);");
-    ProcessorAsserts.assertNotContaining(
-        generatedCode, "hidden", "util(int util)", "risky(int risk)", "returnsInt", "justGetter");
+        contains("public HasVariousMethodsBuilder ok()"),
+        contains("instance.ok();"),
+        contains("public HasVariousMethodsBuilder ok(int ok)"),
+        contains("instance.setOk(ok);"),
+        notContains("hidden"),
+        notContains("util(int util)"),
+        notContains("risky(int risk)"),
+        notContains("returnsInt"),
+        notContains("justGetter"));
   }
 
   @Test
@@ -998,14 +1003,12 @@ class BuilderProcessorTest {
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
     // Expect simple setters and suppliers only; no consumer methods for primitive/array
-    ProcessorAsserts.assertContaining(
+    ProcessorAsserts.assertingResult(
         generatedCode,
-        "public PrimAndArrayBuilder count(Supplier",
-        "public PrimAndArrayBuilder names(Supplier");
-    ProcessorAsserts.assertNotContaining(
-        generatedCode,
-        "public PrimAndArrayBuilder count(Consumer",
-        "public PrimAndArrayBuilder names(Consumer");
+        contains("public PrimAndArrayBuilder count(Supplier"),
+        contains("public PrimAndArrayBuilder names(Supplier"),
+        notContains("public PrimAndArrayBuilder count(Consumer"),
+        notContains("public PrimAndArrayBuilder names(Consumer"));
   }
 
   @Test
@@ -1034,13 +1037,14 @@ class BuilderProcessorTest {
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
 
     // Expect only direct setter and supplier; no varargs/consumer for Map
-    ProcessorAsserts.assertContaining(generatedCode, "public HasMapBuilder map(", "mapSupplier)");
-    ProcessorAsserts.assertNotContaining(
+    ProcessorAsserts.assertingResult(
         generatedCode,
-        "map(String...",
-        "map(java.lang.String...",
-        "mapBuilderConsumer",
-        "mapConsumer");
+        contains("public HasMapBuilder map("),
+        contains("mapSupplier)"),
+        notContains("map(String..."),
+        notContains("map(java.lang.String..."),
+        notContains("mapBuilderConsumer"),
+        notContains("mapConsumer"));
   }
 
   @Test
