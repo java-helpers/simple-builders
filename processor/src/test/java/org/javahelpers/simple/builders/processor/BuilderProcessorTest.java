@@ -731,36 +731,6 @@ class BuilderProcessorTest {
   }
 
   @Test
-  // Todo: what should that test validate?
-  void shouldGenerateSetterForSetOfStrings_whenImplemented() {
-    // Given
-    String packageName = "test";
-    String className = "HasSetString";
-    String builderClassName = className + "Builder";
-
-    JavaFileObject sourceFile =
-        ProcessorTestUtils.simpleBuilderClass(
-            packageName,
-            className,
-            """
-                private java.util.Set<String> tags;
-
-                public java.util.Set<String> getTags() { return tags; }
-                public void setTags(java.util.Set<String> tags) { this.tags = tags; }
-                """);
-
-    // When
-    Compilation compilation = compile(sourceFile);
-
-    // Then
-    String generatedCode = loadGeneratedSource(compilation, builderClassName);
-    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-    ProcessorAsserts.assertContaining(
-        generatedCode, "public HasSetStringBuilder tags(Set<String> tags)");
-  }
-
-  @Test
-  // Todo: what should that test validate?
   void shouldHandleSetOfStrings() {
     // Given
     String packageName = "test";
@@ -782,13 +752,24 @@ class BuilderProcessorTest {
     Compilation compilation = compile(sourceFile);
 
     // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(
         compilation, builderClassName, loadGeneratedSource(compilation, builderClassName));
-    // Currently no positive assertion; future expectation covered by test below
+    ProcessorAsserts.assertContaining(
+            generatedCode, 
+            "public HasSetStringBuilder tags(Set<String> tags)",
+            "instance.setTags(tags);",
+            "public HasSetStringBuilder tags(Consumer<HashSetBuilder<String>> tagsBuilderConsumer)",
+            "instance.setTags(builder.build());",
+            "public HasSetStringBuilder tags(String... tags)",
+            "instance.setTags(Set.of(tags));",
+            "public HasSetStringBuilder tags(Supplier<Set<String>> tagsSupplier)",
+            "instance.setTags(tagsSupplier.get());"
+            );
   }
 
   @Test
-  void shouldGenerateSetterForHelperInDifferentPackage_whenImplemented() {
+  void shouldGenerateSetterForClassInDifferentPackage() {
     // Given
     String packageName = "test";
     String className = "UsesOtherPackageHelper";
@@ -801,14 +782,23 @@ class BuilderProcessorTest {
             """
                 private otherpkg.Helper helper;
 
-                public otherpkg.Helper getHelper() { return helper; }
-                public void setHelper(otherpkg.Helper helper) { this.helper = helper; }
-                """);
+                public otherpkg.Helper getHelper() {
+                  return helper;
+                }
+                public void setHelper(otherpkg.Helper helper) {
+                  this.helper = helper;
+                }
+            """);
 
     JavaFileObject helperSource =
         JavaFileObjects.forSourceString(
             "otherpkg.Helper",
-            "package otherpkg;\npublic class Helper {\n  public Helper() {}\n}\n");
+            """
+                package otherpkg;
+                public class Helper {
+                  public Helper() {}
+                }
+            """);
 
     // When
     Compilation compilation = compile(sourceFile, helperSource);
@@ -837,44 +827,7 @@ class BuilderProcessorTest {
 
                 public java.util.Set<Helper> getHelpers() { return helpers; }
                 public void setHelpers(java.util.Set<Helper> helpers) { this.helpers = helpers; }
-                """);
-
-    JavaFileObject helperSource =
-        JavaFileObjects.forSourceString(
-            packageName + ".Helper",
-            "package "
-                + packageName
-                + ";\n"
-                + "public class Helper {\n"
-                + "  public Helper() {}\n"
-                + "}\n");
-
-    // When
-    Compilation compilation = compile(sourceFile, helperSource);
-
-    // Then
-    assertGenerationSucceeded(
-        compilation, builderClassName, loadGeneratedSource(compilation, builderClassName));
-    // build/create are checked centrally; positive setter check covered by @Disabled test below
-  }
-
-  @Test
-  void shouldGenerateSetterForSetOfCustomType_whenImplemented() {
-    // Given
-    String packageName = "test";
-    String className = "HasSetCustom";
-    String builderClassName = className + "Builder";
-
-    JavaFileObject sourceFile =
-        ProcessorTestUtils.simpleBuilderClass(
-            packageName,
-            className,
-            """
-                private java.util.Set<Helper> helpers;
-
-                public java.util.Set<Helper> getHelpers() { return helpers; }
-                public void setHelpers(java.util.Set<Helper> helpers) { this.helpers = helpers; }
-                """);
+            """);
 
     JavaFileObject helperSource =
         JavaFileObjects.forSourceString(
@@ -893,8 +846,16 @@ class BuilderProcessorTest {
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
     ProcessorAsserts.assertContaining(
-        generatedCode, "public HasSetCustomBuilder helpers(Set<Helper> helpers)");
-  }
+            generatedCode, 
+            "public HasSetCustomBuilder helpers(Set<Helper> helpers)",
+            "instance.setHelpers(helpers);",
+            "public HasSetCustomBuilder helpers(Consumer<HashSetBuilder<Helper>> helpersBuilderConsumer)",
+            "instance.setHelpers(builder.build());",
+            "public HasSetCustomBuilder helpers(Helper... helpers)",
+            "instance.setHelpers(Set.of(helpers));",
+            "public HasSetCustomBuilder helpers(Supplier<Set<Helper>> helpersSupplier)",
+            "instance.setHelpers(helpersSupplier.get());"
+            );  }
 
   @Test
   void shouldHandleHelperInDifferentPackage() {
