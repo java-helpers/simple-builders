@@ -77,7 +77,7 @@ class BuilderProcessorTest {
   }
 
   @Test
-  @Disabled("Constructor-Parameters are not supported yet")
+  @Disabled("TODO: Constructor-Parameters are not supported yet")
   void shouldIgnoreConstructorParametersAndOnlyUseSetters() {
     // Given
     String packageName = "test";
@@ -116,10 +116,9 @@ class BuilderProcessorTest {
   }
 
   @Test
-  @Disabled("Records are not supported for builder generation yet")
+  @Disabled("TODO: Records are not supported for builder generation yet")
   void shouldHandleRecordWithoutGeneratingBuilder() {
     // Given
-    String packageName = "test";
     String recordName = "PersonRecord";
     String builderClassName = recordName + "Builder";
 
