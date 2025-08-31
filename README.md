@@ -93,7 +93,6 @@ public class Person {
     private int age;
     private List<String> emailAddresses;
 
-    // Getters and setters
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
     
