@@ -83,14 +83,12 @@ public final class ProcessorAsserts {
         executables.add(
             () ->
                 Assertions.assertTrue(
-                    normalizedGenerated.contains(normalizedSearch),
-                    check.message()));
+                    normalizedGenerated.contains(normalizedSearch), check.message()));
       } else if (check instanceof NotContainsAssertRecord) {
         executables.add(
             () ->
                 Assertions.assertFalse(
-                    normalizedGenerated.contains(normalizedSearch),
-                    check.message()));
+                    normalizedGenerated.contains(normalizedSearch), check.message()));
       }
     }
     Assertions.assertAll(executables.toArray(new Executable[0]));
