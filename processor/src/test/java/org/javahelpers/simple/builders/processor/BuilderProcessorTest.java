@@ -12,7 +12,6 @@ import com.google.testing.compile.JavaFileObjects;
 import javax.tools.JavaFileObject;
 import org.javahelpers.simple.builders.processor.testing.ProcessorAsserts;
 import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
-import org.junit.Ignore;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -532,6 +531,41 @@ class BuilderProcessorTest {
     // CONSUMER method javadoc and code
     ProcessorAsserts.assertContaining(
         generatedCode, "consumer providing instance of field", "helperPlainConsumer");
+  }
+
+  @Test
+  @Disabled("TODO: missing feature")
+  void shouldPropagateFieldJavadocToBuilderParameter() {
+    // Given
+    String packageName = "test";
+    String className = "FieldWithDoc";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject dto =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private String name;
+
+                public String getName() { return name; }
+                /**
+                 * @param name the person name
+                 */
+                public void setName(String name) { this.name = name; }
+            """);
+
+    // When
+    Compilation compilation = compile(dto);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+    // Expect the field's Javadoc text to appear on the builder method parameter
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        "@param name the person name",
+        "public FieldWithDocBuilder name(String name)");
   }
 
   @Test
@@ -1405,7 +1439,7 @@ class BuilderProcessorTest {
   }
 
   @Test
-  @Ignore("TODO: Not working yet.")
+  @Disabled("TODO: missing feature")
   void shouldHandleFunctionalInterfaces() {
     // Given
     String packageName = "test";
@@ -1431,6 +1465,44 @@ class BuilderProcessorTest {
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
     // Ensure builder compiles and not generates Consumer of Consumer or Supplier of Consumer
     ProcessorAsserts.assertNotContaining(generatedCode, "Consumer<Consumer", "Supplier<Consumer>");
+  }
+
+  @Test
+  void shouldGenerateBuilderForParentClassSetter() {
+    // Given
+    String className = "ChildInheritsSetter";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject parentSource =
+        ProcessorTestUtils.forSource(
+            """
+                package test;
+                public class ParentWithSetter {
+                  private String name;
+                  public String getName() { return name; }
+                  public void setName(String name) { this.name = name; }
+                }
+            """);
+
+    JavaFileObject childSource =
+        ProcessorTestUtils.forSource(
+            """
+                package test;
+                import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+                @SimpleBuilder
+                public class ChildInheritsSetter extends ParentWithSetter { }
+            """);
+
+    // When
+    Compilation compilation = compile(childSource, parentSource);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+    // Expect builder to expose setter for parent class property
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains("public ChildInheritsSetterBuilder name(String name)"));
   }
 
   @Test
@@ -1657,5 +1729,110 @@ class BuilderProcessorTest {
         notContains("public HasMapCustomBuilder map(String..."),
         notContains("Consumer<ArrayListBuilder"),
         notContains("Consumer<HashSetBuilder"));
+  }
+
+  @Test
+  @Disabled("TODO: missing feature")
+  void shouldGenerateGenericBuilderRetainingTypeParameter() {
+    // Given
+    String builderClassName = "GenericDtoBuilder";
+
+    JavaFileObject genericDtoSource =
+        ProcessorTestUtils.forSource(
+            """
+                package test;
+                import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+                @SimpleBuilder
+                public class GenericDto<T> {
+                  private T value;
+                  public T getValue() { return value; }
+                  public void setValue(T value) { this.value = value; }
+                }
+            """);
+
+    // When
+    Compilation compilation = compile(genericDtoSource);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        // builder preserves type parameter T
+        contains("class GenericDtoBuilder<T>"),
+        // setter keeps T
+        contains("public GenericDtoBuilder<T> value(T value)"),
+        // supplier-based setter retains T
+        contains("public GenericDtoBuilder<T> value(Supplier<T> valueSupplier)"),
+        // no direct consumer possible for unknown T (no empty ctor info)
+        notContains("public GenericDtoBuilder<T> value(Consumer<T> valueConsumer)"),
+        // build returns GenericDto<T>
+        contains("public GenericDto<T> build()"),
+        // create() exposes generic as well
+        contains("public static <T> GenericDtoBuilder<T> create()"));
+  }
+
+  @Test
+  @Disabled("TODO: missing feature")
+  void shouldNotGenerateBuilderWhenNestedBuilderInterfaceExists() {
+    // Given: an annotated class that already declares a nested interface named like the would-be builder
+    JavaFileObject source =
+        ProcessorTestUtils.forSource(
+            """
+                package test;
+                import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+                public class HasInnerClassWithBuilder {
+                  @SimpleBuilder
+                  public class InnerClass {
+                    private int x;
+                    public int getX(){return x;}
+                    public void setX(int x){this.x=x;}
+                  }
+                }
+            """);
+
+    // When
+    Compilation compilation = compile(source);
+
+    // Then: compilation succeeds and no builder class with the conflicting name is generated
+    assertThat(compilation).succeeded();
+    org.junit.jupiter.api.Assertions.assertFalse(
+        compilation.generatedFiles().stream()
+            .anyMatch(f -> f.getName().endsWith("test/HasInnerClassWithBuilderBuilder.java")),
+        "Builder should not be generated when nested builder interface is present");
+  }
+
+  @Test
+  @Disabled("TODO: missing feature")
+  void shouldHandleOverloadedSettersForSameFieldWithoutConflicts() {
+    // Given
+    String packageName = "test";
+    String className = "OverloadedNames";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private java.util.List<String> names;
+
+                public java.util.List<String> getNames() { return names; }
+                public void setNames(java.util.List<String> names) { this.names = names; }
+                public void setNames(String... names) { this.names = java.util.List.of(names); }
+            """);
+
+    // When
+    Compilation compilation = compile(sourceFile);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+    // Expect exactly the canonical builder methods without signature conflicts
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        "public OverloadedNamesBuilder names(List<String> names)",
+        "public OverloadedNamesBuilder names(Supplier<List<String>> namesSupplier)",
+        "public OverloadedNamesBuilder names(String... names)");
   }
 }
