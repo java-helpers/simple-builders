@@ -40,16 +40,19 @@ public final class ProcessorAsserts {
   /** Common interface for assertion records. */
   public interface AssertRecord {
     String search();
+
     String message();
   }
 
   /** Coupling of a search string with an assertion message for positive contains checks. */
   public static record ContainsAssertRecord(String search, String message)
-      implements AssertRecord {};
+      implements AssertRecord {}
+  ;
 
   /** Coupling of a search string with an assertion message for negative contains checks. */
   public static record NotContainsAssertRecord(String search, String message)
-      implements AssertRecord {};
+      implements AssertRecord {}
+  ;
 
   /** Factory for positive contains check with default message. */
   public static ContainsAssertRecord contains(String search) {
@@ -58,7 +61,8 @@ public final class ProcessorAsserts {
 
   /** Factory for negative contains check with default message. */
   public static NotContainsAssertRecord notContains(String search) {
-    return new NotContainsAssertRecord(search, String.format("content should not be found: '%s'", search));
+    return new NotContainsAssertRecord(
+        search, String.format("content should not be found: '%s'", search));
   }
 
   /** Assert that generated code matches all provided checks (positive or negative). */
@@ -81,6 +85,15 @@ public final class ProcessorAsserts {
     AssertRecord[] checks =
         java.util.Arrays.stream(searches)
             .map(ProcessorAsserts::notContains)
+            .toArray(AssertRecord[]::new);
+    assertingResult(generatedCode, checks);
+  }
+
+  /** Convenience overload: accept plain strings and convert to ContainsAssertRecord. */
+  public static void assertContaining(String generatedCode, String... searches) {
+    AssertRecord[] checks =
+        java.util.Arrays.stream(searches)
+            .map(ProcessorAsserts::contains)
             .toArray(AssertRecord[]::new);
     assertingResult(generatedCode, checks);
   }

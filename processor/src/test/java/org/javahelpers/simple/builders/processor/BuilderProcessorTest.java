@@ -2,7 +2,6 @@ package org.javahelpers.simple.builders.processor;
 
 import static com.google.testing.compile.CompilationSubject.assertThat;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.assertGenerationSucceeded;
-import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.contains;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils.loadGeneratedSource;
 
 import com.google.testing.compile.Compilation;
@@ -104,12 +103,12 @@ class BuilderProcessorTest {
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
     // Setter-based API should appear (name) and Constructor params (a)
-    ProcessorAsserts.assertingResult(
+    ProcessorAsserts.assertContaining(
         generatedCode,
-        contains("public CtorAndSetterBuilder a(int a)"),
-        contains("instance.setA(a);"),
-        contains("public CtorAndSetterBuilder name(String name)"),
-        contains("instance.setName(name);"));
+        "public CtorAndSetterBuilder a(int a)",
+        "instance.setA(a);",
+        "public CtorAndSetterBuilder name(String name)",
+        "instance.setName(name);");
   }
 
   @Test
@@ -142,12 +141,12 @@ class BuilderProcessorTest {
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
     // Setter-based API should support record Constructor params (name, age)
-    ProcessorAsserts.assertingResult(
+    ProcessorAsserts.assertContaining(
         generatedCode,
-        contains("public PersonRecordBuilder name(String name)"),
-        contains("instance.setName(name);"),
-        contains("public PersonRecordBuilder age(int age)"),
-        contains("instance.setAge(age);"));
+        "public PersonRecordBuilder name(String name)",
+        "instance.setName(name);",
+        "public PersonRecordBuilder age(int age)",
+        "instance.setAge(age);");
   }
 
   @Test
@@ -184,19 +183,19 @@ class BuilderProcessorTest {
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
 
     // Direct setters and varargs convenience for List and Set; direct setter for Map
-    ProcessorAsserts.assertingResult(
+    ProcessorAsserts.assertContaining(
         generatedCode,
-        contains("public WithCollectionsBuilder names(List<String> names)"),
-        contains("public WithCollectionsBuilder names(Supplier<List<String>> namesSupplier)"),
-        contains("public WithCollectionsBuilder names(String... names)"),
-        contains("instance.setNames(List.of(names));"),
-        contains("public WithCollectionsBuilder tags(Set<String> tags)"),
-        contains("public WithCollectionsBuilder tags(Supplier<Set<String>> tagsSupplier)"),
-        contains("public WithCollectionsBuilder tags(String... tags)"),
-        contains("instance.setTags(Set.of(tags));"),
-        contains("public WithCollectionsBuilder map(Map<String, Integer> map)"),
-        contains("public WithCollectionsBuilder map(Supplier<Map<String, Integer>> mapSupplier)"),
-        contains("instance.setMap(map);"));
+        "public WithCollectionsBuilder names(List<String> names)",
+        "public WithCollectionsBuilder names(Supplier<List<String>> namesSupplier)",
+        "public WithCollectionsBuilder names(String... names)",
+        "instance.setNames(List.of(names));",
+        "public WithCollectionsBuilder tags(Set<String> tags)",
+        "public WithCollectionsBuilder tags(Supplier<Set<String>> tagsSupplier)",
+        "public WithCollectionsBuilder tags(String... tags)",
+        "instance.setTags(Set.of(tags));",
+        "public WithCollectionsBuilder map(Map<String, Integer> map)",
+        "public WithCollectionsBuilder map(Supplier<Map<String, Integer>> mapSupplier)",
+        "instance.setMap(map);");
   }
 
   @Test
@@ -221,10 +220,8 @@ class BuilderProcessorTest {
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
 
-    ProcessorAsserts.assertingResult(
-        generatedCode,
-        contains("Inner instance of builder."),
-        contains("private final FieldDoc instance;"));
+    ProcessorAsserts.assertContaining(
+        generatedCode, "Inner instance of builder.", "private final FieldDoc instance;");
   }
 
   @Test
@@ -251,11 +248,11 @@ class BuilderProcessorTest {
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
 
-    ProcessorAsserts.assertingResult(
+    ProcessorAsserts.assertContaining(
         generatedCode,
-        contains("public static CreateDocBuilder create()"),
-        contains("Creating a new builder for {@code test.CreateDoc}"),
-        contains("@return builder for {@code test.CreateDoc}"));
+        "public static CreateDocBuilder create()",
+        "Creating a new builder for {@code test.CreateDoc}",
+        "@return builder for {@code test.CreateDoc}");
   }
 
   @Test
@@ -282,11 +279,8 @@ class BuilderProcessorTest {
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
 
-    ProcessorAsserts.assertingResult(
-        generatedCode,
-        contains("@Override"),
-        contains("public BuildDoc build()"),
-        contains("return instance;"));
+    ProcessorAsserts.assertContaining(
+        generatedCode, "@Override", "public BuildDoc build()", "return instance;");
   }
 
   @Test
@@ -311,8 +305,7 @@ class BuilderProcessorTest {
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
 
-    ProcessorAsserts.assertingResult(
-        generatedCode, contains("instance.setName(name);"), contains("return this;"));
+    ProcessorAsserts.assertContaining(generatedCode, "instance.setName(name);", "return this;");
   }
 
   @Test
@@ -362,14 +355,14 @@ class BuilderProcessorTest {
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
 
     // '@return current instance of builder' should be present for all method types
-    ProcessorAsserts.assertingResult(
+    ProcessorAsserts.assertContaining(
         generatedCode,
-        contains("helperBuilderConsumer"),
-        contains("@return current instance of builder"),
-        contains("helperPlainConsumer"),
-        contains("@return current instance of builder"),
-        contains("nameSupplier"),
-        contains("@return current instance of builder"));
+        "helperBuilderConsumer",
+        "@return current instance of builder",
+        "helperPlainConsumer",
+        "@return current instance of builder",
+        "nameSupplier",
+        "@return current instance of builder");
   }
 
   @Test
@@ -395,10 +388,8 @@ class BuilderProcessorTest {
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
 
     // Expect last parameter mapped to varargs in builder signature and proper call
-    ProcessorAsserts.assertingResult(
-        generatedCode,
-        contains("doMixed(int a, String b, int... nums)"),
-        contains("instance.doMixed(a,b,nums);"));
+    ProcessorAsserts.assertContaining(
+        generatedCode, "doMixed(int a, String b, int... nums)", "instance.doMixed(a,b,nums);");
   }
 
   @Test
@@ -424,8 +415,7 @@ class BuilderProcessorTest {
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
 
     // Javadoc line should contain the nested package name and the class indicator
-    ProcessorAsserts.assertingResult(
-        generatedCode, contains("Builder for {"), contains("test.nested"));
+    ProcessorAsserts.assertContaining(generatedCode, "Builder for {", "test.nested");
   }
 
   @Test
@@ -454,8 +444,8 @@ class BuilderProcessorTest {
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
 
     // Class javadoc and interface
-    ProcessorAsserts.assertingResult(
-        generatedCode, contains("Builder for {"), contains("implements IBuilderBase<DocTarget>"));
+    ProcessorAsserts.assertContaining(
+        generatedCode, "Builder for {", "implements IBuilderBase<DocTarget>");
   }
 
   @Test
@@ -482,13 +472,13 @@ class BuilderProcessorTest {
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
 
-    ProcessorAsserts.assertingResult(
+    ProcessorAsserts.assertContaining(
         generatedCode,
-        contains("Empty constructor of builder for"),
-        contains("Initialisation of builder for"),
-        contains("@param instance object instance for initialisiation"),
-        contains("this.instance = instance;"),
-        contains("this.instance = new CtorDoc();"));
+        "Empty constructor of builder for",
+        "Initialisation of builder for",
+        "@param instance object instance for initialisiation",
+        "this.instance = instance;",
+        "this.instance = new CtorDoc();");
   }
 
   @Test
@@ -529,22 +519,19 @@ class BuilderProcessorTest {
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
 
     // PROXY method javadoc has @param for each parameter and @return
-    ProcessorAsserts.assertingResult(
+    ProcessorAsserts.assertContaining(
         generatedCode,
-        contains("Calling <code>doSomething</code> on dto-instance with parameters."),
-        contains("@param a value for a."),
-        contains("@param b value for b."),
-        contains("@return current instance of builder"));
+        "Calling <code>doSomething</code> on dto-instance with parameters.",
+        "@param a value for a.",
+        "@param b value for b.",
+        "@return current instance of builder");
 
     // SUPPLIER method javadoc and code
-    ProcessorAsserts.assertingResult(
-        generatedCode, contains("supplier for field"), contains("nameSupplier"));
+    ProcessorAsserts.assertContaining(generatedCode, "supplier for field", "nameSupplier");
 
     // CONSUMER method javadoc and code
-    ProcessorAsserts.assertingResult(
-        generatedCode,
-        contains("consumer providing instance of field"),
-        contains("helperPlainConsumer"));
+    ProcessorAsserts.assertContaining(
+        generatedCode, "consumer providing instance of field", "helperPlainConsumer");
   }
 
   @Test
@@ -585,12 +572,12 @@ class BuilderProcessorTest {
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
 
     // Expect consumer-by-builder method using HelperAnnoBuilder and builder.build()
-    ProcessorAsserts.assertingResult(
+    ProcessorAsserts.assertContaining(
         generatedCode,
-        contains("helperBuilderConsumer"),
-        contains("HelperAnnoBuilder builder = new HelperAnnoBuilder();"),
-        contains("helperBuilderConsumer.accept(builder);"),
-        contains("instance.setHelper(builder.build());"));
+        "helperBuilderConsumer",
+        "HelperAnnoBuilder builder = new HelperAnnoBuilder();",
+        "helperBuilderConsumer.accept(builder);",
+        "instance.setHelper(builder.build());");
   }
 
   @Test
@@ -629,11 +616,11 @@ class BuilderProcessorTest {
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
 
     // Expect consumer method with local var named 'consumer' of HelperPlain
-    ProcessorAsserts.assertingResult(
+    ProcessorAsserts.assertContaining(
         generatedCode,
-        contains("HelperPlain consumer = new HelperPlain();"),
-        contains("helperPlainConsumer.accept(consumer);"),
-        contains("instance.setHelperPlain(consumer);"));
+        "HelperPlain consumer = new HelperPlain();",
+        "helperPlainConsumer.accept(consumer);",
+        "instance.setHelperPlain(consumer);");
   }
 
   @Test
@@ -662,8 +649,8 @@ class BuilderProcessorTest {
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
 
     // Expect supplier-based setter usage
-    ProcessorAsserts.assertingResult(
-        generatedCode, contains("nameSupplier"), contains("instance.setName(nameSupplier.get());"));
+    ProcessorAsserts.assertContaining(
+        generatedCode, "nameSupplier", "instance.setName(nameSupplier.get());");
   }
 
   protected Compilation compile(JavaFileObject... sourceFiles) {
@@ -735,14 +722,14 @@ class BuilderProcessorTest {
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
 
     // Verify the generated code contains builder methods (build/create are checked centrally)
-    ProcessorAsserts.assertingResult(
+    ProcessorAsserts.assertContaining(
         generatedCode,
-        contains("public PersonBuilder name(String name)"),
-        contains("public PersonBuilder age(int age)"));
+        "public PersonBuilder name(String name)",
+        "public PersonBuilder age(int age)");
   }
 
   @Test
-  //Todo: what should that test validate?
+  // Todo: what should that test validate?
   void shouldGenerateSetterForSetOfStrings_whenImplemented() {
     // Given
     String packageName = "test";
@@ -766,12 +753,12 @@ class BuilderProcessorTest {
     // Then
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-    ProcessorAsserts.assertingResult(
-        generatedCode, contains("public HasSetStringBuilder tags(Set<String> tags)"));
+    ProcessorAsserts.assertContaining(
+        generatedCode, "public HasSetStringBuilder tags(Set<String> tags)");
   }
 
   @Test
-  //Todo: what should that test validate?
+  // Todo: what should that test validate?
   void shouldHandleSetOfStrings() {
     // Given
     String packageName = "test";
@@ -827,12 +814,12 @@ class BuilderProcessorTest {
     // Then
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-    ProcessorAsserts.assertingResult(
-        generatedCode, contains("public UsesOtherPackageHelperBuilder helper(Helper helper)"));
+    ProcessorAsserts.assertContaining(
+        generatedCode, "public UsesOtherPackageHelperBuilder helper(Helper helper)");
   }
 
-  @Test 
-  //Todo: what should that test validate?
+  @Test
+  // Todo: what should that test validate?
   void shouldHandleSetOfCustomType() {
     // Given
     String packageName = "test";
@@ -903,8 +890,8 @@ class BuilderProcessorTest {
     // Then
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-    ProcessorAsserts.assertingResult(
-        generatedCode, contains("public HasSetCustomBuilder helpers(Set<Helper> helpers)"));
+    ProcessorAsserts.assertContaining(
+        generatedCode, "public HasSetCustomBuilder helpers(Set<Helper> helpers)");
   }
 
   @Test
@@ -972,19 +959,14 @@ class BuilderProcessorTest {
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
     // Expect only ok() proxy to be present
-    ProcessorAsserts.assertingResult(
+    ProcessorAsserts.assertContaining(
         generatedCode,
-        contains("public HasVariousMethodsBuilder ok()"),
-        contains("instance.ok();"),
-        contains("public HasVariousMethodsBuilder ok(int ok)"),
-        contains("instance.setOk(ok);"));
+        "public HasVariousMethodsBuilder ok()",
+        "instance.ok();",
+        "public HasVariousMethodsBuilder ok(int ok)",
+        "instance.setOk(ok);");
     ProcessorAsserts.assertNotContaining(
-        generatedCode,
-        "hidden",
-        "util(int util)",
-        "risky(int risk)",
-        "returnsInt",
-        "justGetter");
+        generatedCode, "hidden", "util(int util)", "risky(int risk)", "returnsInt", "justGetter");
   }
 
   @Test
@@ -1016,10 +998,10 @@ class BuilderProcessorTest {
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
     // Expect simple setters and suppliers only; no consumer methods for primitive/array
-    ProcessorAsserts.assertingResult(
+    ProcessorAsserts.assertContaining(
         generatedCode,
-        contains("public PrimAndArrayBuilder count(Supplier"),
-        contains("public PrimAndArrayBuilder names(Supplier"));
+        "public PrimAndArrayBuilder count(Supplier",
+        "public PrimAndArrayBuilder names(Supplier");
     ProcessorAsserts.assertNotContaining(
         generatedCode,
         "public PrimAndArrayBuilder count(Consumer",
@@ -1052,8 +1034,7 @@ class BuilderProcessorTest {
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
 
     // Expect only direct setter and supplier; no varargs/consumer for Map
-    ProcessorAsserts.assertingResult(
-        generatedCode, contains("public HasMapBuilder map("), contains("mapSupplier)"));
+    ProcessorAsserts.assertContaining(generatedCode, "public HasMapBuilder map(", "mapSupplier)");
     ProcessorAsserts.assertNotContaining(
         generatedCode,
         "map(String...",
@@ -1099,9 +1080,7 @@ class BuilderProcessorTest {
 
     // No consumer method should be generated for abstract helper type
     ProcessorAsserts.assertNotContaining(
-        generatedCode,
-        "helperAbsConsumer",
-        "helperAbsBuilderConsumer");
+        generatedCode, "helperAbsConsumer", "helperAbsBuilderConsumer");
   }
 
   @Test
@@ -1127,14 +1106,14 @@ class BuilderProcessorTest {
     // Then
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-    ProcessorAsserts.assertingResult(
+    ProcessorAsserts.assertContaining(
         generatedCode,
-        contains("@Generated("),
-        contains("@BuilderImplementation("),
-        contains("public static AnnoTargetBuilder create()"),
-        contains("return new AnnoTargetBuilder(instance);"),
-        contains("public AnnoTarget build()"),
-        contains("return instance;"));
+        "@Generated(",
+        "@BuilderImplementation(",
+        "public static AnnoTargetBuilder create()",
+        "return new AnnoTargetBuilder(instance);",
+        "public AnnoTarget build()",
+        "return instance;");
   }
 
   @Test
@@ -1165,12 +1144,12 @@ class BuilderProcessorTest {
     // Then
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-    ProcessorAsserts.assertingResult(
+    ProcessorAsserts.assertContaining(
         generatedCode,
-        contains("public HasCollectionsConvenienceBuilder names(String... names)"),
-        contains("instance.setNames(List.of(names));"),
-        contains("public HasCollectionsConvenienceBuilder tags(String... tags)"),
-        contains("instance.setTags(Set.of(tags));"));
+        "public HasCollectionsConvenienceBuilder names(String... names)",
+        "instance.setNames(List.of(names));",
+        "public HasCollectionsConvenienceBuilder tags(String... tags)",
+        "instance.setTags(Set.of(tags));");
   }
 
   @Test
@@ -1197,10 +1176,10 @@ class BuilderProcessorTest {
     // Then
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-    ProcessorAsserts.assertingResult(
+    ProcessorAsserts.assertContaining(
         generatedCode,
-        contains("public HasLocalDateBuilder date(LocalDate date)"),
-        contains("instance.setDate(date);"));
+        "public HasLocalDateBuilder date(LocalDate date)",
+        "instance.setDate(date);");
   }
 
   @Test
@@ -1299,7 +1278,8 @@ class BuilderProcessorTest {
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
     // Even without setters, builder should exist (build/create checked centrally). No extra
     // asserts.
-    // TODO Without Setters or Constructors there is no need for a builder. we should have a warning in build
+    // TODO Without Setters or Constructors there is no need for a builder. we should have a warning
+    // in build
   }
 
   @Test
@@ -1323,7 +1303,8 @@ class BuilderProcessorTest {
     // Then
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-    // TODO Without Setters or Constructors there is no need for a builder. we should have a warning in build
+    // TODO Without Setters or Constructors there is no need for a builder. we should have a warning
+    // in build
   }
 
   @Test
@@ -1350,7 +1331,7 @@ class BuilderProcessorTest {
     // Then
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-    ProcessorAsserts.assertingResult(generatedCode, contains("public NumbersBuilder a(int a)"));
+    ProcessorAsserts.assertContaining(generatedCode, "public NumbersBuilder a(int a)");
   }
 
   @Test
@@ -1381,7 +1362,7 @@ class BuilderProcessorTest {
   }
 
   @Test
-  //TODO: class code does not match testname
+  // TODO: class code does not match testname
   void shouldBoxPrimitiveTypeArgumentsInGenerics() {
     // Given
     String packageName = "test";
@@ -1489,10 +1470,10 @@ class BuilderProcessorTest {
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
 
-    //TODO: sdd asserts, because of missing empty constructor there could be no consumer
+    // TODO: sdd asserts, because of missing empty constructor there could be no consumer
   }
 
-//TODO adding list of custom types without empty constructor
+  // TODO adding list of custom types without empty constructor
 
   @Test
   void shouldHandleListOfCustomType() {
