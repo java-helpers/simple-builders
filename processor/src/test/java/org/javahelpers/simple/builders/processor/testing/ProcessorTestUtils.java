@@ -3,6 +3,8 @@ package org.javahelpers.simple.builders.processor.testing;
 import com.google.testing.compile.Compilation;
 import com.google.testing.compile.JavaFileObjects;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.tools.JavaFileObject;
 
 /**
@@ -46,6 +48,42 @@ public final class ProcessorTestUtils {
             + (body.endsWith("\n") ? "" : "\n")
             + "}\n";
     return JavaFileObjects.forSourceString(fqcn, source);
+  }
+
+  /**
+   * Creates a {@link JavaFileObject} from a full Java source string by extracting the package name
+   * and the top-level type name.
+   *
+   * <p>This is useful when you already have a complete source text block and want to avoid
+   * duplicating the fully qualified class name separately.
+   *
+   * @param source full Java source code (may or may not declare a package)
+   * @return JavaFileObject suitable for compilation testing
+   * @throws IllegalArgumentException if the top-level type name cannot be determined
+   */
+  public static JavaFileObject forSource(String source) {
+    String pkg = extractPackageName(source);
+    String type = extractTopLevelTypeName(source);
+    if (type == null || type.isBlank()) {
+      throw new IllegalArgumentException("Cannot determine top-level type name from source.");
+    }
+    String fqcn = (pkg == null || pkg.isBlank()) ? type : (pkg + "." + type);
+    return JavaFileObjects.forSourceString(fqcn, source);
+  }
+
+  private static String extractPackageName(String source) {
+    Matcher m =
+        Pattern.compile("(?m)^\\s*package\\s+([a-zA-Z_]\\w*(?:\\.[a-zA-Z_]\\w*)*)\\s*;")
+            .matcher(source);
+    return m.find() ? m.group(1) : null;
+  }
+
+  private static String extractTopLevelTypeName(String source) {
+    Matcher m =
+        Pattern.compile(
+                "(?m)^\\s*(?:public|protected|private)?(?:\\s+(?:abstract|final|static|sealed|non-sealed|strictfp))*\\s*(?:class|interface|enum|record)\\s+([A-Za-z_]\\w*)\\b")
+            .matcher(source);
+    return m.find() ? m.group(1) : null;
   }
 
   /**

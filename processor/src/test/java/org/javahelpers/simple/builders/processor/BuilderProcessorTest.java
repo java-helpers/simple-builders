@@ -32,8 +32,7 @@ class BuilderProcessorTest {
   void shouldFailWhenAnnotationPlacedOnInterface() {
     // Given: @SimpleBuilder used on an interface instead of a class
     JavaFileObject source =
-        JavaFileObjects.forSourceString(
-            "test.WrongTargetInterface",
+        ProcessorTestUtils.forSource(
             """
                 package test;
                 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
@@ -57,8 +56,7 @@ class BuilderProcessorTest {
   void shouldFailWhenAnnotationPlacedOnAbstractClass() {
     // Given: @SimpleBuilder used on an abstract class
     JavaFileObject source =
-        JavaFileObjects.forSourceString(
-            "test.AbstractAnnotated",
+        ProcessorTestUtils.forSource(
             """
                 package test;
                 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
@@ -126,8 +124,7 @@ class BuilderProcessorTest {
     String builderClassName = recordName + "Builder";
 
     JavaFileObject recordFile =
-        JavaFileObjects.forSourceString(
-            packageName + "." + recordName,
+        ProcessorTestUtils.forSource(
             """
             package test;
 
@@ -335,8 +332,7 @@ class BuilderProcessorTest {
             """);
 
     JavaFileObject helperAnno =
-        JavaFileObjects.forSourceString(
-            packageName + ".HelperAnno",
+        ProcessorTestUtils.forSource(
             """
                 package test;
                 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
@@ -345,8 +341,7 @@ class BuilderProcessorTest {
             """);
 
     JavaFileObject helperPlain =
-        JavaFileObjects.forSourceString(
-            packageName + ".HelperPlain",
+        ProcessorTestUtils.forSource(
             """
                 package test;
                 public class HelperPlain { public HelperPlain() {} }
@@ -507,8 +502,7 @@ class BuilderProcessorTest {
                 """);
 
     JavaFileObject helper =
-        JavaFileObjects.forSourceString(
-            packageName + ".HelperPlain",
+        ProcessorTestUtils.forSource(
             """
                 package test;
                 public class HelperPlain {
@@ -558,8 +552,7 @@ class BuilderProcessorTest {
             """);
 
     JavaFileObject helper =
-        JavaFileObjects.forSourceString(
-            packageName + ".HelperAnno",
+        ProcessorTestUtils.forSource(
             """
                 package test;
                 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
@@ -604,8 +597,7 @@ class BuilderProcessorTest {
             """);
 
     JavaFileObject helper =
-        JavaFileObjects.forSourceString(
-            packageName + ".HelperPlain",
+        ProcessorTestUtils.forSource(
             """
                 package test;
                 public class HelperPlain {
@@ -666,8 +658,7 @@ class BuilderProcessorTest {
   void shouldFailCompilationOnLowerReleaseOption() {
     // Given: a minimal @SimpleBuilder-annotated class
     JavaFileObject source =
-        JavaFileObjects.forSourceString(
-            "test.ForcedOldRelease",
+        ProcessorTestUtils.forSource(
             """
                 package test;
                 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
@@ -795,8 +786,7 @@ class BuilderProcessorTest {
             """);
 
     JavaFileObject helperSource =
-        JavaFileObjects.forSourceString(
-            "otherpkg.Helper",
+        ProcessorTestUtils.forSource(
             """
                 package otherpkg;
                 public class Helper {
@@ -834,8 +824,7 @@ class BuilderProcessorTest {
             """);
 
     JavaFileObject helperSource =
-        JavaFileObjects.forSourceString(
-            packageName + ".Helper",
+        ProcessorTestUtils.forSource(
             """
                 package test;
                 public class Helper {
@@ -880,8 +869,7 @@ class BuilderProcessorTest {
             """);
 
     JavaFileObject helperSource =
-        JavaFileObjects.forSourceString(
-            "otherpkg.Helper",
+        ProcessorTestUtils.forSource(
             """
                 package otherpkg;
                 public class Helper {
@@ -1036,8 +1024,7 @@ class BuilderProcessorTest {
             """);
 
     JavaFileObject helperAbs =
-        JavaFileObjects.forSourceString(
-            packageName + ".HelperAbs",
+        ProcessorTestUtils.forSource(
             """
                 package test;
                 public abstract class HelperAbs {
@@ -1384,8 +1371,7 @@ class BuilderProcessorTest {
 
     // And a top-level helper class with empty constructor
     JavaFileObject helperSource =
-        JavaFileObjects.forSourceString(
-            packageName + ".Helper",
+        ProcessorTestUtils.forSource(
             """
                 package test;
                 public class Helper {
@@ -1426,8 +1412,7 @@ class BuilderProcessorTest {
 
     // And a top-level helper class without empty constructor
     JavaFileObject helperSource =
-        JavaFileObjects.forSourceString(
-            packageName + ".HelperNoEmpty",
+        ProcessorTestUtils.forSource(
             """
                 package test;
                 public class HelperNoEmpty {
@@ -1469,8 +1454,7 @@ class BuilderProcessorTest {
 
     // And a top-level Helper class referenced by the list
     JavaFileObject helperSource =
-        JavaFileObjects.forSourceString(
-            packageName + ".Helper",
+        ProcessorTestUtils.forSource(
             """
                 package test;
                 public class Helper {
