@@ -1500,8 +1500,7 @@ class BuilderProcessorTest {
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
     // Expect builder to expose setter for parent class property
     ProcessorAsserts.assertingResult(
-        generatedCode,
-        contains("public ChildInheritsSetterBuilder name(String name)"));
+        generatedCode, contains("public ChildInheritsSetterBuilder name(String name)"));
   }
 
   @Test
@@ -1773,8 +1772,101 @@ class BuilderProcessorTest {
 
   @Test
   @Disabled("TODO: missing feature")
+  void shouldGenerateGenericBuilderRetainingMultipleTypeParameter() {
+    // Given
+    String builderClassName = "GenericDtoBuilder";
+
+    JavaFileObject genericDtoSource =
+        ProcessorTestUtils.forSource(
+            """
+                package test;
+                import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+                @SimpleBuilder
+                public class GenericDto<T, U> {
+                  private T valueT;
+                  private U valueU;
+                  public T getValueT() { return valueT; }
+                  public void setValueT(T valueT) { this.valueT = valueT; }
+                  public U getValueU() { return valueU; }
+                  public void setValueU(U valueU) { this.valueU = valueU; }
+                }
+            """);
+
+    // When
+    Compilation compilation = compile(genericDtoSource);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        // builder preserves type parameter T
+        contains("class GenericDtoBuilder<T, U>"),
+        // setter keeps T
+        contains("public GenericDtoBuilder<T, U> valueT(T valueT)"),
+        // setter keeps U
+        contains("public GenericDtoBuilder<T, U> valueU(U valueU)"),
+        // supplier-based setter retains T
+        contains("public GenericDtoBuilder<T, U> valueT(Supplier<T> valueTSupplier)"),
+        // supplier-based setter retains U
+        contains("public GenericDtoBuilder<T, U> valueU(Supplier<U> valueUSupplier)"),
+        // no direct consumer possible for unknown T (no empty ctor info)
+        notContains("public GenericDtoBuilder<T, U> valueT(Consumer<T> valueTConsumer)"),
+        // no direct consumer possible for unknown U (no empty ctor info)
+        notContains("public GenericDtoBuilder<T, U> valueU(Consumer<U> valueUConsumer)"),
+        // build returns GenericDto<T, U>
+        contains("public GenericDto<T, U> build()"),
+        // create() exposes generic as well
+        contains("public static <T, U> GenericDtoBuilder<T, U> create()"));
+  }
+
+  @Test
+  @Disabled("TODO: missing feature")
+  void shouldGenerateBuilderRetainingFieldspecificTypeParameter() {
+    // Given
+    String builderClassName = "GenericFieldDtoBuilder";
+
+    JavaFileObject genericDtoSource =
+        ProcessorTestUtils.forSource(
+            """
+                package test;
+                import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+                @SimpleBuilder
+                public class GenericFieldDto {
+                  private <T extends io.Serializable> T value;
+                  public io.Serializable getValue() { return value; }
+                  public <T extends io.Serializable> void setValue(T value) { this.value = value; }
+                }
+            """);
+
+    // When
+    Compilation compilation = compile(genericDtoSource);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        // builder preserves type parameter T
+        contains("class GenericFieldDtoBuilder"),
+        // setter keeps T
+        contains("public <T extends io.Serializable> GenericFieldDtoBuilder value(T value)"),
+        // supplier-based setter retains T
+        contains(
+            "public <T extends io.Serializable> GenericFieldDtoBuilder value(Supplier<T> valueSupplier)"),
+        // no direct consumer possible for unknown T (no empty ctor info)
+        notContains("GenericFieldDtoBuilder value(Consumer"),
+        // build returns GenericFieldDto
+        contains("public GenericFieldDto build()"),
+        // create() exposes no generic, because the Builder is not generic
+        contains("public static GenericFieldDtoBuilder create()"));
+  }
+
+  @Test
+  @Disabled("TODO: missing feature")
   void shouldNotGenerateBuilderWhenNestedBuilderInterfaceExists() {
-    // Given: an annotated class that already declares a nested interface named like the would-be builder
+    // Given: an annotated class that already declares a nested interface named like the would-be
+    // builder
     JavaFileObject source =
         ProcessorTestUtils.forSource(
             """
