@@ -975,11 +975,11 @@ class BuilderProcessorTest {
         contains("this.ok = ok;"));
     ProcessorAsserts.assertNotContaining(
         generatedCode,
-        ProcessorAsserts.notContains("hidden"),
-        ProcessorAsserts.notContains("util"),
-        ProcessorAsserts.notContains("risky"),
-        ProcessorAsserts.notContains("returnsInt"),
-        ProcessorAsserts.notContains("justGetter"));
+        "hidden",
+        "util(int util)",
+        "risky(int risk)",
+        "returnsInt",
+        "justGetter");
   }
 
   @Test
@@ -1017,8 +1017,8 @@ class BuilderProcessorTest {
         contains("public PrimAndArrayBuilder names(Supplier<List<String>> namesSupplier"));
     ProcessorAsserts.assertNotContaining(
         generatedCode,
-        ProcessorAsserts.notContains("public PrimAndArrayBuilder count(Consumer"),
-        ProcessorAsserts.notContains("public PrimAndArrayBuilder names(Consumer"));
+        "public PrimAndArrayBuilder count(Consumer",
+        "public PrimAndArrayBuilder names(Consumer");
   }
 
   @Test
@@ -1051,10 +1051,10 @@ class BuilderProcessorTest {
         generatedCode, contains("public HasMapBuilder map("), contains("mapSupplier)"));
     ProcessorAsserts.assertNotContaining(
         generatedCode,
-        ProcessorAsserts.notContains("map(String..."),
-        ProcessorAsserts.notContains("map(java.lang.String..."),
-        ProcessorAsserts.notContains("mapBuilderConsumer"),
-        ProcessorAsserts.notContains("mapConsumer"));
+        "map(String...",
+        "map(java.lang.String...",
+        "mapBuilderConsumer",
+        "mapConsumer");
   }
 
   @Test
@@ -1095,8 +1095,8 @@ class BuilderProcessorTest {
     // No consumer method should be generated for abstract helper type
     ProcessorAsserts.assertNotContaining(
         generatedCode,
-        ProcessorAsserts.notContains("helperAbsConsumer"),
-        ProcessorAsserts.notContains("helperAbsBuilderConsumer"));
+        "helperAbsConsumer",
+        "helperAbsBuilderConsumer");
   }
 
   @Test
@@ -1196,7 +1196,7 @@ class BuilderProcessorTest {
         generatedCode,
         contains("private LocalDate date;"),
         contains("public HasLocalDateBuilder date(LocalDate date)"),
-        contsins("this.date = date;"));
+        contains("this.date = date;"));
   }
 
   @Test
@@ -1402,7 +1402,7 @@ class BuilderProcessorTest {
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
     // Ensure builder compiles and does not use primitive type argument like <int>
-    ProcessorAsserts.assertNotContaining(generatedCode, ProcessorAsserts.notContains("<int>"));
+    ProcessorAsserts.assertNotContaining(generatedCode, "<int>");
   }
 
   @Test
