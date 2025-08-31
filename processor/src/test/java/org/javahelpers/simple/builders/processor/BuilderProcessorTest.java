@@ -34,10 +34,12 @@ class BuilderProcessorTest {
     JavaFileObject source =
         JavaFileObjects.forSourceString(
             "test.WrongTargetInterface",
-            "package test;\n"
-                + "import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;\n"
-                + "@SimpleBuilder\n"
-                + "public interface WrongTargetInterface { void x(); }\n");
+            """
+                package test;
+                import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+                @SimpleBuilder
+                public interface WrongTargetInterface { void x(); }
+            """);
 
     // When
     Compilation compilation =
@@ -57,10 +59,12 @@ class BuilderProcessorTest {
     JavaFileObject source =
         JavaFileObjects.forSourceString(
             "test.AbstractAnnotated",
-            "package test;\n"
-                + "import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;\n"
-                + "@SimpleBuilder\n"
-                + "public abstract class AbstractAnnotated { }\n");
+            """
+                package test;
+                import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+                @SimpleBuilder
+                public abstract class AbstractAnnotated { }
+            """);
 
     // When
     Compilation compilation =
@@ -96,7 +100,7 @@ class BuilderProcessorTest {
                 public String getName() { return name; }
                 public void setName(String name) { this.name = name; }
                 // a has no setter intentionally
-                """);
+            """);
 
     // When
     Compilation compilation = compile(sourceFile);
@@ -121,20 +125,19 @@ class BuilderProcessorTest {
     String recordName = "PersonRecord";
     String builderClassName = recordName + "Builder";
 
-    String source =
-        """
-        package test;
-
-        import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
-
-        @SimpleBuilder
-        public record PersonRecord(String name, int age) {
-          public String upperName() { return name.toUpperCase(); }
-        }
-        """;
-
     JavaFileObject recordFile =
-        JavaFileObjects.forSourceString(packageName + "." + recordName, source);
+        JavaFileObjects.forSourceString(
+            packageName + "." + recordName,
+            """
+            package test;
+
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+            @SimpleBuilder
+            public record PersonRecord(String name, int age) {
+              public String upperName() { return name.toUpperCase(); }
+            }
+            """);
 
     // When
     Compilation compilation = compile(recordFile);
@@ -175,7 +178,7 @@ class BuilderProcessorTest {
 
                 public java.util.Map<String, Integer> getMap() { return map; }
                 public void setMap(java.util.Map<String, Integer> map) { this.map = map; }
-                """);
+            """);
 
     // When
     Compilation compilation = compile(sourceFile);
@@ -213,7 +216,7 @@ class BuilderProcessorTest {
             className,
             """
                 private int x; public int getX(){return x;} public void setX(int x){this.x=x;}
-                """);
+            """);
 
     // When
     Compilation compilation = compile(sourceFile);
@@ -298,7 +301,7 @@ class BuilderProcessorTest {
             className,
             """
                 private String name; public String getName(){return name;} public void setName(String name){this.name=name;}
-                """);
+            """);
 
     // When
     Compilation compilation = compile(sourceFile);
@@ -329,25 +332,25 @@ class BuilderProcessorTest {
                 public void setName(String name) { this.name = name; }
                 public void setHelper(HelperAnno helper) { this.helper = helper; }
                 public void setHelperPlain(HelperPlain helperPlain) { this.helperPlain = helperPlain; }
-                """);
+            """);
 
     JavaFileObject helperAnno =
         JavaFileObjects.forSourceString(
             packageName + ".HelperAnno",
-            "package "
-                + packageName
-                + ";\n"
-                + "import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;\n"
-                + "@SimpleBuilder\n"
-                + "public class HelperAnno { public HelperAnno() {} }\n");
+            """
+                package test;
+                import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+                @SimpleBuilder
+                public class HelperAnno { public HelperAnno() {} }
+            """);
 
     JavaFileObject helperPlain =
         JavaFileObjects.forSourceString(
             packageName + ".HelperPlain",
-            "package "
-                + packageName
-                + ";\n"
-                + "public class HelperPlain { public HelperPlain() {} }\n");
+            """
+                package test;
+                public class HelperPlain { public HelperPlain() {} }
+            """);
 
     // When
     Compilation compilation = compile(dto, helperAnno, helperPlain);
@@ -380,7 +383,7 @@ class BuilderProcessorTest {
             className,
             """
                 public void doMixed(int a, String b, int[] nums) { /* no-op */ }
-                """);
+            """);
 
     // When
     Compilation compilation = compile(sourceFile);
@@ -436,7 +439,7 @@ class BuilderProcessorTest {
 
                 public int getN() { return n; }
                 public void setN(int n) { this.n = n; }
-                """);
+            """);
 
     // When
     Compilation compilation = compile(sourceFile);
@@ -465,7 +468,7 @@ class BuilderProcessorTest {
                 private String x;
                 public String getX() { return x; }
                 public void setX(String x) { this.x = x; }
-                """);
+            """);
 
     // When
     Compilation compilation = compile(sourceFile);
@@ -506,12 +509,12 @@ class BuilderProcessorTest {
     JavaFileObject helper =
         JavaFileObjects.forSourceString(
             packageName + ".HelperPlain",
-            "package "
-                + packageName
-                + ";\n"
-                + "public class HelperPlain {\n"
-                + "  public HelperPlain() {}\n"
-                + "}\n");
+            """
+                package test;
+                public class HelperPlain {
+                  public HelperPlain() {}
+                }
+            """);
 
     // When
     Compilation compilation = compile(dto, helper);
@@ -552,19 +555,19 @@ class BuilderProcessorTest {
 
                 public HelperAnno getHelper() { return helper; }
                 public void setHelper(HelperAnno helper) { this.helper = helper; }
-                """);
+            """);
 
     JavaFileObject helper =
         JavaFileObjects.forSourceString(
             packageName + ".HelperAnno",
-            "package "
-                + packageName
-                + ";\n"
-                + "import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;\n"
-                + "@SimpleBuilder\n"
-                + "public class HelperAnno {\n"
-                + "  public HelperAnno() {}\n"
-                + "}\n");
+            """
+                package test;
+                import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+                @SimpleBuilder
+                public class HelperAnno {
+                  public HelperAnno() {}
+                }
+            """);
 
     // When
     Compilation compilation = compile(dto, helper);
@@ -598,17 +601,17 @@ class BuilderProcessorTest {
 
                 public HelperPlain getHelperPlain() { return helperPlain; }
                 public void setHelperPlain(HelperPlain helperPlain) { this.helperPlain = helperPlain; }
-                """);
+            """);
 
     JavaFileObject helper =
         JavaFileObjects.forSourceString(
             packageName + ".HelperPlain",
-            "package "
-                + packageName
-                + ";\n"
-                + "public class HelperPlain {\n"
-                + "  public HelperPlain() {}\n"
-                + "}\n");
+            """
+                package test;
+                public class HelperPlain {
+                  public HelperPlain() {}
+                }
+            """);
 
     // When
     Compilation compilation = compile(dto, helper);
@@ -641,7 +644,7 @@ class BuilderProcessorTest {
 
                 public String getName() { return name; }
                 public void setName(String name) { this.name = name; }
-                """);
+            """);
 
     // When
     Compilation compilation = compile(sourceFile);
@@ -665,10 +668,12 @@ class BuilderProcessorTest {
     JavaFileObject source =
         JavaFileObjects.forSourceString(
             "test.ForcedOldRelease",
-            "package test;\n"
-                + "import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;\n"
-                + "@SimpleBuilder\n"
-                + "public class ForcedOldRelease { public ForcedOldRelease() {} }\n");
+            """
+                package test;
+                import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+                @SimpleBuilder
+                public class ForcedOldRelease { public ForcedOldRelease() {} }
+            """);
 
     // When: compile with a lower language level to simulate older Java (no production code change)
     Compilation compilation =
@@ -714,7 +719,7 @@ class BuilderProcessorTest {
                 public void setAge(int age) {
                     this.age = age;
                 }
-                """);
+            """);
 
     // When
     Compilation compilation = compile(sourceFile);
@@ -746,7 +751,7 @@ class BuilderProcessorTest {
 
                 public java.util.Set<String> getTags() { return tags; }
                 public void setTags(java.util.Set<String> tags) { this.tags = tags; }
-                """);
+            """);
 
     // When
     Compilation compilation = compile(sourceFile);
@@ -756,16 +761,15 @@ class BuilderProcessorTest {
     assertGenerationSucceeded(
         compilation, builderClassName, loadGeneratedSource(compilation, builderClassName));
     ProcessorAsserts.assertContaining(
-            generatedCode, 
-            "public HasSetStringBuilder tags(Set<String> tags)",
-            "instance.setTags(tags);",
-            "public HasSetStringBuilder tags(Consumer<HashSetBuilder<String>> tagsBuilderConsumer)",
-            "instance.setTags(builder.build());",
-            "public HasSetStringBuilder tags(String... tags)",
-            "instance.setTags(Set.of(tags));",
-            "public HasSetStringBuilder tags(Supplier<Set<String>> tagsSupplier)",
-            "instance.setTags(tagsSupplier.get());"
-            );
+        generatedCode,
+        "public HasSetStringBuilder tags(Set<String> tags)",
+        "instance.setTags(tags);",
+        "public HasSetStringBuilder tags(Consumer<HashSetBuilder<String>> tagsBuilderConsumer)",
+        "instance.setTags(builder.build());",
+        "public HasSetStringBuilder tags(String... tags)",
+        "instance.setTags(Set.of(tags));",
+        "public HasSetStringBuilder tags(Supplier<Set<String>> tagsSupplier)",
+        "instance.setTags(tagsSupplier.get());");
   }
 
   @Test
@@ -832,12 +836,12 @@ class BuilderProcessorTest {
     JavaFileObject helperSource =
         JavaFileObjects.forSourceString(
             packageName + ".Helper",
-            "package "
-                + packageName
-                + ";\n"
-                + "public class Helper {\n"
-                + "  public Helper() {}\n"
-                + "}\n");
+            """
+                package test;
+                public class Helper {
+                  public Helper() {}
+                }
+            """);
 
     // When
     Compilation compilation = compile(sourceFile, helperSource);
@@ -846,16 +850,16 @@ class BuilderProcessorTest {
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
     ProcessorAsserts.assertContaining(
-            generatedCode, 
-            "public HasSetCustomBuilder helpers(Set<Helper> helpers)",
-            "instance.setHelpers(helpers);",
-            "public HasSetCustomBuilder helpers(Consumer<HashSetBuilder<Helper>> helpersBuilderConsumer)",
-            "instance.setHelpers(builder.build());",
-            "public HasSetCustomBuilder helpers(Helper... helpers)",
-            "instance.setHelpers(Set.of(helpers));",
-            "public HasSetCustomBuilder helpers(Supplier<Set<Helper>> helpersSupplier)",
-            "instance.setHelpers(helpersSupplier.get());"
-            );  }
+        generatedCode,
+        "public HasSetCustomBuilder helpers(Set<Helper> helpers)",
+        "instance.setHelpers(helpers);",
+        "public HasSetCustomBuilder helpers(Consumer<HashSetBuilder<Helper>> helpersBuilderConsumer)",
+        "instance.setHelpers(builder.build());",
+        "public HasSetCustomBuilder helpers(Helper... helpers)",
+        "instance.setHelpers(Set.of(helpers));",
+        "public HasSetCustomBuilder helpers(Supplier<Set<Helper>> helpersSupplier)",
+        "instance.setHelpers(helpersSupplier.get());");
+  }
 
   @Test
   void shouldHandleHelperInDifferentPackage() {
@@ -873,12 +877,17 @@ class BuilderProcessorTest {
 
                 public otherpkg.Helper getHelper() { return helper; }
                 public void setHelper(otherpkg.Helper helper) { this.helper = helper; }
-                """);
+            """);
 
     JavaFileObject helperSource =
         JavaFileObjects.forSourceString(
             "otherpkg.Helper",
-            "package otherpkg;\n" + "public class Helper {\n" + "  public Helper() {}\n" + "}\n");
+            """
+                package otherpkg;
+                public class Helper {
+                  public Helper() {}
+                }
+            """);
 
     // When
     Compilation compilation = compile(sourceFile, helperSource);
@@ -913,7 +922,7 @@ class BuilderProcessorTest {
                 public void setRisky(int risk) throws Exception {}
                 public int returnsInt() { return 42; }
                 public int getJustGetter() { return 25; }
-                """);
+            """);
 
     // When
     Compilation compilation = compile(sourceFile);
@@ -955,7 +964,7 @@ class BuilderProcessorTest {
 
                 public String[] getNames() { return names; }
                 public void setNames(String[] names) { this.names = names; }
-                """);
+            """);
 
     // When
     Compilation compilation = compile(sourceFile);
@@ -988,7 +997,7 @@ class BuilderProcessorTest {
 
                 public java.util.Map<String, Integer> getMap() { return map; }
                 public void setMap(java.util.Map<String, Integer> map) { this.map = map; }
-                """);
+            """);
 
     // When
     Compilation compilation = compile(sourceFile);
@@ -1024,17 +1033,17 @@ class BuilderProcessorTest {
 
                 public HelperAbs getHelperAbs() { return helperAbs; }
                 public void setHelperAbs(HelperAbs helperAbs) { this.helperAbs = helperAbs; }
-                """);
+            """);
 
     JavaFileObject helperAbs =
         JavaFileObjects.forSourceString(
             packageName + ".HelperAbs",
-            "package "
-                + packageName
-                + ";\n"
-                + "public abstract class HelperAbs {\n"
-                + "  public HelperAbs() {}\n"
-                + "}\n");
+            """
+                package test;
+                public abstract class HelperAbs {
+                  public HelperAbs() {}
+                }
+            """);
 
     // When
     Compilation compilation = compile(dto, helperAbs);
@@ -1063,7 +1072,7 @@ class BuilderProcessorTest {
                 private int a;
                 public int getA() { return a; }
                 public void setA(int a) { this.a = a; }
-                """);
+            """);
 
     // When
     Compilation compilation = compile(sourceFile);
@@ -1101,7 +1110,7 @@ class BuilderProcessorTest {
 
                 public java.util.Set<String> getTags() { return tags; }
                 public void setTags(java.util.Set<String> tags) { this.tags = tags; }
-                """);
+            """);
 
     // When
     Compilation compilation = compile(sourceFile);
@@ -1133,7 +1142,7 @@ class BuilderProcessorTest {
 
                 public java.time.LocalDate getDate() { return date; }
                 public void setDate(java.time.LocalDate date) { this.date = date; }
-                """);
+            """);
 
     // When
     Compilation compilation = compile(sourceFile);
@@ -1179,7 +1188,7 @@ class BuilderProcessorTest {
 
                 public java.time.LocalDate getDate() { return date; }
                 public void setDate(java.time.LocalDate date) { this.date = date; }
-                """);
+            """);
 
     // When
     Compilation compilation = compile(sourceFile);
@@ -1206,7 +1215,7 @@ class BuilderProcessorTest {
 
                 public String[] getNames() { return names; }
                 public void setNames(String[] names) { this.names = names; }
-                """);
+            """);
 
     // When
     Compilation compilation = compile(sourceFile);
@@ -1233,7 +1242,7 @@ class BuilderProcessorTest {
 
                 public String getName() { return name; }
                 // no setter on purpose
-                """);
+            """);
 
     // When
     Compilation compilation = compile(sourceFile);
@@ -1260,7 +1269,7 @@ class BuilderProcessorTest {
             className,
             """
                 // No fields or methods
-                """);
+            """);
 
     // When
     Compilation compilation = compile(sourceFile);
@@ -1288,7 +1297,7 @@ class BuilderProcessorTest {
 
                 public int getA() { return a; }
                 public void setA(int a) { this.a = a; }
-                """);
+            """);
 
     // When
     Compilation compilation = compile(sourceFile);
@@ -1315,7 +1324,7 @@ class BuilderProcessorTest {
 
                 public java.util.List<String> getNames() { return names; }
                 public void setNames(java.util.List<String> names) { this.names = names; }
-                """);
+            """);
 
     // When
     Compilation compilation = compile(sourceFile);
@@ -1343,7 +1352,7 @@ class BuilderProcessorTest {
 
                 public java.util.function.Consumer<Integer> getConsumer() { return consumer; }
                 public void setConsumer(java.util.function.Consumer<Integer> consumer) { this.consumer = consumer; }
-                """);
+            """);
 
     // When
     Compilation compilation = compile(sourceFile);
@@ -1371,21 +1380,21 @@ class BuilderProcessorTest {
 
                 public Helper getHelper() { return helper; }
                 public void setHelper(Helper helper) { this.helper = helper; }
-                """);
+            """);
 
     // And a top-level helper class with empty constructor
     JavaFileObject helperSource =
         JavaFileObjects.forSourceString(
             packageName + ".Helper",
-            "package "
-                + packageName
-                + ";\n"
-                + "public class Helper {\n"
-                + "  public Helper() {}\n"
-                + "  private String v;\n"
-                + "  public String getV() { return v; }\n"
-                + "  public void setV(String v) { this.v = v; }\n"
-                + "}\n");
+            """
+                package test;
+                public class Helper {
+                  public Helper() {}
+                  private String v;
+                  public String getV() { return v; }
+                  public void setV(String v) { this.v = v; }
+                }
+            """);
 
     // When
     Compilation compilation = compile(sourceFile, helperSource);
@@ -1413,20 +1422,20 @@ class BuilderProcessorTest {
 
                 public HelperNoEmpty getHelper() { return helper; }
                 public void setHelper(HelperNoEmpty helper) { this.helper = helper; }
-                """);
+            """);
 
     // And a top-level helper class without empty constructor
     JavaFileObject helperSource =
         JavaFileObjects.forSourceString(
             packageName + ".HelperNoEmpty",
-            "package "
-                + packageName
-                + ";\n"
-                + "public class HelperNoEmpty {\n"
-                + "  private final int x;\n"
-                + "  public HelperNoEmpty(int x) { this.x = x; }\n"
-                + "  public int getX() { return x; }\n"
-                + "}\n");
+            """
+                package test;
+                public class HelperNoEmpty {
+                  private final int x;
+                  public HelperNoEmpty(int x) { this.x = x; }
+                  public int getX() { return x; }
+                }
+            """);
 
     // When
     Compilation compilation = compile(sourceFile, helperSource);
@@ -1456,18 +1465,18 @@ class BuilderProcessorTest {
 
                 public java.util.List<Helper> getHelpers() { return helpers; }
                 public void setHelpers(java.util.List<Helper> helpers) { this.helpers = helpers; }
-                """);
+            """);
 
     // And a top-level Helper class referenced by the list
     JavaFileObject helperSource =
         JavaFileObjects.forSourceString(
             packageName + ".Helper",
-            "package "
-                + packageName
-                + ";\n"
-                + "public class Helper {\n"
-                + "  public Helper() {}\n"
-                + "}\n");
+            """
+                package test;
+                public class Helper {
+                  public Helper() {}
+                }
+            """);
 
     // When
     Compilation compilation = compile(sourceFile, helperSource);
@@ -1495,18 +1504,18 @@ class BuilderProcessorTest {
 
                 public java.util.Map<String, Helper> getMap() { return map; }
                 public void setMap(java.util.Map<String, Helper> map) { this.map = map; }
-                """);
+            """);
 
     // And a top-level Helper class referenced by the map
     JavaFileObject helperSource =
         JavaFileObjects.forSourceString(
             packageName + ".Helper",
-            "package "
-                + packageName
-                + ";\n"
-                + "public class Helper {\n"
-                + "  public Helper() {}\n"
-                + "}\n");
+            """
+                package test;
+                public class Helper {
+                  public Helper() {}
+                }
+            """);
 
     // When
     Compilation compilation = compile(sourceFile, helperSource);
