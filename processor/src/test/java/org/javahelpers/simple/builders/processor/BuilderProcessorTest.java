@@ -12,6 +12,7 @@ import com.google.testing.compile.JavaFileObjects;
 import javax.tools.JavaFileObject;
 import org.javahelpers.simple.builders.processor.testing.ProcessorAsserts;
 import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
+import org.junit.Ignore;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -26,6 +27,53 @@ class BuilderProcessorTest {
   protected void setUp() {
     processor = new BuilderProcessor();
     compiler = Compiler.javac().withProcessors(processor);
+  }
+
+  @Test
+  void shouldHandleListOfCustomTypeWithoutEmptyConstructor() {
+    // Given
+    String packageName = "test";
+    String className = "HasListNoEmpty";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private java.util.List<HelperNoEmpty> helpers;
+
+                public java.util.List<HelperNoEmpty> getHelpers() { return helpers; }
+                public void setHelpers(java.util.List<HelperNoEmpty> helpers) { this.helpers = helpers; }
+            """);
+
+    // And a top-level HelperNoEmpty class referenced by the list, without empty constructor
+    JavaFileObject helperSource =
+        ProcessorTestUtils.forSource(
+            """
+                package test;
+                public class HelperNoEmpty {
+                  private final int x;
+                  public HelperNoEmpty(int x) { this.x = x; }
+                  public int getX() { return x; }
+                }
+            """);
+
+    // When
+    Compilation compilation = compile(sourceFile, helperSource);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+    // Expect direct setter, varargs, supplier and consumer builder method
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains("public HasListNoEmptyBuilder helpers(List<HelperNoEmpty> helpers)"),
+        contains("public HasListNoEmptyBuilder helpers(HelperNoEmpty... helpers)"),
+        contains(
+            "public HasListNoEmptyBuilder helpers(Supplier<List<HelperNoEmpty>> helpersSupplier)"),
+        contains(
+            "public HasListNoEmptyBuilder helpers( Consumer<ArrayListBuilder<HelperNoEmpty>> helpersBuilderConsumer)"));
   }
 
   @Test
@@ -727,43 +775,6 @@ class BuilderProcessorTest {
   }
 
   @Test
-  void shouldHandleSetOfStrings() {
-    // Given
-    String packageName = "test";
-    String className = "HasSetString";
-    String builderClassName = className + "Builder";
-
-    JavaFileObject sourceFile =
-        ProcessorTestUtils.simpleBuilderClass(
-            packageName,
-            className,
-            """
-                private java.util.Set<String> tags;
-
-                public java.util.Set<String> getTags() { return tags; }
-                public void setTags(java.util.Set<String> tags) { this.tags = tags; }
-            """);
-
-    // When
-    Compilation compilation = compile(sourceFile);
-
-    // Then
-    String generatedCode = loadGeneratedSource(compilation, builderClassName);
-    assertGenerationSucceeded(
-        compilation, builderClassName, loadGeneratedSource(compilation, builderClassName));
-    ProcessorAsserts.assertContaining(
-        generatedCode,
-        "public HasSetStringBuilder tags(Set<String> tags)",
-        "instance.setTags(tags);",
-        "public HasSetStringBuilder tags(Consumer<HashSetBuilder<String>> tagsBuilderConsumer)",
-        "instance.setTags(builder.build());",
-        "public HasSetStringBuilder tags(String... tags)",
-        "instance.setTags(Set.of(tags));",
-        "public HasSetStringBuilder tags(Supplier<Set<String>> tagsSupplier)",
-        "instance.setTags(tagsSupplier.get());");
-  }
-
-  @Test
   void shouldGenerateSetterForClassInDifferentPackage() {
     // Given
     String packageName = "test";
@@ -805,7 +816,43 @@ class BuilderProcessorTest {
   }
 
   @Test
-  // Todo: what should that test validate?
+  void shouldHandleSetOfStrings() {
+    // Given
+    String packageName = "test";
+    String className = "HasSetString";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private java.util.Set<String> tags;
+
+                public java.util.Set<String> getTags() { return tags; }
+                public void setTags(java.util.Set<String> tags) { this.tags = tags; }
+            """);
+
+    // When
+    Compilation compilation = compile(sourceFile);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(
+        compilation, builderClassName, loadGeneratedSource(compilation, builderClassName));
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        "public HasSetStringBuilder tags(Set<String> tags)",
+        "instance.setTags(tags);",
+        "public HasSetStringBuilder tags(Consumer<HashSetBuilder<String>> tagsBuilderConsumer)",
+        "instance.setTags(builder.build());",
+        "public HasSetStringBuilder tags(String... tags)",
+        "instance.setTags(Set.of(tags));",
+        "public HasSetStringBuilder tags(Supplier<Set<String>> tagsSupplier)",
+        "instance.setTags(tagsSupplier.get());");
+  }
+
+  @Test
   void shouldHandleSetOfCustomType() {
     // Given
     String packageName = "test";
@@ -1183,7 +1230,27 @@ class BuilderProcessorTest {
     // Then
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-    // TODO add asserts here for fields and build method
+    // Expect signatures for all supported setter patterns per field kind
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        // primitive int: direct and supplier (boxed)
+        contains("public HasMixedBuilder a(int a)"),
+        contains("public HasMixedBuilder a(Supplier<Integer> aSupplier)"),
+        // array String[]: direct and supplier only (no varargs, no collection-builder consumers)
+        contains("public HasMixedBuilder names(String... names)"),
+        contains("public HasMixedBuilder names(Supplier<String[]> namesSupplier)"),
+        // List<String>: direct, supplier, varargs convenience and consumer with ArrayListBuilder
+        contains("public HasMixedBuilder list(List<String> list)"),
+        contains("public HasMixedBuilder list(Supplier<List<String>> listSupplier)"),
+        contains("public HasMixedBuilder list(String... list)"),
+        contains(
+            "public HasMixedBuilder list(Consumer<ArrayListBuilder<String>> listBuilderConsumer)"),
+        // Map<String,Integer>: direct and supplier only
+        contains("public HasMixedBuilder map(Map<String, Integer> map)"),
+        contains("public HasMixedBuilder map(Supplier<Map<String, Integer>> mapSupplier)"),
+        // LocalDate: direct and supplier
+        contains("public HasMixedBuilder date(LocalDate date)"),
+        contains("public HasMixedBuilder date(Supplier<LocalDate> dateSupplier)"));
   }
 
   @Test
@@ -1210,7 +1277,15 @@ class BuilderProcessorTest {
     // Then
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-    // TODO: check test is needed?
+    // Arrays should get setter and supplier
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains("public HasObjectArrayBuilder names(Supplier<String[]> namesSupplier)"),
+        contains("public HasObjectArrayBuilder names(String... names)"),
+        notContains("public HasObjectArrayBuilder names(String[] names)"),
+        notContains("public HasObjectArrayBuilder names(List<String> names)"), // TODO: feature
+        notContains("Consumer<ArrayListBuilder"), // TODO: feature
+        notContains("Consumer<HashSetBuilder"));
   }
 
   @Test
@@ -1237,10 +1312,9 @@ class BuilderProcessorTest {
     // Then
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-    // Even without setters, builder should exist (build/create checked centrally). No extra
-    // asserts.
-    // TODO Without Setters or Constructors there is no need for a builder. we should have a warning
-    // in build
+    // Even without setters, builder should exist (build/create checked centrally).
+    ProcessorAsserts.assertNotContaining(
+        generatedCode, "public OnlyGettersBuilder name(String name)");
   }
 
   @Test
@@ -1264,8 +1338,11 @@ class BuilderProcessorTest {
     // Then
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-    // TODO Without Setters or Constructors there is no need for a builder. we should have a warning
-    // in build
+    // There should be no builder generated for an empty class
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains("public EmptyClass build() { return instance; }"),
+        notContains("return this;"));
   }
 
   @Test
@@ -1319,15 +1396,67 @@ class BuilderProcessorTest {
     // Then
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-    // TODO: add assterts
+    // Expect direct setter, supplier, varargs convenience, and consumer with ArrayListBuilder
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        "public HasListBuilder names(List<String> names)",
+        "public HasListBuilder names(Supplier<List<String>> namesSupplier)",
+        "public HasListBuilder names(String... names)",
+        "public HasListBuilder names(Consumer<ArrayListBuilder<String>> namesBuilderConsumer)");
   }
 
   @Test
-  // TODO: class code does not match testname
-  void shouldBoxPrimitiveTypeArgumentsInGenerics() {
+  void shouldBoxPrimitiveTypeArguments() {
     // Given
     String packageName = "test";
     String className = "HasConsumer";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private int intValue;
+                private long longValue;
+                private double doubleValue;
+                private boolean booleanValue;
+
+                public int getIntValue() { return intValue; }
+                public void setIntValue(int intValue) { this.intValue = intValue; }
+                public long getLongValue() { return longValue; }
+                public void setLongValue(long longValue) { this.longValue = longValue; }
+                public double getDoubleValue() { return doubleValue; }
+                public void setDoubleValue(double doubleValue) { this.doubleValue = doubleValue; }
+                public boolean getBooleanValue() { return booleanValue; }
+                public void setBooleanValue(boolean booleanValue) { this.booleanValue = booleanValue; }
+            """);
+
+    // When
+    Compilation compilation = compile(sourceFile);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+    // Ensure builder compiles and does not use primitive type argument like <int>
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        notContains("<int>"),
+        notContains("<long>"),
+        notContains("<double>"),
+        notContains("<boolean>"),
+        contains("public HasConsumerBuilder intValue(Supplier<Integer> intValueSupplier)"),
+        contains("public HasConsumerBuilder longValue(Supplier<Long> longValueSupplier)"),
+        contains("public HasConsumerBuilder doubleValue(Supplier<Double> doubleValueSupplier)"),
+        contains("public HasConsumerBuilder booleanValue(Supplier<Boolean> booleanValueSupplier)"));
+  }
+
+  @Test
+  @Ignore("TODO: Not working yet.")
+  void shouldHandleFunctionalInterfaces() {
+    // Given
+    String packageName = "test";
+    String className = "HasFunctionalInterface";
     String builderClassName = className + "Builder";
 
     JavaFileObject sourceFile =
@@ -1347,8 +1476,8 @@ class BuilderProcessorTest {
     // Then
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-    // Ensure builder compiles and does not use primitive type argument like <int>
-    ProcessorAsserts.assertNotContaining(generatedCode, "<int>");
+    // Ensure builder compiles and not generates Consumer of Consumer or Supplier of Consumer
+    ProcessorAsserts.assertNotContaining(generatedCode, "Consumer<Consumer", "Supplier<Consumer>");
   }
 
   @Test
@@ -1388,8 +1517,12 @@ class BuilderProcessorTest {
     // Then
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-
-    // TODO: add asserts
+    // Expect direct setter, supplier and consumer creating instance via empty constructor
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        "public OuterWithHelperBuilder helper(Helper helper)",
+        "public OuterWithHelperBuilder helper(Supplier<Helper> helperSupplier)",
+        "public OuterWithHelperBuilder helper(Consumer<Helper> helperConsumer)");
   }
 
   @Test
@@ -1428,8 +1561,14 @@ class BuilderProcessorTest {
     // Then
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-
-    // TODO: sdd asserts, because of missing empty constructor there could be no consumer
+    // Expect only direct setter and supplier. No consumer method should be generated.
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains("public OuterWithNoEmptyHelperBuilder helper(HelperNoEmpty helper)"),
+        contains(
+            "public OuterWithNoEmptyHelperBuilder helper(Supplier<HelperNoEmpty> helperSupplier)"),
+        notContains(
+            "public OuterWithNoEmptyHelperBuilder helper(Consumer<HelperNoEmpty> helperConsumer)"));
   }
 
   // TODO adding list of custom types without empty constructor
@@ -1468,8 +1607,13 @@ class BuilderProcessorTest {
     // Then
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-
-    // TODO: Adding asserts
+    // Expect direct setter, supplier, varargs convenience, and consumer with ArrayListBuilder
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        "public HasListCustomBuilder helpers(List<Helper> helpers)",
+        "public HasListCustomBuilder helpers(Supplier<List<Helper>> helpersSupplier)",
+        "public HasListCustomBuilder helpers(Helper... helpers)",
+        "public HasListCustomBuilder helpers(Consumer<ArrayListBuilder<Helper>> helpersBuilderConsumer)");
   }
 
   @Test
@@ -1507,7 +1651,13 @@ class BuilderProcessorTest {
     // Then
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-
-    // TODO: Adding asserts
+    // Expect only direct setter and supplier for Map; no varargs or collection-builder consumer
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains("public HasMapCustomBuilder map(Map<String, Helper> map)"),
+        contains("public HasMapCustomBuilder map(Supplier<Map<String, Helper>> mapSupplier)"),
+        notContains("public HasMapCustomBuilder map(String..."),
+        notContains("Consumer<ArrayListBuilder"),
+        notContains("Consumer<HashSetBuilder"));
   }
 }
