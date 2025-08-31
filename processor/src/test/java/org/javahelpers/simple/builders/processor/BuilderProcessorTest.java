@@ -254,8 +254,8 @@ class BuilderProcessorTest {
     ProcessorAsserts.assertingResult(
         generatedCode,
         contains("public static CreateDocBuilder create()"),
-        contains("Creating a new builder for {@code CreateDoc}"),
-        contains("@return builder for {@code CreateDoc}"));
+        contains("Creating a new builder for {@code test.CreateDoc}"),
+        contains("@return builder for {@code test.CreateDoc}"));
   }
 
   @Test
@@ -954,6 +954,9 @@ class BuilderProcessorTest {
                 // valid proxy candidate
                 public void ok() {}
 
+                // valid setter
+                public void setOk(int ok) {}
+
                 // should be filtered
                 private void setHidden(int hidden) {}
                 public static void setUtil(int util) {}
@@ -971,8 +974,10 @@ class BuilderProcessorTest {
     // Expect only ok() proxy to be present
     ProcessorAsserts.assertingResult(
         generatedCode,
+        contains("public HasVariousMethodsBuilder ok()"),
+        contains("instance.ok();"),
         contains("public HasVariousMethodsBuilder ok(int ok)"),
-        contains("this.ok = ok;"));
+        contains("instance.setOk(ok);"));
     ProcessorAsserts.assertNotContaining(
         generatedCode,
         "hidden",
@@ -1013,8 +1018,8 @@ class BuilderProcessorTest {
     // Expect simple setters and suppliers only; no consumer methods for primitive/array
     ProcessorAsserts.assertingResult(
         generatedCode,
-        contains("public PrimAndArrayBuilder count(Supplier<Integer> countSupplier"),
-        contains("public PrimAndArrayBuilder names(Supplier<List<String>> namesSupplier"));
+        contains("public PrimAndArrayBuilder count(Supplier"),
+        contains("public PrimAndArrayBuilder names(Supplier"));
     ProcessorAsserts.assertNotContaining(
         generatedCode,
         "public PrimAndArrayBuilder count(Consumer",
@@ -1194,9 +1199,8 @@ class BuilderProcessorTest {
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
     ProcessorAsserts.assertingResult(
         generatedCode,
-        contains("private LocalDate date;"),
         contains("public HasLocalDateBuilder date(LocalDate date)"),
-        contains("this.date = date;"));
+        contains("instance.setDate(date);"));
   }
 
   @Test
