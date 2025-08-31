@@ -3,7 +3,7 @@
 [![License](https://img.shields.io/badge/License-MIT%202.0-yellowgreen.svg)](https://github.com/java-helpers/simple-builders/blob/main/LICENSE)
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.java-helpers/simple-builders-core.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:io.github.java-helpers%20AND%20a:simple-builders-core)
 [![Java Version](https://img.shields.io/badge/Java-17%2B-blue)](https://www.oracle.com/java/technologies/javase/17-relnote-issues.html)
-[![Maven](https://img.shields.io/badge/Maven-3.6%2B-orange)](https://maven.apache.org/)
+[![Maven](https://img.shields.io/badge/Maven-3.8%2B-orange)](https://maven.apache.org/)
 [![codecov](https://codecov.io/gh/java-helpers/simple-builders/graph/badge.svg)](https://codecov.io/gh/java-helpers/simple-builders)
 
 ## Table of Contents
@@ -24,7 +24,7 @@ Simple Builders is a Java [annotation processor](https://docs.oracle.com/en/java
 
 ## Features
 
-- **Zero Runtime Dependencies**: The generated code has no runtime dependencies
+- **Low Runtime Dependencies**: The generated code has only dependencies to a core dependency for CollectionBuilders and to Apache.CommonLang3
 - **Type-Safe Builders**: Compile-time type checking for all builder methods
 - **Fluent API**: Clean, chainable API for object construction
 - **Collections Support**: Built-in support for collections and maps
@@ -42,14 +42,14 @@ For Maven-based projects, add the following to your POM file in order to use Sim
 ```xml
 ...
 <properties>
-    <org.simple-builders.version>0.1.0</org.simple-builders.version>
+    <simple-builders.version>0.1.0</simple-builders.version>
 </properties>
 ...
 <dependencies>
     <dependency>
         <groupId>io.github.java-helpers</groupId>
         <artifactId>simple-builders-core</artifactId>
-        <version>${org.simple-builders.version}</version>
+        <version>${simple-builders.version}</version>
     </dependency>
 </dependencies>
 ...
@@ -66,7 +66,7 @@ For Maven-based projects, add the following to your POM file in order to use Sim
                     <path>
                         <groupId>io.github.java-helpers</groupId>
                         <artifactId>simple-builders-processor</artifactId>
-                        <version>${org.simple-builders.version}</version>
+                        <version>${simple-builders.version}</version>
                     </path>
                 </annotationProcessorPaths>
             </configuration>
@@ -210,4 +210,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Licensing
 
-MapStruct is licensed under the MIT License; you may not use this project except in compliance with the License. You may obtain a copy of the License at http://www.opensource.org/licenses/mit-license.php.
+SimpleBuilders is licensed under the MIT License; you may not use this project except in compliance with the License. You may obtain a copy of the License at http://www.opensource.org/licenses/mit-license.php.
