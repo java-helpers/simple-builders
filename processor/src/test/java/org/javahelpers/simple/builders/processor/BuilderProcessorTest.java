@@ -1863,7 +1863,6 @@ class BuilderProcessorTest {
   }
 
   @Test
-  @Disabled("TODO: missing feature")
   void shouldNotGenerateBuilderWhenNestedBuilderInterfaceExists() {
     // Given: an annotated class that already declares a nested interface named like the would-be
     // builder

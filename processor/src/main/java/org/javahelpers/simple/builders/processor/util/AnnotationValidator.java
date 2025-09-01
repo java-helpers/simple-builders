@@ -27,6 +27,7 @@ package org.javahelpers.simple.builders.processor.util;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.element.NestingKind;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 
@@ -55,6 +56,17 @@ public class AnnotationValidator {
       throw new BuilderException(
           annotatedElement,
           "The " + SimpleBuilder.class.getSimpleName() + " should not be abstract");
+    }
+
+    // Only allow @SimpleBuilder on top-level classes
+    if (annotatedElement instanceof javax.lang.model.element.TypeElement typeElement) {
+      if (typeElement.getNestingKind() != NestingKind.TOP_LEVEL) {
+        throw new BuilderException(
+            annotatedElement,
+            "The "
+                + SimpleBuilder.class.getSimpleName()
+                + " should be declared on a top-level class only");
+      }
     }
   }
 }
