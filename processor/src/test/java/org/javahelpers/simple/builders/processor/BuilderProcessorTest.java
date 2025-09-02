@@ -520,20 +520,22 @@ class BuilderProcessorTest {
     ProcessorAsserts.assertContaining(
         generatedCode,
         "Calling <code>doSomething</code> on dto-instance with parameters.",
-        "@param a value for a.",
-        "@param b value for b.",
+        "@param a",
+        "@param b",
         "@return current instance of builder");
 
+    // Setter method javadoc and code (default values, when nothing is set)
+    ProcessorAsserts.assertContaining(generatedCode, "@param name name");
+
     // SUPPLIER method javadoc and code
-    ProcessorAsserts.assertContaining(generatedCode, "supplier for field", "nameSupplier");
+    ProcessorAsserts.assertContaining(generatedCode, "@param nameSupplier supplier for name");
 
     // CONSUMER method javadoc and code
     ProcessorAsserts.assertContaining(
-        generatedCode, "consumer providing instance of field", "helperPlainConsumer");
+        generatedCode, "@param helperPlainConsumer consumer providing an instance of helperPlain");
   }
 
   @Test
-  @Disabled("TODO: missing feature")
   void shouldPropagateFieldJavadocToBuilderParameter() {
     // Given
     String packageName = "test";

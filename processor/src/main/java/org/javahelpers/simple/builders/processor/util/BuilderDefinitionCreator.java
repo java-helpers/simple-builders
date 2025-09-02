@@ -74,8 +74,7 @@ public class BuilderDefinitionCreator {
 
     BuilderDefinitionDto result = new BuilderDefinitionDto();
     String packageName = elementUtils.getPackageOf(annotatedType).getQualifiedName().toString();
-    String simpleClassName =
-        StringUtils.removeStart(annotatedElement.getSimpleName().toString(), packageName + ".");
+    String simpleClassName = annotatedType.getSimpleName().toString();
     result.setBuilderTypeName(new TypeName(packageName, simpleClassName + BUILDER_SUFFIX));
     result.setBuildingTargetTypeName(new TypeName(packageName, simpleClassName));
 
@@ -223,6 +222,14 @@ public class BuilderDefinitionCreator {
     TypeMirror fieldTypeMirror = fieldParameter.asType();
     TypeElement fieldTypeElement = (TypeElement) typeUtils.asElement(fieldTypeMirror);
 
+    // Extract only the @param Javadoc for the single setter parameter (if present)
+    String fullJavaDoc = elementUtils.getDocComment(mth);
+    String parameterJavaDocExtracted =
+        JavaLangAnalyser.extractParamJavaDoc(fullJavaDoc, fieldParameter);
+    String parameterJavaDoc =
+        parameterJavaDocExtracted == null ? fieldName : parameterJavaDocExtracted;
+    result.setJavaDoc(parameterJavaDoc);
+
     // extracting type of field
     MethodParameterDto fieldParameterDto =
         map2MethodParameter(fieldParameter, elementUtils, typeUtils);
@@ -235,7 +242,7 @@ public class BuilderDefinitionCreator {
     // simple setter
     result.addMethod(createFieldSetter(fieldName, fieldType));
 
-    // add consumer/supplier generation via helpers; helpers will handle functional-interface skip
+    // add consumer/supplier generation via helpers
     addConsumerMethodsForField(
         result, fieldName, fieldType, fieldParameter, fieldTypeElement, elementUtils, typeUtils);
     addSupplierMethodsForField(result, fieldName, fieldType, fieldTypeElement, elementUtils);

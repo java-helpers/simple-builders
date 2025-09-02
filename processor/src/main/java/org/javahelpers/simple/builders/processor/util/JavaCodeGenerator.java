@@ -206,10 +206,18 @@ public class JavaCodeGenerator {
   }
 
   private List<MethodSpec> createFieldMethods(FieldDto fieldDto, ClassName builderClassName) {
-    return fieldDto.getMethods().stream().map(m -> createMethod(m, builderClassName)).toList();
+    return fieldDto.getMethods().stream()
+        .map(m -> createMethod(m, builderClassName, fieldDto.getJavaDoc()))
+        .toList();
   }
 
   private MethodSpec createMethod(MethodDto methodDto, ClassName returnType) {
+    // TODO: Remove when switched to fields instead of instance in builder
+    return createMethod(methodDto, returnType, "");
+  }
+
+  private MethodSpec createMethod(
+      MethodDto methodDto, ClassName returnType, String optionalFieldParamJavaDoc) {
     MethodSpec.Builder methodBuilder =
         MethodSpec.methodBuilder(methodDto.getMethodName()).returns(returnType);
     methodDto.getModifier().ifPresent(methodBuilder::addModifiers);
@@ -246,24 +254,26 @@ public class JavaCodeGenerator {
       // Extending Javadoc with parameters
       switch (methodDto.getMethodType()) {
         case PROXY ->
-            methodBuilder.addJavadoc("\n@param $1N value for $1N.", paramDto.getParameterName());
+            methodBuilder.addJavadoc(
+                "\n@param $1N $2N", paramDto.getParameterName(), optionalFieldParamJavaDoc);
         case CONSUMER ->
             methodBuilder.addJavadoc(
-                "\n@param $1N consumer providing instance of field <code>$2N</code>.",
+                "\n@param $1N consumer providing an instance of $2N",
                 paramDto.getParameterName(),
-                methodDto.getMethodName());
+                optionalFieldParamJavaDoc);
         case CONSUMER_BY_BUILDER ->
             methodBuilder.addJavadoc(
-                "\n@param $1N consumer providing instance of a builder for field <code>$2N</code>.",
+                "\n@param $1N consumer providing an instance of a builder for $2N",
                 paramDto.getParameterName(),
-                methodDto.getMethodName());
+                optionalFieldParamJavaDoc);
         case SUPPLIER ->
             methodBuilder.addJavadoc(
-                "\n@param $1N supplier for field <code>$2N</code>.",
+                "\n@param $1N supplier for $2N",
                 paramDto.getParameterName(),
-                methodDto.getMethodName());
+                optionalFieldParamJavaDoc);
       }
     }
+
     CodeBlock codeBlock = map2CodeBlock(methodDto.getMethodCodeDto());
     methodBuilder.addCode(codeBlock).addJavadoc("\n@return current instance of builder");
     return methodBuilder.build();
