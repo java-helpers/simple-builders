@@ -129,6 +129,9 @@ public final class JavaLangAnalyser {
    */
   public static Optional<AnnotationMirror> findAnnotation(
       Element methodElement, Class<? extends Annotation> annotationClass) {
+    if (methodElement == null) {
+      return Optional.empty();
+    }
 
     for (AnnotationMirror annotationMirror : methodElement.getAnnotationMirrors()) {
       if (annotationMirror
@@ -140,5 +143,34 @@ public final class JavaLangAnalyser {
     }
 
     return Optional.empty();
+  }
+
+  /**
+   * Determines whether a given type element is a functional interface.
+   *
+   * <p>Prefers the explicit @FunctionalInterface annotation. Otherwise, returns true only if the
+   * element is an interface and declares exactly one abstract instance method (ignoring static and
+   * default methods). Inherited abstract methods are ignored for simplicity.
+   */
+  public static boolean isFunctionalInterface(TypeElement typeElement, Elements elementUtils) {
+    if (typeElement == null) {
+      return false;
+    }
+
+    // Prefer explicit annotation
+    if (JavaLangAnalyser.findAnnotation(typeElement, FunctionalInterface.class).isPresent()) {
+      return true;
+    }
+    // Only interfaces can be functional interfaces
+    if (typeElement.getKind() != javax.lang.model.element.ElementKind.INTERFACE) {
+      return false;
+    }
+    // Heuristic: exactly one abstract method declared (ignores inherited ones for simplicity)
+    long abstractDeclared =
+        ElementFilter.methodsIn(typeElement.getEnclosedElements()).stream()
+            .filter(m -> !m.getModifiers().contains(javax.lang.model.element.Modifier.STATIC))
+            .filter(m -> !m.getModifiers().contains(javax.lang.model.element.Modifier.DEFAULT))
+            .count();
+    return abstractDeclared == 1;
   }
 }

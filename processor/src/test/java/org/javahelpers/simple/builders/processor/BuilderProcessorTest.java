@@ -1438,7 +1438,6 @@ class BuilderProcessorTest {
   }
 
   @Test
-  @Disabled("TODO: missing feature")
   void shouldHandleFunctionalInterfaces() {
     // Given
     String packageName = "test";

@@ -134,6 +134,78 @@ public class BuilderDefinitionCreator {
     return Optional.of(result);
   }
 
+  private static void addAdditionalHelperMethodsForField(
+      FieldDto result, String fieldName, TypeName fieldType) {
+    if (isList(fieldType)) {
+      result.addMethod(
+          createFieldSetterWithTransform(
+              fieldName, "List.of(%s)", new TypeNameArray(fieldType.getInnerType().get(), false)));
+      return;
+    }
+    if (isSet(fieldType)) {
+      result.addMethod(
+          createFieldSetterWithTransform(
+              fieldName, "Set.of(%s)", new TypeNameArray(fieldType.getInnerType().get(), true)));
+      return;
+    }
+    if (isMap(fieldType)) {
+      // TODO MAP (having 2 inner classes, TypeNameGeneric is not able to address that yet)
+    }
+  }
+
+  private static void addConsumerMethodsForField(
+      FieldDto result,
+      String fieldName,
+      TypeName fieldType,
+      VariableElement fieldParameter,
+      TypeElement fieldTypeElement,
+      Elements elementUtils,
+      Types typeUtils) {
+    // Skip consumer generation for functional interfaces
+    if (isFunctionalInterface(fieldTypeElement, elementUtils)) {
+      return;
+    }
+    Optional<TypeName> builderTypeOpt = findBuilderType(fieldParameter, elementUtils, typeUtils);
+    if (builderTypeOpt.isPresent()) {
+      TypeName builderType = builderTypeOpt.get();
+      result.addMethod(
+          BuilderDefinitionCreator.createFieldConsumerWithBuilder(fieldName, builderType));
+      return;
+    } else if (!isJavaClass(fieldType)
+        && fieldTypeElement != null
+        && fieldTypeElement.getKind() == javax.lang.model.element.ElementKind.CLASS
+        && !fieldTypeElement.getModifiers().contains(Modifier.ABSTRACT)
+        && hasEmptyConstructor(fieldTypeElement, elementUtils)) {
+      // Only generate a Consumer for concrete classes with an accessible empty constructor
+      result.addMethod(createFieldConsumer(fieldName, fieldType));
+      return;
+    } else if (isList(fieldType)) {
+      result.addMethod(
+          createFieldConsumerWithBuilder(
+              fieldName, map2TypeName(ArrayListBuilder.class), fieldType.getInnerType().get()));
+      return;
+    } else if (isMap(fieldType)) {
+      // TODO MAP (having 2 inner classes, TypeNameGeneric is not able to adress that yet)
+    } else if (isSet(fieldType)) {
+      result.addMethod(
+          createFieldConsumerWithBuilder(
+              fieldName, map2TypeName(HashSetBuilder.class), fieldType.getInnerType().get()));
+    }
+  }
+
+  private static void addSupplierMethodsForField(
+      FieldDto result,
+      String fieldName,
+      TypeName fieldType,
+      TypeElement fieldTypeElement,
+      Elements elementUtils) {
+    // Skip supplier generation for functional interfaces
+    if (isFunctionalInterface(fieldTypeElement, elementUtils)) {
+      return;
+    }
+    result.addMethod(createFieldSupplier(fieldName, fieldType));
+  }
+
   private static Optional<FieldDto> createFieldDto(
       ExecutableElement mth, Elements elementUtils, Types typeUtils) {
     String methodName = mth.getSimpleName().toString();
@@ -163,39 +235,11 @@ public class BuilderDefinitionCreator {
     // simple setter
     result.addMethod(createFieldSetter(fieldName, fieldType));
 
-    // setting value by builder
-    Optional<TypeName> builderTypeOpt = findBuilderType(fieldParameter, elementUtils, typeUtils);
-    if (builderTypeOpt.isPresent()) {
-      TypeName builderType = builderTypeOpt.get();
-      result.addMethod(
-          BuilderDefinitionCreator.createFieldConsumerWithBuilder(fieldName, builderType));
-    } else if (!isJavaClass(fieldType)
-        && fieldTypeElement != null
-        && fieldTypeElement.getKind() == javax.lang.model.element.ElementKind.CLASS
-        && !fieldTypeElement.getModifiers().contains(Modifier.ABSTRACT)
-        && hasEmptyConstructor(fieldTypeElement, elementUtils)) {
-      // Only generate a Consumer for concrete classes with an accessible empty constructor
-      result.addMethod(createFieldConsumer(fieldName, fieldType));
-    } else if (isList(fieldType)) {
-      result.addMethod(
-          createFieldConsumerWithBuilder(
-              fieldName, map2TypeName(ArrayListBuilder.class), fieldType.getInnerType().get()));
-      result.addMethod(
-          createFieldSetterWithTransform(
-              fieldName, "List.of(%s)", new TypeNameArray(fieldType.getInnerType().get(), false)));
-    } else if (isMap(fieldType)) {
-      // TODO MAP (having 2 inner classes, TypeNameGeneric is not able to adress that yet)
-    } else if (isSet(fieldType)) {
-      result.addMethod(
-          createFieldConsumerWithBuilder(
-              fieldName, map2TypeName(HashSetBuilder.class), fieldType.getInnerType().get()));
-      result.addMethod(
-          createFieldSetterWithTransform(
-              fieldName, "Set.of(%s)", new TypeNameArray(fieldType.getInnerType().get(), true)));
-    }
-
-    // setting value by supplier
-    result.addMethod(createFieldSupplier(fieldName, fieldType));
+    // add consumer/supplier generation via helpers; helpers will handle functional-interface skip
+    addConsumerMethodsForField(
+        result, fieldName, fieldType, fieldParameter, fieldTypeElement, elementUtils, typeUtils);
+    addSupplierMethodsForField(result, fieldName, fieldType, fieldTypeElement, elementUtils);
+    addAdditionalHelperMethodsForField(result, fieldName, fieldType);
 
     return Optional.of(result);
   }
