@@ -35,9 +35,11 @@ import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 
 /** Helperclass for extrating specific information from existing classes. */
 public final class JavaLangAnalyser {
@@ -129,6 +131,9 @@ public final class JavaLangAnalyser {
    */
   public static Optional<AnnotationMirror> findAnnotation(
       Element methodElement, Class<? extends Annotation> annotationClass) {
+    if (methodElement == null) {
+      return Optional.empty();
+    }
 
     for (AnnotationMirror annotationMirror : methodElement.getAnnotationMirrors()) {
       if (annotationMirror
@@ -140,5 +145,87 @@ public final class JavaLangAnalyser {
     }
 
     return Optional.empty();
+  }
+
+  /**
+   * Determines whether a given type element is a functional interface.
+   *
+   * <p>Prefers the explicit @FunctionalInterface annotation. Otherwise, returns true only if the
+   * element is an interface and declares exactly one abstract instance method (ignoring static and
+   * default methods). Inherited abstract methods are ignored for simplicity.
+   */
+  public static boolean isFunctionalInterface(TypeElement typeElement) {
+    if (typeElement == null) {
+      return false;
+    }
+
+    // Prefer explicit annotation
+    if (JavaLangAnalyser.findAnnotation(typeElement, FunctionalInterface.class).isPresent()) {
+      return true;
+    }
+    // Only interfaces can be functional interfaces
+    if (typeElement.getKind() != javax.lang.model.element.ElementKind.INTERFACE) {
+      return false;
+    }
+    // Heuristic: exactly one abstract method declared (ignores inherited ones for simplicity)
+    long abstractDeclared =
+        ElementFilter.methodsIn(typeElement.getEnclosedElements()).stream()
+            .filter(m -> !m.getModifiers().contains(javax.lang.model.element.Modifier.STATIC))
+            .filter(m -> !m.getModifiers().contains(javax.lang.model.element.Modifier.DEFAULT))
+            .count();
+    return abstractDeclared == 1;
+  }
+
+  /**
+   * Extracts the Javadoc text following the @param tag for the given parameter name. Continuation
+   * lines are supported until the next Javadoc tag (starting with '@') or an empty line.
+   *
+   * @param javaDoc the full raw Javadoc as returned by Elements.getDocComment(...)
+   * @param parameter the parameter to look for
+   * @return the extracted text or null if not found or empty
+   */
+  public static String extractParamJavaDoc(String javaDoc, VariableElement parameter) {
+    if (javaDoc == null || parameter == null) {
+      return null;
+    }
+    String parameterName = parameter.getSimpleName().toString();
+    String[] lines = javaDoc.split("\r?\n");
+    boolean capture = false;
+    StringBuilder sb = new StringBuilder();
+    for (String rawLine : lines) {
+      String line = rawLine.trim();
+      if (line.startsWith("*")) {
+        line = line.substring(1).trim();
+      }
+      if (line.startsWith("@")) {
+        // new tag begins; stop capturing unless this is our @param start
+        capture = false;
+        if (line.startsWith("@param ")) {
+          // format: @param <name> text...
+          String rest = line.substring("@param ".length()).trim();
+          int sp = rest.indexOf(' ');
+          String name = sp >= 0 ? rest.substring(0, sp) : rest;
+          String text = sp >= 0 ? rest.substring(sp + 1).trim() : "";
+          if (Strings.CI.equals(parameterName, name)) {
+            if (!text.isEmpty()) {
+              sb.append(text);
+            }
+            capture = true;
+          }
+        }
+        continue;
+      }
+      if (capture) {
+        if (line.isEmpty()) {
+          break;
+        }
+        if (sb.length() > 0) sb.append(' ');
+        sb.append(line);
+      } else {
+        // TODO: add logging for not found javadoc for parameter
+      }
+    }
+    String result = sb.toString().trim();
+    return result.isEmpty() ? null : result;
   }
 }

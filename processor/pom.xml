@@ -191,48 +191,7 @@
       </plugin>
 
       <!-- JaCoCo Code Coverage (processor module only) -->
-      <plugin>
-        <groupId>org.jacoco</groupId>
-        <artifactId>jacoco-maven-plugin</artifactId>
-        <version>${plugin.jacoco.version}</version>
-        <executions>
-          <execution>
-            <id>prepare-agent</id>
-            <goals>
-              <goal>prepare-agent</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>report</id>
-            <phase>verify</phase>
-            <goals>
-              <goal>report</goal>
-            </goals>
-            <configuration>
-              <excludes>
-                <!-- Exclude mapper utilities from coverage -->
-                <exclude>**/*Mapper*.class</exclude>
-                <!-- Exclude DTOs package from coverage -->
-                <exclude>**/processor/dtos/**</exclude>
-              </excludes>
-            </configuration>
-          </execution>
-        </executions>
-        <configuration>
-          <!-- Only cover main sources of this module -->
-          <dataFile>${project.build.directory}/jacoco.exec</dataFile>
-          <outputDirectory>${project.reporting.outputDirectory}/jacoco</outputDirectory>
-          <reports>
-            <report>html</report>
-            <report>xml</report>
-            <report>csv</report>
-          </reports>
-          <excludes>
-            <!-- exclude any generated sources or test utilities if they ever get packaged under main -->
-            <exclude>**/generated/**</exclude>
-          </excludes>
-        </configuration>
-      </plugin>
+      <!-- moved to 'coverage' profile -->
     </plugins>
   </build>
 
@@ -304,6 +263,55 @@
                 </goals>
               </execution>
             </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>metrics</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.jacoco</groupId>
+            <artifactId>jacoco-maven-plugin</artifactId>
+            <version>${plugin.jacoco.version}</version>
+            <executions>
+              <execution>
+                <id>prepare-agent</id>
+                <goals>
+                  <goal>prepare-agent</goal>
+                </goals>
+              </execution>
+              <execution>
+                <id>report</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>report</goal>
+                </goals>
+                <configuration>
+                  <excludes>
+                    <!-- Exclude mapper utilities from coverage -->
+                    <exclude>**/*Mapper*.class</exclude>
+                    <!-- Exclude DTOs package from coverage -->
+                    <exclude>**/processor/dtos/**</exclude>
+                  </excludes>
+                </configuration>
+              </execution>
+            </executions>
+            <configuration>
+              <!-- Only cover main sources of this module -->
+              <dataFile>${project.build.directory}/jacoco.exec</dataFile>
+              <outputDirectory>${project.reporting.outputDirectory}/jacoco</outputDirectory>
+              <reports>
+                <report>html</report>
+                <report>xml</report>
+                <report>csv</report>
+              </reports>
+              <excludes>
+                <!-- exclude any generated sources or test utilities if they ever get packaged under main -->
+                <exclude>**/generated/**</exclude>
+              </excludes>
+            </configuration>
           </plugin>
         </plugins>
       </build>
