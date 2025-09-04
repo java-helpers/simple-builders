@@ -24,13 +24,13 @@
 
 package org.javahelpers.simple.builders.processor.util;
 
-import static org.javahelpers.simple.builders.processor.dtos.TypeNamePrimitive.PrimitiveTypeEnum.BOOLEAN;
-
 import com.palantir.javapoet.ArrayTypeName;
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.CodeBlock;
 import com.palantir.javapoet.ParameterizedTypeName;
 import com.palantir.javapoet.TypeName;
+import com.palantir.javapoet.TypeVariableName;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -98,6 +98,31 @@ public final class JavapoetMapper {
   public static ClassName map2ClassName(
       org.javahelpers.simple.builders.processor.dtos.TypeName typeName) {
     return ClassName.get(typeName.getPackageName(), typeName.getClassName());
+  }
+
+  public static ParameterizedTypeName map2ParameterizedTypeName(
+      org.javahelpers.simple.builders.processor.dtos.TypeName baseType,
+      List<GenericParameterDto> builderGenerics) {
+    ClassName baseTypeClassName = map2ClassName(baseType);
+    return ParameterizedTypeName.get(
+        baseTypeClassName, map2TypeVariables(builderGenerics).toArray(new TypeVariableName[0]));
+  }
+
+  public static List<TypeVariableName> map2TypeVariables(
+      List<GenericParameterDto> builderGenerics) {
+    List<TypeVariableName> javapoetGenerics = new ArrayList<>();
+    for (GenericParameterDto g : builderGenerics) {
+      List<TypeName> bounds = new ArrayList<>();
+      for (org.javahelpers.simple.builders.processor.dtos.TypeName b : g.getUpperBounds()) {
+        bounds.add(map2ParameterType(b));
+      }
+      TypeVariableName tv =
+          bounds.isEmpty()
+              ? TypeVariableName.get(g.getName())
+              : TypeVariableName.get(g.getName(), bounds.toArray(new TypeName[0]));
+      javapoetGenerics.add(tv);
+    }
+    return javapoetGenerics;
   }
 
   /**

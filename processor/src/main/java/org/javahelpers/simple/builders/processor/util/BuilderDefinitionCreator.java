@@ -37,12 +37,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.Modifier;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
+import javax.lang.model.element.*;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
@@ -77,6 +72,10 @@ public class BuilderDefinitionCreator {
     String simpleClassName = annotatedType.getSimpleName().toString();
     result.setBuilderTypeName(new TypeName(packageName, simpleClassName + BUILDER_SUFFIX));
     result.setBuildingTargetTypeName(new TypeName(packageName, simpleClassName));
+
+    // Extract generics from the annotated type via mapper (stream-based)
+    JavaLangMapper.map2GenericParameterDtos(annotatedType, elementUtils, typeUtils)
+        .forEach(result::addGeneric);
 
     List<? extends Element> allMembers = elementUtils.getAllMembers(annotatedType);
     List<ExecutableElement> methods = ElementFilter.methodsIn(allMembers);
@@ -138,13 +137,19 @@ public class BuilderDefinitionCreator {
     if (isList(fieldType)) {
       result.addMethod(
           createFieldSetterWithTransform(
-              fieldName, "List.of(%s)", new TypeNameArray(fieldType.getInnerType().get(), false)));
+              fieldName,
+              "List.of(%s)",
+              new TypeNameArray(fieldType.getInnerType().get(), false),
+              result.getFieldGenerics()));
       return;
     }
     if (isSet(fieldType)) {
       result.addMethod(
           createFieldSetterWithTransform(
-              fieldName, "Set.of(%s)", new TypeNameArray(fieldType.getInnerType().get(), true)));
+              fieldName,
+              "Set.of(%s)",
+              new TypeNameArray(fieldType.getInnerType().get(), true),
+              result.getFieldGenerics()));
       return;
     }
     if (isMap(fieldType)) {
@@ -160,6 +165,10 @@ public class BuilderDefinitionCreator {
       TypeElement fieldTypeElement,
       Elements elementUtils,
       Types typeUtils) {
+    // Do not generate supplier methods for generic type variables (e.g., T)
+    if (fieldType instanceof TypeNameVariable) {
+      return;
+    }
     // Skip consumer generation for functional interfaces
     if (isFunctionalInterface(fieldTypeElement, elementUtils)) {
       return;
@@ -202,7 +211,7 @@ public class BuilderDefinitionCreator {
     if (isFunctionalInterface(fieldTypeElement, elementUtils)) {
       return;
     }
-    result.addMethod(createFieldSupplier(fieldName, fieldType));
+    result.addMethod(createFieldSupplier(fieldName, fieldType, result.getFieldGenerics()));
   }
 
   private static Optional<FieldDto> createFieldDto(
@@ -220,7 +229,8 @@ public class BuilderDefinitionCreator {
     }
     VariableElement fieldParameter = parameters.get(0);
     TypeMirror fieldTypeMirror = fieldParameter.asType();
-    TypeElement fieldTypeElement = (TypeElement) typeUtils.asElement(fieldTypeMirror);
+    Element rawElement = typeUtils.asElement(fieldTypeMirror);
+    TypeElement fieldTypeElement = rawElement instanceof TypeElement te ? te : null;
 
     // Extract only the @param Javadoc for the single setter parameter (if present)
     String fullJavaDoc = elementUtils.getDocComment(mth);
@@ -239,8 +249,16 @@ public class BuilderDefinitionCreator {
     }
     TypeName fieldType = fieldParameterDto.getParameterType();
 
+    // Extract generics declared on the setter itself (field-specific), e.g., <T extends
+    // Serializable>
+    List<GenericParameterDto> fieldGenerics =
+        mth.getTypeParameters().stream()
+            .map(tp -> JavaLangMapper.map2GenericParameterDto(tp, elementUtils, typeUtils))
+            .toList();
+    result.setFieldGenerics(fieldGenerics);
+
     // simple setter
-    result.addMethod(createFieldSetter(fieldName, fieldType));
+    result.addMethod(createFieldSetterWithTransform(fieldName, null, fieldType, fieldGenerics));
 
     // add consumer/supplier generation via helpers
     addConsumerMethodsForField(
@@ -251,12 +269,11 @@ public class BuilderDefinitionCreator {
     return Optional.of(result);
   }
 
-  private static MethodDto createFieldSetter(String fieldName, TypeName fieldType) {
-    return createFieldSetterWithTransform(fieldName, null, fieldType);
-  }
-
   private static MethodDto createFieldSetterWithTransform(
-      String fieldName, String transform, TypeName fieldType) {
+      String fieldName,
+      String transform,
+      TypeName fieldType,
+      List<GenericParameterDto> fieldGenerics) {
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName(fieldName);
     parameter.setParameterTypeName(fieldType);
@@ -265,6 +282,7 @@ public class BuilderDefinitionCreator {
     methodDto.addParameter(parameter);
     methodDto.setModifier(Modifier.PUBLIC);
     methodDto.setMethodType(MethodTypes.PROXY);
+    methodDto.setMethodGenerics(fieldGenerics);
     String params;
     if (StringUtils.isBlank(transform)) {
       params = parameter.getParameterName();
@@ -333,7 +351,8 @@ public class BuilderDefinitionCreator {
     return methodDto;
   }
 
-  private static MethodDto createFieldSupplier(String fieldName, TypeName fieldType) {
+  private static MethodDto createFieldSupplier(
+      String fieldName, TypeName fieldType, List<GenericParameterDto> fieldGenerics) {
     TypeNameGeneric supplierType = new TypeNameGeneric(map2TypeName(Supplier.class), fieldType);
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName(fieldName + "Supplier");
@@ -343,6 +362,7 @@ public class BuilderDefinitionCreator {
     methodDto.addParameter(parameter);
     methodDto.setModifier(Modifier.PUBLIC);
     methodDto.setMethodType(MethodTypes.SUPPLIER);
+    methodDto.setMethodGenerics(fieldGenerics);
     methodDto.setCode(
         """
         instance.$dtoMethod:N($dtoMethodParam:N.get());

@@ -44,6 +44,9 @@ public class FieldDto {
   /** Optional Javadoc of the field extracted from setter or constructor. */
   private String javaDoc;
 
+  /** Method-level generics declared on the setter, to be reused in builder methods. */
+  private final List<GenericParameterDto> fieldGenerics = new ArrayList<>();
+
   /**
    * Getting name of field.
    *
@@ -115,5 +118,18 @@ public class FieldDto {
    */
   public void setJavaDoc(String javaDoc) {
     this.javaDoc = javaDoc;
+  }
+
+  /** Returns generics declared on the setter (field-specific). */
+  public List<GenericParameterDto> getFieldGenerics() {
+    return fieldGenerics;
+  }
+
+  /** Replaces generics list with the provided entries. */
+  public void setFieldGenerics(List<GenericParameterDto> generics) {
+    this.fieldGenerics.clear();
+    if (generics != null) {
+      this.fieldGenerics.addAll(generics);
+    }
   }
 }

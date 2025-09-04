@@ -25,6 +25,7 @@
 package org.javahelpers.simple.builders.processor.dtos;
 
 import java.util.LinkedList;
+import java.util.List;
 
 /** BuilderDefinitionDto holds all information for generating a builder. */
 public class BuilderDefinitionDto {
@@ -33,6 +34,9 @@ public class BuilderDefinitionDto {
 
   /** Type of builder. Containing package and name of DTO. */
   private TypeName builderTypeName;
+
+  /** Generic parameters declared on the target DTO (e.g., <T extends Number, U>). */
+  private final List<GenericParameterDto> generics = new LinkedList<>();
 
   /**
    * List of all methods of target DTO which are supported by builder and not targeting a specific
@@ -119,5 +123,15 @@ public class BuilderDefinitionDto {
    */
   public LinkedList<FieldDto> getSetterFieldsForBuilder() {
     return setterFieldsForBuilder;
+  }
+
+  /** Adds a generic parameter definition. */
+  public void addGeneric(GenericParameterDto generic) {
+    generics.add(generic);
+  }
+
+  /** Returns the list of generic parameters of the target DTO, in declared order. */
+  public List<GenericParameterDto> getGenerics() {
+    return generics;
   }
 }
