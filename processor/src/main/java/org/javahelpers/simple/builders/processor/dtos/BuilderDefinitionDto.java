@@ -42,13 +42,13 @@ public class BuilderDefinitionDto {
    * List of all methods of target DTO which are supported by builder and not targeting a specific
    * DTO field.
    */
-  private final LinkedList<MethodDto> methodsForBuilder = new LinkedList<>();
+  private final List<MethodDto> methodsForBuilder = new LinkedList<>();
 
   /**
    * List of all fields of target DTO which are supported by builder. A field could be supported by
    * several functions in builder.
    */
-  private final LinkedList<FieldDto> setterFieldsForBuilder = new LinkedList<>();
+  private final List<FieldDto> setterFieldsForBuilder = new LinkedList<>();
 
   /**
    * Getting type of builder.
@@ -103,7 +103,7 @@ public class BuilderDefinitionDto {
    * @return list of methods with type {@code
    *     org.javahelpers.simple.builders.internal.dtos.MethodDto}
    */
-  public LinkedList<MethodDto> getMethodsForBuilder() {
+  public List<MethodDto> getMethodsForBuilder() {
     return methodsForBuilder;
   }
 
@@ -121,7 +121,7 @@ public class BuilderDefinitionDto {
    *
    * @return list of fields with type {@code org.javahelpers.simple.builders.internal.dtos.FieldDto}
    */
-  public LinkedList<FieldDto> getSetterFieldsForBuilder() {
+  public List<FieldDto> getSetterFieldsForBuilder() {
     return setterFieldsForBuilder;
   }
 
