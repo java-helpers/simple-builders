@@ -59,14 +59,13 @@ public class AnnotationValidator {
     }
 
     // Only allow @SimpleBuilder on top-level classes
-    if (annotatedElement instanceof javax.lang.model.element.TypeElement typeElement) {
-      if (typeElement.getNestingKind() != NestingKind.TOP_LEVEL) {
-        throw new BuilderException(
-            annotatedElement,
-            "The "
-                + SimpleBuilder.class.getSimpleName()
-                + " should be declared on a top-level class only");
-      }
+    if (annotatedElement instanceof javax.lang.model.element.TypeElement typeElement
+        && typeElement.getNestingKind() != NestingKind.TOP_LEVEL) {
+      throw new BuilderException(
+          annotatedElement,
+          "The "
+              + SimpleBuilder.class.getSimpleName()
+              + " should be declared on a top-level class only");
     }
   }
 }

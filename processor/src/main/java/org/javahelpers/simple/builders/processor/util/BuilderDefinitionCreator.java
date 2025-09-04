@@ -170,7 +170,7 @@ public class BuilderDefinitionCreator {
       return;
     }
     // Skip consumer generation for functional interfaces
-    if (isFunctionalInterface(fieldTypeElement, elementUtils)) {
+    if (isFunctionalInterface(fieldTypeElement)) {
       return;
     }
     Optional<TypeName> builderTypeOpt = findBuilderType(fieldParameter, elementUtils, typeUtils);
@@ -178,7 +178,6 @@ public class BuilderDefinitionCreator {
       TypeName builderType = builderTypeOpt.get();
       result.addMethod(
           BuilderDefinitionCreator.createFieldConsumerWithBuilder(fieldName, builderType));
-      return;
     } else if (!isJavaClass(fieldType)
         && fieldTypeElement != null
         && fieldTypeElement.getKind() == javax.lang.model.element.ElementKind.CLASS
@@ -186,12 +185,10 @@ public class BuilderDefinitionCreator {
         && hasEmptyConstructor(fieldTypeElement, elementUtils)) {
       // Only generate a Consumer for concrete classes with an accessible empty constructor
       result.addMethod(createFieldConsumer(fieldName, fieldType));
-      return;
     } else if (isList(fieldType)) {
       result.addMethod(
           createFieldConsumerWithBuilder(
               fieldName, map2TypeName(ArrayListBuilder.class), fieldType.getInnerType().get()));
-      return;
     } else if (isMap(fieldType)) {
       // TODO MAP (having 2 inner classes, TypeNameGeneric is not able to adress that yet)
     } else if (isSet(fieldType)) {
@@ -202,13 +199,9 @@ public class BuilderDefinitionCreator {
   }
 
   private static void addSupplierMethodsForField(
-      FieldDto result,
-      String fieldName,
-      TypeName fieldType,
-      TypeElement fieldTypeElement,
-      Elements elementUtils) {
+      FieldDto result, String fieldName, TypeName fieldType, TypeElement fieldTypeElement) {
     // Skip supplier generation for functional interfaces
-    if (isFunctionalInterface(fieldTypeElement, elementUtils)) {
+    if (isFunctionalInterface(fieldTypeElement)) {
       return;
     }
     result.addMethod(createFieldSupplier(fieldName, fieldType, result.getFieldGenerics()));
@@ -263,7 +256,7 @@ public class BuilderDefinitionCreator {
     // add consumer/supplier generation via helpers
     addConsumerMethodsForField(
         result, fieldName, fieldType, fieldParameter, fieldTypeElement, elementUtils, typeUtils);
-    addSupplierMethodsForField(result, fieldName, fieldType, fieldTypeElement, elementUtils);
+    addSupplierMethodsForField(result, fieldName, fieldType, fieldTypeElement);
     addAdditionalHelperMethodsForField(result, fieldName, fieldType);
 
     return Optional.of(result);

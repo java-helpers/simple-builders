@@ -55,12 +55,10 @@ public final class ProcessorAsserts {
   /** Coupling of a search string with an assertion message for positive contains checks. */
   public static record ContainsAssertRecord(String search, String message)
       implements AssertRecord {}
-  ;
 
   /** Coupling of a search string with an assertion message for negative contains checks. */
   public static record NotContainsAssertRecord(String search, String message)
       implements AssertRecord {}
-  ;
 
   /** Factory for positive contains check with default message. */
   public static ContainsAssertRecord contains(String search) {

@@ -154,7 +154,7 @@ public final class JavaLangAnalyser {
    * element is an interface and declares exactly one abstract instance method (ignoring static and
    * default methods). Inherited abstract methods are ignored for simplicity.
    */
-  public static boolean isFunctionalInterface(TypeElement typeElement, Elements elementUtils) {
+  public static boolean isFunctionalInterface(TypeElement typeElement) {
     if (typeElement == null) {
       return false;
     }
