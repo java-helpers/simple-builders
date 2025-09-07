@@ -29,10 +29,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/**
- * Annotation to be placed on setters/constructors or parameters of setters to ignore it in
- * Builder-Generation.
- */
+/** Annotation to be placed on setters/constructors to ignore it in Builder-Generation. */
 @Target({ElementType.PARAMETER, ElementType.METHOD})
 @Retention(RetentionPolicy.CLASS)
 public @interface IgnoreInBuilder {}
