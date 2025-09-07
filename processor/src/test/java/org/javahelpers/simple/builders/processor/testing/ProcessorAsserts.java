@@ -16,6 +16,12 @@ public final class ProcessorAsserts {
 
   private ProcessorAsserts() {}
 
+  /** Collapse all whitespace (spaces, tabs, newlines) to single spaces and trim. */
+  private static String normalizeWhitespace(String input) {
+    if (input == null) return null;
+    return input.replaceAll("\\s+", " ").trim();
+  }
+
   /**
    * Asserts compilation succeeded and that the basic builder API exists in the provided generated
    * source (build() and static create()).
@@ -29,57 +35,78 @@ public final class ProcessorAsserts {
             ? builderSimpleName.substring(0, builderSimpleName.length() - "Builder".length())
             : builderSimpleName;
 
+    String normalized = normalizeWhitespace(generated);
     Assertions.assertTrue(
-        generated.contains("public " + targetSimpleName + " build()"),
+        normalized.contains(normalizeWhitespace("public " + targetSimpleName + " build()")),
         "method missing: 'public " + targetSimpleName + " build()'");
     Assertions.assertTrue(
-        generated.contains("public static " + builderSimpleName + " create()"),
+        normalized.contains(
+            normalizeWhitespace("public static " + builderSimpleName + " create()")),
         "method missing: 'public static " + builderSimpleName + " create()'");
   }
 
+  /** Common interface for assertion records. */
+  public interface AssertRecord {
+    String search();
+
+    String message();
+  }
+
   /** Coupling of a search string with an assertion message for positive contains checks. */
-  public static record ContainsAssertRecord(String search, String message) {}
+  public static record ContainsAssertRecord(String search, String message)
+      implements AssertRecord {}
 
   /** Coupling of a search string with an assertion message for negative contains checks. */
-  public static record NotContainsAssertRecord(String search, String message) {}
-
-  /** Factory for positive contains check with custom message. */
-  public static ContainsAssertRecord containsWithMessage(String search, String message) {
-    return new ContainsAssertRecord(search, message);
-  }
+  public static record NotContainsAssertRecord(String search, String message)
+      implements AssertRecord {}
 
   /** Factory for positive contains check with default message. */
   public static ContainsAssertRecord contains(String search) {
-    return new ContainsAssertRecord(search, String.format("method missing: '%s'", search));
-  }
-
-  /** Factory for negative contains check with custom message. */
-  public static NotContainsAssertRecord notContainsWithMessage(String search, String message) {
-    return new NotContainsAssertRecord(search, message);
+    return new ContainsAssertRecord(search, String.format("content missing: '%s'", search));
   }
 
   /** Factory for negative contains check with default message. */
   public static NotContainsAssertRecord notContains(String search) {
-    return new NotContainsAssertRecord(search, String.format("should not contain: '%s'", search));
+    return new NotContainsAssertRecord(
+        search, String.format("content should not be found: '%s'", search));
   }
 
-  /** Assert that generated code contains all provided checks. */
-  public static void assertingResult(String generatedCode, ContainsAssertRecord... checks) {
+  /** Assert that generated code matches all provided checks (positive or negative). */
+  public static void assertingResult(String generatedCode, AssertRecord... checks) {
     List<Executable> executables = new ArrayList<>();
-    for (ContainsAssertRecord check : checks) {
-      executables.add(
-          () -> Assertions.assertTrue(generatedCode.contains(check.search()), check.message()));
+    String normalizedGenerated = normalizeWhitespace(generatedCode);
+    for (AssertRecord check : checks) {
+      String normalizedSearch = normalizeWhitespace(check.search());
+      if (check instanceof ContainsAssertRecord) {
+        executables.add(
+            () ->
+                Assertions.assertTrue(
+                    normalizedGenerated.contains(normalizedSearch), check.message()));
+      } else if (check instanceof NotContainsAssertRecord) {
+        executables.add(
+            () ->
+                Assertions.assertFalse(
+                    normalizedGenerated.contains(normalizedSearch), check.message()));
+      }
     }
     Assertions.assertAll(executables.toArray(new Executable[0]));
   }
 
-  /** Assert that generated code does not contain any of the provided checks. */
-  public static void assertNotContaining(String generatedCode, NotContainsAssertRecord... checks) {
-    List<Executable> executables = new ArrayList<>();
-    for (NotContainsAssertRecord check : checks) {
-      executables.add(
-          () -> Assertions.assertFalse(generatedCode.contains(check.search()), check.message()));
-    }
-    Assertions.assertAll(executables.toArray(new Executable[0]));
+  /** Convenience overload: accept plain strings and convert to NotContainsAssertRecord. */
+  public static void assertNotContaining(String generatedCode, String... searches) {
+    AssertRecord[] checks =
+        java.util.Arrays.stream(searches)
+            .map(ProcessorAsserts::notContains)
+            .toArray(AssertRecord[]::new);
+    assertingResult(generatedCode, checks);
+  }
+
+  /** Convenience overload: accept plain strings and convert to ContainsAssertRecord. */
+  public static void assertContaining(String generatedCode, String... searches) {
+    AssertRecord[] checks =
+        java.util.Arrays.stream(searches)
+            .map(ProcessorAsserts::contains)
+            .toArray(AssertRecord[]::new);
+    assertingResult(generatedCode, checks);
   }
 }

@@ -21,6 +21,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+      checks: write
 
     steps:
     - uses: actions/checkout@v4
@@ -31,7 +32,7 @@ jobs:
         distribution: 'temurin'
         cache: maven
     - name: Build with Maven
-      run: mvn -B verify --file pom.xml
+      run: mvn -B verify -Pmetrics --file pom.xml
 
     - name: Upload JaCoCo HTML report (processor)
       if: always()
@@ -49,7 +50,19 @@ jobs:
         path: processor/target/site/jacoco/jacoco.xml
         if-no-files-found: warn
 
-    - name: Upload coverage to Codecov
+    - name: Upload test results to Codecov (processor)
+      if: always()
+      uses: codecov/test-results-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: |
+          processor/target/surefire-reports/*.xml
+          processor/target/failsafe-reports/*.xml
+        if-no-files-found: warn
+        fail_ci_if_error: true
+        verbose: false
+
+    - name: Upload coverage to Codecov (processor)
       if: always()
       uses: codecov/codecov-action@v5
       with:
@@ -57,5 +70,5 @@ jobs:
         files: processor/target/site/jacoco/jacoco.xml
         flags: processor
         name: codecov-upload
-        verbose: true
+        verbose: false
         token: ${{ secrets.CODECOV_TOKEN }}
