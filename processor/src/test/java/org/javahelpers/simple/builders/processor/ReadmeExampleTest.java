@@ -7,14 +7,12 @@ import com.google.testing.compile.Compilation;
 import com.google.testing.compile.Compiler;
 import com.google.testing.compile.JavaFileObjects;
 import javax.tools.JavaFileObject;
-
 import org.javahelpers.simple.builders.processor.testing.ProcessorAsserts;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class ReadmeExampleTest {
 
-  private Compilation compileSources(JavaFileObject... sources){
+  private Compilation compileSources(JavaFileObject... sources) {
     BuilderProcessor processor = new BuilderProcessor();
     Compiler compiler = Compiler.javac().withProcessors(processor);
     return compiler.compile(sources);
@@ -198,16 +196,15 @@ class ReadmeExampleTest {
 
     // Validate the full usage too
     Compilation compilationWithUsage = compileSources(project, task, statusEnum, usage);
-    assertGenerationSucceeded(compilationWithUsage,"TaskBuilder");
+    assertGenerationSucceeded(compilationWithUsage, "TaskBuilder");
   }
-
 
   /**
    * Asserts compilation succeeded and that the basic builder API exists in the provided generated
    * source (build() and static create()).
    */
-  public static void assertGenerationSucceeded(
-      Compilation compilation, String builderSimpleName) {
-        ProcessorAsserts.assertGenerationSucceeded(compilation, builderSimpleName, loadGeneratedSource(compilation, builderSimpleName));
+  public static void assertGenerationSucceeded(Compilation compilation, String builderSimpleName) {
+    ProcessorAsserts.assertGenerationSucceeded(
+        compilation, builderSimpleName, loadGeneratedSource(compilation, builderSimpleName));
   }
 }
