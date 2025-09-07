@@ -32,8 +32,6 @@ import static org.javahelpers.simple.builders.processor.util.JavaLangMapper.map2
 import static org.javahelpers.simple.builders.processor.util.JavaLangMapper.mapRelevantModifier;
 import static org.javahelpers.simple.builders.processor.util.TypeNameAnalyser.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
