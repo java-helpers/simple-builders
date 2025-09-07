@@ -32,6 +32,7 @@ import static org.javahelpers.simple.builders.processor.util.JavaLangMapper.map2
 import static org.javahelpers.simple.builders.processor.util.JavaLangMapper.mapRelevantModifier;
 import static org.javahelpers.simple.builders.processor.util.TypeNameAnalyser.*;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -137,13 +138,14 @@ public class BuilderDefinitionCreator {
   private static void addAdditionalHelperMethodsForField(
       FieldDto result, String fieldName, TypeName fieldType) {
     List<TypeName> innerTypes;
+    int innerTypesCnt;
     if (fieldType instanceof TypeNameGeneric fieldTypeGeneric) {
       innerTypes = fieldTypeGeneric.getInnerTypeArguments();
-
+      innerTypesCnt = innerTypes.size();
     } else {
-      innerTypes = Arrays.asList(new TypeName("java.lang", "Object"));
+      innerTypes = null;
+      innerTypesCnt = 0;
     }
-    int innerTypesCnt = innerTypes.size();
 
     if (isList(fieldType) && innerTypesCnt == 1) {
       result.addMethod(

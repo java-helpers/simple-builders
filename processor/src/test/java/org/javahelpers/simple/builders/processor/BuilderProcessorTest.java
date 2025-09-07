@@ -1923,4 +1923,57 @@ class BuilderProcessorTest {
         "public OverloadedNamesBuilder names(Supplier<List<String>> namesSupplier)",
         "public OverloadedNamesBuilder names(String... names)");
   }
+
+  @Test
+  void collectionsWithRawTypes_shouldGenerateBuilders() {
+
+    JavaFileObject rawCollectionsClass =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+            import java.util.List;
+            import java.util.Set;
+            import java.util.Map;
+            @SimpleBuilder
+            public class RawCollections {
+              private List rawList;
+              private Set rawSet;
+              private Map rawMap;
+
+              public List getRawList() { return rawList; }
+              public void setRawList(List rawList) { this.rawList = rawList; }
+
+              public Set getRawSet() { return rawSet; }
+              public void setRawSet(Set rawSet) { this.rawSet = rawSet; }
+
+              public Map getRawMap() { return rawMap; }
+              public void setRawMap(Map rawMap) { this.rawMap = rawMap; }
+            }
+            """);
+
+    // Test builder generation (without usage)
+    Compilation compilation = compile(rawCollectionsClass);
+    String generatedCode = loadGeneratedSource(compilation, "RawCollectionsBuilder");
+    assertGenerationSucceeded(compilation, "RawCollectionsBuilder", generatedCode);
+
+    // Verify basic builder methods are generated
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        "public static RawCollectionsBuilder create()",
+        "public RawCollectionsBuilder rawList(List rawList)",
+        "public RawCollectionsBuilder rawSet(Set rawSet)",
+        "public RawCollectionsBuilder rawMap(Map rawMap)",
+        "public RawCollections build()");
+
+    // Verify no additional helper methods are generated for raw types
+    ProcessorAsserts.assertNotContaining(
+        generatedCode,
+        "rawListBuilderConsumer",
+        "rawSetBuilderConsumer",
+        "rawMapBuilderConsumer",
+        "rawList(String...)",
+        "rawSet(String...)",
+        "rawMap(Map.Entry)");
+  }
 }
