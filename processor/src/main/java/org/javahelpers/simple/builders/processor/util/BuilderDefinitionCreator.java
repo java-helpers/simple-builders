@@ -43,6 +43,7 @@ import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import org.apache.commons.lang3.StringUtils;
+import org.javahelpers.simple.builders.core.annotations.IgnoreInBuilder;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 import org.javahelpers.simple.builders.core.builders.ArrayListBuilder;
 import org.javahelpers.simple.builders.core.builders.HashMapBuilder;
@@ -99,6 +100,7 @@ public class BuilderDefinitionCreator {
     return isNoMethodOfObjectClass(mth)
         && hasNoThrowablesDeclared(mth)
         && hasNoReturnValue(mth)
+        && hasNotAnnotation(IgnoreInBuilder.class, mth)
         && isNotPrivate(mth)
         && isNotStatic(mth);
   }
