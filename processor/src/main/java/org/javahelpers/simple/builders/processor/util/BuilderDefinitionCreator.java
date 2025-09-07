@@ -32,6 +32,7 @@ import static org.javahelpers.simple.builders.processor.util.JavaLangMapper.map2
 import static org.javahelpers.simple.builders.processor.util.JavaLangMapper.mapRelevantModifier;
 import static org.javahelpers.simple.builders.processor.util.TypeNameAnalyser.*;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -45,6 +46,7 @@ import javax.lang.model.util.Types;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 import org.javahelpers.simple.builders.core.builders.ArrayListBuilder;
+import org.javahelpers.simple.builders.core.builders.HashMapBuilder;
 import org.javahelpers.simple.builders.core.builders.HashSetBuilder;
 import org.javahelpers.simple.builders.processor.dtos.*;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
@@ -134,26 +136,37 @@ public class BuilderDefinitionCreator {
 
   private static void addAdditionalHelperMethodsForField(
       FieldDto result, String fieldName, TypeName fieldType) {
-    if (isList(fieldType)) {
+    List<TypeName> innerTypes;
+    if (fieldType instanceof TypeNameGeneric fieldTypeGeneric) {
+      innerTypes = fieldTypeGeneric.getInnerTypeArguments();
+
+    } else {
+      innerTypes = Arrays.asList(new TypeName("java.lang", "Object"));
+    }
+    int innerTypesCnt = innerTypes.size();
+
+    if (isList(fieldType) && innerTypesCnt == 1) {
       result.addMethod(
           createFieldSetterWithTransform(
               fieldName,
               "List.of(%s)",
-              new TypeNameArray(fieldType.getInnerType().get(), false),
+              new TypeNameArray(innerTypes.get(0), false),
               result.getFieldGenerics()));
-      return;
-    }
-    if (isSet(fieldType)) {
+    } else if (isSet(fieldType) && innerTypesCnt == 1) {
       result.addMethod(
           createFieldSetterWithTransform(
               fieldName,
               "Set.of(%s)",
-              new TypeNameArray(fieldType.getInnerType().get(), true),
+              new TypeNameArray(innerTypes.get(0), true),
               result.getFieldGenerics()));
-      return;
-    }
-    if (isMap(fieldType)) {
-      // TODO MAP (having 2 inner classes, TypeNameGeneric is not able to address that yet)
+    } else if (isMap(fieldType) && innerTypesCnt == 2) {
+      TypeName mapEntryType =
+          new TypeNameArray(
+              new TypeNameGeneric("java.util", "Map.Entry", innerTypes.get(0), innerTypes.get(1)),
+              false);
+      result.addMethod(
+          createFieldSetterWithTransform(
+              fieldName, "Map.ofEntries(%s)", mapEntryType, result.getFieldGenerics()));
     }
   }
 
@@ -185,16 +198,33 @@ public class BuilderDefinitionCreator {
         && hasEmptyConstructor(fieldTypeElement, elementUtils)) {
       // Only generate a Consumer for concrete classes with an accessible empty constructor
       result.addMethod(createFieldConsumer(fieldName, fieldType));
-    } else if (isList(fieldType)) {
+    } else if (isList(fieldType)
+        && fieldType instanceof TypeNameGeneric fieldTypeGeneric
+        && fieldTypeGeneric.getInnerTypeArguments().size() == 1) {
       result.addMethod(
           createFieldConsumerWithBuilder(
-              fieldName, map2TypeName(ArrayListBuilder.class), fieldType.getInnerType().get()));
-    } else if (isMap(fieldType)) {
-      // TODO MAP (having 2 inner classes, TypeNameGeneric is not able to adress that yet)
-    } else if (isSet(fieldType)) {
+              fieldName,
+              map2TypeName(ArrayListBuilder.class),
+              fieldTypeGeneric.getInnerTypeArguments().get(0)));
+    } else if (isMap(fieldType)
+        && fieldType instanceof TypeNameGeneric fieldTypeGeneric
+        && fieldTypeGeneric.getInnerTypeArguments().size() == 2) {
+      TypeName builderTargetTypeName =
+          new TypeNameGeneric(
+              map2TypeName(HashMapBuilder.class),
+              fieldTypeGeneric.getInnerTypeArguments().get(0),
+              fieldTypeGeneric.getInnerTypeArguments().get(1));
+      MethodDto mapConsumerWithBuilder =
+          BuilderDefinitionCreator.createFieldConsumerWithBuilder(fieldName, builderTargetTypeName);
+      result.addMethod(mapConsumerWithBuilder);
+    } else if (isSet(fieldType)
+        && fieldType instanceof TypeNameGeneric fieldTypeGeneric
+        && fieldTypeGeneric.getInnerTypeArguments().size() == 1) {
       result.addMethod(
           createFieldConsumerWithBuilder(
-              fieldName, map2TypeName(HashSetBuilder.class), fieldType.getInnerType().get()));
+              fieldName,
+              map2TypeName(HashSetBuilder.class),
+              fieldTypeGeneric.getInnerTypeArguments().get(0)));
     }
   }
 
