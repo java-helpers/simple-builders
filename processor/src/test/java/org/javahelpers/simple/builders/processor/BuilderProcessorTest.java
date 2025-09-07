@@ -763,6 +763,60 @@ class BuilderProcessorTest {
   }
 
   @Test
+  void shouldHandleGenericWrapperTypes() {
+
+    JavaFileObject optionalWrapperClass =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+            import java.util.Optional;
+            import java.time.LocalDate;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+            @SimpleBuilder
+            public class OptionalWrapper {
+              private Optional<String> name;
+              private Optional<Integer> count;
+              private Optional<LocalDate> date;
+
+              public Optional<String> getName() { return name; }
+              public void setName(Optional<String> name) { this.name = name; }
+
+              public Optional<Integer> getCount() { return count; }
+              public void setCount(Optional<Integer> count) { this.count = count; }
+
+              public Optional<LocalDate> getDate() { return date; }
+              public void setDate(Optional<LocalDate> date) { this.date = date; }
+            }
+            """);
+
+    // Test builder generation (without usage)
+    Compilation compilation = compile(optionalWrapperClass);
+    String optionalBuilder = loadGeneratedSource(compilation, "OptionalWrapperBuilder");
+
+    // Verify Optional wrapper generates basic methods
+    assertGenerationSucceeded(compilation, "OptionalWrapperBuilder", optionalBuilder);
+    ProcessorAsserts.assertContaining(
+        optionalBuilder,
+        "public static OptionalWrapperBuilder create()",
+        "public OptionalWrapperBuilder name(Optional<String> name)",
+        "public OptionalWrapperBuilder count(Optional<Integer> count)",
+        "public OptionalWrapperBuilder date(Optional<LocalDate> date)",
+        "public OptionalWrapper build()");
+
+    // Verify no additional helper methods are generated for these generic types
+    // (since they don't match List/Set/Map patterns)
+    ProcessorAsserts.assertNotContaining(
+        optionalBuilder,
+        "nameBuilderConsumer",
+        "countBuilderConsumer",
+        "dateBuilderConsumer",
+        "name(String...)",
+        "count(Integer...)",
+        "date(LocalDate...)");
+  }
+
+  @Test
   void shouldGenerateSetterForClassInDifferentPackage() {
     // Given
     String packageName = "test";
