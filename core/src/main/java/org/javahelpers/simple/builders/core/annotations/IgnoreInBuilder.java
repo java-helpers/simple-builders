@@ -24,12 +24,15 @@
 
 package org.javahelpers.simple.builders.core.annotations;
 
-import java.lang.annotation.Elementype;
+import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
- 
-/** Annotation to be placed on setters/constructors or parameters of setters to ignore it in Builder-Generation. */
-@Target(ElementType.PARAMETER, ElementType.METHOD)
+
+/**
+ * Annotation to be placed on setters/constructors or parameters of setters to ignore it in
+ * Builder-Generation.
+ */
+@Target({ElementType.PARAMETER, ElementType.METHOD})
 @Retention(RetentionPolicy.CLASS)
 public @interface IgnoreInBuilder {}
