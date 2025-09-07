@@ -67,7 +67,7 @@ class ReadmeExampleTest {
     ProcessorAsserts.assertGenerationSucceeded(compilation, builderClassName, generatedCode);
 
     // Fixed expected strings based on README usage snippet
-    org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.assertingResult(
+    ProcessorAsserts.assertingResult(
         generatedCode,
         contains("public static PersonBuilder create()"),
         contains("public PersonBuilder name(String name)"),
@@ -173,7 +173,7 @@ class ReadmeExampleTest {
     ProcessorAsserts.assertGenerationSucceeded(compilation, "ProjectBuilder", projectBuilder);
 
     // Assert key capabilities corresponding to README usage
-    org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.assertingResult(
+    ProcessorAsserts.assertingResult(
         projectBuilder,
         contains("public static ProjectBuilder create()"),
         contains("public ProjectBuilder name(String name)"),
@@ -187,7 +187,7 @@ class ReadmeExampleTest {
     // Also validate TaskBuilder exists and typical fluent API
     String taskBuilder = loadGeneratedSource(compilation, "TaskBuilder");
     ProcessorAsserts.assertGenerationSucceeded(compilation, "TaskBuilder", taskBuilder);
-    org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.assertingResult(
+    ProcessorAsserts.assertingResult(
         taskBuilder,
         contains("public static TaskBuilder create()"),
         contains("public TaskBuilder title(String title)"),

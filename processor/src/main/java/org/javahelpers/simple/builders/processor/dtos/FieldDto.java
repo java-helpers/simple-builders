@@ -38,7 +38,7 @@ public class FieldDto {
   /** Type of field. Containing generic, name of package and class */
   private TypeName fieldType;
 
-  /** List of all methods in builder, which provide helpers to change the field. */
+  /** List of all methods in builder, which change the field. */
   private final List<MethodDto> fieldSetterMethodsList = new ArrayList<>();
 
   /** Optional Javadoc of the field extracted from setter or constructor. */
