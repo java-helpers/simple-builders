@@ -6,3 +6,24 @@ updates:
       - "/processor"
     schedule:
       interval: "weekly"
+    groups:
+      # Group all library dependencies together (excluding plugins)
+      dependencies:
+        exclude-patterns:
+          - "org.apache.maven.plugins:*"
+          - "com.spotify.fmt:*"
+          - "org.jacoco:*"
+          - "org.sonatype.central:*"
+        update-types:
+          - "minor"
+          - "patch"
+      # Group Maven plugins together
+      maven-plugins:
+        patterns:
+          - "org.apache.maven.plugins:*"
+          - "com.spotify.fmt:*"
+          - "org.jacoco:*"
+          - "org.sonatype.central:*"
+        update-types:
+          - "minor"
+          - "patch"
