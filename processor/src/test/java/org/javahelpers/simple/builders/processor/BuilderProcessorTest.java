@@ -1022,6 +1022,39 @@ class BuilderProcessorTest {
   }
 
   @Test
+  void shouldIgnoreIfAnnotatedWithIgnoreInBuilder() {
+    // Given
+    String packageName = "test";
+    String className = "IgnoredByAnnotation";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private String name;
+
+                public String getName() { return name; }
+
+                @org.javahelpers.simple.builders.core.annotations.IgnoreInBuilder
+                public void setName(String name) { this.name = name; }
+            """);
+
+    // When
+    Compilation compilation = compile(sourceFile);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+    // Ensure no builder methods were generated for ignored setters (method- and parameter-level)
+    ProcessorAsserts.assertNotContaining(
+        generatedCode,
+        "public IgnoredByAnnotationBuilder name(String name)",
+        "public IgnoredByAnnotationBuilder name(Supplier<String> nameSupplier)");
+  }
+
+  @Test
   void shouldNotGenerateConsumersForPrimitiveAndArrayFields() {
     // Given
     String packageName = "test";
