@@ -46,7 +46,7 @@ public class BuilderDefinitionDto {
 
   /**
    * List of all fields of target DTO which are supported by builder. A field could be supported by
-   * several functions in builder.
+   * multiple functions in builder.
    */
   private final List<FieldDto> setterFieldsForBuilder = new LinkedList<>();
 

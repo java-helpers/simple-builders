@@ -1,6 +1,5 @@
 package org.javahelpers.simple.builders.processor;
 
-import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.assertGenerationSucceeded;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.contains;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils.loadGeneratedSource;
 
@@ -8,18 +7,15 @@ import com.google.testing.compile.Compilation;
 import com.google.testing.compile.Compiler;
 import com.google.testing.compile.JavaFileObjects;
 import javax.tools.JavaFileObject;
-import org.junit.jupiter.api.BeforeEach;
+import org.javahelpers.simple.builders.processor.testing.ProcessorAsserts;
 import org.junit.jupiter.api.Test;
 
 class ReadmeExampleTest {
 
-  protected BuilderProcessor processor;
-  protected Compiler compiler;
-
-  @BeforeEach
-  protected void setUp() {
-    processor = new BuilderProcessor();
-    compiler = Compiler.javac().withProcessors(processor);
+  private Compilation compileSources(JavaFileObject... sources) {
+    BuilderProcessor processor = new BuilderProcessor();
+    Compiler compiler = Compiler.javac().withProcessors(processor);
+    return compiler.compile(sources);
   }
 
   @Test
@@ -49,18 +45,41 @@ class ReadmeExampleTest {
             }
             """);
 
-    Compilation compilation = compiler.compile(person);
+    JavaFileObject usage =
+        JavaFileObjects.forSourceString(
+            packageName + ".Usage",
+            """
+            package readme;
+            public class Usage {
+              public static void main(){
+                Person person = PersonBuilder.create()
+                           .name("John Doe")
+                           .age(30)
+                           .emailAddresses("john@example.com", "j.doe@example.com")
+                           .build();
+              }
+            }
+            """);
+
+    // Test 1: Builder generation (without usage)
+    Compilation compilation = compileSources(person);
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
-    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+    ProcessorAsserts.assertGenerationSucceeded(compilation, builderClassName, generatedCode);
 
     // Fixed expected strings based on README usage snippet
-    org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.assertingResult(
+    ProcessorAsserts.assertingResult(
         generatedCode,
         contains("public static PersonBuilder create()"),
         contains("public PersonBuilder name(String name)"),
         contains("public PersonBuilder age(int age)"),
         contains("public PersonBuilder emailAddresses(String... emailAddresses)"),
         contains("public Person build()"));
+
+    // Test 2: Usage compilation (with usage)
+    Compilation compilationWithUsage = compileSources(person, usage);
+
+    // Validate the full usage too
+    assertGenerationSucceeded(compilationWithUsage, "PersonBuilder");
   }
 
   @Test
@@ -120,31 +139,73 @@ class ReadmeExampleTest {
             public enum ProjectStatus { PLANNING, IN_PROGRESS, COMPLETED, ON_HOLD }
             """);
 
-    Compilation compilation = compiler.compile(project, task, statusEnum);
+    JavaFileObject usage =
+        JavaFileObjects.forSourceString(
+            packageName + ".Usage",
+            """
+            package readme;
+            public class Usage {
+              public static void main(){
+                Project project = ProjectBuilder.create()
+                    .name("Simple Builders with a bit of complexity")
+                    .status(ProjectStatus.IN_PROGRESS)
+                    .tasks(tasks -> tasks
+                        .add(TaskBuilder.create()
+                            .title("Implement core functionality")
+                            .completed(true)
+                            .build())
+                        .add(TaskBuilder.create()
+                            .title("Add documentation")
+                            .description("Update README and add Javadocs")
+                            .build())
+                    )
+                    .metadata(metadata -> metadata
+                        .put("version", "1.0.0")
+                        .put("owner", "dev-team"))
+                    .build();
+              }
+            }
+            """);
+
+    Compilation compilation = compileSources(project, task, statusEnum);
 
     String projectBuilder = loadGeneratedSource(compilation, "ProjectBuilder");
-    assertGenerationSucceeded(compilation, "ProjectBuilder", projectBuilder);
+    ProcessorAsserts.assertGenerationSucceeded(compilation, "ProjectBuilder", projectBuilder);
 
     // Assert key capabilities corresponding to README usage
-    org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.assertingResult(
+    ProcessorAsserts.assertingResult(
         projectBuilder,
         contains("public static ProjectBuilder create()"),
         contains("public ProjectBuilder name(String name)"),
         contains(
             "public ProjectBuilder tasks(Consumer<ArrayListBuilder<Task>> tasksBuilderConsumer)"),
-        contains("public ProjectBuilder metadata(Map<String, String> metadata)"),
+        contains(
+            "public ProjectBuilder metadata(Consumer<HashMapBuilder<String, String>> metadataBuilderConsumer"),
         contains("public ProjectBuilder status(ProjectStatus status)"),
         contains("public Project build()"));
 
     // Also validate TaskBuilder exists and typical fluent API
     String taskBuilder = loadGeneratedSource(compilation, "TaskBuilder");
-    assertGenerationSucceeded(compilation, "TaskBuilder", taskBuilder);
-    org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.assertingResult(
+    ProcessorAsserts.assertGenerationSucceeded(compilation, "TaskBuilder", taskBuilder);
+    ProcessorAsserts.assertingResult(
         taskBuilder,
         contains("public static TaskBuilder create()"),
         contains("public TaskBuilder title(String title)"),
         contains("public TaskBuilder description(String description)"),
         contains("public TaskBuilder completed(boolean completed)"),
         contains("public Task build()"));
+
+    // Validate the full usage too
+    Compilation compilationWithUsage = compileSources(project, task, statusEnum, usage);
+    assertGenerationSucceeded(compilationWithUsage, "TaskBuilder");
+  }
+
+  /**
+   * Asserts compilation succeeded and that the basic builder API exists in the provided generated
+   * source (build() and static create()).
+   */
+  public static void assertGenerationSucceeded(Compilation compilation, String builderSimpleName) {
+    ProcessorAsserts.assertGenerationSucceeded(
+        compilation, builderSimpleName, loadGeneratedSource(compilation, builderSimpleName));
   }
 }

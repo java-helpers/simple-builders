@@ -763,6 +763,60 @@ class BuilderProcessorTest {
   }
 
   @Test
+  void shouldHandleGenericWrapperTypes() {
+
+    JavaFileObject optionalWrapperClass =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+            import java.util.Optional;
+            import java.time.LocalDate;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+            @SimpleBuilder
+            public class OptionalWrapper {
+              private Optional<String> name;
+              private Optional<Integer> count;
+              private Optional<LocalDate> date;
+
+              public Optional<String> getName() { return name; }
+              public void setName(Optional<String> name) { this.name = name; }
+
+              public Optional<Integer> getCount() { return count; }
+              public void setCount(Optional<Integer> count) { this.count = count; }
+
+              public Optional<LocalDate> getDate() { return date; }
+              public void setDate(Optional<LocalDate> date) { this.date = date; }
+            }
+            """);
+
+    // Test builder generation (without usage)
+    Compilation compilation = compile(optionalWrapperClass);
+    String optionalBuilder = loadGeneratedSource(compilation, "OptionalWrapperBuilder");
+
+    // Verify Optional wrapper generates basic methods
+    assertGenerationSucceeded(compilation, "OptionalWrapperBuilder", optionalBuilder);
+    ProcessorAsserts.assertContaining(
+        optionalBuilder,
+        "public static OptionalWrapperBuilder create()",
+        "public OptionalWrapperBuilder name(Optional<String> name)",
+        "public OptionalWrapperBuilder count(Optional<Integer> count)",
+        "public OptionalWrapperBuilder date(Optional<LocalDate> date)",
+        "public OptionalWrapper build()");
+
+    // Verify no additional helper methods are generated for these generic types
+    // (since they don't match List/Set/Map patterns)
+    ProcessorAsserts.assertNotContaining(
+        optionalBuilder,
+        "nameBuilderConsumer",
+        "countBuilderConsumer",
+        "dateBuilderConsumer",
+        "name(String...)",
+        "count(Integer...)",
+        "date(LocalDate...)");
+  }
+
+  @Test
   void shouldGenerateSetterForClassInDifferentPackage() {
     // Given
     String packageName = "test";
@@ -1002,42 +1056,6 @@ class BuilderProcessorTest {
         contains("public PrimAndArrayBuilder names(Supplier"),
         notContains("public PrimAndArrayBuilder count(Consumer"),
         notContains("public PrimAndArrayBuilder names(Consumer"));
-  }
-
-  @Test
-  void shouldNotGenerateSpecialMethodsForMapBeyondSetterAndSupplier() {
-    // Given
-    String packageName = "test";
-    String className = "HasMap";
-    String builderClassName = className + "Builder";
-
-    JavaFileObject sourceFile =
-        ProcessorTestUtils.simpleBuilderClass(
-            packageName,
-            className,
-            """
-                private java.util.Map<String, Integer> map;
-
-                public java.util.Map<String, Integer> getMap() { return map; }
-                public void setMap(java.util.Map<String, Integer> map) { this.map = map; }
-            """);
-
-    // When
-    Compilation compilation = compile(sourceFile);
-
-    // Then
-    String generatedCode = loadGeneratedSource(compilation, builderClassName);
-    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-
-    // Expect only direct setter and supplier; no varargs/consumer for Map
-    ProcessorAsserts.assertingResult(
-        generatedCode,
-        contains("public HasMapBuilder map("),
-        contains("mapSupplier)"),
-        notContains("map(String..."),
-        notContains("map(java.lang.String..."),
-        notContains("mapBuilderConsumer"),
-        notContains("mapConsumer"));
   }
 
   @Test
@@ -1958,5 +1976,58 @@ class BuilderProcessorTest {
         "public OverloadedNamesBuilder names(List<String> names)",
         "public OverloadedNamesBuilder names(Supplier<List<String>> namesSupplier)",
         "public OverloadedNamesBuilder names(String... names)");
+  }
+
+  @Test
+  void collectionsWithRawTypes_shouldGenerateBuilders() {
+
+    JavaFileObject rawCollectionsClass =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+            import java.util.List;
+            import java.util.Set;
+            import java.util.Map;
+            @SimpleBuilder
+            public class RawCollections {
+              private List rawList;
+              private Set rawSet;
+              private Map rawMap;
+
+              public List getRawList() { return rawList; }
+              public void setRawList(List rawList) { this.rawList = rawList; }
+
+              public Set getRawSet() { return rawSet; }
+              public void setRawSet(Set rawSet) { this.rawSet = rawSet; }
+
+              public Map getRawMap() { return rawMap; }
+              public void setRawMap(Map rawMap) { this.rawMap = rawMap; }
+            }
+            """);
+
+    // Test builder generation (without usage)
+    Compilation compilation = compile(rawCollectionsClass);
+    String generatedCode = loadGeneratedSource(compilation, "RawCollectionsBuilder");
+    assertGenerationSucceeded(compilation, "RawCollectionsBuilder", generatedCode);
+
+    // Verify basic builder methods are generated
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        "public static RawCollectionsBuilder create()",
+        "public RawCollectionsBuilder rawList(List rawList)",
+        "public RawCollectionsBuilder rawSet(Set rawSet)",
+        "public RawCollectionsBuilder rawMap(Map rawMap)",
+        "public RawCollections build()");
+
+    // Verify no additional helper methods are generated for raw types
+    ProcessorAsserts.assertNotContaining(
+        generatedCode,
+        "rawListBuilderConsumer",
+        "rawSetBuilderConsumer",
+        "rawMapBuilderConsumer",
+        "rawList(String...)",
+        "rawSet(String...)",
+        "rawMap(Map.Entry)");
   }
 }

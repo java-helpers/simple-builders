@@ -161,7 +161,9 @@ Project project = ProjectBuilder.create()
             .description("Update README and add Javadocs")
             .build())
     )
-    .metadata(Map.of("version", "1.0.0", "owner", "dev-team"))
+    .metadata(metadata -> metadata
+        .put("version", "1.0.0")
+        .put("owner", "dev-team"))
     .build();
 ```
 
