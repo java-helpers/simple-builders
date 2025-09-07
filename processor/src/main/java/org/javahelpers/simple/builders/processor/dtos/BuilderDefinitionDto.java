@@ -34,8 +34,12 @@ public class BuilderDefinitionDto {
 
   /** Type of builder. Containing package and name of DTO. */
   private TypeName builderTypeName;
-  
-  /** Fields in constructor. Containing all fields which need to be given for calling the constructor. Ordering in LinkedList is matching orderung of parameters in constructor call. Instances of fields are added in LinkedList of all fields too. */
+
+  /**
+   * Fields in constructor. Containing all fields which need to be given for calling the
+   * constructor. Ordering in LinkedList is matching orderung of parameters in constructor call.
+   * Instances of fields are added in LinkedList of all fields too.
+   */
   private final LinkedList<FieldDto> fieldsInConstructor = new LinkedList<>();
 
   /** Generic parameters declared on the target DTO (e.g., <T extends Number, U>). */
