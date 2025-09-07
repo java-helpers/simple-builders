@@ -54,7 +54,7 @@
     
     <!-- Dependency Versions -->
     <auto-service.version>1.1.1</auto-service.version>
-    <javapoet.version>0.6.0</javapoet.version>
+    <javapoet.version>0.7.0</javapoet.version>
     <commons-lang.version>3.18.0</commons-lang.version>
     <junit-jupiter.version>5.13.4</junit-jupiter.version>
     <google-compile-testing.version>0.21.0</google-compile-testing.version>
@@ -74,9 +74,9 @@
     <plugin.maven.install.version>3.1.4</plugin.maven.install.version>
     <plugin.maven.resources.version>3.3.1</plugin.maven.resources.version>
     <plugin.maven.site.version>3.21.0</plugin.maven.site.version>
-    <plugin.maven.surefire.version>3.2.5</plugin.maven.surefire.version>
+    <plugin.maven.surefire.version>3.5.3</plugin.maven.surefire.version>
     <plugin.code-format.version>2.27</plugin.code-format.version>
-    <plugin.jacoco.version>0.8.12</plugin.jacoco.version>
+    <plugin.jacoco.version>0.8.13</plugin.jacoco.version>
   </properties>
 
   <dependencies>
@@ -191,48 +191,7 @@
       </plugin>
 
       <!-- JaCoCo Code Coverage (processor module only) -->
-      <plugin>
-        <groupId>org.jacoco</groupId>
-        <artifactId>jacoco-maven-plugin</artifactId>
-        <version>${plugin.jacoco.version}</version>
-        <executions>
-          <execution>
-            <id>prepare-agent</id>
-            <goals>
-              <goal>prepare-agent</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>report</id>
-            <phase>verify</phase>
-            <goals>
-              <goal>report</goal>
-            </goals>
-            <configuration>
-              <excludes>
-                <!-- Exclude mapper utilities from coverage -->
-                <exclude>**/*Mapper*.class</exclude>
-                <!-- Exclude DTOs package from coverage -->
-                <exclude>**/processor/dtos/**</exclude>
-              </excludes>
-            </configuration>
-          </execution>
-        </executions>
-        <configuration>
-          <!-- Only cover main sources of this module -->
-          <dataFile>${project.build.directory}/jacoco.exec</dataFile>
-          <outputDirectory>${project.reporting.outputDirectory}/jacoco</outputDirectory>
-          <reports>
-            <report>html</report>
-            <report>xml</report>
-            <report>csv</report>
-          </reports>
-          <excludes>
-            <!-- exclude any generated sources or test utilities if they ever get packaged under main -->
-            <exclude>**/generated/**</exclude>
-          </excludes>
-        </configuration>
-      </plugin>
+      <!-- moved to 'coverage' profile -->
     </plugins>
   </build>
 
@@ -304,6 +263,55 @@
                 </goals>
               </execution>
             </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>metrics</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.jacoco</groupId>
+            <artifactId>jacoco-maven-plugin</artifactId>
+            <version>${plugin.jacoco.version}</version>
+            <executions>
+              <execution>
+                <id>prepare-agent</id>
+                <goals>
+                  <goal>prepare-agent</goal>
+                </goals>
+              </execution>
+              <execution>
+                <id>report</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>report</goal>
+                </goals>
+                <configuration>
+                  <excludes>
+                    <!-- Exclude mapper utilities from coverage -->
+                    <exclude>**/*Mapper*.class</exclude>
+                    <!-- Exclude DTOs package from coverage -->
+                    <exclude>**/processor/dtos/**</exclude>
+                  </excludes>
+                </configuration>
+              </execution>
+            </executions>
+            <configuration>
+              <!-- Only cover main sources of this module -->
+              <dataFile>${project.build.directory}/jacoco.exec</dataFile>
+              <outputDirectory>${project.reporting.outputDirectory}/jacoco</outputDirectory>
+              <reports>
+                <report>html</report>
+                <report>xml</report>
+                <report>csv</report>
+              </reports>
+              <excludes>
+                <!-- exclude any generated sources or test utilities if they ever get packaged under main -->
+                <exclude>**/generated/**</exclude>
+              </excludes>
+            </configuration>
           </plugin>
         </plugins>
       </build>

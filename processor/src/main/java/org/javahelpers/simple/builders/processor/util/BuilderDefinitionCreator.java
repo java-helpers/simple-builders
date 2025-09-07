@@ -37,12 +37,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.Modifier;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
+import javax.lang.model.element.*;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
@@ -74,10 +69,13 @@ public class BuilderDefinitionCreator {
 
     BuilderDefinitionDto result = new BuilderDefinitionDto();
     String packageName = elementUtils.getPackageOf(annotatedType).getQualifiedName().toString();
-    String simpleClassName =
-        StringUtils.removeStart(annotatedElement.getSimpleName().toString(), packageName + ".");
+    String simpleClassName = annotatedType.getSimpleName().toString();
     result.setBuilderTypeName(new TypeName(packageName, simpleClassName + BUILDER_SUFFIX));
     result.setBuildingTargetTypeName(new TypeName(packageName, simpleClassName));
+
+    // Extract generics from the annotated type via mapper (stream-based)
+    JavaLangMapper.map2GenericParameterDtos(annotatedType, elementUtils, typeUtils)
+        .forEach(result::addGeneric);
 
     List<? extends Element> allMembers = elementUtils.getAllMembers(annotatedType);
     List<ExecutableElement> methods = ElementFilter.methodsIn(allMembers);
@@ -134,36 +132,47 @@ public class BuilderDefinitionCreator {
     return Optional.of(result);
   }
 
-  private static Optional<FieldDto> createFieldDto(
-      ExecutableElement mth, Elements elementUtils, Types typeUtils) {
-    String methodName = mth.getSimpleName().toString();
-    String fieldName = StringUtils.uncapitalize(StringUtils.removeStart(methodName, "set"));
-
-    FieldDto result = new FieldDto();
-    result.setFieldName(fieldName);
-    List<? extends VariableElement> parameters = mth.getParameters();
-    if (parameters.size() != 1) {
-      // TODO: Logging
-      // Sollte eigentlich nie vorkommen, da das vorher raus gefiltert wurde
-      return Optional.empty();
+  private static void addAdditionalHelperMethodsForField(
+      FieldDto result, String fieldName, TypeName fieldType) {
+    if (isList(fieldType)) {
+      result.addMethod(
+          createFieldSetterWithTransform(
+              fieldName,
+              "List.of(%s)",
+              new TypeNameArray(fieldType.getInnerType().get(), false),
+              result.getFieldGenerics()));
+      return;
     }
-    VariableElement fieldParameter = parameters.get(0);
-    TypeMirror fieldTypeMirror = fieldParameter.asType();
-    TypeElement fieldTypeElement = (TypeElement) typeUtils.asElement(fieldTypeMirror);
-
-    // extracting type of field
-    MethodParameterDto fieldParameterDto =
-        map2MethodParameter(fieldParameter, elementUtils, typeUtils);
-    if (fieldParameterDto == null) {
-      // TODO: Logging
-      return Optional.empty();
+    if (isSet(fieldType)) {
+      result.addMethod(
+          createFieldSetterWithTransform(
+              fieldName,
+              "Set.of(%s)",
+              new TypeNameArray(fieldType.getInnerType().get(), true),
+              result.getFieldGenerics()));
+      return;
     }
-    TypeName fieldType = fieldParameterDto.getParameterType();
+    if (isMap(fieldType)) {
+      // TODO MAP (having 2 inner classes, TypeNameGeneric is not able to address that yet)
+    }
+  }
 
-    // simple setter
-    result.addMethod(createFieldSetter(fieldName, fieldType));
-
-    // setting value by builder
+  private static void addConsumerMethodsForField(
+      FieldDto result,
+      String fieldName,
+      TypeName fieldType,
+      VariableElement fieldParameter,
+      TypeElement fieldTypeElement,
+      Elements elementUtils,
+      Types typeUtils) {
+    // Do not generate supplier methods for generic type variables (e.g., T)
+    if (fieldType instanceof TypeNameVariable) {
+      return;
+    }
+    // Skip consumer generation for functional interfaces
+    if (isFunctionalInterface(fieldTypeElement)) {
+      return;
+    }
     Optional<TypeName> builderTypeOpt = findBuilderType(fieldParameter, elementUtils, typeUtils);
     if (builderTypeOpt.isPresent()) {
       TypeName builderType = builderTypeOpt.get();
@@ -180,32 +189,84 @@ public class BuilderDefinitionCreator {
       result.addMethod(
           createFieldConsumerWithBuilder(
               fieldName, map2TypeName(ArrayListBuilder.class), fieldType.getInnerType().get()));
-      result.addMethod(
-          createFieldSetterWithTransform(
-              fieldName, "List.of(%s)", new TypeNameArray(fieldType.getInnerType().get(), false)));
     } else if (isMap(fieldType)) {
       // TODO MAP (having 2 inner classes, TypeNameGeneric is not able to adress that yet)
     } else if (isSet(fieldType)) {
       result.addMethod(
           createFieldConsumerWithBuilder(
               fieldName, map2TypeName(HashSetBuilder.class), fieldType.getInnerType().get()));
-      result.addMethod(
-          createFieldSetterWithTransform(
-              fieldName, "Set.of(%s)", new TypeNameArray(fieldType.getInnerType().get(), true)));
     }
+  }
 
-    // setting value by supplier
-    result.addMethod(createFieldSupplier(fieldName, fieldType));
+  private static void addSupplierMethodsForField(
+      FieldDto result, String fieldName, TypeName fieldType, TypeElement fieldTypeElement) {
+    // Skip supplier generation for functional interfaces
+    if (isFunctionalInterface(fieldTypeElement)) {
+      return;
+    }
+    result.addMethod(createFieldSupplier(fieldName, fieldType, result.getFieldGenerics()));
+  }
+
+  private static Optional<FieldDto> createFieldDto(
+      ExecutableElement mth, Elements elementUtils, Types typeUtils) {
+    String methodName = mth.getSimpleName().toString();
+    String fieldName = StringUtils.uncapitalize(StringUtils.removeStart(methodName, "set"));
+
+    FieldDto result = new FieldDto();
+    result.setFieldName(fieldName);
+    List<? extends VariableElement> parameters = mth.getParameters();
+    if (parameters.size() != 1) {
+      // TODO: Logging
+      // Sollte eigentlich nie vorkommen, da das vorher raus gefiltert wurde
+      return Optional.empty();
+    }
+    VariableElement fieldParameter = parameters.get(0);
+    TypeMirror fieldTypeMirror = fieldParameter.asType();
+    Element rawElement = typeUtils.asElement(fieldTypeMirror);
+    TypeElement fieldTypeElement = rawElement instanceof TypeElement te ? te : null;
+
+    // Extract only the @param Javadoc for the single setter parameter (if present)
+    String fullJavaDoc = elementUtils.getDocComment(mth);
+    String parameterJavaDocExtracted =
+        JavaLangAnalyser.extractParamJavaDoc(fullJavaDoc, fieldParameter);
+    String parameterJavaDoc =
+        parameterJavaDocExtracted == null ? fieldName : parameterJavaDocExtracted;
+    result.setJavaDoc(parameterJavaDoc);
+
+    // extracting type of field
+    MethodParameterDto fieldParameterDto =
+        map2MethodParameter(fieldParameter, elementUtils, typeUtils);
+    if (fieldParameterDto == null) {
+      // TODO: Logging
+      return Optional.empty();
+    }
+    TypeName fieldType = fieldParameterDto.getParameterType();
+
+    // Extract generics declared on the setter itself (field-specific), e.g., <T extends
+    // Serializable>
+    List<GenericParameterDto> fieldGenerics =
+        mth.getTypeParameters().stream()
+            .map(tp -> JavaLangMapper.map2GenericParameterDto(tp, elementUtils, typeUtils))
+            .toList();
+    result.setFieldGenerics(fieldGenerics);
+
+    // simple setter
+    result.addMethod(createFieldSetterWithTransform(fieldName, null, fieldType, fieldGenerics));
+
+    // add consumer/supplier generation via helpers
+    addConsumerMethodsForField(
+        result, fieldName, fieldType, fieldParameter, fieldTypeElement, elementUtils, typeUtils);
+    addSupplierMethodsForField(result, fieldName, fieldType, fieldTypeElement);
+    addAdditionalHelperMethodsForField(result, fieldName, fieldType);
 
     return Optional.of(result);
   }
 
-  private static MethodDto createFieldSetter(String fieldName, TypeName fieldType) {
-    return createFieldSetterWithTransform(fieldName, null, fieldType);
-  }
-
   private static MethodDto createFieldSetterWithTransform(
-      String fieldName, String transform, TypeName fieldType) {
+      String fieldName,
+      String transform,
+      TypeName fieldType,
+      List<GenericParameterDto> fieldGenerics) {
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName(fieldName);
     parameter.setParameterTypeName(fieldType);
@@ -214,6 +275,7 @@ public class BuilderDefinitionCreator {
     methodDto.addParameter(parameter);
     methodDto.setModifier(Modifier.PUBLIC);
     methodDto.setMethodType(MethodTypes.PROXY);
+    methodDto.setMethodGenerics(fieldGenerics);
     String params;
     if (StringUtils.isBlank(transform)) {
       params = parameter.getParameterName();
@@ -282,7 +344,8 @@ public class BuilderDefinitionCreator {
     return methodDto;
   }
 
-  private static MethodDto createFieldSupplier(String fieldName, TypeName fieldType) {
+  private static MethodDto createFieldSupplier(
+      String fieldName, TypeName fieldType, List<GenericParameterDto> fieldGenerics) {
     TypeNameGeneric supplierType = new TypeNameGeneric(map2TypeName(Supplier.class), fieldType);
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName(fieldName + "Supplier");
@@ -292,6 +355,7 @@ public class BuilderDefinitionCreator {
     methodDto.addParameter(parameter);
     methodDto.setModifier(Modifier.PUBLIC);
     methodDto.setMethodType(MethodTypes.SUPPLIER);
+    methodDto.setMethodGenerics(fieldGenerics);
     methodDto.setCode(
         """
         instance.$dtoMethod:N($dtoMethodParam:N.get());
