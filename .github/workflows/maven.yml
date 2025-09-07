@@ -18,6 +18,10 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      checks: write
 
     steps:
     - uses: actions/checkout@v4
@@ -28,4 +32,43 @@ jobs:
         distribution: 'temurin'
         cache: maven
     - name: Build with Maven
-      run: mvn -B package --file pom.xml
+      run: mvn -B verify -Pmetrics --file pom.xml
+
+    - name: Upload JaCoCo HTML report (processor)
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: jacoco-report-html-processor
+        path: processor/target/site/jacoco/
+        if-no-files-found: warn
+
+    - name: Upload JaCoCo XML report (processor)
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: jacoco-report-xml-processor
+        path: processor/target/site/jacoco/jacoco.xml
+        if-no-files-found: warn
+
+    - name: Upload test results to Codecov (processor)
+      if: always()
+      uses: codecov/test-results-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: |
+          processor/target/surefire-reports/*.xml
+          processor/target/failsafe-reports/*.xml
+        if-no-files-found: warn
+        fail_ci_if_error: true
+        verbose: false
+
+    - name: Upload coverage to Codecov (processor)
+      if: always()
+      uses: codecov/codecov-action@v5
+      with:
+        fail_ci_if_error: true
+        files: processor/target/site/jacoco/jacoco.xml
+        flags: processor
+        name: codecov-upload
+        verbose: false
+        token: ${{ secrets.CODECOV_TOKEN }}

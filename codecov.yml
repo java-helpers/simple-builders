@@ -1,0 +1,18 @@
+codecov:
+  require_ci_to_pass: false
+
+coverage:
+  status:
+    project:
+      default:
+        target: 80%
+    patch:
+      default:
+        target: 90%
+        threshold: 5%
+
+comment:
+  layout: "condensed_header, condensed_files, condensed_footer"
+  hide_project_coverage: TRUE
+
+# JaCoCo/Maven will define included/excluded files via reports; no extra Codecov ignores here.

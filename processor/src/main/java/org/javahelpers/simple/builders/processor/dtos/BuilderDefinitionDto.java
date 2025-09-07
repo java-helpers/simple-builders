@@ -25,6 +25,7 @@
 package org.javahelpers.simple.builders.processor.dtos;
 
 import java.util.LinkedList;
+import java.util.List;
 
 /** BuilderDefinitionDto holds all information for generating a builder. */
 public class BuilderDefinitionDto {
@@ -34,17 +35,20 @@ public class BuilderDefinitionDto {
   /** Type of builder. Containing package and name of DTO. */
   private TypeName builderTypeName;
 
+  /** Generic parameters declared on the target DTO (e.g., <T extends Number, U>). */
+  private final List<GenericParameterDto> generics = new LinkedList<>();
+
   /**
    * List of all methods of target DTO which are supported by builder and not targeting a specific
    * DTO field.
    */
-  private final LinkedList<MethodDto> methodsForBuilder = new LinkedList<>();
+  private final List<MethodDto> methodsForBuilder = new LinkedList<>();
 
   /**
    * List of all fields of target DTO which are supported by builder. A field could be supported by
-   * several functions in builder.
+   * multiple functions in builder.
    */
-  private final LinkedList<FieldDto> setterFieldsForBuilder = new LinkedList<>();
+  private final List<FieldDto> setterFieldsForBuilder = new LinkedList<>();
 
   /**
    * Getting type of builder.
@@ -99,7 +103,7 @@ public class BuilderDefinitionDto {
    * @return list of methods with type {@code
    *     org.javahelpers.simple.builders.internal.dtos.MethodDto}
    */
-  public LinkedList<MethodDto> getMethodsForBuilder() {
+  public List<MethodDto> getMethodsForBuilder() {
     return methodsForBuilder;
   }
 
@@ -117,7 +121,17 @@ public class BuilderDefinitionDto {
    *
    * @return list of fields with type {@code org.javahelpers.simple.builders.internal.dtos.FieldDto}
    */
-  public LinkedList<FieldDto> getSetterFieldsForBuilder() {
+  public List<FieldDto> getSetterFieldsForBuilder() {
     return setterFieldsForBuilder;
+  }
+
+  /** Adds a generic parameter definition. */
+  public void addGeneric(GenericParameterDto generic) {
+    generics.add(generic);
+  }
+
+  /** Returns the list of generic parameters of the target DTO, in declared order. */
+  public List<GenericParameterDto> getGenerics() {
+    return generics;
   }
 }

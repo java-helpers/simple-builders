@@ -24,13 +24,14 @@
 
 package org.javahelpers.simple.builders.processor.util;
 
-import static org.javahelpers.simple.builders.processor.dtos.TypeNamePrimitive.PrimitiveTypeEnum.BOOLEAN;
-
 import com.palantir.javapoet.ArrayTypeName;
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.CodeBlock;
 import com.palantir.javapoet.ParameterizedTypeName;
 import com.palantir.javapoet.TypeName;
+import com.palantir.javapoet.TypeVariableName;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.javahelpers.simple.builders.processor.dtos.*;
@@ -39,6 +40,23 @@ import org.javahelpers.simple.builders.processor.dtos.*;
 public final class JavapoetMapper {
 
   private JavapoetMapper() {}
+
+  /**
+   * Maps a list of simple-builder DTO type names to an array of JavaPoet {@code TypeName}s.
+   * Primitives are boxed because JavaPoet requires reference types for type arguments.
+   */
+  public static TypeName[] map2TypeArgumentsArray(
+      List<org.javahelpers.simple.builders.processor.dtos.TypeName> typeArguments) {
+    java.util.List<TypeName> args = new java.util.ArrayList<>(typeArguments.size());
+    for (org.javahelpers.simple.builders.processor.dtos.TypeName tn : typeArguments) {
+      TypeName mapped = map2ParameterType(tn);
+      if (mapped.isPrimitive()) {
+        mapped = mapped.box();
+      }
+      args.add(mapped);
+    }
+    return args.toArray(new TypeName[0]);
+  }
 
   /**
    * Mapper for parameterType. Maps into javapoet classes.
@@ -64,9 +82,9 @@ public final class JavapoetMapper {
         case SHORT -> TypeName.SHORT;
         default -> null;
       };
-    } else if (parameterType.getInnerType().isPresent()) {
-      return ParameterizedTypeName.get(
-          classNameParameter, map2ParameterType(parameterType.getInnerType().get()));
+    } else if (parameterType instanceof TypeNameGeneric param) {
+      TypeName[] typeArgs = map2TypeArgumentsArray(param.getInnerTypeArguments());
+      return ParameterizedTypeName.get(classNameParameter, typeArgs);
     }
     return classNameParameter;
   }
@@ -80,6 +98,31 @@ public final class JavapoetMapper {
   public static ClassName map2ClassName(
       org.javahelpers.simple.builders.processor.dtos.TypeName typeName) {
     return ClassName.get(typeName.getPackageName(), typeName.getClassName());
+  }
+
+  public static ParameterizedTypeName map2ParameterizedTypeName(
+      org.javahelpers.simple.builders.processor.dtos.TypeName baseType,
+      List<GenericParameterDto> builderGenerics) {
+    ClassName baseTypeClassName = map2ClassName(baseType);
+    return ParameterizedTypeName.get(
+        baseTypeClassName, map2TypeVariables(builderGenerics).toArray(new TypeVariableName[0]));
+  }
+
+  public static List<TypeVariableName> map2TypeVariables(
+      List<GenericParameterDto> builderGenerics) {
+    List<TypeVariableName> javapoetGenerics = new ArrayList<>();
+    for (GenericParameterDto g : builderGenerics) {
+      List<TypeName> bounds = new ArrayList<>();
+      for (org.javahelpers.simple.builders.processor.dtos.TypeName b : g.getUpperBounds()) {
+        bounds.add(map2ParameterType(b));
+      }
+      TypeVariableName tv =
+          bounds.isEmpty()
+              ? TypeVariableName.get(g.getName())
+              : TypeVariableName.get(g.getName(), bounds.toArray(new TypeName[0]));
+      javapoetGenerics.add(tv);
+    }
+    return javapoetGenerics;
   }
 
   /**

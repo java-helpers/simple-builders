@@ -4,13 +4,14 @@
 
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>org.javahelpers</groupId>
+  <groupId>io.github.java-helpers</groupId>
   <artifactId>simple-builders</artifactId>
-  <version>1.0</version>
+  <version>0.2.0</version>
   <packaging>pom</packaging>
 
   <name>Simple Builders</name>
   <description>Simple Builder is a utility package for generating builders for dtos in maven generate-sources phase.</description>
+  <url>https://github.com/java-helpers/simple-builders</url>
   
   <licenses>
     <license>
@@ -22,24 +23,31 @@
   
   <inceptionYear>2025</inceptionYear>
   
+  <scm>
+    <connection>scm:git:git://github.com/java-helpers/simple-builders.git</connection>
+    <developerConnection>scm:git:ssh://github.com/java-helpers/simple-builders.git</developerConnection>
+    <url>https://github.com/java-helpers/simple-builders/tree/main</url>
+    <tag>HEAD</tag>
+  </scm>
+  
   <issueManagement>
     <system>GitHub</system>
     <url>https://github.com/java-helpers/simple-builders/issues</url>
   </issueManagement>
-  
-  <scm>
-    <connection>scm:git:https://github.com/java-helpers/simple-builders.git</connection>
-    <developerConnection>scm:git:https://github.com/java-helpers/simple-builders.git</developerConnection>
-    <url>https://github.com/java-helpers/simple-builders/simple-builders</url>
-  </scm>
+
+  <ciManagement>
+    <system>Github Actions</system>
+    <url>https://github.com/java-helpers/simple-builders/actions</url>
+  </ciManagement>
 
   <developers>
     <developer>
       <name>Andreas Igel</name>
       <id>aigel</id>
-      <email>Andreas.Igel@Computacenter.com</email>
+      <email>Andreas.Igel@gmx.com</email>
       <roles>
         <role>Java Developer</role>
+        <role>Java Architect</role>
       </roles>
     </developer>
   </developers>
@@ -52,10 +60,95 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    
+    <!-- Java and Compiler Properties -->
     <java.version>17</java.version>
     <maven.compiler.source>${java.version}</maven.compiler.source>
     <maven.compiler.target>${java.version}</maven.compiler.target>
     <maven.compiler.release>${java.version}</maven.compiler.release>
+    
+    <!-- Plugin Versions -->
+    <plugin.maven.compiler.version>3.13.0</plugin.maven.compiler.version>
+    <plugin.maven.deploy.version>3.1.1</plugin.maven.deploy.version>
+    <plugin.maven.site.version>3.21.0</plugin.maven.site.version>
+    <plugin.maven.source.version>3.3.1</plugin.maven.source.version>
+    <plugin.maven.javadoc.version>3.11.2</plugin.maven.javadoc.version>
+    <plugin.maven.gpg.version>3.2.7</plugin.maven.gpg.version>
+    <plugin.central.publishing.version>0.8.0</plugin.central.publishing.version>
+    <plugin.code-format.version>2.25</plugin.code-format.version>
   </properties>
 
+  <build>
+    <pluginManagement>
+      <plugins>
+        <!-- Compiler Plugin -->
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>${plugin.maven.compiler.version}</version>
+          <configuration>
+            <source>${java.version}</source>
+            <target>${java.version}</target>
+            <release>${java.version}</release>
+          </configuration>
+        </plugin>
+        
+        <!-- Site Plugin -->
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-site-plugin</artifactId>
+          <version>${plugin.maven.site.version}</version>
+        </plugin>
+        
+        <!-- Code Formatting -->
+        <plugin>
+          <groupId>com.spotify.fmt</groupId>
+          <artifactId>fmt-maven-plugin</artifactId>
+          <version>${plugin.code-format.version}</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+    
+    <plugins>
+      <!-- Compiler Plugin -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+      </plugin>
+      
+      <!-- Code Formatting -->
+      <plugin>
+        <groupId>com.spotify.fmt</groupId>
+        <artifactId>fmt-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>format</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+  
+  <!-- Common profile for release builds -->
+  <profiles>
+    <profile>
+      <id>release</id>
+      <!-- Skip deployment for root POM -->
+       <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-deploy-plugin</artifactId>
+            <version>${plugin.maven.deploy.version}</version>
+            <configuration>
+              <skip>true</skip>
+            </configuration>
+          </plugin>
+        </plugins>
+       </build>
+      <!-- Other configuration moved to individual modules -->
+    </profile>
+  </profiles>
 </project>

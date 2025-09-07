@@ -33,20 +33,17 @@ import java.util.List;
 import java.util.Set;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.PrimitiveType;
-import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.SimpleTypeVisitor14;
 import javax.lang.model.util.Types;
-import org.javahelpers.simple.builders.processor.dtos.MethodParameterDto;
-import org.javahelpers.simple.builders.processor.dtos.TypeName;
-import org.javahelpers.simple.builders.processor.dtos.TypeNameArray;
-import org.javahelpers.simple.builders.processor.dtos.TypeNameGeneric;
-import org.javahelpers.simple.builders.processor.dtos.TypeNamePrimitive;
+import org.javahelpers.simple.builders.processor.dtos.*;
 
 /** Helper functions to create simple builder types from java.lang types. */
 public final class JavaLangMapper {
@@ -78,6 +75,26 @@ public final class JavaLangMapper {
     return new TypeName(clazz.getPackageName(), clazz.getSimpleName());
   }
 
+  /** Maps the declared type parameters of the given type element into GenericParameterDto list. */
+  public static List<GenericParameterDto> map2GenericParameterDtos(
+      TypeElement type, Elements elementUtils, Types typeUtils) {
+    return type.getTypeParameters().stream()
+        .map(tp -> map2GenericParameterDto(tp, elementUtils, typeUtils))
+        .toList();
+  }
+
+  /** Maps a single {@code TypeParameterElement} to {@code GenericParameterDto}. */
+  public static GenericParameterDto map2GenericParameterDto(
+      TypeParameterElement tp, Elements elementUtils, Types typeUtils) {
+    GenericParameterDto g = new GenericParameterDto();
+    g.setName(tp.getSimpleName().toString());
+    tp.getBounds().stream()
+        .filter(b -> !"java.lang.Object".equals(b.toString()))
+        .map(b -> extractType(b, elementUtils, typeUtils))
+        .forEach(g::addUpperBound);
+    return g;
+  }
+
   /**
    * Mapping a method parameter to {@code
    * org.javahelpers.simple.builders.processor.dtos.MethodParameterDto}.
@@ -97,6 +114,19 @@ public final class JavaLangMapper {
       return null;
     }
     result.setParameterTypeName(typeName);
+    return result;
+  }
+
+  /**
+   * Maps a list of {@code TypeMirror} to a list of simple-builder {@code TypeName}s using {@link
+   * #extractType(TypeMirror, Elements, Types)}.
+   */
+  private static List<TypeName> extractTypeForList(
+      List<TypeMirror> typeMirrors, Elements elementUtils, Types typeUtils) {
+    List<TypeName> result = new ArrayList<>(typeMirrors.size());
+    for (TypeMirror tm : typeMirrors) {
+      result.add(extractType(tm, elementUtils, typeUtils));
+    }
     return result;
   }
 
@@ -129,7 +159,7 @@ public final class JavaLangMapper {
             TypeName rawType = new TypeName(packageName, simpleClassName);
             TypeMirror enclosingType = t.getEnclosingType();
             TypeName enclosing =
-                (enclosingType.getKind() != TypeKind.NONE)
+                (enclosingType.getKind() != NONE)
                         && !t.asElement().getModifiers().contains(Modifier.STATIC)
                     ? enclosingType.accept(this, null)
                     : null;
@@ -140,12 +170,10 @@ public final class JavaLangMapper {
             List<TypeMirror> typesExtracted = new ArrayList<>(t.getTypeArguments());
             if (typesExtracted.isEmpty()) {
               return rawType;
-            } else if (typesExtracted.size() == 1) {
-              return new TypeNameGeneric(
-                  rawType, extractType(typesExtracted.get(0), elementUtils, typeUtils));
             } else {
-              // TODO: Multi-Type not supported yet
-              return rawType;
+              List<TypeName> argTypes = extractTypeForList(typesExtracted, elementUtils, typeUtils);
+              // Represent all generics uniformly
+              return new TypeNameGeneric(rawType, argTypes);
             }
           }
 
@@ -153,6 +181,12 @@ public final class JavaLangMapper {
           public TypeNameArray visitArray(ArrayType t, Void _p) {
             return new TypeNameArray(
                 extractType(t.getComponentType(), elementUtils, typeUtils), false);
+          }
+
+          @Override
+          public TypeName visitTypeVariable(TypeVariable t, Void _p) {
+            String name = t.asElement().getSimpleName().toString();
+            return new TypeNameVariable(name);
           }
 
           @Override

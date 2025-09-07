@@ -41,6 +41,12 @@ public class FieldDto {
   /** List of all methods in builder, which change the field. */
   private final List<MethodDto> fieldSetterMethodsList = new ArrayList<>();
 
+  /** Optional Javadoc of the field extracted from setter or constructor. */
+  private String javaDoc;
+
+  /** Method-level generics declared on the setter, to be reused in builder methods. */
+  private final List<GenericParameterDto> fieldGenerics = new ArrayList<>();
+
   /**
    * Getting name of field.
    *
@@ -94,5 +100,36 @@ public class FieldDto {
    */
   public void addMethod(MethodDto methodDto) {
     this.fieldSetterMethodsList.add(methodDto);
+  }
+
+  /**
+   * Getting extracted Javadoc.
+   *
+   * @return Javadoc text or null if none present
+   */
+  public String getJavaDoc() {
+    return javaDoc;
+  }
+
+  /**
+   * Setting extracted Javadoc.
+   *
+   * @param javaDoc Javadoc text
+   */
+  public void setJavaDoc(String javaDoc) {
+    this.javaDoc = javaDoc;
+  }
+
+  /** Returns generics declared on the setter (field-specific). */
+  public List<GenericParameterDto> getFieldGenerics() {
+    return fieldGenerics;
+  }
+
+  /** Replaces generics list with the provided entries. */
+  public void setFieldGenerics(List<GenericParameterDto> generics) {
+    this.fieldGenerics.clear();
+    if (generics != null) {
+      this.fieldGenerics.addAll(generics);
+    }
   }
 }
