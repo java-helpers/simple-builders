@@ -1005,42 +1005,6 @@ class BuilderProcessorTest {
   }
 
   @Test
-  void shouldNotGenerateSpecialMethodsForMapBeyondSetterAndSupplier() {
-    // Given
-    String packageName = "test";
-    String className = "HasMap";
-    String builderClassName = className + "Builder";
-
-    JavaFileObject sourceFile =
-        ProcessorTestUtils.simpleBuilderClass(
-            packageName,
-            className,
-            """
-                private java.util.Map<String, Integer> map;
-
-                public java.util.Map<String, Integer> getMap() { return map; }
-                public void setMap(java.util.Map<String, Integer> map) { this.map = map; }
-            """);
-
-    // When
-    Compilation compilation = compile(sourceFile);
-
-    // Then
-    String generatedCode = loadGeneratedSource(compilation, builderClassName);
-    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-
-    // Expect only direct setter and supplier; no varargs/consumer for Map
-    ProcessorAsserts.assertingResult(
-        generatedCode,
-        contains("public HasMapBuilder map("),
-        contains("mapSupplier)"),
-        notContains("map(String..."),
-        notContains("map(java.lang.String..."),
-        notContains("mapBuilderConsumer"),
-        notContains("mapConsumer"));
-  }
-
-  @Test
   void shouldNotGenerateConsumerForAbstractHelper() {
     // Given
     String packageName = "test";
