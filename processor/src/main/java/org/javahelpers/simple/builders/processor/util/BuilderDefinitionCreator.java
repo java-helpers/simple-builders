@@ -79,6 +79,9 @@ public class BuilderDefinitionCreator {
     result.setBuilderTypeName(new TypeName(packageName, simpleClassName + BUILDER_SUFFIX));
     result.setBuildingTargetTypeName(new TypeName(packageName, simpleClassName));
 
+    // Todo: extract Constructor and his fields. result needs to be filled im constructors and fields.
+
+    // Todo: moving into helper function
     List<? extends Element> allMembers = elementUtils.getAllMembers(annotatedType);
     List<ExecutableElement> methods = ElementFilter.methodsIn(allMembers);
 
@@ -86,6 +89,7 @@ public class BuilderDefinitionCreator {
       // nur public
       if (isMethodRelevantForBuilder(mth)) {
         if (isSetterForField(mth)) {
+          // Todo: we need to check setter-fields for duplication with constructor fields
           createFieldDto(mth, elementUtils, typeUtils).ifPresent(result::addField);
         } else {
           createMethodDto(mth, elementUtils, typeUtils).ifPresent(result::addMethod);
@@ -104,6 +108,7 @@ public class BuilderDefinitionCreator {
         && isNotStatic(mth);
   }
 
+  // Todo: remove, should not be supported anymore
   private static Optional<MethodDto> createMethodDto(
       ExecutableElement mth, Elements elementUtils, Types typeUtils) {
     String methodName = mth.getSimpleName().toString();
