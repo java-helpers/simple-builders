@@ -97,11 +97,6 @@ public class JavaCodeGenerator {
     classBuilder.addMethod(createConstructorWithInstance(dtoBaseClass, dtoTypeName));
     classBuilder.addMethod(createEmptyConstructor(dtoBaseClass, builderDef.getGenerics()));
 
-    // Generate Methods in Builder without being setter or getter
-    for (MethodDto methodDto : builderDef.getMethodsForBuilder()) {
-      classBuilder.addMethod(createMethod(methodDto, builderTypeName));
-    }
-
     // Generate Fields and Fieldspecific funtions in Builder
     for (FieldDto fieldDto : builderDef.getSetterFieldsForBuilder()) {
       List<MethodSpec> methodSpecs = createFieldMethods(fieldDto, builderTypeName);
@@ -259,11 +254,6 @@ public class JavaCodeGenerator {
     return fieldDto.getMethods().stream()
         .map(m -> createMethod(m, builderTypeName, fieldDto.getJavaDoc()))
         .toList();
-  }
-
-  private MethodSpec createMethod(MethodDto methodDto, com.palantir.javapoet.TypeName returnType) {
-    // TODO: Remove when switched to fields instead of instance in builder
-    return createMethod(methodDto, returnType, "");
   }
 
   private MethodSpec createMethod(

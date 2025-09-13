@@ -29,11 +29,9 @@ import static org.javahelpers.simple.builders.processor.util.AnnotationValidator
 import static org.javahelpers.simple.builders.processor.util.JavaLangAnalyser.*;
 import static org.javahelpers.simple.builders.processor.util.JavaLangMapper.map2MethodParameter;
 import static org.javahelpers.simple.builders.processor.util.JavaLangMapper.map2TypeName;
-import static org.javahelpers.simple.builders.processor.util.JavaLangMapper.mapRelevantModifier;
 import static org.javahelpers.simple.builders.processor.util.TypeNameAnalyser.*;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -92,8 +90,6 @@ public class BuilderDefinitionCreator {
         if (isSetterForField(mth)) {
           // Todo: we need to check setter-fields for duplication with constructor fields
           createFieldDto(mth, elementUtils, typeUtils).ifPresent(result::addField);
-        } else {
-          createMethodDto(mth, elementUtils, typeUtils).ifPresent(result::addMethod);
         }
       }
     }
@@ -108,37 +104,6 @@ public class BuilderDefinitionCreator {
         && hasNotAnnotation(IgnoreInBuilder.class, mth)
         && isNotPrivate(mth)
         && isNotStatic(mth);
-  }
-
-  // Todo: remove, should not be supported anymore
-  private static Optional<MethodDto> createMethodDto(
-      ExecutableElement mth, Elements elementUtils, Types typeUtils) {
-    String methodName = mth.getSimpleName().toString();
-    List<? extends VariableElement> parameters = mth.getParameters();
-
-    MethodDto result = new MethodDto();
-    result.setMethodName(methodName);
-    result.setModifier(mapRelevantModifier(mth.getModifiers()));
-    parameters.stream()
-        .map(v -> map2MethodParameter(v, elementUtils, typeUtils))
-        .forEach(result::addParameter);
-    if (result.getParameters().stream().anyMatch(Objects::isNull)) {
-      // TODO: Logging
-      return Optional.empty();
-    }
-
-    List<String> paramList =
-        result.getParameters().stream().map(MethodParameterDto::getParameterName).toList();
-    String paramListJoin = String.join(",", paramList);
-    result.setCode(
-        """
-        instance.$dtoMethod:N($dtoMethodParams:N);
-        return this;
-        """);
-    result.addArgument("dtoMethod", methodName);
-    result.addArgument("dtoMethodParams", paramListJoin);
-
-    return Optional.of(result);
   }
 
   private static void addAdditionalHelperMethodsForField(

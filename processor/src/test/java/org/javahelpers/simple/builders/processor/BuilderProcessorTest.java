@@ -365,33 +365,6 @@ class BuilderProcessorTest {
   }
 
   @Test
-  void shouldGenerateProxyWithMixedParamsAndArrayVarargs() {
-    // Given
-    String packageName = "test";
-    String className = "MixedProxy";
-    String builderClassName = className + "Builder";
-
-    JavaFileObject sourceFile =
-        ProcessorTestUtils.simpleBuilderClass(
-            packageName,
-            className,
-            """
-                public void doMixed(int a, String b, int[] nums) { /* no-op */ }
-            """);
-
-    // When
-    Compilation compilation = compile(sourceFile);
-
-    // Then
-    String generatedCode = loadGeneratedSource(compilation, builderClassName);
-    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-
-    // Expect last parameter mapped to varargs in builder signature and proper call
-    ProcessorAsserts.assertContaining(
-        generatedCode, "doMixed(int a, String b, int... nums)", "instance.doMixed(a,b,nums);");
-  }
-
-  @Test
   void shouldIncludeNestedPackageInClassJavadoc() {
     // Given
     String packageName = "test.nested";
@@ -516,13 +489,7 @@ class BuilderProcessorTest {
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
 
-    // PROXY method javadoc has @param for each parameter and @return
-    ProcessorAsserts.assertContaining(
-        generatedCode,
-        "Calling <code>doSomething</code> on dto-instance with parameters.",
-        "@param a",
-        "@param b",
-        "@return current instance of builder");
+    // Note: Proxy methods are no longer supported; do not assert proxy method javadoc here.
 
     // Setter method javadoc and code (default values, when nothing is set)
     ProcessorAsserts.assertContaining(generatedCode, "@param name name");
@@ -987,13 +954,11 @@ class BuilderProcessorTest {
             packageName,
             className,
             """
-                // valid proxy candidate
-                public void ok() {}
-
                 // valid setter
                 public void setOk(int ok) {}
 
                 // should be filtered
+                public void nonSetterMethods() {}
                 private void setHidden(int hidden) {}
                 public static void setUtil(int util) {}
                 public void setRisky(int risk) throws Exception {}
@@ -1007,13 +972,12 @@ class BuilderProcessorTest {
     // Then
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-    // Expect only ok() proxy to be present
+    // Expect only setter-derived methods to be present (no proxy methods)
     ProcessorAsserts.assertingResult(
         generatedCode,
-        contains("public HasVariousMethodsBuilder ok()"),
-        contains("instance.ok();"),
         contains("public HasVariousMethodsBuilder ok(int ok)"),
         contains("instance.setOk(ok);"),
+        notContains("nonSetterMethods"),
         notContains("hidden"),
         notContains("util(int util)"),
         notContains("risky(int risk)"),

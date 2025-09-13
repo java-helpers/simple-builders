@@ -46,12 +46,6 @@ public class BuilderDefinitionDto {
   private final List<GenericParameterDto> generics = new LinkedList<>();
 
   /**
-   * List of all methods of target DTO which are supported by builder and not targeting a specific
-   * DTO field.
-   */
-  private final LinkedList<MethodDto> methods = new LinkedList<>();
-
-  /**
    * List of all fields of target DTO which are supported by builder. A field could be supported by
    * multiple functions in builder.
    */
@@ -93,25 +87,6 @@ public class BuilderDefinitionDto {
    */
   public void setBuildingTargetTypeName(TypeName buildingTargetTypeName) {
     this.buildingTargetTypeName = buildingTargetTypeName;
-  }
-
-  /**
-   * Adding a method-definition to builder defintion.
-   *
-   * @param member {@code org.javahelpers.simple.builders.internal.dtos.MethodDto} to be added
-   */
-  public void addMethod(MethodDto member) {
-    methods.add(member);
-  }
-
-  /**
-   * Getting all definied methods in builder definition.
-   *
-   * @return list of methods with type {@code
-   *     org.javahelpers.simple.builders.internal.dtos.MethodDto}
-   */
-  public LinkedList<MethodDto> getMethodsForBuilder() {
-    return methods;
   }
 
   /**
