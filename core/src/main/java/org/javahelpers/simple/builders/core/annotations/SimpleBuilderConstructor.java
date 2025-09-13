@@ -29,7 +29,10 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/** Annotation to be placed on a constructor, if a specific constructor should be used for building the resulting DTO. */
+/**
+ * Annotation to be placed on a constructor, if a specific constructor should be used for building
+ * the resulting DTO.
+ */
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.CLASS)
 public @interface SimpleBuilderConstructor {}

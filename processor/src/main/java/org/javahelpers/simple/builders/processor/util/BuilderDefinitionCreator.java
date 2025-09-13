@@ -79,7 +79,8 @@ public class BuilderDefinitionCreator {
     JavaLangMapper.map2GenericParameterDtos(annotatedType, elementUtils, typeUtils)
         .forEach(result::addGeneric);
 
-    // Todo: extract Constructor and his fields. result needs to be filled im constructors and fields.
+    // Todo: extract Constructor and his fields. result needs to be filled im constructors and
+    // fields.
 
     // Todo: moving into helper function
     List<? extends Element> allMembers = elementUtils.getAllMembers(annotatedType);
