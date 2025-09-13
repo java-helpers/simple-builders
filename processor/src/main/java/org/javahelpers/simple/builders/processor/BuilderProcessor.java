@@ -41,7 +41,6 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
-import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 import org.javahelpers.simple.builders.processor.dtos.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 import org.javahelpers.simple.builders.processor.util.JavaCodeGenerator;
@@ -88,7 +87,18 @@ public class BuilderProcessor extends AbstractProcessor {
       // Fail fast: we already emitted an error in init(); do not attempt any processing.
       return true;
     }
-    for (Element annotatedElement : roundEnv.getElementsAnnotatedWith(SimpleBuilder.class)) {
+    // Resolve annotation as TypeElement to support environments where the Class<?> overload
+    // of getElementsAnnotatedWith is unavailable.
+    TypeElement simpleBuilderAnnotation =
+        elementUtils.getTypeElement(
+            org.javahelpers.simple.builders.core.annotations.SimpleBuilder.class
+                .getCanonicalName());
+    if (simpleBuilderAnnotation == null) {
+      // TODO: Logging
+      // Annotation type not on classpath; nothing to do this round.
+      return true;
+    }
+    for (Element annotatedElement : roundEnv.getElementsAnnotatedWith(simpleBuilderAnnotation)) {
       try {
         process(annotatedElement);
       } catch (BuilderException ex) {
