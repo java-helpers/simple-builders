@@ -26,7 +26,7 @@ package org.javahelpers.simple.builders.processor.dtos;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Definition of a field. Containing all information to generate methods in builder to set or modify
@@ -38,12 +38,6 @@ public class FieldDto {
 
   /** Type of field. Containing generic, name of package and class */
   private TypeName fieldType;
-
-  /**
-   * Name of setter in target object. Entry may be {@code null} if field is only been set via
-   * constructor
-   */
-  private String setterName;
 
   /** List of all methods in builder, which provide helpers to change the field. */
   private final List<MethodDto> fieldSetterMethodsList = new ArrayList<>();
@@ -72,12 +66,13 @@ public class FieldDto {
     this.fieldName = fieldName;
   }
 
-  public Optional<String> getSetterName() {
-    return Optional.ofNullable(setterName);
-  }
-
-  public void setSetterName(String setterName) {
-    this.setterName = setterName;
+  /**
+   * Getting name of setter method.
+   *
+   * @return name of setter for field
+   */
+  public String getSetterName() {
+    return "set" + StringUtils.capitalize(fieldName);
   }
 
   /**
