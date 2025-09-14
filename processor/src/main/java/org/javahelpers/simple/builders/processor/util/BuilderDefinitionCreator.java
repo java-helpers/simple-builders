@@ -86,11 +86,9 @@ public class BuilderDefinitionCreator {
 
     for (ExecutableElement mth : methods) {
       // nur public
-      if (isMethodRelevantForBuilder(mth)) {
-        if (isSetterForField(mth)) {
-          // Todo: we need to check setter-fields for duplication with constructor fields
-          createFieldDto(mth, elementUtils, typeUtils).ifPresent(result::addField);
-        }
+      if (isMethodRelevantForBuilder(mth) && JavaLangAnalyser.isSetterForField(mth)) {
+        // Todo: we need to check setter-fields for duplication with constructor fields
+        createFieldDto(mth, elementUtils, typeUtils).ifPresent(result::addField);
       }
     }
 
