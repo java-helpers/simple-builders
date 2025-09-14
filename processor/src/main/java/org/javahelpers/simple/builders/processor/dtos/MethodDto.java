@@ -27,7 +27,6 @@ package org.javahelpers.simple.builders.processor.dtos;
 import static org.javahelpers.simple.builders.processor.dtos.MethodTypes.PROXY;
 
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Optional;
 import javax.lang.model.element.Modifier;
 import org.apache.commons.lang3.StringUtils;
@@ -51,9 +50,6 @@ public class MethodDto {
 
   /** Definition of inner implementation for method. */
   private final MethodCodeDto methodCodeDto = new MethodCodeDto();
-
-  /** Method-level type parameters (e.g., <T extends Serializable>). */
-  private final List<GenericParameterDto> methodGenerics = new LinkedList<>();
 
   /**
    * Getting type of method for source code generation. Defaults to {@code
@@ -161,19 +157,6 @@ public class MethodDto {
    */
   public LinkedList<MethodParameterDto> getParameters() {
     return parameters;
-  }
-
-  /** Replaces method-level generic parameter list with the provided entries. */
-  public void setMethodGenerics(List<GenericParameterDto> generics) {
-    this.methodGenerics.clear();
-    if (generics != null) {
-      this.methodGenerics.addAll(generics);
-    }
-  }
-
-  /** Returns declared method-level generic parameters. */
-  public List<GenericParameterDto> getMethodGenerics() {
-    return methodGenerics;
   }
 
   /**

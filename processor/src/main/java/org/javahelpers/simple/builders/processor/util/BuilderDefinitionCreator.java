@@ -40,6 +40,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.annotations.IgnoreInBuilder;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
@@ -88,7 +89,8 @@ public class BuilderDefinitionCreator {
       // nur public
       if (isMethodRelevantForBuilder(mth) && JavaLangAnalyser.isSetterForField(mth)) {
         // Todo: we need to check setter-fields for duplication with constructor fields
-        createFieldDto(mth, elementUtils, typeUtils).ifPresent(result::addField);
+        createFieldDto(mth, result.getGenerics(), elementUtils, typeUtils)
+            .ifPresent(result::addField);
       }
     }
 
@@ -119,25 +121,18 @@ public class BuilderDefinitionCreator {
     if (isList(fieldType) && innerTypesCnt == 1) {
       result.addMethod(
           createFieldSetterWithTransform(
-              fieldName,
-              "List.of(%s)",
-              new TypeNameArray(innerTypes.get(0), false),
-              result.getFieldGenerics()));
+              fieldName, "List.of(%s)", new TypeNameArray(innerTypes.get(0), false)));
     } else if (isSet(fieldType) && innerTypesCnt == 1) {
       result.addMethod(
           createFieldSetterWithTransform(
-              fieldName,
-              "Set.of(%s)",
-              new TypeNameArray(innerTypes.get(0), true),
-              result.getFieldGenerics()));
+              fieldName, "Set.of(%s)", new TypeNameArray(innerTypes.get(0), true)));
     } else if (isMap(fieldType) && innerTypesCnt == 2) {
       TypeName mapEntryType =
           new TypeNameArray(
               new TypeNameGeneric("java.util", "Map.Entry", innerTypes.get(0), innerTypes.get(1)),
               false);
       result.addMethod(
-          createFieldSetterWithTransform(
-              fieldName, "Map.ofEntries(%s)", mapEntryType, result.getFieldGenerics()));
+          createFieldSetterWithTransform(fieldName, "Map.ofEntries(%s)", mapEntryType));
     }
   }
 
@@ -205,11 +200,14 @@ public class BuilderDefinitionCreator {
     if (isFunctionalInterface(fieldTypeElement)) {
       return;
     }
-    result.addMethod(createFieldSupplier(fieldName, fieldType, result.getFieldGenerics()));
+    result.addMethod(createFieldSupplier(fieldName, fieldType));
   }
 
   private static Optional<FieldDto> createFieldDto(
-      ExecutableElement mth, Elements elementUtils, Types typeUtils) {
+      ExecutableElement mth,
+      List<GenericParameterDto> dtoGenerics,
+      Elements elementUtils,
+      Types typeUtils) {
     String methodName = mth.getSimpleName().toString();
     String fieldName = StringUtils.uncapitalize(StringUtils.removeStart(methodName, "set"));
 
@@ -244,16 +242,23 @@ public class BuilderDefinitionCreator {
     TypeName fieldType = fieldParameterDto.getParameterType();
     result.setFieldType(fieldType);
 
-    // Extract generics declared on the setter itself (field-specific), e.g., <T extends
+    // Finding generics declared on the setter itself (field-specific), e.g., <T extends
     // Serializable>
-    List<GenericParameterDto> fieldGenerics =
-        mth.getTypeParameters().stream()
-            .map(tp -> JavaLangMapper.map2GenericParameterDto(tp, elementUtils, typeUtils))
-            .toList();
-    result.setFieldGenerics(fieldGenerics);
+    if (CollectionUtils.isNotEmpty(mth.getTypeParameters())) {
+      List<String> dtoGenericsNames =
+          dtoGenerics.stream().map(GenericParameterDto::getName).toList();
+      List<String> mthGenericsNames =
+          mth.getTypeParameters().stream().map(tp -> tp.getSimpleName().toString()).toList();
+      // If there are field-specific generics, no field in builder could be generated for it, so it
+      // needs to be ignored
+      if (CollectionUtils.containsAll(dtoGenericsNames, mthGenericsNames)) {
+        // TODO: Logging
+        return Optional.empty();
+      }
+    }
 
     // simple setter
-    result.addMethod(createFieldSetterWithTransform(fieldName, null, fieldType, fieldGenerics));
+    result.addMethod(createFieldSetterWithTransform(fieldName, null, fieldType));
 
     // add consumer/supplier generation via helpers
     addConsumerMethodsForField(
@@ -265,10 +270,7 @@ public class BuilderDefinitionCreator {
   }
 
   private static MethodDto createFieldSetterWithTransform(
-      String fieldName,
-      String transform,
-      TypeName fieldType,
-      List<GenericParameterDto> fieldGenerics) {
+      String fieldName, String transform, TypeName fieldType) {
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName(fieldName);
     parameter.setParameterTypeName(fieldType);
@@ -277,7 +279,6 @@ public class BuilderDefinitionCreator {
     methodDto.addParameter(parameter);
     methodDto.setModifier(Modifier.PUBLIC);
     methodDto.setMethodType(MethodTypes.PROXY);
-    methodDto.setMethodGenerics(fieldGenerics);
     String params;
     if (StringUtils.isBlank(transform)) {
       params = parameter.getParameterName();
@@ -346,8 +347,7 @@ public class BuilderDefinitionCreator {
     return methodDto;
   }
 
-  private static MethodDto createFieldSupplier(
-      String fieldName, TypeName fieldType, List<GenericParameterDto> fieldGenerics) {
+  private static MethodDto createFieldSupplier(String fieldName, TypeName fieldType) {
     TypeNameGeneric supplierType = new TypeNameGeneric(map2TypeName(Supplier.class), fieldType);
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName(fieldName + "Supplier");
@@ -357,7 +357,6 @@ public class BuilderDefinitionCreator {
     methodDto.addParameter(parameter);
     methodDto.setModifier(Modifier.PUBLIC);
     methodDto.setMethodType(MethodTypes.SUPPLIER);
-    methodDto.setMethodGenerics(fieldGenerics);
     methodDto.setCode(
         """
         this.$fieldName:N = $dtoMethodParam:N.get();

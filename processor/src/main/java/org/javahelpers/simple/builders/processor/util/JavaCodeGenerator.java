@@ -99,7 +99,7 @@ public class JavaCodeGenerator {
 
     // Generate backing fields for each DTO field (boxed types to allow null/unset)
     for (FieldDto fieldDto : builderDef.getSetterFieldsForBuilder()) {
-      FieldSpec fieldSpec = createFieldMember(builderDef, fieldDto);
+      FieldSpec fieldSpec = createFieldMember(fieldDto);
       classBuilder.addField(fieldSpec);
     }
 
@@ -202,29 +202,12 @@ public class JavaCodeGenerator {
     return cb.build();
   }
 
-  private FieldSpec createFieldMember(BuilderDefinitionDto builderDef, FieldDto fieldDto) {
+  private FieldSpec createFieldMember(FieldDto fieldDto) {
     com.palantir.javapoet.TypeName fieldType = map2ParameterType(fieldDto.getFieldType());
-    // Checking if the type could be extractedfrom the field, even if it is generic
-    if (fieldDto.getFieldType()
-        instanceof org.javahelpers.simple.builders.processor.dtos.TypeNameVariable varType) {
-      String varName = varType.getClassName();
-      boolean declaredOnDto =
-          builderDef.getGenerics().stream().anyMatch(g -> g.getName().equals(varName));
-      if (!declaredOnDto) {
-        // Because the Generics are created on base of existing classes, this should be possible
-        // TODO Add Lgging here
-        // Ensure havin no Builder-Generation error in this case, so downgrade to object
-        fieldType = ClassName.get("java.lang", "Object");
-      }
-    }
     if (fieldType.isPrimitive()) {
       fieldType = fieldType.box();
     }
-    if (!fieldDto.getFieldGenerics().isEmpty()) {
-      fieldType = map2GenericParameterDto(fieldDto.getFieldGenerics().getFirst().getUpperBounds().getFirst());
-    }
-    FieldSpec.Builder fsb = FieldSpec.builder(fieldType, fieldDto.getFieldName(), Modifier.PRIVATE);
-    return fsb.build();
+    return FieldSpec.builder(fieldType, fieldDto.getFieldName(), Modifier.PRIVATE).build();
   }
 
   private MethodSpec createMethodBuild(
@@ -243,13 +226,11 @@ public class JavaCodeGenerator {
     } else {
       mb.addStatement("$1T result = new $2T<>()", returnType, dtoBaseClass);
     }
-/*
     for (FieldDto f : fields) {
       mb.beginControlFlow("if (this.$N != null)", f.getFieldName())
           .addStatement("result.$N(this.$N)", f.getSetterName(), f.getFieldName())
           .endControlFlow();
     }
- */
     mb.addStatement("return result");
     return mb.build();
   }
@@ -295,10 +276,6 @@ public class JavaCodeGenerator {
     MethodSpec.Builder methodBuilder =
         MethodSpec.methodBuilder(methodDto.getMethodName()).returns(returnType);
     methodDto.getModifier().ifPresent(methodBuilder::addModifiers);
-    // add method-level generics if present (e.g., <T extends Serializable>)
-    if (!methodDto.getMethodGenerics().isEmpty()) {
-      methodBuilder.addTypeVariables(map2TypeVariables(methodDto.getMethodGenerics()));
-    }
     int maxIndexParameters = methodDto.getParameters().size() - 1;
 
     // Adding javadoc for method

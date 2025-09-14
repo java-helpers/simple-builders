@@ -1883,49 +1883,6 @@ class BuilderProcessorTest {
   }
 
   @Test
-  void shouldGenerateBuilderRetainingFieldspecificTypeParameter() {
-    // Given
-    String builderClassName = "GenericFieldDtoBuilder";
-
-    JavaFileObject genericDtoSource =
-        ProcessorTestUtils.forSource(
-            """
-                package test;
-                import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
-                @SimpleBuilder
-                public class GenericFieldDto {
-                  private java.io.Serializable value;
-                  public java.io.Serializable getValue() { return value; }
-                  public <T extends java.io.Serializable> void setValue(T value) { this.value = value; }
-                }
-            """);
-
-    // When
-    Compilation compilation = compile(genericDtoSource);
-
-    // Then
-    String generatedCode = loadGeneratedSource(compilation, builderClassName);
-    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-    ProcessorAsserts.assertingResult(
-        generatedCode,
-        // builder preserves type parameter T
-        contains("class GenericFieldDtoBuilder"),
-        // new import for Serializable
-        contains("import java.io.Serializable;"),
-        // setter keeps T
-        contains("public <T extends Serializable> GenericFieldDtoBuilder value(T value)"),
-        // supplier-based setter retains T
-        contains(
-            "public <T extends Serializable> GenericFieldDtoBuilder value(Supplier<T> valueSupplier)"),
-        // no direct consumer possible for unknown T (no empty ctor info)
-        notContains("GenericFieldDtoBuilder value(Consumer"),
-        // build returns GenericFieldDto
-        contains("public GenericFieldDto build()"),
-        // create() exposes no generic, because the Builder is not generic
-        contains("public static GenericFieldDtoBuilder create()"));
-  }
-
-  @Test
   void shouldNotGenerateBuilderWhenNestedBuilderInterfaceExists() {
     // Given: an annotated class that already declares a nested interface named like the would-be
     // builder
