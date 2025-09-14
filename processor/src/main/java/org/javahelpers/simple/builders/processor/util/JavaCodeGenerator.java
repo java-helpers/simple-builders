@@ -89,13 +89,19 @@ public class JavaCodeGenerator {
         TypeSpec.classBuilder(builderBaseClass)
             .addTypeVariables(map2TypeVariables(builderDef.getGenerics()))
             .addJavadoc(createJavadocForClass(dtoBaseClass))
-            .addSuperinterface(createInterfaceBuilderBase(dtoTypeName))
-            .addField(createFieldDtoInstance(dtoTypeName));
+            .addSuperinterface(createInterfaceBuilderBase(dtoTypeName));
 
-    // TODO: Constructors sollten in der BuilderDefinitionDto definiert werden, nur für Klassen mit
-    // leerem Constructor ist auch ein Builder mit leerem Constructor möglich
-    classBuilder.addMethod(createConstructorWithInstance(dtoBaseClass, dtoTypeName));
-    classBuilder.addMethod(createEmptyConstructor(dtoBaseClass, builderDef.getGenerics()));
+    // Adding Constructors for builder
+    classBuilder.addMethod(
+        createConstructorWithInstance(
+            dtoBaseClass, dtoTypeName, builderDef.getSetterFieldsForBuilder()));
+    classBuilder.addMethod(createEmptyConstructor(dtoBaseClass));
+
+    // Generate backing fields for each DTO field (boxed types to allow null/unset)
+    for (FieldDto fieldDto : builderDef.getSetterFieldsForBuilder()) {
+      FieldSpec fieldSpec = createFieldMember(builderDef, fieldDto);
+      classBuilder.addField(fieldSpec);
+    }
 
     // Generate Fields and Fieldspecific funtions in Builder
     for (FieldDto fieldDto : builderDef.getSetterFieldsForBuilder()) {
@@ -104,14 +110,15 @@ public class JavaCodeGenerator {
     }
 
     // Adding builder-specific methods
-    classBuilder.addMethod(createMethodBuild(dtoTypeName));
     classBuilder.addMethod(
-        createMethodStaticCreate(
-            builderBaseClass,
-            builderTypeName,
+        createMethodBuild(
             dtoBaseClass,
             dtoTypeName,
+            builderDef.getSetterFieldsForBuilder(),
             builderDef.getGenerics()));
+    classBuilder.addMethod(
+        createMethodStaticCreate(
+            builderBaseClass, builderTypeName, dtoBaseClass, builderDef.getGenerics()));
 
     // Adding annotations
     classBuilder.addAnnotation(createAnnotationGenerated());
@@ -151,14 +158,7 @@ public class JavaCodeGenerator {
         .build();
   }
 
-  private FieldSpec createFieldDtoInstance(com.palantir.javapoet.TypeName dtoTypeName) {
-    return FieldSpec.builder(dtoTypeName, "instance", Modifier.PRIVATE, Modifier.FINAL)
-        .addJavadoc("Inner instance of builder.")
-        .build();
-  }
-
-  private MethodSpec createEmptyConstructor(
-      ClassName dtoClass, List<GenericParameterDto> generics) {
+  private MethodSpec createEmptyConstructor(ClassName dtoClass) {
     MethodSpec.Builder constructorBuilder =
         MethodSpec.constructorBuilder()
             .addModifiers(Modifier.PUBLIC)
@@ -168,49 +168,97 @@ public class JavaCodeGenerator {
             """,
                 dtoClass.packageName(),
                 dtoClass);
-    if (generics.isEmpty()) {
-      constructorBuilder.addStatement("this.instance = new $1T()", dtoClass);
-    } else {
-      // Use diamond operator only if the DTO is generic; otherwise, use raw constructor
-      constructorBuilder.addStatement("this.instance = new $1T<>()", dtoClass);
-    }
     return constructorBuilder.build();
   }
 
   private MethodSpec createConstructorWithInstance(
-      ClassName dtoBaseClass, com.palantir.javapoet.TypeName dtoType) {
-    return MethodSpec.constructorBuilder()
-        .addModifiers(Modifier.PUBLIC)
-        .addParameter(dtoType, "instance")
-        .addStatement("this.instance = instance")
-        .addJavadoc(
-            """
+      ClassName dtoBaseClass, com.palantir.javapoet.TypeName dtoType, List<FieldDto> fields) {
+    MethodSpec.Builder cb =
+        MethodSpec.constructorBuilder()
+            .addModifiers(Modifier.PUBLIC)
+            .addParameter(dtoType, "instance")
+            .addJavadoc(
+                """
             Initialisation of builder for {@code $1N.$2T} by a instance.
 
             @param instance object instance for initialisiation
             """,
-            dtoBaseClass.packageName(),
-            dtoBaseClass)
-        .build();
+                dtoBaseClass.packageName(),
+                dtoBaseClass);
+
+    for (FieldDto f : fields) {
+      String cap = org.apache.commons.lang3.StringUtils.capitalize(f.getFieldName());
+      boolean isPrimitiveBoolean =
+          f.getFieldType()
+                  instanceof org.javahelpers.simple.builders.processor.dtos.TypeNamePrimitive
+              && ((org.javahelpers.simple.builders.processor.dtos.TypeNamePrimitive)
+                          f.getFieldType())
+                      .getType()
+                  == org.javahelpers.simple.builders.processor.dtos.TypeNamePrimitive
+                      .PrimitiveTypeEnum.BOOLEAN;
+      String getter = (isPrimitiveBoolean ? "is" : "get") + cap;
+      cb.addStatement("this.$N = instance.$N()", f.getFieldName(), getter);
+    }
+    return cb.build();
   }
 
-  private MethodSpec createMethodBuild(com.palantir.javapoet.TypeName returnType) {
-    return MethodSpec.methodBuilder("build")
-        .addModifiers(PUBLIC)
-        .returns(returnType)
-        .addAnnotation(Override.class)
-        .addCode(
-            """
-            return instance;
-            """)
-        .build();
+  private FieldSpec createFieldMember(BuilderDefinitionDto builderDef, FieldDto fieldDto) {
+    com.palantir.javapoet.TypeName fieldType = map2ParameterType(fieldDto.getFieldType());
+    // Checking if the type could be extractedfrom the field, even if it is generic
+    /*
+    if (fieldDto.getFieldType()
+        instanceof org.javahelpers.simple.builders.processor.dtos.TypeNameVariable varType) {
+      String varName = varType.getClassName();
+      boolean declaredOnDto =
+          builderDef.getGenerics().stream().anyMatch(g -> g.getName().equals(varName));
+      if (!declaredOnDto) {
+        // Because the Generics are created on base of existing classes, this should be possible
+        // TODO Add Lgging here
+        // Ensure havin no Builder-Generation error in this case, so downgrade to object
+        fieldType = ClassName.get("java.lang", "Object");
+      }
+    }*/
+    if (fieldType.isPrimitive()) {
+      fieldType = fieldType.box();
+    }
+    if (!fieldDto.getFieldGenerics().isEmpty()) {
+      fieldType = map2GenericParameterDto(fieldDto.getFieldGenerics().getFirst().getUpperBounds().getFirst());
+    }
+    FieldSpec.Builder fsb = FieldSpec.builder(fieldType, fieldDto.getFieldName(), Modifier.PRIVATE);
+    return fsb.build();
+  }
+
+  private MethodSpec createMethodBuild(
+      ClassName dtoBaseClass,
+      com.palantir.javapoet.TypeName returnType,
+      List<FieldDto> fields,
+      List<GenericParameterDto> generics) {
+    MethodSpec.Builder mb =
+        MethodSpec.methodBuilder("build")
+            .addModifiers(PUBLIC)
+            .returns(returnType)
+            .addAnnotation(Override.class);
+
+    if (generics.isEmpty()) {
+      mb.addStatement("$1T result = new $1T()", dtoBaseClass);
+    } else {
+      mb.addStatement("$1T result = new $2T<>()", returnType, dtoBaseClass);
+    }
+/*
+    for (FieldDto f : fields) {
+      mb.beginControlFlow("if (this.$N != null)", f.getFieldName())
+          .addStatement("result.$N(this.$N)", f.getSetterName(), f.getFieldName())
+          .endControlFlow();
+    }
+ */
+    mb.addStatement("return result");
+    return mb.build();
   }
 
   private MethodSpec createMethodStaticCreate(
       com.palantir.javapoet.ClassName builderBaseClass,
       com.palantir.javapoet.TypeName builderType,
       com.palantir.javapoet.ClassName dtoBaseClass,
-      com.palantir.javapoet.TypeName dtoType,
       List<GenericParameterDto> generics) {
     MethodSpec.Builder methodBuilder =
         MethodSpec.methodBuilder("create")
@@ -224,27 +272,12 @@ public class JavaCodeGenerator {
                 dtoBaseClass.packageName(),
                 dtoBaseClass);
     if (generics.isEmpty()) {
-      methodBuilder
-          .returns(builderBaseClass)
-          .addCode(
-              """
-        $1T instance = new $1T();
-        return new $2T(instance);
-        """,
-              dtoBaseClass,
-              builderBaseClass);
+      methodBuilder.returns(builderBaseClass).addCode("return new $1T();\n", builderBaseClass);
     } else {
       methodBuilder
           .returns(builderType)
-          .addCode(
-              """
-              $1T instance = new $2T<>();
-              return new $3T<>(instance);
-              """,
-              dtoType,
-              dtoBaseClass,
-              builderBaseClass)
-          .addTypeVariables(map2TypeVariables(generics));
+          .addTypeVariables(map2TypeVariables(generics))
+          .addCode("return new $1T<>();\n", builderBaseClass);
     }
     return methodBuilder.build();
   }

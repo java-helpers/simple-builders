@@ -244,6 +244,7 @@ public class BuilderDefinitionCreator {
       return Optional.empty();
     }
     TypeName fieldType = fieldParameterDto.getParameterType();
+    result.setFieldType(fieldType);
 
     // Extract generics declared on the setter itself (field-specific), e.g., <T extends
     // Serializable>
@@ -287,10 +288,10 @@ public class BuilderDefinitionCreator {
     }
     methodDto.setCode(
         """
-        instance.$dtoMethod:N($dtoMethodParams:N);
+        this.$fieldName:N = $dtoMethodParams:N;
         return this;
         """);
-    methodDto.addArgument("dtoMethod", methodDto.createFieldSetterMethodName());
+    methodDto.addArgument("fieldName", fieldName);
     methodDto.addArgument("dtoMethodParams", params);
     return methodDto;
   }
@@ -309,10 +310,10 @@ public class BuilderDefinitionCreator {
         """
         $helperType:T consumer = new $helperType:T();
         $dtoMethodParam:N.accept(consumer);
-        instance.$dtoMethod:N(consumer);
+        this.$fieldName:N = consumer;
         return this;
         """);
-    methodDto.addArgument("dtoMethod", methodDto.createFieldSetterMethodName());
+    methodDto.addArgument("fieldName", fieldName);
     methodDto.addArgument("dtoMethodParam", parameter.getParameterName());
     methodDto.addArgument("helperType", fieldType);
     return methodDto;
@@ -338,10 +339,10 @@ public class BuilderDefinitionCreator {
         """
         $helperType:T builder = new $helperType:T();
         $dtoMethodParam:N.accept(builder);
-        instance.$dtoMethod:N(builder.build());
+        this.$fieldName:N = builder.build();
         return this;
         """);
-    methodDto.addArgument("dtoMethod", methodDto.createFieldSetterMethodName());
+    methodDto.addArgument("fieldName", fieldName);
     methodDto.addArgument("dtoMethodParam", parameter.getParameterName());
     methodDto.addArgument("helperType", builderType);
     return methodDto;
@@ -361,10 +362,10 @@ public class BuilderDefinitionCreator {
     methodDto.setMethodGenerics(fieldGenerics);
     methodDto.setCode(
         """
-        instance.$dtoMethod:N($dtoMethodParam:N.get());
+        this.$fieldName:N = $dtoMethodParam:N.get();
         return this;
         """);
-    methodDto.addArgument("dtoMethod", methodDto.createFieldSetterMethodName());
+    methodDto.addArgument("fieldName", fieldName);
     methodDto.addArgument("dtoMethodParam", parameter.getParameterName());
     return methodDto;
   }

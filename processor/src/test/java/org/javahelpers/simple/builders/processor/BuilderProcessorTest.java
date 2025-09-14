@@ -110,9 +110,9 @@ class BuilderProcessorTest {
     ProcessorAsserts.assertContaining(
         generatedCode,
         "public CtorAndSetterBuilder a(int a)",
-        "instance.setA(a);",
+        "this.a = a;",
         "public CtorAndSetterBuilder name(String name)",
-        "instance.setName(name);");
+        "this.name = name;");
   }
 
   @Test
@@ -145,9 +145,9 @@ class BuilderProcessorTest {
     ProcessorAsserts.assertContaining(
         generatedCode,
         "public PersonRecordBuilder name(String name)",
-        "instance.setName(name);",
+        "this.name = name;",
         "public PersonRecordBuilder age(int age)",
-        "instance.setAge(age);");
+        "this.age = age;");
   }
 
   @Test
@@ -189,18 +189,18 @@ class BuilderProcessorTest {
         "public WithCollectionsBuilder names(List<String> names)",
         "public WithCollectionsBuilder names(Supplier<List<String>> namesSupplier)",
         "public WithCollectionsBuilder names(String... names)",
-        "instance.setNames(List.of(names));",
+        "this.names = List.of(names);",
         "public WithCollectionsBuilder tags(Set<String> tags)",
         "public WithCollectionsBuilder tags(Supplier<Set<String>> tagsSupplier)",
         "public WithCollectionsBuilder tags(String... tags)",
-        "instance.setTags(Set.of(tags));",
+        "this.tags = Set.of(tags);",
         "public WithCollectionsBuilder map(Map<String, Integer> map)",
         "public WithCollectionsBuilder map(Supplier<Map<String, Integer>> mapSupplier)",
-        "instance.setMap(map);");
+        "this.map = map;");
   }
 
   @Test
-  void shouldDeclareInstanceFieldAsPrivateFinalWithJavadoc() {
+  void shouldDeclarePerFieldBackingField() {
     // Given
     String packageName = "test";
     String className = "FieldDoc";
@@ -221,8 +221,9 @@ class BuilderProcessorTest {
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
 
-    ProcessorAsserts.assertContaining(
-        generatedCode, "Inner instance of builder.", "private final FieldDoc instance;");
+    // Expect a private boxed backing field for primitive int setter
+    ProcessorAsserts.assertContaining(generatedCode, "private Integer x;");
+    ProcessorAsserts.assertNotContaining(generatedCode, " FieldDoc instance;");
   }
 
   @Test
@@ -253,11 +254,12 @@ class BuilderProcessorTest {
         generatedCode,
         "public static CreateDocBuilder create()",
         "Creating a new builder for {@code test.CreateDoc}",
-        "@return builder for {@code test.CreateDoc}");
+        "@return builder for {@code test.CreateDoc}",
+        "return new CreateDocBuilder();");
   }
 
   @Test
-  void shouldGenerateBuildOverrideAndReturnInstance() {
+  void shouldGenerateBuildOverrideAndReturnAnInstanceWithCalledSetters() {
     // Given
     String packageName = "test";
     String className = "BuildDoc";
@@ -281,7 +283,17 @@ class BuilderProcessorTest {
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
 
     ProcessorAsserts.assertContaining(
-        generatedCode, "@Override", "public BuildDoc build()", "return instance;");
+        generatedCode,
+        """
+        @Override
+        public BuildDoc build() {
+            BuildDoc result = new BuildDoc();
+            if (this.x != null) {
+                result.setX(this.x);
+            }
+            return result;
+        }
+        """);
   }
 
   @Test
@@ -306,7 +318,11 @@ class BuilderProcessorTest {
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
 
-    ProcessorAsserts.assertContaining(generatedCode, "instance.setName(name);", "return this;");
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        "public FluentReturnBuilder name(String name)",
+        "this.name = name;",
+        "return this;");
   }
 
   @Test
@@ -326,7 +342,9 @@ class BuilderProcessorTest {
                 private HelperPlain helperPlain;
                 public String getName() { return name; }
                 public void setName(String name) { this.name = name; }
+                public HelperAnno getHelper() { return helper; }
                 public void setHelper(HelperAnno helper) { this.helper = helper; }
+                public HelperPlain getHelperPlain() { return helperPlain; }
                 public void setHelperPlain(HelperPlain helperPlain) { this.helperPlain = helperPlain; }
             """);
 
@@ -449,8 +467,8 @@ class BuilderProcessorTest {
         "Empty constructor of builder for",
         "Initialisation of builder for",
         "@param instance object instance for initialisiation",
-        "this.instance = instance;",
-        "this.instance = new CtorDoc();");
+        "public CtorDocBuilder()",
+        "public CtorDocBuilder(CtorDoc instance)");
   }
 
   @Test
@@ -469,6 +487,7 @@ class BuilderProcessorTest {
                 private HelperPlain helperPlain;
                 public String getName() { return name; }
                 public void setName(String name) { this.name = name; }
+                public HelperPlain getHelperPlain() { return helperPlain; }
                 public void setHelperPlain(HelperPlain helperPlain) { this.helperPlain = helperPlain; }
                 public void doSomething(int a, String b) { /* no-op */ }
                 """);
@@ -578,7 +597,7 @@ class BuilderProcessorTest {
         "helperBuilderConsumer",
         "HelperAnnoBuilder builder = new HelperAnnoBuilder();",
         "helperBuilderConsumer.accept(builder);",
-        "instance.setHelper(builder.build());");
+        "this.helper = builder.build();");
   }
 
   @Test
@@ -619,8 +638,7 @@ class BuilderProcessorTest {
     ProcessorAsserts.assertContaining(
         generatedCode,
         "HelperPlain consumer = new HelperPlain();",
-        "helperPlainConsumer.accept(consumer);",
-        "instance.setHelperPlain(consumer);");
+        "helperPlainConsumer.accept(consumer);");
   }
 
   @Test
@@ -650,7 +668,7 @@ class BuilderProcessorTest {
 
     // Expect supplier-based setter usage
     ProcessorAsserts.assertContaining(
-        generatedCode, "nameSupplier", "instance.setName(nameSupplier.get());");
+        generatedCode, "nameSupplier", "this.name = nameSupplier.get();");
   }
 
   protected Compilation compile(JavaFileObject... sourceFiles) {
@@ -852,13 +870,13 @@ class BuilderProcessorTest {
     ProcessorAsserts.assertContaining(
         generatedCode,
         "public HasSetStringBuilder tags(Set<String> tags)",
-        "instance.setTags(tags);",
+        "this.tags = tags;",
         "public HasSetStringBuilder tags(Consumer<HashSetBuilder<String>> tagsBuilderConsumer)",
-        "instance.setTags(builder.build());",
+        "this.tags = builder.build();",
         "public HasSetStringBuilder tags(String... tags)",
-        "instance.setTags(Set.of(tags));",
+        "this.tags = Set.of(tags);",
         "public HasSetStringBuilder tags(Supplier<Set<String>> tagsSupplier)",
-        "instance.setTags(tagsSupplier.get());");
+        "this.tags = tagsSupplier.get();");
   }
 
   @Test
@@ -897,13 +915,13 @@ class BuilderProcessorTest {
     ProcessorAsserts.assertContaining(
         generatedCode,
         "public HasSetCustomBuilder helpers(Set<Helper> helpers)",
-        "instance.setHelpers(helpers);",
+        "this.helpers = helpers;",
         "public HasSetCustomBuilder helpers(Consumer<HashSetBuilder<Helper>> helpersBuilderConsumer)",
-        "instance.setHelpers(builder.build());",
+        "this.helpers = builder.build();",
         "public HasSetCustomBuilder helpers(Helper... helpers)",
-        "instance.setHelpers(Set.of(helpers));",
+        "this.helpers = Set.of(helpers);",
         "public HasSetCustomBuilder helpers(Supplier<Set<Helper>> helpersSupplier)",
-        "instance.setHelpers(helpersSupplier.get());");
+        "this.helpers = helpersSupplier.get();");
   }
 
   @Test
@@ -954,8 +972,9 @@ class BuilderProcessorTest {
             packageName,
             className,
             """
-                // valid setter
+                // valid setter (having a getter)
                 public void setOk(int ok) {}
+                public int getOk() { return 0; }
 
                 // should be filtered
                 public void nonSetterMethods() {}
@@ -976,7 +995,7 @@ class BuilderProcessorTest {
     ProcessorAsserts.assertingResult(
         generatedCode,
         contains("public HasVariousMethodsBuilder ok(int ok)"),
-        contains("instance.setOk(ok);"),
+        contains("this.ok = ok;"),
         notContains("nonSetterMethods"),
         notContains("hidden"),
         notContains("util(int util)"),
@@ -1119,12 +1138,10 @@ class BuilderProcessorTest {
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
     ProcessorAsserts.assertContaining(
         generatedCode,
-        "@Generated(",
-        "@BuilderImplementation(",
-        "public static AnnoTargetBuilder create()",
-        "return new AnnoTargetBuilder(instance);",
-        "public AnnoTarget build()",
-        "return instance;");
+        "@Generated(\"Generated by org.javahelpers.simple.builders.processor.BuilderProcessor\")",
+        "@BuilderImplementation( forClass = AnnoTarget.class )",
+        "public static AnnoTargetBuilder create() { return new AnnoTargetBuilder(); }",
+        "@Override public AnnoTarget build()");
   }
 
   @Test
@@ -1157,10 +1174,8 @@ class BuilderProcessorTest {
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
     ProcessorAsserts.assertContaining(
         generatedCode,
-        "public HasCollectionsConvenienceBuilder names(String... names)",
-        "instance.setNames(List.of(names));",
-        "public HasCollectionsConvenienceBuilder tags(String... tags)",
-        "instance.setTags(Set.of(tags));");
+        "public HasCollectionsConvenienceBuilder names(String... names) { this.names = List.of(names);",
+        "public HasCollectionsConvenienceBuilder tags(String... tags) { this.tags = Set.of(tags);");
   }
 
   @Test
@@ -1188,9 +1203,7 @@ class BuilderProcessorTest {
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
     ProcessorAsserts.assertContaining(
-        generatedCode,
-        "public HasLocalDateBuilder date(LocalDate date)",
-        "instance.setDate(date);");
+        generatedCode, "public HasLocalDateBuilder date(LocalDate date) { this.date = date;");
   }
 
   @Test
@@ -1342,10 +1355,11 @@ class BuilderProcessorTest {
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
     // There should be no builder generated for an empty class
-    ProcessorAsserts.assertingResult(
+    ProcessorAsserts.assertContaining(
         generatedCode,
-        contains("public EmptyClass build() { return instance; }"),
-        notContains("return this;"));
+        "public EmptyClass build()",
+        "EmptyClass result = new EmptyClass();",
+        "return result;");
   }
 
   @Test
@@ -1431,7 +1445,7 @@ class BuilderProcessorTest {
                 public void setLongValue(long longValue) { this.longValue = longValue; }
                 public double getDoubleValue() { return doubleValue; }
                 public void setDoubleValue(double doubleValue) { this.doubleValue = doubleValue; }
-                public boolean getBooleanValue() { return booleanValue; }
+                public boolean isBooleanValue() { return booleanValue; }
                 public void setBooleanValue(boolean booleanValue) { this.booleanValue = booleanValue; }
             """);
 
