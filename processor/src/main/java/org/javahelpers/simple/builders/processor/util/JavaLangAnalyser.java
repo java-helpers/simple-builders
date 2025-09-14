@@ -117,7 +117,11 @@ public final class JavaLangAnalyser {
    * @return {@code true}, if the signature matches setters
    */
   public static boolean isSetterForField(ExecutableElement mth) {
-    return StringUtils.startsWith(mth.getSimpleName(), "set") && mth.getParameters().size() == 1;
+    String name = mth.getSimpleName().toString();
+    return StringUtils.length(name) > 3
+        && Strings.CS.startsWith(name, "set")
+        && StringUtils.isAllUpperCase(StringUtils.substring(name, 3, 4))
+        && mth.getParameters().size() == 1;
   }
 
   /**

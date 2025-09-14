@@ -978,6 +978,7 @@ class BuilderProcessorTest {
 
                 // should be filtered
                 public void nonSetterMethods() {}
+                public void settingChanged(String nonSetterValue) {}
                 private void setHidden(int hidden) {}
                 public static void setUtil(int util) {}
                 public void setRisky(int risk) throws Exception {}
@@ -997,6 +998,7 @@ class BuilderProcessorTest {
         contains("public HasVariousMethodsBuilder ok(int ok)"),
         contains("this.ok = ok;"),
         notContains("nonSetterMethods"),
+        notContains("settingChanged"),
         notContains("hidden"),
         notContains("util(int util)"),
         notContains("risky(int risk)"),
