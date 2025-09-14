@@ -205,7 +205,6 @@ public class JavaCodeGenerator {
   private FieldSpec createFieldMember(BuilderDefinitionDto builderDef, FieldDto fieldDto) {
     com.palantir.javapoet.TypeName fieldType = map2ParameterType(fieldDto.getFieldType());
     // Checking if the type could be extractedfrom the field, even if it is generic
-    /*
     if (fieldDto.getFieldType()
         instanceof org.javahelpers.simple.builders.processor.dtos.TypeNameVariable varType) {
       String varName = varType.getClassName();
@@ -217,7 +216,7 @@ public class JavaCodeGenerator {
         // Ensure havin no Builder-Generation error in this case, so downgrade to object
         fieldType = ClassName.get("java.lang", "Object");
       }
-    }*/
+    }
     if (fieldType.isPrimitive()) {
       fieldType = fieldType.box();
     }
