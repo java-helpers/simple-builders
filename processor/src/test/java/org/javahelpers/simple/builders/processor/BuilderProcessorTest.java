@@ -190,13 +190,16 @@ class BuilderProcessorTest {
         "public WithCollectionsBuilder names(Supplier<List<String>> namesSupplier)",
         "public WithCollectionsBuilder names(String... names)",
         "this.names = List.of(names);",
+        "private List<String> names;",
         "public WithCollectionsBuilder tags(Set<String> tags)",
         "public WithCollectionsBuilder tags(Supplier<Set<String>> tagsSupplier)",
         "public WithCollectionsBuilder tags(String... tags)",
         "this.tags = Set.of(tags);",
+        "private Set<String> tags;",
         "public WithCollectionsBuilder map(Map<String, Integer> map)",
         "public WithCollectionsBuilder map(Supplier<Map<String, Integer>> mapSupplier)",
-        "this.map = map;");
+        "this.map = map;",
+        "private Map<String, Integer> map;");
   }
 
   @Test
@@ -468,7 +471,8 @@ class BuilderProcessorTest {
         "Initialisation of builder for",
         "@param instance object instance for initialisiation",
         "public CtorDocBuilder()",
-        "public CtorDocBuilder(CtorDoc instance)");
+        "public CtorDocBuilder(CtorDoc instance)",
+        "private String x;");
   }
 
   @Test
@@ -519,6 +523,11 @@ class BuilderProcessorTest {
     // CONSUMER method javadoc and code
     ProcessorAsserts.assertContaining(
         generatedCode, "@param helperPlainConsumer consumer providing an instance of helperPlain");
+
+    // Backing fields present
+    // TODO: Add Javadoc to fields
+    ProcessorAsserts.assertContaining(
+        generatedCode, "private String name;", "private HelperPlain helperPlain;");
   }
 
   @Test
@@ -552,7 +561,8 @@ class BuilderProcessorTest {
     ProcessorAsserts.assertContaining(
         generatedCode,
         "@param name the person name",
-        "public FieldWithDocBuilder name(String name)");
+        "public FieldWithDocBuilder name(String name)",
+        "private String name;");
   }
 
   @Test
@@ -594,6 +604,7 @@ class BuilderProcessorTest {
     // Expect consumer-by-builder method using HelperAnnoBuilder and builder.build()
     ProcessorAsserts.assertContaining(
         generatedCode,
+        "private HelperAnno helper;",
         "helperBuilderConsumer",
         "HelperAnnoBuilder builder = new HelperAnnoBuilder();",
         "helperBuilderConsumer.accept(builder);",
@@ -638,7 +649,8 @@ class BuilderProcessorTest {
     ProcessorAsserts.assertContaining(
         generatedCode,
         "HelperPlain consumer = new HelperPlain();",
-        "helperPlainConsumer.accept(consumer);");
+        "helperPlainConsumer.accept(consumer);",
+        "private HelperPlain helperPlain;");
   }
 
   @Test
@@ -668,7 +680,7 @@ class BuilderProcessorTest {
 
     // Expect supplier-based setter usage
     ProcessorAsserts.assertContaining(
-        generatedCode, "nameSupplier", "this.name = nameSupplier.get();");
+        generatedCode, "nameSupplier", "private String name;", "this.name = nameSupplier.get();");
   }
 
   protected Compilation compile(JavaFileObject... sourceFiles) {
@@ -744,7 +756,9 @@ class BuilderProcessorTest {
     ProcessorAsserts.assertContaining(
         generatedCode,
         "public PersonBuilder name(String name)",
-        "public PersonBuilder age(int age)");
+        "public PersonBuilder age(int age)",
+        "private String name;",
+        "private Integer age;");
   }
 
   @Test
@@ -799,6 +813,12 @@ class BuilderProcessorTest {
         "name(String...)",
         "count(Integer...)",
         "date(LocalDate...)");
+    // Backing fields present
+    ProcessorAsserts.assertContaining(
+        optionalBuilder,
+        "private Optional<String> name;",
+        "private Optional<Integer> count;",
+        "private Optional<LocalDate> date;");
   }
 
   @Test
@@ -839,7 +859,9 @@ class BuilderProcessorTest {
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
     ProcessorAsserts.assertContaining(
-        generatedCode, "public UsesOtherPackageHelperBuilder helper(Helper helper)");
+        generatedCode,
+        "public UsesOtherPackageHelperBuilder helper(Helper helper)",
+        "private Helper helper;");
   }
 
   @Test
