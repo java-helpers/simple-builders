@@ -63,7 +63,7 @@
     
     <!-- Plugin Versions -->
     <plugin.central.publishing.version>0.8.0</plugin.central.publishing.version>
-    <plugin.code-format.version>2.27</plugin.code-format.version>
+    <plugin.code-format.version>2.28</plugin.code-format.version>
     <plugin.maven.compiler.version>3.14.0</plugin.maven.compiler.version>
     <plugin.maven.source.version>3.3.1</plugin.maven.source.version>
     <plugin.maven.javadoc.version>3.11.3</plugin.maven.javadoc.version>
