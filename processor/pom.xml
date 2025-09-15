@@ -57,7 +57,7 @@
     <javapoet.version>0.7.0</javapoet.version>
     <commons-lang.version>3.18.0</commons-lang.version>
     <junit-jupiter.version>5.13.4</junit-jupiter.version>
-    <google-compile-testing.version>0.22.0</google-compile-testing.version>
+    <google-compile-testing.version>0.23.0</google-compile-testing.version>
     
     <!-- Java and Compiler Properties -->
     <java.version>17</java.version>
