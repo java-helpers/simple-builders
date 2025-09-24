@@ -91,9 +91,10 @@ public class JavaCodeGenerator {
             .addSuperinterface(createInterfaceBuilderBase(dtoTypeName));
 
     // Adding Constructors for builder
-    classBuilder.addMethod(
-        createConstructorWithInstance(
-            dtoBaseClass, dtoTypeName, builderDef.getSetterFieldsForBuilder()));
+    java.util.List<FieldDto> initFields = new java.util.LinkedList<>();
+    initFields.addAll(builderDef.getConstructorFieldsForBuilder());
+    initFields.addAll(builderDef.getSetterFieldsForBuilder());
+    classBuilder.addMethod(createConstructorWithInstance(dtoBaseClass, dtoTypeName, initFields));
     classBuilder.addMethod(createEmptyConstructor(dtoBaseClass));
 
     // Generate backing fields for each DTO field (constructor and setter fields)

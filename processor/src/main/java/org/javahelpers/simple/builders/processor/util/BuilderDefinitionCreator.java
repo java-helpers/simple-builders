@@ -24,6 +24,7 @@
 
 package org.javahelpers.simple.builders.processor.util;
 
+import static java.util.stream.Collectors.toSet;
 import static javax.lang.model.type.TypeKind.ARRAY;
 import static org.javahelpers.simple.builders.processor.util.AnnotationValidator.validateAnnotatedElement;
 import static org.javahelpers.simple.builders.processor.util.JavaLangAnalyser.*;
@@ -33,6 +34,7 @@ import static org.javahelpers.simple.builders.processor.util.TypeNameAnalyser.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javax.lang.model.element.*;
@@ -85,7 +87,7 @@ public class BuilderDefinitionCreator {
       ExecutableElement ctor = constructorOpt.get();
       for (VariableElement param : ctor.getParameters()) {
         Optional<FieldDto> fieldFromCtor =
-            createFieldFromConstructor(param, elementUtils, typeUtils);
+            createFieldFromConstructor(annotatedType, param, elementUtils, typeUtils);
         fieldFromCtor.ifPresent(result::addFieldInConstructor);
       }
     }
@@ -94,12 +96,24 @@ public class BuilderDefinitionCreator {
     List<? extends Element> allMembers = elementUtils.getAllMembers(annotatedType);
     List<ExecutableElement> methods = ElementFilter.methodsIn(allMembers);
 
+    // Build a set of constructor field names to avoid duplicates from setters
+    Set<String> ctorFieldNames =
+        result.getConstructorFieldsForBuilder().stream()
+            .map(FieldDto::getFieldName)
+            .collect(toSet());
+
     for (ExecutableElement mth : methods) {
       // nur public
       if (isMethodRelevantForBuilder(mth)) {
-        // Todo: we need to check setter-fields for duplication with constructor fields
-        createFieldFromSetter(mth, result.getGenerics(), elementUtils, typeUtils)
-            .ifPresent(result::addField);
+        // Avoid adding setter-derived fields that duplicate constructor params
+        Optional<FieldDto> maybeField =
+            createFieldFromSetter(mth, result.getGenerics(), elementUtils, typeUtils);
+        if (maybeField.isPresent()) {
+          FieldDto field = maybeField.get();
+          if (!ctorFieldNames.contains(field.getFieldName())) {
+            result.addField(field);
+          }
+        }
       }
     }
 
@@ -312,7 +326,7 @@ public class BuilderDefinitionCreator {
    * the constructor argument.
    */
   private static Optional<FieldDto> createFieldFromConstructor(
-      VariableElement param, Elements elementUtils, Types typeUtils) {
+      TypeElement dtoType, VariableElement param, Elements elementUtils, Types typeUtils) {
     MethodParameterDto paramDto = map2MethodParameter(param, elementUtils, typeUtils);
     if (paramDto == null) {
       return Optional.empty();
@@ -322,6 +336,9 @@ public class BuilderDefinitionCreator {
     FieldDto ctorField = new FieldDto();
     ctorField.setFieldName(fieldName);
     ctorField.setFieldType(fieldType);
+    // Find matching getter on the DTO type
+    JavaLangAnalyser.findGetterForField(dtoType, fieldName, param.asType(), elementUtils, typeUtils)
+        .ifPresent(getter -> ctorField.setGetterName(getter.getSimpleName().toString()));
     // Provide a simple setter in builder to set the constructor argument
     ctorField.addMethod(createFieldSetterWithTransform(fieldName, null, fieldType));
     return Optional.of(ctorField);

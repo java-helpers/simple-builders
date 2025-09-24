@@ -115,6 +115,54 @@ class BuilderProcessorTest {
   }
 
   @Test
+  void shouldPreferConstructorOverSetterWhenBothExist() {
+    // Given
+    String packageName = "test";
+    String className = "CtorAndSetterSameField";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private int a; // could be set via constructor and setter
+                private String name;
+
+                public CtorAndSetterSameField(int a) { this.a = a; }
+
+                public int getA() { return a; }
+                public void setA(int a) { this.a = a; }
+
+                public String getName() { return name; }
+                public void setName(String name) { this.name = name; }
+            """);
+
+    // When
+    Compilation compilation = compile(sourceFile);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+    // Expect helper for constructor param and no duplicate setter application for 'a'
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        "public CtorAndSetterSameFieldBuilder()",
+        // Expectations on constructor of builder with instance
+        "public CtorAndSetterSameFieldBuilder(CtorAndSetterSameField instance)",
+        "this.name = instance.getName();",
+        "this.a = instance.getA();",
+        // Expectations on helper functions
+        "public CtorAndSetterSameFieldBuilder a(int a)",
+        "public CtorAndSetterSameFieldBuilder name(String name)",
+        // Expectations on build function
+        "CtorAndSetterSameField result = new CtorAndSetterSameField(this.a);",
+        "result.setName(this.name);");
+    // expect no setter application for 'a' on build-function
+    ProcessorAsserts.assertNotContaining(generatedCode, "result.setA(this.a);");
+  }
+
+  @Test
   @Disabled("TODO: Records are not supported for builder generation yet")
   void shouldHandleRecordWithoutGeneratingBuilder() {
     // Given
