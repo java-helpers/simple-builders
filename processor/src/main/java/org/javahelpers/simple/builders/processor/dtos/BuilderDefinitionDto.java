@@ -117,6 +117,17 @@ public class BuilderDefinitionDto {
     return fieldsInConstructor;
   }
 
+  /**
+   * Returns all fields known to the builder in a single list. Constructor parameters appear first
+   * (in constructor order), followed by setter-derived fields.
+   */
+  public List<FieldDto> getAllFieldsForBuilder() {
+    LinkedList<FieldDto> all = new LinkedList<>();
+    all.addAll(fieldsInConstructor);
+    all.addAll(fields);
+    return all;
+  }
+
   /** Adds a generic parameter definition. */
   public void addGeneric(GenericParameterDto generic) {
     generics.add(generic);
