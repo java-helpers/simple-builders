@@ -79,11 +79,13 @@ public class BuilderDefinitionCreator {
         .forEach(result::addGeneric);
 
     // Extract constructors and their parameters (treat as constructor fields)
-    Optional<ExecutableElement> constructorOpt = findConstructorForBuilder(annotatedType, elementUtils);
+    Optional<ExecutableElement> constructorOpt =
+        findConstructorForBuilder(annotatedType, elementUtils);
     if (constructorOpt.isPresent()) {
       ExecutableElement ctor = constructorOpt.get();
       for (VariableElement param : ctor.getParameters()) {
-        Optional<FieldDto> fieldFromCtor = createFieldFromConstructor(param, elementUtils, typeUtils);
+        Optional<FieldDto> fieldFromCtor =
+            createFieldFromConstructor(param, elementUtils, typeUtils);
         fieldFromCtor.ifPresent(result::addFieldInConstructor);
       }
     }
@@ -254,7 +256,8 @@ public class BuilderDefinitionCreator {
     TypeElement dtoType = (TypeElement) mth.getEnclosingElement();
     JavaLangAnalyser.findGetterForField(
             dtoType, fieldName, fieldTypeMirror, elementUtils, typeUtils)
-        .ifPresent(getterExecutable -> result.setGetterName(getterExecutable.getSimpleName().toString()));
+        .ifPresent(
+            getterExecutable -> result.setGetterName(getterExecutable.getSimpleName().toString()));
 
     // Finding generics declared on the setter itself (field-specific), e.g., <T extends
     // Serializable>
