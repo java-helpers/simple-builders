@@ -78,8 +78,15 @@ public class BuilderDefinitionCreator {
     JavaLangMapper.map2GenericParameterDtos(annotatedType, elementUtils, typeUtils)
         .forEach(result::addGeneric);
 
-    // Todo: extract Constructor and his fields. result needs to be filled im constructors and
-    // fields.
+    // Extract constructors and their parameters (treat as constructor fields)
+    Optional<ExecutableElement> constructorOpt = findConstructorForBuilder(annotatedType, elementUtils);
+    if (constructorOpt.isPresent()) {
+      ExecutableElement ctor = constructorOpt.get();
+      for (VariableElement param : ctor.getParameters()) {
+        Optional<FieldDto> fieldFromCtor = createFieldFromConstructor(param, elementUtils, typeUtils);
+        fieldFromCtor.ifPresent(result::addFieldInConstructor);
+      }
+    }
 
     // Todo: moving into helper function
     List<? extends Element> allMembers = elementUtils.getAllMembers(annotatedType);
@@ -89,7 +96,7 @@ public class BuilderDefinitionCreator {
       // nur public
       if (isMethodRelevantForBuilder(mth)) {
         // Todo: we need to check setter-fields for duplication with constructor fields
-        createFieldDto(mth, result.getGenerics(), elementUtils, typeUtils)
+        createFieldFromSetter(mth, result.getGenerics(), elementUtils, typeUtils)
             .ifPresent(result::addField);
       }
     }
@@ -204,7 +211,7 @@ public class BuilderDefinitionCreator {
     result.addMethod(createFieldSupplier(fieldName, fieldType));
   }
 
-  private static Optional<FieldDto> createFieldDto(
+  private static Optional<FieldDto> createFieldFromSetter(
       ExecutableElement mth,
       List<GenericParameterDto> dtoGenerics,
       Elements elementUtils,
@@ -247,7 +254,7 @@ public class BuilderDefinitionCreator {
     TypeElement dtoType = (TypeElement) mth.getEnclosingElement();
     JavaLangAnalyser.findGetterForField(
             dtoType, fieldName, fieldTypeMirror, elementUtils, typeUtils)
-        .ifPresent(getter -> result.setGetterName(getter.getSimpleName().toString()));
+        .ifPresent(getterExecutable -> result.setGetterName(getterExecutable.getSimpleName().toString()));
 
     // Finding generics declared on the setter itself (field-specific), e.g., <T extends
     // Serializable>
@@ -274,6 +281,47 @@ public class BuilderDefinitionCreator {
     addAdditionalHelperMethodsForField(result, fieldName, fieldType);
 
     return Optional.of(result);
+  }
+
+  /**
+   * Determines which constructor to use for builder initialization. Currently selects the
+   * constructor with the highest number of parameters. Returns empty if no constructor has
+   * parameters (i.e., only default constructor or none found).
+   */
+  private static Optional<ExecutableElement> findConstructorForBuilder(
+      TypeElement annotatedType, Elements elementUtils) {
+    List<ExecutableElement> ctors =
+        ElementFilter.constructorsIn(elementUtils.getAllMembers(annotatedType));
+    ExecutableElement selected = null;
+    int maxParams = -1;
+    for (ExecutableElement ctor : ctors) {
+      int p = ctor.getParameters().size();
+      if (p > maxParams) {
+        maxParams = p;
+        selected = ctor;
+      }
+    }
+    return (selected != null && maxParams > 0) ? Optional.of(selected) : Optional.empty();
+  }
+
+  /**
+   * Creates a FieldDto from a constructor parameter, including a simple builder setter to supply
+   * the constructor argument.
+   */
+  private static Optional<FieldDto> createFieldFromConstructor(
+      VariableElement param, Elements elementUtils, Types typeUtils) {
+    MethodParameterDto paramDto = map2MethodParameter(param, elementUtils, typeUtils);
+    if (paramDto == null) {
+      return Optional.empty();
+    }
+    String fieldName = param.getSimpleName().toString();
+    TypeName fieldType = paramDto.getParameterType();
+    FieldDto ctorField = new FieldDto();
+    ctorField.setFieldName(fieldName);
+    ctorField.setFieldType(fieldType);
+    // Provide a simple setter in builder to set the constructor argument
+    ctorField.addMethod(createFieldSetterWithTransform(fieldName, null, fieldType));
+    return Optional.of(ctorField);
   }
 
   private static MethodDto createFieldSetterWithTransform(

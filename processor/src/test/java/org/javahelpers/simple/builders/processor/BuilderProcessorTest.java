@@ -77,8 +77,7 @@ class BuilderProcessorTest {
   }
 
   @Test
-  @Disabled("TODO: Constructor-Parameters are not supported yet")
-  void shouldIgnoreConstructorParametersAndOnlyUseSetters() {
+  void shouldHandleFieldsOfConstructorAndSetters() {
     // Given
     String packageName = "test";
     String className = "CtorAndSetter";
@@ -89,10 +88,9 @@ class BuilderProcessorTest {
             packageName,
             className,
             """
-                private int a; // has no setter, only in constructor
+                private final int a; // has no setter, only in constructor
                 private String name; // will be set via setter
 
-                public CtorAndSetter() {}
                 public CtorAndSetter(int a) { this.a = a; }
 
                 public String getName() { return name; }
@@ -109,10 +107,11 @@ class BuilderProcessorTest {
     // Setter-based API should appear (name) and Constructor params (a)
     ProcessorAsserts.assertContaining(
         generatedCode,
-        "public CtorAndSetterBuilder a(int a)",
-        "this.a = a;",
-        "public CtorAndSetterBuilder name(String name)",
-        "this.name = name;");
+        "public CtorAndSetterBuilder()", // empty constructor for builder
+        "public CtorAndSetterBuilder name(String name)", // helpermethod for setter
+        "public CtorAndSetterBuilder a(int a)", // helpermethod for constructor param
+        "CtorAndSetter result = new CtorAndSetter(this.a);",
+        "result.setName(this.name);");
   }
 
   @Test

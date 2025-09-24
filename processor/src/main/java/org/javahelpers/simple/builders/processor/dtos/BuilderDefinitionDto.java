@@ -40,7 +40,7 @@ public class BuilderDefinitionDto {
    * constructor. Ordering in LinkedList is matching orderung of parameters in constructor call.
    * Instances of fields are added in LinkedList of all fields too.
    */
-  private final LinkedList<FieldDto> fieldsInConstructor = new LinkedList<>();
+  private final List<FieldDto> fieldsInConstructor = new LinkedList<>();
 
   /** Generic parameters declared on the target DTO (e.g., <T extends Number, U>). */
   private final List<GenericParameterDto> generics = new LinkedList<>();
@@ -98,6 +98,11 @@ public class BuilderDefinitionDto {
     fields.add(field);
   }
 
+  /** Adds a field definition that will be provided via the DTO constructor. */
+  public void addFieldInConstructor(FieldDto field) {
+    fieldsInConstructor.add(field);
+  }
+
   /**
    * Getting all definied fields in builder definition.
    *
@@ -105,6 +110,11 @@ public class BuilderDefinitionDto {
    */
   public LinkedList<FieldDto> getSetterFieldsForBuilder() {
     return fields;
+  }
+
+  /** Returns the ordered list of fields to be passed to the DTO constructor. */
+  public List<FieldDto> getConstructorFieldsForBuilder() {
+    return fieldsInConstructor;
   }
 
   /** Adds a generic parameter definition. */

@@ -26,7 +26,6 @@ package org.javahelpers.simple.builders.processor.util;
 
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
-import static org.javahelpers.simple.builders.processor.dtos.MethodTypes.*;
 import static org.javahelpers.simple.builders.processor.util.JavapoetMapper.*;
 
 import com.palantir.javapoet.AnnotationSpec;
@@ -97,13 +96,21 @@ public class JavaCodeGenerator {
             dtoBaseClass, dtoTypeName, builderDef.getSetterFieldsForBuilder()));
     classBuilder.addMethod(createEmptyConstructor(dtoBaseClass));
 
-    // Generate backing fields for each DTO field (boxed types to allow null/unset)
+    // Generate backing fields for each DTO field (constructor and setter fields)
+    for (FieldDto fieldDto : builderDef.getConstructorFieldsForBuilder()) {
+      FieldSpec fieldSpec = createFieldMember(fieldDto);
+      classBuilder.addField(fieldSpec);
+    }
     for (FieldDto fieldDto : builderDef.getSetterFieldsForBuilder()) {
       FieldSpec fieldSpec = createFieldMember(fieldDto);
       classBuilder.addField(fieldSpec);
     }
 
-    // Generate Fields and Fieldspecific funtions in Builder
+    // Generate field-specific functions in Builder (constructor fields first, then setter fields)
+    for (FieldDto fieldDto : builderDef.getConstructorFieldsForBuilder()) {
+      List<MethodSpec> methodSpecs = createFieldMethods(fieldDto, builderTypeName);
+      classBuilder.addMethods(methodSpecs);
+    }
     for (FieldDto fieldDto : builderDef.getSetterFieldsForBuilder()) {
       List<MethodSpec> methodSpecs = createFieldMethods(fieldDto, builderTypeName);
       classBuilder.addMethods(methodSpecs);
@@ -114,6 +121,7 @@ public class JavaCodeGenerator {
         createMethodBuild(
             dtoBaseClass,
             dtoTypeName,
+            builderDef.getConstructorFieldsForBuilder(),
             builderDef.getSetterFieldsForBuilder(),
             builderDef.getGenerics()));
     classBuilder.addMethod(
@@ -205,7 +213,8 @@ public class JavaCodeGenerator {
   private MethodSpec createMethodBuild(
       ClassName dtoBaseClass,
       com.palantir.javapoet.TypeName returnType,
-      List<FieldDto> fields,
+      List<FieldDto> constructorFields,
+      List<FieldDto> setterFields,
       List<GenericParameterDto> generics) {
     MethodSpec.Builder mb =
         MethodSpec.methodBuilder("build")
@@ -213,12 +222,22 @@ public class JavaCodeGenerator {
             .returns(returnType)
             .addAnnotation(Override.class);
 
+    // Build constructor argument list: use backing fields in declared order
+    String ctorArgs =
+        constructorFields.stream()
+            .map(FieldDto::getFieldName)
+            .map(n -> String.format("this.%s", n))
+            .reduce((a, b) -> a + ", " + b)
+            .orElse("");
+
     if (generics.isEmpty()) {
-      mb.addStatement("$1T result = new $1T()", dtoBaseClass);
+      mb.addStatement("$1T result = new $1T($2L)", dtoBaseClass, ctorArgs);
     } else {
-      mb.addStatement("$1T result = new $2T<>()", returnType, dtoBaseClass);
+      mb.addStatement("$1T result = new $2T<>($3L)", returnType, dtoBaseClass, ctorArgs);
     }
-    for (FieldDto f : fields) {
+
+    // Apply setter-based fields
+    for (FieldDto f : setterFields) {
       mb.beginControlFlow("if (this.$N != null)", f.getFieldName())
           .addStatement("result.$N(this.$N)", f.getSetterName(), f.getFieldName())
           .endControlFlow();
@@ -302,20 +321,20 @@ public class JavaCodeGenerator {
       switch (methodDto.getMethodType()) {
         case PROXY ->
             methodBuilder.addJavadoc(
-                "\n@param $1N $2N", paramDto.getParameterName(), optionalFieldParamJavaDoc);
+                "\n@param $1N $2L", paramDto.getParameterName(), optionalFieldParamJavaDoc);
         case CONSUMER ->
             methodBuilder.addJavadoc(
-                "\n@param $1N consumer providing an instance of $2N",
+                "\n@param $1N consumer providing an instance of $2L",
                 paramDto.getParameterName(),
                 optionalFieldParamJavaDoc);
         case CONSUMER_BY_BUILDER ->
             methodBuilder.addJavadoc(
-                "\n@param $1N consumer providing an instance of a builder for $2N",
+                "\n@param $1N consumer providing an instance of a builder for $2L",
                 paramDto.getParameterName(),
                 optionalFieldParamJavaDoc);
         case SUPPLIER ->
             methodBuilder.addJavadoc(
-                "\n@param $1N supplier for $2N",
+                "\n@param $1N supplier for $2L",
                 paramDto.getParameterName(),
                 optionalFieldParamJavaDoc);
       }
