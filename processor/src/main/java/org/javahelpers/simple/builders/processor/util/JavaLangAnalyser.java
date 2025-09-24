@@ -36,8 +36,10 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 
@@ -243,5 +245,44 @@ public final class JavaLangAnalyser {
     }
     String result = sb.toString().trim();
     return result.isEmpty() ? null : result;
+  }
+
+  /**
+   * Finds the getter method for a given field on the specified DTO type.
+   *
+   * <p>Prefers boolean-style "isX" over "getX" when both are present. The getter must have no
+   * parameters and its return type must match the provided field type mirror.
+   *
+   * @param dtoType the enclosing DTO type element
+   * @param fieldName the field name (uncapitalized)
+   * @param fieldTypeMirror the expected return type of the getter
+   * @param elementUtils elements utility
+   * @param typeUtils types utility
+   * @return Optional containing the getter ExecutableElement if found
+   */
+  public static Optional<ExecutableElement> findGetterForField(
+      TypeElement dtoType,
+      String fieldName,
+      TypeMirror fieldTypeMirror,
+      Elements elementUtils,
+      Types typeUtils) {
+    if (dtoType == null || fieldName == null || fieldTypeMirror == null) {
+      return Optional.empty();
+    }
+    String cap = StringUtils.capitalize(fieldName);
+    String getterCandidate = "get" + cap;
+    String booleanGetterCandidate = "is" + cap;
+    List<ExecutableElement> classMethods =
+        ElementFilter.methodsIn(elementUtils.getAllMembers(dtoType));
+    // Prefer boolean-style getter if present
+    for (ExecutableElement candidate : classMethods) {
+      String name = candidate.getSimpleName().toString();
+      if ((name.equals(booleanGetterCandidate) || name.equals(getterCandidate))
+          && candidate.getParameters().isEmpty()
+          && typeUtils.isSameType(candidate.getReturnType(), fieldTypeMirror)) {
+        return Optional.of(candidate);
+      }
+    }
+    return Optional.empty();
   }
 }

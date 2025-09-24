@@ -243,6 +243,12 @@ public class BuilderDefinitionCreator {
     TypeName fieldType = fieldParameterDto.getParameterType();
     result.setFieldType(fieldType);
 
+    // Determine if a corresponding getter exists on the DTO and record its name
+    TypeElement dtoType = (TypeElement) mth.getEnclosingElement();
+    JavaLangAnalyser.findGetterForField(
+            dtoType, fieldName, fieldTypeMirror, elementUtils, typeUtils)
+        .ifPresent(getter -> result.setGetterName(getter.getSimpleName().toString()));
+
     // Finding generics declared on the setter itself (field-specific), e.g., <T extends
     // Serializable>
     if (CollectionUtils.isNotEmpty(mth.getTypeParameters())) {

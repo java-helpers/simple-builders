@@ -26,6 +26,7 @@ package org.javahelpers.simple.builders.processor.dtos;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -47,6 +48,9 @@ public class FieldDto {
 
   /** Method-level generics declared on the setter, to be reused in builder methods. */
   private final List<GenericParameterDto> fieldGenerics = new ArrayList<>();
+
+  /** The name of the getter method to call, because in case of boolean it does not need to start with get (e.g., getName or isActive). */
+  private String getterName;
 
   /**
    * Getting name of field.
@@ -141,5 +145,15 @@ public class FieldDto {
     if (generics != null) {
       this.fieldGenerics.addAll(generics);
     }
+  }
+
+  /** Returns the getter method name to use (without parentheses). */
+  public Optional<String> getGetterName() {
+    return Optional.ofNullable(getterName);
+  }
+
+  /** Sets the getter method name to use (without parentheses). */
+  public void setGetterName(String getterName) {
+    this.getterName = getterName;
   }
 }

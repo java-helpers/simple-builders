@@ -187,17 +187,9 @@ public class JavaCodeGenerator {
                 dtoBaseClass);
 
     for (FieldDto f : fields) {
-      String cap = org.apache.commons.lang3.StringUtils.capitalize(f.getFieldName());
-      boolean isPrimitiveBoolean =
-          f.getFieldType()
-                  instanceof org.javahelpers.simple.builders.processor.dtos.TypeNamePrimitive
-              && ((org.javahelpers.simple.builders.processor.dtos.TypeNamePrimitive)
-                          f.getFieldType())
-                      .getType()
-                  == org.javahelpers.simple.builders.processor.dtos.TypeNamePrimitive
-                      .PrimitiveTypeEnum.BOOLEAN;
-      String getter = (isPrimitiveBoolean ? "is" : "get") + cap;
-      cb.addStatement("this.$N = instance.$N()", f.getFieldName(), getter);
+      f.getGetterName()
+          .ifPresent(
+              getter -> cb.addStatement("this.$N = instance.$N()", f.getFieldName(), getter));
     }
     return cb.build();
   }
