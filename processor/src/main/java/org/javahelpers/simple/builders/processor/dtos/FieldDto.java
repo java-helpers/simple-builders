@@ -49,7 +49,10 @@ public class FieldDto {
   /** Method-level generics declared on the setter, to be reused in builder methods. */
   private final List<GenericParameterDto> fieldGenerics = new ArrayList<>();
 
-  /** The name of the getter method to call, because in case of boolean it does not need to start with get (e.g., getName or isActive). */
+  /**
+   * The name of the getter method to call, because in case of boolean it does not need to start
+   * with get (e.g., getName or isActive).
+   */
   private String getterName;
 
   /**
