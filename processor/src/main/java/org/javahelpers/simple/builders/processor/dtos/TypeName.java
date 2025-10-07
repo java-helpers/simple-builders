@@ -80,6 +80,12 @@ public class TypeName {
     return Optional.empty();
   }
 
+  /**
+   * Creates a new instance of {@code TypeName} from an existing {@code Class}.
+   *
+   * @param clazz existing class to retrieve packe and class-name from
+   * @return
+   */
   public static TypeName of(Class<?> clazz) {
     return new TypeName(clazz.getPackage().getName(), clazz.getSimpleName());
   }
