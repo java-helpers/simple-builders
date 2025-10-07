@@ -77,6 +77,52 @@ class BuilderProcessorTest {
   }
 
   @Test
+  void shouldGenerateBuilderForNonEmptyConstructorWithFinalFields() {
+    // Given
+    String packageName = "test";
+    String className = "NonEmptyCtorFinals";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private final String name;
+                private final int age;
+
+                public NonEmptyCtorFinals(String name, int age) {
+                    this.name = name;
+                    this.age = age;
+                }
+
+                public String getName() { return name; }
+                public int getAge() { return age; }
+            """);
+
+    // When
+    Compilation compilation = compile(sourceFile);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    // Expect helper methods for constructor params and proper build invocation
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        "public NonEmptyCtorFinalsBuilder()",
+        "public NonEmptyCtorFinalsBuilder(NonEmptyCtorFinals instance)",
+        "this.name = initialValue(instance.getName());",
+        "this.age = initialValue(instance.getAge());",
+        "public NonEmptyCtorFinalsBuilder name(String name)",
+        "public NonEmptyCtorFinalsBuilder age(int age)",
+        "NonEmptyCtorFinals result = new NonEmptyCtorFinals(this.name.value(), this.age.value());");
+
+    // Ensure no setter calls are emitted for final fields
+    ProcessorAsserts.assertNotContaining(generatedCode, "result.setName", "result.setAge");
+  }
+
+  @Test
   void shouldHandleFieldsOfConstructorAndSetters() {
     // Given
     String packageName = "test";
