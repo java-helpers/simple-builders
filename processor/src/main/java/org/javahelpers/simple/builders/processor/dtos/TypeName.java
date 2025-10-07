@@ -79,4 +79,8 @@ public class TypeName {
   public Optional<TypeName> getInnerType() {
     return Optional.empty();
   }
+
+  public static TypeName of(Class<?> clazz) {
+    return new TypeName(clazz.getPackage().getName(), clazz.getSimpleName());
+  }
 }

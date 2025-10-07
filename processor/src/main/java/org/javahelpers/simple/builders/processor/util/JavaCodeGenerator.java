@@ -43,6 +43,7 @@ import javax.annotation.processing.Generated;
 import javax.lang.model.element.Modifier;
 import org.javahelpers.simple.builders.core.annotations.BuilderImplementation;
 import org.javahelpers.simple.builders.core.interfaces.IBuilderBase;
+import org.javahelpers.simple.builders.core.util.TrackedValue;
 import org.javahelpers.simple.builders.processor.dtos.*;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 
@@ -137,7 +138,13 @@ public class JavaCodeGenerator {
 
   private void writeClassToFile(String packageName, TypeSpec typeSpec) throws BuilderException {
     try {
-      JavaFile.builder(packageName, typeSpec).skipJavaLangImports(true).build().writeTo(filer);
+      JavaFile.builder(packageName, typeSpec)
+          .skipJavaLangImports(true)
+          .addStaticImport(TrackedValue.class, "initialValue")
+          .addStaticImport(TrackedValue.class, "changedValue")
+          .addStaticImport(TrackedValue.class, "unsetValue")
+          .build()
+          .writeTo(filer);
     } catch (IOException ex) {
       throw new BuilderException(null, ex);
     }
@@ -197,7 +204,12 @@ public class JavaCodeGenerator {
     for (FieldDto f : fields) {
       f.getGetterName()
           .ifPresent(
-              getter -> cb.addStatement("this.$N = instance.$N()", f.getFieldName(), getter));
+              getter ->
+                  cb.addStatement(
+                      "this.$N = $T.initialValue(instance.$N())",
+                      f.getFieldName(),
+                      ClassName.get(TrackedValue.class),
+                      getter));
     }
     return cb.build();
   }
@@ -207,7 +219,13 @@ public class JavaCodeGenerator {
     if (fieldType.isPrimitive()) {
       fieldType = fieldType.box();
     }
-    return FieldSpec.builder(fieldType, fieldDto.getFieldName(), Modifier.PRIVATE).build();
+    // Wrap all fields in TrackedValue<FieldType>
+    ClassName builderFieldWrapper = ClassName.get(TrackedValue.class);
+    ParameterizedTypeName wrappedFieldType =
+        ParameterizedTypeName.get(builderFieldWrapper, fieldType);
+    return FieldSpec.builder(wrappedFieldType, fieldDto.getFieldName(), Modifier.PRIVATE)
+        .initializer("$T.unsetValue()", builderFieldWrapper)
+        .build();
   }
 
   private MethodSpec createMethodBuild(
@@ -222,11 +240,11 @@ public class JavaCodeGenerator {
             .returns(returnType)
             .addAnnotation(Override.class);
 
-    // Build constructor argument list: use backing fields in declared order
+    // Build constructor argument list: use backing fields' values in declared order
     String ctorArgs =
         constructorFields.stream()
             .map(FieldDto::getFieldName)
-            .map(n -> String.format("this.%s", n))
+            .map(n -> String.format("this.%s.value()", n))
             .reduce((a, b) -> a + ", " + b)
             .orElse("");
 
@@ -236,11 +254,9 @@ public class JavaCodeGenerator {
       mb.addStatement("$1T result = new $2T<>($3L)", returnType, dtoBaseClass, ctorArgs);
     }
 
-    // Apply setter-based fields
+    // Apply setter-based fields only when changed
     for (FieldDto f : setterFields) {
-      mb.beginControlFlow("if (this.$N != null)", f.getFieldName())
-          .addStatement("result.$N(this.$N)", f.getSetterName(), f.getFieldName())
-          .endControlFlow();
+      mb.addStatement("this.$N.ifChanged(result::$N)", f.getFieldName(), f.getSetterName());
     }
     mb.addStatement("return result");
     return mb.build();

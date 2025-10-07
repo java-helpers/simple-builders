@@ -110,8 +110,8 @@ class BuilderProcessorTest {
         "public CtorAndSetterBuilder()", // empty constructor for builder
         "public CtorAndSetterBuilder name(String name)", // helpermethod for setter
         "public CtorAndSetterBuilder a(int a)", // helpermethod for constructor param
-        "CtorAndSetter result = new CtorAndSetter(this.a);",
-        "result.setName(this.name);");
+        "CtorAndSetter result = new CtorAndSetter(this.a.value());",
+        "this.name.ifChanged(result::setName);");
   }
 
   @Test
@@ -150,14 +150,14 @@ class BuilderProcessorTest {
         "public CtorAndSetterSameFieldBuilder()",
         // Expectations on constructor of builder with instance
         "public CtorAndSetterSameFieldBuilder(CtorAndSetterSameField instance)",
-        "this.name = instance.getName();",
-        "this.a = instance.getA();",
+        "this.name = initialValue(instance.getName());",
+        "this.a = initialValue(instance.getA());",
         // Expectations on helper functions
         "public CtorAndSetterSameFieldBuilder a(int a)",
         "public CtorAndSetterSameFieldBuilder name(String name)",
         // Expectations on build function
-        "CtorAndSetterSameField result = new CtorAndSetterSameField(this.a);",
-        "result.setName(this.name);");
+        "CtorAndSetterSameField result = new CtorAndSetterSameField(this.a.value());",
+        "this.name.ifChanged(result::setName);");
     // expect no setter application for 'a' on build-function
     ProcessorAsserts.assertNotContaining(generatedCode, "result.setA(this.a);");
   }
@@ -236,17 +236,17 @@ class BuilderProcessorTest {
         "public WithCollectionsBuilder names(List<String> names)",
         "public WithCollectionsBuilder names(Supplier<List<String>> namesSupplier)",
         "public WithCollectionsBuilder names(String... names)",
-        "this.names = List.of(names);",
-        "private List<String> names;",
+        "this.names = changedValue(List.of(names));",
+        "private TrackedValue<List<String>> names = unsetValue();",
         "public WithCollectionsBuilder tags(Set<String> tags)",
         "public WithCollectionsBuilder tags(Supplier<Set<String>> tagsSupplier)",
         "public WithCollectionsBuilder tags(String... tags)",
-        "this.tags = Set.of(tags);",
-        "private Set<String> tags;",
+        "this.tags = changedValue(Set.of(tags));",
+        "private TrackedValue<Set<String>> tags = unsetValue();",
         "public WithCollectionsBuilder map(Map<String, Integer> map)",
         "public WithCollectionsBuilder map(Supplier<Map<String, Integer>> mapSupplier)",
-        "this.map = map;",
-        "private Map<String, Integer> map;");
+        "this.map = changedValue(map);",
+        "private TrackedValue<Map<String, Integer>> map = unsetValue();");
   }
 
   @Test
@@ -271,8 +271,9 @@ class BuilderProcessorTest {
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
 
-    // Expect a private boxed backing field for primitive int setter
-    ProcessorAsserts.assertContaining(generatedCode, "private Integer x;");
+    // Expect a private tracked backing field for primitive int setter
+    ProcessorAsserts.assertContaining(
+        generatedCode, "private TrackedValue<Integer> x = unsetValue();");
     ProcessorAsserts.assertNotContaining(generatedCode, " FieldDoc instance;");
   }
 
@@ -338,9 +339,7 @@ class BuilderProcessorTest {
         @Override
         public BuildDoc build() {
             BuildDoc result = new BuildDoc();
-            if (this.x != null) {
-                result.setX(this.x);
-            }
+            this.x.ifChanged(result::setX);
             return result;
         }
         """);
@@ -371,7 +370,7 @@ class BuilderProcessorTest {
     ProcessorAsserts.assertContaining(
         generatedCode,
         "public FluentReturnBuilder name(String name)",
-        "this.name = name;",
+        "this.name = changedValue(name);",
         "return this;");
   }
 
@@ -519,7 +518,7 @@ class BuilderProcessorTest {
         "@param instance object instance for initialisiation",
         "public CtorDocBuilder()",
         "public CtorDocBuilder(CtorDoc instance)",
-        "private String x;");
+        "private TrackedValue<String> x = unsetValue();");
   }
 
   @Test
@@ -574,7 +573,9 @@ class BuilderProcessorTest {
     // Backing fields present
     // TODO: Add Javadoc to fields
     ProcessorAsserts.assertContaining(
-        generatedCode, "private String name;", "private HelperPlain helperPlain;");
+        generatedCode,
+        "private TrackedValue<String> name = unsetValue();",
+        "private TrackedValue<HelperPlain> helperPlain = unsetValue();");
   }
 
   @Test
@@ -609,7 +610,7 @@ class BuilderProcessorTest {
         generatedCode,
         "@param name the person name",
         "public FieldWithDocBuilder name(String name)",
-        "private String name;");
+        "private TrackedValue<String> name = unsetValue();");
   }
 
   @Test
@@ -651,11 +652,11 @@ class BuilderProcessorTest {
     // Expect consumer-by-builder method using HelperAnnoBuilder and builder.build()
     ProcessorAsserts.assertContaining(
         generatedCode,
-        "private HelperAnno helper;",
+        "private TrackedValue<HelperAnno> helper = unsetValue();",
         "helperBuilderConsumer",
         "HelperAnnoBuilder builder = new HelperAnnoBuilder();",
         "helperBuilderConsumer.accept(builder);",
-        "this.helper = builder.build();");
+        "this.helper = changedValue(builder.build());");
   }
 
   @Test
@@ -697,7 +698,7 @@ class BuilderProcessorTest {
         generatedCode,
         "HelperPlain consumer = new HelperPlain();",
         "helperPlainConsumer.accept(consumer);",
-        "private HelperPlain helperPlain;");
+        "private TrackedValue<HelperPlain> helperPlain = unsetValue();");
   }
 
   @Test
@@ -727,7 +728,10 @@ class BuilderProcessorTest {
 
     // Expect supplier-based setter usage
     ProcessorAsserts.assertContaining(
-        generatedCode, "nameSupplier", "private String name;", "this.name = nameSupplier.get();");
+        generatedCode,
+        "nameSupplier",
+        "private TrackedValue<String> name = unsetValue();",
+        "this.name = changedValue(nameSupplier.get());");
   }
 
   protected Compilation compile(JavaFileObject... sourceFiles) {
@@ -804,11 +808,13 @@ class BuilderProcessorTest {
         generatedCode,
         "public PersonBuilder name(String name)",
         "public PersonBuilder age(int age)",
-        "private String name;",
-        "private Integer age;");
+        "private TrackedValue<String> name = unsetValue();",
+        "private TrackedValue<Integer> age = unsetValue();");
   }
 
   @Test
+  // TODO: Replace Optional with other generic wrapper type, because for optional there is a
+  // feature-request
   void shouldHandleGenericWrapperTypes() {
 
     JavaFileObject optionalWrapperClass =
@@ -863,9 +869,9 @@ class BuilderProcessorTest {
     // Backing fields present
     ProcessorAsserts.assertContaining(
         optionalBuilder,
-        "private Optional<String> name;",
-        "private Optional<Integer> count;",
-        "private Optional<LocalDate> date;");
+        "private TrackedValue<Optional<String>> name = unsetValue();",
+        "private TrackedValue<Optional<Integer>> count = unsetValue();",
+        "private TrackedValue<Optional<LocalDate>> date = unsetValue();");
   }
 
   @Test
@@ -908,7 +914,7 @@ class BuilderProcessorTest {
     ProcessorAsserts.assertContaining(
         generatedCode,
         "public UsesOtherPackageHelperBuilder helper(Helper helper)",
-        "private Helper helper;");
+        "private TrackedValue<Helper> helper = unsetValue();");
   }
 
   @Test
@@ -939,13 +945,13 @@ class BuilderProcessorTest {
     ProcessorAsserts.assertContaining(
         generatedCode,
         "public HasSetStringBuilder tags(Set<String> tags)",
-        "this.tags = tags;",
+        "this.tags = changedValue(tags);",
         "public HasSetStringBuilder tags(Consumer<HashSetBuilder<String>> tagsBuilderConsumer)",
-        "this.tags = builder.build();",
+        "this.tags = changedValue(builder.build());",
         "public HasSetStringBuilder tags(String... tags)",
-        "this.tags = Set.of(tags);",
+        "this.tags = changedValue(Set.of(tags));",
         "public HasSetStringBuilder tags(Supplier<Set<String>> tagsSupplier)",
-        "this.tags = tagsSupplier.get();");
+        "this.tags = changedValue(tagsSupplier.get());");
   }
 
   @Test
@@ -984,13 +990,13 @@ class BuilderProcessorTest {
     ProcessorAsserts.assertContaining(
         generatedCode,
         "public HasSetCustomBuilder helpers(Set<Helper> helpers)",
-        "this.helpers = helpers;",
+        "this.helpers = changedValue(helpers);",
         "public HasSetCustomBuilder helpers(Consumer<HashSetBuilder<Helper>> helpersBuilderConsumer)",
-        "this.helpers = builder.build();",
+        "this.helpers = changedValue(builder.build());",
         "public HasSetCustomBuilder helpers(Helper... helpers)",
-        "this.helpers = Set.of(helpers);",
+        "this.helpers = changedValue(Set.of(helpers));",
         "public HasSetCustomBuilder helpers(Supplier<Set<Helper>> helpersSupplier)",
-        "this.helpers = helpersSupplier.get();");
+        "this.helpers = changedValue(helpersSupplier.get());");
   }
 
   @Test
@@ -1065,7 +1071,7 @@ class BuilderProcessorTest {
     ProcessorAsserts.assertingResult(
         generatedCode,
         contains("public HasVariousMethodsBuilder ok(int ok)"),
-        contains("this.ok = ok;"),
+        contains("this.ok = changedValue(ok);"),
         notContains("nonSetterMethods"),
         notContains("settingChanged"),
         notContains("hidden"),
@@ -1245,8 +1251,8 @@ class BuilderProcessorTest {
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
     ProcessorAsserts.assertContaining(
         generatedCode,
-        "public HasCollectionsConvenienceBuilder names(String... names) { this.names = List.of(names);",
-        "public HasCollectionsConvenienceBuilder tags(String... tags) { this.tags = Set.of(tags);");
+        "public HasCollectionsConvenienceBuilder names(String... names) { this.names = changedValue(List.of(names));",
+        "public HasCollectionsConvenienceBuilder tags(String... tags) { this.tags = changedValue(Set.of(tags));");
   }
 
   @Test
@@ -1274,7 +1280,8 @@ class BuilderProcessorTest {
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
     ProcessorAsserts.assertContaining(
-        generatedCode, "public HasLocalDateBuilder date(LocalDate date) { this.date = date;");
+        generatedCode,
+        "public HasLocalDateBuilder date(LocalDate date) { this.date = changedValue(date);");
   }
 
   @Test

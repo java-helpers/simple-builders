@@ -49,6 +49,7 @@ import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 import org.javahelpers.simple.builders.core.builders.ArrayListBuilder;
 import org.javahelpers.simple.builders.core.builders.HashMapBuilder;
 import org.javahelpers.simple.builders.core.builders.HashSetBuilder;
+import org.javahelpers.simple.builders.core.util.TrackedValue;
 import org.javahelpers.simple.builders.processor.dtos.*;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 
@@ -362,11 +363,12 @@ public class BuilderDefinitionCreator {
     }
     methodDto.setCode(
         """
-        this.$fieldName:N = $dtoMethodParams:N;
+        this.$fieldName:N = $builderFieldWrapper:T.changedValue($dtoMethodParams:N);
         return this;
         """);
     methodDto.addArgument("fieldName", fieldName);
     methodDto.addArgument("dtoMethodParams", params);
+    methodDto.addArgument("builderFieldWrapper", TypeName.of(TrackedValue.class));
     return methodDto;
   }
 
@@ -384,12 +386,13 @@ public class BuilderDefinitionCreator {
         """
         $helperType:T consumer = new $helperType:T();
         $dtoMethodParam:N.accept(consumer);
-        this.$fieldName:N = consumer;
+        this.$fieldName:N = $builderFieldWrapper:T.changedValue(consumer);
         return this;
         """);
     methodDto.addArgument("fieldName", fieldName);
     methodDto.addArgument("dtoMethodParam", parameter.getParameterName());
     methodDto.addArgument("helperType", fieldType);
+    methodDto.addArgument("builderFieldWrapper", TypeName.of(TrackedValue.class));
     return methodDto;
   }
 
@@ -413,12 +416,13 @@ public class BuilderDefinitionCreator {
         """
         $helperType:T builder = new $helperType:T();
         $dtoMethodParam:N.accept(builder);
-        this.$fieldName:N = builder.build();
+        this.$fieldName:N = $builderFieldWrapper:T.changedValue(builder.build());
         return this;
         """);
     methodDto.addArgument("fieldName", fieldName);
     methodDto.addArgument("dtoMethodParam", parameter.getParameterName());
     methodDto.addArgument("helperType", builderType);
+    methodDto.addArgument("builderFieldWrapper", TypeName.of(TrackedValue.class));
     return methodDto;
   }
 
@@ -434,11 +438,12 @@ public class BuilderDefinitionCreator {
     methodDto.setMethodType(MethodTypes.SUPPLIER);
     methodDto.setCode(
         """
-        this.$fieldName:N = $dtoMethodParam:N.get();
+        this.$fieldName:N = $builderFieldWrapper:T.changedValue($dtoMethodParam:N.get());
         return this;
         """);
     methodDto.addArgument("fieldName", fieldName);
     methodDto.addArgument("dtoMethodParam", parameter.getParameterName());
+    methodDto.addArgument("builderFieldWrapper", TypeName.of(TrackedValue.class));
     return methodDto;
   }
 
