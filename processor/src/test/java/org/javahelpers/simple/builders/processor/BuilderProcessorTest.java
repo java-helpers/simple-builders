@@ -2120,9 +2120,11 @@ class BuilderProcessorTest {
         contains("public DtoWithGenericSettersBuilder<T> name"),
         // fieldWithClassGeneric setter should be present
         contains("public DtoWithGenericSettersBuilder<T> fieldWithClassGeneric"),
-        // fieldWithOwnGeneric setter should be ignored because it has method-level type parameter <F>
+        // fieldWithOwnGeneric setter should be ignored because it has method-level type parameter
+        // <F>
         notContains("public DtoWithGenericSettersBuilder<T> fieldWithOwnGeneric"),
-        // fieldWithExtendedClassGeneric setter should be ignored because it has method-level type parameter <F>, even if it extends the type parameter of the class <T>
+        // fieldWithExtendedClassGeneric setter should be ignored because it has method-level type
+        // parameter <F>, even if it extends the type parameter of the class <T>
         notContains("public DtoWithGenericSettersBuilder<T> fieldWithExtendedClassGeneric"));
   }
 
