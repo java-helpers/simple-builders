@@ -224,6 +224,10 @@ public class JavaCodeGenerator {
     ParameterizedTypeName wrappedFieldType =
         ParameterizedTypeName.get(builderFieldWrapper, fieldType);
     return FieldSpec.builder(wrappedFieldType, fieldDto.getFieldName(), Modifier.PRIVATE)
+        .addJavadoc(
+            "Tracked value for <code>$L</code>: $L.\n",
+            fieldDto.getFieldName(),
+            fieldDto.getJavaDoc())
         .initializer("$T.unsetValue()", builderFieldWrapper)
         .build();
   }

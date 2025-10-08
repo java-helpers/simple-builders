@@ -643,8 +643,14 @@ class BuilderProcessorTest {
                 private String name;
                 private HelperPlain helperPlain;
                 public String getName() { return name; }
+                /**
+                 * @param name the name of a specific person
+                 */
                 public void setName(String name) { this.name = name; }
                 public HelperPlain getHelperPlain() { return helperPlain; }
+                /**
+                 * @param helperPlain complex helper object
+                 */
                 public void setHelperPlain(HelperPlain helperPlain) { this.helperPlain = helperPlain; }
                 public void doSomething(int a, String b) { /* no-op */ }
                 """);
@@ -668,20 +674,23 @@ class BuilderProcessorTest {
     // Note: Proxy methods are no longer supported; do not assert proxy method javadoc here.
 
     // Setter method javadoc and code (default values, when nothing is set)
-    ProcessorAsserts.assertContaining(generatedCode, "@param name name");
+    ProcessorAsserts.assertContaining(generatedCode, "@param name the name of a specific person");
 
     // SUPPLIER method javadoc and code
-    ProcessorAsserts.assertContaining(generatedCode, "@param nameSupplier supplier for name");
+    ProcessorAsserts.assertContaining(
+        generatedCode, "@param nameSupplier supplier for the name of a specific person");
 
     // CONSUMER method javadoc and code
     ProcessorAsserts.assertContaining(
-        generatedCode, "@param helperPlainConsumer consumer providing an instance of helperPlain");
+        generatedCode,
+        "@param helperPlainConsumer consumer providing an instance of complex helper object");
 
-    // Backing fields present
-    // TODO: Add Javadoc to fields
+    // Backing fields present with javadoc
     ProcessorAsserts.assertContaining(
         generatedCode,
+        "* Tracked value for <code>name</code>: the name of a specific person.",
         "private TrackedValue<String> name = unsetValue();",
+        "* Tracked value for <code>helperPlain</code>: complex helper object.",
         "private TrackedValue<HelperPlain> helperPlain = unsetValue();");
   }
 
