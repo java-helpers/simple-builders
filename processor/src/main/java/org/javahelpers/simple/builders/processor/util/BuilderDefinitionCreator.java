@@ -316,6 +316,8 @@ public class BuilderDefinitionCreator {
     FieldDto ctorField = new FieldDto();
     ctorField.setFieldName(fieldName);
     ctorField.setFieldType(fieldType);
+    // Set javadoc (default to field name if no javadoc found)
+    ctorField.setJavaDoc(fieldName);
     // Find matching getter on the DTO type
     JavaLangAnalyser.findGetterForField(dtoType, fieldName, param.asType(), elementUtils, typeUtils)
         .ifPresent(getter -> ctorField.setGetterName(getter.getSimpleName().toString()));

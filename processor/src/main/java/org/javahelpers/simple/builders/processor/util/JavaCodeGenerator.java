@@ -309,19 +309,18 @@ public class JavaCodeGenerator {
     switch (methodDto.getMethodType()) {
       case PROXY ->
           methodBuilder.addJavadoc(
-              "Calling <code>$1N</code> on dto-instance with parameters.\n",
-              methodDto.getMethodName());
+              "Sets the value for <code>$1N</code>.\n", methodDto.getMethodName());
       case CONSUMER ->
           methodBuilder.addJavadoc(
-              "Calling <code>$1N</code> on dto-instance with value after executing consumer.\n",
+              "Sets the value for <code>$1N</code> by executing the provided consumer.\n",
               methodDto.createFieldSetterMethodName());
       case CONSUMER_BY_BUILDER ->
           methodBuilder.addJavadoc(
-              "Calling <code>$1N</code> on dto-instance with builder result value.\n",
+              "Sets the value for <code>$1N</code> using a builder consumer that produces the value.\n",
               methodDto.createFieldSetterMethodName());
       case SUPPLIER ->
           methodBuilder.addJavadoc(
-              "Calling <code>$1N</code> on instance with value of supplier.\n",
+              "Sets the value for <code>$1N</code> by invoking the provided supplier.\n",
               methodDto.createFieldSetterMethodName());
     }
 
