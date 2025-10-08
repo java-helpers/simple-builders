@@ -343,6 +343,46 @@ class BuilderProcessorTest {
   }
 
   @Test
+  void shouldHandleRecordWithMultipleConstructorsAndAnnotatedNonCanonical() {
+    // Given: Record with canonical constructor (name, age, email) but a secondary
+    // constructor with fewer params is annotated with @SimpleBuilderConstructor
+    String recordName = "PersonWithEmail";
+    String builderClassName = recordName + "Builder";
+
+    JavaFileObject recordFile =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilderConstructor;
+
+            @SimpleBuilder
+            public record PersonWithEmail(String name, int age, String email) {
+              @SimpleBuilderConstructor
+              public PersonWithEmail(String name, int age) {
+                this(name, age, null);
+              }
+            }
+            """);
+
+    // When
+    Compilation compilation = compile(recordFile);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+    // Builder should only generate methods for the annotated constructor (name, age)
+    // NOT for email, since records don't have setters and email is not in the annotated ctor
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        "public PersonWithEmailBuilder name(String name)",
+        "public PersonWithEmailBuilder age(int age)");
+    // Email should NOT have a builder method since it's not in the annotated constructor
+    ProcessorAsserts.assertNotContaining(generatedCode, "public PersonWithEmailBuilder email");
+  }
+
+  @Test
   void shouldGenerateCollectionSettersAndProviders() {
     // Given
     String packageName = "test";
