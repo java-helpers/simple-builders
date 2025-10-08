@@ -209,6 +209,67 @@ class BuilderProcessorTest {
   }
 
   @Test
+  void shouldUseAnnotatedConstructorWhenMultipleConstructorsExist() {
+    // Given
+    String builderClassName = "AnnotatedCtorChoiceBuilder";
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.forSource(
+            """
+                package test;
+
+                import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+                import org.javahelpers.simple.builders.core.annotations.SimpleBuilderConstructor;
+
+                @SimpleBuilder
+                public class AnnotatedCtorChoice {
+                  private int a;
+                  private String name;
+                  private boolean flag;
+
+                  @SimpleBuilderConstructor
+                  public AnnotatedCtorChoice(int a, String name) {
+                    this.a = a;
+                    this.name = name;
+                  }
+
+                  // Alternative constructor that must NOT be used by the builder
+                  public AnnotatedCtorChoice(int a, String name, boolean flag) {
+                    this.a = a;
+                    this.name = name;
+                    this.flag = flag;
+                  }
+
+                  public int getA() { return a; }
+                  public String getName() { return name; }
+                  public boolean isFlag() { return flag; }
+
+                  public void setName(String name) { this.name = name; }
+                }
+            """);
+
+    // When
+    Compilation compilation = compile(sourceFile);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    // Builder must use the annotated (a, name) constructor
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        "public AnnotatedCtorChoiceBuilder a(int a)",
+        "public AnnotatedCtorChoiceBuilder name(String name)",
+        "AnnotatedCtorChoice result = new AnnotatedCtorChoice(this.a.value(), this.name.value());");
+
+    // Ensure the alternative constructor (with flag) is not used nor exposed via helpers
+    ProcessorAsserts.assertNotContaining(
+        generatedCode,
+        "public AnnotatedCtorChoiceBuilder flag",
+        "new AnnotatedCtorChoice(this.a.value(), this.flag.value())");
+  }
+
+  @Test
   @Disabled("TODO: Records are not supported for builder generation yet")
   void shouldHandleRecordWithoutGeneratingBuilder() {
     // Given
