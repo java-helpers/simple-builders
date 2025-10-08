@@ -46,10 +46,13 @@ public class AnnotationValidator {
    * @throws BuilderException if annotation-target does not match supported types
    */
   public static void validateAnnotatedElement(Element annotatedElement) throws BuilderException {
-    if (annotatedElement.getKind() != ElementKind.CLASS) {
+    if (annotatedElement.getKind() != ElementKind.CLASS
+        && annotatedElement.getKind() != ElementKind.RECORD) {
       throw new BuilderException(
           annotatedElement,
-          "The " + SimpleBuilder.class.getSimpleName() + " should annotated " + " on class.");
+          "The "
+              + SimpleBuilder.class.getSimpleName()
+              + " should be annotated on a class or record.");
     }
 
     if (annotatedElement.getModifiers().contains(Modifier.ABSTRACT)) {
