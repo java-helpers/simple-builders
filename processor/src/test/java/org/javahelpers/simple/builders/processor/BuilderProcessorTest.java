@@ -2077,6 +2077,56 @@ class BuilderProcessorTest {
   }
 
   @Test
+  void shouldIgnoreSettersWithMethodLevelTypeParameters() {
+    // Given: a DTO with setters that have their own type parameters
+    String builderClassName = "DtoWithGenericSettersBuilder";
+    JavaFileObject source =
+        ProcessorTestUtils.forSource(
+            """
+                package test;
+                import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+                import java.io.Serializable;
+                @SimpleBuilder
+                public class DtoWithGenericSetters <T> {
+                  private String name;
+                  private Object fieldWithOwnGeneric;
+                  private T fieldWithClassGeneric;
+                  private T fieldWithExtendedClassGeneric;
+                  public String getName() { return name; }
+                  public void setName(String name) { this.name = name; }
+                  public T getFieldWithClassGeneric() { return fieldWithClassGeneric; }
+                  public void setFieldWithClassGeneric(T fieldWithClassGeneric) { this.fieldWithClassGeneric = fieldWithClassGeneric; }
+                  public T getFieldWithExtendedClassGeneric() { return fieldWithExtendedClassGeneric; }
+                  public <F extends T> void setFieldWithExtendedClassGeneric(F fieldWithExtendedClassGeneric) {
+                    this.fieldWithExtendedClassGeneric = fieldWithExtendedClassGeneric;
+                  }
+                  public Object getFieldWithOwnGeneric() { return fieldWithOwnGeneric; }
+                  // This setter has its own type parameter - should be ignored
+                  public <F extends Serializable> void setFieldWithOwnGeneric(F fieldWithOwnGeneric) {
+                    this.fieldWithOwnGeneric = fieldWithOwnGeneric;
+                  }
+                }
+            """);
+
+    // When
+    Compilation compilation = compile(source);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertThat(compilation).succeededWithoutWarnings();
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        // name field should be present
+        contains("public DtoWithGenericSettersBuilder<T> name"),
+        // fieldWithClassGeneric setter should be present
+        contains("public DtoWithGenericSettersBuilder<T> fieldWithClassGeneric"),
+        // fieldWithOwnGeneric setter should be ignored because it has method-level type parameter <F>
+        notContains("public DtoWithGenericSettersBuilder<T> fieldWithOwnGeneric"),
+        // fieldWithExtendedClassGeneric setter should be ignored because it has method-level type parameter <F>, even if it extends the type parameter of the class <T>
+        notContains("public DtoWithGenericSettersBuilder<T> fieldWithExtendedClassGeneric"));
+  }
+
+  @Test
   void shouldNotGenerateBuilderWhenNestedBuilderInterfaceExists() {
     // Given: an annotated class that already declares a nested interface named like the would-be
     // builder
