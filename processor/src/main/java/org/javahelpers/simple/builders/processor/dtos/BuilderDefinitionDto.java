@@ -35,20 +35,21 @@ public class BuilderDefinitionDto {
   /** Type of builder. Containing package and name of DTO. */
   private TypeName builderTypeName;
 
+  /**
+   * Fields in constructor. Containing all fields which need to be given for calling the
+   * constructor. Ordering in LinkedList is matching orderung of parameters in constructor call.
+   * Instances of fields are added in LinkedList of all fields too.
+   */
+  private final List<FieldDto> fieldsInConstructor = new LinkedList<>();
+
   /** Generic parameters declared on the target DTO (e.g., <T extends Number, U>). */
   private final List<GenericParameterDto> generics = new LinkedList<>();
-
-  /**
-   * List of all methods of target DTO which are supported by builder and not targeting a specific
-   * DTO field.
-   */
-  private final List<MethodDto> methodsForBuilder = new LinkedList<>();
 
   /**
    * List of all fields of target DTO which are supported by builder. A field could be supported by
    * multiple functions in builder.
    */
-  private final List<FieldDto> setterFieldsForBuilder = new LinkedList<>();
+  private final List<FieldDto> fields = new LinkedList<>();
 
   /**
    * Getting type of builder.
@@ -89,31 +90,17 @@ public class BuilderDefinitionDto {
   }
 
   /**
-   * Adding a method-definition to builder defintion.
-   *
-   * @param member {@code org.javahelpers.simple.builders.internal.dtos.MethodDto} to be added
-   */
-  public void addMethod(MethodDto member) {
-    methodsForBuilder.add(member);
-  }
-
-  /**
-   * Getting all definied methods in builder definition.
-   *
-   * @return list of methods with type {@code
-   *     org.javahelpers.simple.builders.internal.dtos.MethodDto}
-   */
-  public List<MethodDto> getMethodsForBuilder() {
-    return methodsForBuilder;
-  }
-
-  /**
    * Adding a field-definition to builder defintion.
    *
    * @param field {@code org.javahelpers.simple.builders.internal.dtos.FieldDto} to be added
    */
   public void addField(FieldDto field) {
-    setterFieldsForBuilder.add(field);
+    fields.add(field);
+  }
+
+  /** Adds a field definition that will be provided via the DTO constructor. */
+  public void addFieldInConstructor(FieldDto field) {
+    fieldsInConstructor.add(field);
   }
 
   /**
@@ -122,7 +109,23 @@ public class BuilderDefinitionDto {
    * @return list of fields with type {@code org.javahelpers.simple.builders.internal.dtos.FieldDto}
    */
   public List<FieldDto> getSetterFieldsForBuilder() {
-    return setterFieldsForBuilder;
+    return fields;
+  }
+
+  /** Returns the ordered list of fields to be passed to the DTO constructor. */
+  public List<FieldDto> getConstructorFieldsForBuilder() {
+    return fieldsInConstructor;
+  }
+
+  /**
+   * Returns all fields known to the builder in a single list. Constructor parameters appear first
+   * (in constructor order), followed by setter-derived fields.
+   */
+  public List<FieldDto> getAllFieldsForBuilder() {
+    LinkedList<FieldDto> all = new LinkedList<>();
+    all.addAll(fieldsInConstructor);
+    all.addAll(fields);
+    return all;
   }
 
   /** Adds a generic parameter definition. */

@@ -66,6 +66,11 @@ public final class JavapoetMapper {
    */
   public static TypeName map2ParameterType(
       org.javahelpers.simple.builders.processor.dtos.TypeName parameterType) {
+    // Handle generic type variables (e.g., T, K, V)
+    if (parameterType
+        instanceof org.javahelpers.simple.builders.processor.dtos.TypeNameVariable typeVariable) {
+      return TypeVariableName.get(typeVariable.getClassName());
+    }
     ClassName classNameParameter =
         ClassName.get(parameterType.getPackageName(), parameterType.getClassName());
     if (parameterType instanceof TypeNameArray parameterTypeArray) {

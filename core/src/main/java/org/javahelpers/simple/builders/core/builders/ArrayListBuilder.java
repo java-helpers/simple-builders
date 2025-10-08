@@ -66,6 +66,6 @@ public class ArrayListBuilder<T> {
    * @return new ArrayList holding all elements which have been added before
    */
   public List<T> build() {
-    return new ArrayList(mList);
+    return new ArrayList<>(mList);
   }
 }

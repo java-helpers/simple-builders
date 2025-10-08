@@ -26,6 +26,8 @@ package org.javahelpers.simple.builders.processor.dtos;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Definition of a field. Containing all information to generate methods in builder to set or modify
@@ -38,7 +40,7 @@ public class FieldDto {
   /** Type of field. Containing generic, name of package and class */
   private TypeName fieldType;
 
-  /** List of all methods in builder, which change the field. */
+  /** List of all methods in builder, which provide helpers to change the field. */
   private final List<MethodDto> fieldSetterMethodsList = new ArrayList<>();
 
   /** Optional Javadoc of the field extracted from setter or constructor. */
@@ -46,6 +48,12 @@ public class FieldDto {
 
   /** Method-level generics declared on the setter, to be reused in builder methods. */
   private final List<GenericParameterDto> fieldGenerics = new ArrayList<>();
+
+  /**
+   * The name of the getter method to call, because in case of boolean it does not need to start
+   * with get (e.g., getName or isActive).
+   */
+  private String getterName;
 
   /**
    * Getting name of field.
@@ -63,6 +71,15 @@ public class FieldDto {
    */
   public void setFieldName(String fieldName) {
     this.fieldName = fieldName;
+  }
+
+  /**
+   * Getting name of setter method.
+   *
+   * @return name of setter for field
+   */
+  public String getSetterName() {
+    return "set" + StringUtils.capitalize(fieldName);
   }
 
   /**
@@ -131,5 +148,15 @@ public class FieldDto {
     if (generics != null) {
       this.fieldGenerics.addAll(generics);
     }
+  }
+
+  /** Returns the getter method name to use (without parentheses). */
+  public Optional<String> getGetterName() {
+    return Optional.ofNullable(getterName);
+  }
+
+  /** Sets the getter method name to use (without parentheses). */
+  public void setGetterName(String getterName) {
+    this.getterName = getterName;
   }
 }
