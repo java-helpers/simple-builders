@@ -46,7 +46,6 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.annotations.IgnoreInBuilder;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
-import org.javahelpers.simple.builders.core.annotations.SimpleBuilderConstructor;
 import org.javahelpers.simple.builders.core.builders.ArrayListBuilder;
 import org.javahelpers.simple.builders.core.builders.HashMapBuilder;
 import org.javahelpers.simple.builders.core.builders.HashSetBuilder;
@@ -300,37 +299,6 @@ public class BuilderDefinitionCreator {
     addAdditionalHelperMethodsForField(result, fieldName, fieldType);
 
     return Optional.of(result);
-  }
-
-  /**
-   * Determines which constructor to use for builder initialization. Prioritizes constructors
-   * annotated with {@link SimpleBuilderConstructor}. If none is annotated, selects the constructor
-   * with the highest number of parameters. Returns empty if no constructor has parameters (i.e.,
-   * only default constructor or none found).
-   */
-  private static Optional<ExecutableElement> findConstructorForBuilder(
-      TypeElement annotatedType, Elements elementUtils) {
-    List<ExecutableElement> ctors =
-        ElementFilter.constructorsIn(elementUtils.getAllMembers(annotatedType));
-
-    // First, check if any constructor is annotated with @SimpleBuilderConstructor
-    for (ExecutableElement ctor : ctors) {
-      if (ctor.getAnnotation(SimpleBuilderConstructor.class) != null) {
-        return Optional.of(ctor);
-      }
-    }
-
-    // Fall back to heuristic: select constructor with the most parameters
-    ExecutableElement selected = null;
-    int maxParams = -1;
-    for (ExecutableElement ctor : ctors) {
-      int p = ctor.getParameters().size();
-      if (p > maxParams) {
-        maxParams = p;
-        selected = ctor;
-      }
-    }
-    return (selected != null && maxParams > 0) ? Optional.of(selected) : Optional.empty();
   }
 
   /**

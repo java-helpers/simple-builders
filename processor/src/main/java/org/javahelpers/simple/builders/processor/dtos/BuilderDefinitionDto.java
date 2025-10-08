@@ -49,7 +49,7 @@ public class BuilderDefinitionDto {
    * List of all fields of target DTO which are supported by builder. A field could be supported by
    * multiple functions in builder.
    */
-  private final LinkedList<FieldDto> fields = new LinkedList<>();
+  private final List<FieldDto> fields = new LinkedList<>();
 
   /**
    * Getting type of builder.
@@ -108,7 +108,7 @@ public class BuilderDefinitionDto {
    *
    * @return list of fields with type {@code org.javahelpers.simple.builders.internal.dtos.FieldDto}
    */
-  public LinkedList<FieldDto> getSetterFieldsForBuilder() {
+  public List<FieldDto> getSetterFieldsForBuilder() {
     return fields;
   }
 

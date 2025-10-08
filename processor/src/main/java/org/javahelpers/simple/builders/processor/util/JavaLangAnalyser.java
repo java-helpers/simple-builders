@@ -42,6 +42,7 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
+import org.javahelpers.simple.builders.core.annotations.SimpleBuilderConstructor;
 
 /** Helperclass for extrating specific information from existing classes. */
 public final class JavaLangAnalyser {
@@ -284,5 +285,40 @@ public final class JavaLangAnalyser {
       }
     }
     return Optional.empty();
+  }
+
+  /**
+   * Determines which constructor to use for builder initialization. Prioritizes constructors
+   * annotated with {@link SimpleBuilderConstructor}. If none is annotated, selects the constructor
+   * with the highest number of parameters. Returns empty if no constructor has parameters (i.e.,
+   * only default constructor or none found).
+   *
+   * @param annotatedType the type element to search for constructors
+   * @param elementUtils elements utility
+   * @return Optional containing the selected constructor, or empty if none suitable
+   */
+  public static Optional<ExecutableElement> findConstructorForBuilder(
+      TypeElement annotatedType, Elements elementUtils) {
+    List<ExecutableElement> ctors =
+        ElementFilter.constructorsIn(elementUtils.getAllMembers(annotatedType));
+
+    // First, check if any constructor is annotated with @SimpleBuilderConstructor
+    for (ExecutableElement ctor : ctors) {
+      if (ctor.getAnnotation(SimpleBuilderConstructor.class) != null) {
+        return Optional.of(ctor);
+      }
+    }
+
+    // Fall back to heuristic: select constructor with the most parameters
+    ExecutableElement selected = null;
+    int maxParams = -1;
+    for (ExecutableElement ctor : ctors) {
+      int p = ctor.getParameters().size();
+      if (p > maxParams) {
+        maxParams = p;
+        selected = ctor;
+      }
+    }
+    return (selected != null && maxParams > 0) ? Optional.of(selected) : Optional.empty();
   }
 }
