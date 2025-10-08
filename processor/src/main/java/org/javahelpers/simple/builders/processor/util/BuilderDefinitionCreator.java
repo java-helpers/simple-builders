@@ -107,8 +107,7 @@ public class BuilderDefinitionCreator {
       // nur public
       if (isMethodRelevantForBuilder(mth)) {
         // Avoid adding setter-derived fields that duplicate constructor params
-        Optional<FieldDto> maybeField =
-            createFieldFromSetter(mth, result.getGenerics(), elementUtils, typeUtils);
+        Optional<FieldDto> maybeField = createFieldFromSetter(mth, elementUtils, typeUtils);
         if (maybeField.isPresent()) {
           FieldDto field = maybeField.get();
           if (!ctorFieldNames.contains(field.getFieldName())) {
@@ -229,10 +228,7 @@ public class BuilderDefinitionCreator {
   }
 
   private static Optional<FieldDto> createFieldFromSetter(
-      ExecutableElement mth,
-      List<GenericParameterDto> dtoGenerics,
-      Elements elementUtils,
-      Types typeUtils) {
+      ExecutableElement mth, Elements elementUtils, Types typeUtils) {
     String methodName = mth.getSimpleName().toString();
     String fieldName = StringUtils.uncapitalize(StringUtils.removeStart(methodName, "set"));
 
@@ -276,17 +272,11 @@ public class BuilderDefinitionCreator {
 
     // Finding generics declared on the setter itself (field-specific), e.g., <T extends
     // Serializable>
+    // If there are field-specific generics, no field in builder could be generated for it, so it
+    // needs to be ignored
     if (CollectionUtils.isNotEmpty(mth.getTypeParameters())) {
-      List<String> dtoGenericsNames =
-          dtoGenerics.stream().map(GenericParameterDto::getName).toList();
-      List<String> mthGenericsNames =
-          mth.getTypeParameters().stream().map(tp -> tp.getSimpleName().toString()).toList();
-      // If there are field-specific generics, no field in builder could be generated for it, so it
-      // needs to be ignored
-      if (CollectionUtils.containsAll(dtoGenericsNames, mthGenericsNames)) {
-        // TODO: Logging
-        return Optional.empty();
-      }
+      // TODO: Logging
+      return Optional.empty();
     }
 
     // simple setter
