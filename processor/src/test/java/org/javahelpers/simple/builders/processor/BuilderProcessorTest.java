@@ -270,7 +270,45 @@ class BuilderProcessorTest {
   }
 
   @Test
-  @Disabled("TODO: Records are not supported for builder generation yet")
+  void shouldIgnoreSimpleBuilderConstructorOnRegularMethod() {
+    // Given: @SimpleBuilderConstructor incorrectly placed on a regular method (not constructor)
+    String className = "WrongMethodAnnotation";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject source =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilderConstructor;
+
+            @SimpleBuilder
+            public class WrongMethodAnnotation {
+              private String name;
+
+              @SimpleBuilderConstructor
+              public void notAConstructor(String name) {
+                this.name = name;
+              }
+
+              public String getName() { return name; }
+              public void setName(String name) { this.name = name; }
+            }
+            """);
+
+    // When
+    Compilation compilation = compile(source);
+
+    // Then: Builder should still be generated, but annotation on method should be ignored
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+    // Builder should have method from setter, not from annotated regular method
+    ProcessorAsserts.assertContaining(
+        generatedCode, "public WrongMethodAnnotationBuilder name(String name)");
+  }
+
+  @Test
   void shouldHandleRecordWithoutGeneratingBuilder() {
     // Given
     String recordName = "PersonRecord";
@@ -299,9 +337,49 @@ class BuilderProcessorTest {
     ProcessorAsserts.assertContaining(
         generatedCode,
         "public PersonRecordBuilder name(String name)",
-        "this.name = name;",
+        "this.name = changedValue(name);",
         "public PersonRecordBuilder age(int age)",
-        "this.age = age;");
+        "this.age = changedValue(age);");
+  }
+
+  @Test
+  void shouldHandleRecordWithMultipleConstructorsAndAnnotatedNonCanonical() {
+    // Given: Record with canonical constructor (name, age, email) but a secondary
+    // constructor with fewer params is annotated with @SimpleBuilderConstructor
+    String recordName = "PersonWithEmail";
+    String builderClassName = recordName + "Builder";
+
+    JavaFileObject recordFile =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilderConstructor;
+
+            @SimpleBuilder
+            public record PersonWithEmail(String name, int age, String email) {
+              @SimpleBuilderConstructor
+              public PersonWithEmail(String name, int age) {
+                this(name, age, null);
+              }
+            }
+            """);
+
+    // When
+    Compilation compilation = compile(recordFile);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+    // Builder should only generate methods for the annotated constructor (name, age)
+    // NOT for email, since records don't have setters and email is not in the annotated ctor
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        "public PersonWithEmailBuilder name(String name)",
+        "public PersonWithEmailBuilder age(int age)");
+    // Email should NOT have a builder method since it's not in the annotated constructor
+    ProcessorAsserts.assertNotContaining(generatedCode, "public PersonWithEmailBuilder email");
   }
 
   @Test

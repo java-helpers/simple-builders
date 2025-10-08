@@ -30,9 +30,17 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotation to be placed on a constructor, if a specific constructor should be used for building
- * the resulting DTO.
+ * Annotation to be placed on a constructor to indicate that this specific constructor should be
+ * used for building the resulting DTO.
+ *
+ * <p>This annotation supports both regular class constructors and record constructors. Note that
+ * {@code ElementType.METHOD} is included in the target to support record constructors (which are
+ * treated as methods in certain contexts), but this annotation should only be applied to actual
+ * constructors. When placed on regular methods, the annotation will be silently ignored.
+ *
+ * <p>If multiple constructors exist and none is annotated, the processor will select the
+ * constructor with the most parameters.
  */
-@Target({ElementType.CONSTRUCTOR})
+@Target({ElementType.CONSTRUCTOR, ElementType.METHOD})
 @Retention(RetentionPolicy.CLASS)
 public @interface SimpleBuilderConstructor {}
