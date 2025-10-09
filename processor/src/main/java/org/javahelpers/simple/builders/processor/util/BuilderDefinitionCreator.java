@@ -57,6 +57,10 @@ import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 public class BuilderDefinitionCreator {
   private static final String BUILDER_SUFFIX = "Builder";
 
+  private BuilderDefinitionCreator() {
+    // Private constructor to prevent instantiation
+  }
+
   /**
    * Extracting definition for a builder from annotated element.
    *
