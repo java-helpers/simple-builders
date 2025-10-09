@@ -58,6 +58,17 @@ import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 public class BuilderDefinitionCreator {
   private static final String BUILDER_SUFFIX = "Builder";
 
+  // Template argument keys for code generation
+  private static final String ARG_FIELD_NAME = "fieldName";
+  private static final String ARG_DTO_METHOD_PARAM = "dtoMethodParam";
+  private static final String ARG_DTO_METHOD_PARAMS = "dtoMethodParams";
+  private static final String ARG_BUILDER_FIELD_WRAPPER = "builderFieldWrapper";
+  private static final String ARG_HELPER_TYPE = "helperType";
+
+  // Parameter name suffixes
+  private static final String SUFFIX_CONSUMER = "Consumer";
+  private static final String SUFFIX_SUPPLIER = "Supplier";
+
   private BuilderDefinitionCreator() {
     // Private constructor to prevent instantiation
   }
@@ -339,16 +350,16 @@ public class BuilderDefinitionCreator {
         this.$fieldName:N = $builderFieldWrapper:T.changedValue($dtoMethodParams:N);
         return this;
         """);
-    methodDto.addArgument("fieldName", fieldName);
-    methodDto.addArgument("dtoMethodParams", params);
-    methodDto.addArgument("builderFieldWrapper", TypeName.of(TrackedValue.class));
+    methodDto.addArgument(ARG_FIELD_NAME, fieldName);
+    methodDto.addArgument(ARG_DTO_METHOD_PARAMS, params);
+    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TypeName.of(TrackedValue.class));
     return methodDto;
   }
 
   private static MethodDto createFieldConsumer(String fieldName, TypeName fieldType) {
     TypeNameGeneric consumerType = new TypeNameGeneric(map2TypeName(Consumer.class), fieldType);
     MethodParameterDto parameter = new MethodParameterDto();
-    parameter.setParameterName(fieldName + "Consumer");
+    parameter.setParameterName(fieldName + SUFFIX_CONSUMER);
     parameter.setParameterTypeName(consumerType);
     MethodDto methodDto = new MethodDto();
     methodDto.setMethodName(fieldName);
@@ -362,10 +373,10 @@ public class BuilderDefinitionCreator {
         this.$fieldName:N = $builderFieldWrapper:T.changedValue(consumer);
         return this;
         """);
-    methodDto.addArgument("fieldName", fieldName);
-    methodDto.addArgument("dtoMethodParam", parameter.getParameterName());
-    methodDto.addArgument("helperType", fieldType);
-    methodDto.addArgument("builderFieldWrapper", TypeName.of(TrackedValue.class));
+    methodDto.addArgument(ARG_FIELD_NAME, fieldName);
+    methodDto.addArgument(ARG_DTO_METHOD_PARAM, parameter.getParameterName());
+    methodDto.addArgument(ARG_HELPER_TYPE, fieldType);
+    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TypeName.of(TrackedValue.class));
     return methodDto;
   }
 
@@ -378,7 +389,7 @@ public class BuilderDefinitionCreator {
   private static MethodDto createFieldConsumerWithBuilder(String fieldName, TypeName builderType) {
     TypeNameGeneric consumerType = new TypeNameGeneric(map2TypeName(Consumer.class), builderType);
     MethodParameterDto parameter = new MethodParameterDto();
-    parameter.setParameterName(fieldName + BUILDER_SUFFIX + "Consumer");
+    parameter.setParameterName(fieldName + BUILDER_SUFFIX + SUFFIX_CONSUMER);
     parameter.setParameterTypeName(consumerType);
     MethodDto methodDto = new MethodDto();
     methodDto.setMethodName(fieldName);
@@ -392,17 +403,17 @@ public class BuilderDefinitionCreator {
         this.$fieldName:N = $builderFieldWrapper:T.changedValue(builder.build());
         return this;
         """);
-    methodDto.addArgument("fieldName", fieldName);
-    methodDto.addArgument("dtoMethodParam", parameter.getParameterName());
-    methodDto.addArgument("helperType", builderType);
-    methodDto.addArgument("builderFieldWrapper", TypeName.of(TrackedValue.class));
+    methodDto.addArgument(ARG_FIELD_NAME, fieldName);
+    methodDto.addArgument(ARG_DTO_METHOD_PARAM, parameter.getParameterName());
+    methodDto.addArgument(ARG_HELPER_TYPE, builderType);
+    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TypeName.of(TrackedValue.class));
     return methodDto;
   }
 
   private static MethodDto createFieldSupplier(String fieldName, TypeName fieldType) {
     TypeNameGeneric supplierType = new TypeNameGeneric(map2TypeName(Supplier.class), fieldType);
     MethodParameterDto parameter = new MethodParameterDto();
-    parameter.setParameterName(fieldName + "Supplier");
+    parameter.setParameterName(fieldName + SUFFIX_SUPPLIER);
     parameter.setParameterTypeName(supplierType);
     MethodDto methodDto = new MethodDto();
     methodDto.setMethodName(fieldName);
@@ -414,9 +425,9 @@ public class BuilderDefinitionCreator {
         this.$fieldName:N = $builderFieldWrapper:T.changedValue($dtoMethodParam:N.get());
         return this;
         """);
-    methodDto.addArgument("fieldName", fieldName);
-    methodDto.addArgument("dtoMethodParam", parameter.getParameterName());
-    methodDto.addArgument("builderFieldWrapper", TypeName.of(TrackedValue.class));
+    methodDto.addArgument(ARG_FIELD_NAME, fieldName);
+    methodDto.addArgument(ARG_DTO_METHOD_PARAM, parameter.getParameterName());
+    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TypeName.of(TrackedValue.class));
     return methodDto;
   }
 
