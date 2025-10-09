@@ -29,7 +29,6 @@ import static org.javahelpers.simple.builders.processor.util.BuilderDefinitionCr
 import com.google.auto.service.AutoService;
 import java.util.Set;
 import javax.annotation.processing.AbstractProcessor;
-import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.Processor;
@@ -55,7 +54,6 @@ import org.javahelpers.simple.builders.processor.util.JavaCodeGenerator;
 public class BuilderProcessor extends AbstractProcessor {
   private Types typeUtils;
   private Elements elementUtils;
-  private Filer filer;
   private Messager messager;
   private JavaCodeGenerator codeGenerator;
   private boolean supportedJdk = true;
@@ -65,9 +63,8 @@ public class BuilderProcessor extends AbstractProcessor {
     super.init(processingEnv);
     this.typeUtils = processingEnv.getTypeUtils();
     this.elementUtils = processingEnv.getElementUtils();
-    this.filer = processingEnv.getFiler();
     this.messager = processingEnv.getMessager();
-    this.codeGenerator = new JavaCodeGenerator(filer);
+    this.codeGenerator = new JavaCodeGenerator(processingEnv.getFiler());
 
     // Enforce minimum Java version (17+) for the processor
     SourceVersion current = processingEnv.getSourceVersion();
