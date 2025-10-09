@@ -48,6 +48,11 @@ import org.javahelpers.simple.builders.processor.dtos.*;
 /** Helper functions to create simple builder types from java.lang types. */
 public final class JavaLangMapper {
 
+  /** Private constructor to prevent instantiation of utility class. */
+  private JavaLangMapper() {
+    // Utility class
+  }
+
   /**
    * Mapper for {@code java.util.Set<javax.lang.model.element.Modifier>} to extract the relevant
    * modifier. If there is a public modifier, this is returned. If there is a protected modifier,
@@ -136,7 +141,7 @@ public final class JavaLangMapper {
         new SimpleTypeVisitor14<TypeName, Void>() {
 
           @Override
-          public TypeName visitPrimitive(PrimitiveType t, Void _p) {
+          public TypeName visitPrimitive(PrimitiveType t, Void p) {
             return switch (t.getKind()) {
               case BOOLEAN -> TypeNamePrimitive.BOOLEAN;
               case BYTE -> TypeNamePrimitive.BYTE;
@@ -178,19 +183,19 @@ public final class JavaLangMapper {
           }
 
           @Override
-          public TypeNameArray visitArray(ArrayType t, Void _p) {
+          public TypeNameArray visitArray(ArrayType t, Void p) {
             return new TypeNameArray(
                 extractType(t.getComponentType(), elementUtils, typeUtils), false);
           }
 
           @Override
-          public TypeName visitTypeVariable(TypeVariable t, Void _p) {
+          public TypeName visitTypeVariable(TypeVariable t, Void p) {
             String name = t.asElement().getSimpleName().toString();
             return new TypeNameVariable(name);
           }
 
           @Override
-          protected TypeName defaultAction(TypeMirror e, Void _p) {
+          protected TypeName defaultAction(TypeMirror e, Void p) {
             throw new IllegalArgumentException("Unexpected type mirror: " + e);
           }
         },

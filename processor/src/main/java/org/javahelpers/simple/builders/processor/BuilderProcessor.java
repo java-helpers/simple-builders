@@ -76,7 +76,7 @@ public class BuilderProcessor extends AbstractProcessor {
       messager.printMessage(
           Diagnostic.Kind.ERROR,
           "simple-builders requires Java 17 or higher for annotation processing. Detected: "
-              + String.valueOf(current)
+              + current
               + ". Please upgrade to JDK 17+ or disable the processor.");
     }
   }

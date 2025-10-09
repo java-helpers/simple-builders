@@ -238,7 +238,7 @@ public final class JavaLangAnalyser {
         if (line.isEmpty()) {
           break;
         }
-        if (sb.length() > 0) sb.append(' ');
+        if (!sb.isEmpty()) sb.append(' ');
         sb.append(line);
       } else {
         // TODO: add logging for not found javadoc for parameter
