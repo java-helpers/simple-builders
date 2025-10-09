@@ -23,7 +23,7 @@
  */
 package org.javahelpers.simple.builders.processor.util;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.javahelpers.simple.builders.processor.dtos.TypeName;
 
 /** Helperclass to extract insights from TypeName. */
@@ -38,8 +38,8 @@ public class TypeNameAnalyser {
    * @return {@code true}, if it is a {@code java.util.Map}
    */
   public static boolean isMap(TypeName typeName) {
-    return StringUtils.equalsIgnoreCase(typeName.getPackageName(), "java.util")
-        && StringUtils.equalsIgnoreCase(typeName.getClassName(), "Map");
+    return Strings.CI.equals(typeName.getPackageName(), "java.util")
+        && Strings.CI.equals(typeName.getClassName(), "Map");
   }
 
   /**
@@ -49,7 +49,7 @@ public class TypeNameAnalyser {
    * @return {@code true}, if type is a java-base class
    */
   public static boolean isJavaClass(TypeName typeName) {
-    return StringUtils.equalsAny(typeName.getPackageName(), "java.lang", "java.time", "java.util");
+    return Strings.CI.equalsAny(typeName.getPackageName(), "java.lang", "java.time", "java.util");
   }
 
   /**
@@ -59,8 +59,8 @@ public class TypeNameAnalyser {
    * @return {@code true}, if it is a {@code java.util.Set}
    */
   public static boolean isSet(TypeName typeName) {
-    return StringUtils.equalsIgnoreCase(typeName.getPackageName(), "java.util")
-        && StringUtils.equalsIgnoreCase(typeName.getClassName(), "Set");
+    return Strings.CI.equals(typeName.getPackageName(), "java.util")
+        && Strings.CI.equals(typeName.getClassName(), "Set");
   }
 
   /**
@@ -70,7 +70,7 @@ public class TypeNameAnalyser {
    * @return {@code true}, if it is a {@code java.util.List}
    */
   public static boolean isList(TypeName typeName) {
-    return StringUtils.equalsIgnoreCase(typeName.getPackageName(), "java.util")
-        && StringUtils.equalsIgnoreCase(typeName.getClassName(), "List");
+    return Strings.CI.equals(typeName.getPackageName(), "java.util")
+        && Strings.CI.equals(typeName.getClassName(), "List");
   }
 }

@@ -57,8 +57,8 @@ public final class JavaLangAnalyser {
    */
   public static boolean isNoMethodOfObjectClass(ExecutableElement mth) {
     String simpleNameOfParent = mth.getEnclosingElement().getSimpleName().toString();
-    return !(StringUtils.equals("java.lang.Object", simpleNameOfParent)
-        || StringUtils.equals("Object", simpleNameOfParent));
+    return !(Strings.CS.equals("java.lang.Object", simpleNameOfParent)
+        || Strings.CS.equals("Object", simpleNameOfParent));
   }
 
   /**
