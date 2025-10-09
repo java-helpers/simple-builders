@@ -44,6 +44,7 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.javahelpers.simple.builders.core.annotations.IgnoreInBuilder;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 import org.javahelpers.simple.builders.core.builders.ArrayListBuilder;
@@ -231,7 +232,7 @@ public class BuilderDefinitionCreator {
   private static Optional<FieldDto> createFieldFromSetter(
       ExecutableElement mth, Elements elementUtils, Types typeUtils) {
     String methodName = mth.getSimpleName().toString();
-    String fieldName = StringUtils.uncapitalize(StringUtils.removeStart(methodName, "set"));
+    String fieldName = StringUtils.uncapitalize(Strings.CI.removeStart(methodName, "set"));
 
     FieldDto result = new FieldDto();
     result.setFieldName(fieldName);
