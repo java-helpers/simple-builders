@@ -1,13 +1,13 @@
 package org.javahelpers.simple.builders.processor;
 
 import static com.google.testing.compile.CompilationSubject.assertThat;
+import static com.google.testing.compile.Compiler.javac;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.assertGenerationSucceeded;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.contains;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.notContains;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils.loadGeneratedSource;
 
 import com.google.testing.compile.Compilation;
-import com.google.testing.compile.Compiler;
 import com.google.testing.compile.JavaFileObjects;
 import javax.tools.JavaFileObject;
 import org.javahelpers.simple.builders.processor.testing.ProcessorAsserts;
@@ -31,8 +31,7 @@ class BuilderProcessorTest {
             """);
 
     // When
-    Compilation compilation =
-        Compiler.javac().withProcessors(new BuilderProcessor()).compile(source);
+    Compilation compilation = javac().withProcessors(new BuilderProcessor()).compile(source);
 
     // Then: compilation should fail with appropriate error message
     assertThat(compilation).failed();
@@ -53,8 +52,7 @@ class BuilderProcessorTest {
             """);
 
     // When
-    Compilation compilation =
-        Compiler.javac().withProcessors(new BuilderProcessor()).compile(source);
+    Compilation compilation = javac().withProcessors(new BuilderProcessor()).compile(source);
 
     // Then: compilation should fail with appropriate error message
     assertThat(compilation).failed();
@@ -914,7 +912,7 @@ class BuilderProcessorTest {
   }
 
   protected Compilation compile(JavaFileObject... sourceFiles) {
-    return Compiler.javac().withProcessors(new BuilderProcessor()).compile(sourceFiles);
+    return javac().withProcessors(new BuilderProcessor()).compile(sourceFiles);
   }
 
   @Test
@@ -931,7 +929,7 @@ class BuilderProcessorTest {
 
     // When: compile with a lower language level to simulate older Java (no production code change)
     Compilation compilation =
-        Compiler.javac()
+        javac()
             .withProcessors(new BuilderProcessor())
             .withOptions("--release", "11")
             .compile(source);
