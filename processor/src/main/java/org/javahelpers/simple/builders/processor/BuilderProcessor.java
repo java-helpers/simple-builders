@@ -36,11 +36,10 @@ import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.util.Elements;
-import javax.lang.model.util.Types;
 import org.javahelpers.simple.builders.processor.dtos.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 import org.javahelpers.simple.builders.processor.util.JavaCodeGenerator;
+import org.javahelpers.simple.builders.processor.util.ProcessingContext;
 import org.javahelpers.simple.builders.processor.util.ProcessingLogger;
 
 /**
@@ -51,8 +50,7 @@ import org.javahelpers.simple.builders.processor.util.ProcessingLogger;
 @AutoService(Processor.class)
 @SupportedAnnotationTypes("org.javahelpers.simple.builders.core.annotations.SimpleBuilder")
 public class BuilderProcessor extends AbstractProcessor {
-  private Types typeUtils;
-  private Elements elementUtils;
+  private ProcessingContext context;
   private JavaCodeGenerator codeGenerator;
   private ProcessingLogger logger;
   private boolean supportedJdk = true;
@@ -60,8 +58,8 @@ public class BuilderProcessor extends AbstractProcessor {
   @Override
   public synchronized void init(ProcessingEnvironment processingEnv) {
     super.init(processingEnv);
-    this.typeUtils = processingEnv.getTypeUtils();
-    this.elementUtils = processingEnv.getElementUtils();
+    this.context =
+        new ProcessingContext(processingEnv.getElementUtils(), processingEnv.getTypeUtils());
     this.logger = new ProcessingLogger(processingEnv.getMessager());
     this.codeGenerator = new JavaCodeGenerator(processingEnv.getFiler());
 
@@ -85,7 +83,7 @@ public class BuilderProcessor extends AbstractProcessor {
     // Resolve annotation as TypeElement to support environments where the Class<?> overload
     // of getElementsAnnotatedWith is unavailable.
     TypeElement simpleBuilderAnnotation =
-        elementUtils.getTypeElement(
+        context.getTypeElement(
             org.javahelpers.simple.builders.core.annotations.SimpleBuilder.class
                 .getCanonicalName());
     if (simpleBuilderAnnotation == null) {
@@ -109,7 +107,7 @@ public class BuilderProcessor extends AbstractProcessor {
   }
 
   private void process(Element annotatedElement) throws BuilderException {
-    BuilderDefinitionDto builderDef = extractFromElement(annotatedElement, elementUtils, typeUtils);
+    BuilderDefinitionDto builderDef = extractFromElement(annotatedElement, context);
     codeGenerator.generateBuilder(builderDef);
   }
 

@@ -40,14 +40,11 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
-import javax.lang.model.util.Elements;
 import javax.lang.model.util.SimpleTypeVisitor14;
-import javax.lang.model.util.Types;
 import org.javahelpers.simple.builders.processor.dtos.*;
 
 /** Helper functions to create simple builder types from java.lang types. */
 public final class JavaLangMapper {
-
   /** Private constructor to prevent instantiation of utility class. */
   private JavaLangMapper() {
     // Utility class
@@ -82,20 +79,20 @@ public final class JavaLangMapper {
 
   /** Maps the declared type parameters of the given type element into GenericParameterDto list. */
   public static List<GenericParameterDto> map2GenericParameterDtos(
-      TypeElement type, Elements elementUtils, Types typeUtils) {
+      TypeElement type, ProcessingContext context) {
     return type.getTypeParameters().stream()
-        .map(tp -> map2GenericParameterDto(tp, elementUtils, typeUtils))
+        .map(tp -> map2GenericParameterDto(tp, context))
         .toList();
   }
 
   /** Maps a single {@code TypeParameterElement} to {@code GenericParameterDto}. */
   public static GenericParameterDto map2GenericParameterDto(
-      TypeParameterElement tp, Elements elementUtils, Types typeUtils) {
+      TypeParameterElement tp, ProcessingContext context) {
     GenericParameterDto g = new GenericParameterDto();
     g.setName(tp.getSimpleName().toString());
     tp.getBounds().stream()
         .filter(b -> !"java.lang.Object".equals(b.toString()))
-        .map(b -> extractType(b, elementUtils, typeUtils))
+        .map(b -> extractType(b, context))
         .forEach(g::addUpperBound);
     return g;
   }
@@ -105,16 +102,15 @@ public final class JavaLangMapper {
    * org.javahelpers.simple.builders.processor.dtos.MethodParameterDto}.
    *
    * @param param Parameter variable to be mapped
-   * @param elementUtils Instance of helper for elements
-   * @param typeUtils Instance of helper for types
+   * @param context processing context
    * @return MethodParameterDto holding the information of the param.
    */
   public static MethodParameterDto map2MethodParameter(
-      VariableElement param, Elements elementUtils, Types typeUtils) {
+      VariableElement param, ProcessingContext context) {
     MethodParameterDto result = new MethodParameterDto();
     result.setParameterName(param.getSimpleName().toString());
     TypeMirror typeMirror = param.asType();
-    TypeName typeName = extractType(typeMirror, elementUtils, typeUtils);
+    TypeName typeName = extractType(typeMirror, context);
     if (typeName == null) {
       return null;
     }
@@ -124,19 +120,18 @@ public final class JavaLangMapper {
 
   /**
    * Maps a list of {@code TypeMirror} to a list of simple-builder {@code TypeName}s using {@link
-   * #extractType(TypeMirror, Elements, Types)}.
+   * #extractType(TypeMirror, ProcessingContext)}.
    */
   private static List<TypeName> extractTypeForList(
-      List<TypeMirror> typeMirrors, Elements elementUtils, Types typeUtils) {
+      List<TypeMirror> typeMirrors, ProcessingContext context) {
     List<TypeName> result = new ArrayList<>(typeMirrors.size());
     for (TypeMirror tm : typeMirrors) {
-      result.add(extractType(tm, elementUtils, typeUtils));
+      result.add(extractType(tm, context));
     }
     return result;
   }
 
-  private static TypeName extractType(
-      TypeMirror typeOfParameter, Elements elementUtils, Types typeUtils) {
+  private static TypeName extractType(TypeMirror typeOfParameter, ProcessingContext context) {
     return typeOfParameter.accept(
         new SimpleTypeVisitor14<TypeName, Void>() {
 
@@ -157,10 +152,9 @@ public final class JavaLangMapper {
 
           @Override
           public TypeName visitDeclared(DeclaredType t, Void p) {
-            TypeElement elementOfParameter = (TypeElement) typeUtils.asElement(typeOfParameter);
+            TypeElement elementOfParameter = (TypeElement) context.asElement(typeOfParameter);
             String simpleClassName = elementOfParameter.getSimpleName().toString();
-            String packageName =
-                elementUtils.getPackageOf(elementOfParameter).getQualifiedName().toString();
+            String packageName = context.getPackageName(elementOfParameter);
             TypeName rawType = new TypeName(packageName, simpleClassName);
             TypeMirror enclosingType = t.getEnclosingType();
             TypeName enclosing =
@@ -176,7 +170,7 @@ public final class JavaLangMapper {
             if (typesExtracted.isEmpty()) {
               return rawType;
             } else {
-              List<TypeName> argTypes = extractTypeForList(typesExtracted, elementUtils, typeUtils);
+              List<TypeName> argTypes = extractTypeForList(typesExtracted, context);
               // Represent all generics uniformly
               return new TypeNameGeneric(rawType, argTypes);
             }
@@ -184,8 +178,7 @@ public final class JavaLangMapper {
 
           @Override
           public TypeNameArray visitArray(ArrayType t, Void p) {
-            return new TypeNameArray(
-                extractType(t.getComponentType(), elementUtils, typeUtils), false);
+            return new TypeNameArray(extractType(t.getComponentType(), context), false);
           }
 
           @Override

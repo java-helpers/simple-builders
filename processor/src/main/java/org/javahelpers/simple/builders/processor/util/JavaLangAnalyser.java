@@ -38,8 +38,6 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
-import javax.lang.model.util.Elements;
-import javax.lang.model.util.Types;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilderConstructor;
@@ -124,21 +122,20 @@ public final class JavaLangAnalyser {
   public static boolean isSetterForField(ExecutableElement mth) {
     String name = mth.getSimpleName().toString();
     return StringUtils.length(name) > 3
-        && Strings.CS.startsWith(name, "set")
         && StringUtils.isAllUpperCase(StringUtils.substring(name, 3, 4))
         && mth.getParameters().size() == 1;
   }
 
   /**
-   * Helper to check if an element has an empty Constructor.
+   * Check if the class (TypeElement) has an empty constructor.
    *
    * @param typeElement
-   * @param elementUtils
+   * @param context processing context
    * @return {@code true}, if the element has an empty constructor
    */
-  public static boolean hasEmptyConstructor(TypeElement typeElement, Elements elementUtils) {
+  public static boolean hasEmptyConstructor(TypeElement typeElement, ProcessingContext context) {
     List<ExecutableElement> constructors =
-        ElementFilter.constructorsIn(elementUtils.getAllMembers(typeElement));
+        ElementFilter.constructorsIn(context.getAllMembers(typeElement));
     return constructors.stream().anyMatch(c -> c.getParameters().isEmpty());
   }
 
@@ -306,30 +303,27 @@ public final class JavaLangAnalyser {
    * @param dtoType the enclosing DTO type element
    * @param fieldName the field name (uncapitalized)
    * @param fieldTypeMirror the expected return type of the getter
-   * @param elementUtils elements utility
-   * @param typeUtils types utility
+   * @param context processing context
    * @return Optional containing the getter ExecutableElement if found
    */
   public static Optional<ExecutableElement> findGetterForField(
       TypeElement dtoType,
       String fieldName,
       TypeMirror fieldTypeMirror,
-      Elements elementUtils,
-      Types typeUtils) {
+      ProcessingContext context) {
     if (dtoType == null || fieldName == null || fieldTypeMirror == null) {
       return Optional.empty();
     }
     String cap = StringUtils.capitalize(fieldName);
     String getterCandidate = "get" + cap;
     String booleanGetterCandidate = "is" + cap;
-    List<ExecutableElement> classMethods =
-        ElementFilter.methodsIn(elementUtils.getAllMembers(dtoType));
+    List<ExecutableElement> classMethods = ElementFilter.methodsIn(context.getAllMembers(dtoType));
     // Prefer boolean-style getter if present
     for (ExecutableElement candidate : classMethods) {
       String name = candidate.getSimpleName().toString();
       if ((name.equals(booleanGetterCandidate) || name.equals(getterCandidate))
           && candidate.getParameters().isEmpty()
-          && typeUtils.isSameType(candidate.getReturnType(), fieldTypeMirror)) {
+          && context.isSameType(candidate.getReturnType(), fieldTypeMirror)) {
         return Optional.of(candidate);
       }
     }
@@ -347,9 +341,9 @@ public final class JavaLangAnalyser {
    * @return Optional containing the selected constructor, or empty if none suitable
    */
   public static Optional<ExecutableElement> findConstructorForBuilder(
-      TypeElement annotatedType, Elements elementUtils) {
+      TypeElement annotatedType, ProcessingContext context) {
     List<ExecutableElement> ctors =
-        ElementFilter.constructorsIn(elementUtils.getAllMembers(annotatedType));
+        ElementFilter.constructorsIn(context.getAllMembers(annotatedType));
 
     // First, check if any constructor is annotated with @SimpleBuilderConstructor
     for (ExecutableElement ctor : ctors) {

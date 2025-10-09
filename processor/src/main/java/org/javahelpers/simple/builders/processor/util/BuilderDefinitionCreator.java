@@ -40,8 +40,6 @@ import java.util.function.Supplier;
 import javax.lang.model.element.*;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
-import javax.lang.model.util.Elements;
-import javax.lang.model.util.Types;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
@@ -77,39 +75,36 @@ public class BuilderDefinitionCreator {
    * Extracting definition for a builder from annotated element.
    *
    * @param annotatedElement annotated elment which is target of builder creation
-   * @param elementUtils {@code javax.lang.model.util.Elements} utils
-   * @param typeUtils {@code javax.lang.model.util.Types} utils
+   * @param context processing context with element and type utilities
    * @return definition of builder
    * @throws BuilderException if validation or generation failed
    */
   public static BuilderDefinitionDto extractFromElement(
-      Element annotatedElement, Elements elementUtils, Types typeUtils) throws BuilderException {
+      Element annotatedElement, ProcessingContext context) throws BuilderException {
     validateAnnotatedElement(annotatedElement);
     TypeElement annotatedType = (TypeElement) annotatedElement;
 
     BuilderDefinitionDto result = new BuilderDefinitionDto();
-    String packageName = elementUtils.getPackageOf(annotatedType).getQualifiedName().toString();
+    String packageName = context.getPackageName(annotatedType);
     String simpleClassName = annotatedType.getSimpleName().toString();
     result.setBuilderTypeName(new TypeName(packageName, simpleClassName + BUILDER_SUFFIX));
     result.setBuildingTargetTypeName(new TypeName(packageName, simpleClassName));
 
     // Extract generics from the annotated type via mapper (stream-based)
-    JavaLangMapper.map2GenericParameterDtos(annotatedType, elementUtils, typeUtils)
-        .forEach(result::addGeneric);
+    JavaLangMapper.map2GenericParameterDtos(annotatedType, context).forEach(result::addGeneric);
 
     // Extract constructors and their parameters (treat as constructor fields)
-    Optional<ExecutableElement> constructorOpt =
-        findConstructorForBuilder(annotatedType, elementUtils);
+    Optional<ExecutableElement> constructorOpt = findConstructorForBuilder(annotatedType, context);
     if (constructorOpt.isPresent()) {
       ExecutableElement ctor = constructorOpt.get();
       for (VariableElement param : ctor.getParameters()) {
         Optional<FieldDto> fieldFromCtor =
-            createFieldFromConstructor(annotatedType, param, elementUtils, typeUtils);
+            createFieldFromConstructor(annotatedType, param, context);
         fieldFromCtor.ifPresent(result::addFieldInConstructor);
       }
     }
 
-    List<? extends Element> allMembers = elementUtils.getAllMembers(annotatedType);
+    List<? extends Element> allMembers = context.getAllMembers(annotatedType);
     List<ExecutableElement> methods = ElementFilter.methodsIn(allMembers);
 
     // Build a set of constructor field names to avoid duplicates from setters
@@ -122,7 +117,7 @@ public class BuilderDefinitionCreator {
       // nur public
       if (isMethodRelevantForBuilder(mth)) {
         // Avoid adding setter-derived fields that duplicate constructor params
-        Optional<FieldDto> maybeField = createFieldFromSetter(mth, elementUtils, typeUtils);
+        Optional<FieldDto> maybeField = createFieldFromSetter(mth, context);
         if (maybeField.isPresent()) {
           FieldDto field = maybeField.get();
           if (!ctorFieldNames.contains(field.getFieldName())) {
@@ -179,8 +174,7 @@ public class BuilderDefinitionCreator {
       TypeName fieldType,
       VariableElement fieldParameter,
       TypeElement fieldTypeElement,
-      Elements elementUtils,
-      Types typeUtils) {
+      ProcessingContext context) {
     // Do not generate supplier methods for generic type variables (e.g., T)
     if (fieldType instanceof TypeNameVariable) {
       return;
@@ -189,7 +183,7 @@ public class BuilderDefinitionCreator {
     if (isFunctionalInterface(fieldTypeElement)) {
       return;
     }
-    Optional<TypeName> builderTypeOpt = findBuilderType(fieldParameter, elementUtils, typeUtils);
+    Optional<TypeName> builderTypeOpt = findBuilderType(fieldParameter, context);
     if (builderTypeOpt.isPresent()) {
       TypeName builderType = builderTypeOpt.get();
       result.addMethod(
@@ -198,7 +192,7 @@ public class BuilderDefinitionCreator {
         && fieldTypeElement != null
         && fieldTypeElement.getKind() == javax.lang.model.element.ElementKind.CLASS
         && !fieldTypeElement.getModifiers().contains(Modifier.ABSTRACT)
-        && hasEmptyConstructor(fieldTypeElement, elementUtils)) {
+        && hasEmptyConstructor(fieldTypeElement, context)) {
       // Only generate a Consumer for concrete classes with an accessible empty constructor
       result.addMethod(createFieldConsumer(fieldName, fieldType));
     } else if (isList(fieldType)
@@ -241,7 +235,7 @@ public class BuilderDefinitionCreator {
   }
 
   private static Optional<FieldDto> createFieldFromSetter(
-      ExecutableElement mth, Elements elementUtils, Types typeUtils) {
+      ExecutableElement mth, ProcessingContext context) {
     String methodName = mth.getSimpleName().toString();
     String fieldName = StringUtils.uncapitalize(Strings.CI.removeStart(methodName, "set"));
 
@@ -255,11 +249,11 @@ public class BuilderDefinitionCreator {
     }
     VariableElement fieldParameter = parameters.get(0);
     TypeMirror fieldTypeMirror = fieldParameter.asType();
-    Element rawElement = typeUtils.asElement(fieldTypeMirror);
+    Element rawElement = context.asElement(fieldTypeMirror);
     TypeElement fieldTypeElement = rawElement instanceof TypeElement te ? te : null;
 
     // Extract only the @param Javadoc for the single setter parameter (if present)
-    String fullJavaDoc = elementUtils.getDocComment(mth);
+    String fullJavaDoc = context.getDocComment(mth);
     String parameterJavaDocExtracted =
         JavaLangAnalyser.extractParamJavaDoc(fullJavaDoc, fieldParameter);
     String parameterJavaDoc =
@@ -267,8 +261,7 @@ public class BuilderDefinitionCreator {
     result.setJavaDoc(parameterJavaDoc);
 
     // extracting type of field
-    MethodParameterDto fieldParameterDto =
-        map2MethodParameter(fieldParameter, elementUtils, typeUtils);
+    MethodParameterDto fieldParameterDto = map2MethodParameter(fieldParameter, context);
     if (fieldParameterDto == null) {
       // TODO: Logging
       return Optional.empty();
@@ -278,8 +271,7 @@ public class BuilderDefinitionCreator {
 
     // Determine if a corresponding getter exists on the DTO and record its name
     TypeElement dtoType = (TypeElement) mth.getEnclosingElement();
-    JavaLangAnalyser.findGetterForField(
-            dtoType, fieldName, fieldTypeMirror, elementUtils, typeUtils)
+    JavaLangAnalyser.findGetterForField(dtoType, fieldName, fieldTypeMirror, context)
         .ifPresent(
             getterExecutable -> result.setGetterName(getterExecutable.getSimpleName().toString()));
 
@@ -297,7 +289,7 @@ public class BuilderDefinitionCreator {
 
     // add consumer/supplier generation via helpers
     addConsumerMethodsForField(
-        result, fieldName, fieldType, fieldParameter, fieldTypeElement, elementUtils, typeUtils);
+        result, fieldName, fieldType, fieldParameter, fieldTypeElement, context);
     addSupplierMethodsForField(result, fieldName, fieldType, fieldTypeElement);
     addAdditionalHelperMethodsForField(result, fieldName, fieldType);
 
@@ -309,8 +301,8 @@ public class BuilderDefinitionCreator {
    * the constructor argument.
    */
   private static Optional<FieldDto> createFieldFromConstructor(
-      TypeElement dtoType, VariableElement param, Elements elementUtils, Types typeUtils) {
-    MethodParameterDto paramDto = map2MethodParameter(param, elementUtils, typeUtils);
+      TypeElement dtoType, VariableElement param, ProcessingContext context) {
+    MethodParameterDto paramDto = map2MethodParameter(param, context);
     if (paramDto == null) {
       return Optional.empty();
     }
@@ -322,7 +314,7 @@ public class BuilderDefinitionCreator {
     // Set javadoc (default to field name if no javadoc found)
     ctorField.setJavaDoc(fieldName);
     // Find matching getter on the DTO type
-    JavaLangAnalyser.findGetterForField(dtoType, fieldName, param.asType(), elementUtils, typeUtils)
+    JavaLangAnalyser.findGetterForField(dtoType, fieldName, param.asType(), context)
         .ifPresent(getter -> ctorField.setGetterName(getter.getSimpleName().toString()));
     // Provide a simple setter in builder to set the constructor argument
     ctorField.addMethod(createFieldSetterWithTransform(fieldName, null, fieldType));
@@ -432,19 +424,18 @@ public class BuilderDefinitionCreator {
   }
 
   private static Optional<TypeName> findBuilderType(
-      VariableElement param, Elements elementUtils, Types typeUtils) {
+      VariableElement param, ProcessingContext context) {
     TypeMirror typeOfParameter = param.asType();
     if (typeOfParameter.getKind() == ARRAY || typeOfParameter.getKind().isPrimitive()) {
       return Optional.empty();
     }
-    Element elementOfParameter = typeUtils.asElement(typeOfParameter);
+    Element elementOfParameter = context.asElement(typeOfParameter);
     if (elementOfParameter == null) {
       // Can happen for primitives or certain compiler-internal types; nothing to build
       return Optional.empty();
     }
     String simpleClassName = elementOfParameter.getSimpleName().toString();
-    String packageName =
-        elementUtils.getPackageOf(elementOfParameter).getQualifiedName().toString();
+    String packageName = context.getPackageName(elementOfParameter);
     Optional<AnnotationMirror> foundBuilderAnnotation =
         findAnnotation(elementOfParameter, SimpleBuilder.class);
     boolean isClassWithoutGenerics = StringUtils.containsNone(simpleClassName, "<");

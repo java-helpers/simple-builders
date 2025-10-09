@@ -205,16 +205,16 @@ class JavaLangAnalyserTest {
 
   @Test
   void findGetterForField_shouldReturnEmpty_whenDtoTypeIsNull() {
-    assertTrue(JavaLangAnalyser.findGetterForField(null, "fieldName", null, null, null).isEmpty());
+    assertTrue(JavaLangAnalyser.findGetterForField(null, "fieldName", null, null).isEmpty());
   }
 
   @Test
   void findGetterForField_shouldReturnEmpty_whenFieldNameIsNull() {
-    assertTrue(JavaLangAnalyser.findGetterForField(null, null, null, null, null).isEmpty());
+    assertTrue(JavaLangAnalyser.findGetterForField(null, null, null, null).isEmpty());
   }
 
   @Test
   void findGetterForField_shouldReturnEmpty_whenFieldTypeMirrorIsNull() {
-    assertTrue(JavaLangAnalyser.findGetterForField(null, "fieldName", null, null, null).isEmpty());
+    assertTrue(JavaLangAnalyser.findGetterForField(null, "fieldName", null, null).isEmpty());
   }
 }
