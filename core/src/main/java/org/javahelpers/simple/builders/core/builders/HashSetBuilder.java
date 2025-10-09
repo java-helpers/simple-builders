@@ -67,6 +67,6 @@ public class HashSetBuilder<T> {
    * @return a new HashSet containing all elements added to this builder
    */
   public Set<T> build() {
-    return new HashSet(mSet);
+    return new HashSet<>(mSet);
   }
 }

@@ -29,8 +29,6 @@ import static org.javahelpers.simple.builders.processor.util.BuilderDefinitionCr
 import com.google.auto.service.AutoService;
 import java.util.Set;
 import javax.annotation.processing.AbstractProcessor;
-import javax.annotation.processing.Filer;
-import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
@@ -38,12 +36,11 @@ import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.util.Elements;
-import javax.lang.model.util.Types;
-import javax.tools.Diagnostic;
 import org.javahelpers.simple.builders.processor.dtos.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 import org.javahelpers.simple.builders.processor.util.JavaCodeGenerator;
+import org.javahelpers.simple.builders.processor.util.ProcessingContext;
+import org.javahelpers.simple.builders.processor.util.ProcessingLogger;
 
 /**
  * BuilderProcessor is an annotation processor for execution in generate-sources phase. The
@@ -53,30 +50,26 @@ import org.javahelpers.simple.builders.processor.util.JavaCodeGenerator;
 @AutoService(Processor.class)
 @SupportedAnnotationTypes("org.javahelpers.simple.builders.core.annotations.SimpleBuilder")
 public class BuilderProcessor extends AbstractProcessor {
-  private Types typeUtils;
-  private Elements elementUtils;
-  private Filer filer;
-  private Messager messager;
+  private ProcessingContext context;
   private JavaCodeGenerator codeGenerator;
   private boolean supportedJdk = true;
 
   @Override
   public synchronized void init(ProcessingEnvironment processingEnv) {
     super.init(processingEnv);
-    this.typeUtils = processingEnv.getTypeUtils();
-    this.elementUtils = processingEnv.getElementUtils();
-    this.filer = processingEnv.getFiler();
-    this.messager = processingEnv.getMessager();
-    this.codeGenerator = new JavaCodeGenerator(filer);
+    ProcessingLogger logger = new ProcessingLogger(processingEnv.getMessager());
+    this.context =
+        new ProcessingContext(
+            processingEnv.getElementUtils(), processingEnv.getTypeUtils(), logger);
+    this.codeGenerator = new JavaCodeGenerator(processingEnv.getFiler());
 
     // Enforce minimum Java version (17+) for the processor
     SourceVersion current = processingEnv.getSourceVersion();
     this.supportedJdk = isAtLeastJava17(current);
     if (!this.supportedJdk) {
-      messager.printMessage(
-          Diagnostic.Kind.ERROR,
+      context.error(
           "simple-builders requires Java 17 or higher for annotation processing. Detected: "
-              + String.valueOf(current)
+              + current
               + ". Please upgrade to JDK 17+ or disable the processor.");
     }
   }
@@ -85,24 +78,24 @@ public class BuilderProcessor extends AbstractProcessor {
   public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
     if (!supportedJdk) {
       // Fail fast: we already emitted an error in init(); do not attempt any processing.
-      return true;
+      return false;
     }
     // Resolve annotation as TypeElement to support environments where the Class<?> overload
     // of getElementsAnnotatedWith is unavailable.
     TypeElement simpleBuilderAnnotation =
-        elementUtils.getTypeElement(
+        context.getTypeElement(
             org.javahelpers.simple.builders.core.annotations.SimpleBuilder.class
                 .getCanonicalName());
     if (simpleBuilderAnnotation == null) {
-      // TODO: Logging
-      // Annotation type not on classpath; nothing to do this round.
-      return true;
+      context.error(
+          "Annotation org.javahelpers.simple.builders.core.annotations.SimpleBuilder is not on classpath. So nothing to do here.");
+      return false;
     }
     for (Element annotatedElement : roundEnv.getElementsAnnotatedWith(simpleBuilderAnnotation)) {
       try {
         process(annotatedElement);
       } catch (BuilderException ex) {
-        // TODO Logging
+        context.error(annotatedElement, "Failed to process annotated element: " + ex.getMessage());
       }
     }
     return true;
@@ -114,7 +107,7 @@ public class BuilderProcessor extends AbstractProcessor {
   }
 
   private void process(Element annotatedElement) throws BuilderException {
-    BuilderDefinitionDto builderDef = extractFromElement(annotatedElement, elementUtils, typeUtils);
+    BuilderDefinitionDto builderDef = extractFromElement(annotatedElement, context);
     codeGenerator.generateBuilder(builderDef);
   }
 

@@ -146,7 +146,7 @@ public final class JavapoetMapper {
     return CodeBlock.builder().addNamed(codeDto.getCodeFormat(), arguments).build();
   }
 
-  private static Object toCodeblockValue(MethodCodePlaceholder placeHolderValue) {
+  private static Object toCodeblockValue(MethodCodePlaceholder<?> placeHolderValue) {
     if (placeHolderValue instanceof MethodCodeStringPlaceholder stringPlaceholder) {
       return stringPlaceholder.getValue();
     } else if (placeHolderValue instanceof MethodCodeTypePlaceholder typePlaceholder) {

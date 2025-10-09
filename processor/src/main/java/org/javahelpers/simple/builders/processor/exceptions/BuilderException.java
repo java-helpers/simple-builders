@@ -28,7 +28,7 @@ import javax.lang.model.element.Element;
 
 /** Special exception for errors in processing of annotations. */
 public class BuilderException extends Exception {
-  private final Element element;
+  private final transient Element element;
 
   /**
    * Creating an exception with location element, message and parameters.

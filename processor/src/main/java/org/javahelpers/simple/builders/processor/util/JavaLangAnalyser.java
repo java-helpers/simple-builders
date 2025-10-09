@@ -38,14 +38,14 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
-import javax.lang.model.util.Elements;
-import javax.lang.model.util.Types;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilderConstructor;
 
 /** Helperclass for extrating specific information from existing classes. */
 public final class JavaLangAnalyser {
+
+  private static final String PARAM_TAG = "@param ";
 
   private JavaLangAnalyser() {}
 
@@ -57,8 +57,8 @@ public final class JavaLangAnalyser {
    */
   public static boolean isNoMethodOfObjectClass(ExecutableElement mth) {
     String simpleNameOfParent = mth.getEnclosingElement().getSimpleName().toString();
-    return !(StringUtils.equals("java.lang.Object", simpleNameOfParent)
-        || StringUtils.equals("Object", simpleNameOfParent));
+    return !(Strings.CS.equals("java.lang.Object", simpleNameOfParent)
+        || Strings.CS.equals("Object", simpleNameOfParent));
   }
 
   /**
@@ -121,22 +121,22 @@ public final class JavaLangAnalyser {
    */
   public static boolean isSetterForField(ExecutableElement mth) {
     String name = mth.getSimpleName().toString();
-    return StringUtils.length(name) > 3
-        && Strings.CS.startsWith(name, "set")
+    return name.startsWith("set")
+        && StringUtils.length(name) > 3
         && StringUtils.isAllUpperCase(StringUtils.substring(name, 3, 4))
         && mth.getParameters().size() == 1;
   }
 
   /**
-   * Helper to check if an element has an empty Constructor.
+   * Check if the class (TypeElement) has an empty constructor.
    *
    * @param typeElement
-   * @param elementUtils
+   * @param context processing context
    * @return {@code true}, if the element has an empty constructor
    */
-  public static boolean hasEmptyConstructor(TypeElement typeElement, Elements elementUtils) {
+  public static boolean hasEmptyConstructor(TypeElement typeElement, ProcessingContext context) {
     List<ExecutableElement> constructors =
-        ElementFilter.constructorsIn(elementUtils.getAllMembers(typeElement));
+        ElementFilter.constructorsIn(context.getAllMembers(typeElement));
     return constructors.stream().anyMatch(c -> c.getParameters().isEmpty());
   }
 
@@ -209,41 +209,88 @@ public final class JavaLangAnalyser {
     }
     String parameterName = parameter.getSimpleName().toString();
     String[] lines = javaDoc.split("\r?\n");
-    boolean capture = false;
-    StringBuilder sb = new StringBuilder();
-    for (String rawLine : lines) {
-      String line = rawLine.trim();
-      if (line.startsWith("*")) {
-        line = line.substring(1).trim();
-      }
-      if (line.startsWith("@")) {
-        // new tag begins; stop capturing unless this is our @param start
-        capture = false;
-        if (line.startsWith("@param ")) {
-          // format: @param <name> text...
-          String rest = line.substring("@param ".length()).trim();
-          int sp = rest.indexOf(' ');
-          String name = sp >= 0 ? rest.substring(0, sp) : rest;
-          String text = sp >= 0 ? rest.substring(sp + 1).trim() : "";
-          if (Strings.CI.equals(parameterName, name)) {
-            if (!text.isEmpty()) {
-              sb.append(text);
-            }
-            capture = true;
-          }
+
+    // Find the @param line for our parameter
+    int indexOfParamTag = findParamTagLine(lines, parameterName);
+    if (indexOfParamTag < 0) {
+      return null;
+    }
+
+    // Extract text from the @param line and continuation lines
+    return extractParamText(lines, indexOfParamTag);
+  }
+
+  /**
+   * Finds the line index containing @param tag for the given parameter name.
+   *
+   * @param lines the javadoc lines
+   * @param parameterName the parameter to search for
+   * @return the line index, or -1 if not found
+   */
+  private static int findParamTagLine(String[] lines, String parameterName) {
+    for (int i = 0; i < lines.length; i++) {
+      String cleanedLine = cleanJavadocLine(lines[i]);
+      if (cleanedLine.startsWith(PARAM_TAG)) {
+        String rest = cleanedLine.substring(PARAM_TAG.length()).trim();
+        int spaceIndex = rest.indexOf(' ');
+        String name = spaceIndex >= 0 ? rest.substring(0, spaceIndex) : rest;
+        if (Strings.CI.equals(parameterName, name)) {
+          return i;
         }
-        continue;
-      }
-      if (capture) {
-        if (line.isEmpty()) {
-          break;
-        }
-        if (sb.length() > 0) sb.append(' ');
-        sb.append(line);
-      } else {
-        // TODO: add logging for not found javadoc for parameter
       }
     }
+    return -1;
+  }
+
+  /**
+   * Removes leading asterisk and whitespace from a Javadoc line.
+   *
+   * @param rawLine the raw line from Javadoc
+   * @return the cleaned line
+   */
+  private static String cleanJavadocLine(String rawLine) {
+    String line = rawLine.trim();
+    if (line.startsWith("*")) {
+      return line.substring(1).trim();
+    }
+    return line;
+  }
+
+  /**
+   * Extracts the parameter documentation text starting from the @param line.
+   *
+   * @param lines the javadoc lines
+   * @param startIndex the index of the @param line
+   * @return the extracted documentation text or null if empty
+   */
+  private static String extractParamText(String[] lines, int startIndex) {
+    StringBuilder sb = new StringBuilder();
+
+    // Extract initial text from the @param line
+    String firstLine = cleanJavadocLine(lines[startIndex]);
+    String rest = firstLine.substring(PARAM_TAG.length()).trim();
+    int spaceIndex = rest.indexOf(' ');
+    if (spaceIndex >= 0) {
+      String initialText = rest.substring(spaceIndex + 1).trim();
+      if (!initialText.isEmpty()) {
+        sb.append(initialText);
+      }
+    }
+
+    // Append continuation lines until next tag or empty line
+    for (int i = startIndex + 1; i < lines.length; i++) {
+      String cleanedLine = cleanJavadocLine(lines[i]);
+
+      if (cleanedLine.isEmpty() || cleanedLine.startsWith("@")) {
+        break;
+      }
+
+      if (!sb.isEmpty()) {
+        sb.append(' ');
+      }
+      sb.append(cleanedLine);
+    }
+
     String result = sb.toString().trim();
     return result.isEmpty() ? null : result;
   }
@@ -257,30 +304,27 @@ public final class JavaLangAnalyser {
    * @param dtoType the enclosing DTO type element
    * @param fieldName the field name (uncapitalized)
    * @param fieldTypeMirror the expected return type of the getter
-   * @param elementUtils elements utility
-   * @param typeUtils types utility
+   * @param context processing context
    * @return Optional containing the getter ExecutableElement if found
    */
   public static Optional<ExecutableElement> findGetterForField(
       TypeElement dtoType,
       String fieldName,
       TypeMirror fieldTypeMirror,
-      Elements elementUtils,
-      Types typeUtils) {
+      ProcessingContext context) {
     if (dtoType == null || fieldName == null || fieldTypeMirror == null) {
       return Optional.empty();
     }
     String cap = StringUtils.capitalize(fieldName);
     String getterCandidate = "get" + cap;
     String booleanGetterCandidate = "is" + cap;
-    List<ExecutableElement> classMethods =
-        ElementFilter.methodsIn(elementUtils.getAllMembers(dtoType));
+    List<ExecutableElement> classMethods = ElementFilter.methodsIn(context.getAllMembers(dtoType));
     // Prefer boolean-style getter if present
     for (ExecutableElement candidate : classMethods) {
       String name = candidate.getSimpleName().toString();
       if ((name.equals(booleanGetterCandidate) || name.equals(getterCandidate))
           && candidate.getParameters().isEmpty()
-          && typeUtils.isSameType(candidate.getReturnType(), fieldTypeMirror)) {
+          && context.isSameType(candidate.getReturnType(), fieldTypeMirror)) {
         return Optional.of(candidate);
       }
     }
@@ -298,9 +342,9 @@ public final class JavaLangAnalyser {
    * @return Optional containing the selected constructor, or empty if none suitable
    */
   public static Optional<ExecutableElement> findConstructorForBuilder(
-      TypeElement annotatedType, Elements elementUtils) {
+      TypeElement annotatedType, ProcessingContext context) {
     List<ExecutableElement> ctors =
-        ElementFilter.constructorsIn(elementUtils.getAllMembers(annotatedType));
+        ElementFilter.constructorsIn(context.getAllMembers(annotatedType));
 
     // First, check if any constructor is annotated with @SimpleBuilderConstructor
     for (ExecutableElement ctor : ctors) {

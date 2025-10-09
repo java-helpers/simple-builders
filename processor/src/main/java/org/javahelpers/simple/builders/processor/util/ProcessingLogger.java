@@ -59,6 +59,16 @@ public class ProcessingLogger {
   }
 
   /**
+   * Reports an error with the specified message. The error will be reported to the underlying
+   * Messager instance.
+   *
+   * @param message the error message to be reported
+   */
+  public void error(String message) {
+    messager.printMessage(Diagnostic.Kind.ERROR, message);
+  }
+
+  /**
    * Posts an informational note message to the underlying Messager. This is typically used for
    * non-critical information during processing.
    *
@@ -66,5 +76,16 @@ public class ProcessingLogger {
    */
   public void log(String message) {
     messager.printMessage(Diagnostic.Kind.NOTE, message);
+  }
+
+  /**
+   * Reports a warning at the location of the given element with the specified message. The warning
+   * will be reported to the underlying Messager instance.
+   *
+   * @param e the element where the warning occurred, used for location information
+   * @param message the warning message to be reported
+   */
+  public void warning(Element e, String message) {
+    messager.printMessage(Diagnostic.Kind.WARNING, message, e);
   }
 }

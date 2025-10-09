@@ -1,32 +1,22 @@
 package org.javahelpers.simple.builders.processor;
 
 import static com.google.testing.compile.CompilationSubject.assertThat;
+import static com.google.testing.compile.Compiler.javac;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.assertGenerationSucceeded;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.contains;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.notContains;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils.loadGeneratedSource;
 
 import com.google.testing.compile.Compilation;
-import com.google.testing.compile.Compiler;
 import com.google.testing.compile.JavaFileObjects;
 import javax.tools.JavaFileObject;
 import org.javahelpers.simple.builders.processor.testing.ProcessorAsserts;
 import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 /** Tests for the {@link BuilderProcessor} class. */
 class BuilderProcessorTest {
-
-  protected BuilderProcessor processor;
-  protected Compiler compiler;
-
-  @BeforeEach
-  protected void setUp() {
-    processor = new BuilderProcessor();
-    compiler = Compiler.javac().withProcessors(processor);
-  }
 
   @Test
   void shouldFailWhenAnnotationPlacedOnInterface() {
@@ -41,15 +31,12 @@ class BuilderProcessorTest {
             """);
 
     // When
-    Compilation compilation =
-        Compiler.javac().withProcessors(new BuilderProcessor()).compile(source);
+    Compilation compilation = compile(source);
 
-    // Then: processor swallows validation exceptions; assert no builder was generated
-    assertThat(compilation).succeeded();
-    org.junit.jupiter.api.Assertions.assertFalse(
-        compilation.generatedFiles().stream()
-            .anyMatch(f -> f.getName().endsWith("test/WrongTargetInterfaceBuilder.java")),
-        "Builder should not be generated for interface target");
+    // Then: compilation should fail with appropriate error message
+    assertThat(compilation).failed();
+    assertThat(compilation)
+        .hadErrorContaining("The SimpleBuilder should be annotated on a class or record");
   }
 
   @Test
@@ -65,15 +52,11 @@ class BuilderProcessorTest {
             """);
 
     // When
-    Compilation compilation =
-        Compiler.javac().withProcessors(new BuilderProcessor()).compile(source);
+    Compilation compilation = compile(source);
 
-    // Then: processor swallows validation exceptions; assert no builder was generated
-    assertThat(compilation).succeeded();
-    org.junit.jupiter.api.Assertions.assertFalse(
-        compilation.generatedFiles().stream()
-            .anyMatch(f -> f.getName().endsWith("test/AbstractAnnotatedBuilder.java")),
-        "Builder should not be generated for abstract class target");
+    // Then: compilation should fail with appropriate error message
+    assertThat(compilation).failed();
+    assertThat(compilation).hadErrorContaining("The SimpleBuilder should not be abstract");
   }
 
   @Test
@@ -929,7 +912,7 @@ class BuilderProcessorTest {
   }
 
   protected Compilation compile(JavaFileObject... sourceFiles) {
-    return compiler.compile(sourceFiles);
+    return javac().withProcessors(new BuilderProcessor()).compile(sourceFiles);
   }
 
   @Test
@@ -946,7 +929,7 @@ class BuilderProcessorTest {
 
     // When: compile with a lower language level to simulate older Java (no production code change)
     Compilation compilation =
-        Compiler.javac()
+        javac()
             .withProcessors(new BuilderProcessor())
             .withOptions("--release", "11")
             .compile(source);
@@ -1007,51 +990,57 @@ class BuilderProcessorTest {
   }
 
   @Test
-  // TODO: Replace Optional with other generic wrapper type, because for optional there is a
-  // feature-request
   void shouldHandleGenericWrapperTypes() {
 
-    JavaFileObject optionalWrapperClass =
+    JavaFileObject wrapperRecord =
         ProcessorTestUtils.forSource(
             """
             package test;
-            import java.util.Optional;
+
+            public record WrapperRecord<T>(T value) {
+            }
+            """);
+
+    JavaFileObject dtoWithWrappedTypes =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
             import java.time.LocalDate;
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 
             @SimpleBuilder
-            public class OptionalWrapper {
-              private Optional<String> name;
-              private Optional<Integer> count;
-              private Optional<LocalDate> date;
+            public class DtoWithWrappedTypes {
+              private WrapperRecord<String> name;
+              private WrapperRecord<Integer> count;
+              private WrapperRecord<LocalDate> date;
 
-              public Optional<String> getName() { return name; }
-              public void setName(Optional<String> name) { this.name = name; }
+              public WrapperRecord<String> getName() { return name; }
+              public void setName(WrapperRecord<String> name) { this.name = name; }
 
-              public Optional<Integer> getCount() { return count; }
-              public void setCount(Optional<Integer> count) { this.count = count; }
+              public WrapperRecord<Integer> getCount() { return count; }
+              public void setCount(WrapperRecord<Integer> count) { this.count = count; }
 
-              public Optional<LocalDate> getDate() { return date; }
-              public void setDate(Optional<LocalDate> date) { this.date = date; }
+              public WrapperRecord<LocalDate> getDate() { return date; }
+              public void setDate(WrapperRecord<LocalDate> date) { this.date = date; }
             }
             """);
 
     // Test builder generation (without usage)
-    Compilation compilation = compile(optionalWrapperClass);
-    String optionalBuilder = loadGeneratedSource(compilation, "OptionalWrapperBuilder");
+    Compilation compilation = compile(wrapperRecord, dtoWithWrappedTypes);
+    String optionalBuilder = loadGeneratedSource(compilation, "DtoWithWrappedTypesBuilder");
 
     // Verify Optional wrapper generates basic methods
-    assertGenerationSucceeded(compilation, "OptionalWrapperBuilder", optionalBuilder);
+    assertGenerationSucceeded(compilation, "DtoWithWrappedTypesBuilder", optionalBuilder);
     ProcessorAsserts.assertContaining(
         optionalBuilder,
-        "public static OptionalWrapperBuilder create()",
-        "public OptionalWrapperBuilder name(Optional<String> name)",
-        "public OptionalWrapperBuilder count(Optional<Integer> count)",
-        "public OptionalWrapperBuilder date(Optional<LocalDate> date)",
-        "public OptionalWrapper build()");
+        "public static DtoWithWrappedTypesBuilder create()",
+        "public DtoWithWrappedTypesBuilder name(WrapperRecord<String> name)",
+        "public DtoWithWrappedTypesBuilder count(WrapperRecord<Integer> count)",
+        "public DtoWithWrappedTypesBuilder date(WrapperRecord<LocalDate> date)",
+        "public DtoWithWrappedTypes build()");
 
     // Verify no additional helper methods are generated for these generic types
-    // (since they don't match List/Set/Map patterns)
+    // (since they don't match List/Set/Map/Optional patterns)
     ProcessorAsserts.assertNotContaining(
         optionalBuilder,
         "nameBuilderConsumer",
@@ -1063,9 +1052,9 @@ class BuilderProcessorTest {
     // Backing fields present
     ProcessorAsserts.assertContaining(
         optionalBuilder,
-        "private TrackedValue<Optional<String>> name = unsetValue();",
-        "private TrackedValue<Optional<Integer>> count = unsetValue();",
-        "private TrackedValue<Optional<LocalDate>> date = unsetValue();");
+        "private TrackedValue<WrapperRecord<String>> name = unsetValue();",
+        "private TrackedValue<WrapperRecord<Integer>> count = unsetValue();",
+        "private TrackedValue<WrapperRecord<LocalDate>> date = unsetValue();");
   }
 
   @Test
@@ -2191,7 +2180,13 @@ class BuilderProcessorTest {
 
     // Then
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
-    assertThat(compilation).succeededWithoutWarnings();
+    assertThat(compilation).succeeded();
+    assertThat(compilation)
+        .hadWarningContaining(
+            "Field fieldWithOwnGeneric has field-specific generics, so it will be ignored");
+    assertThat(compilation)
+        .hadWarningContaining(
+            "Field fieldWithExtendedClassGeneric has field-specific generics, so it will be ignored");
     ProcessorAsserts.assertingResult(
         generatedCode,
         // name field should be present
@@ -2228,12 +2223,10 @@ class BuilderProcessorTest {
     // When
     Compilation compilation = compile(source);
 
-    // Then: compilation succeeds and no builder class with the conflicting name is generated
-    assertThat(compilation).succeeded();
-    org.junit.jupiter.api.Assertions.assertFalse(
-        compilation.generatedFiles().stream()
-            .anyMatch(f -> f.getName().endsWith("test/HasInnerClassWithBuilderBuilder.java")),
-        "Builder should not be generated when nested builder interface is present");
+    // Then: compilation should fail with appropriate error message
+    assertThat(compilation).failed();
+    assertThat(compilation)
+        .hadErrorContaining("The SimpleBuilder should be declared on a top-level class only");
   }
 
   @Test
