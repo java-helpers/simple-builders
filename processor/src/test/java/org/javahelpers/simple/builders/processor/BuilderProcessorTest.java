@@ -31,7 +31,7 @@ class BuilderProcessorTest {
             """);
 
     // When
-    Compilation compilation = javac().withProcessors(new BuilderProcessor()).compile(source);
+    Compilation compilation = compile(source);
 
     // Then: compilation should fail with appropriate error message
     assertThat(compilation).failed();
@@ -52,7 +52,7 @@ class BuilderProcessorTest {
             """);
 
     // When
-    Compilation compilation = javac().withProcessors(new BuilderProcessor()).compile(source);
+    Compilation compilation = compile(source);
 
     // Then: compilation should fail with appropriate error message
     assertThat(compilation).failed();
