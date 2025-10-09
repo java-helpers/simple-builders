@@ -33,18 +33,20 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
 /**
- * Context object that wraps Elements and Types utilities from annotation processing, providing
- * domain-specific methods for type and element operations.
+ * Context object that wraps Elements, Types, and logging utilities from annotation processing,
+ * providing domain-specific methods for type and element operations.
  *
  * <p>This eliminates repetitive parameter passing and provides a cleaner API.
  */
 public final class ProcessingContext {
   private final Elements elementUtils;
   private final Types typeUtils;
+  private final ProcessingLogger logger;
 
-  public ProcessingContext(Elements elementUtils, Types typeUtils) {
+  public ProcessingContext(Elements elementUtils, Types typeUtils, ProcessingLogger logger) {
     this.elementUtils = elementUtils;
     this.typeUtils = typeUtils;
+    this.logger = logger;
   }
 
   /**
@@ -119,20 +121,30 @@ public final class ProcessingContext {
   }
 
   /**
-   * Get the raw Elements utility for advanced operations.
+   * Reports an error at the location of the given element.
    *
-   * @return the Elements utility
+   * @param element the element where the error occurred
+   * @param message the error message
    */
-  public Elements elements() {
-    return elementUtils;
+  public void error(Element element, String message) {
+    logger.error(element, message);
   }
 
   /**
-   * Get the raw Types utility for advanced operations.
+   * Reports an error message.
    *
-   * @return the Types utility
+   * @param message the error message
    */
-  public Types types() {
-    return typeUtils;
+  public void error(String message) {
+    logger.error(message);
+  }
+
+  /**
+   * Logs an informational message.
+   *
+   * @param message the message to log
+   */
+  public void log(String message) {
+    logger.log(message);
   }
 }

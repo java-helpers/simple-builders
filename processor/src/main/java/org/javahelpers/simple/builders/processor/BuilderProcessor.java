@@ -52,22 +52,22 @@ import org.javahelpers.simple.builders.processor.util.ProcessingLogger;
 public class BuilderProcessor extends AbstractProcessor {
   private ProcessingContext context;
   private JavaCodeGenerator codeGenerator;
-  private ProcessingLogger logger;
   private boolean supportedJdk = true;
 
   @Override
   public synchronized void init(ProcessingEnvironment processingEnv) {
     super.init(processingEnv);
+    ProcessingLogger logger = new ProcessingLogger(processingEnv.getMessager());
     this.context =
-        new ProcessingContext(processingEnv.getElementUtils(), processingEnv.getTypeUtils());
-    this.logger = new ProcessingLogger(processingEnv.getMessager());
+        new ProcessingContext(
+            processingEnv.getElementUtils(), processingEnv.getTypeUtils(), logger);
     this.codeGenerator = new JavaCodeGenerator(processingEnv.getFiler());
 
     // Enforce minimum Java version (17+) for the processor
     SourceVersion current = processingEnv.getSourceVersion();
     this.supportedJdk = isAtLeastJava17(current);
     if (!this.supportedJdk) {
-      logger.error(
+      context.error(
           "simple-builders requires Java 17 or higher for annotation processing. Detected: "
               + current
               + ". Please upgrade to JDK 17+ or disable the processor.");
@@ -87,7 +87,7 @@ public class BuilderProcessor extends AbstractProcessor {
             org.javahelpers.simple.builders.core.annotations.SimpleBuilder.class
                 .getCanonicalName());
     if (simpleBuilderAnnotation == null) {
-      logger.error(
+      context.error(
           "Annotation org.javahelpers.simple.builders.core.annotations.SimpleBuilder is not on classpath. So nothing to do here.");
       return false;
     }
@@ -95,7 +95,7 @@ public class BuilderProcessor extends AbstractProcessor {
       try {
         process(annotatedElement);
       } catch (BuilderException ex) {
-        logger.error(annotatedElement, "Failed to process annotated element: " + ex.getMessage());
+        context.error(annotatedElement, "Failed to process annotated element: " + ex.getMessage());
       }
     }
     return true;
