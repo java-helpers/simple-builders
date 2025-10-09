@@ -47,6 +47,8 @@ import org.javahelpers.simple.builders.core.annotations.SimpleBuilderConstructor
 /** Helperclass for extrating specific information from existing classes. */
 public final class JavaLangAnalyser {
 
+  private static final String PARAM_TAG = "@param ";
+
   private JavaLangAnalyser() {}
 
   /**
@@ -209,41 +211,88 @@ public final class JavaLangAnalyser {
     }
     String parameterName = parameter.getSimpleName().toString();
     String[] lines = javaDoc.split("\r?\n");
-    boolean capture = false;
-    StringBuilder sb = new StringBuilder();
-    for (String rawLine : lines) {
-      String line = rawLine.trim();
-      if (line.startsWith("*")) {
-        line = line.substring(1).trim();
-      }
-      if (line.startsWith("@")) {
-        // new tag begins; stop capturing unless this is our @param start
-        capture = false;
-        if (line.startsWith("@param ")) {
-          // format: @param <name> text...
-          String rest = line.substring("@param ".length()).trim();
-          int sp = rest.indexOf(' ');
-          String name = sp >= 0 ? rest.substring(0, sp) : rest;
-          String text = sp >= 0 ? rest.substring(sp + 1).trim() : "";
-          if (Strings.CI.equals(parameterName, name)) {
-            if (!text.isEmpty()) {
-              sb.append(text);
-            }
-            capture = true;
-          }
+
+    // Find the @param line for our parameter
+    int indexOfParamTag = findParamTagLine(lines, parameterName);
+    if (indexOfParamTag < 0) {
+      return null;
+    }
+
+    // Extract text from the @param line and continuation lines
+    return extractParamText(lines, indexOfParamTag);
+  }
+
+  /**
+   * Finds the line index containing @param tag for the given parameter name.
+   *
+   * @param lines the javadoc lines
+   * @param parameterName the parameter to search for
+   * @return the line index, or -1 if not found
+   */
+  private static int findParamTagLine(String[] lines, String parameterName) {
+    for (int i = 0; i < lines.length; i++) {
+      String cleanedLine = cleanJavadocLine(lines[i]);
+      if (cleanedLine.startsWith(PARAM_TAG)) {
+        String rest = cleanedLine.substring(PARAM_TAG.length()).trim();
+        int spaceIndex = rest.indexOf(' ');
+        String name = spaceIndex >= 0 ? rest.substring(0, spaceIndex) : rest;
+        if (Strings.CI.equals(parameterName, name)) {
+          return i;
         }
-        continue;
-      }
-      if (capture) {
-        if (line.isEmpty()) {
-          break;
-        }
-        if (!sb.isEmpty()) sb.append(' ');
-        sb.append(line);
-      } else {
-        // TODO: add logging for not found javadoc for parameter
       }
     }
+    return -1;
+  }
+
+  /**
+   * Removes leading asterisk and whitespace from a Javadoc line.
+   *
+   * @param rawLine the raw line from Javadoc
+   * @return the cleaned line
+   */
+  private static String cleanJavadocLine(String rawLine) {
+    String line = rawLine.trim();
+    if (line.startsWith("*")) {
+      return line.substring(1).trim();
+    }
+    return line;
+  }
+
+  /**
+   * Extracts the parameter documentation text starting from the @param line.
+   *
+   * @param lines the javadoc lines
+   * @param startIndex the index of the @param line
+   * @return the extracted documentation text or null if empty
+   */
+  private static String extractParamText(String[] lines, int startIndex) {
+    StringBuilder sb = new StringBuilder();
+
+    // Extract initial text from the @param line
+    String firstLine = cleanJavadocLine(lines[startIndex]);
+    String rest = firstLine.substring(PARAM_TAG.length()).trim();
+    int spaceIndex = rest.indexOf(' ');
+    if (spaceIndex >= 0) {
+      String initialText = rest.substring(spaceIndex + 1).trim();
+      if (!initialText.isEmpty()) {
+        sb.append(initialText);
+      }
+    }
+
+    // Append continuation lines until next tag or empty line
+    for (int i = startIndex + 1; i < lines.length; i++) {
+      String cleanedLine = cleanJavadocLine(lines[i]);
+
+      if (cleanedLine.isEmpty() || cleanedLine.startsWith("@")) {
+        break;
+      }
+
+      if (!sb.isEmpty()) {
+        sb.append(' ');
+      }
+      sb.append(cleanedLine);
+    }
+
     String result = sb.toString().trim();
     return result.isEmpty() ? null : result;
   }
