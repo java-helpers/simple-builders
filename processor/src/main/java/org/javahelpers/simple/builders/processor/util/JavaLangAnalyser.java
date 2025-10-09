@@ -121,7 +121,8 @@ public final class JavaLangAnalyser {
    */
   public static boolean isSetterForField(ExecutableElement mth) {
     String name = mth.getSimpleName().toString();
-    return StringUtils.length(name) > 3
+    return name.startsWith("set")
+        && StringUtils.length(name) > 3
         && StringUtils.isAllUpperCase(StringUtils.substring(name, 3, 4))
         && mth.getParameters().size() == 1;
   }
