@@ -243,8 +243,8 @@ public class BuilderDefinitionCreator {
     result.setFieldName(fieldName);
     List<? extends VariableElement> parameters = mth.getParameters();
     if (parameters.size() != 1) {
-      // TODO: Logging
-      // Sollte eigentlich nie vorkommen, da das vorher raus gefiltert wurde
+      // Should never happen, just to be sure here
+      context.warning(mth.getEnclosingElement(), "Setter method " + methodName + " has " + parameters.size() + " parameters, expected 1");
       return Optional.empty();
     }
     VariableElement fieldParameter = parameters.get(0);
@@ -263,7 +263,7 @@ public class BuilderDefinitionCreator {
     // extracting type of field
     MethodParameterDto fieldParameterDto = map2MethodParameter(fieldParameter, context);
     if (fieldParameterDto == null) {
-      // TODO: Logging
+      context.warning(mth.getEnclosingElement(), "Could not extract type of field " + fieldName);
       return Optional.empty();
     }
     TypeName fieldType = fieldParameterDto.getParameterType();
@@ -280,7 +280,7 @@ public class BuilderDefinitionCreator {
     // If there are field-specific generics, no field in builder could be generated for it, so it
     // needs to be ignored
     if (CollectionUtils.isNotEmpty(mth.getTypeParameters())) {
-      // TODO: Logging
+      context.warning(mth.getEnclosingElement(), "Field " + fieldName + " has field-specific generics, so it will be ignored");
       return Optional.empty();
     }
 

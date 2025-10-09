@@ -77,4 +77,15 @@ public class ProcessingLogger {
   public void log(String message) {
     messager.printMessage(Diagnostic.Kind.NOTE, message);
   }
+
+  /**
+   * Reports a warning at the location of the given element with the specified message. The warning
+   * will be reported to the underlying Messager instance.
+   *
+   * @param e the element where the warning occurred, used for location information
+   * @param message the warning message to be reported
+   */
+  public void warning(Element e, String message) {
+    messager.printMessage(Diagnostic.Kind.WARNING, message, e);
+  }
 }

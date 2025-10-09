@@ -147,4 +147,14 @@ public final class ProcessingContext {
   public void log(String message) {
     logger.log(message);
   }
+
+  /**
+   * Reports a warning at the location of the given element with the specified message.
+   *
+   * @param element the element where the warning occurred, used for location information
+   * @param message the warning message to be reported
+   */
+  public void warning(Element element, String message) {
+    logger.warning(element, message);
+  }
 }
