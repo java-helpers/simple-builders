@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -15,6 +16,9 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import org.javahelpers.simple.builders.processor.util.JavaLangAnalyser;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 /** Unit tests for {@link JavaLangAnalyser}. */
 class JavaLangAnalyserTest {
@@ -110,21 +114,30 @@ class JavaLangAnalyserTest {
 
   private final VariableElement parameter = new TestVariableElement("testParam");
 
-  @Test
-  void extractParamJavaDoc_shouldReturnNull_whenJavaDocIsNull() {
-    assertNull(JavaLangAnalyser.extractParamJavaDoc(null, parameter));
+  private static Stream<Arguments> extractParamJavaDocNullCases() {
+    VariableElement param = new TestVariableElement("testParam");
+    return Stream.of(
+        Arguments.of("JavaDoc is null", null, param),
+        Arguments.of("Parameter is null", "Some Javadoc", null),
+        Arguments.of(
+            "Param tag not found",
+            "/**\n         * Some method description.\n         * @param otherParam some other parameter\n         * @return something\n         */",
+            param),
+        Arguments.of(
+            "Empty param doc",
+            "/**\n         * Some method description.\n         * @param testParam\n         * @return something\n         */",
+            param),
+        Arguments.of(
+            "Whitespace only param doc",
+            "/**\n         * Some method description.\n         * @param testParam    \n         * @return something\n         */",
+            param));
   }
 
-  @Test
-  void extractParamJavaDoc_shouldReturnNull_whenParameterIsNull() {
-    assertNull(JavaLangAnalyser.extractParamJavaDoc("Some Javadoc", null));
-  }
-
-  @Test
-  void extractParamJavaDoc_shouldReturnNull_whenParamTagNotFound() {
-    String javaDoc =
-        "/**\n         * Some method description.\n         * @param otherParam some other parameter\n         * @return something\n         */";
-    assertNull(JavaLangAnalyser.extractParamJavaDoc(javaDoc, parameter));
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("extractParamJavaDocNullCases")
+  void extractParamJavaDoc_shouldReturnNull(
+      String testCase, String javaDoc, VariableElement param) {
+    assertNull(JavaLangAnalyser.extractParamJavaDoc(javaDoc, param));
   }
 
   @Test
@@ -150,20 +163,6 @@ class JavaLangAnalyserTest {
         "/**\n         * Some method description.\n         * @param testParam this is a test parameter\n         * @return something\n         * @since 1.0\n         */";
     assertEquals(
         "this is a test parameter", JavaLangAnalyser.extractParamJavaDoc(javaDoc, parameter));
-  }
-
-  @Test
-  void extractParamJavaDoc_shouldHandleEmptyParamDoc() {
-    String javaDoc =
-        "/**\n         * Some method description.\n         * @param testParam\n         * @return something\n         */";
-    assertNull(JavaLangAnalyser.extractParamJavaDoc(javaDoc, parameter));
-  }
-
-  @Test
-  void extractParamJavaDoc_shouldHandleWhitespaceOnlyParamDoc() {
-    String javaDoc =
-        "/**\n         * Some method description.\n         * @param testParam    \n         * @return something\n         */";
-    assertNull(JavaLangAnalyser.extractParamJavaDoc(javaDoc, parameter));
   }
 
   @Test
