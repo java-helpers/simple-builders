@@ -5,6 +5,8 @@
 [![Java Version](https://img.shields.io/badge/Java-17%2B-blue)](https://www.oracle.com/java/technologies/javase/17-relnote-issues.html)
 [![Maven](https://img.shields.io/badge/Maven-3.8%2B-orange)](https://maven.apache.org/)
 [![codecov](https://codecov.io/gh/java-helpers/simple-builders/graph/badge.svg)](https://codecov.io/gh/java-helpers/simple-builders)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=java-helpers_simple-builders&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=java-helpers_simple-builders)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=java-helpers_simple-builders&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=java-helpers_simple-builders)
 
 ## Table of Contents
 - [What is Simple Builders?](#what-is-simple-builders)
