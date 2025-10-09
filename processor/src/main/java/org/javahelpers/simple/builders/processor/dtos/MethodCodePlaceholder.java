@@ -39,7 +39,7 @@ public abstract class MethodCodePlaceholder<T> {
    * @param label name of placeholder
    * @param value dynamic value for placeholder
    */
-  public MethodCodePlaceholder(String label, T value) {
+  protected MethodCodePlaceholder(String label, T value) {
     this.label = label;
     this.value = value;
   }
