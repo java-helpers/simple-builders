@@ -78,6 +78,7 @@ public class MethodCodeDto {
    *
    * @return argument values
    */
+  @SuppressWarnings("java:S1452")
   public List<MethodCodePlaceholder<?>> getCodeArguments() {
     return codeArguments;
   }

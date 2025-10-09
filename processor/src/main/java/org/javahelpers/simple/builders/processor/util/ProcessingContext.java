@@ -85,6 +85,7 @@ public final class ProcessingContext {
    * @param typeElement the type to inspect
    * @return list of all members
    */
+  @SuppressWarnings("java:S1452")
   public List<? extends Element> getAllMembers(TypeElement typeElement) {
     return elementUtils.getAllMembers(typeElement);
   }
