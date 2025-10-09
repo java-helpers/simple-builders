@@ -82,7 +82,7 @@ public class BuilderProcessor extends AbstractProcessor {
   public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
     if (!supportedJdk) {
       // Fail fast: we already emitted an error in init(); do not attempt any processing.
-      return true;
+      return false;
     }
     // Resolve annotation as TypeElement to support environments where the Class<?> overload
     // of getElementsAnnotatedWith is unavailable.
@@ -93,7 +93,7 @@ public class BuilderProcessor extends AbstractProcessor {
     if (simpleBuilderAnnotation == null) {
       // TODO: Logging
       // Annotation type not on classpath; nothing to do this round.
-      return true;
+      return false;
     }
     for (Element annotatedElement : roundEnv.getElementsAnnotatedWith(simpleBuilderAnnotation)) {
       try {
