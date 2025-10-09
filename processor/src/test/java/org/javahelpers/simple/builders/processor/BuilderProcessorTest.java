@@ -1007,51 +1007,57 @@ class BuilderProcessorTest {
   }
 
   @Test
-  // TODO: Replace Optional with other generic wrapper type, because for optional there is a
-  // feature-request
   void shouldHandleGenericWrapperTypes() {
 
-    JavaFileObject optionalWrapperClass =
+    JavaFileObject wrapperRecord =
         ProcessorTestUtils.forSource(
             """
             package test;
-            import java.util.Optional;
+
+            public record WrapperRecord<T>(T value) {
+            }
+            """);
+
+    JavaFileObject dtoWithWrappedTypes =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
             import java.time.LocalDate;
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 
             @SimpleBuilder
-            public class OptionalWrapper {
-              private Optional<String> name;
-              private Optional<Integer> count;
-              private Optional<LocalDate> date;
+            public class DtoWithWrappedTypes {
+              private WrapperRecord<String> name;
+              private WrapperRecord<Integer> count;
+              private WrapperRecord<LocalDate> date;
 
-              public Optional<String> getName() { return name; }
-              public void setName(Optional<String> name) { this.name = name; }
+              public WrapperRecord<String> getName() { return name; }
+              public void setName(WrapperRecord<String> name) { this.name = name; }
 
-              public Optional<Integer> getCount() { return count; }
-              public void setCount(Optional<Integer> count) { this.count = count; }
+              public WrapperRecord<Integer> getCount() { return count; }
+              public void setCount(WrapperRecord<Integer> count) { this.count = count; }
 
-              public Optional<LocalDate> getDate() { return date; }
-              public void setDate(Optional<LocalDate> date) { this.date = date; }
+              public WrapperRecord<LocalDate> getDate() { return date; }
+              public void setDate(WrapperRecord<LocalDate> date) { this.date = date; }
             }
             """);
 
     // Test builder generation (without usage)
-    Compilation compilation = compile(optionalWrapperClass);
-    String optionalBuilder = loadGeneratedSource(compilation, "OptionalWrapperBuilder");
+    Compilation compilation = compile(wrapperRecord, dtoWithWrappedTypes);
+    String optionalBuilder = loadGeneratedSource(compilation, "DtoWithWrappedTypesBuilder");
 
     // Verify Optional wrapper generates basic methods
-    assertGenerationSucceeded(compilation, "OptionalWrapperBuilder", optionalBuilder);
+    assertGenerationSucceeded(compilation, "DtoWithWrappedTypesBuilder", optionalBuilder);
     ProcessorAsserts.assertContaining(
         optionalBuilder,
-        "public static OptionalWrapperBuilder create()",
-        "public OptionalWrapperBuilder name(Optional<String> name)",
-        "public OptionalWrapperBuilder count(Optional<Integer> count)",
-        "public OptionalWrapperBuilder date(Optional<LocalDate> date)",
-        "public OptionalWrapper build()");
+        "public static DtoWithWrappedTypesBuilder create()",
+        "public DtoWithWrappedTypesBuilder name(WrapperRecord<String> name)",
+        "public DtoWithWrappedTypesBuilder count(WrapperRecord<Integer> count)",
+        "public DtoWithWrappedTypesBuilder date(WrapperRecord<LocalDate> date)",
+        "public DtoWithWrappedTypes build()");
 
     // Verify no additional helper methods are generated for these generic types
-    // (since they don't match List/Set/Map patterns)
+    // (since they don't match List/Set/Map/Optional patterns)
     ProcessorAsserts.assertNotContaining(
         optionalBuilder,
         "nameBuilderConsumer",
@@ -1063,9 +1069,9 @@ class BuilderProcessorTest {
     // Backing fields present
     ProcessorAsserts.assertContaining(
         optionalBuilder,
-        "private TrackedValue<Optional<String>> name = unsetValue();",
-        "private TrackedValue<Optional<Integer>> count = unsetValue();",
-        "private TrackedValue<Optional<LocalDate>> date = unsetValue();");
+        "private TrackedValue<WrapperRecord<String>> name = unsetValue();",
+        "private TrackedValue<WrapperRecord<Integer>> count = unsetValue();",
+        "private TrackedValue<WrapperRecord<LocalDate>> date = unsetValue();");
   }
 
   @Test
