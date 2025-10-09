@@ -29,7 +29,6 @@ import static org.javahelpers.simple.builders.processor.util.BuilderDefinitionCr
 import com.google.auto.service.AutoService;
 import java.util.Set;
 import javax.annotation.processing.AbstractProcessor;
-import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
@@ -39,10 +38,10 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
-import javax.tools.Diagnostic;
 import org.javahelpers.simple.builders.processor.dtos.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 import org.javahelpers.simple.builders.processor.util.JavaCodeGenerator;
+import org.javahelpers.simple.builders.processor.util.ProcessingLogger;
 
 /**
  * BuilderProcessor is an annotation processor for execution in generate-sources phase. The
@@ -54,8 +53,8 @@ import org.javahelpers.simple.builders.processor.util.JavaCodeGenerator;
 public class BuilderProcessor extends AbstractProcessor {
   private Types typeUtils;
   private Elements elementUtils;
-  private Messager messager;
   private JavaCodeGenerator codeGenerator;
+  private ProcessingLogger logger;
   private boolean supportedJdk = true;
 
   @Override
@@ -63,15 +62,14 @@ public class BuilderProcessor extends AbstractProcessor {
     super.init(processingEnv);
     this.typeUtils = processingEnv.getTypeUtils();
     this.elementUtils = processingEnv.getElementUtils();
-    this.messager = processingEnv.getMessager();
+    this.logger = new ProcessingLogger(processingEnv.getMessager());
     this.codeGenerator = new JavaCodeGenerator(processingEnv.getFiler());
 
     // Enforce minimum Java version (17+) for the processor
     SourceVersion current = processingEnv.getSourceVersion();
     this.supportedJdk = isAtLeastJava17(current);
     if (!this.supportedJdk) {
-      messager.printMessage(
-          Diagnostic.Kind.ERROR,
+      logger.error(
           "simple-builders requires Java 17 or higher for annotation processing. Detected: "
               + current
               + ". Please upgrade to JDK 17+ or disable the processor.");
@@ -91,15 +89,15 @@ public class BuilderProcessor extends AbstractProcessor {
             org.javahelpers.simple.builders.core.annotations.SimpleBuilder.class
                 .getCanonicalName());
     if (simpleBuilderAnnotation == null) {
-      // TODO: Logging
-      // Annotation type not on classpath; nothing to do this round.
+      logger.error(
+          "Annotation org.javahelpers.simple.builders.core.annotations.SimpleBuilder is not on classpath. So nothing to do here.");
       return false;
     }
     for (Element annotatedElement : roundEnv.getElementsAnnotatedWith(simpleBuilderAnnotation)) {
       try {
         process(annotatedElement);
       } catch (BuilderException ex) {
-        // TODO Logging
+        logger.error(annotatedElement, "Failed to process annotated element: " + ex.getMessage());
       }
     }
     return true;

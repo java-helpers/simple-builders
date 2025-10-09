@@ -59,6 +59,16 @@ public class ProcessingLogger {
   }
 
   /**
+   * Reports an error with the specified message. The error will be reported to the underlying
+   * Messager instance.
+   *
+   * @param message the error message to be reported
+   */
+  public void error(String message) {
+    messager.printMessage(Diagnostic.Kind.ERROR, message);
+  }
+
+  /**
    * Posts an informational note message to the underlying Messager. This is typically used for
    * non-critical information during processing.
    *

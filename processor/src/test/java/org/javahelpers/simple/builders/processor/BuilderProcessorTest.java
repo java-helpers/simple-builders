@@ -12,21 +12,11 @@ import com.google.testing.compile.JavaFileObjects;
 import javax.tools.JavaFileObject;
 import org.javahelpers.simple.builders.processor.testing.ProcessorAsserts;
 import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 /** Tests for the {@link BuilderProcessor} class. */
 class BuilderProcessorTest {
-
-  BuilderProcessor processor;
-  Compiler compiler;
-
-  @BeforeEach
-  void setUp() {
-    processor = new BuilderProcessor();
-    compiler = Compiler.javac().withProcessors(processor);
-  }
 
   @Test
   void shouldFailWhenAnnotationPlacedOnInterface() {
@@ -44,12 +34,10 @@ class BuilderProcessorTest {
     Compilation compilation =
         Compiler.javac().withProcessors(new BuilderProcessor()).compile(source);
 
-    // Then: processor swallows validation exceptions; assert no builder was generated
-    assertThat(compilation).succeeded();
-    org.junit.jupiter.api.Assertions.assertFalse(
-        compilation.generatedFiles().stream()
-            .anyMatch(f -> f.getName().endsWith("test/WrongTargetInterfaceBuilder.java")),
-        "Builder should not be generated for interface target");
+    // Then: compilation should fail with appropriate error message
+    assertThat(compilation).failed();
+    assertThat(compilation)
+        .hadErrorContaining("The SimpleBuilder should be annotated on a class or record");
   }
 
   @Test
@@ -68,12 +56,9 @@ class BuilderProcessorTest {
     Compilation compilation =
         Compiler.javac().withProcessors(new BuilderProcessor()).compile(source);
 
-    // Then: processor swallows validation exceptions; assert no builder was generated
-    assertThat(compilation).succeeded();
-    org.junit.jupiter.api.Assertions.assertFalse(
-        compilation.generatedFiles().stream()
-            .anyMatch(f -> f.getName().endsWith("test/AbstractAnnotatedBuilder.java")),
-        "Builder should not be generated for abstract class target");
+    // Then: compilation should fail with appropriate error message
+    assertThat(compilation).failed();
+    assertThat(compilation).hadErrorContaining("The SimpleBuilder should not be abstract");
   }
 
   @Test
@@ -929,7 +914,7 @@ class BuilderProcessorTest {
   }
 
   protected Compilation compile(JavaFileObject... sourceFiles) {
-    return compiler.compile(sourceFiles);
+    return Compiler.javac().withProcessors(new BuilderProcessor()).compile(sourceFiles);
   }
 
   @Test
@@ -2234,12 +2219,10 @@ class BuilderProcessorTest {
     // When
     Compilation compilation = compile(source);
 
-    // Then: compilation succeeds and no builder class with the conflicting name is generated
-    assertThat(compilation).succeeded();
-    org.junit.jupiter.api.Assertions.assertFalse(
-        compilation.generatedFiles().stream()
-            .anyMatch(f -> f.getName().endsWith("test/HasInnerClassWithBuilderBuilder.java")),
-        "Builder should not be generated when nested builder interface is present");
+    // Then: compilation should fail with appropriate error message
+    assertThat(compilation).failed();
+    assertThat(compilation)
+        .hadErrorContaining("The SimpleBuilder should be declared on a top-level class only");
   }
 
   @Test
