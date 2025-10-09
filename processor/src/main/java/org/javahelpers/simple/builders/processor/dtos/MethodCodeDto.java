@@ -33,7 +33,7 @@ public class MethodCodeDto {
   private String codeFormat;
 
   /** List of placeholders in CodeFormat. Containing dynamic values too. */
-  private final List<MethodCodePlaceholder> codeArguments = new ArrayList<>();
+  private final List<MethodCodePlaceholder<?>> codeArguments = new ArrayList<>();
 
   /**
    * Setting format of code.
@@ -78,7 +78,7 @@ public class MethodCodeDto {
    *
    * @return argument values
    */
-  public List<MethodCodePlaceholder> getCodeArguments() {
+  public List<MethodCodePlaceholder<?>> getCodeArguments() {
     return codeArguments;
   }
 }
