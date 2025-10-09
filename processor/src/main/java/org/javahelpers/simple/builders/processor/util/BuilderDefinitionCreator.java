@@ -93,7 +93,6 @@ public class BuilderDefinitionCreator {
       }
     }
 
-    // Todo: moving into helper function
     List<? extends Element> allMembers = elementUtils.getAllMembers(annotatedType);
     List<ExecutableElement> methods = ElementFilter.methodsIn(allMembers);
 
@@ -132,15 +131,13 @@ public class BuilderDefinitionCreator {
 
   private static void addAdditionalHelperMethodsForField(
       FieldDto result, String fieldName, TypeName fieldType) {
-    List<TypeName> innerTypes;
-    int innerTypesCnt;
-    if (fieldType instanceof TypeNameGeneric fieldTypeGeneric) {
-      innerTypes = fieldTypeGeneric.getInnerTypeArguments();
-      innerTypesCnt = innerTypes.size();
-    } else {
-      innerTypes = null;
-      innerTypesCnt = 0;
+    // Only process generic types (List, Set, Map, etc.)
+    if (!(fieldType instanceof TypeNameGeneric fieldTypeGeneric)) {
+      return;
     }
+
+    List<TypeName> innerTypes = fieldTypeGeneric.getInnerTypeArguments();
+    int innerTypesCnt = innerTypes.size();
 
     if (isList(fieldType) && innerTypesCnt == 1) {
       result.addMethod(
