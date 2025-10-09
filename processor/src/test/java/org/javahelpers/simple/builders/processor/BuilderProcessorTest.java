@@ -19,11 +19,11 @@ import org.junit.jupiter.api.Test;
 /** Tests for the {@link BuilderProcessor} class. */
 class BuilderProcessorTest {
 
-  protected BuilderProcessor processor;
-  protected Compiler compiler;
+  BuilderProcessor processor;
+  Compiler compiler;
 
   @BeforeEach
-  protected void setUp() {
+  void setUp() {
     processor = new BuilderProcessor();
     compiler = Compiler.javac().withProcessors(processor);
   }
