@@ -33,14 +33,13 @@ import org.javahelpers.simple.builders.example.PersonDto;
 @Generated("org.javahelpers.simple.builders.processor")
 @BuilderImplementation(forClass = PersonDto.class)
 public class PersonDtoBuilder {
-  private final PersonDto instance = new PersonDto();
+  private final PersonDto instance = new PersonDto("test");
 
   public static PersonDtoBuilder create() {
     return new PersonDtoBuilder();
   }
 
   public PersonDtoBuilder name(String name) {
-    instance.setName(name);
     return this;
   }
 
