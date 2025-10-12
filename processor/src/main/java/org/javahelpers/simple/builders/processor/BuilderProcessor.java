@@ -109,7 +109,8 @@ public class BuilderProcessor extends AbstractProcessor {
             "simple-builders: Successfully generated builder for: %s",
             annotatedElement.getSimpleName());
       } catch (BuilderException ex) {
-        context.error(
+        // All builder generation failures are warnings to allow other builders to be generated
+        context.warning(
             annotatedElement, "simple-builders: Failed to generate builder - %s", ex.getMessage());
       }
     }

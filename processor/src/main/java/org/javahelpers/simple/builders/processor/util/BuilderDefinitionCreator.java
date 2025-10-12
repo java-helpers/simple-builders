@@ -72,11 +72,11 @@ public class BuilderDefinitionCreator {
   }
 
   /**
-   * Extracting definition for a builder from annotated element.
+   * Extracts a BuilderDefinition from the annotated element.
    *
-   * @param annotatedElement annotated elment which is target of builder creation
-   * @param context processing context with element and type utilities
-   * @return definition of builder
+   * @param annotatedElement the annotated type element to extract the builder definition from
+   * @param context the processing context for annotations processing
+   * @return the builder definition
    * @throws BuilderException if validation or generation failed
    */
   public static BuilderDefinitionDto extractFromElement(

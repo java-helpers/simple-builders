@@ -4,7 +4,9 @@ The Simple Builders annotation processor supports conditional debug logging that
 
 ## Logging Levels
 
-- **INFO**: Always visible - Shows success/failure messages for each builder generated
+- **INFO**: Always visible - Shows success messages for each builder generated
+- **WARNING**: Always visible - Shows when a builder cannot be generated (e.g., wrong annotation target, generation errors). Other builders will continue to be generated.
+- **ERROR**: Always visible - Shows fatal configuration errors (e.g., unsupported JDK version). Stops compilation completely.
 - **DEBUG**: Conditional - Shows detailed tracing of field discovery, method analysis, and code generation steps
 
 ## Enabling Debug Logging

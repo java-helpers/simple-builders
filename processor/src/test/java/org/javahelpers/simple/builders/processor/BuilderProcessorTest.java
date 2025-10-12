@@ -33,10 +33,10 @@ class BuilderProcessorTest {
     // When
     Compilation compilation = compile(source);
 
-    // Then: compilation should fail with appropriate error message
-    assertThat(compilation).failed();
+    // Then: compilation should succeed but with a warning
+    assertThat(compilation).succeeded();
     assertThat(compilation)
-        .hadErrorContaining("The SimpleBuilder should be annotated on a class or record");
+        .hadWarningContaining("The SimpleBuilder should be annotated on a class or record");
   }
 
   @Test
@@ -54,9 +54,9 @@ class BuilderProcessorTest {
     // When
     Compilation compilation = compile(source);
 
-    // Then: compilation should fail with appropriate error message
-    assertThat(compilation).failed();
-    assertThat(compilation).hadErrorContaining("The SimpleBuilder should not be abstract");
+    // Then: compilation should succeed but with a warning
+    assertThat(compilation).succeeded();
+    assertThat(compilation).hadWarningContaining("The SimpleBuilder should not be abstract");
   }
 
   @Test
@@ -2273,10 +2273,10 @@ class BuilderProcessorTest {
     // When
     Compilation compilation = compile(source);
 
-    // Then: compilation should fail with appropriate error message
-    assertThat(compilation).failed();
+    // Then: compilation should succeed but with a warning
+    assertThat(compilation).succeeded();
     assertThat(compilation)
-        .hadErrorContaining("The SimpleBuilder should be declared on a top-level class only");
+        .hadWarningContaining("The SimpleBuilder should be declared on a top-level class only");
   }
 
   @Test
