@@ -39,7 +39,6 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javax.lang.model.element.*;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.ElementFilter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
@@ -84,11 +83,16 @@ public class BuilderDefinitionCreator {
     validateAnnotatedElement(annotatedElement);
     TypeElement annotatedType = (TypeElement) annotatedElement;
 
+    context.debug("Extracting builder definition from: %s", annotatedType.getQualifiedName());
+
     BuilderDefinitionDto result = new BuilderDefinitionDto();
     String packageName = context.getPackageName(annotatedType);
     String simpleClassName = annotatedType.getSimpleName().toString();
     result.setBuilderTypeName(new TypeName(packageName, simpleClassName + BUILDER_SUFFIX));
     result.setBuildingTargetTypeName(new TypeName(packageName, simpleClassName));
+
+    context.debug(
+        "Builder will be generated as: %s.%s", packageName, simpleClassName + BUILDER_SUFFIX);
 
     // Extract generics from the annotated type via mapper (stream-based)
     JavaLangMapper.map2GenericParameterDtos(annotatedType, context).forEach(result::addGeneric);
@@ -104,40 +108,75 @@ public class BuilderDefinitionCreator {
       }
     }
 
-    List<? extends Element> allMembers = context.getAllMembers(annotatedType);
-    List<ExecutableElement> methods = ElementFilter.methodsIn(allMembers);
-
     // Build a set of constructor field names to avoid duplicates from setters
     Set<String> ctorFieldNames =
         result.getConstructorFieldsForBuilder().stream()
             .map(FieldDto::getFieldName)
             .collect(toSet());
 
+    // Build fields on base of setters
+    List<ExecutableElement> methods = findAllPossibleSettersOfClass(annotatedType, context);
+    int processedCount = 0;
+    int addedCount = 0;
+    int skippedCount = 0;
     for (ExecutableElement mth : methods) {
-      // nur public
-      if (isMethodRelevantForBuilder(mth)) {
+      context.debug(
+          "Analyzing method: %s with %d parameter(s)",
+          mth.getSimpleName(), mth.getParameters().size());
+      if (isMethodRelevantForBuilder(mth, context)) {
         // Avoid adding setter-derived fields that duplicate constructor params
         Optional<FieldDto> maybeField = createFieldFromSetter(mth, context);
         if (maybeField.isPresent()) {
+          processedCount++;
           FieldDto field = maybeField.get();
           if (!ctorFieldNames.contains(field.getFieldName())) {
+            addedCount++;
+            String fieldTypeName = field.getFieldType().getClassName();
+            if (field.getFieldType().getPackageName() != null
+                && !field.getFieldType().getPackageName().isEmpty()) {
+              fieldTypeName = field.getFieldType().getPackageName() + "." + fieldTypeName;
+            }
+            context.debug("  -> Adding field: %s (type: %s)", field.getFieldName(), fieldTypeName);
             result.addField(field);
+            continue;
           }
+        } else {
+          context.debug("  -> Skipping method (already in constructor): %s", mth.getSimpleName());
         }
       }
+      skippedCount++;
     }
+
+    context.debug(
+        "Processed %d possible setters: added %d fields, skipped %d",
+        processedCount, addedCount, skippedCount);
 
     return result;
   }
 
-  private static boolean isMethodRelevantForBuilder(ExecutableElement mth) {
-    return isSetterForField(mth)
-        && isNoMethodOfObjectClass(mth)
-        && hasNoThrowablesDeclared(mth)
-        && hasNoReturnValue(mth)
-        && hasNotAnnotation(IgnoreInBuilder.class, mth)
-        && isNotPrivate(mth)
-        && isNotStatic(mth);
+  private static boolean isMethodRelevantForBuilder(
+      ExecutableElement mth, ProcessingContext context) {
+    if (!hasNoThrowablesDeclared(mth)) {
+      context.debug("  -> Skipping: declares throwables");
+      return false;
+    }
+    if (!hasNoReturnValue(mth)) {
+      context.debug("  -> Skipping: has return value");
+      return false;
+    }
+    if (!hasNotAnnotation(IgnoreInBuilder.class, mth)) {
+      context.debug("  -> Skipping: has @IgnoreInBuilder annotation");
+      return false;
+    }
+    if (!isNotPrivate(mth)) {
+      context.debug("  -> Skipping: is private");
+      return false;
+    }
+    if (!isNotStatic(mth)) {
+      context.debug("  -> Skipping: is static");
+      return false;
+    }
+    return true;
   }
 
   private static void addAdditionalHelperMethodsForField(
@@ -246,7 +285,9 @@ public class BuilderDefinitionCreator {
       // Should never happen, just to be sure here
       context.warning(
           mth.getEnclosingElement(),
-          "Setter method " + methodName + " has " + parameters.size() + " parameters, expected 1");
+          "Method %s has %d parameters, expected 1",
+          mth.getSimpleName(),
+          mth.getParameters().size());
       return Optional.empty();
     }
     VariableElement fieldParameter = parameters.get(0);
@@ -265,7 +306,7 @@ public class BuilderDefinitionCreator {
     // extracting type of field
     MethodParameterDto fieldParameterDto = map2MethodParameter(fieldParameter, context);
     if (fieldParameterDto == null) {
-      context.warning(mth.getEnclosingElement(), "Could not extract type of field " + fieldName);
+      context.warning(mth.getEnclosingElement(), "Could not extract type of field '%s'", fieldName);
       return Optional.empty();
     }
     TypeName fieldType = fieldParameterDto.getParameterType();
@@ -284,7 +325,8 @@ public class BuilderDefinitionCreator {
     if (CollectionUtils.isNotEmpty(mth.getTypeParameters())) {
       context.warning(
           mth.getEnclosingElement(),
-          "Field " + fieldName + " has field-specific generics, so it will be ignored");
+          "Field '%s' has field-specific generics, so it will be ignored",
+          fieldName);
       return Optional.empty();
     }
 

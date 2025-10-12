@@ -52,24 +52,31 @@ public class JavaCodeGenerator {
   /** Util class for source code generation of type {@code javax.annotation.processing.Filer}. */
   private final Filer filer;
 
+  /** Logger for debug output during code generation. */
+  private final ProcessingLogger logger;
+
   /**
    * Constructor for JavaCodeGenerator.
    *
    * @param filer Util class for source code generation of type {@code
    *     javax.annotation.processing.Filer}
+   * @param logger Logger for debug output
    */
-  public JavaCodeGenerator(Filer filer) {
+  public JavaCodeGenerator(Filer filer, ProcessingLogger logger) {
     this.filer = filer;
+    this.logger = logger;
   }
 
   /**
    * Generating source code file for builder. Creation of source code files is done by {@code
-   * javax.annotation.processing.Filer}.
    *
    * @param builderDef dto of all information to create the builder
    * @throws BuilderException if there is an error in source code generation
    */
   public void generateBuilder(BuilderDefinitionDto builderDef) throws BuilderException {
+    logger.debug(
+        "Starting code generation for builder: %s", builderDef.getBuilderTypeName().getClassName());
+
     ClassName builderBaseClass = map2ClassName(builderDef.getBuilderTypeName());
     ClassName dtoBaseClass = map2ClassName(builderDef.getBuildingTargetTypeName());
     com.palantir.javapoet.TypeName builderTypeName;
@@ -83,6 +90,7 @@ public class JavaCodeGenerator {
       dtoTypeName =
           map2ParameterizedTypeName(
               builderDef.getBuildingTargetTypeName(), builderDef.getGenerics());
+      logger.debug("Builder has %d generic type parameter(s)", builderDef.getGenerics().size());
     }
 
     TypeSpec.Builder classBuilder =
@@ -97,6 +105,11 @@ public class JavaCodeGenerator {
             dtoBaseClass, dtoTypeName, builderDef.getAllFieldsForBuilder()));
     classBuilder.addMethod(createEmptyConstructor(dtoBaseClass));
 
+    logger.debug(
+        "Generating %d constructor fields and %d setter fields",
+        builderDef.getConstructorFieldsForBuilder().size(),
+        builderDef.getSetterFieldsForBuilder().size());
+
     // Generate backing fields for each DTO field (constructor and setter fields)
     for (FieldDto fieldDto : builderDef.getConstructorFieldsForBuilder()) {
       FieldSpec fieldSpec = createFieldMember(fieldDto);
@@ -110,10 +123,14 @@ public class JavaCodeGenerator {
     // Generate field-specific functions in Builder (constructor fields first, then setter fields)
     for (FieldDto fieldDto : builderDef.getConstructorFieldsForBuilder()) {
       List<MethodSpec> methodSpecs = createFieldMethods(fieldDto, builderTypeName);
+      logger.debug(
+          "  Generated %d methods for field: %s", methodSpecs.size(), fieldDto.getFieldName());
       classBuilder.addMethods(methodSpecs);
     }
     for (FieldDto fieldDto : builderDef.getSetterFieldsForBuilder()) {
       List<MethodSpec> methodSpecs = createFieldMethods(fieldDto, builderTypeName);
+      logger.debug(
+          "  Generated %d methods for field: %s", methodSpecs.size(), fieldDto.getFieldName());
       classBuilder.addMethods(methodSpecs);
     }
 
@@ -133,7 +150,13 @@ public class JavaCodeGenerator {
     classBuilder.addAnnotation(createAnnotationGenerated());
     classBuilder.addAnnotation(createAnnotationBuilderImplementation(dtoBaseClass));
 
+    logger.debug(
+        "Writing builder class to file: %s.%s",
+        builderDef.getBuilderTypeName().getPackageName(),
+        builderDef.getBuilderTypeName().getClassName());
     writeClassToFile(builderDef.getBuilderTypeName().getPackageName(), classBuilder.build());
+    logger.debug(
+        "Successfully generated builder: %s", builderDef.getBuilderTypeName().getClassName());
   }
 
   private void writeClassToFile(String packageName, TypeSpec typeSpec) throws BuilderException {

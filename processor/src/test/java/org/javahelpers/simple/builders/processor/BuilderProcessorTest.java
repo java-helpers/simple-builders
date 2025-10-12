@@ -2183,10 +2183,10 @@ class BuilderProcessorTest {
     assertThat(compilation).succeeded();
     assertThat(compilation)
         .hadWarningContaining(
-            "Field fieldWithOwnGeneric has field-specific generics, so it will be ignored");
+            "Field 'fieldWithOwnGeneric' has field-specific generics, so it will be ignored");
     assertThat(compilation)
         .hadWarningContaining(
-            "Field fieldWithExtendedClassGeneric has field-specific generics, so it will be ignored");
+            "Field 'fieldWithExtendedClassGeneric' has field-specific generics, so it will be ignored");
     ProcessorAsserts.assertingResult(
         generatedCode,
         // name field should be present
