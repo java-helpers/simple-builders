@@ -132,12 +132,33 @@ public final class ProcessingContext {
   }
 
   /**
+   * Reports an error at the location of the given element with a formatted message.
+   *
+   * @param element the element where the error occurred
+   * @param format the format string
+   * @param args arguments referenced by the format specifiers in the format string
+   */
+  public void error(Element element, String format, Object... args) {
+    logger.error(element, format, args);
+  }
+
+  /**
    * Reports an error message.
    *
    * @param message the error message
    */
   public void error(String message) {
     logger.error(message);
+  }
+
+  /**
+   * Reports an error with a formatted message.
+   *
+   * @param format the format string
+   * @param args arguments referenced by the format specifiers in the format string
+   */
+  public void error(String format, Object... args) {
+    logger.error(format, args);
   }
 
   /**
@@ -150,12 +171,32 @@ public final class ProcessingContext {
   }
 
   /**
+   * Logs an informational message with a formatted string.
+   *
+   * @param format the format string
+   * @param args arguments referenced by the format specifiers in the format string
+   */
+  public void log(String format, Object... args) {
+    logger.log(format, args);
+  }
+
+  /**
    * Logs an info-level message that appears in normal Maven output.
    *
    * @param message the info message to log
    */
   public void info(String message) {
     logger.info(message);
+  }
+
+  /**
+   * Logs an info-level message with a formatted string.
+   *
+   * @param format the format string
+   * @param args arguments referenced by the format specifiers in the format string
+   */
+  public void info(String format, Object... args) {
+    logger.info(format, args);
   }
 
   /**
@@ -168,6 +209,16 @@ public final class ProcessingContext {
   }
 
   /**
+   * Logs a debug message with a formatted string.
+   *
+   * @param format the format string
+   * @param args arguments referenced by the format specifiers in the format string
+   */
+  public void debug(String format, Object... args) {
+    logger.debug(format, args);
+  }
+
+  /**
    * Reports a warning at the location of the given element with the specified message.
    *
    * @param element the element where the warning occurred, used for location information
@@ -175,5 +226,16 @@ public final class ProcessingContext {
    */
   public void warning(Element element, String message) {
     logger.warning(element, message);
+  }
+
+  /**
+   * Reports a warning at the location of the given element with a formatted message.
+   *
+   * @param element the element where the warning occurred, used for location information
+   * @param format the format string
+   * @param args arguments referenced by the format specifiers in the format string
+   */
+  public void warning(Element element, String format, Object... args) {
+    logger.warning(element, format, args);
   }
 }
