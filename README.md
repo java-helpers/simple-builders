@@ -20,6 +20,7 @@
 - [Building from Source](#building-from-source)
 - [Contributing](#contributing)
 - [License](#license)
+- [Links](#links)
 
 ## What is Simple Builders?
 
@@ -217,7 +218,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 * [Downloads](https://github.com/java-helpers/simple-builders/releases)
 * [Issue tracker](https://github.com/java-helpers/simple-builders/issues)
 * [CI build](https://github.com/java-helpers/simple-builders/actions/)
-
-## Licensing
-
-SimpleBuilders is licensed under the MIT License; you may not use this project except in compliance with the License. You may obtain a copy of the License at http://www.opensource.org/licenses/mit-license.php.
