@@ -2,6 +2,11 @@
 
 The Simple Builders annotation processor supports conditional debug logging that provides detailed information about the builder generation process.
 
+## Logging Levels
+
+- **INFO**: Always visible - Shows success/failure messages for each builder generated
+- **DEBUG**: Conditional - Shows detailed tracing of field discovery, method analysis, and code generation steps
+
 ## Enabling Debug Logging
 
 Debug logging uses `Diagnostic.Kind.OTHER` but is only activated when explicitly enabled via the compiler argument `-Averbose=true`.
@@ -59,9 +64,12 @@ Set it permanently in your `pom.xml`:
 
 ## Example Debug Output
 
-When debug logging is enabled, you'll see detailed output like:
+When debug logging is enabled, you'll see detailed output with visual separators:
 
 ```
+[INFO] ========================================
+[INFO] simple-builders: PROCESSING ROUND START
+[INFO] ========================================
 [INFO] simple-builders: Processing round started. Found 3 annotated elements.
 [INFO] simple-builders: Processing element: PersonDto
 [INFO] Extracting builder definition from: org.example.PersonDto

@@ -54,38 +54,6 @@ public class ProcessingLogger {
   }
 
   /**
-   * Reports an error at the location of the given element with the specified message. The error
-   * will be reported to the underlying Messager instance.
-   *
-   * @param e the element where the error occurred, used for location information
-   * @param message the error message to be reported
-   */
-  public void error(Element e, String message) {
-    messager.printMessage(Diagnostic.Kind.ERROR, message, e);
-  }
-
-  /**
-   * Reports an error at the location of the given element with a formatted message.
-   *
-   * @param e the element where the error occurred, used for location information
-   * @param format the format string
-   * @param args arguments referenced by the format specifiers in the format string
-   */
-  public void error(Element e, String format, Object... args) {
-    messager.printMessage(Diagnostic.Kind.ERROR, String.format(format, args), e);
-  }
-
-  /**
-   * Reports an error with the specified message. The error will be reported to the underlying
-   * Messager instance.
-   *
-   * @param message the error message to be reported
-   */
-  public void error(String message) {
-    messager.printMessage(Diagnostic.Kind.ERROR, message);
-  }
-
-  /**
    * Reports an error with a formatted message.
    *
    * @param format the format string
@@ -93,26 +61,6 @@ public class ProcessingLogger {
    */
   public void error(String format, Object... args) {
     messager.printMessage(Diagnostic.Kind.ERROR, String.format(format, args));
-  }
-
-  /**
-   * Posts an informational note message to the underlying Messager. This is typically used for
-   * non-critical information during processing. Maps to Maven's NOTE level.
-   *
-   * @param message the informational message to be posted
-   */
-  public void log(String message) {
-    messager.printMessage(Diagnostic.Kind.NOTE, message);
-  }
-
-  /**
-   * Posts an informational note message with a formatted string.
-   *
-   * @param format the format string
-   * @param args arguments referenced by the format specifiers in the format string
-   */
-  public void log(String format, Object... args) {
-    messager.printMessage(Diagnostic.Kind.NOTE, String.format(format, args));
   }
 
   /**
@@ -143,7 +91,8 @@ public class ProcessingLogger {
    */
   public void debug(String message) {
     if (debugEnabled) {
-      messager.printMessage(Diagnostic.Kind.OTHER, message);
+      String formatWithDebug = "[DEBUG] " + message;
+      messager.printMessage(Diagnostic.Kind.OTHER, formatWithDebug);
     }
   }
 
@@ -155,7 +104,8 @@ public class ProcessingLogger {
    */
   public void debug(String format, Object... args) {
     if (debugEnabled) {
-      messager.printMessage(Diagnostic.Kind.OTHER, String.format(format, args));
+      String formatWithDebug = "[DEBUG] " + format;
+      messager.printMessage(Diagnostic.Kind.OTHER, String.format(formatWithDebug, args));
     }
   }
 
@@ -179,5 +129,27 @@ public class ProcessingLogger {
    */
   public void warning(Element e, String format, Object... args) {
     messager.printMessage(Diagnostic.Kind.WARNING, String.format(format, args), e);
+  }
+
+  /**
+   * Reports an error at the location of the given element with the specified message. The error
+   * will be reported to the underlying Messager instance.
+   *
+   * @param e the element where the error occurred, used for location information
+   * @param message the error message to be reported
+   */
+  public void error(Element e, String message) {
+    messager.printMessage(Diagnostic.Kind.ERROR, message, e);
+  }
+
+  /**
+   * Reports an error at the location of the given element with a formatted message.
+   *
+   * @param e the element where the error occurred, used for location information
+   * @param format the format string
+   * @param args arguments referenced by the format specifiers in the format string
+   */
+  public void error(Element e, String format, Object... args) {
+    messager.printMessage(Diagnostic.Kind.ERROR, String.format(format, args), e);
   }
 }

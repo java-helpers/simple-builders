@@ -122,65 +122,6 @@ public final class ProcessingContext {
   }
 
   /**
-   * Reports an error at the location of the given element.
-   *
-   * @param element the element where the error occurred
-   * @param message the error message
-   */
-  public void error(Element element, String message) {
-    logger.error(element, message);
-  }
-
-  /**
-   * Reports an error at the location of the given element with a formatted message.
-   *
-   * @param element the element where the error occurred
-   * @param format the format string
-   * @param args arguments referenced by the format specifiers in the format string
-   */
-  public void error(Element element, String format, Object... args) {
-    logger.error(element, format, args);
-  }
-
-  /**
-   * Reports an error message.
-   *
-   * @param message the error message
-   */
-  public void error(String message) {
-    logger.error(message);
-  }
-
-  /**
-   * Reports an error with a formatted message.
-   *
-   * @param format the format string
-   * @param args arguments referenced by the format specifiers in the format string
-   */
-  public void error(String format, Object... args) {
-    logger.error(format, args);
-  }
-
-  /**
-   * Logs an informational message.
-   *
-   * @param message the message to log
-   */
-  public void log(String message) {
-    logger.log(message);
-  }
-
-  /**
-   * Logs an informational message with a formatted string.
-   *
-   * @param format the format string
-   * @param args arguments referenced by the format specifiers in the format string
-   */
-  public void log(String format, Object... args) {
-    logger.log(format, args);
-  }
-
-  /**
    * Logs an info-level message that appears in normal Maven output.
    *
    * @param message the info message to log
@@ -237,5 +178,36 @@ public final class ProcessingContext {
    */
   public void warning(Element element, String format, Object... args) {
     logger.warning(element, format, args);
+  }
+
+  /**
+   * Reports an error with a formatted message.
+   *
+   * @param format the format string
+   * @param args arguments referenced by the format specifiers in the format string
+   */
+  public void error(String format, Object... args) {
+    logger.error(format, args);
+  }
+
+  /**
+   * Reports an error at the location of the given element.
+   *
+   * @param element the element where the error occurred
+   * @param message the error message
+   */
+  public void error(Element element, String message) {
+    logger.error(element, message);
+  }
+
+  /**
+   * Reports an error at the location of the given element with a formatted message.
+   *
+   * @param element the element where the error occurred
+   * @param format the format string
+   * @param args arguments referenced by the format specifiers in the format string
+   */
+  public void error(Element element, String format, Object... args) {
+    logger.error(element, format, args);
   }
 }
