@@ -80,9 +80,9 @@
               <version>${project.version}</version>
             </path>
           </annotationProcessorPaths>
-          <compilerArguments>
-            <Averbose>${simplebuilder.verbose}</Averbose>
-          </compilerArguments>
+          <compilerArgs>
+            <arg>-Averbose=${simplebuilder.verbose}</arg>
+          </compilerArgs>
         </configuration>
       </plugin>
     </plugins>

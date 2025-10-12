@@ -16,6 +16,7 @@
 - [Usage](#usage)
   - [Basic Usage](#basic-usage)
   - [Collections and Nested Objects](#collections-and-nested-objects)
+  - [Debug Logging](#debug-logging)
 - [Building from Source](#building-from-source)
 - [Contributing](#contributing)
 - [License](#license)
@@ -168,6 +169,12 @@ Project project = ProjectBuilder.create()
         .put("owner", "dev-team"))
     .build();
 ```
+
+### Debug Logging
+
+Simple Builders supports detailed debug logging to trace the builder generation process. Enable it with the `-Averbose=true` compiler argument for detailed insights into field discovery, method analysis, and code generation.
+
+For complete documentation on enabling and using debug logging, see [DEBUG_LOGGING.md](DEBUG_LOGGING.md).
 
 ## Building from Source
 

@@ -27,9 +27,9 @@ Add a property in your `pom.xml`:
       <artifactId>maven-compiler-plugin</artifactId>
       <version>3.13.0</version>
       <configuration>
-        <compilerArguments>
-          <Averbose>${simplebuilder.verbose}</Averbose>
-        </compilerArguments>
+        <compilerArgs>
+          <arg>-Averbose=${simplebuilder.verbose}</arg>
+        </compilerArgs>
       </configuration>
     </plugin>
   </plugins>
@@ -53,9 +53,9 @@ Set it permanently in your `pom.xml`:
       <artifactId>maven-compiler-plugin</artifactId>
       <version>3.13.0</version>
       <configuration>
-        <compilerArguments>
-          <Averbose>true</Averbose>
-        </compilerArguments>
+        <compilerArgs>
+          <arg>-Averbose=true</arg>
+        </compilerArgs>
       </configuration>
     </plugin>
   </plugins>
@@ -67,30 +67,30 @@ Set it permanently in your `pom.xml`:
 When debug logging is enabled, you'll see detailed output with visual separators:
 
 ```
-[INFO] ========================================
+[INFO] [DEBUG] ===============================
 [INFO] simple-builders: PROCESSING ROUND START
-[INFO] ========================================
-[INFO] simple-builders: Processing round started. Found 3 annotated elements.
-[INFO] simple-builders: Processing element: PersonDto
-[INFO] Extracting builder definition from: org.example.PersonDto
-[INFO] Builder will be generated as: org.example.PersonDtoBuilder
-[INFO] Found 17 total methods in class hierarchy
-[INFO] Analyzing method: setName with 1 parameter(s)
-[INFO]   -> Adding field: name (type: java.lang.String)
-[INFO] Analyzing method: setAge with 1 parameter(s)
-[INFO]   -> Adding field: age (type: int)
-[INFO] Found 2 relevant setter methods (filtered from 17 total methods)
-[INFO] Processed 2 setters: added 2 fields, skipped 0 duplicates
-[INFO] Starting code generation for builder: PersonDtoBuilder
-[INFO] Generating methods for 2 setter fields
-[INFO]   Generated 2 method(s) for field: name
-[INFO]   Generated 2 method(s) for field: age
-[INFO] Writing builder class to file: org.example.PersonDtoBuilder
-[INFO] Successfully generated builder: PersonDtoBuilder
+[INFO] [DEBUG] ===============================
+[INFO] [DEBUG] simple-builders: Processing round started. Found 3 annotated elements.
+[INFO] [DEBUG] ------------------------------------
+[INFO] [DEBUG] simple-builders: Processing element: PersonDto
+[INFO] [DEBUG] ------------------------------------
+[INFO] [DEBUG] Extracting builder definition from: org.example.PersonDto
+[INFO] [DEBUG] Builder will be generated as: org.example.PersonDtoBuilder
+[INFO] [DEBUG] Analyzing method: setName with 1 parameter(s)
+[INFO] [DEBUG]   -> Adding field: name (type: java.lang.String)
+[INFO] [DEBUG] Analyzing method: setAge with 1 parameter(s)
+[INFO] [DEBUG]   -> Adding field: age (type: int)
+[INFO] [DEBUG] Processed 2 possible setters: added 2 fields, skipped 0
+[INFO] [DEBUG] Starting code generation for builder: PersonDtoBuilder
+[INFO] [DEBUG] Generating 0 constructor fields and 2 setter fields
+[INFO] [DEBUG]   Generated 2 methods for field: name
+[INFO] [DEBUG]   Generated 2 methods for field: age
+[INFO] [DEBUG] Writing builder class to file: org.example.PersonDtoBuilder
+[INFO] [DEBUG] Successfully generated builder: PersonDtoBuilder
 [INFO] simple-builders: Successfully generated builder for: PersonDto
 ```
 
-**Note**: Debug messages use `Diagnostic.Kind.OTHER` which appears as `[INFO]` in Maven output.
+**Note**: Debug messages are prefixed with `[DEBUG]` and use `Diagnostic.Kind.OTHER` which appears as `[INFO]` in Maven output.
 
 ## Normal Output (Without Debug)
 

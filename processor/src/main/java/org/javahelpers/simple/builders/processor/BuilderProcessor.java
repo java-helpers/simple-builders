@@ -33,6 +33,7 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
+import javax.annotation.processing.SupportedOptions;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
@@ -49,6 +50,7 @@ import org.javahelpers.simple.builders.processor.util.ProcessingLogger;
  */
 @AutoService(Processor.class)
 @SupportedAnnotationTypes("org.javahelpers.simple.builders.core.annotations.SimpleBuilder")
+@SupportedOptions("verbose")
 public class BuilderProcessor extends AbstractProcessor {
   private ProcessingContext context;
   private JavaCodeGenerator codeGenerator;
