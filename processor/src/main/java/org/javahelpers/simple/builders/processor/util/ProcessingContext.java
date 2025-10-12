@@ -160,16 +160,6 @@ public final class ProcessingContext {
   }
 
   /**
-   * Reports a warning at the location of the given element with the specified message.
-   *
-   * @param element the element where the warning occurred, used for location information
-   * @param message the warning message to be reported
-   */
-  public void warning(Element element, String message) {
-    logger.warning(element, message);
-  }
-
-  /**
    * Reports a warning at the location of the given element with a formatted message.
    *
    * @param element the element where the warning occurred, used for location information
@@ -188,26 +178,5 @@ public final class ProcessingContext {
    */
   public void error(String format, Object... args) {
     logger.error(format, args);
-  }
-
-  /**
-   * Reports an error at the location of the given element.
-   *
-   * @param element the element where the error occurred
-   * @param message the error message
-   */
-  public void error(Element element, String message) {
-    logger.error(element, message);
-  }
-
-  /**
-   * Reports an error at the location of the given element with a formatted message.
-   *
-   * @param element the element where the error occurred
-   * @param format the format string
-   * @param args arguments referenced by the format specifiers in the format string
-   */
-  public void error(Element element, String format, Object... args) {
-    logger.error(element, format, args);
   }
 }

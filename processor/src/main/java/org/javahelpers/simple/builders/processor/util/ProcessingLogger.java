@@ -110,17 +110,6 @@ public class ProcessingLogger {
   }
 
   /**
-   * Reports a warning at the location of the given element with the specified message. The warning
-   * will be reported to the underlying Messager instance.
-   *
-   * @param e the element where the warning occurred, used for location information
-   * @param message the warning message to be reported
-   */
-  public void warning(Element e, String message) {
-    messager.printMessage(Diagnostic.Kind.WARNING, message, e);
-  }
-
-  /**
    * Reports a warning at the location of the given element with a formatted message.
    *
    * @param e the element where the warning occurred, used for location information
@@ -129,27 +118,5 @@ public class ProcessingLogger {
    */
   public void warning(Element e, String format, Object... args) {
     messager.printMessage(Diagnostic.Kind.WARNING, String.format(format, args), e);
-  }
-
-  /**
-   * Reports an error at the location of the given element with the specified message. The error
-   * will be reported to the underlying Messager instance.
-   *
-   * @param e the element where the error occurred, used for location information
-   * @param message the error message to be reported
-   */
-  public void error(Element e, String message) {
-    messager.printMessage(Diagnostic.Kind.ERROR, message, e);
-  }
-
-  /**
-   * Reports an error at the location of the given element with a formatted message.
-   *
-   * @param e the element where the error occurred, used for location information
-   * @param format the format string
-   * @param args arguments referenced by the format specifiers in the format string
-   */
-  public void error(Element e, String format, Object... args) {
-    messager.printMessage(Diagnostic.Kind.ERROR, String.format(format, args), e);
   }
 }
