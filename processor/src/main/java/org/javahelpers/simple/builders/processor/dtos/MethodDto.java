@@ -27,6 +27,7 @@ package org.javahelpers.simple.builders.processor.dtos;
 import static org.javahelpers.simple.builders.processor.dtos.MethodTypes.PROXY;
 
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Optional;
 import javax.lang.model.element.Modifier;
 import org.apache.commons.lang3.StringUtils;
@@ -155,7 +156,7 @@ public class MethodDto {
    * @return List of parameters of type {@code
    *     rg.javahelpers.simple.builders.internal.dtos.MethodParameterDto}
    */
-  public LinkedList<MethodParameterDto> getParameters() {
+  public List<MethodParameterDto> getParameters() {
     return parameters;
   }
 
