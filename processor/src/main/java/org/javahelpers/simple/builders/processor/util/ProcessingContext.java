@@ -150,6 +150,24 @@ public final class ProcessingContext {
   }
 
   /**
+   * Logs an info-level message that appears in normal Maven output.
+   *
+   * @param message the info message to log
+   */
+  public void info(String message) {
+    logger.info(message);
+  }
+
+  /**
+   * Logs a debug message visible when Maven is run with -X flag.
+   *
+   * @param message the debug message to log
+   */
+  public void debug(String message) {
+    logger.debug(message);
+  }
+
+  /**
    * Reports a warning at the location of the given element with the specified message.
    *
    * @param element the element where the warning occurred, used for location information

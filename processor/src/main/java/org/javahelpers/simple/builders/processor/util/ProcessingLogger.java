@@ -70,11 +70,31 @@ public class ProcessingLogger {
 
   /**
    * Posts an informational note message to the underlying Messager. This is typically used for
-   * non-critical information during processing.
+   * non-critical information during processing. Maps to Maven's NOTE level.
    *
    * @param message the informational message to be posted
    */
   public void log(String message) {
+    messager.printMessage(Diagnostic.Kind.NOTE, message);
+  }
+
+  /**
+   * Posts an info-level message (NOTE level in Maven). Used for important status information about
+   * builder generation.
+   *
+   * @param message the info message to be posted
+   */
+  public void info(String message) {
+    messager.printMessage(Diagnostic.Kind.NOTE, message);
+  }
+
+  /**
+   * Posts a debug message with NOTE level. Used for detailed tracing of the builder generation
+   * process. Visible when Maven is run with -X flag.
+   *
+   * @param message the debug message to be posted
+   */
+  public void debug(String message) {
     messager.printMessage(Diagnostic.Kind.NOTE, message);
   }
 
