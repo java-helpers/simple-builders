@@ -13,6 +13,7 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+    types: [opened, synchronize, reopened]
 
 jobs:
   build:
@@ -25,14 +26,37 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Shallow clones should be disabled for better SonarCloud analysis
+        
     - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
         java-version: '17'
-        distribution: 'temurin'
+        distribution: 'zulu'
         cache: maven
+
+    - name: Cache SonarCloud packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.sonar/cache
+        key: ${{ runner.os }}-sonar
+        restore-keys: ${{ runner.os }}-sonar
+        
+    - name: Cache Maven packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys: ${{ runner.os }}-m2
+
     - name: Build with Maven
-      run: mvn -B verify -Pmetrics --file pom.xml
+      run: mvn -B install -Pmetrics --file pom.xml
+
+    - name: SonarCloud Analysis
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      run: mvn -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar --file pom.xml
 
     - name: Upload JaCoCo HTML report (processor)
       if: always()
@@ -52,19 +76,18 @@ jobs:
 
     - name: Upload test results to Codecov (processor)
       if: always()
-      uses: codecov/test-results-action@v1
+      uses: codecov/test-results-action@47f89e9acb64b76debcd5ea40642d25a4adced9f # v1.1.1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: |
           processor/target/surefire-reports/*.xml
           processor/target/failsafe-reports/*.xml
-        if-no-files-found: warn
         fail_ci_if_error: true
         verbose: false
 
     - name: Upload coverage to Codecov (processor)
       if: always()
-      uses: codecov/codecov-action@v5
+      uses: codecov/codecov-action@015f24e6818733317a2da2edd6290ab26238649a # v5.0.7
       with:
         fail_ci_if_error: true
         files: processor/target/site/jacoco/jacoco.xml

@@ -309,11 +309,6 @@
               <!-- Only cover main sources of this module -->
               <dataFile>${project.build.directory}/jacoco.exec</dataFile>
               <outputDirectory>${project.reporting.outputDirectory}/jacoco</outputDirectory>
-              <reports>
-                <report>html</report>
-                <report>xml</report>
-                <report>csv</report>
-              </reports>
               <excludes>
                 <!-- exclude any generated sources or test utilities if they ever get packaged under main -->
                 <exclude>**/generated/**</exclude>
