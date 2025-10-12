@@ -103,6 +103,16 @@ public class BuilderDefinitionDto {
     fieldsInConstructor.add(field);
   }
 
+  /** Adds multiple field definitions to be provided via the DTO constructor. */
+  public void addAllFieldsInConstructor(List<FieldDto> fields) {
+    fieldsInConstructor.addAll(fields);
+  }
+
+  /** Adds multiple field definitions to the builder. */
+  public void addAllFields(List<FieldDto> fields) {
+    this.fields.addAll(fields);
+  }
+
   /**
    * Getting all definied fields in builder definition.
    *

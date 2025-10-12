@@ -33,6 +33,7 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
+import javax.annotation.processing.SupportedOptions;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
@@ -49,6 +50,7 @@ import org.javahelpers.simple.builders.processor.util.ProcessingLogger;
  */
 @AutoService(Processor.class)
 @SupportedAnnotationTypes("org.javahelpers.simple.builders.core.annotations.SimpleBuilder")
+@SupportedOptions("verbose")
 public class BuilderProcessor extends AbstractProcessor {
   private ProcessingContext context;
   private JavaCodeGenerator codeGenerator;
@@ -57,20 +59,17 @@ public class BuilderProcessor extends AbstractProcessor {
   @Override
   public synchronized void init(ProcessingEnvironment processingEnv) {
     super.init(processingEnv);
-    ProcessingLogger logger = new ProcessingLogger(processingEnv.getMessager());
+    ProcessingLogger logger = new ProcessingLogger(processingEnv);
     this.context =
         new ProcessingContext(
             processingEnv.getElementUtils(), processingEnv.getTypeUtils(), logger);
-    this.codeGenerator = new JavaCodeGenerator(processingEnv.getFiler());
-
-    // Enforce minimum Java version (17+) for the processor
+    this.codeGenerator = new JavaCodeGenerator(processingEnv.getFiler(), logger);
     SourceVersion current = processingEnv.getSourceVersion();
     this.supportedJdk = isAtLeastJava17(current);
     if (!this.supportedJdk) {
       context.error(
-          "simple-builders requires Java 17 or higher for annotation processing. Detected: "
-              + current
-              + ". Please upgrade to JDK 17+ or disable the processor.");
+          "simple-builders requires Java 17 or higher for annotation processing. Detected: '%s'. Please upgrade to JDK 17+ or disable the processor.",
+          current);
     }
   }
 
@@ -89,13 +88,30 @@ public class BuilderProcessor extends AbstractProcessor {
     if (simpleBuilderAnnotation == null) {
       context.error(
           "Annotation org.javahelpers.simple.builders.core.annotations.SimpleBuilder is not on classpath. So nothing to do here.");
-      return false;
     }
-    for (Element annotatedElement : roundEnv.getElementsAnnotatedWith(simpleBuilderAnnotation)) {
+
+    Set<? extends Element> annotatedElements =
+        roundEnv.getElementsAnnotatedWith(simpleBuilderAnnotation);
+    context.debug("===============================");
+    context.info("simple-builders: PROCESSING ROUND START");
+    context.debug("===============================");
+    context.debug(
+        "simple-builders: Processing round started. Found %d annotated elements.",
+        annotatedElements.size());
+
+    for (Element annotatedElement : annotatedElements) {
       try {
+        context.debug("------------------------------------");
+        context.debug("simple-builders: Processing element: %s", annotatedElement.getSimpleName());
+        context.debug("------------------------------------");
         process(annotatedElement);
+        context.info(
+            "simple-builders: Successfully generated builder for: %s",
+            annotatedElement.getSimpleName());
       } catch (BuilderException ex) {
-        context.error(annotatedElement, "Failed to process annotated element: " + ex.getMessage());
+        // All builder generation failures are warnings to allow other builders to be generated
+        context.warning(
+            annotatedElement, "simple-builders: Failed to generate builder - %s", ex.getMessage());
       }
     }
     return true;

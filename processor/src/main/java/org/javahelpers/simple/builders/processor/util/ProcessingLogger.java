@@ -25,6 +25,7 @@
 package org.javahelpers.simple.builders.processor.util;
 
 import javax.annotation.processing.Messager;
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.tools.Diagnostic;
 
@@ -37,55 +38,85 @@ public class ProcessingLogger {
   /** Util class for exposing messages of type {@code javax.annotation.processing.Messager}. */
   private final Messager messager;
 
+  /** Flag indicating if debug logging is enabled. */
+  private final boolean debugEnabled;
+
   /**
-   * Constructs a new ProcessingLogger with the specified Messager instance. The Messager is used to
-   * report errors, warnings, and other notices during annotation processing.
+   * Constructs a new ProcessingLogger with the specified ProcessingEnvironment. The Messager is
+   * used to report errors, warnings, and other notices during annotation processing. Debug logging
+   * is enabled by setting the compiler argument: -Averbose=true
    *
-   * @param messager the Messager instance to use for reporting messages, must not be null
+   * @param processingEnv the processing environment providing messager and options
    */
-  public ProcessingLogger(Messager messager) {
-    this.messager = messager;
+  public ProcessingLogger(ProcessingEnvironment processingEnv) {
+    this.messager = processingEnv.getMessager();
+    this.debugEnabled = "true".equalsIgnoreCase(processingEnv.getOptions().get("verbose"));
   }
 
   /**
-   * Reports an error at the location of the given element with the specified message. The error
-   * will be reported to the underlying Messager instance.
+   * Reports an error with a formatted message.
    *
-   * @param e the element where the error occurred, used for location information
-   * @param message the error message to be reported
+   * @param format the format string
+   * @param args arguments referenced by the format specifiers in the format string
    */
-  public void error(Element e, String message) {
-    messager.printMessage(Diagnostic.Kind.ERROR, message, e);
+  public void error(String format, Object... args) {
+    messager.printMessage(Diagnostic.Kind.ERROR, String.format(format, args));
   }
 
   /**
-   * Reports an error with the specified message. The error will be reported to the underlying
-   * Messager instance.
+   * Posts an info-level message (NOTE level in Maven). Used for important status information about
+   * builder generation.
    *
-   * @param message the error message to be reported
+   * @param message the info message to be posted
    */
-  public void error(String message) {
-    messager.printMessage(Diagnostic.Kind.ERROR, message);
-  }
-
-  /**
-   * Posts an informational note message to the underlying Messager. This is typically used for
-   * non-critical information during processing.
-   *
-   * @param message the informational message to be posted
-   */
-  public void log(String message) {
+  public void info(String message) {
     messager.printMessage(Diagnostic.Kind.NOTE, message);
   }
 
   /**
-   * Reports a warning at the location of the given element with the specified message. The warning
-   * will be reported to the underlying Messager instance.
+   * Posts an info-level message with a formatted string.
+   *
+   * @param format the format string
+   * @param args arguments referenced by the format specifiers in the format string
+   */
+  public void info(String format, Object... args) {
+    messager.printMessage(Diagnostic.Kind.NOTE, String.format(format, args));
+  }
+
+  /**
+   * Posts a debug message with OTHER level. Used for detailed tracing of the builder generation
+   * process. Only visible when enabled via -Averbose=true compiler argument.
+   *
+   * @param message the debug message to be posted
+   */
+  public void debug(String message) {
+    if (debugEnabled) {
+      String formatWithDebug = "[DEBUG] " + message;
+      messager.printMessage(Diagnostic.Kind.OTHER, formatWithDebug);
+    }
+  }
+
+  /**
+   * Posts a debug message with a formatted string. Only visible when enabled via -Averbose=true.
+   *
+   * @param format the format string
+   * @param args arguments referenced by the format specifiers in the format string
+   */
+  public void debug(String format, Object... args) {
+    if (debugEnabled) {
+      String formatWithDebug = "[DEBUG] " + format;
+      messager.printMessage(Diagnostic.Kind.OTHER, String.format(formatWithDebug, args));
+    }
+  }
+
+  /**
+   * Reports a warning at the location of the given element with a formatted message.
    *
    * @param e the element where the warning occurred, used for location information
-   * @param message the warning message to be reported
+   * @param format the format string
+   * @param args arguments referenced by the format specifiers in the format string
    */
-  public void warning(Element e, String message) {
-    messager.printMessage(Diagnostic.Kind.WARNING, message, e);
+  public void warning(Element e, String format, Object... args) {
+    messager.printMessage(Diagnostic.Kind.WARNING, String.format(format, args), e);
   }
 }

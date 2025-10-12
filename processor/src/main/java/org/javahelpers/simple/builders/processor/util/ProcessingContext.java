@@ -122,40 +122,61 @@ public final class ProcessingContext {
   }
 
   /**
-   * Reports an error at the location of the given element.
+   * Logs an info-level message that appears in normal Maven output.
    *
-   * @param element the element where the error occurred
-   * @param message the error message
+   * @param message the info message to log
    */
-  public void error(Element element, String message) {
-    logger.error(element, message);
+  public void info(String message) {
+    logger.info(message);
   }
 
   /**
-   * Reports an error message.
+   * Logs an info-level message with a formatted string.
    *
-   * @param message the error message
+   * @param format the format string
+   * @param args arguments referenced by the format specifiers in the format string
    */
-  public void error(String message) {
-    logger.error(message);
+  public void info(String format, Object... args) {
+    logger.info(format, args);
   }
 
   /**
-   * Logs an informational message.
+   * Logs a debug message visible when Maven is run with -X flag.
    *
-   * @param message the message to log
+   * @param message the debug message to log
    */
-  public void log(String message) {
-    logger.log(message);
+  public void debug(String message) {
+    logger.debug(message);
   }
 
   /**
-   * Reports a warning at the location of the given element with the specified message.
+   * Logs a debug message with a formatted string.
+   *
+   * @param format the format string
+   * @param args arguments referenced by the format specifiers in the format string
+   */
+  public void debug(String format, Object... args) {
+    logger.debug(format, args);
+  }
+
+  /**
+   * Reports a warning at the location of the given element with a formatted message.
    *
    * @param element the element where the warning occurred, used for location information
-   * @param message the warning message to be reported
+   * @param format the format string
+   * @param args arguments referenced by the format specifiers in the format string
    */
-  public void warning(Element element, String message) {
-    logger.warning(element, message);
+  public void warning(Element element, String format, Object... args) {
+    logger.warning(element, format, args);
+  }
+
+  /**
+   * Reports an error with a formatted message.
+   *
+   * @param format the format string
+   * @param args arguments referenced by the format specifiers in the format string
+   */
+  public void error(String format, Object... args) {
+    logger.error(format, args);
   }
 }

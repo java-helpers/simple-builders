@@ -62,6 +62,22 @@ public final class JavaLangAnalyser {
   }
 
   /**
+   * Gets all methods of a class, including inherited methods, excluding methods from {@code
+   * java.lang.Object}.
+   *
+   * @param context the processing context
+   * @param typeElement the type element to get methods from
+   * @return filtered list excluding Object class methods
+   */
+  public static List<ExecutableElement> findAllPossibleSettersOfClass(
+      TypeElement typeElement, ProcessingContext context) {
+    return ElementFilter.methodsIn(context.getAllMembers(typeElement)).stream()
+        .filter(JavaLangAnalyser::isNoMethodOfObjectClass)
+        .filter(JavaLangAnalyser::isSetterForField)
+        .toList();
+  }
+
+  /**
    * Helper function to filter methods with specific annotations.
    *
    * @param annotationClass is the class of an annotation to be searched on executable

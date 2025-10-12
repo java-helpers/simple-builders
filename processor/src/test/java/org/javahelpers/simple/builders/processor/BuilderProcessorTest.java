@@ -19,6 +19,65 @@ import org.junit.jupiter.api.Test;
 class BuilderProcessorTest {
 
   @Test
+  void shouldGenerateBasicBuilder() {
+    // Given: A simple class with one field
+    String className = "SimpleDto";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.simpleBuilderClass(
+            "test",
+            className,
+            """
+                private String value;
+                public String getValue() { return value; }
+                public void setValue(String value) { this.value = value; }
+            """);
+
+    // When
+    Compilation compilation = compile(sourceFile);
+
+    // Then: Builder should be generated successfully
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+    ProcessorAsserts.assertContaining(
+        generatedCode, "public SimpleDtoBuilder value(String value)", "public SimpleDto build()");
+  }
+
+  @Test
+  void shouldLogDebugMessagesWhenVerboseModeEnabled() {
+    // Given
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.simpleBuilderClass(
+            "test",
+            "VerboseTest",
+            """
+                private String name;
+                public String getName() { return name; }
+                public void setName(String name) { this.name = name; }
+            """);
+
+    // When: Compile with verbose=true to enable debug logging
+    Compilation compilation =
+        javac()
+            .withProcessors(new BuilderProcessor())
+            .withOptions("-Averbose=true")
+            .compile(sourceFile);
+
+    // Then: Compilation succeeds and debug messages are present
+    assertThat(compilation).succeeded();
+
+    // Verify key debug messages are logged
+    ProcessorAsserts.assertHadNoteContaining(
+        compilation,
+        "simple-builders: PROCESSING ROUND START",
+        "[DEBUG] simple-builders: Processing element: VerboseTest",
+        "[DEBUG] Extracting builder definition from: test.VerboseTest",
+        "[DEBUG]   -> Adding field: name",
+        "[DEBUG] Successfully generated builder: VerboseTestBuilder");
+  }
+
+  @Test
   void shouldFailWhenAnnotationPlacedOnInterface() {
     // Given: @SimpleBuilder used on an interface instead of a class
     JavaFileObject source =
@@ -33,10 +92,10 @@ class BuilderProcessorTest {
     // When
     Compilation compilation = compile(source);
 
-    // Then: compilation should fail with appropriate error message
-    assertThat(compilation).failed();
+    // Then: compilation should succeed but with a warning
+    assertThat(compilation).succeeded();
     assertThat(compilation)
-        .hadErrorContaining("The SimpleBuilder should be annotated on a class or record");
+        .hadWarningContaining("The SimpleBuilder should be annotated on a class or record");
   }
 
   @Test
@@ -54,9 +113,9 @@ class BuilderProcessorTest {
     // When
     Compilation compilation = compile(source);
 
-    // Then: compilation should fail with appropriate error message
-    assertThat(compilation).failed();
-    assertThat(compilation).hadErrorContaining("The SimpleBuilder should not be abstract");
+    // Then: compilation should succeed but with a warning
+    assertThat(compilation).succeeded();
+    assertThat(compilation).hadWarningContaining("The SimpleBuilder should not be abstract");
   }
 
   @Test
@@ -138,7 +197,9 @@ class BuilderProcessorTest {
         generatedCode,
         "public CtorAndSetterBuilder()", // empty constructor for builder
         "public CtorAndSetterBuilder name(String name)", // helpermethod for setter
+        "public CtorAndSetterBuilder name(Supplier<String> nameSupplier)", // supplier for setter
         "public CtorAndSetterBuilder a(int a)", // helpermethod for constructor param
+        "public CtorAndSetterBuilder a(Supplier<Integer> aSupplier)", // supplier for constructor
         "CtorAndSetter result = new CtorAndSetter(this.a.value());",
         "this.name.ifChanged(result::setName);");
   }
@@ -289,6 +350,110 @@ class BuilderProcessorTest {
     // Builder should have method from setter, not from annotated regular method
     ProcessorAsserts.assertContaining(
         generatedCode, "public WrongMethodAnnotationBuilder name(String name)");
+  }
+
+  @Test
+  void shouldGenerateSupplierMethodsForConstructorFields() {
+    // Given
+    String packageName = "test";
+    String className = "RequiredFieldViaConstructor";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private final String name;
+                private final int age;
+                private String description;
+
+                public RequiredFieldViaConstructor(String name, int age) {
+                  this.name = name;
+                  this.age = age;
+                }
+
+                public String getName() { return name; }
+                public int getAge() { return age; }
+                public String getDescription() { return description; }
+                public void setDescription(String description) { this.description = description; }
+            """);
+
+    // When
+    Compilation compilation = compile(sourceFile);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    // Constructor fields should have both basic setter AND supplier methods
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        // Basic setters for constructor fields
+        "public RequiredFieldViaConstructorBuilder name(String name)",
+        "public RequiredFieldViaConstructorBuilder age(int age)",
+        // Supplier methods for constructor fields (the bug we fixed!)
+        "public RequiredFieldViaConstructorBuilder name(Supplier<String> nameSupplier)",
+        "public RequiredFieldViaConstructorBuilder age(Supplier<Integer> ageSupplier)",
+        // Setter field should also have supplier
+        "public RequiredFieldViaConstructorBuilder description(String description)",
+        "public RequiredFieldViaConstructorBuilder description(Supplier<String> descriptionSupplier)");
+  }
+
+  @Test
+  void shouldGenerateConsumerMethodsForConstructorFieldsWithCustomTypes() {
+    // Given
+    String packageName = "test";
+    String className = "RequiredCustomTypeViaConstructor";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject dto =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private final Address address;
+                private String notes;
+
+                public RequiredCustomTypeViaConstructor(Address address) {
+                  this.address = address;
+                }
+
+                public Address getAddress() { return address; }
+                public String getNotes() { return notes; }
+                public void setNotes(String notes) { this.notes = notes; }
+            """);
+
+    JavaFileObject helper =
+        ProcessorTestUtils.forSource(
+            """
+                package test;
+                public class Address {
+                  private String street;
+                  public Address() {}
+                  public String getStreet() { return street; }
+                  public void setStreet(String street) { this.street = street; }
+                }
+            """);
+
+    // When
+    Compilation compilation = compile(dto, helper);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    // Constructor field with custom type should have setter, supplier AND consumer methods
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        // Basic setter for constructor field
+        "public RequiredCustomTypeViaConstructorBuilder address(Address address)",
+        // Supplier method for constructor field
+        "public RequiredCustomTypeViaConstructorBuilder address(Supplier<Address> addressSupplier)",
+        // Consumer method for constructor field (the key coverage addition!)
+        "public RequiredCustomTypeViaConstructorBuilder address(Consumer<Address> addressConsumer)",
+        "Address consumer = new Address();",
+        "addressConsumer.accept(consumer);");
   }
 
   @Test
@@ -1237,6 +1402,7 @@ class BuilderProcessorTest {
                 // should be filtered
                 public void nonSetterMethods() {}
                 public void settingChanged(String nonSetterValue) {}
+                public int setSetterWithReturnValue(int returnValue) { return returnValue; }
                 private void setHidden(int hidden) {}
                 public static void setUtil(int util) {}
                 public void setRisky(int risk) throws Exception {}
@@ -1257,6 +1423,7 @@ class BuilderProcessorTest {
         contains("this.ok = changedValue(ok);"),
         notContains("nonSetterMethods"),
         notContains("settingChanged"),
+        notContains("setterWithReturnValue"),
         notContains("hidden"),
         notContains("util(int util)"),
         notContains("risky(int risk)"),
@@ -2183,10 +2350,10 @@ class BuilderProcessorTest {
     assertThat(compilation).succeeded();
     assertThat(compilation)
         .hadWarningContaining(
-            "Field fieldWithOwnGeneric has field-specific generics, so it will be ignored");
+            "Field 'fieldWithOwnGeneric' has field-specific generics, so it will be ignored");
     assertThat(compilation)
         .hadWarningContaining(
-            "Field fieldWithExtendedClassGeneric has field-specific generics, so it will be ignored");
+            "Field 'fieldWithExtendedClassGeneric' has field-specific generics, so it will be ignored");
     ProcessorAsserts.assertingResult(
         generatedCode,
         // name field should be present
@@ -2223,10 +2390,10 @@ class BuilderProcessorTest {
     // When
     Compilation compilation = compile(source);
 
-    // Then: compilation should fail with appropriate error message
-    assertThat(compilation).failed();
+    // Then: compilation should succeed but with a warning
+    assertThat(compilation).succeeded();
     assertThat(compilation)
-        .hadErrorContaining("The SimpleBuilder should be declared on a top-level class only");
+        .hadWarningContaining("The SimpleBuilder should be declared on a top-level class only");
   }
 
   @Test

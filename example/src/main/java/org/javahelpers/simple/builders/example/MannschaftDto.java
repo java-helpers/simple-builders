@@ -25,6 +25,9 @@
 package org.javahelpers.simple.builders.example;
 
 import java.util.Set;
+import java.util.function.Supplier;
+
+import org.javahelpers.simple.builders.core.annotations.IgnoreInBuilder;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 
 @SimpleBuilder
@@ -38,6 +41,11 @@ public class MannschaftDto {
 
   public void setName(String name) {
     this.name = name;
+  }
+
+  @IgnoreInBuilder
+  public void setName(Supplier<String> nameSupplier) {
+    this.name = nameSupplier.get();
   }
 
   public Set<SponsorDto> getSponsoren() {
