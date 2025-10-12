@@ -138,7 +138,9 @@ class BuilderProcessorTest {
         generatedCode,
         "public CtorAndSetterBuilder()", // empty constructor for builder
         "public CtorAndSetterBuilder name(String name)", // helpermethod for setter
+        "public CtorAndSetterBuilder name(Supplier<String> nameSupplier)", // supplier for setter
         "public CtorAndSetterBuilder a(int a)", // helpermethod for constructor param
+        "public CtorAndSetterBuilder a(Supplier<Integer> aSupplier)", // supplier for constructor
         "CtorAndSetter result = new CtorAndSetter(this.a.value());",
         "this.name.ifChanged(result::setName);");
   }
@@ -289,6 +291,54 @@ class BuilderProcessorTest {
     // Builder should have method from setter, not from annotated regular method
     ProcessorAsserts.assertContaining(
         generatedCode, "public WrongMethodAnnotationBuilder name(String name)");
+  }
+
+  @Test
+  void shouldGenerateSupplierMethodsForConstructorFields() {
+    // Given
+    String packageName = "test";
+    String className = "RequiredFieldViaConstructor";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private final String name;
+                private final int age;
+                private String description;
+
+                public RequiredFieldViaConstructor(String name, int age) {
+                  this.name = name;
+                  this.age = age;
+                }
+
+                public String getName() { return name; }
+                public int getAge() { return age; }
+                public String getDescription() { return description; }
+                public void setDescription(String description) { this.description = description; }
+            """);
+
+    // When
+    Compilation compilation = compile(sourceFile);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    // Constructor fields should have both basic setter AND supplier methods
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        // Basic setters for constructor fields
+        "public RequiredFieldViaConstructorBuilder name(String name)",
+        "public RequiredFieldViaConstructorBuilder age(int age)",
+        // Supplier methods for constructor fields (the bug we fixed!)
+        "public RequiredFieldViaConstructorBuilder name(Supplier<String> nameSupplier)",
+        "public RequiredFieldViaConstructorBuilder age(Supplier<Integer> ageSupplier)",
+        // Setter field should also have supplier
+        "public RequiredFieldViaConstructorBuilder description(String description)",
+        "public RequiredFieldViaConstructorBuilder description(Supplier<String> descriptionSupplier)");
   }
 
   @Test
