@@ -330,11 +330,7 @@ public class BuilderDefinitionCreator {
     List<? extends VariableElement> parameters = mth.getParameters();
     if (parameters.size() != 1) {
       // Should never happen, just to be sure here
-      context.warning(
-          mth.getEnclosingElement(),
-          "Method %s has %d parameters, expected 1",
-          mth.getSimpleName(),
-          mth.getParameters().size());
+      context.warning(mth, "Unexpected state of method.");
       return Optional.empty();
     }
 
