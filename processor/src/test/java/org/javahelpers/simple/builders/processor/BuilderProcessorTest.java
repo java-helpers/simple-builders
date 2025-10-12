@@ -1402,6 +1402,7 @@ class BuilderProcessorTest {
                 // should be filtered
                 public void nonSetterMethods() {}
                 public void settingChanged(String nonSetterValue) {}
+                public int setSetterWithReturnValue(int returnValue) { return returnValue; }
                 private void setHidden(int hidden) {}
                 public static void setUtil(int util) {}
                 public void setRisky(int risk) throws Exception {}
@@ -1422,6 +1423,7 @@ class BuilderProcessorTest {
         contains("this.ok = changedValue(ok);"),
         notContains("nonSetterMethods"),
         notContains("settingChanged"),
+        notContains("setterWithReturnValue"),
         notContains("hidden"),
         notContains("util(int util)"),
         notContains("risky(int risk)"),
