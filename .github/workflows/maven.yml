@@ -76,7 +76,7 @@ jobs:
 
     - name: Upload test results to Codecov (processor)
       if: always()
-      uses: codecov/test-results-action@cc7d97334878eb95c30c0700b5e1d44f9f4eeb9f # v1.0.1
+      uses: codecov/test-results-action@47f89e9acb64b76debcd5ea40642d25a4adced9f # v1.1.1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: |
@@ -87,7 +87,7 @@ jobs:
 
     - name: Upload coverage to Codecov (processor)
       if: always()
-      uses: codecov/codecov-action@5c47607acb93fed5485fdbf7232e8a31425f672a # v5.0.2
+      uses: codecov/codecov-action@015f24e6818733317a2da2edd6290ab26238649a # v5.0.7
       with:
         fail_ci_if_error: true
         files: processor/target/site/jacoco/jacoco.xml
