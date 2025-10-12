@@ -56,7 +56,7 @@ jobs:
     - name: SonarCloud Analysis
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      run: mvn -B sonar:sonar --file pom.xml
+      run: mvn -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar --file pom.xml
 
     - name: Upload JaCoCo HTML report (processor)
       if: always()
