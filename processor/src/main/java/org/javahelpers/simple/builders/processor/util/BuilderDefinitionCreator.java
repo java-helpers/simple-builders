@@ -32,6 +32,7 @@ import static org.javahelpers.simple.builders.processor.util.JavaLangMapper.map2
 import static org.javahelpers.simple.builders.processor.util.JavaLangMapper.map2TypeName;
 import static org.javahelpers.simple.builders.processor.util.TypeNameAnalyser.*;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -85,6 +86,20 @@ public class BuilderDefinitionCreator {
 
     context.debug("Extracting builder definition from: %s", annotatedType.getQualifiedName());
 
+    BuilderDefinitionDto result = initializeBuilderDefinition(annotatedType, context);
+
+    List<FieldDto> constructorFields = extractConstructorFields(annotatedType, context);
+    result.addAllFieldsInConstructor(constructorFields);
+
+    List<FieldDto> setterFields = extractSetterFields(annotatedType, result, context);
+    result.addAllFields(setterFields);
+
+    return result;
+  }
+
+  /** Initializes the builder definition with package, class name, and generics. */
+  private static BuilderDefinitionDto initializeBuilderDefinition(
+      TypeElement annotatedType, ProcessingContext context) {
     BuilderDefinitionDto result = new BuilderDefinitionDto();
     String packageName = context.getPackageName(annotatedType);
     String simpleClassName = annotatedType.getSimpleName().toString();
@@ -97,16 +112,45 @@ public class BuilderDefinitionCreator {
     // Extract generics from the annotated type via mapper (stream-based)
     JavaLangMapper.map2GenericParameterDtos(annotatedType, context).forEach(result::addGeneric);
 
-    // Extract constructors and their parameters (treat as constructor fields)
+    return result;
+  }
+
+  /**
+   * Extracts fields from the constructor parameters.
+   *
+   * @return list of fields extracted from constructor parameters
+   */
+  private static List<FieldDto> extractConstructorFields(
+      TypeElement annotatedType, ProcessingContext context) {
+    List<FieldDto> constructorFields = new LinkedList<>();
     Optional<ExecutableElement> constructorOpt = findConstructorForBuilder(annotatedType, context);
     if (constructorOpt.isPresent()) {
       ExecutableElement ctor = constructorOpt.get();
+      context.debug(
+          "Analyzing constructor: %s with %d parameter(s)",
+          ctor.getSimpleName(), ctor.getParameters().size());
       for (VariableElement param : ctor.getParameters()) {
         Optional<FieldDto> fieldFromCtor =
             createFieldFromConstructor(annotatedType, param, context);
-        fieldFromCtor.ifPresent(result::addFieldInConstructor);
+        if (fieldFromCtor.isPresent()) {
+          FieldDto field = fieldFromCtor.get();
+          logFieldAddition(field, context);
+          constructorFields.add(field);
+        }
       }
     }
+    return constructorFields;
+  }
+
+  /**
+   * Extracts fields from setter methods, avoiding duplicates from constructor fields.
+   *
+   * @param result the builder definition containing constructor fields to check for duplicates
+   * @return list of fields extracted from setter methods
+   */
+  private static List<FieldDto> extractSetterFields(
+      TypeElement annotatedType, BuilderDefinitionDto result, ProcessingContext context) {
+    List<FieldDto> setterFields = new LinkedList<>();
 
     // Build a set of constructor field names to avoid duplicates from setters
     Set<String> ctorFieldNames =
@@ -114,30 +158,25 @@ public class BuilderDefinitionCreator {
             .map(FieldDto::getFieldName)
             .collect(toSet());
 
-    // Build fields on base of setters
     List<ExecutableElement> methods = findAllPossibleSettersOfClass(annotatedType, context);
     int processedCount = 0;
     int addedCount = 0;
     int skippedCount = 0;
+
     for (ExecutableElement mth : methods) {
       context.debug(
           "Analyzing method: %s with %d parameter(s)",
           mth.getSimpleName(), mth.getParameters().size());
+
       if (isMethodRelevantForBuilder(mth, context)) {
-        // Avoid adding setter-derived fields that duplicate constructor params
         Optional<FieldDto> maybeField = createFieldFromSetter(mth, context);
         if (maybeField.isPresent()) {
           processedCount++;
           FieldDto field = maybeField.get();
           if (!ctorFieldNames.contains(field.getFieldName())) {
             addedCount++;
-            String fieldTypeName = field.getFieldType().getClassName();
-            if (field.getFieldType().getPackageName() != null
-                && !field.getFieldType().getPackageName().isEmpty()) {
-              fieldTypeName = field.getFieldType().getPackageName() + "." + fieldTypeName;
-            }
-            context.debug("  -> Adding field: %s (type: %s)", field.getFieldName(), fieldTypeName);
-            result.addField(field);
+            logFieldAddition(field, context);
+            setterFields.add(field);
             continue;
           }
         } else {
@@ -151,7 +190,17 @@ public class BuilderDefinitionCreator {
         "Processed %d possible setters: added %d fields, skipped %d",
         processedCount, addedCount, skippedCount);
 
-    return result;
+    return setterFields;
+  }
+
+  /** Logs the addition of a field with its type information. */
+  private static void logFieldAddition(FieldDto field, ProcessingContext context) {
+    String fieldTypeName = field.getFieldType().getClassName();
+    if (field.getFieldType().getPackageName() != null
+        && !field.getFieldType().getPackageName().isEmpty()) {
+      fieldTypeName = field.getFieldType().getPackageName() + "." + fieldTypeName;
+    }
+    context.debug("  -> Adding field: %s (type: %s)", field.getFieldName(), fieldTypeName);
   }
 
   private static boolean isMethodRelevantForBuilder(
