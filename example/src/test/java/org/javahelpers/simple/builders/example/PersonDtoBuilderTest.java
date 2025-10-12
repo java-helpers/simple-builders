@@ -30,10 +30,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
 
-public class PersonDtoBuilderTest {
+class PersonDtoBuilderTest {
 
   @Test
-  public void testBuilder() {
+  void testBuilder() {
     PersonDto personDto =
         PersonDtoBuilder.create()
             .birthdate(LocalDate.now())
