@@ -67,6 +67,16 @@
     <maven.compiler.target>${java.version}</maven.compiler.target>
     <maven.compiler.release>${java.version}</maven.compiler.release>
     
+    <!-- SonarCloud Properties -->
+    <sonar.projectKey>java-helpers_simple-builders</sonar.projectKey>
+    <sonar.organization>java-helpers</sonar.organization>
+    <sonar.projectName>Simple Builders</sonar.projectName>
+    <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+    <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/processor/target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+    <sonar.exclusions>**/example/**</sonar.exclusions>
+    <!-- Coverage exclusion needs to match jacoco configuration in processor module -->
+    <sonar.coverage.exclusions>**/*Mapper*.java,**/processor/dtos/**,**/generated/**</sonar.coverage.exclusions>
+    
     <!-- Plugin Versions -->
     <plugin.maven.compiler.version>3.13.0</plugin.maven.compiler.version>
     <plugin.maven.deploy.version>3.1.1</plugin.maven.deploy.version>
