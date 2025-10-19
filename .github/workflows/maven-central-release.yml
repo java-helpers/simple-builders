@@ -1,0 +1,115 @@
+# GitHub Action workflow for releasing artifacts to Maven Central
+# This workflow is triggered manually or on tag creation and handles:
+# - Version management from git tags
+# - GPG signing of artifacts
+# - Deployment to Maven Central via Sonatype
+
+name: Release to Maven Central
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_version:
+        description: 'Release version (e.g., 0.2.0)'
+        required: true
+        type: string
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'zulu'
+          cache: maven
+          server-id: central
+          server-username: MAVEN_USERNAME
+          server-password: MAVEN_PASSWORD
+          gpg-private-key: ${{ secrets.GPG_SIGNING_KEY }}
+          gpg-passphrase: MAVEN_GPG_PASSPHRASE
+          
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.release_version }}"
+          else
+            # Extract version from tag (remove 'v' prefix)
+            VERSION=${GITHUB_REF#refs/tags/v}
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Releasing version: $VERSION"
+          
+      - name: Update POM versions
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+          echo "Setting version to $VERSION"
+          
+          # Update parent POM
+          mvn versions:set -DnewVersion=$VERSION -DgenerateBackupPoms=false
+          
+          # Update module POMs
+          mvn versions:set -DnewVersion=$VERSION -DgenerateBackupPoms=false -pl core
+          mvn versions:set -DnewVersion=$VERSION -DgenerateBackupPoms=false -pl processor
+          
+      - name: Commit version changes
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add pom.xml core/pom.xml processor/pom.xml
+          git commit -m "chore: release version $VERSION [skip ci]"
+          
+      - name: Create/Update Git tag
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          # For tag-based releases, move the existing tag to the new commit
+          # For manual releases, create a new tag
+          git tag -f -a "v$VERSION" -m "Release version $VERSION"
+          
+      - name: Build and verify
+        run: mvn -B clean verify -Prelease
+        
+      - name: Deploy to Maven Central
+        env:
+          MAVEN_USERNAME: ${{ secrets.CENTRAL_TOKEN_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.CENTRAL_TOKEN_PASSWORD }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_SIGNING_KEY_PASSWORD }}
+        run: |
+          mvn -B deploy -Prelease -pl core,processor -DskipTests=true
+          
+      - name: Push changes to repository
+        if: success()
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+          # Push commit and tag
+          git push origin main
+          git push -f origin "v$VERSION"
+          
+      - name: Create GitHub Release
+        if: success()
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.VERSION }}
+          name: Release ${{ steps.version.outputs.VERSION }}
+          # Create as draft for review before publishing
+          draft: true
+          # Set to true for pre-release versions (alpha, beta, RC)
+          prerelease: ${{ contains(steps.version.outputs.VERSION, '-') }}
+          # Auto-generate release notes from commits and PRs
+          generate_release_notes: true
