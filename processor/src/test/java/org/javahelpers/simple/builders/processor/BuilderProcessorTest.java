@@ -1112,12 +1112,16 @@ class BuilderProcessorTest {
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
 
-    // Expect supplier-based setter usage
+    // Expect supplier-based setter and backing field
     ProcessorAsserts.assertContaining(
         generatedCode,
-        "nameSupplier",
         "private TrackedValue<String> name = unsetValue();",
-        "this.name = changedValue(nameSupplier.get());");
+        """
+        public HasSupplierBuilder name(Supplier<String> nameSupplier) {
+          this.name = changedValue(nameSupplier.get());
+          return this;
+        }
+        """);
   }
 
   protected Compilation compile(JavaFileObject... sourceFiles) {
