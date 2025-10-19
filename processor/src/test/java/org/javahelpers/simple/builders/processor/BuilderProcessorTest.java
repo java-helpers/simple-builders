@@ -583,6 +583,50 @@ class BuilderProcessorTest {
   }
 
   @Test
+  void shouldGenerateOptionalSettersAndProviders() {
+    // Given
+    String packageName = "test";
+    String className = "WithOptionals";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private java.util.Optional<String> description;
+                private java.util.Optional<Integer> age;
+
+                public java.util.Optional<String> getDescription() { return description; }
+                public void setDescription(java.util.Optional<String> description) { this.description = description; }
+
+                public java.util.Optional<Integer> getAge() { return age; }
+                public void setAge(java.util.Optional<Integer> age) { this.age = age; }
+            """);
+
+    // When
+    Compilation compilation = compile(sourceFile);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    // Direct setters with Optional<T> and unwrapped T convenience
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        "public WithOptionalsBuilder description(Optional<String> description)",
+        "public WithOptionalsBuilder description(Supplier<Optional<String>> descriptionSupplier)",
+        "public WithOptionalsBuilder description(String description)",
+        "this.description = changedValue(Optional.of(description));",
+        "private TrackedValue<Optional<String>> description = unsetValue();",
+        "public WithOptionalsBuilder age(Optional<Integer> age)",
+        "public WithOptionalsBuilder age(Supplier<Optional<Integer>> ageSupplier)",
+        "public WithOptionalsBuilder age(Integer age)",
+        "this.age = changedValue(Optional.of(age));",
+        "private TrackedValue<Optional<Integer>> age = unsetValue();");
+  }
+
+  @Test
   void shouldDeclarePerFieldBackingField() {
     // Given
     String packageName = "test";
@@ -1205,7 +1249,7 @@ class BuilderProcessorTest {
         "public DtoWithWrappedTypes build()");
 
     // Verify no additional helper methods are generated for these generic types
-    // (since they don't match List/Set/Map/Optional patterns)
+    // (since they don't match List/Set/Map/Optional patterns with recognized inner types)
     ProcessorAsserts.assertNotContaining(
         optionalBuilder,
         "nameBuilderConsumer",
