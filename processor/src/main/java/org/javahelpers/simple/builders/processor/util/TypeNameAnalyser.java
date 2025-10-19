@@ -87,4 +87,15 @@ public class TypeNameAnalyser {
     return Strings.CI.equals(typeName.getPackageName(), JAVA_UTIL_PACKAGE)
         && Strings.CI.equals(typeName.getClassName(), "Optional");
   }
+
+  /**
+   * Helper to check if the type is a {@code java.lang.String}.
+   *
+   * @param typeName Type to be validated
+   * @return {@code true}, if it is a {@code java.lang.String}
+   */
+  public static boolean isString(TypeName typeName) {
+    return Strings.CI.equals(typeName.getPackageName(), "java.lang")
+        && Strings.CI.equals(typeName.getClassName(), "String");
+  }
 }

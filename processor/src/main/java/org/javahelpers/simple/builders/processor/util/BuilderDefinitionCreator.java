@@ -63,6 +63,9 @@ public class BuilderDefinitionCreator {
   private static final String ARG_BUILDER_FIELD_WRAPPER = "builderFieldWrapper";
   private static final String ARG_HELPER_TYPE = "helperType";
 
+  // Type constants
+  private static final TypeName TRACKED_VALUE_TYPE = TypeName.of(TrackedValue.class);
+
   // Parameter name suffixes
   private static final String SUFFIX_CONSUMER = "Consumer";
   private static final String SUFFIX_SUPPLIER = "Supplier";
@@ -230,6 +233,12 @@ public class BuilderDefinitionCreator {
 
   private static void addAdditionalHelperMethodsForField(
       FieldDto result, String fieldName, TypeName fieldType) {
+    // Check for String type (not array) and add format method
+    if (isString(fieldType) && !(fieldType instanceof TypeNameArray)) {
+      result.addMethod(
+          createStringFormatMethodWithTransform(fieldName, "String.format(format, args)"));
+    }
+
     // Only process generic types (List, Set, Map, Optional, etc.)
     if (!(fieldType instanceof TypeNameGeneric fieldTypeGeneric)) {
       return;
@@ -257,6 +266,14 @@ public class BuilderDefinitionCreator {
       // Add setter that accepts the inner type T and wraps it in Optional.of()
       result.addMethod(
           createFieldSetterWithTransform(fieldName, "Optional.of(%s)", innerTypes.get(0)));
+
+      // If Optional<String>, add format method
+      TypeName innerType = innerTypes.get(0);
+      if (isString(innerType)) {
+        result.addMethod(
+            createStringFormatMethodWithTransform(
+                fieldName, "Optional.of(String.format(format, args))"));
+      }
     }
   }
 
@@ -525,6 +542,35 @@ public class BuilderDefinitionCreator {
         """);
     methodDto.addArgument(ARG_FIELD_NAME, fieldName);
     methodDto.addArgument(ARG_DTO_METHOD_PARAM, parameter.getParameterName());
+    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TypeName.of(TrackedValue.class));
+    return methodDto;
+  }
+
+  private static MethodDto createStringFormatMethodWithTransform(
+      String fieldName, String transform) {
+    TypeName stringType = new TypeName("java.lang", "String");
+
+    MethodParameterDto formatParam = new MethodParameterDto();
+    formatParam.setParameterName("format");
+    formatParam.setParameterTypeName(stringType);
+
+    MethodParameterDto argsParam = new MethodParameterDto();
+    argsParam.setParameterName("args");
+    argsParam.setParameterTypeName(new TypeNameArray(TypeName.of(Object.class), false));
+
+    MethodDto methodDto = new MethodDto();
+    methodDto.setMethodName(fieldName);
+    methodDto.addParameter(formatParam);
+    methodDto.addParameter(argsParam);
+    methodDto.setModifier(Modifier.PUBLIC);
+    methodDto.setMethodType(MethodTypes.PROXY);
+    methodDto.setCode(
+        """
+        this.$fieldName:N = $builderFieldWrapper:T.changedValue($transform:N);
+        return this;
+        """);
+    methodDto.addArgument(ARG_FIELD_NAME, fieldName);
+    methodDto.addArgument("transform", transform);
     methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TypeName.of(TrackedValue.class));
     return methodDto;
   }
