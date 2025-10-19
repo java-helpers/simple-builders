@@ -44,7 +44,7 @@ import java.util.function.Consumer;
  * @param value the underlying value (may be {@code null})
  * @param isChanged whether the value was explicitly changed by the builder API
  */
-public record TrackedValue<T>(T value, boolean isChanged) {
+public record TrackedValue<T>(T value, boolean isChanged, boolean isUnset) {
 
   /**
    * Executes the provided {@link Consumer} only if this value has been explicitly changed.
@@ -65,7 +65,7 @@ public record TrackedValue<T>(T value, boolean isChanged) {
    * @return an instance with {@code value == null} and {@code isChanged == false}
    */
   public static <T> TrackedValue<T> unsetValue() {
-    return new TrackedValue<>(null, false);
+    return new TrackedValue<>(null, false, true);
   }
 
   /**
@@ -77,7 +77,7 @@ public record TrackedValue<T>(T value, boolean isChanged) {
    * @return an instance with the given value and {@code isChanged == false}
    */
   public static <T> TrackedValue<T> initialValue(T value) {
-    return new TrackedValue<>(value, false);
+    return new TrackedValue<>(value, false, false);
   }
 
   /**
@@ -88,6 +88,6 @@ public record TrackedValue<T>(T value, boolean isChanged) {
    * @return an instance with the given value and {@code isChanged == true}
    */
   public static <T> TrackedValue<T> changedValue(T value) {
-    return new TrackedValue<>(value, true);
+    return new TrackedValue<>(value, true, false);
   }
 }

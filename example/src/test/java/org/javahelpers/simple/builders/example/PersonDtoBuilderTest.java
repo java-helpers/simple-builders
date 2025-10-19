@@ -45,6 +45,7 @@ class PersonDtoBuilderTest {
                         .sponsoren(
                             sb -> sb.add(SponsorDtoBuilder.create().name("TestSponsor").build())))
             .name(this::nameSupplier)
+            .mannschaft(mb -> mb.sponsoren(sb -> sb.add(SponsorDtoBuilder.create().name("TestSponsor2").build())))
             .build();
     assertNotNull(personDto);
     assertNotNull(personDto.getBirthdate());
