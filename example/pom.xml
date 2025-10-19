@@ -73,17 +73,31 @@
           <target>${java.version}</target>
           <release>${java.version}</release>
           <generatedSourcesDirectory>${project.build.directory}/generated-sources/annotations</generatedSourcesDirectory>
-          <annotationProcessorPaths>
-            <path>
-              <groupId>io.github.java-helpers</groupId>
-              <artifactId>simple-builders-processor</artifactId>
-              <version>${project.version}</version>
-            </path>
-          </annotationProcessorPaths>
-          <compilerArgs>
-            <arg>-Averbose=${simplebuilder.verbose}</arg>
-          </compilerArgs>
         </configuration>
+        <executions>
+          <execution>
+            <id>default-compile</id>
+            <configuration>
+              <annotationProcessorPaths>
+                <path>
+                  <groupId>io.github.java-helpers</groupId>
+                  <artifactId>simple-builders-processor</artifactId>
+                  <version>${project.version}</version>
+                </path>
+              </annotationProcessorPaths>
+              <compilerArgs>
+                <arg>-Averbose=${simplebuilder.verbose}</arg>
+              </compilerArgs>
+            </configuration>
+          </execution>
+          <execution>
+            <id>default-testCompile</id>
+            <configuration>
+              <!-- No annotation processor for test compilation -->
+              <proc>none</proc>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>

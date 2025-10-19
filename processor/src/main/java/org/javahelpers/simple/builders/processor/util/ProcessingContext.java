@@ -43,6 +43,13 @@ public final class ProcessingContext {
   private final Types typeUtils;
   private final ProcessingLogger logger;
 
+  /**
+   * Creates a new processing context.
+   *
+   * @param elementUtils utility for operating on program elements
+   * @param typeUtils utility for operating on types
+   * @param logger the logging utility for the annotation processor
+   */
   public ProcessingContext(Elements elementUtils, Types typeUtils, ProcessingLogger logger) {
     this.elementUtils = elementUtils;
     this.typeUtils = typeUtils;

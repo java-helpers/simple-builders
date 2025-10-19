@@ -71,7 +71,7 @@ public class TypeNameArray extends TypeName {
   /**
    * Helper function to return the type of objects in array.
    *
-   * @return
+   * @return the TypeName of the array element type
    */
   public TypeName getTypeOfArray() {
     return typeOfArray;
