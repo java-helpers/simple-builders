@@ -38,6 +38,7 @@ class PersonDtoBuilderTest {
         PersonDtoBuilder.create()
             .birthdate(LocalDate.now())
             .nickNames(b -> b.add("Test1").add("Test2"))
+            .nickNames(b -> b.add("Test3").add("Test4"))
             .mannschaft(
                 mb ->
                     mb.name("Testmannschaft")
@@ -50,6 +51,7 @@ class PersonDtoBuilderTest {
     assertEquals("Testname", personDto.getName());
     assertNotNull(personDto.getMannschaft());
     assertEquals("Testmannschaft", personDto.getMannschaft().getName());
+    assertEquals(4, personDto.getNickNames().size());
   }
 
   private String nameSupplier() {
