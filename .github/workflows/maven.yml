@@ -54,6 +54,8 @@ jobs:
       run: mvn -B install -Pmetrics --file pom.xml
 
     - name: SonarCloud Analysis
+      # Skip for Dependabot PRs (no access to secrets)
+      if: github.actor != 'dependabot[bot]'
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       run: mvn -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar --file pom.xml
@@ -75,7 +77,8 @@ jobs:
         if-no-files-found: warn
 
     - name: Upload test results to Codecov (processor)
-      if: always()
+      # Skip for Dependabot PRs (no access to secrets)
+      if: always() && github.actor != 'dependabot[bot]'
       uses: codecov/test-results-action@47f89e9acb64b76debcd5ea40642d25a4adced9f # v1.1.1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
@@ -86,7 +89,8 @@ jobs:
         verbose: false
 
     - name: Upload coverage to Codecov (processor)
-      if: always()
+      # Skip for Dependabot PRs (no access to secrets)
+      if: always() && github.actor != 'dependabot[bot]'
       uses: codecov/codecov-action@015f24e6818733317a2da2edd6290ab26238649a # v5.0.7
       with:
         fail_ci_if_error: true
