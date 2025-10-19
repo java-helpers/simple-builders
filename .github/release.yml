@@ -25,19 +25,35 @@ changelog:
       labels:
         - maintenance
         - refactor
-        
-    - title: 📦 Dependency Updates
-      labels:
-        - dependencies
-      # This will group all Dependabot PRs together
-      collapse-after: 5  # Show first 5, collapse the rest
       
     - title: Other Changes
       labels:
         - "*"
 
-# Optional: Customize the header
-# header: |
-#   ## What's Changed
-#   
-#   This release includes the following updates:
+footer: |
+  ---
+  
+  ## 📦 Maven Central
+  
+  This release is available on Maven Central:
+  
+  **Core Module:**
+  ```xml
+  <dependency>
+    <groupId>io.github.java-helpers</groupId>
+    <artifactId>simple-builders-core</artifactId>
+    <version>$RESOLVED_VERSION</version>
+  </dependency>
+  ```
+  🔗 [View on Maven Central](https://central.sonatype.com/artifact/io.github.java-helpers/simple-builders-core/$RESOLVED_VERSION)
+  
+  **Processor Module:**
+  ```xml
+  <dependency>
+    <groupId>io.github.java-helpers</groupId>
+    <artifactId>simple-builders-processor</artifactId>
+    <version>$RESOLVED_VERSION</version>
+    <scope>provided</scope>
+  </dependency>
+  ```
+  🔗 [View on Maven Central](https://central.sonatype.com/artifact/io.github.java-helpers/simple-builders-processor/$RESOLVED_VERSION)
