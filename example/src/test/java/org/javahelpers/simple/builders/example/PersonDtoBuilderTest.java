@@ -53,6 +53,7 @@ class PersonDtoBuilderTest {
     assertNotNull(personDto.getMannschaft());
     assertEquals("Testmannschaft", personDto.getMannschaft().getName());
     assertEquals(4, personDto.getNickNames().size());
+    assertEquals(2, personDto.getMannschaft().getSponsoren().size());
   }
 
   private String nameSupplier() {
