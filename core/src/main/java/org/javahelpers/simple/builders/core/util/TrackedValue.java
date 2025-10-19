@@ -43,17 +43,18 @@ import java.util.function.Consumer;
  * @param <T> the value type
  * @param value the underlying value (may be {@code null})
  * @param isChanged whether the value was explicitly changed by the builder API
+ * @param isInitial whether the value is an initial value from an existing instance
  */
-public record TrackedValue<T>(T value, boolean isChanged, boolean isUnset) {
+public record TrackedValue<T>(T value, boolean isChanged, boolean isInitial) {
 
   /**
-   * Executes the provided {@link Consumer} only if this value has been explicitly changed.
+   * Executes the provided {@link Consumer} only if this value has been set (initial value or
+   * changed).
    *
-   * @param consumer action to perform with the current {@link #value()} when {@link #isChanged()}
-   *     is {@code true}
+   * @param consumer action to perform with the current {@link #value()}
    */
-  public void ifChanged(Consumer<T> consumer) {
-    if (isChanged) {
+  public void ifSet(Consumer<T> consumer) {
+    if (isChanged || isInitial) {
       consumer.accept(value);
     }
   }
@@ -62,10 +63,11 @@ public record TrackedValue<T>(T value, boolean isChanged, boolean isUnset) {
    * Creates a tracked value representing an unset state (no change made).
    *
    * @param <T> the value type
-   * @return an instance with {@code value == null} and {@code isChanged == false}
+   * @return an instance with {@code value == null}, {@code isChanged == false}, and {@code
+   *     isInitial == false}
    */
   public static <T> TrackedValue<T> unsetValue() {
-    return new TrackedValue<>(null, false, true);
+    return new TrackedValue<>(null, false, false);
   }
 
   /**
@@ -74,10 +76,11 @@ public record TrackedValue<T>(T value, boolean isChanged, boolean isUnset) {
    *
    * @param <T> the value type
    * @param value the initial value (may be {@code null})
-   * @return an instance with the given value and {@code isChanged == false}
+   * @return an instance with the given value, {@code isChanged == false}, and {@code isInitial ==
+   *     true}
    */
   public static <T> TrackedValue<T> initialValue(T value) {
-    return new TrackedValue<>(value, false, false);
+    return new TrackedValue<>(value, false, true);
   }
 
   /**

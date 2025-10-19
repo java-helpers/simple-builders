@@ -489,7 +489,7 @@ public class BuilderDefinitionCreator {
     methodDto.setMethodType(MethodTypes.CONSUMER);
     methodDto.setCode(
         """
-        $helperType:T consumer = !this.$fieldName:N.isUnset() ? this.$fieldName:N.value() : new $helperType:T();
+        $helperType:T consumer = this.$fieldName:N.ifSet() ? this.$fieldName:N.value() : new $helperType:T();
         $dtoMethodParam:N.accept(consumer);
         this.$fieldName:N = $builderFieldWrapper:T.changedValue(consumer);
         return this;
@@ -545,7 +545,7 @@ public class BuilderDefinitionCreator {
     methodDto.setMethodType(MethodTypes.CONSUMER_BY_BUILDER);
     methodDto.setCode(
         """
-        $helperType:T builder = !this.$fieldName:N.isUnset() ? new $helperType:T(this.$fieldName:N.value()) : new $helperType:T();
+        $helperType:T builder = this.$fieldName:N.ifSet() ? new $helperType:T(this.$fieldName:N.value()) : new $helperType:T();
         $dtoMethodParam:N.accept(builder);
         this.$fieldName:N = $builderFieldWrapper:T.changedValue(builder.build());
         return this;

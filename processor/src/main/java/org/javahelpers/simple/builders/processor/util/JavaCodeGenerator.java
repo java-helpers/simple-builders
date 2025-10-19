@@ -281,9 +281,9 @@ public class JavaCodeGenerator {
       mb.addStatement("$1T result = new $2T<>($3L)", returnType, dtoBaseClass, ctorArgs);
     }
 
-    // Apply setter-based fields only when changed
+    // Apply setter-based fields only when set
     for (FieldDto f : setterFields) {
-      mb.addStatement("this.$N.ifChanged(result::$N)", f.getFieldName(), f.getSetterName());
+      mb.addStatement("this.$N.ifSet(result::$N)", f.getFieldName(), f.getSetterName());
     }
     mb.addStatement("return result");
     return mb.build();
