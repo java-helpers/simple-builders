@@ -324,15 +324,8 @@ public class BuilderDefinitionCreator {
       return;
     }
 
-    // For Optional<T> fields, create a supplier that provides T and wraps it in Optional
-    if (isOptional(fieldType)
-        && fieldType instanceof TypeNameGeneric fieldTypeGeneric
-        && fieldTypeGeneric.getInnerTypeArguments().size() == 1) {
-      TypeName innerType = fieldTypeGeneric.getInnerTypeArguments().get(0);
-      result.addMethod(createFieldSupplierWithTransform(fieldName, "Optional.of(%s)", innerType));
-    } else {
-      result.addMethod(createFieldSupplier(fieldName, fieldType));
-    }
+    // For all fields including Optional<T>, use the real field type for suppliers
+    result.addMethod(createFieldSupplier(fieldName, fieldType));
   }
 
   private static Optional<FieldDto> createFieldFromSetter(
@@ -532,35 +525,6 @@ public class BuilderDefinitionCreator {
         """);
     methodDto.addArgument(ARG_FIELD_NAME, fieldName);
     methodDto.addArgument(ARG_DTO_METHOD_PARAM, parameter.getParameterName());
-    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TypeName.of(TrackedValue.class));
-    return methodDto;
-  }
-
-  private static MethodDto createFieldSupplierWithTransform(
-      String fieldName, String transform, TypeName supplierReturnType) {
-    TypeNameGeneric supplierType =
-        new TypeNameGeneric(map2TypeName(Supplier.class), supplierReturnType);
-    MethodParameterDto parameter = new MethodParameterDto();
-    parameter.setParameterName(fieldName + SUFFIX_SUPPLIER);
-    parameter.setParameterTypeName(supplierType);
-    MethodDto methodDto = new MethodDto();
-    methodDto.setMethodName(fieldName);
-    methodDto.addParameter(parameter);
-    methodDto.setModifier(Modifier.PUBLIC);
-    methodDto.setMethodType(MethodTypes.SUPPLIER);
-    String params;
-    if (StringUtils.isBlank(transform)) {
-      params = parameter.getParameterName() + ".get()";
-    } else {
-      params = String.format(transform, parameter.getParameterName() + ".get()");
-    }
-    methodDto.setCode(
-        """
-        this.$fieldName:N = $builderFieldWrapper:T.changedValue($dtoMethodParams:N);
-        return this;
-        """);
-    methodDto.addArgument(ARG_FIELD_NAME, fieldName);
-    methodDto.addArgument(ARG_DTO_METHOD_PARAMS, params);
     methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TypeName.of(TrackedValue.class));
     return methodDto;
   }
