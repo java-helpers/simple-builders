@@ -27,7 +27,7 @@ package org.javahelpers.simple.builders.processor.dtos;
 import java.util.LinkedList;
 import java.util.List;
 
-/** Represents a generic type parameter (e.g., T extends Number & Comparable<T>). */
+/** Represents a generic type parameter (e.g., {@code T extends Number & Comparable<T>}). */
 public class GenericParameterDto {
   /** The name of the generic parameter (e.g., "T"). */
   private String name;
@@ -35,22 +35,40 @@ public class GenericParameterDto {
   /** Optional upper bounds in declared order (empty if unbounded). */
   private final List<TypeName> upperBounds = new LinkedList<>();
 
+  /**
+   * Gets the name of the generic parameter.
+   *
+   * @return the name (e.g., "T", "K", "V")
+   */
   public String getName() {
     return name;
   }
 
+  /**
+   * Sets the name of the generic parameter.
+   *
+   * @param name the name to set (e.g., "T", "K", "V")
+   */
   public void setName(String name) {
     this.name = name;
   }
 
-  /** Add an upper bound. */
+  /**
+   * Add an upper bound.
+   *
+   * @param bound the upper bound type to add
+   */
   public void addUpperBound(TypeName bound) {
     if (bound != null) {
       upperBounds.add(bound);
     }
   }
 
-  /** Returns all upper bounds (possibly empty). */
+  /**
+   * Returns all upper bounds (possibly empty).
+   *
+   * @return the list of upper bound types
+   */
   public List<TypeName> getUpperBounds() {
     return upperBounds;
   }

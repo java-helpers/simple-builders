@@ -80,6 +80,7 @@ public final class JavaLangAnalyser {
   /**
    * Helper function to filter methods with specific annotations.
    *
+   * @param <A> the annotation type
    * @param annotationClass is the class of an annotation to be searched on executable
    * @param mth ExecutableElement to be validated
    * @return {@code true}, if it the specified annotation is not set on this method
@@ -146,7 +147,7 @@ public final class JavaLangAnalyser {
   /**
    * Check if the class (TypeElement) has an empty constructor.
    *
-   * @param typeElement
+   * @param typeElement the type element to check
    * @param context processing context
    * @return {@code true}, if the element has an empty constructor
    */
@@ -188,6 +189,9 @@ public final class JavaLangAnalyser {
    * <p>Prefers the explicit @FunctionalInterface annotation. Otherwise, returns true only if the
    * element is an interface and declares exactly one abstract instance method (ignoring static and
    * default methods). Inherited abstract methods are ignored for simplicity.
+   *
+   * @param typeElement the type element to check
+   * @return {@code true} if the type is a functional interface, {@code false} otherwise
    */
   public static boolean isFunctionalInterface(TypeElement typeElement) {
     if (typeElement == null) {
@@ -354,7 +358,7 @@ public final class JavaLangAnalyser {
    * only default constructor or none found).
    *
    * @param annotatedType the type element to search for constructors
-   * @param elementUtils elements utility
+   * @param context the processing context providing access to elements and types utilities
    * @return Optional containing the selected constructor, or empty if none suitable
    */
   public static Optional<ExecutableElement> findConstructorForBuilder(

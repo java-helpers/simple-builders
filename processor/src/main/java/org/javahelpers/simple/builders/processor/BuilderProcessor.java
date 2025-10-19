@@ -45,7 +45,7 @@ import org.javahelpers.simple.builders.processor.util.ProcessingLogger;
 
 /**
  * BuilderProcessor is an annotation processor for execution in generate-sources phase. The
- * BuilderProcessor using the Java way for generating builders, by implementing {@cod
+ * BuilderProcessor using the Java way for generating builders, by implementing {@code
  * javax.annotation.processing.AbstractProcessor}.
  */
 @AutoService(Processor.class)
