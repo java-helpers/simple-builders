@@ -88,6 +88,8 @@ jobs:
           fi
           
       - name: Build and verify
+        env:
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_SIGNING_KEY_PASSWORD }}
         run: mvn -B clean verify -Prelease
         
       - name: Deploy to Maven Central
