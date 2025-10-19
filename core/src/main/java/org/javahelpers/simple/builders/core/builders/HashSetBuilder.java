@@ -36,9 +36,22 @@ import java.util.Set;
 public class HashSetBuilder<T> {
   private final Set<T> mSet = new HashSet<>();
 
+  /** Creates an empty HashSetBuilder. */
+  public HashSetBuilder() {}
+
   /**
-   * Adds the specified element to this set if it is not already present. Calling add-function on
-   * inner HashSet field.
+   * Creates a HashSetBuilder initialized with the elements from the given set.
+   *
+   * @param initialSet set to initialize from
+   */
+  public HashSetBuilder(Set<T> initialSet) {
+    if (initialSet != null) {
+      mSet.addAll(initialSet);
+    }
+  }
+
+  /**
+   * Appends the element to the internal set. Calling add-function on inner HashSet field.
    *
    * @param element element to be appended
    * @return current instance of ArrayListBuilder for using in stream-notation

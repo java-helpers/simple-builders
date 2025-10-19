@@ -36,6 +36,20 @@ import java.util.List;
 public class ArrayListBuilder<T> {
   private final List<T> mList = new ArrayList<>();
 
+  /** Creates an empty ArrayListBuilder. */
+  public ArrayListBuilder() {}
+
+  /**
+   * Creates an ArrayListBuilder initialized with the elements from the given list.
+   *
+   * @param initialList list to initialize from
+   */
+  public ArrayListBuilder(List<T> initialList) {
+    if (initialList != null) {
+      mList.addAll(initialList);
+    }
+  }
+
   /**
    * Appends the element to the end of the internal list. Calling add-function on inner ArrayList
    * field.
