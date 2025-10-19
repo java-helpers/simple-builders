@@ -624,21 +624,6 @@ public class BuilderDefinitionCreator {
     return isOptionalString(fieldType);
   }
 
-  /**
-   * Checks if the field type is Optional&lt;String&gt;.
-   *
-   * @param fieldType the type of the field
-   * @return true if the type is Optional&lt;String&gt;, false otherwise
-   */
-  private static boolean isOptionalString(TypeName fieldType) {
-    if (fieldType instanceof TypeNameGeneric fieldTypeGeneric
-        && isOptional(fieldType)
-        && fieldTypeGeneric.getInnerTypeArguments().size() == 1) {
-      return isString(fieldTypeGeneric.getInnerTypeArguments().get(0));
-    }
-    return false;
-  }
-
   private static Optional<TypeName> findBuilderType(
       VariableElement param, ProcessingContext context) {
     TypeMirror typeOfParameter = param.asType();
