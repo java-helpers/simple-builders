@@ -64,6 +64,9 @@
     <!-- Maven Central Publishing -->
     <central.autoPublish>false</central.autoPublish>
     
+    <!-- Dependency Versions -->
+    <junit-jupiter.version>6.0.0</junit-jupiter.version>
+    
     <!-- Plugin Versions -->
     <plugin.central.publishing.version>0.9.0</plugin.central.publishing.version>
     <plugin.code-format.version>2.29</plugin.code-format.version>
@@ -76,6 +79,19 @@
   </properties>
 
   <dependencies>
+    <!-- Test Dependencies -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+      <version>${junit-jupiter.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-engine</artifactId>
+      <version>${junit-jupiter.version}</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
