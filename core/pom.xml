@@ -76,6 +76,7 @@
     <plugin.maven.gpg.version>3.2.8</plugin.maven.gpg.version>
     <plugin.maven.install.version>3.1.4</plugin.maven.install.version>
     <plugin.maven.site.version>3.21.0</plugin.maven.site.version>
+    <plugin.jacoco.version>0.8.14</plugin.jacoco.version>
   </properties>
 
   <dependencies>
@@ -210,6 +211,37 @@
                 <arg>--pinentry-mode</arg>
                 <arg>loopback</arg>
               </gpgArguments>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>metrics</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.jacoco</groupId>
+            <artifactId>jacoco-maven-plugin</artifactId>
+            <version>${plugin.jacoco.version}</version>
+            <executions>
+              <execution>
+                <id>prepare-agent</id>
+                <goals>
+                  <goal>prepare-agent</goal>
+                </goals>
+              </execution>
+              <execution>
+                <id>report</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>report</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <dataFile>${project.build.directory}/jacoco.exec</dataFile>
+              <outputDirectory>${project.reporting.outputDirectory}/jacoco</outputDirectory>
             </configuration>
           </plugin>
         </plugins>
