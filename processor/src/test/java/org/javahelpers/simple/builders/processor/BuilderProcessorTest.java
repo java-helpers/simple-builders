@@ -619,6 +619,7 @@ class BuilderProcessorTest {
         "public WithOptionalsBuilder description(Optional<String> description)",
         "public WithOptionalsBuilder description(Supplier<Optional<String>> descriptionSupplier)",
         "public WithOptionalsBuilder description(String description)",
+        "public WithOptionalsBuilder description(String format, Object... args)",
         "this.description = changedValue(Optional.of(description));",
         "private TrackedValue<Optional<String>> description = unsetValue();",
         "public WithOptionalsBuilder age(Optional<Integer> age)",
