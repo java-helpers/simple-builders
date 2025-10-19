@@ -37,6 +37,20 @@ import java.util.Map;
 public class HashMapBuilder<K, V> {
   private final Map<K, V> mMap = new HashMap<>();
 
+  /** Creates an empty HashMapBuilder. */
+  public HashMapBuilder() {}
+
+  /**
+   * Creates a HashMapBuilder initialized with the mappings from the given map.
+   *
+   * @param initialMap map to initialize from
+   */
+  public HashMapBuilder(Map<K, V> initialMap) {
+    if (initialMap != null) {
+      mMap.putAll(initialMap);
+    }
+  }
+
   /**
    * Associates the specified value with the specified key in this map. Using an inner HashMap
    * implementation. If the key already exists in the map, the old value is replaced.

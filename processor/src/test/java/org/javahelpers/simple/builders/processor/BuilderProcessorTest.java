@@ -201,7 +201,7 @@ class BuilderProcessorTest {
         "public CtorAndSetterBuilder a(int a)", // helpermethod for constructor param
         "public CtorAndSetterBuilder a(Supplier<Integer> aSupplier)", // supplier for constructor
         "CtorAndSetter result = new CtorAndSetter(this.a.value());",
-        "this.name.ifChanged(result::setName);");
+        "this.name.ifSet(result::setName);");
   }
 
   @Test
@@ -247,7 +247,7 @@ class BuilderProcessorTest {
         "public CtorAndSetterSameFieldBuilder name(String name)",
         // Expectations on build function
         "CtorAndSetterSameField result = new CtorAndSetterSameField(this.a.value());",
-        "this.name.ifChanged(result::setName);");
+        "this.name.ifSet(result::setName);");
     // expect no setter application for 'a' on build-function
     ProcessorAsserts.assertNotContaining(generatedCode, "result.setA(this.a);");
   }
@@ -454,7 +454,7 @@ class BuilderProcessorTest {
         "public RequiredCustomTypeViaConstructorBuilder address(Supplier<Address> addressSupplier)",
         // Consumer method for constructor field (the key coverage addition!)
         "public RequiredCustomTypeViaConstructorBuilder address(Consumer<Address> addressConsumer)",
-        "Address consumer = new Address();",
+        "Address consumer = this.address.isSet() ? this.address.value() : new Address();",
         "addressConsumer.accept(consumer);");
   }
 
@@ -882,7 +882,7 @@ class BuilderProcessorTest {
         @Override
         public BuildDoc build() {
             BuildDoc result = new BuildDoc();
-            this.x.ifChanged(result::setX);
+            this.x.ifSet(result::setX);
             return result;
         }
         """);
@@ -1206,7 +1206,7 @@ class BuilderProcessorTest {
         generatedCode,
         "private TrackedValue<HelperAnno> helper = unsetValue();",
         "helperBuilderConsumer",
-        "HelperAnnoBuilder builder = new HelperAnnoBuilder();",
+        "HelperAnnoBuilder builder = this.helper.isSet() ? new HelperAnnoBuilder(this.helper.value()) : new HelperAnnoBuilder();",
         "helperBuilderConsumer.accept(builder);",
         "this.helper = changedValue(builder.build());");
   }
@@ -1248,7 +1248,7 @@ class BuilderProcessorTest {
     // Expect consumer method with local var named 'consumer' of HelperPlain
     ProcessorAsserts.assertContaining(
         generatedCode,
-        "HelperPlain consumer = new HelperPlain();",
+        "HelperPlain consumer = this.helperPlain.isSet() ? this.helperPlain.value() : new HelperPlain();",
         "helperPlainConsumer.accept(consumer);",
         "private TrackedValue<HelperPlain> helperPlain = unsetValue();");
   }

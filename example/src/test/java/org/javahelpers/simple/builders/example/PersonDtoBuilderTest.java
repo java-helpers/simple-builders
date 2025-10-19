@@ -38,18 +38,22 @@ class PersonDtoBuilderTest {
         PersonDtoBuilder.create()
             .birthdate(LocalDate.now())
             .nickNames(b -> b.add("Test1").add("Test2"))
+            .nickNames(b -> b.add("Test3").add("Test4"))
             .mannschaft(
                 mb ->
                     mb.name("Testmannschaft")
                         .sponsoren(
                             sb -> sb.add(SponsorDtoBuilder.create().name("TestSponsor").build())))
             .name(this::nameSupplier)
+            .mannschaft(mb -> mb.sponsoren(sb -> sb.add(SponsorDtoBuilder.create().name("TestSponsor2").build())))
             .build();
     assertNotNull(personDto);
     assertNotNull(personDto.getBirthdate());
     assertEquals("Testname", personDto.getName());
     assertNotNull(personDto.getMannschaft());
     assertEquals("Testmannschaft", personDto.getMannschaft().getName());
+    assertEquals(4, personDto.getNickNames().size());
+    assertEquals(2, personDto.getMannschaft().getSponsoren().size());
   }
 
   private String nameSupplier() {
