@@ -133,10 +133,16 @@ jobs:
               PRERELEASE_FLAG="--prerelease"
             fi
             
-            # Create draft release with auto-generated notes
+            # Create draft release with auto-generated notes and attach artifacts
             gh release create "v$VERSION" \
               --title "Release $VERSION" \
               --draft \
               --generate-notes \
-              $PRERELEASE_FLAG
+              $PRERELEASE_FLAG \
+              core/target/simple-builders-core-${VERSION}.jar \
+              core/target/simple-builders-core-${VERSION}-sources.jar \
+              core/target/simple-builders-core-${VERSION}-javadoc.jar \
+              processor/target/simple-builders-processor-${VERSION}.jar \
+              processor/target/simple-builders-processor-${VERSION}-sources.jar \
+              processor/target/simple-builders-processor-${VERSION}-javadoc.jar
           fi
