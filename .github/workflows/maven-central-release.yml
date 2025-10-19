@@ -81,7 +81,7 @@ jobs:
           MAVEN_PASSWORD: ${{ secrets.CENTRAL_TOKEN_PASSWORD }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_SIGNING_KEY_PASSWORD }}
         run: |
-          mvn -B deploy -Prelease -pl core,processor -DskipTests=true
+          mvn -B deploy -Prelease -pl core,processor -DskipTests=true -Dcentral.autoPublish=true
           
       - name: Push changes to repository
         if: success()

@@ -66,6 +66,9 @@
     <maven.compiler.target>${java.version}</maven.compiler.target>
     <maven.compiler.release>${java.version}</maven.compiler.release>
     
+    <!-- Maven Central Publishing -->
+    <central.autoPublish>false</central.autoPublish>
+    
     <!-- Plugin Versions -->
     <plugin.central.publishing.version>0.8.0</plugin.central.publishing.version>
     <plugin.maven.compiler.version>3.14.1</plugin.maven.compiler.version>
@@ -226,6 +229,7 @@
             <extensions>true</extensions>
             <configuration>
               <publishingServerId>central</publishingServerId>
+              <autoPublish>${central.autoPublish}</autoPublish>
             </configuration>
           </plugin>
           <plugin>
