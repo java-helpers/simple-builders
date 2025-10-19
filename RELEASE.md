@@ -11,12 +11,6 @@ Configure these GitHub secrets in **Settings** → **Secrets and variables** →
 3. **`GPG_SIGNING_KEY`** - GPG private key (full armored block)
 4. **`GPG_SIGNING_KEY_PASSWORD`** - GPG key passphrase
 
-**First time setup?** See [MAVEN_CENTRAL_SETUP.md](MAVEN_CENTRAL_SETUP.md) for detailed instructions on:
-- Creating a Maven Central account
-- Verifying namespace ownership
-- Generating publishing tokens
-- Creating and exporting GPG keys
-
 ## How to Release
 
 **Actions** → **Release to Maven Central** → **Run workflow** → Enter version (e.g., `0.2.0`)

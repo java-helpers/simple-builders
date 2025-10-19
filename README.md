@@ -209,8 +209,7 @@ Please ensure your code follows the project's code style and includes appropriat
 
 ### Releasing
 
-For maintainers: 
-- **First time setup:** See [MAVEN_CENTRAL_SETUP.md](MAVEN_CENTRAL_SETUP.md) for credential generation
+For maintainers:
 - **Release process:** See [RELEASE.md](RELEASE.md) for releasing new versions
 
 ## License
