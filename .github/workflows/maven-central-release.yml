@@ -93,13 +93,18 @@ jobs:
           
       - name: Create GitHub Release
         if: success()
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ steps.version.outputs.VERSION }}
-          name: Release ${{ steps.version.outputs.VERSION }}
-          # Create as draft for review before publishing
-          draft: true
-          # Set to true for pre-release versions (alpha, beta, RC)
-          prerelease: ${{ contains(steps.version.outputs.VERSION, '-') }}
-          # Auto-generate release notes from commits and PRs
-          generate_release_notes: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+          PRERELEASE_FLAG=""
+          if [[ "$VERSION" == *"-"* ]]; then
+            PRERELEASE_FLAG="--prerelease"
+          fi
+          
+          # Create draft release with auto-generated notes
+          gh release create "v$VERSION" \
+            --title "Release $VERSION" \
+            --draft \
+            --generate-notes \
+            $PRERELEASE_FLAG
