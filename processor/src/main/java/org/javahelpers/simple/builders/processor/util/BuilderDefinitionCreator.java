@@ -292,6 +292,20 @@ public class BuilderDefinitionCreator {
     if (isFunctionalInterface(fieldTypeElement)) {
       return;
     }
+
+    // Add StringBuilder consumer for String fields
+    if (isString(fieldType) && !(fieldType instanceof TypeNameArray)) {
+      result.addMethod(createStringBuilderConsumer(fieldName, "builder.toString()"));
+    }
+
+    // Add StringBuilder consumer for Optional<String> fields
+    if (fieldType instanceof TypeNameGeneric fieldTypeGeneric
+        && isOptional(fieldType)
+        && fieldTypeGeneric.getInnerTypeArguments().size() == 1
+        && isString(fieldTypeGeneric.getInnerTypeArguments().get(0))) {
+      result.addMethod(createStringBuilderConsumer(fieldName, "Optional.of(builder.toString())"));
+    }
+
     Optional<TypeName> builderTypeOpt = findBuilderType(fieldParameter, context);
     if (builderTypeOpt.isPresent()) {
       TypeName builderType = builderTypeOpt.get();
@@ -491,6 +505,32 @@ public class BuilderDefinitionCreator {
     methodDto.addArgument(ARG_FIELD_NAME, fieldName);
     methodDto.addArgument(ARG_DTO_METHOD_PARAM, parameter.getParameterName());
     methodDto.addArgument(ARG_HELPER_TYPE, fieldType);
+    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
+    return methodDto;
+  }
+
+  private static MethodDto createStringBuilderConsumer(String fieldName, String transform) {
+    TypeName stringBuilderType = new TypeName("java.lang", "StringBuilder");
+    TypeNameGeneric consumerType =
+        new TypeNameGeneric(map2TypeName(Consumer.class), stringBuilderType);
+    MethodParameterDto parameter = new MethodParameterDto();
+    parameter.setParameterName(fieldName + "StringBuilderConsumer");
+    parameter.setParameterTypeName(consumerType);
+    MethodDto methodDto = new MethodDto();
+    methodDto.setMethodName(fieldName);
+    methodDto.addParameter(parameter);
+    methodDto.setModifier(Modifier.PUBLIC);
+    methodDto.setMethodType(MethodTypes.CONSUMER);
+    methodDto.setCode(
+        """
+        StringBuilder builder = new StringBuilder();
+        $dtoMethodParam:N.accept(builder);
+        this.$fieldName:N = $builderFieldWrapper:T.changedValue($transform:N);
+        return this;
+        """);
+    methodDto.addArgument(ARG_FIELD_NAME, fieldName);
+    methodDto.addArgument(ARG_DTO_METHOD_PARAM, parameter.getParameterName());
+    methodDto.addArgument("transform", transform);
     methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
     return methodDto;
   }
