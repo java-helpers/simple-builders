@@ -24,24 +24,24 @@ class BuilderProcessorTest {
     String className = "SimpleDto";
     String builderClassName = className + "Builder";
 
+    // When
     JavaFileObject sourceFile =
         ProcessorTestUtils.simpleBuilderClass(
             "test",
             className,
             """
-                private String value;
-                public String getValue() { return value; }
-                public void setValue(String value) { this.value = value; }
+                private Integer value;
+                public Integer getValue() { return value; }
+                public void setValue(Integer value) { this.value = value; }
             """);
 
-    // When
     Compilation compilation = compile(sourceFile);
 
     // Then: Builder should be generated successfully
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
     ProcessorAsserts.assertContaining(
-        generatedCode, "public SimpleDtoBuilder value(String value)", "public SimpleDto build()");
+        generatedCode, "public SimpleDtoBuilder value(Integer value)", "public SimpleDto build()");
   }
 
   @Test
@@ -391,12 +391,14 @@ class BuilderProcessorTest {
         generatedCode,
         // Basic setters for constructor fields
         "public RequiredFieldViaConstructorBuilder name(String name)",
+        "public RequiredFieldViaConstructorBuilder name(String format, Object... args)",
         "public RequiredFieldViaConstructorBuilder age(int age)",
         // Supplier methods for constructor fields (the bug we fixed!)
         "public RequiredFieldViaConstructorBuilder name(Supplier<String> nameSupplier)",
         "public RequiredFieldViaConstructorBuilder age(Supplier<Integer> ageSupplier)",
         // Setter field should also have supplier
         "public RequiredFieldViaConstructorBuilder description(String description)",
+        "public RequiredFieldViaConstructorBuilder description(String format, Object... args)",
         "public RequiredFieldViaConstructorBuilder description(Supplier<String> descriptionSupplier)");
   }
 
@@ -580,6 +582,214 @@ class BuilderProcessorTest {
         "public WithCollectionsBuilder map(Supplier<Map<String, Integer>> mapSupplier)",
         "this.map = changedValue(map);",
         "private TrackedValue<Map<String, Integer>> map = unsetValue();");
+  }
+
+  @Test
+  void shouldGenerateOptionalSettersAndProviders() {
+    // Given
+    String packageName = "test";
+    String className = "WithOptionals";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private java.util.Optional<String> description;
+                private java.util.Optional<Integer> age;
+
+                public java.util.Optional<String> getDescription() { return description; }
+                public void setDescription(java.util.Optional<String> description) { this.description = description; }
+
+                public java.util.Optional<Integer> getAge() { return age; }
+                public void setAge(java.util.Optional<Integer> age) { this.age = age; }
+            """);
+
+    // When
+    Compilation compilation = compile(sourceFile);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    // Direct setters with Optional<T> and unwrapped T convenience
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        "public WithOptionalsBuilder description(Optional<String> description)",
+        "public WithOptionalsBuilder description(Supplier<Optional<String>> descriptionSupplier)",
+        "public WithOptionalsBuilder description(String description)",
+        "public WithOptionalsBuilder description(String format, Object... args)",
+        "this.description = changedValue(Optional.of(description));",
+        "private TrackedValue<Optional<String>> description = unsetValue();",
+        "public WithOptionalsBuilder age(Optional<Integer> age)",
+        "public WithOptionalsBuilder age(Supplier<Optional<Integer>> ageSupplier)",
+        "public WithOptionalsBuilder age(Integer age)",
+        "this.age = changedValue(Optional.of(age));",
+        "private TrackedValue<Optional<Integer>> age = unsetValue();");
+  }
+
+  @Test
+  void shouldGenerateStringFormatMethodForStringField() {
+    // Given: String field to verify format method generation
+    String packageName = "test";
+    String className = "WithString";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private String message;
+
+                public String getMessage() { return message; }
+                public void setMessage(String message) { this.message = message; }
+            """);
+
+    // When
+    Compilation compilation = compile(sourceFile);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    // Verify both basic String setter and format method are generated
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        "private TrackedValue<String> message = unsetValue();",
+        """
+        public WithStringBuilder message(String message) {
+          this.message = changedValue(message);
+          return this;
+        }
+        """,
+        """
+        public WithStringBuilder message(String format, Object... args) {
+          this.message = changedValue(String.format(format, args));
+          return this;
+        }
+        """);
+  }
+
+  @Test
+  void shouldGenerateStringFormatMethodForOptionalString() {
+    // Given: Optional<String> field to verify format method generation
+    String packageName = "test";
+    String className = "WithOptionalString";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private java.util.Optional<String> message;
+
+                public java.util.Optional<String> getMessage() { return message; }
+                public void setMessage(java.util.Optional<String> message) { this.message = message; }
+            """);
+
+    // When
+    Compilation compilation = compile(sourceFile);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    // Verify both unwrapped String setter and format method are generated
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        "private TrackedValue<Optional<String>> message = unsetValue();",
+        """
+        public WithOptionalStringBuilder message(String message) {
+          this.message = changedValue(Optional.of(message));
+          return this;
+        }
+        """,
+        """
+        public WithOptionalStringBuilder message(String format, Object... args) {
+          this.message = changedValue(Optional.of(String.format(format, args)));
+          return this;
+        }
+        """);
+  }
+
+  @Test
+  void shouldGenerateStringBuilderConsumerForStringField() {
+    // Given: String field to verify StringBuilder consumer generation
+    String packageName = "test";
+    String className = "WithStringBuilder";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private String message;
+
+                public String getMessage() { return message; }
+                public void setMessage(String message) { this.message = message; }
+            """);
+
+    // When
+    Compilation compilation = compile(sourceFile);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    // Verify StringBuilder consumer method is generated
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        "private TrackedValue<String> message = unsetValue();",
+        """
+        public WithStringBuilderBuilder message(Consumer<StringBuilder> messageStringBuilderConsumer) {
+          StringBuilder builder = new StringBuilder();
+          messageStringBuilderConsumer.accept(builder);
+          this.message = changedValue(builder.toString());
+          return this;
+        }
+        """);
+  }
+
+  @Test
+  void shouldGenerateStringBuilderConsumerForOptionalString() {
+    // Given: Optional<String> field to verify StringBuilder consumer generation
+    String packageName = "test";
+    String className = "WithOptString";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private java.util.Optional<String> message;
+
+                public java.util.Optional<String> getMessage() { return message; }
+                public void setMessage(java.util.Optional<String> message) { this.message = message; }
+            """);
+
+    // When
+    Compilation compilation = compile(sourceFile);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    // Verify StringBuilder consumer method is generated with Optional wrapping
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        """
+        public WithOptStringBuilder message(Consumer<StringBuilder> messageStringBuilderConsumer) {
+          StringBuilder builder = new StringBuilder();
+          messageStringBuilderConsumer.accept(builder);
+          this.message = changedValue(Optional.of(builder.toString()));
+          return this;
+        }
+        """);
   }
 
   @Test
@@ -1068,12 +1278,16 @@ class BuilderProcessorTest {
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
 
-    // Expect supplier-based setter usage
+    // Expect supplier-based setter and backing field
     ProcessorAsserts.assertContaining(
         generatedCode,
-        "nameSupplier",
         "private TrackedValue<String> name = unsetValue();",
-        "this.name = changedValue(nameSupplier.get());");
+        """
+        public HasSupplierBuilder name(Supplier<String> nameSupplier) {
+          this.name = changedValue(nameSupplier.get());
+          return this;
+        }
+        """);
   }
 
   protected Compilation compile(JavaFileObject... sourceFiles) {
@@ -1205,7 +1419,7 @@ class BuilderProcessorTest {
         "public DtoWithWrappedTypes build()");
 
     // Verify no additional helper methods are generated for these generic types
-    // (since they don't match List/Set/Map/Optional patterns)
+    // (since they don't match List/Set/Map/Optional patterns with recognized inner types)
     ProcessorAsserts.assertNotContaining(
         optionalBuilder,
         "nameBuilderConsumer",

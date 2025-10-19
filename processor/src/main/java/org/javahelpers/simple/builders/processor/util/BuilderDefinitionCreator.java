@@ -63,6 +63,9 @@ public class BuilderDefinitionCreator {
   private static final String ARG_BUILDER_FIELD_WRAPPER = "builderFieldWrapper";
   private static final String ARG_HELPER_TYPE = "helperType";
 
+  // Type constants
+  private static final TypeName TRACKED_VALUE_TYPE = TypeName.of(TrackedValue.class);
+
   // Parameter name suffixes
   private static final String SUFFIX_CONSUMER = "Consumer";
   private static final String SUFFIX_SUPPLIER = "Supplier";
@@ -230,7 +233,13 @@ public class BuilderDefinitionCreator {
 
   private static void addAdditionalHelperMethodsForField(
       FieldDto result, String fieldName, TypeName fieldType) {
-    // Only process generic types (List, Set, Map, etc.)
+    // Check for String type (not array) and add format method
+    if (isString(fieldType) && !(fieldType instanceof TypeNameArray)) {
+      result.addMethod(
+          createStringFormatMethodWithTransform(fieldName, "String.format(format, args)"));
+    }
+
+    // Only process generic types (List, Set, Map, Optional, etc.)
     if (!(fieldType instanceof TypeNameGeneric fieldTypeGeneric)) {
       return;
     }
@@ -253,6 +262,18 @@ public class BuilderDefinitionCreator {
               false);
       result.addMethod(
           createFieldSetterWithTransform(fieldName, "Map.ofEntries(%s)", mapEntryType));
+    } else if (isOptional(fieldType) && innerTypesCnt == 1) {
+      // Add setter that accepts the inner type T and wraps it in Optional.of()
+      result.addMethod(
+          createFieldSetterWithTransform(fieldName, "Optional.of(%s)", innerTypes.get(0)));
+
+      // If Optional<String>, add format method
+      TypeName innerType = innerTypes.get(0);
+      if (isString(innerType)) {
+        result.addMethod(
+            createStringFormatMethodWithTransform(
+                fieldName, "Optional.of(String.format(format, args))"));
+      }
     }
   }
 
@@ -271,6 +292,7 @@ public class BuilderDefinitionCreator {
     if (isFunctionalInterface(fieldTypeElement)) {
       return;
     }
+
     Optional<TypeName> builderTypeOpt = findBuilderType(fieldParameter, context);
     if (builderTypeOpt.isPresent()) {
       TypeName builderType = builderTypeOpt.get();
@@ -310,6 +332,11 @@ public class BuilderDefinitionCreator {
               fieldName,
               map2TypeName(HashSetBuilder.class),
               fieldTypeGeneric.getInnerTypeArguments().get(0)));
+    } else if (shouldGenerateStringBuilderConsumer(fieldType)) {
+      // Generate StringBuilder consumer for String or Optional<String>
+      String transform =
+          isOptionalString(fieldType) ? "Optional.of(builder.toString())" : "builder.toString()";
+      result.addMethod(createStringBuilderConsumer(fieldName, transform));
     }
   }
 
@@ -319,6 +346,8 @@ public class BuilderDefinitionCreator {
     if (isFunctionalInterface(fieldTypeElement)) {
       return;
     }
+
+    // For all fields including Optional<T>, use the real field type for suppliers
     result.addMethod(createFieldSupplier(fieldName, fieldType));
   }
 
@@ -444,7 +473,7 @@ public class BuilderDefinitionCreator {
         """);
     methodDto.addArgument(ARG_FIELD_NAME, fieldName);
     methodDto.addArgument(ARG_DTO_METHOD_PARAMS, params);
-    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TypeName.of(TrackedValue.class));
+    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
     return methodDto;
   }
 
@@ -468,7 +497,33 @@ public class BuilderDefinitionCreator {
     methodDto.addArgument(ARG_FIELD_NAME, fieldName);
     methodDto.addArgument(ARG_DTO_METHOD_PARAM, parameter.getParameterName());
     methodDto.addArgument(ARG_HELPER_TYPE, fieldType);
-    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TypeName.of(TrackedValue.class));
+    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
+    return methodDto;
+  }
+
+  private static MethodDto createStringBuilderConsumer(String fieldName, String transform) {
+    TypeName stringBuilderType = new TypeName("java.lang", "StringBuilder");
+    TypeNameGeneric consumerType =
+        new TypeNameGeneric(map2TypeName(Consumer.class), stringBuilderType);
+    MethodParameterDto parameter = new MethodParameterDto();
+    parameter.setParameterName(fieldName + "StringBuilderConsumer");
+    parameter.setParameterTypeName(consumerType);
+    MethodDto methodDto = new MethodDto();
+    methodDto.setMethodName(fieldName);
+    methodDto.addParameter(parameter);
+    methodDto.setModifier(Modifier.PUBLIC);
+    methodDto.setMethodType(MethodTypes.CONSUMER);
+    methodDto.setCode(
+        """
+        StringBuilder builder = new StringBuilder();
+        $dtoMethodParam:N.accept(builder);
+        this.$fieldName:N = $builderFieldWrapper:T.changedValue($transform:N);
+        return this;
+        """);
+    methodDto.addArgument(ARG_FIELD_NAME, fieldName);
+    methodDto.addArgument(ARG_DTO_METHOD_PARAM, parameter.getParameterName());
+    methodDto.addArgument("transform", transform);
+    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
     return methodDto;
   }
 
@@ -498,7 +553,7 @@ public class BuilderDefinitionCreator {
     methodDto.addArgument(ARG_FIELD_NAME, fieldName);
     methodDto.addArgument(ARG_DTO_METHOD_PARAM, parameter.getParameterName());
     methodDto.addArgument(ARG_HELPER_TYPE, builderType);
-    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TypeName.of(TrackedValue.class));
+    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
     return methodDto;
   }
 
@@ -519,8 +574,54 @@ public class BuilderDefinitionCreator {
         """);
     methodDto.addArgument(ARG_FIELD_NAME, fieldName);
     methodDto.addArgument(ARG_DTO_METHOD_PARAM, parameter.getParameterName());
-    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TypeName.of(TrackedValue.class));
+    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
     return methodDto;
+  }
+
+  private static MethodDto createStringFormatMethodWithTransform(
+      String fieldName, String transform) {
+    TypeName stringType = new TypeName("java.lang", "String");
+
+    MethodParameterDto formatParam = new MethodParameterDto();
+    formatParam.setParameterName("format");
+    formatParam.setParameterTypeName(stringType);
+
+    MethodParameterDto argsParam = new MethodParameterDto();
+    argsParam.setParameterName("args");
+    argsParam.setParameterTypeName(new TypeNameArray(TypeName.of(Object.class), false));
+
+    MethodDto methodDto = new MethodDto();
+    methodDto.setMethodName(fieldName);
+    methodDto.addParameter(formatParam);
+    methodDto.addParameter(argsParam);
+    methodDto.setModifier(Modifier.PUBLIC);
+    methodDto.setMethodType(MethodTypes.PROXY);
+    methodDto.setCode(
+        """
+        this.$fieldName:N = $builderFieldWrapper:T.changedValue($transform:N);
+        return this;
+        """);
+    methodDto.addArgument(ARG_FIELD_NAME, fieldName);
+    methodDto.addArgument("transform", transform);
+    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
+    return methodDto;
+  }
+
+  /**
+   * Checks if a StringBuilder consumer should be generated for the given field type. This applies
+   * to plain String fields and Optional&lt;String&gt; fields.
+   *
+   * @param fieldType the type of the field
+   * @return true if StringBuilder consumer should be generated, false otherwise
+   */
+  private static boolean shouldGenerateStringBuilderConsumer(TypeName fieldType) {
+    // Check for plain String (not array)
+    if (isString(fieldType) && !(fieldType instanceof TypeNameArray)) {
+      return true;
+    }
+
+    // Check for Optional<String>
+    return isOptionalString(fieldType);
   }
 
   private static Optional<TypeName> findBuilderType(

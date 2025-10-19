@@ -25,6 +25,7 @@ package org.javahelpers.simple.builders.processor.util;
 
 import org.apache.commons.lang3.Strings;
 import org.javahelpers.simple.builders.processor.dtos.TypeName;
+import org.javahelpers.simple.builders.processor.dtos.TypeNameGeneric;
 
 /** Helperclass to extract insights from TypeName. */
 public class TypeNameAnalyser {
@@ -75,5 +76,42 @@ public class TypeNameAnalyser {
   public static boolean isList(TypeName typeName) {
     return Strings.CI.equals(typeName.getPackageName(), JAVA_UTIL_PACKAGE)
         && Strings.CI.equals(typeName.getClassName(), "List");
+  }
+
+  /**
+   * Helper to check if the type is a {@code java.util.Optional}.
+   *
+   * @param typeName Type to be validated
+   * @return {@code true}, if it is a {@code java.util.Optional}
+   */
+  public static boolean isOptional(TypeName typeName) {
+    return Strings.CI.equals(typeName.getPackageName(), JAVA_UTIL_PACKAGE)
+        && Strings.CI.equals(typeName.getClassName(), "Optional");
+  }
+
+  /**
+   * Helper to check if the type is a {@code java.lang.String}.
+   *
+   * @param typeName Type to be validated
+   * @return {@code true}, if it is a {@code java.lang.String}
+   */
+  public static boolean isString(TypeName typeName) {
+    return Strings.CI.equals(typeName.getPackageName(), "java.lang")
+        && Strings.CI.equals(typeName.getClassName(), "String");
+  }
+
+  /**
+   * Checks if the field type is Optional&lt;String&gt;.
+   *
+   * @param fieldType the type of the field
+   * @return true if the type is Optional&lt;String&gt;, false otherwise
+   */
+  public static boolean isOptionalString(TypeName fieldType) {
+    if (fieldType instanceof TypeNameGeneric fieldTypeGeneric
+        && isOptional(fieldType)
+        && fieldTypeGeneric.getInnerTypeArguments().size() == 1) {
+      return isString(fieldTypeGeneric.getInnerTypeArguments().get(0));
+    }
+    return false;
   }
 }
