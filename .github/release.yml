@@ -1,0 +1,43 @@
+changelog:
+  exclude:
+    labels:
+      - ignore-for-release
+      - pipeline
+    authors:
+      # Exclude bots from being mentioned as contributors
+      - dependabot
+      - dependabot[bot]
+  
+  categories:
+    - title: 🚀 Features
+      labels:
+        - enhancement
+        
+    - title: 🐛 Bug Fixes
+      labels:
+        - bug
+        
+    - title: 📚 Documentation
+      labels:
+        - documentation
+        
+    - title: 🔧 Maintenance
+      labels:
+        - maintenance
+        - refactor
+        
+    - title: 📦 Dependency Updates
+      labels:
+        - dependencies
+      # This will group all Dependabot PRs together
+      collapse-after: 5  # Show first 5, collapse the rest
+      
+    - title: Other Changes
+      labels:
+        - "*"
+
+# Optional: Customize the header
+# header: |
+#   ## What's Changed
+#   
+#   This release includes the following updates:
