@@ -13,9 +13,6 @@ on:
         description: 'Release version (e.g., 0.2.0)'
         required: true
         type: string
-  push:
-    tags:
-      - 'v*.*.*'
 
 jobs:
   release:
@@ -44,12 +41,7 @@ jobs:
       - name: Determine version
         id: version
         run: |
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            VERSION="${{ github.event.inputs.release_version }}"
-          else
-            # Extract version from tag (remove 'v' prefix)
-            VERSION=${GITHUB_REF#refs/tags/v}
-          fi
+          VERSION="${{ github.event.inputs.release_version }}"
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
           echo "Releasing version: $VERSION"
           
@@ -73,14 +65,12 @@ jobs:
           git add pom.xml core/pom.xml processor/pom.xml
           git commit -m "chore: release version $VERSION [skip ci]"
           
-      - name: Create/Update Git tag
+      - name: Create Git tag
         run: |
           VERSION=${{ steps.version.outputs.VERSION }}
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-          # For tag-based releases, move the existing tag to the new commit
-          # For manual releases, create a new tag
-          git tag -f -a "v$VERSION" -m "Release version $VERSION"
+          git tag -a "v$VERSION" -m "Release version $VERSION"
           
       - name: Build and verify
         run: mvn -B clean verify -Prelease
@@ -99,7 +89,7 @@ jobs:
           VERSION=${{ steps.version.outputs.VERSION }}
           # Push commit and tag
           git push origin main
-          git push -f origin "v$VERSION"
+          git push origin "v$VERSION"
           
       - name: Create GitHub Release
         if: success()
