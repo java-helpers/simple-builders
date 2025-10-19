@@ -94,14 +94,23 @@ public class TypeNamePrimitive extends TypeName {
    * specific primitive type that can be used during annotation processing.
    */
   public enum PrimitiveTypeEnum {
+    /** The void primitive type. */
     VOID,
+    /** The boolean primitive type. */
     BOOLEAN,
+    /** The byte primitive type. */
     BYTE,
+    /** The short primitive type. */
     SHORT,
+    /** The int primitive type. */
     INT,
+    /** The long primitive type. */
     LONG,
+    /** The char primitive type. */
     CHAR,
+    /** The float primitive type. */
     FLOAT,
+    /** The double primitive type. */
     DOUBLE;
   }
 }

@@ -58,7 +58,7 @@ public class FieldDto {
   /**
    * Getting name of field.
    *
-   * @return
+   * @return the name of the field
    */
   public String getFieldName() {
     return fieldName;
@@ -67,7 +67,7 @@ public class FieldDto {
   /**
    * Setting name of field.
    *
-   * @param fieldName
+   * @param fieldName the name to set for this field
    */
   public void setFieldName(String fieldName) {
     this.fieldName = fieldName;
@@ -137,12 +137,20 @@ public class FieldDto {
     this.javaDoc = javaDoc;
   }
 
-  /** Returns generics declared on the setter (field-specific). */
+  /**
+   * Returns generics declared on the setter (field-specific).
+   *
+   * @return the list of generic parameters for this field
+   */
   public List<GenericParameterDto> getFieldGenerics() {
     return fieldGenerics;
   }
 
-  /** Replaces generics list with the provided entries. */
+  /**
+   * Replaces generics list with the provided entries.
+   *
+   * @param generics the list of generic parameters to set
+   */
   public void setFieldGenerics(List<GenericParameterDto> generics) {
     this.fieldGenerics.clear();
     if (generics != null) {
@@ -150,12 +158,20 @@ public class FieldDto {
     }
   }
 
-  /** Returns the getter method name to use (without parentheses). */
+  /**
+   * Returns the getter method name to use (without parentheses).
+   *
+   * @return Optional containing the getter name, or empty if not set
+   */
   public Optional<String> getGetterName() {
     return Optional.ofNullable(getterName);
   }
 
-  /** Sets the getter method name to use (without parentheses). */
+  /**
+   * Sets the getter method name to use (without parentheses).
+   *
+   * @param getterName the getter method name to set
+   */
   public void setGetterName(String getterName) {
     this.getterName = getterName;
   }

@@ -61,6 +61,9 @@
     <maven.compiler.target>${java.version}</maven.compiler.target>
     <maven.compiler.release>${java.version}</maven.compiler.release>
     
+    <!-- Maven Central Publishing -->
+    <central.autoPublish>false</central.autoPublish>
+    
     <!-- Plugin Versions -->
     <plugin.central.publishing.version>0.8.0</plugin.central.publishing.version>
     <plugin.code-format.version>2.29</plugin.code-format.version>
@@ -134,10 +137,11 @@
           <plugin>
             <groupId>org.sonatype.central</groupId>
             <artifactId>central-publishing-maven-plugin</artifactId>
-            <version>${plugin.maven.central.publishing.version}</version>
+            <version>${plugin.central.publishing.version}</version>
             <extensions>true</extensions>
             <configuration>
               <publishingServerId>central</publishingServerId>
+              <autoPublish>${central.autoPublish}</autoPublish>
             </configuration>
           </plugin>
           <plugin>
@@ -175,6 +179,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-gpg-plugin</artifactId>
+            <version>${plugin.maven.gpg.version}</version>
             <executions>
               <execution>
                 <id>sign-artifacts</id>
@@ -184,6 +189,12 @@
                 </goals>
               </execution>
             </executions>
+            <configuration>
+              <gpgArguments>
+                <arg>--pinentry-mode</arg>
+                <arg>loopback</arg>
+              </gpgArguments>
+            </configuration>
           </plugin>
         </plugins>
       </build>

@@ -42,7 +42,7 @@ public class BuilderDefinitionDto {
    */
   private final List<FieldDto> fieldsInConstructor = new LinkedList<>();
 
-  /** Generic parameters declared on the target DTO (e.g., <T extends Number, U>). */
+  /** Generic parameters declared on the target DTO (e.g., {@code <T extends Number, U>}). */
   private final List<GenericParameterDto> generics = new LinkedList<>();
 
   /**
@@ -98,17 +98,29 @@ public class BuilderDefinitionDto {
     fields.add(field);
   }
 
-  /** Adds a field definition that will be provided via the DTO constructor. */
+  /**
+   * Adds a field definition that will be provided via the DTO constructor.
+   *
+   * @param field the field to add to the constructor parameters
+   */
   public void addFieldInConstructor(FieldDto field) {
     fieldsInConstructor.add(field);
   }
 
-  /** Adds multiple field definitions to be provided via the DTO constructor. */
+  /**
+   * Adds multiple field definitions to be provided via the DTO constructor.
+   *
+   * @param fields the list of fields to add to the constructor parameters
+   */
   public void addAllFieldsInConstructor(List<FieldDto> fields) {
     fieldsInConstructor.addAll(fields);
   }
 
-  /** Adds multiple field definitions to the builder. */
+  /**
+   * Adds multiple field definitions to the builder.
+   *
+   * @param fields the list of fields to add
+   */
   public void addAllFields(List<FieldDto> fields) {
     this.fields.addAll(fields);
   }
@@ -122,7 +134,11 @@ public class BuilderDefinitionDto {
     return fields;
   }
 
-  /** Returns the ordered list of fields to be passed to the DTO constructor. */
+  /**
+   * Returns the ordered list of fields to be passed to the DTO constructor.
+   *
+   * @return the ordered list of constructor parameter fields
+   */
   public List<FieldDto> getConstructorFieldsForBuilder() {
     return fieldsInConstructor;
   }
@@ -130,6 +146,8 @@ public class BuilderDefinitionDto {
   /**
    * Returns all fields known to the builder in a single list. Constructor parameters appear first
    * (in constructor order), followed by setter-derived fields.
+   *
+   * @return all fields in the builder (constructor fields first, then setter fields)
    */
   public List<FieldDto> getAllFieldsForBuilder() {
     LinkedList<FieldDto> all = new LinkedList<>();
@@ -138,12 +156,20 @@ public class BuilderDefinitionDto {
     return all;
   }
 
-  /** Adds a generic parameter definition. */
+  /**
+   * Adds a generic parameter definition.
+   *
+   * @param generic the generic parameter to add
+   */
   public void addGeneric(GenericParameterDto generic) {
     generics.add(generic);
   }
 
-  /** Returns the list of generic parameters of the target DTO, in declared order. */
+  /**
+   * Returns the list of generic parameters of the target DTO, in declared order.
+   *
+   * @return the list of generic parameters
+   */
   public List<GenericParameterDto> getGenerics() {
     return generics;
   }

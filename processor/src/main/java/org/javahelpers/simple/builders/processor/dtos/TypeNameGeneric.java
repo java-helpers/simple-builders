@@ -33,9 +33,9 @@ import java.util.Optional;
  * <p>Examples:
  *
  * <ul>
- *   <li>List<T> -> outer: {@code java.util.List}, inner: {@code T}
- *   <li>Map<K,V> -> outer: {@code java.util.Map}, inner: {@code K}, {@code V}
- *   <li>Optional<Person> -> outer: {@code java.util.Optional}, inner: {@code Person}
+ *   <li>{@code List<T>} -&gt; outer: {@code java.util.List}, inner: {@code T}
+ *   <li>{@code Map<K,V>} -&gt; outer: {@code java.util.Map}, inner: {@code K}, {@code V}
+ *   <li>{@code Optional<Person>} -&gt; outer: {@code java.util.Optional}, inner: {@code Person}
  * </ul>
  *
  * This class is used throughout the processor to model parameterized Java types in a uniform way.
@@ -46,6 +46,9 @@ public class TypeNameGeneric extends TypeName {
   /**
    * Creates a {@code TypeNameGeneric} based on another {@code TypeName} as outer type and a list of
    * inner type arguments.
+   *
+   * @param outerType the outer type to use for package and class name
+   * @param innerTypeArguments the list of generic type arguments
    */
   public TypeNameGeneric(TypeName outerType, List<TypeName> innerTypeArguments) {
     super(outerType.getPackageName(), outerType.getClassName());
@@ -55,6 +58,10 @@ public class TypeNameGeneric extends TypeName {
   /**
    * Creates a {@code TypeNameGeneric} for the given package/class and a list of inner type
    * arguments.
+   *
+   * @param packageName the package name
+   * @param className the class name
+   * @param innerTypeArguments the list of generic type arguments
    */
   public TypeNameGeneric(String packageName, String className, List<TypeName> innerTypeArguments) {
     super(packageName, className);
@@ -64,6 +71,9 @@ public class TypeNameGeneric extends TypeName {
   /**
    * Creates a {@code TypeNameGeneric} with Varargs convenience constructor with an outer {@code
    * TypeName} and any number of inner type arguments.
+   *
+   * @param outerType the outer type to use for package and class name
+   * @param innerTypeArguments variable number of generic type arguments
    */
   public TypeNameGeneric(TypeName outerType, TypeName... innerTypeArguments) {
     super(outerType.getPackageName(), outerType.getClassName());
@@ -73,16 +83,30 @@ public class TypeNameGeneric extends TypeName {
   /**
    * Varargs convenience constructor with package/class names and any number of inner type
    * arguments.
+   *
+   * @param packageName the package name
+   * @param className the class name
+   * @param innerTypeArguments variable number of generic type arguments
    */
   public TypeNameGeneric(String packageName, String className, TypeName... innerTypeArguments) {
     super(packageName, className);
     this.innerTypeArguments = List.of(innerTypeArguments);
   }
 
+  /**
+   * Returns the list of inner generic type arguments.
+   *
+   * @return an unmodifiable list of inner type arguments
+   */
   public List<TypeName> getInnerTypeArguments() {
     return Collections.unmodifiableList(innerTypeArguments);
   }
 
+  /**
+   * Checks if this generic type has multiple inner type arguments.
+   *
+   * @return true if there is more than one inner type argument, false otherwise
+   */
   public boolean hasMultipleInnerTypes() {
     return innerTypeArguments.size() > 1;
   }

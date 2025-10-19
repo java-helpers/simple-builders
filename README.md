@@ -207,6 +207,11 @@ Contributions are welcome! Please follow these steps:
 
 Please ensure your code follows the project's code style and includes appropriate tests.
 
+### Releasing
+
+For maintainers:
+- **Release process:** See [RELEASE.md](RELEASE.md) for releasing new versions
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

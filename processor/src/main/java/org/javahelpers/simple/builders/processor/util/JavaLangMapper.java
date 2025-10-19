@@ -77,7 +77,13 @@ public final class JavaLangMapper {
     return new TypeName(clazz.getPackageName(), clazz.getSimpleName());
   }
 
-  /** Maps the declared type parameters of the given type element into GenericParameterDto list. */
+  /**
+   * Maps the declared type parameters of the given type element into GenericParameterDto list.
+   *
+   * @param type the type element whose type parameters to map
+   * @param context the processing context
+   * @return list of GenericParameterDto representing the type parameters
+   */
   public static List<GenericParameterDto> map2GenericParameterDtos(
       TypeElement type, ProcessingContext context) {
     return type.getTypeParameters().stream()
@@ -85,7 +91,13 @@ public final class JavaLangMapper {
         .toList();
   }
 
-  /** Maps a single {@code TypeParameterElement} to {@code GenericParameterDto}. */
+  /**
+   * Maps a single {@code TypeParameterElement} to {@code GenericParameterDto}.
+   *
+   * @param tp the type parameter element to map
+   * @param context the processing context
+   * @return a GenericParameterDto representing the type parameter
+   */
   public static GenericParameterDto map2GenericParameterDto(
       TypeParameterElement tp, ProcessingContext context) {
     GenericParameterDto g = new GenericParameterDto();

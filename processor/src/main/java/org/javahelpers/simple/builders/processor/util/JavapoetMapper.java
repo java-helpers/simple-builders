@@ -44,6 +44,9 @@ public final class JavapoetMapper {
   /**
    * Maps a list of simple-builder DTO type names to an array of JavaPoet {@code TypeName}s.
    * Primitives are boxed because JavaPoet requires reference types for type arguments.
+   *
+   * @param typeArguments the list of type arguments to map
+   * @return array of JavaPoet TypeName instances
    */
   public static TypeName[] map2TypeArgumentsArray(
       List<org.javahelpers.simple.builders.processor.dtos.TypeName> typeArguments) {
@@ -105,6 +108,13 @@ public final class JavapoetMapper {
     return ClassName.get(typeName.getPackageName(), typeName.getClassName());
   }
 
+  /**
+   * Maps a base type and generic parameters to a JavaPoet ParameterizedTypeName.
+   *
+   * @param baseType the base type to parameterize
+   * @param builderGenerics the list of generic parameters
+   * @return a ParameterizedTypeName with the given type parameters
+   */
   public static ParameterizedTypeName map2ParameterizedTypeName(
       org.javahelpers.simple.builders.processor.dtos.TypeName baseType,
       List<GenericParameterDto> builderGenerics) {
@@ -113,6 +123,12 @@ public final class JavapoetMapper {
         baseTypeClassName, map2TypeVariables(builderGenerics).toArray(new TypeVariableName[0]));
   }
 
+  /**
+   * Maps a list of GenericParameterDto to JavaPoet TypeVariableName instances.
+   *
+   * @param builderGenerics the list of generic parameters to map
+   * @return list of TypeVariableName representing the generic parameters
+   */
   public static List<TypeVariableName> map2TypeVariables(
       List<GenericParameterDto> builderGenerics) {
     List<TypeVariableName> javapoetGenerics = new ArrayList<>();
@@ -134,7 +150,7 @@ public final class JavapoetMapper {
    * CodeBlock creating by definition in {@code MethodCodeDto}.
    *
    * @param codeDto code definition
-   * @return {@CodeBlock} of javapoet
+   * @return {@code CodeBlock} of javapoet
    */
   public static CodeBlock map2CodeBlock(
       org.javahelpers.simple.builders.processor.dtos.MethodCodeDto codeDto) {

@@ -28,6 +28,8 @@ public class TypeNameVariable extends TypeName {
   /**
    * Creates a TypeName representing a type variable (no package). The variable name is stored as
    * className for simplicity across the existing TypeName API.
+   *
+   * @param variableName the name of the type variable (e.g., "T", "K", "V")
    */
   public TypeNameVariable(String variableName) {
     super("", variableName);

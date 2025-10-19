@@ -83,8 +83,8 @@ public class TypeName {
   /**
    * Creates a new instance of {@code TypeName} from an existing {@code Class}.
    *
-   * @param clazz existing class to retrieve packe and class-name from
-   * @return
+   * @param clazz existing class to retrieve package and class-name from
+   * @return a new TypeName instance representing the given class
    */
   public static TypeName of(Class<?> clazz) {
     return new TypeName(clazz.getPackage().getName(), clazz.getSimpleName());

@@ -68,7 +68,7 @@ public class JavaCodeGenerator {
   }
 
   /**
-   * Generating source code file for builder. Creation of source code files is done by {@code
+   * Generating source code file for builder using Javapoet.
    *
    * @param builderDef dto of all information to create the builder
    * @throws BuilderException if there is an error in source code generation
