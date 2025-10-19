@@ -467,7 +467,7 @@ public class BuilderDefinitionCreator {
         """);
     methodDto.addArgument(ARG_FIELD_NAME, fieldName);
     methodDto.addArgument(ARG_DTO_METHOD_PARAMS, params);
-    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TypeName.of(TrackedValue.class));
+    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
     return methodDto;
   }
 
@@ -491,7 +491,7 @@ public class BuilderDefinitionCreator {
     methodDto.addArgument(ARG_FIELD_NAME, fieldName);
     methodDto.addArgument(ARG_DTO_METHOD_PARAM, parameter.getParameterName());
     methodDto.addArgument(ARG_HELPER_TYPE, fieldType);
-    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TypeName.of(TrackedValue.class));
+    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
     return methodDto;
   }
 
@@ -521,7 +521,7 @@ public class BuilderDefinitionCreator {
     methodDto.addArgument(ARG_FIELD_NAME, fieldName);
     methodDto.addArgument(ARG_DTO_METHOD_PARAM, parameter.getParameterName());
     methodDto.addArgument(ARG_HELPER_TYPE, builderType);
-    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TypeName.of(TrackedValue.class));
+    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
     return methodDto;
   }
 
@@ -542,7 +542,7 @@ public class BuilderDefinitionCreator {
         """);
     methodDto.addArgument(ARG_FIELD_NAME, fieldName);
     methodDto.addArgument(ARG_DTO_METHOD_PARAM, parameter.getParameterName());
-    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TypeName.of(TrackedValue.class));
+    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
     return methodDto;
   }
 
@@ -571,7 +571,7 @@ public class BuilderDefinitionCreator {
         """);
     methodDto.addArgument(ARG_FIELD_NAME, fieldName);
     methodDto.addArgument("transform", transform);
-    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TypeName.of(TrackedValue.class));
+    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
     return methodDto;
   }
 
