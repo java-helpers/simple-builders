@@ -48,13 +48,22 @@ import java.util.function.Consumer;
 public record TrackedValue<T>(T value, boolean isChanged, boolean isInitial) {
 
   /**
+   * Checks if this value has been set (either as initial value or changed).
+   *
+   * @return true if the value is set (initial or changed), false if unset
+   */
+  public boolean isSet() {
+    return isChanged || isInitial;
+  }
+
+  /**
    * Executes the provided {@link Consumer} only if this value has been set (initial value or
    * changed).
    *
    * @param consumer action to perform with the current {@link #value()}
    */
   public void ifSet(Consumer<T> consumer) {
-    if (isChanged || isInitial) {
+    if (isSet()) {
       consumer.accept(value);
     }
   }

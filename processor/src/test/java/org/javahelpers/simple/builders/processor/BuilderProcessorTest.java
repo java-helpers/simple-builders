@@ -454,7 +454,7 @@ class BuilderProcessorTest {
         "public RequiredCustomTypeViaConstructorBuilder address(Supplier<Address> addressSupplier)",
         // Consumer method for constructor field (the key coverage addition!)
         "public RequiredCustomTypeViaConstructorBuilder address(Consumer<Address> addressConsumer)",
-        "Address consumer = this.address.ifSet() ? this.address.value() : new Address();",
+        "Address consumer = this.address.isSet() ? this.address.value() : new Address();",
         "addressConsumer.accept(consumer);");
   }
 
@@ -1206,7 +1206,7 @@ class BuilderProcessorTest {
         generatedCode,
         "private TrackedValue<HelperAnno> helper = unsetValue();",
         "helperBuilderConsumer",
-        "HelperAnnoBuilder builder = this.helper.ifSet() ? new HelperAnnoBuilder(this.helper.value()) : new HelperAnnoBuilder();",
+        "HelperAnnoBuilder builder = this.helper.isSet() ? new HelperAnnoBuilder(this.helper.value()) : new HelperAnnoBuilder();",
         "helperBuilderConsumer.accept(builder);",
         "this.helper = changedValue(builder.build());");
   }
@@ -1248,7 +1248,7 @@ class BuilderProcessorTest {
     // Expect consumer method with local var named 'consumer' of HelperPlain
     ProcessorAsserts.assertContaining(
         generatedCode,
-        "HelperPlain consumer = this.helperPlain.ifSet() ? this.helperPlain.value() : new HelperPlain();",
+        "HelperPlain consumer = this.helperPlain.isSet() ? this.helperPlain.value() : new HelperPlain();",
         "helperPlainConsumer.accept(consumer);",
         "private TrackedValue<HelperPlain> helperPlain = unsetValue();");
   }
