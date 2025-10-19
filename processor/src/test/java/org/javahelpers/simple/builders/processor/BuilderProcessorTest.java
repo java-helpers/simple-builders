@@ -716,6 +716,83 @@ class BuilderProcessorTest {
   }
 
   @Test
+  void shouldGenerateStringBuilderConsumerForStringField() {
+    // Given: String field to verify StringBuilder consumer generation
+    String packageName = "test";
+    String className = "WithStringBuilder";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private String message;
+
+                public String getMessage() { return message; }
+                public void setMessage(String message) { this.message = message; }
+            """);
+
+    // When
+    Compilation compilation = compile(sourceFile);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    // Verify StringBuilder consumer method is generated
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        "private TrackedValue<String> message = unsetValue();",
+        """
+        public WithStringBuilderBuilder message(Consumer<StringBuilder> messageStringBuilderConsumer) {
+          StringBuilder builder = new StringBuilder();
+          messageStringBuilderConsumer.accept(builder);
+          this.message = changedValue(builder.toString());
+          return this;
+        }
+        """);
+  }
+
+  @Test
+  void shouldGenerateStringBuilderConsumerForOptionalString() {
+    // Given: Optional<String> field to verify StringBuilder consumer generation
+    String packageName = "test";
+    String className = "WithOptString";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private java.util.Optional<String> message;
+
+                public java.util.Optional<String> getMessage() { return message; }
+                public void setMessage(java.util.Optional<String> message) { this.message = message; }
+            """);
+
+    // When
+    Compilation compilation = compile(sourceFile);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    // Verify StringBuilder consumer method is generated with Optional wrapping
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        """
+        public WithOptStringBuilder message(Consumer<StringBuilder> messageStringBuilderConsumer) {
+          StringBuilder builder = new StringBuilder();
+          messageStringBuilderConsumer.accept(builder);
+          this.message = changedValue(Optional.of(builder.toString()));
+          return this;
+        }
+        """);
+    }
+
+  @Test
   void shouldDeclarePerFieldBackingField() {
     // Given
     String packageName = "test";
