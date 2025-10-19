@@ -790,7 +790,7 @@ class BuilderProcessorTest {
           return this;
         }
         """);
-    }
+  }
 
   @Test
   void shouldDeclarePerFieldBackingField() {

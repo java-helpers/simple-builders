@@ -293,19 +293,6 @@ public class BuilderDefinitionCreator {
       return;
     }
 
-    // Add StringBuilder consumer for String fields
-    if (isString(fieldType) && !(fieldType instanceof TypeNameArray)) {
-      result.addMethod(createStringBuilderConsumer(fieldName, "builder.toString()"));
-    }
-
-    // Add StringBuilder consumer for Optional<String> fields
-    if (fieldType instanceof TypeNameGeneric fieldTypeGeneric
-        && isOptional(fieldType)
-        && fieldTypeGeneric.getInnerTypeArguments().size() == 1
-        && isString(fieldTypeGeneric.getInnerTypeArguments().get(0))) {
-      result.addMethod(createStringBuilderConsumer(fieldName, "Optional.of(builder.toString())"));
-    }
-
     Optional<TypeName> builderTypeOpt = findBuilderType(fieldParameter, context);
     if (builderTypeOpt.isPresent()) {
       TypeName builderType = builderTypeOpt.get();
@@ -345,6 +332,11 @@ public class BuilderDefinitionCreator {
               fieldName,
               map2TypeName(HashSetBuilder.class),
               fieldTypeGeneric.getInnerTypeArguments().get(0)));
+    } else if (shouldGenerateStringBuilderConsumer(fieldType)) {
+      // Generate StringBuilder consumer for String or Optional<String>
+      String transform =
+          isOptionalString(fieldType) ? "Optional.of(builder.toString())" : "builder.toString()";
+      result.addMethod(createStringBuilderConsumer(fieldName, transform));
     }
   }
 
@@ -613,6 +605,38 @@ public class BuilderDefinitionCreator {
     methodDto.addArgument("transform", transform);
     methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
     return methodDto;
+  }
+
+  /**
+   * Checks if a StringBuilder consumer should be generated for the given field type. This applies
+   * to plain String fields and Optional&lt;String&gt; fields.
+   *
+   * @param fieldType the type of the field
+   * @return true if StringBuilder consumer should be generated, false otherwise
+   */
+  private static boolean shouldGenerateStringBuilderConsumer(TypeName fieldType) {
+    // Check for plain String (not array)
+    if (isString(fieldType) && !(fieldType instanceof TypeNameArray)) {
+      return true;
+    }
+
+    // Check for Optional<String>
+    return isOptionalString(fieldType);
+  }
+
+  /**
+   * Checks if the field type is Optional&lt;String&gt;.
+   *
+   * @param fieldType the type of the field
+   * @return true if the type is Optional&lt;String&gt;, false otherwise
+   */
+  private static boolean isOptionalString(TypeName fieldType) {
+    if (fieldType instanceof TypeNameGeneric fieldTypeGeneric
+        && isOptional(fieldType)
+        && fieldTypeGeneric.getInnerTypeArguments().size() == 1) {
+      return isString(fieldTypeGeneric.getInnerTypeArguments().get(0));
+    }
+    return false;
   }
 
   private static Optional<TypeName> findBuilderType(
