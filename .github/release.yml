@@ -1,0 +1,59 @@
+changelog:
+  exclude:
+    labels:
+      - ignore-for-release
+      - pipeline
+    authors:
+      # Exclude bots from being mentioned as contributors
+      - dependabot
+      - dependabot[bot]
+  
+  categories:
+    - title: 🚀 Features
+      labels:
+        - enhancement
+        
+    - title: 🐛 Bug Fixes
+      labels:
+        - bug
+        
+    - title: 📚 Documentation
+      labels:
+        - documentation
+        
+    - title: 🔧 Maintenance
+      labels:
+        - maintenance
+        - refactor
+      
+    - title: Other Changes
+      labels:
+        - "*"
+
+footer: |
+  ---
+  
+  ## 📦 Maven Central
+  
+  This release is available on Maven Central:
+  
+  **Core Module:**
+  ```xml
+  <dependency>
+    <groupId>io.github.java-helpers</groupId>
+    <artifactId>simple-builders-core</artifactId>
+    <version>$RESOLVED_VERSION</version>
+  </dependency>
+  ```
+  🔗 [View on Maven Central](https://central.sonatype.com/artifact/io.github.java-helpers/simple-builders-core/$RESOLVED_VERSION)
+  
+  **Processor Module:**
+  ```xml
+  <dependency>
+    <groupId>io.github.java-helpers</groupId>
+    <artifactId>simple-builders-processor</artifactId>
+    <version>$RESOLVED_VERSION</version>
+    <scope>provided</scope>
+  </dependency>
+  ```
+  🔗 [View on Maven Central](https://central.sonatype.com/artifact/io.github.java-helpers/simple-builders-processor/$RESOLVED_VERSION)

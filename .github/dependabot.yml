@@ -6,6 +6,9 @@ updates:
       - "/processor"
     schedule:
       interval: "weekly"
+    labels:
+      - "dependencies"
+      - "java"
     groups:
       # Group all library dependencies together (excluding plugins)
       dependencies:

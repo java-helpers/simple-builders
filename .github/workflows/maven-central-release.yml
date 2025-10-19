@@ -133,10 +133,28 @@ jobs:
               PRERELEASE_FLAG="--prerelease"
             fi
             
-            # Create draft release with auto-generated notes
+            # Generate release notes and replace version placeholder
+            gh api repos/java-helpers/simple-builders/releases/generate-notes \
+              -f tag_name="v$VERSION" \
+              -f target_commitish="main" \
+              --jq '.body' > release_notes.md
+            
+            # Replace version placeholder in generated notes
+            sed -i "s/\$RESOLVED_VERSION/$VERSION/g" release_notes.md
+            
+            # Create draft release with custom notes and attach artifacts
             gh release create "v$VERSION" \
               --title "Release $VERSION" \
               --draft \
-              --generate-notes \
-              $PRERELEASE_FLAG
+              --notes-file release_notes.md \
+              $PRERELEASE_FLAG \
+              core/target/simple-builders-core-${VERSION}.jar \
+              core/target/simple-builders-core-${VERSION}-sources.jar \
+              core/target/simple-builders-core-${VERSION}-javadoc.jar \
+              processor/target/simple-builders-processor-${VERSION}.jar \
+              processor/target/simple-builders-processor-${VERSION}-sources.jar \
+              processor/target/simple-builders-processor-${VERSION}-javadoc.jar
+            
+            # Clean up
+            rm -f release_notes.md
           fi
