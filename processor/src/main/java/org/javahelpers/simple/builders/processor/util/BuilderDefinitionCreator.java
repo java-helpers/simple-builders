@@ -230,7 +230,7 @@ public class BuilderDefinitionCreator {
 
   private static void addAdditionalHelperMethodsForField(
       FieldDto result, String fieldName, TypeName fieldType) {
-    // Only process generic types (List, Set, Map, etc.)
+    // Only process generic types (List, Set, Map, Optional, etc.)
     if (!(fieldType instanceof TypeNameGeneric fieldTypeGeneric)) {
       return;
     }
@@ -253,6 +253,10 @@ public class BuilderDefinitionCreator {
               false);
       result.addMethod(
           createFieldSetterWithTransform(fieldName, "Map.ofEntries(%s)", mapEntryType));
+    } else if (isOptional(fieldType) && innerTypesCnt == 1) {
+      // Add setter that accepts the inner type T and wraps it in Optional.of()
+      result.addMethod(
+          createFieldSetterWithTransform(fieldName, "Optional.of(%s)", innerTypes.get(0)));
     }
   }
 
@@ -319,7 +323,16 @@ public class BuilderDefinitionCreator {
     if (isFunctionalInterface(fieldTypeElement)) {
       return;
     }
-    result.addMethod(createFieldSupplier(fieldName, fieldType));
+
+    // For Optional<T> fields, create a supplier that provides T and wraps it in Optional
+    if (isOptional(fieldType)
+        && fieldType instanceof TypeNameGeneric fieldTypeGeneric
+        && fieldTypeGeneric.getInnerTypeArguments().size() == 1) {
+      TypeName innerType = fieldTypeGeneric.getInnerTypeArguments().get(0);
+      result.addMethod(createFieldSupplierWithTransform(fieldName, "Optional.of(%s)", innerType));
+    } else {
+      result.addMethod(createFieldSupplier(fieldName, fieldType));
+    }
   }
 
   private static Optional<FieldDto> createFieldFromSetter(
@@ -519,6 +532,35 @@ public class BuilderDefinitionCreator {
         """);
     methodDto.addArgument(ARG_FIELD_NAME, fieldName);
     methodDto.addArgument(ARG_DTO_METHOD_PARAM, parameter.getParameterName());
+    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TypeName.of(TrackedValue.class));
+    return methodDto;
+  }
+
+  private static MethodDto createFieldSupplierWithTransform(
+      String fieldName, String transform, TypeName supplierReturnType) {
+    TypeNameGeneric supplierType =
+        new TypeNameGeneric(map2TypeName(Supplier.class), supplierReturnType);
+    MethodParameterDto parameter = new MethodParameterDto();
+    parameter.setParameterName(fieldName + SUFFIX_SUPPLIER);
+    parameter.setParameterTypeName(supplierType);
+    MethodDto methodDto = new MethodDto();
+    methodDto.setMethodName(fieldName);
+    methodDto.addParameter(parameter);
+    methodDto.setModifier(Modifier.PUBLIC);
+    methodDto.setMethodType(MethodTypes.SUPPLIER);
+    String params;
+    if (StringUtils.isBlank(transform)) {
+      params = parameter.getParameterName() + ".get()";
+    } else {
+      params = String.format(transform, parameter.getParameterName() + ".get()");
+    }
+    methodDto.setCode(
+        """
+        this.$fieldName:N = $builderFieldWrapper:T.changedValue($dtoMethodParams:N);
+        return this;
+        """);
+    methodDto.addArgument(ARG_FIELD_NAME, fieldName);
+    methodDto.addArgument(ARG_DTO_METHOD_PARAMS, params);
     methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TypeName.of(TrackedValue.class));
     return methodDto;
   }
