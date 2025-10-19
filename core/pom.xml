@@ -134,7 +134,7 @@
           <plugin>
             <groupId>org.sonatype.central</groupId>
             <artifactId>central-publishing-maven-plugin</artifactId>
-            <version>${plugin.maven.central.publishing.version}</version>
+            <version>${plugin.central.publishing.version}</version>
             <extensions>true</extensions>
             <configuration>
               <publishingServerId>central</publishingServerId>
@@ -175,6 +175,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-gpg-plugin</artifactId>
+            <version>${plugin.maven.gpg.version}</version>
             <executions>
               <execution>
                 <id>sign-artifacts</id>
