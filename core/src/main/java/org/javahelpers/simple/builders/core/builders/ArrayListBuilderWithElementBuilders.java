@@ -49,7 +49,8 @@ import org.javahelpers.simple.builders.core.interfaces.IBuilderBase;
  * }</pre>
  *
  * @param <T> the type of elements in the targeting list
- * @param <B> the type of builder used to create elements, must implement {@link IBuilderBase} and building objects of type T
+ * @param <B> the type of builder used to create elements, must implement {@link IBuilderBase} and
+ *     building objects of type T
  */
 public class ArrayListBuilderWithElementBuilders<T, B extends IBuilderBase<T>>
     extends ArrayListBuilder<T> {
