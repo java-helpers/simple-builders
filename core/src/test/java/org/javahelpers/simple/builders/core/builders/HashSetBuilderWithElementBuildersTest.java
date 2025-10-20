@@ -26,6 +26,7 @@ package org.javahelpers.simple.builders.core.builders;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
@@ -134,7 +135,7 @@ class HashSetBuilderWithElementBuildersTest {
     HashSetBuilderWithElementBuilders<TestPerson, TestPersonBuilder> result =
         builder.add(person -> person.name("Test").age(25));
 
-    assertEquals(builder, result);
+    assertSame(builder, result);
   }
 
   @Test
