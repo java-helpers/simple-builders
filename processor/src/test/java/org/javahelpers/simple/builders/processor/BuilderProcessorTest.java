@@ -2696,4 +2696,160 @@ class BuilderProcessorTest {
         "rawSet(String...)",
         "rawMap(Map.Entry)");
   }
+
+  @Test
+  void shouldGenerateArrayListBuilderWithElementBuildersForAnnotatedElements() {
+    // Given: List of custom type where element has @SimpleBuilder
+    String packageName = "test";
+    String className = "HasListWithBuilders";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject dto =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private java.util.List<Task> tasks;
+
+                public java.util.List<Task> getTasks() { return tasks; }
+                public void setTasks(java.util.List<Task> tasks) { this.tasks = tasks; }
+            """);
+
+    JavaFileObject task =
+        ProcessorTestUtils.forSource(
+            """
+                package test;
+                import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+                @SimpleBuilder
+                public class Task {
+                  private String title;
+                  public String getTitle() { return title; }
+                  public void setTitle(String title) { this.title = title; }
+                }
+            """);
+
+    // When
+    Compilation compilation = compile(dto, task);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    // Verify WithElementBuilders consumer is generated instead of regular ArrayListBuilder
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains("public HasListWithBuildersBuilder tasks(List<Task> tasks)"),
+        contains("public HasListWithBuildersBuilder tasks(Supplier<List<Task>> tasksSupplier)"),
+        contains("public HasListWithBuildersBuilder tasks(Task... tasks)"),
+        // Key assertion: uses ArrayListBuilderWithElementBuilders with TaskBuilder
+        contains(
+            "public HasListWithBuildersBuilder tasks(Consumer<ArrayListBuilderWithElementBuilders<Task, TaskBuilder>> tasksBuilderConsumer)"),
+        contains(
+            "new ArrayListBuilderWithElementBuilders<Task,TaskBuilder>(this.tasks.value(), TaskBuilder::create)"),
+        contains("new ArrayListBuilderWithElementBuilders<Task,TaskBuilder>(TaskBuilder::create)"),
+        // Should NOT use regular ArrayListBuilder
+        notContains("Consumer<ArrayListBuilder<Task>>"));
+  }
+
+  @Test
+  void shouldGenerateHashSetBuilderWithElementBuildersForAnnotatedElements() {
+    // Given: Set of custom type where element has @SimpleBuilder
+    String packageName = "test";
+    String className = "HasSetWithBuilders";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject dto =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private java.util.Set<Tag> tags;
+
+                public java.util.Set<Tag> getTags() { return tags; }
+                public void setTags(java.util.Set<Tag> tags) { this.tags = tags; }
+            """);
+
+    JavaFileObject tag =
+        ProcessorTestUtils.forSource(
+            """
+                package test;
+                import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+                @SimpleBuilder
+                public class Tag {
+                  private String name;
+                  public String getName() { return name; }
+                  public void setName(String name) { this.name = name; }
+                }
+            """);
+
+    // When
+    Compilation compilation = compile(dto, tag);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    // Verify WithElementBuilders consumer is generated for Set
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains("public HasSetWithBuildersBuilder tags(Set<Tag> tags)"),
+        contains("public HasSetWithBuildersBuilder tags(Supplier<Set<Tag>> tagsSupplier)"),
+        contains("public HasSetWithBuildersBuilder tags(Tag... tags)"),
+        // Key assertion: uses HashSetBuilderWithElementBuilders with TagBuilder
+        contains(
+            "public HasSetWithBuildersBuilder tags(Consumer<HashSetBuilderWithElementBuilders<Tag, TagBuilder>> tagsBuilderConsumer)"),
+        contains(
+            "new HashSetBuilderWithElementBuilders<Tag, TagBuilder>(this.tags.value(), TagBuilder::create)"),
+        contains("new HashSetBuilderWithElementBuilders<Tag, TagBuilder>(TagBuilder::create)"),
+        // Should NOT use regular HashSetBuilder
+        notContains("Consumer<HashSetBuilder<Tag>>"));
+  }
+
+  @Test
+  void shouldUseRegularBuilderWhenElementTypeHasNoSimpleBuilder() {
+    // Given: List of custom type WITHOUT @SimpleBuilder annotation
+    String packageName = "test";
+    String className = "HasListWithoutBuilders";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject dto =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private java.util.List<PlainClass> items;
+
+                public java.util.List<PlainClass> getItems() { return items; }
+                public void setItems(java.util.List<PlainClass> items) { this.items = items; }
+            """);
+
+    JavaFileObject plain =
+        ProcessorTestUtils.forSource(
+            """
+                package test;
+                public class PlainClass {
+                  private String value;
+                  public PlainClass() {}
+                  public String getValue() { return value; }
+                  public void setValue(String value) { this.value = value; }
+                }
+            """);
+
+    // When
+    Compilation compilation = compile(dto, plain);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    // Verify regular ArrayListBuilder is used (not WithElementBuilders)
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains("public HasListWithoutBuildersBuilder items(List<PlainClass> items)"),
+        contains(
+            "public HasListWithoutBuildersBuilder items(Consumer<ArrayListBuilder<PlainClass>> itemsBuilderConsumer)"),
+        // Should NOT use WithElementBuilders version
+        notContains("ArrayListBuilderWithElementBuilders"),
+        notContains("PlainClassBuilder"));
+  }
 }
