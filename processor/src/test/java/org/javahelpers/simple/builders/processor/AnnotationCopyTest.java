@@ -365,4 +365,148 @@ class AnnotationCopyTest {
             public TaskBuilder simpleField(
                 @ComplexAnnotation(stringValue = "custom", priority = test.complex.Priority.LOW, tags = {"single"}) String format,"""));
   }
+
+  @Test
+  void annotations_javaLangAnnotations_notCopied() {
+    String packageName = "test.javafilter";
+
+    JavaFileObject service =
+        JavaFileObjects.forSourceString(
+            packageName + ".Service",
+            """
+            package test.javafilter;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+            @SimpleBuilder
+            public class Service {
+              private String name;
+
+              public String getName() { return name; }
+
+              @Deprecated
+              @SuppressWarnings("unused")
+              public void setName(String name) {
+                this.name = name;
+              }
+            }
+            """);
+
+    Compilation compilation = compileSources(service);
+    String generatedCode = loadGeneratedSource(compilation, "ServiceBuilder");
+    ProcessorAsserts.assertGenerationSucceeded(compilation, "ServiceBuilder", generatedCode);
+
+    // Verify that Java standard annotations are NOT copied to builder methods
+    ProcessorAsserts.assertNotContaining(generatedCode, "@Deprecated", "@SuppressWarnings");
+  }
+
+  @Test
+  void annotations_emptyArrayValues_formattedCorrectly() {
+    String packageName = "test.emptyarray";
+
+    JavaFileObject arrayAnnotation =
+        JavaFileObjects.forSourceString(
+            packageName + ".ArrayAnnotation",
+            """
+            package test.emptyarray;
+            import java.lang.annotation.ElementType;
+            import java.lang.annotation.Retention;
+            import java.lang.annotation.RetentionPolicy;
+            import java.lang.annotation.Target;
+
+            @Retention(RetentionPolicy.RUNTIME)
+            @Target({ElementType.FIELD, ElementType.PARAMETER})
+            public @interface ArrayAnnotation {
+              String[] tags() default {};
+              int[] numbers() default {};
+            }
+            """);
+
+    JavaFileObject data =
+        JavaFileObjects.forSourceString(
+            packageName + ".Data",
+            """
+            package test.emptyarray;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+            @SimpleBuilder
+            public class Data {
+              private String value;
+
+              public String getValue() { return value; }
+              public void setValue(@ArrayAnnotation(tags = {}, numbers = {}) String value) {
+                this.value = value;
+              }
+            }
+            """);
+
+    Compilation compilation = compileSources(arrayAnnotation, data);
+    String generatedCode = loadGeneratedSource(compilation, "DataBuilder");
+    ProcessorAsserts.assertGenerationSucceeded(compilation, "DataBuilder", generatedCode);
+
+    // Verify empty arrays are formatted correctly
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains("@ArrayAnnotation(tags = {}, numbers = {})"),
+        contains(
+            "public DataBuilder value(@ArrayAnnotation(tags = {}, numbers = {}) String value)"));
+  }
+
+  @Test
+  void annotations_mixedPrimitiveArrays_formattedCorrectly() {
+    String packageName = "test.mixedarray";
+
+    JavaFileObject rangeAnnotation =
+        JavaFileObjects.forSourceString(
+            packageName + ".Range",
+            """
+            package test.mixedarray;
+            import java.lang.annotation.ElementType;
+            import java.lang.annotation.Retention;
+            import java.lang.annotation.RetentionPolicy;
+            import java.lang.annotation.Target;
+
+            @Retention(RetentionPolicy.RUNTIME)
+            @Target({ElementType.FIELD, ElementType.PARAMETER})
+            public @interface Range {
+              int[] values();
+              double[] decimals() default {1.0, 2.0};
+            }
+            """);
+
+    JavaFileObject measurement =
+        JavaFileObjects.forSourceString(
+            packageName + ".Measurement",
+            """
+            package test.mixedarray;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+            @SimpleBuilder
+            public class Measurement {
+              private String sensor;
+
+              public String getSensor() { return sensor; }
+              public void setSensor(
+                @Range(values = {0, 100, 255}, decimals = {0.5, 1.5, 2.5}) String sensor) {
+                this.sensor = sensor;
+              }
+            }
+            """);
+
+    Compilation compilation = compileSources(rangeAnnotation, measurement);
+    String generatedCode = loadGeneratedSource(compilation, "MeasurementBuilder");
+    ProcessorAsserts.assertGenerationSucceeded(compilation, "MeasurementBuilder", generatedCode);
+
+    // Verify mixed primitive arrays are formatted correctly
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains(
+            """
+            public MeasurementBuilder sensor(
+                @Range(values = {0, 100, 255}, decimals = {0.5, 1.5, 2.5}) String sensor)"""),
+        // Format method should also have the annotation
+        contains(
+            """
+            public MeasurementBuilder sensor(
+                @Range(values = {0, 100, 255}, decimals = {0.5, 1.5, 2.5}) String format,"""));
+  }
 }
