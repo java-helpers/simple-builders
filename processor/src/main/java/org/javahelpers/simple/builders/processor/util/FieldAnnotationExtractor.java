@@ -27,6 +27,7 @@ package org.javahelpers.simple.builders.processor.util;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
@@ -60,45 +61,56 @@ public final class FieldAnnotationExtractor {
         annotationMirrors.size(), param.getSimpleName());
 
     for (AnnotationMirror mirror : annotationMirrors) {
-      // Get the annotation type element
-      Element annotationElement = mirror.getAnnotationType().asElement();
-      if (!(annotationElement instanceof TypeElement annotationType)) {
-        continue;
-      }
-
-      String annotationQualifiedName = annotationType.getQualifiedName().toString();
-
-      // Filter out annotations that should not be copied to the builder
-      if (shouldSkipAnnotation(annotationQualifiedName)) {
-        context.debug("    -> Skipping annotation: %s", annotationQualifiedName);
-        continue;
-      }
-
-      // Create AnnotationDto
-      AnnotationDto annotationDto = new AnnotationDto();
-
-      // Extract package and class name
-      String packageName = context.getPackageName(annotationType);
-      String simpleName = annotationType.getSimpleName().toString();
-      annotationDto.setAnnotationType(new TypeName(packageName, simpleName));
-
-      // Extract annotation members (parameters)
-      Map<? extends ExecutableElement, ? extends javax.lang.model.element.AnnotationValue>
-          elementValues = mirror.getElementValues();
-      for (Map.Entry<
-              ? extends ExecutableElement, ? extends javax.lang.model.element.AnnotationValue>
-          entry : elementValues.entrySet()) {
-        String memberName = entry.getKey().getSimpleName().toString();
-        String memberValue = formatAnnotationValue(entry.getValue());
-        annotationDto.addMember(memberName, memberValue);
-        context.debug("      -> Member: %s = %s", memberName, memberValue);
-      }
-
-      annotations.add(annotationDto);
-      context.debug("    -> Added annotation: %s", annotationQualifiedName);
+      extractAnnotation(mirror, context).ifPresent(annotations::add);
     }
 
     return annotations;
+  }
+
+  /**
+   * Extracts a single annotation from an AnnotationMirror. Filters out annotations that should not
+   * be copied to the builder.
+   *
+   * @param mirror the annotation mirror to process
+   * @param context processing context
+   * @return Optional containing the extracted annotation, or empty if it should be skipped
+   */
+  private static Optional<AnnotationDto> extractAnnotation(
+      AnnotationMirror mirror, ProcessingContext context) {
+    // Get the annotation type element
+    Element annotationElement = mirror.getAnnotationType().asElement();
+    if (!(annotationElement instanceof TypeElement annotationType)) {
+      return Optional.empty();
+    }
+
+    String annotationQualifiedName = annotationType.getQualifiedName().toString();
+
+    // Filter out annotations that should not be copied to the builder
+    if (shouldSkipAnnotation(annotationQualifiedName)) {
+      context.debug("    -> Skipping annotation: %s", annotationQualifiedName);
+      return Optional.empty();
+    }
+
+    // Create AnnotationDto
+    AnnotationDto annotationDto = new AnnotationDto();
+
+    // Extract package and class name
+    String packageName = context.getPackageName(annotationType);
+    String simpleName = annotationType.getSimpleName().toString();
+    annotationDto.setAnnotationType(new TypeName(packageName, simpleName));
+
+    // Extract annotation members (parameters)
+    Map<? extends ExecutableElement, ? extends javax.lang.model.element.AnnotationValue>
+        elementValues = mirror.getElementValues();
+    for (Map.Entry<? extends ExecutableElement, ? extends javax.lang.model.element.AnnotationValue>
+        entry : elementValues.entrySet()) {
+      String memberName = entry.getKey().getSimpleName().toString();
+      String memberValue = formatAnnotationValue(entry.getValue());
+      annotationDto.addMember(memberName, memberValue);
+    }
+
+    context.debug("    -> Added annotation: %s", annotationQualifiedName);
+    return Optional.of(annotationDto);
   }
 
   /**
