@@ -24,6 +24,9 @@
 
 package org.javahelpers.simple.builders.processor.dtos;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /** MethodParameterDto contains all information for generating parameters in method headers. */
 public class MethodParameterDto {
   /** Name of parameter. */
@@ -31,6 +34,9 @@ public class MethodParameterDto {
 
   /** Type of parameter. */
   private TypeName parameterType;
+
+  /** Annotations to be applied to this parameter. */
+  private final List<AnnotationDto> annotations = new ArrayList<>();
 
   /**
    * Getting name of parameter
@@ -66,5 +72,23 @@ public class MethodParameterDto {
    */
   public void setParameterTypeName(TypeName parameterType) {
     this.parameterType = parameterType;
+  }
+
+  /**
+   * Returns the list of annotations to be applied to this parameter.
+   *
+   * @return the list of annotations
+   */
+  public List<AnnotationDto> getAnnotations() {
+    return annotations;
+  }
+
+  /**
+   * Adds an annotation to be applied to this parameter.
+   *
+   * @param annotation the annotation to add
+   */
+  public void addAnnotation(AnnotationDto annotation) {
+    this.annotations.add(annotation);
   }
 }

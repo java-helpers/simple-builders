@@ -234,11 +234,12 @@ public class BuilderDefinitionCreator {
   }
 
   private static void addAdditionalHelperMethodsForField(
-      FieldDto result, String fieldName, TypeName fieldType) {
+      FieldDto result, String fieldName, TypeName fieldType, List<AnnotationDto> annotations) {
     // Check for String type (not array) and add format method
     if (isString(fieldType) && !(fieldType instanceof TypeNameArray)) {
       result.addMethod(
-          createStringFormatMethodWithTransform(fieldName, "String.format(format, args)"));
+          createStringFormatMethodWithTransform(
+              fieldName, "String.format(format, args)", annotations));
     }
 
     // Only process generic types (List, Set, Map, Optional, etc.)
@@ -265,16 +266,16 @@ public class BuilderDefinitionCreator {
       result.addMethod(
           createFieldSetterWithTransform(fieldName, "Map.ofEntries(%s)", mapEntryType));
     } else if (isOptional(fieldType) && innerTypesCnt == 1) {
-      // Add setter that accepts the inner type T and wraps it in Optional.of()
+      // Add setter that accepts the inner type T and wraps it in Optional.ofNullable()
       result.addMethod(
-          createFieldSetterWithTransform(fieldName, "Optional.of(%s)", innerTypes.get(0)));
+          createFieldSetterWithTransform(fieldName, "Optional.ofNullable(%s)", innerTypes.get(0)));
 
       // If Optional<String>, add format method
       TypeName innerType = innerTypes.get(0);
       if (isString(innerType)) {
         result.addMethod(
             createStringFormatMethodWithTransform(
-                fieldName, "Optional.of(String.format(format, args))"));
+                fieldName, "Optional.of(String.format(format, args))", List.of()));
       }
     }
   }
@@ -547,22 +548,49 @@ public class BuilderDefinitionCreator {
     JavaLangAnalyser.findGetterForField(dtoType, fieldName, fieldTypeMirror, context)
         .ifPresent(getter -> field.setGetterName(getter.getSimpleName().toString()));
 
-    // Add basic setter method
-    field.addMethod(createFieldSetterWithTransform(fieldName, null, fieldType));
+    // Extract annotations from the field parameter
+    List<AnnotationDto> annotations = FieldAnnotationExtractor.extractAnnotations(param, context);
+
+    // Add basic setter method with annotations
+    field.addMethod(createFieldSetterWithTransform(fieldName, null, fieldType, annotations));
 
     // Add consumer/supplier/helper methods
     addConsumerMethodsForField(field, fieldName, fieldType, param, fieldTypeElement, context);
     addSupplierMethodsForField(field, fieldName, fieldType, fieldTypeElement);
-    addAdditionalHelperMethodsForField(field, fieldName, fieldType);
+    addAdditionalHelperMethodsForField(field, fieldName, fieldType, annotations);
 
     return Optional.of(field);
   }
 
+  /**
+   * Creates a field setter method with optional transform, without annotations.
+   *
+   * @param fieldName the name of the field
+   * @param transform optional transform expression (e.g., "Optional.of(%s)")
+   * @param fieldType the type of the field
+   * @return the method DTO for the setter
+   */
   private static MethodDto createFieldSetterWithTransform(
       String fieldName, String transform, TypeName fieldType) {
+    return createFieldSetterWithTransform(fieldName, transform, fieldType, List.of());
+  }
+
+  /**
+   * Creates a field setter method with optional transform and annotations.
+   *
+   * @param fieldName the name of the field
+   * @param transform optional transform expression (e.g., "Optional.of(%s)")
+   * @param fieldType the type of the field
+   * @param annotations annotations to apply to the parameter
+   * @return the method DTO for the setter
+   */
+  private static MethodDto createFieldSetterWithTransform(
+      String fieldName, String transform, TypeName fieldType, List<AnnotationDto> annotations) {
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName(fieldName);
     parameter.setParameterTypeName(fieldType);
+    // Add annotations to the parameter
+    annotations.forEach(parameter::addAnnotation);
     MethodDto methodDto = new MethodDto();
     methodDto.setMethodName(fieldName);
     methodDto.addParameter(parameter);
@@ -724,12 +752,14 @@ public class BuilderDefinitionCreator {
   }
 
   private static MethodDto createStringFormatMethodWithTransform(
-      String fieldName, String transform) {
+      String fieldName, String transform, List<AnnotationDto> annotations) {
     TypeName stringType = new TypeName("java.lang", "String");
 
     MethodParameterDto formatParam = new MethodParameterDto();
     formatParam.setParameterName("format");
     formatParam.setParameterTypeName(stringType);
+    // Apply annotations to the format parameter (it's a String value)
+    annotations.forEach(formatParam::addAnnotation);
 
     MethodParameterDto argsParam = new MethodParameterDto();
     argsParam.setParameterName("args");

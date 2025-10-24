@@ -33,6 +33,7 @@ Simple Builders is a Java [annotation processor](https://docs.oracle.com/en/java
 - **Fluent API**: Clean, chainable API for object construction
 - **Collections Support**: Built-in support for collections and maps
 - **Nested Builders**: Automatic generation of nested object builders
+- **Annotation Preservation**: Validation annotations are automatically copied to builder methods
 
 ## Requirements
 
@@ -119,6 +120,41 @@ Person person = PersonBuilder.create()
     .emailAddresses("john@example.com", "j.doe@example.com")
     .build();
 ```
+
+#### Validation Annotations
+
+Simple Builders preserves validation annotations on your builder methods:
+
+```java
+import jakarta.validation.constraints.*;
+
+@SimpleBuilder
+public class User {
+    private String email;
+    private int age;
+
+    public String getEmail() { return email; }
+    public void setEmail(@Email @NotNull String email) { 
+        this.email = email; 
+    }
+    
+    public int getAge() { return age; }
+    public void setAge(@Min(18) int age) { 
+        this.age = age; 
+    }
+}
+```
+
+The generated builder preserves these annotations:
+
+```java
+User user = UserBuilder.create()
+    .email("user@example.com")  // @Email and @NotNull are on the parameter
+    .age(25)                     // @Min(18) is on the parameter
+    .build();
+```
+
+This ensures validation frameworks work seamlessly with builder-generated objects.
 
 ### Collections and Nested Objects
 

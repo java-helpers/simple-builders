@@ -24,6 +24,7 @@
 
 package org.javahelpers.simple.builders.processor.util;
 
+import com.palantir.javapoet.AnnotationSpec;
 import com.palantir.javapoet.ArrayTypeName;
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.CodeBlock;
@@ -170,5 +171,34 @@ public final class JavapoetMapper {
     } else {
       throw new UnsupportedOperationException("");
     }
+  }
+
+  /**
+   * Maps an AnnotationDto to a JavaPoet AnnotationSpec.
+   *
+   * @param annotationDto the annotation DTO to map
+   * @return JavaPoet AnnotationSpec
+   */
+  public static AnnotationSpec map2AnnotationSpec(AnnotationDto annotationDto) {
+    ClassName annotationType = map2ClassName(annotationDto.getAnnotationType());
+    AnnotationSpec.Builder builder = AnnotationSpec.builder(annotationType);
+
+    // Add annotation members (parameters)
+    for (Map.Entry<String, String> member : annotationDto.getMembers().entrySet()) {
+      // Use $L (literal) format since the values are already formatted as code strings
+      builder.addMember(member.getKey(), "$L", member.getValue());
+    }
+
+    return builder.build();
+  }
+
+  /**
+   * Maps a list of AnnotationDto to JavaPoet AnnotationSpec instances.
+   *
+   * @param annotations the list of annotations to map
+   * @return list of AnnotationSpec
+   */
+  public static List<AnnotationSpec> map2AnnotationSpecs(List<AnnotationDto> annotations) {
+    return annotations.stream().map(JavapoetMapper::map2AnnotationSpec).toList();
   }
 }

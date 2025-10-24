@@ -620,12 +620,12 @@ class BuilderProcessorTest {
         "public WithOptionalsBuilder description(Supplier<Optional<String>> descriptionSupplier)",
         "public WithOptionalsBuilder description(String description)",
         "public WithOptionalsBuilder description(String format, Object... args)",
-        "this.description = changedValue(Optional.of(description));",
+        "this.description = changedValue(Optional.ofNullable(description));",
         "private TrackedValue<Optional<String>> description = unsetValue();",
         "public WithOptionalsBuilder age(Optional<Integer> age)",
         "public WithOptionalsBuilder age(Supplier<Optional<Integer>> ageSupplier)",
         "public WithOptionalsBuilder age(Integer age)",
-        "this.age = changedValue(Optional.of(age));",
+        "this.age = changedValue(Optional.ofNullable(age));",
         "private TrackedValue<Optional<Integer>> age = unsetValue();");
   }
 
@@ -703,7 +703,7 @@ class BuilderProcessorTest {
         "private TrackedValue<Optional<String>> message = unsetValue();",
         """
         public WithOptionalStringBuilder message(String message) {
-          this.message = changedValue(Optional.of(message));
+          this.message = changedValue(Optional.ofNullable(message));
           return this;
         }
         """,
