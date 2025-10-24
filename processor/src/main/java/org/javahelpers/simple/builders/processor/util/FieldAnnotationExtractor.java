@@ -30,9 +30,11 @@ import java.util.Map;
 import java.util.Optional;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.DeclaredType;
 import org.javahelpers.simple.builders.processor.dtos.AnnotationDto;
 import org.javahelpers.simple.builders.processor.dtos.TypeName;
 
@@ -114,16 +116,73 @@ public final class FieldAnnotationExtractor {
   }
 
   /**
-   * Formats an annotation value as a code string suitable for code generation. Uses {@link
-   * javax.lang.model.element.AnnotationValue#toString()} which is explicitly designed to return a
-   * form suitable for source code representation.
+   * Formats an annotation value as a code string suitable for code generation. Handles different
+   * types of annotation values including primitives, strings, enums, classes, arrays, and nested
+   * annotations.
    *
    * @param value the annotation value to format
    * @return formatted code string suitable for source code
    */
   private static String formatAnnotationValue(javax.lang.model.element.AnnotationValue value) {
-    // AnnotationValue.toString() returns a form suitable for source code representation
+    Object actualValue = value.getValue();
+
+    // Handle enum constants - need to fully qualify them
+    if (actualValue instanceof VariableElement varElement
+        && varElement.getKind() == ElementKind.ENUM_CONSTANT) {
+      return formatEnumConstant(varElement);
+    }
+
+    // Handle class literals - already properly formatted by toString()
+    if (actualValue instanceof DeclaredType) {
+      return value.toString();
+    }
+
+    // Handle arrays - need to recursively format elements
+    if (actualValue instanceof List<?> list) {
+      return formatArray(list);
+    }
+
+    // For all other types (primitives, strings, nested annotations), toString() works correctly
     return value.toString();
+  }
+
+  /**
+   * Formats an enum constant with its fully qualified name.
+   *
+   * @param varElement the variable element representing the enum constant
+   * @return fully qualified enum constant name
+   */
+  private static String formatEnumConstant(VariableElement varElement) {
+    Element enumClass = varElement.getEnclosingElement();
+    if (enumClass instanceof TypeElement enumType) {
+      return enumType.getQualifiedName() + "." + varElement.getSimpleName();
+    }
+    return varElement.getSimpleName().toString();
+  }
+
+  /**
+   * Formats an array of annotation values.
+   *
+   * @param list the list of array elements
+   * @return formatted array string
+   */
+  private static String formatArray(List<?> list) {
+    if (list.isEmpty()) {
+      return "{}";
+    }
+    StringBuilder sb = new StringBuilder("{");
+    for (int i = 0; i < list.size(); i++) {
+      if (i > 0) {
+        sb.append(", ");
+      }
+      if (list.get(i) instanceof javax.lang.model.element.AnnotationValue annotValue) {
+        sb.append(formatAnnotationValue(annotValue));
+      } else {
+        sb.append(list.get(i).toString());
+      }
+    }
+    sb.append("}");
+    return sb.toString();
   }
 
   /**
