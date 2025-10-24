@@ -234,11 +234,12 @@ public class BuilderDefinitionCreator {
   }
 
   private static void addAdditionalHelperMethodsForField(
-      FieldDto result, String fieldName, TypeName fieldType) {
+      FieldDto result, String fieldName, TypeName fieldType, List<AnnotationDto> annotations) {
     // Check for String type (not array) and add format method
     if (isString(fieldType) && !(fieldType instanceof TypeNameArray)) {
       result.addMethod(
-          createStringFormatMethodWithTransform(fieldName, "String.format(format, args)"));
+          createStringFormatMethodWithTransform(
+              fieldName, "String.format(format, args)", annotations));
     }
 
     // Only process generic types (List, Set, Map, Optional, etc.)
@@ -274,7 +275,7 @@ public class BuilderDefinitionCreator {
       if (isString(innerType)) {
         result.addMethod(
             createStringFormatMethodWithTransform(
-                fieldName, "Optional.of(String.format(format, args))"));
+                fieldName, "Optional.of(String.format(format, args))", List.of()));
       }
     }
   }
@@ -556,7 +557,7 @@ public class BuilderDefinitionCreator {
     // Add consumer/supplier/helper methods
     addConsumerMethodsForField(field, fieldName, fieldType, param, fieldTypeElement, context);
     addSupplierMethodsForField(field, fieldName, fieldType, fieldTypeElement);
-    addAdditionalHelperMethodsForField(field, fieldName, fieldType);
+    addAdditionalHelperMethodsForField(field, fieldName, fieldType, annotations);
 
     return Optional.of(field);
   }
@@ -751,12 +752,14 @@ public class BuilderDefinitionCreator {
   }
 
   private static MethodDto createStringFormatMethodWithTransform(
-      String fieldName, String transform) {
+      String fieldName, String transform, List<AnnotationDto> annotations) {
     TypeName stringType = new TypeName("java.lang", "String");
 
     MethodParameterDto formatParam = new MethodParameterDto();
     formatParam.setParameterName("format");
     formatParam.setParameterTypeName(stringType);
+    // Apply annotations to the format parameter (it's a String value)
+    annotations.forEach(formatParam::addAnnotation);
 
     MethodParameterDto argsParam = new MethodParameterDto();
     argsParam.setParameterName("args");
