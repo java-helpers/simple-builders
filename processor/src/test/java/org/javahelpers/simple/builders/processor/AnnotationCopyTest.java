@@ -21,11 +21,11 @@ class AnnotationCopyTest {
 
   @Test
   void annotations_copiedToBuilderFields() {
-    String packageName = "test.annotations";
+    String packageName = "test";
 
     JavaFileObject notNullAnnotation =
         JavaFileObjects.forSourceString(
-            packageName + ".NotNull",
+            packageName + ".annotations.NotNull",
             """
             package test.annotations;
             import java.lang.annotation.ElementType;
@@ -41,7 +41,7 @@ class AnnotationCopyTest {
 
     JavaFileObject customAnnotation =
         JavaFileObjects.forSourceString(
-            packageName + ".CustomAnnotation",
+            packageName + ".annotations.CustomAnnotation",
             """
             package test.annotations;
             import java.lang.annotation.ElementType;
@@ -60,8 +60,10 @@ class AnnotationCopyTest {
         JavaFileObjects.forSourceString(
             packageName + ".Person",
             """
-            package test.annotations;
+            package test;
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+            import test.annotations.NotNull;
+            import test.annotations.CustomAnnotation;
 
             @SimpleBuilder
             public class Person {
