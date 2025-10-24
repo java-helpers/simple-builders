@@ -131,6 +131,33 @@ public final class JavaLangAnalyser {
   }
 
   /**
+   * Checks whether the given {@link TypeElement} declares generic type parameters.
+   *
+   * @param typeElement the type element to inspect
+   * @return {@code true} if the type declares one or more type parameters; {@code false} otherwise
+   */
+  public static boolean hasGenericTypes(TypeElement typeElement) {
+    if (typeElement == null) {
+      return false;
+    }
+    return CollectionUtils.isNotEmpty(typeElement.getTypeParameters());
+  }
+
+  /**
+   * Checks whether the given {@link ExecutableElement} declares generic type parameters.
+   *
+   * @param executableElement the executable element to inspect
+   * @return {@code true} if the executable declares one or more type parameters; {@code false}
+   *     otherwise
+   */
+  public static boolean hasGenericTypes(ExecutableElement executableElement) {
+    if (executableElement == null) {
+      return false;
+    }
+    return CollectionUtils.isNotEmpty(executableElement.getTypeParameters());
+  }
+
+  /**
    * Helper to check if the method is a setter for a field.
    *
    * @param mth ExecutableElement to be validated

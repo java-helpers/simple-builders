@@ -416,7 +416,7 @@ public class BuilderDefinitionCreator {
     // Serializable>
     // If there are field-specific generics, no field in builder could be generated for it, so it
     // needs to be ignored
-    if (CollectionUtils.isNotEmpty(mth.getTypeParameters())) {
+    if (JavaLangAnalyser.hasGenericTypes(mth)) {
       context.warning(
           mth.getEnclosingElement(),
           "Field '%s' has field-specific generics, so it will be ignored",
