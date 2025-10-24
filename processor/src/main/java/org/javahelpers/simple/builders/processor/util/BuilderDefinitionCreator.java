@@ -547,12 +547,11 @@ public class BuilderDefinitionCreator {
     JavaLangAnalyser.findGetterForField(dtoType, fieldName, fieldTypeMirror, context)
         .ifPresent(getter -> field.setGetterName(getter.getSimpleName().toString()));
 
-    // Add basic setter method
-    field.addMethod(createFieldSetterWithTransform(fieldName, null, fieldType));
-
-    // Extract and add annotations from the field parameter
+    // Extract annotations from the field parameter
     List<AnnotationDto> annotations = FieldAnnotationExtractor.extractAnnotations(param, context);
-    annotations.forEach(field::addAnnotation);
+
+    // Add basic setter method with annotations
+    field.addMethod(createFieldSetterWithTransform(fieldName, null, fieldType, annotations));
 
     // Add consumer/supplier/helper methods
     addConsumerMethodsForField(field, fieldName, fieldType, param, fieldTypeElement, context);
@@ -562,11 +561,35 @@ public class BuilderDefinitionCreator {
     return Optional.of(field);
   }
 
+  /**
+   * Creates a field setter method with optional transform, without annotations.
+   *
+   * @param fieldName the name of the field
+   * @param transform optional transform expression (e.g., "Optional.of(%s)")
+   * @param fieldType the type of the field
+   * @return the method DTO for the setter
+   */
   private static MethodDto createFieldSetterWithTransform(
       String fieldName, String transform, TypeName fieldType) {
+    return createFieldSetterWithTransform(fieldName, transform, fieldType, List.of());
+  }
+
+  /**
+   * Creates a field setter method with optional transform and annotations.
+   *
+   * @param fieldName the name of the field
+   * @param transform optional transform expression (e.g., "Optional.of(%s)")
+   * @param fieldType the type of the field
+   * @param annotations annotations to apply to the parameter
+   * @return the method DTO for the setter
+   */
+  private static MethodDto createFieldSetterWithTransform(
+      String fieldName, String transform, TypeName fieldType, List<AnnotationDto> annotations) {
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName(fieldName);
     parameter.setParameterTypeName(fieldType);
+    // Add annotations to the parameter
+    annotations.forEach(parameter::addAnnotation);
     MethodDto methodDto = new MethodDto();
     methodDto.setMethodName(fieldName);
     methodDto.addParameter(parameter);

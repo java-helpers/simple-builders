@@ -34,6 +34,7 @@ import com.palantir.javapoet.CodeBlock;
 import com.palantir.javapoet.FieldSpec;
 import com.palantir.javapoet.JavaFile;
 import com.palantir.javapoet.MethodSpec;
+import com.palantir.javapoet.ParameterSpec;
 import com.palantir.javapoet.ParameterizedTypeName;
 import com.palantir.javapoet.TypeSpec;
 import java.io.IOException;
@@ -247,23 +248,13 @@ public class JavaCodeGenerator {
     ParameterizedTypeName wrappedFieldType =
         ParameterizedTypeName.get(builderFieldWrapper, fieldType);
 
-    FieldSpec.Builder fieldBuilder =
-        FieldSpec.builder(wrappedFieldType, fieldDto.getFieldName(), Modifier.PRIVATE)
-            .addJavadoc(
-                "Tracked value for <code>$L</code>: $L.\n",
-                fieldDto.getFieldName(),
-                fieldDto.getJavaDoc())
-            .initializer("$T.unsetValue()", builderFieldWrapper);
-
-    // Add annotations from the target class field
-    if (!fieldDto.getAnnotations().isEmpty()) {
-      logger.debug(
-          "  Adding %d annotation(s) to builder field: %s",
-          fieldDto.getAnnotations().size(), fieldDto.getFieldName());
-      fieldBuilder.addAnnotations(map2AnnotationSpecs(fieldDto.getAnnotations()));
-    }
-
-    return fieldBuilder.build();
+    return FieldSpec.builder(wrappedFieldType, fieldDto.getFieldName(), Modifier.PRIVATE)
+        .addJavadoc(
+            "Tracked value for <code>$L</code>: $L.\n",
+            fieldDto.getFieldName(),
+            fieldDto.getJavaDoc())
+        .initializer("$T.unsetValue()", builderFieldWrapper)
+        .build();
   }
 
   private MethodSpec createMethodBuild(
@@ -364,8 +355,8 @@ public class JavaCodeGenerator {
 
     for (int i = 0; i <= maxIndexParameters; i++) {
       MethodParameterDto paramDto = methodDto.getParameters().get(i);
-      com.palantir.javapoet.TypeName parameterType = map2ParameterType(paramDto.getParameterType());
-      methodBuilder.addParameter(parameterType, paramDto.getParameterName());
+      methodBuilder.addParameter(createParameter(paramDto));
+
       if (i == maxIndexParameters && paramDto.getParameterType() instanceof TypeNameArray) {
         methodBuilder.varargs(); // Arrays should be mapped to be generics
       }
@@ -396,5 +387,21 @@ public class JavaCodeGenerator {
     CodeBlock codeBlock = map2CodeBlock(methodDto.getMethodCodeDto());
     methodBuilder.addCode(codeBlock).addJavadoc("\n@return current instance of builder");
     return methodBuilder.build();
+  }
+
+  /**
+   * Creates a ParameterSpec from a MethodParameterDto, including any annotations.
+   *
+   * @param paramDto the parameter DTO containing type, name, and annotations
+   * @return the generated ParameterSpec
+   */
+  private ParameterSpec createParameter(MethodParameterDto paramDto) {
+    com.palantir.javapoet.TypeName parameterType = map2ParameterType(paramDto.getParameterType());
+    ParameterSpec.Builder paramBuilder =
+        ParameterSpec.builder(parameterType, paramDto.getParameterName());
+    if (!paramDto.getAnnotations().isEmpty()) {
+      paramBuilder.addAnnotations(map2AnnotationSpecs(paramDto.getAnnotations()));
+    }
+    return paramBuilder.build();
   }
 }

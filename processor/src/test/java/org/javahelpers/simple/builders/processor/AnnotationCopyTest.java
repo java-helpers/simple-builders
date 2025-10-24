@@ -84,13 +84,13 @@ class AnnotationCopyTest {
     String generatedCode = loadGeneratedSource(compilation, "PersonBuilder");
     ProcessorAsserts.assertGenerationSucceeded(compilation, "PersonBuilder", generatedCode);
 
-    // Verify that annotations are copied to builder fields
+    // Verify that annotations are copied to builder method parameters
     ProcessorAsserts.assertingResult(
         generatedCode,
-        // NotNull annotation should be on the name field
-        contains("@NotNull"),
-        // CustomAnnotation should be on the email field
-        contains("@CustomAnnotation(\"email-field\")"));
+        // NotNull annotation should be on the name method parameter
+        contains("name(@NotNull String name)"),
+        // CustomAnnotation should be on the email method parameter
+        contains("email(@CustomAnnotation(\"email-field\") String email)"));
   }
 
   @Test
@@ -157,13 +157,13 @@ class AnnotationCopyTest {
     String generatedCode = loadGeneratedSource(compilation, "ProductBuilder");
     ProcessorAsserts.assertGenerationSucceeded(compilation, "ProductBuilder", generatedCode);
 
-    // Verify that annotations from constructor parameters are copied to builder fields
+    // Verify that annotations from constructor parameters are copied to builder method parameters
     ProcessorAsserts.assertingResult(
         generatedCode,
-        // NotNull annotation should be on the name field
-        contains("@NotNull"),
-        // Positive annotation should be on the price field
-        contains("@Positive"));
+        // NotNull annotation should be on the name method parameter
+        contains("name(@NotNull String name)"),
+        // Positive annotation should be on the price method parameter
+        contains("price(@Positive double price)"));
   }
 
   @Test
@@ -212,8 +212,8 @@ class AnnotationCopyTest {
     String generatedCode = loadGeneratedSource(compilation, "PersonBuilder");
     ProcessorAsserts.assertGenerationSucceeded(compilation, "PersonBuilder", generatedCode);
 
-    // Verify that NotNull annotation is copied
-    ProcessorAsserts.assertingResult(generatedCode, contains("@NotNull"));
+    // Verify that NotNull annotation is copied to method parameters
+    ProcessorAsserts.assertingResult(generatedCode, contains("name(@NotNull String name)"));
 
     // Verify that ignoredField is not in the builder (due to @IgnoreInBuilder)
     ProcessorAsserts.assertNotContaining(generatedCode, "ignoredField");
