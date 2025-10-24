@@ -266,9 +266,9 @@ public class BuilderDefinitionCreator {
       result.addMethod(
           createFieldSetterWithTransform(fieldName, "Map.ofEntries(%s)", mapEntryType));
     } else if (isOptional(fieldType) && innerTypesCnt == 1) {
-      // Add setter that accepts the inner type T and wraps it in Optional.of()
+      // Add setter that accepts the inner type T and wraps it in Optional.ofNullable()
       result.addMethod(
-          createFieldSetterWithTransform(fieldName, "Optional.of(%s)", innerTypes.get(0)));
+          createFieldSetterWithTransform(fieldName, "Optional.ofNullable(%s)", innerTypes.get(0)));
 
       // If Optional<String>, add format method
       TypeName innerType = innerTypes.get(0);
