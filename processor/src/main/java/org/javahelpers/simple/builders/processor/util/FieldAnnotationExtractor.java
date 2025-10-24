@@ -196,10 +196,12 @@ public final class FieldAnnotationExtractor {
     if (qualifiedName.startsWith("org.javahelpers.simple.builders.")) {
       return true;
     }
-    // Skip standard Java annotations that are not relevant for builder fields
-    return qualifiedName.equals("java.lang.Override")
-        || qualifiedName.equals("java.lang.Deprecated")
-        || qualifiedName.equals("java.lang.SuppressWarnings")
-        || qualifiedName.startsWith("javax.annotation.processing.");
+    // Skip generated code annotations (these are for code generation metadata, not validation)
+    if (qualifiedName.equals("javax.annotation.Generated")
+        || qualifiedName.equals("javax.annotation.processing.Generated")) {
+      return true;
+    }
+    // Skip compiler-only annotations that are not relevant for builder parameters
+    return qualifiedName.equals("java.lang.SuppressWarnings");
   }
 }

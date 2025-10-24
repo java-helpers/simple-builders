@@ -367,7 +367,7 @@ class AnnotationCopyTest {
   }
 
   @Test
-  void annotations_javaLangAnnotations_notCopied() {
+  void annotations_deprecatedCopied_suppressWarningsFiltered() {
     String packageName = "test.javafilter";
 
     JavaFileObject service =
@@ -383,9 +383,9 @@ class AnnotationCopyTest {
 
               public String getName() { return name; }
 
-              @Deprecated
-              @SuppressWarnings("unused")
-              public void setName(String name) {
+              public void setName(
+                  @Deprecated
+                  @SuppressWarnings("unused") String name) {
                 this.name = name;
               }
             }
@@ -395,8 +395,178 @@ class AnnotationCopyTest {
     String generatedCode = loadGeneratedSource(compilation, "ServiceBuilder");
     ProcessorAsserts.assertGenerationSucceeded(compilation, "ServiceBuilder", generatedCode);
 
-    // Verify that Java standard annotations are NOT copied to builder methods
-    ProcessorAsserts.assertNotContaining(generatedCode, "@Deprecated", "@SuppressWarnings");
+    // Verify that @Deprecated IS copied (developers need to know field is deprecated!)
+    ProcessorAsserts.assertingResult(
+        generatedCode, contains("public ServiceBuilder name(@Deprecated String name)"));
+
+    // But @SuppressWarnings is NOT copied (compiler-only, not relevant for users)
+    ProcessorAsserts.assertNotContaining(generatedCode, "@SuppressWarnings");
+  }
+
+  @Test
+  void annotations_frameworkAnnotations_filtered() {
+    String packageName = "test.framework";
+
+    // Create an annotation in the SimpleBuilder framework package
+    JavaFileObject frameworkAnnotation =
+        JavaFileObjects.forSourceString(
+            "org.javahelpers.simple.builders.custom.FrameworkAnnotation",
+            """
+            package org.javahelpers.simple.builders.custom;
+            import java.lang.annotation.ElementType;
+            import java.lang.annotation.Retention;
+            import java.lang.annotation.RetentionPolicy;
+            import java.lang.annotation.Target;
+
+            @Retention(RetentionPolicy.RUNTIME)
+            @Target({ElementType.FIELD, ElementType.PARAMETER})
+            public @interface FrameworkAnnotation {
+              String value() default "";
+            }
+            """);
+
+    JavaFileObject entity =
+        JavaFileObjects.forSourceString(
+            packageName + ".Entity",
+            """
+            package test.framework;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+            import org.javahelpers.simple.builders.custom.FrameworkAnnotation;
+
+            @SimpleBuilder
+            public class Entity {
+              private String id;
+
+              public String getId() { return id; }
+
+              public void setId(
+                  @FrameworkAnnotation("internal") String id) {
+                this.id = id;
+              }
+            }
+            """);
+
+    Compilation compilation = compileSources(frameworkAnnotation, entity);
+    String generatedCode = loadGeneratedSource(compilation, "EntityBuilder");
+    ProcessorAsserts.assertGenerationSucceeded(compilation, "EntityBuilder", generatedCode);
+
+    // Verify that SimpleBuilder framework annotations are NOT copied to builder methods
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        // Method should exist without the framework annotation
+        contains("public EntityBuilder id(String id)"));
+
+    // Framework annotation should not appear anywhere in generated code
+    ProcessorAsserts.assertNotContaining(generatedCode, "@FrameworkAnnotation");
+  }
+
+  @Test
+  void annotations_customAnnotations_copiedCorrectly() {
+    String packageName = "test.custom";
+
+    // Create a custom annotation that should NOT be filtered
+    JavaFileObject validAnnotation =
+        JavaFileObjects.forSourceString(
+            packageName + ".ValidAnnotation",
+            """
+            package test.custom;
+            import java.lang.annotation.ElementType;
+            import java.lang.annotation.Retention;
+            import java.lang.annotation.RetentionPolicy;
+            import java.lang.annotation.Target;
+
+            @Retention(RetentionPolicy.RUNTIME)
+            @Target({ElementType.FIELD, ElementType.PARAMETER})
+            public @interface ValidAnnotation {
+              String value() default "";
+            }
+            """);
+
+    JavaFileObject model =
+        JavaFileObjects.forSourceString(
+            packageName + ".Model",
+            """
+            package test.custom;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+            @SimpleBuilder
+            public class Model {
+              private String data;
+
+              public String getData() { return data; }
+              public void setData(@ValidAnnotation("keep-me") String data) {
+                this.data = data;
+              }
+            }
+            """);
+
+    Compilation compilation = compileSources(validAnnotation, model);
+    String generatedCode = loadGeneratedSource(compilation, "ModelBuilder");
+    ProcessorAsserts.assertGenerationSucceeded(compilation, "ModelBuilder", generatedCode);
+
+    // Verify that custom annotations ARE copied (not filtered out)
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains(
+            """
+            public ModelBuilder data(
+                @ValidAnnotation("keep-me") String data)"""));
+  }
+
+  @Test
+  void annotations_generatedAnnotations_notCopied() {
+    String packageName = "test.generated";
+
+    // Create Generated annotation (commonly used by code generators)
+    JavaFileObject generatedAnnotation =
+        JavaFileObjects.forSourceString(
+            "javax.annotation.Generated",
+            """
+            package javax.annotation;
+            import java.lang.annotation.ElementType;
+            import java.lang.annotation.Retention;
+            import java.lang.annotation.RetentionPolicy;
+            import java.lang.annotation.Target;
+
+            @Retention(RetentionPolicy.SOURCE)
+            @Target({ElementType.PACKAGE, ElementType.TYPE, ElementType.METHOD, ElementType.PARAMETER})
+            public @interface Generated {
+              String[] value();
+            }
+            """);
+
+    JavaFileObject model =
+        JavaFileObjects.forSourceString(
+            packageName + ".Model",
+            """
+            package test.generated;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+            import javax.annotation.Generated;
+
+            @SimpleBuilder
+            public class Model {
+              private String code;
+
+              public String getCode() { return code; }
+              public void setCode(@Generated(\"SomeGenerator\") String code) {
+                this.code = code;
+              }
+            }
+            """);
+
+    Compilation compilation = compileSources(generatedAnnotation, model);
+    String generatedCode = loadGeneratedSource(compilation, "ModelBuilder");
+    ProcessorAsserts.assertGenerationSucceeded(compilation, "ModelBuilder", generatedCode);
+
+    // Verify that @Generated annotations are NOT copied to parameters (they're metadata, not
+    // validation)
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        // Method should exist without @Generated on the parameter
+        contains("public ModelBuilder code(String code)"));
+
+    // The annotation should not be on the method parameter
+    ProcessorAsserts.assertNotContaining(generatedCode, "code(@Generated");
   }
 
   @Test
