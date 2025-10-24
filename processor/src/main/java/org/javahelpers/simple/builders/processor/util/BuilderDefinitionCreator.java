@@ -368,7 +368,7 @@ public class BuilderDefinitionCreator {
 
     // Get the TypeMirror of the element type from the parameter's type
     TypeMirror fieldTypeMirror = fieldParameter.asType();
-    TypeMirror elementTypeMirror = extractFirstTypeArgument(fieldTypeMirror, context);
+    TypeMirror elementTypeMirror = extractFirstTypeArgument(fieldTypeMirror);
 
     Optional<TypeName> elementBuilderType =
         resolveBuilderType(elementType, elementTypeMirror, context);
@@ -426,7 +426,7 @@ public class BuilderDefinitionCreator {
 
     // Get the TypeMirror of the element type from the parameter's type
     TypeMirror fieldTypeMirror = fieldParameter.asType();
-    TypeMirror elementTypeMirror = extractFirstTypeArgument(fieldTypeMirror, context);
+    TypeMirror elementTypeMirror = extractFirstTypeArgument(fieldTypeMirror);
 
     Optional<TypeName> elementBuilderType =
         resolveBuilderType(elementType, elementTypeMirror, context);
@@ -851,11 +851,9 @@ public class BuilderDefinitionCreator {
    * List&lt;Task&gt;, this extracts the Task TypeMirror.
    *
    * @param typeMirror the parameterized type mirror
-   * @param context processing context
    * @return the first type argument, or null if not a parameterized type
    */
-  private static TypeMirror extractFirstTypeArgument(
-      TypeMirror typeMirror, ProcessingContext context) {
+  private static TypeMirror extractFirstTypeArgument(TypeMirror typeMirror) {
     if (typeMirror instanceof javax.lang.model.type.DeclaredType declaredType) {
       List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
       if (!typeArguments.isEmpty()) {
