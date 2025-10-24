@@ -55,6 +55,9 @@ public class FieldDto {
    */
   private String getterName;
 
+  /** Annotations to be copied from the target class field to the builder class field. */
+  private final List<AnnotationDto> annotations = new ArrayList<>();
+
   /**
    * Getting name of field.
    *
@@ -174,5 +177,23 @@ public class FieldDto {
    */
   public void setGetterName(String getterName) {
     this.getterName = getterName;
+  }
+
+  /**
+   * Returns the list of annotations to be copied to the builder field.
+   *
+   * @return the list of annotations
+   */
+  public List<AnnotationDto> getAnnotations() {
+    return annotations;
+  }
+
+  /**
+   * Adds an annotation to be copied to the builder field.
+   *
+   * @param annotation the annotation to add
+   */
+  public void addAnnotation(AnnotationDto annotation) {
+    this.annotations.add(annotation);
   }
 }

@@ -550,12 +550,85 @@ public class BuilderDefinitionCreator {
     // Add basic setter method
     field.addMethod(createFieldSetterWithTransform(fieldName, null, fieldType));
 
+    // Extract and add annotations from the field parameter
+    extractAnnotations(param, field, context);
+
     // Add consumer/supplier/helper methods
     addConsumerMethodsForField(field, fieldName, fieldType, param, fieldTypeElement, context);
     addSupplierMethodsForField(field, fieldName, fieldType, fieldTypeElement);
     addAdditionalHelperMethodsForField(field, fieldName, fieldType);
 
     return Optional.of(field);
+  }
+
+  /**
+   * Extracts annotations from a field parameter and adds them to the FieldDto. Filters out
+   * annotations that should not be copied to the builder.
+   *
+   * @param param the parameter element containing annotations
+   * @param field the field DTO to add annotations to
+   * @param context processing context
+   */
+  private static void extractAnnotations(
+      VariableElement param, FieldDto field, ProcessingContext context) {
+    List<? extends AnnotationMirror> annotationMirrors = param.getAnnotationMirrors();
+
+    context.debug(
+        "  -> Extracting %d annotation(s) from field %s",
+        annotationMirrors.size(), param.getSimpleName());
+
+    for (AnnotationMirror mirror : annotationMirrors) {
+      // Get the annotation type element
+      Element annotationElement = mirror.getAnnotationType().asElement();
+      if (!(annotationElement instanceof TypeElement annotationType)) {
+        continue;
+      }
+
+      String annotationQualifiedName = annotationType.getQualifiedName().toString();
+
+      // Filter out annotations that should not be copied to the builder
+      if (shouldSkipAnnotation(annotationQualifiedName)) {
+        context.debug("    -> Skipping annotation: %s", annotationQualifiedName);
+        continue;
+      }
+
+      // Create AnnotationDto
+      AnnotationDto annotationDto = new AnnotationDto();
+
+      // Extract package and class name
+      String packageName = context.getPackageName(annotationType);
+      String simpleName = annotationType.getSimpleName().toString();
+      annotationDto.setAnnotationType(new TypeName(packageName, simpleName));
+      annotationDto.setAnnotationMirror(mirror);
+
+      field.addAnnotation(annotationDto);
+      context.debug("    -> Added annotation: %s", annotationQualifiedName);
+    }
+  }
+
+  /**
+   * Determines if an annotation should be skipped (not copied to the builder).
+   *
+   * @param qualifiedName the fully qualified name of the annotation
+   * @return true if the annotation should be skipped, false otherwise
+   */
+  private static boolean shouldSkipAnnotation(String qualifiedName) {
+    // Skip SimpleBuilder framework annotations
+    if (qualifiedName.startsWith("org.javahelpers.simple.builders.")) {
+      return true;
+    }
+    // Skip standard Java annotations that are not relevant for builder fields
+    if (qualifiedName.equals("java.lang.Override")
+        || qualifiedName.equals("java.lang.Deprecated")
+        || qualifiedName.equals("java.lang.SuppressWarnings")) {
+      return true;
+    }
+    // Skip javax.annotation.processing annotations
+    if (qualifiedName.startsWith("javax.annotation.processing.")) {
+      return true;
+    }
+    // Keep all other annotations
+    return false;
   }
 
   private static MethodDto createFieldSetterWithTransform(

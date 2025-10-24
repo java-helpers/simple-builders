@@ -246,13 +246,24 @@ public class JavaCodeGenerator {
     ClassName builderFieldWrapper = ClassName.get(TrackedValue.class);
     ParameterizedTypeName wrappedFieldType =
         ParameterizedTypeName.get(builderFieldWrapper, fieldType);
-    return FieldSpec.builder(wrappedFieldType, fieldDto.getFieldName(), Modifier.PRIVATE)
-        .addJavadoc(
-            "Tracked value for <code>$L</code>: $L.\n",
-            fieldDto.getFieldName(),
-            fieldDto.getJavaDoc())
-        .initializer("$T.unsetValue()", builderFieldWrapper)
-        .build();
+
+    FieldSpec.Builder fieldBuilder =
+        FieldSpec.builder(wrappedFieldType, fieldDto.getFieldName(), Modifier.PRIVATE)
+            .addJavadoc(
+                "Tracked value for <code>$L</code>: $L.\n",
+                fieldDto.getFieldName(),
+                fieldDto.getJavaDoc())
+            .initializer("$T.unsetValue()", builderFieldWrapper);
+
+    // Add annotations from the target class field
+    if (!fieldDto.getAnnotations().isEmpty()) {
+      logger.debug(
+          "  Adding %d annotation(s) to builder field: %s",
+          fieldDto.getAnnotations().size(), fieldDto.getFieldName());
+      fieldBuilder.addAnnotations(map2AnnotationSpecs(fieldDto.getAnnotations()));
+    }
+
+    return fieldBuilder.build();
   }
 
   private MethodSpec createMethodBuild(
