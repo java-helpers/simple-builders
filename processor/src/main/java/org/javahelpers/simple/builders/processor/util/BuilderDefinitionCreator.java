@@ -294,7 +294,7 @@ public class BuilderDefinitionCreator {
       return;
     }
 
-    Optional<TypeName> builderTypeOpt = findBuilderType(fieldParameter, context);
+    Optional<TypeName> builderTypeOpt = resolveBuilderType(fieldParameter, context);
     if (builderTypeOpt.isPresent()) {
       TypeName builderType = builderTypeOpt.get();
       result.addMethod(
@@ -315,10 +315,7 @@ public class BuilderDefinitionCreator {
       TypeMirror fieldTypeMirror = fieldParameter.asType();
       TypeMirror elementTypeMirror = extractFirstTypeArgument(fieldTypeMirror, context);
 
-      Optional<TypeName> elementBuilderType =
-          elementTypeMirror != null
-              ? findBuilderTypeForElementType(elementType, elementTypeMirror, context)
-              : Optional.empty();
+      Optional<TypeName> elementBuilderType = resolveBuilderType(elementType, elementTypeMirror, context);
 
       if (elementBuilderType.isPresent()) {
         // Element type has a builder - use ArrayListBuilderWithElementBuilders
@@ -358,10 +355,7 @@ public class BuilderDefinitionCreator {
       TypeMirror fieldTypeMirror = fieldParameter.asType();
       TypeMirror elementTypeMirror = extractFirstTypeArgument(fieldTypeMirror, context);
 
-      Optional<TypeName> elementBuilderType =
-          elementTypeMirror != null
-              ? findBuilderTypeForElementType(elementType, elementTypeMirror, context)
-              : Optional.empty();
+      Optional<TypeName> elementBuilderType = resolveBuilderType(elementType, elementTypeMirror, context);
 
       if (elementBuilderType.isPresent()) {
         // Element type has a builder - use HashSetBuilderWithElementBuilders
@@ -710,26 +704,24 @@ public class BuilderDefinitionCreator {
     return isOptionalString(fieldType);
   }
 
-  private static Optional<TypeName> findBuilderType(
+  private static Optional<TypeName> resolveBuilderType(
       VariableElement param, ProcessingContext context) {
     TypeMirror typeOfParameter = param.asType();
     if (typeOfParameter.getKind() == ARRAY || typeOfParameter.getKind().isPrimitive()) {
       return Optional.empty();
     }
     Element elementOfParameter = context.asElement(typeOfParameter);
-    if (elementOfParameter == null) {
+    if (!(elementOfParameter instanceof TypeElement typeElement)) {
       // Can happen for primitives or certain compiler-internal types; nothing to build
       return Optional.empty();
     }
-    String simpleClassName = elementOfParameter.getSimpleName().toString();
-    String packageName = context.getPackageName(elementOfParameter);
-    Optional<AnnotationMirror> foundBuilderAnnotation =
-        findAnnotation(elementOfParameter, SimpleBuilder.class);
-    boolean isClassWithoutGenerics = StringUtils.containsNone(simpleClassName, "<");
-    if (foundBuilderAnnotation.isPresent() && isClassWithoutGenerics) {
-      return Optional.of(new TypeName(packageName, simpleClassName + BUILDER_SUFFIX));
+    // For direct field types disallow generics here in the caller
+    if (JavaLangAnalyser.hasGenericTypes(typeElement)) {
+      context.debug(
+          "  -> Skipping builder lookup for generic type %s", typeElement.getSimpleName());
+      return Optional.empty();
     }
-    return Optional.empty();
+    return resolveBuilderTypeFromTypeElement(typeElement, context);
   }
 
   /**
@@ -740,8 +732,14 @@ public class BuilderDefinitionCreator {
    * @param context processing context
    * @return Optional containing the builder TypeName if the element type has @SimpleBuilder
    */
-  private static Optional<TypeName> findBuilderTypeForElementType(
+  private static Optional<TypeName> resolveBuilderType(
       TypeName elementType, TypeMirror elementTypeMirror, ProcessingContext context) {
+
+    // Skip cases without type mirror
+    if (elementTypeMirror == null) {
+      return Optional.empty();
+    }
+
     // Skip type variables and primitives
     if (elementType instanceof TypeNameVariable || elementType instanceof TypeNamePrimitive) {
       context.debug("  -> Skipping type variable or primitive: %s", elementType);
@@ -754,22 +752,33 @@ public class BuilderDefinitionCreator {
       context.debug("  -> Element is not a TypeElement: %s", element);
       return Optional.empty();
     }
+    // For collection element types: delegate to shared helper
+    return resolveBuilderTypeFromTypeElement(typeElement, context);
+  }
 
-    // Check if element type has @SimpleBuilder annotation
+  /**
+   * Shared helper resolving a builder {@link TypeName} from a {@link TypeElement} if it is
+   * annotated with {@code @SimpleBuilder}. Generics policy is enforced by the callers.
+   *
+   * @param typeElement the type element to inspect
+   * @param context processing context
+   */
+  private static Optional<TypeName> resolveBuilderTypeFromTypeElement(
+      TypeElement typeElement, ProcessingContext context) {
+    // Check annotation presence first
     Optional<AnnotationMirror> foundBuilderAnnotation =
         findAnnotation(typeElement, SimpleBuilder.class);
-
-    if (foundBuilderAnnotation.isPresent()) {
-      String packageName = context.getPackageName(typeElement);
-      String simpleClassName = typeElement.getSimpleName().toString();
-      context.debug(
-          "  -> Found @SimpleBuilder on element type %s.%s, will use %sBuilder",
-          packageName, simpleClassName, simpleClassName);
-      return Optional.of(new TypeName(packageName, simpleClassName + BUILDER_SUFFIX));
+    if (foundBuilderAnnotation.isEmpty()) {
+      context.debug("  -> Type %s has no @SimpleBuilder", typeElement.getSimpleName());
+      return Optional.empty();
     }
 
-    context.debug("  -> Element type %s does not have @SimpleBuilder", typeElement.getSimpleName());
-    return Optional.empty();
+    String packageName = context.getPackageName(typeElement);
+    String simpleClassName = typeElement.getSimpleName().toString();
+    context.debug(
+        "  -> Found @SimpleBuilder on type %s.%s, will use %sBuilder",
+        packageName, simpleClassName, simpleClassName);
+    return Optional.of(new TypeName(packageName, simpleClassName + BUILDER_SUFFIX));
   }
 
   /**
