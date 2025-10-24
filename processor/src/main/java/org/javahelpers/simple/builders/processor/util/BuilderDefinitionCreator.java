@@ -46,8 +46,10 @@ import org.apache.commons.lang3.Strings;
 import org.javahelpers.simple.builders.core.annotations.IgnoreInBuilder;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 import org.javahelpers.simple.builders.core.builders.ArrayListBuilder;
+import org.javahelpers.simple.builders.core.builders.ArrayListBuilderWithElementBuilders;
 import org.javahelpers.simple.builders.core.builders.HashMapBuilder;
 import org.javahelpers.simple.builders.core.builders.HashSetBuilder;
+import org.javahelpers.simple.builders.core.builders.HashSetBuilderWithElementBuilders;
 import org.javahelpers.simple.builders.core.util.TrackedValue;
 import org.javahelpers.simple.builders.processor.dtos.*;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
@@ -380,20 +382,17 @@ public class BuilderDefinitionCreator {
 
     if (elementBuilderType.isPresent()) {
       // Element type has a builder - use ArrayListBuilderWithElementBuilders
-      TypeName arrayListBuilderWithElementBuildersType =
-          new TypeName(
-              "org.javahelpers.simple.builders.core.builders",
-              "ArrayListBuilderWithElementBuilders");
       TypeName builderType =
           new TypeNameGeneric(
-              arrayListBuilderWithElementBuildersType, elementType, elementBuilderType.get());
+              map2TypeName(ArrayListBuilderWithElementBuilders.class),
+              elementType,
+              elementBuilderType.get());
       result.addMethod(
           createFieldConsumerWithElementBuilders(fieldName, builderType, elementBuilderType.get()));
     } else {
       // Regular ArrayListBuilder
-      result.addMethod(
-          createFieldConsumerWithBuilder(
-              fieldName, map2TypeName(ArrayListBuilder.class), elementType));
+      TypeName builderType = map2TypeName(ArrayListBuilder.class);
+      result.addMethod(createFieldConsumerWithBuilder(fieldName, builderType, elementType));
     }
     return true;
   }
@@ -441,19 +440,17 @@ public class BuilderDefinitionCreator {
 
     if (elementBuilderType.isPresent()) {
       // Element type has a builder - use HashSetBuilderWithElementBuilders
-      TypeName hashSetBuilderWithElementBuildersType =
-          new TypeName(
-              "org.javahelpers.simple.builders.core.builders", "HashSetBuilderWithElementBuilders");
       TypeName builderType =
           new TypeNameGeneric(
-              hashSetBuilderWithElementBuildersType, elementType, elementBuilderType.get());
+              map2TypeName(HashSetBuilderWithElementBuilders.class),
+              elementType,
+              elementBuilderType.get());
       result.addMethod(
           createFieldConsumerWithElementBuilders(fieldName, builderType, elementBuilderType.get()));
     } else {
       // Regular HashSetBuilder
-      result.addMethod(
-          createFieldConsumerWithBuilder(
-              fieldName, map2TypeName(HashSetBuilder.class), elementType));
+      TypeName builderType = map2TypeName(HashSetBuilder.class);
+      result.addMethod(createFieldConsumerWithBuilder(fieldName, builderType, elementType));
     }
     return true;
   }
