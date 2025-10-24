@@ -295,18 +295,12 @@ public class BuilderDefinitionCreator {
       return;
     }
 
-    if (tryAddBuilderConsumer(result, fieldName, fieldType, fieldParameter, context)) {
-      // handled by direct builder helper
-    } else if (tryAddFieldConsumer(result, fieldName, fieldType, fieldTypeElement, context)) {
-      // handled by field helper
-    } else if (tryAddListConsumer(result, fieldName, fieldType, fieldParameter, context)) {
-      // handled by list helper
-    } else if (tryAddMapConsumer(result, fieldName, fieldType)) {
-      // handled by map helper
-    } else if (tryAddSetConsumer(result, fieldName, fieldType, fieldParameter, context)) {
-      // handled by set helper
-    } else if (tryAddStringBuilderConsumer(result, fieldName, fieldType)) {
-      // handled by string builder helper
+    if (!tryAddBuilderConsumer(result, fieldName, fieldParameter, context)
+        && !tryAddFieldConsumer(result, fieldName, fieldType, fieldTypeElement, context)
+        && !tryAddListConsumer(result, fieldName, fieldType, fieldParameter, context)
+        && !tryAddMapConsumer(result, fieldName, fieldType)
+        && !tryAddSetConsumer(result, fieldName, fieldType, fieldParameter, context)) {
+      tryAddStringBuilderConsumer(result, fieldName, fieldType);
     }
   }
 
@@ -314,7 +308,6 @@ public class BuilderDefinitionCreator {
   private static boolean tryAddBuilderConsumer(
       FieldDto result,
       String fieldName,
-      TypeName fieldType,
       VariableElement fieldParameter,
       ProcessingContext context) {
     Optional<TypeName> builderTypeOpt = resolveBuilderType(fieldParameter, context);
