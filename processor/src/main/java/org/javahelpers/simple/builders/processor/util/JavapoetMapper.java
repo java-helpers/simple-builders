@@ -180,7 +180,16 @@ public final class JavapoetMapper {
    * @return JavaPoet AnnotationSpec
    */
   public static AnnotationSpec map2AnnotationSpec(AnnotationDto annotationDto) {
-    return AnnotationSpec.get(annotationDto.getAnnotationMirror());
+    ClassName annotationType = map2ClassName(annotationDto.getAnnotationType());
+    AnnotationSpec.Builder builder = AnnotationSpec.builder(annotationType);
+
+    // Add annotation members (parameters)
+    for (Map.Entry<String, String> member : annotationDto.getMembers().entrySet()) {
+      // Use $L (literal) format since the values are already formatted as code strings
+      builder.addMember(member.getKey(), "$L", member.getValue());
+    }
+
+    return builder.build();
   }
 
   /**

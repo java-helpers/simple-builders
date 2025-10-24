@@ -24,18 +24,24 @@
 
 package org.javahelpers.simple.builders.processor.dtos;
 
-import javax.lang.model.element.AnnotationMirror;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * DTO representing an annotation to be copied from the target class field to the builder class
- * field.
+ * field. Contains the annotation type and its members in a plain format suitable for code
+ * generation.
  */
 public class AnnotationDto {
   /** The annotation type (fully qualified name). */
   private TypeName annotationType;
 
-  /** The annotation mirror containing all annotation data including parameters. */
-  private AnnotationMirror annotationMirror;
+  /**
+   * Annotation members (parameters) as key-value pairs. The values are stored as code strings ready
+   * for generation (e.g., "\"value\"", "123", "{1, 2, 3}"). LinkedHashMap preserves declaration
+   * order.
+   */
+  private final Map<String, String> members = new LinkedHashMap<>();
 
   /**
    * Gets the annotation type.
@@ -56,20 +62,21 @@ public class AnnotationDto {
   }
 
   /**
-   * Gets the annotation mirror.
+   * Gets the annotation members (parameters) as key-value pairs.
    *
-   * @return the annotation mirror containing all annotation data
+   * @return map of member names to their code string values
    */
-  public AnnotationMirror getAnnotationMirror() {
-    return annotationMirror;
+  public Map<String, String> getMembers() {
+    return members;
   }
 
   /**
-   * Sets the annotation mirror.
+   * Adds an annotation member (parameter).
    *
-   * @param annotationMirror the annotation mirror containing all annotation data
+   * @param name the member name
+   * @param value the member value as a code string
    */
-  public void setAnnotationMirror(AnnotationMirror annotationMirror) {
-    this.annotationMirror = annotationMirror;
+  public void addMember(String name, String value) {
+    this.members.put(name, value);
   }
 }
