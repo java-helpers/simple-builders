@@ -34,20 +34,22 @@ import static org.javahelpers.simple.builders.processor.util.TypeNameAnalyser.*;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javax.lang.model.element.*;
 import javax.lang.model.type.TypeMirror;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.javahelpers.simple.builders.core.annotations.IgnoreInBuilder;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 import org.javahelpers.simple.builders.core.builders.ArrayListBuilder;
+import org.javahelpers.simple.builders.core.builders.ArrayListBuilderWithElementBuilders;
 import org.javahelpers.simple.builders.core.builders.HashMapBuilder;
 import org.javahelpers.simple.builders.core.builders.HashSetBuilder;
+import org.javahelpers.simple.builders.core.builders.HashSetBuilderWithElementBuilders;
 import org.javahelpers.simple.builders.core.util.TrackedValue;
 import org.javahelpers.simple.builders.processor.dtos.*;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
@@ -293,51 +295,157 @@ public class BuilderDefinitionCreator {
       return;
     }
 
-    Optional<TypeName> builderTypeOpt = findBuilderType(fieldParameter, context);
+    if (!tryAddBuilderConsumer(result, fieldName, fieldParameter, context)
+        && !tryAddFieldConsumer(result, fieldName, fieldType, fieldTypeElement, context)
+        && !tryAddListConsumer(result, fieldName, fieldType, fieldParameter, context)
+        && !tryAddMapConsumer(result, fieldName, fieldType)
+        && !tryAddSetConsumer(result, fieldName, fieldType, fieldParameter, context)) {
+      tryAddStringBuilderConsumer(result, fieldName, fieldType);
+    }
+  }
+
+  /** Tries to add a direct builder-based consumer when the field type itself has a builder. */
+  private static boolean tryAddBuilderConsumer(
+      FieldDto result,
+      String fieldName,
+      VariableElement fieldParameter,
+      ProcessingContext context) {
+    Optional<TypeName> builderTypeOpt = resolveBuilderType(fieldParameter, context);
     if (builderTypeOpt.isPresent()) {
       TypeName builderType = builderTypeOpt.get();
       result.addMethod(
           BuilderDefinitionCreator.createFieldConsumerWithBuilder(fieldName, builderType));
-    } else if (!isJavaClass(fieldType)
+      return true;
+    }
+    return false;
+  }
+
+  /** Tries to add a consumer using an empty constructor of a concrete non-java class. */
+  private static boolean tryAddFieldConsumer(
+      FieldDto result,
+      String fieldName,
+      TypeName fieldType,
+      TypeElement fieldTypeElement,
+      ProcessingContext context) {
+    if (!isJavaClass(fieldType)
         && fieldTypeElement != null
         && fieldTypeElement.getKind() == javax.lang.model.element.ElementKind.CLASS
         && !fieldTypeElement.getModifiers().contains(Modifier.ABSTRACT)
         && hasEmptyConstructor(fieldTypeElement, context)) {
       // Only generate a Consumer for concrete classes with an accessible empty constructor
       result.addMethod(createFieldConsumer(fieldName, fieldType));
-    } else if (isList(fieldType)
-        && fieldType instanceof TypeNameGeneric fieldTypeGeneric
-        && fieldTypeGeneric.getInnerTypeArguments().size() == 1) {
-      result.addMethod(
-          createFieldConsumerWithBuilder(
-              fieldName,
-              map2TypeName(ArrayListBuilder.class),
-              fieldTypeGeneric.getInnerTypeArguments().get(0)));
-    } else if (isMap(fieldType)
-        && fieldType instanceof TypeNameGeneric fieldTypeGeneric
-        && fieldTypeGeneric.getInnerTypeArguments().size() == 2) {
-      TypeName builderTargetTypeName =
-          new TypeNameGeneric(
-              map2TypeName(HashMapBuilder.class),
-              fieldTypeGeneric.getInnerTypeArguments().get(0),
-              fieldTypeGeneric.getInnerTypeArguments().get(1));
-      MethodDto mapConsumerWithBuilder =
-          BuilderDefinitionCreator.createFieldConsumerWithBuilder(fieldName, builderTargetTypeName);
-      result.addMethod(mapConsumerWithBuilder);
-    } else if (isSet(fieldType)
-        && fieldType instanceof TypeNameGeneric fieldTypeGeneric
-        && fieldTypeGeneric.getInnerTypeArguments().size() == 1) {
-      result.addMethod(
-          createFieldConsumerWithBuilder(
-              fieldName,
-              map2TypeName(HashSetBuilder.class),
-              fieldTypeGeneric.getInnerTypeArguments().get(0)));
-    } else if (shouldGenerateStringBuilderConsumer(fieldType)) {
-      // Generate StringBuilder consumer for String or Optional<String>
+      return true;
+    }
+    return false;
+  }
+
+  /** Tries to add StringBuilder-based consumer for String and Optional<String>. */
+  private static boolean tryAddStringBuilderConsumer(
+      FieldDto result, String fieldName, TypeName fieldType) {
+    if (shouldGenerateStringBuilderConsumer(fieldType)) {
       String transform =
           isOptionalString(fieldType) ? "Optional.of(builder.toString())" : "builder.toString()";
       result.addMethod(createStringBuilderConsumer(fieldName, transform));
+      return true;
     }
+    return false;
+  }
+
+  /** Tries to add List-specific consumer methods. Returns true if handled. */
+  private static boolean tryAddListConsumer(
+      FieldDto result,
+      String fieldName,
+      TypeName fieldType,
+      VariableElement fieldParameter,
+      ProcessingContext context) {
+    if (!(isList(fieldType)
+        && fieldType instanceof TypeNameGeneric fieldTypeGeneric
+        && fieldTypeGeneric.getInnerTypeArguments().size() == 1)) {
+      return false;
+    }
+
+    TypeName elementType = fieldTypeGeneric.getInnerTypeArguments().get(0);
+
+    // Get the TypeMirror of the element type from the parameter's type
+    TypeMirror fieldTypeMirror = fieldParameter.asType();
+    TypeMirror elementTypeMirror = extractFirstTypeArgument(fieldTypeMirror);
+
+    Optional<TypeName> elementBuilderType =
+        resolveBuilderType(elementType, elementTypeMirror, context);
+
+    if (elementBuilderType.isPresent()) {
+      // Element type has a builder - use ArrayListBuilderWithElementBuilders
+      TypeName builderType =
+          new TypeNameGeneric(
+              map2TypeName(ArrayListBuilderWithElementBuilders.class),
+              elementType,
+              elementBuilderType.get());
+      result.addMethod(
+          createFieldConsumerWithElementBuilders(fieldName, builderType, elementBuilderType.get()));
+    } else {
+      // Regular ArrayListBuilder
+      TypeName builderType = map2TypeName(ArrayListBuilder.class);
+      result.addMethod(createFieldConsumerWithBuilder(fieldName, builderType, elementType));
+    }
+    return true;
+  }
+
+  /** Tries to add Map-specific consumer methods. Returns true if handled. */
+  private static boolean tryAddMapConsumer(FieldDto result, String fieldName, TypeName fieldType) {
+    if (!(isMap(fieldType)
+        && fieldType instanceof TypeNameGeneric fieldTypeGeneric
+        && fieldTypeGeneric.getInnerTypeArguments().size() == 2)) {
+      return false;
+    }
+
+    TypeName builderTargetTypeName =
+        new TypeNameGeneric(
+            map2TypeName(HashMapBuilder.class),
+            fieldTypeGeneric.getInnerTypeArguments().get(0),
+            fieldTypeGeneric.getInnerTypeArguments().get(1));
+    MethodDto mapConsumerWithBuilder =
+        BuilderDefinitionCreator.createFieldConsumerWithBuilder(fieldName, builderTargetTypeName);
+    result.addMethod(mapConsumerWithBuilder);
+    return true;
+  }
+
+  /** Tries to add Set-specific consumer methods. Returns true if handled. */
+  private static boolean tryAddSetConsumer(
+      FieldDto result,
+      String fieldName,
+      TypeName fieldType,
+      VariableElement fieldParameter,
+      ProcessingContext context) {
+    if (!(isSet(fieldType)
+        && fieldType instanceof TypeNameGeneric fieldTypeGeneric
+        && fieldTypeGeneric.getInnerTypeArguments().size() == 1)) {
+      return false;
+    }
+
+    TypeName elementType = fieldTypeGeneric.getInnerTypeArguments().get(0);
+
+    // Get the TypeMirror of the element type from the parameter's type
+    TypeMirror fieldTypeMirror = fieldParameter.asType();
+    TypeMirror elementTypeMirror = extractFirstTypeArgument(fieldTypeMirror);
+
+    Optional<TypeName> elementBuilderType =
+        resolveBuilderType(elementType, elementTypeMirror, context);
+
+    if (elementBuilderType.isPresent()) {
+      // Element type has a builder - use HashSetBuilderWithElementBuilders
+      TypeName builderType =
+          new TypeNameGeneric(
+              map2TypeName(HashSetBuilderWithElementBuilders.class),
+              elementType,
+              elementBuilderType.get());
+      result.addMethod(
+          createFieldConsumerWithElementBuilders(fieldName, builderType, elementBuilderType.get()));
+    } else {
+      // Regular HashSetBuilder
+      TypeName builderType = map2TypeName(HashSetBuilder.class);
+      result.addMethod(createFieldConsumerWithBuilder(fieldName, builderType, elementType));
+    }
+    return true;
   }
 
   private static void addSupplierMethodsForField(
@@ -367,7 +475,7 @@ public class BuilderDefinitionCreator {
     // Serializable>
     // If there are field-specific generics, no field in builder could be generated for it, so it
     // needs to be ignored
-    if (CollectionUtils.isNotEmpty(mth.getTypeParameters())) {
+    if (JavaLangAnalyser.hasGenericTypes(mth)) {
       context.warning(
           mth.getEnclosingElement(),
           "Field '%s' has field-specific generics, so it will be ignored",
@@ -534,6 +642,41 @@ public class BuilderDefinitionCreator {
   }
 
   private static MethodDto createFieldConsumerWithBuilder(String fieldName, TypeName builderType) {
+    return createFieldConsumerWithBuilder(
+        fieldName, builderType, "this.$fieldName:N.value()", "", Map.of());
+  }
+
+  /**
+   * Creates a consumer method for collection builders with element builders. Used for
+   * ArrayListBuilderWithElementBuilders and HashSetBuilderWithElementBuilders.
+   */
+  private static MethodDto createFieldConsumerWithElementBuilders(
+      String fieldName, TypeName collectionBuilderType, TypeName elementBuilderType) {
+    return createFieldConsumerWithBuilder(
+        fieldName,
+        collectionBuilderType,
+        "this.$fieldName:N.value(), $elementBuilderType:T::create",
+        "$elementBuilderType:T::create",
+        Map.of("elementBuilderType", elementBuilderType));
+  }
+
+  /**
+   * Creates a consumer method for a field with a builder type.
+   *
+   * @param fieldName the field name
+   * @param builderType the builder type (e.g., ArrayListBuilder or
+   *     ArrayListBuilderWithElementBuilders)
+   * @param constructorArgsWithValue constructor arguments when field is already set
+   * @param constructorArgsEmpty constructor arguments when field is empty
+   * @param additionalArguments additional template arguments to add to the method (must be TypeName
+   *     values)
+   */
+  private static MethodDto createFieldConsumerWithBuilder(
+      String fieldName,
+      TypeName builderType,
+      String constructorArgsWithValue,
+      String constructorArgsEmpty,
+      Map<String, TypeName> additionalArguments) {
     TypeNameGeneric consumerType = new TypeNameGeneric(map2TypeName(Consumer.class), builderType);
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName(fieldName + BUILDER_SUFFIX + SUFFIX_CONSUMER);
@@ -545,14 +688,16 @@ public class BuilderDefinitionCreator {
     methodDto.setMethodType(MethodTypes.CONSUMER_BY_BUILDER);
     methodDto.setCode(
         """
-        $helperType:T builder = this.$fieldName:N.isSet() ? new $helperType:T(this.$fieldName:N.value()) : new $helperType:T();
+        $helperType:T builder = this.$fieldName:N.isSet() ? new $helperType:T(%s) : new $helperType:T(%s);
         $dtoMethodParam:N.accept(builder);
         this.$fieldName:N = $builderFieldWrapper:T.changedValue(builder.build());
         return this;
-        """);
+        """
+            .formatted(constructorArgsWithValue, constructorArgsEmpty));
     methodDto.addArgument(ARG_FIELD_NAME, fieldName);
     methodDto.addArgument(ARG_DTO_METHOD_PARAM, parameter.getParameterName());
     methodDto.addArgument(ARG_HELPER_TYPE, builderType);
+    additionalArguments.forEach(methodDto::addArgument);
     methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
     return methodDto;
   }
@@ -624,25 +769,97 @@ public class BuilderDefinitionCreator {
     return isOptionalString(fieldType);
   }
 
-  private static Optional<TypeName> findBuilderType(
+  private static Optional<TypeName> resolveBuilderType(
       VariableElement param, ProcessingContext context) {
     TypeMirror typeOfParameter = param.asType();
     if (typeOfParameter.getKind() == ARRAY || typeOfParameter.getKind().isPrimitive()) {
       return Optional.empty();
     }
     Element elementOfParameter = context.asElement(typeOfParameter);
-    if (elementOfParameter == null) {
+    if (!(elementOfParameter instanceof TypeElement typeElement)) {
       // Can happen for primitives or certain compiler-internal types; nothing to build
       return Optional.empty();
     }
-    String simpleClassName = elementOfParameter.getSimpleName().toString();
-    String packageName = context.getPackageName(elementOfParameter);
-    Optional<AnnotationMirror> foundBuilderAnnotation =
-        findAnnotation(elementOfParameter, SimpleBuilder.class);
-    boolean isClassWithoutGenerics = StringUtils.containsNone(simpleClassName, "<");
-    if (foundBuilderAnnotation.isPresent() && isClassWithoutGenerics) {
-      return Optional.of(new TypeName(packageName, simpleClassName + BUILDER_SUFFIX));
+    // For direct field types disallow generics here in the caller
+    if (JavaLangAnalyser.hasGenericTypes(typeElement)) {
+      context.debug(
+          "  -> Skipping builder lookup for generic type %s", typeElement.getSimpleName());
+      return Optional.empty();
     }
-    return Optional.empty();
+    return resolveBuilderTypeFromTypeElement(typeElement, context);
+  }
+
+  /**
+   * Finds the builder type for a given element type (used for collection elements).
+   *
+   * @param elementType the type of the collection element
+   * @param elementTypeMirror the TypeMirror of the element type (from the parameter)
+   * @param context processing context
+   * @return Optional containing the builder TypeName if the element type has @SimpleBuilder
+   */
+  private static Optional<TypeName> resolveBuilderType(
+      TypeName elementType, TypeMirror elementTypeMirror, ProcessingContext context) {
+
+    // Skip cases without type mirror
+    if (elementTypeMirror == null) {
+      return Optional.empty();
+    }
+
+    // Skip type variables and primitives
+    if (elementType instanceof TypeNameVariable || elementType instanceof TypeNamePrimitive) {
+      context.debug("  -> Skipping type variable or primitive: %s", elementType);
+      return Optional.empty();
+    }
+
+    // Try to get the element from the TypeMirror
+    Element element = context.asElement(elementTypeMirror);
+    if (!(element instanceof TypeElement typeElement)) {
+      context.debug("  -> Element is not a TypeElement: %s", element);
+      return Optional.empty();
+    }
+    // For collection element types: delegate to shared helper
+    return resolveBuilderTypeFromTypeElement(typeElement, context);
+  }
+
+  /**
+   * Shared helper resolving a builder {@link TypeName} from a {@link TypeElement} if it is
+   * annotated with {@code @SimpleBuilder}. Generics policy is enforced by the callers.
+   *
+   * @param typeElement the type element to inspect
+   * @param context processing context
+   */
+  private static Optional<TypeName> resolveBuilderTypeFromTypeElement(
+      TypeElement typeElement, ProcessingContext context) {
+    // Check annotation presence first
+    Optional<AnnotationMirror> foundBuilderAnnotation =
+        findAnnotation(typeElement, SimpleBuilder.class);
+    if (foundBuilderAnnotation.isEmpty()) {
+      context.debug("  -> Type %s has no @SimpleBuilder", typeElement.getSimpleName());
+      return Optional.empty();
+    }
+
+    String packageName = context.getPackageName(typeElement);
+    String simpleClassName = typeElement.getSimpleName().toString();
+    context.debug(
+        "  -> Found @SimpleBuilder on type %s.%s, will use %sBuilder",
+        packageName, simpleClassName, simpleClassName);
+    return Optional.of(new TypeName(packageName, simpleClassName + BUILDER_SUFFIX));
+  }
+
+  /**
+   * Extracts the first type argument from a parameterized type mirror. For example, from
+   * List&lt;Task&gt;, this extracts the Task TypeMirror.
+   *
+   * @param typeMirror the parameterized type mirror
+   * @return the first type argument, or null if not a parameterized type
+   */
+  private static TypeMirror extractFirstTypeArgument(TypeMirror typeMirror) {
+    if (typeMirror instanceof javax.lang.model.type.DeclaredType declaredType) {
+      List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
+      if (!typeArguments.isEmpty()) {
+        return typeArguments.get(0);
+      }
+    }
+    return null;
   }
 }

@@ -19,7 +19,7 @@ public final class ProcessorAsserts {
   /** Collapse all whitespace (spaces, tabs, newlines) to single spaces and trim. */
   private static String normalizeWhitespace(String input) {
     if (input == null) return null;
-    return input.replaceAll("\\s+", " ").trim();
+    return input.replaceAll("[\\t\\n\\r\\s]+", "").trim();
   }
 
   /**

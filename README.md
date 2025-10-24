@@ -152,18 +152,19 @@ public enum ProjectStatus {
 Usage with collections and nested builders:
 
 ```java
+String version = "1.0.0";
 Project project = ProjectBuilder.create()
-    .name("Simple Builders with a bit of complexity")
+    .name("Simple Builders in version '%s' with a bit of complexity", version)
     .status(ProjectStatus.IN_PROGRESS)
     .tasks(tasks -> tasks
-        .add(TaskBuilder.create()
+        .add(taskBuilder -> taskBuilder
             .title("Implement core functionality")
             .completed(true)
-            .build())
-        .add(TaskBuilder.create()
+        )
+        .add(taskBuilder -> taskBuilder
             .title("Add documentation")
             .description("Update README and add Javadocs")
-            .build())
+        )
     )
     .metadata(metadata -> metadata
         .put("version", "1.0.0")

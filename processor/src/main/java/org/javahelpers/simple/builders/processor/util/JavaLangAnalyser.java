@@ -38,6 +38,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilderConstructor;
@@ -128,6 +129,33 @@ public final class JavaLangAnalyser {
    */
   public static boolean isNotStatic(ExecutableElement mth) {
     return !mth.getModifiers().contains(STATIC);
+  }
+
+  /**
+   * Checks whether the given {@link TypeElement} declares generic type parameters.
+   *
+   * @param typeElement the type element to inspect
+   * @return {@code true} if the type declares one or more type parameters; {@code false} otherwise
+   */
+  public static boolean hasGenericTypes(TypeElement typeElement) {
+    if (typeElement == null) {
+      return false;
+    }
+    return CollectionUtils.isNotEmpty(typeElement.getTypeParameters());
+  }
+
+  /**
+   * Checks whether the given {@link ExecutableElement} declares generic type parameters.
+   *
+   * @param executableElement the executable element to inspect
+   * @return {@code true} if the executable declares one or more type parameters; {@code false}
+   *     otherwise
+   */
+  public static boolean hasGenericTypes(ExecutableElement executableElement) {
+    if (executableElement == null) {
+      return false;
+    }
+    return CollectionUtils.isNotEmpty(executableElement.getTypeParameters());
   }
 
   /**
