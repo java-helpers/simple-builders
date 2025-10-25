@@ -204,4 +204,51 @@ public final class FieldAnnotationExtractor {
     // Skip compiler-only annotations that are not relevant for builder parameters
     return qualifiedName.equals("java.lang.SuppressWarnings");
   }
+
+  /**
+   * Checks if a parameter has a non-null constraint annotation.
+   *
+   * <p>Detects common non-null annotations from various libraries:
+   *
+   * <ul>
+   *   <li>jakarta.validation.constraints.NotNull
+   *   <li>javax.validation.constraints.NotNull
+   *   <li>org.jetbrains.annotations.NotNull
+   *   <li>lombok.NonNull
+   *   <li>android.support.annotation.NonNull
+   *   <li>androidx.annotation.NonNull
+   *   <li>org.eclipse.jdt.annotation.NonNull
+   *   <li>javax.annotation.Nonnull
+   *   <li>com.google.code.findbugs.annotations.NonNull
+   * </ul>
+   *
+   * @param param the parameter element to check
+   * @return true if the parameter has a non-null constraint annotation
+   */
+  public static boolean hasNonNullConstraint(VariableElement param) {
+    return param.getAnnotationMirrors().stream()
+        .map(am -> am.getAnnotationType().asElement())
+        .filter(TypeElement.class::isInstance)
+        .map(el -> ((TypeElement) el).getQualifiedName().toString())
+        .anyMatch(FieldAnnotationExtractor::isNonNullAnnotation);
+  }
+
+  /**
+   * Checks if the given qualified name represents a non-null constraint annotation.
+   *
+   * @param qualifiedName the fully qualified annotation name
+   * @return true if it's a recognized non-null annotation
+   */
+  private static boolean isNonNullAnnotation(String qualifiedName) {
+    return qualifiedName.equals("jakarta.validation.constraints.NotNull")
+        || qualifiedName.equals("javax.validation.constraints.NotNull")
+        || qualifiedName.equals("org.jetbrains.annotations.NotNull")
+        || qualifiedName.equals("lombok.NonNull")
+        || qualifiedName.equals("android.support.annotation.NonNull")
+        || qualifiedName.equals("androidx.annotation.NonNull")
+        || qualifiedName.equals("org.eclipse.jdt.annotation.NonNull")
+        || qualifiedName.equals("javax.annotation.Nonnull")
+        || qualifiedName.equals("edu.umd.cs.findbugs.annotations.NonNull")
+        || qualifiedName.equals("com.google.code.findbugs.annotations.NonNull");
+  }
 }

@@ -139,6 +139,8 @@ public class BuilderDefinitionCreator {
             createFieldFromConstructor(annotatedType, param, context);
         if (fieldFromCtor.isPresent()) {
           FieldDto field = fieldFromCtor.get();
+          // Constructor parameters are mandatory - must be set before build()
+          field.setMandatory(true);
           logFieldAddition(field, context);
           constructorFields.add(field);
         }
@@ -550,6 +552,11 @@ public class BuilderDefinitionCreator {
 
     // Extract annotations from the field parameter
     List<AnnotationDto> annotations = FieldAnnotationExtractor.extractAnnotations(param, context);
+
+    // Check if field has non-null constraint
+    if (FieldAnnotationExtractor.hasNonNullConstraint(param)) {
+      field.setNonNullable(true);
+    }
 
     // Add basic setter method with annotations
     field.addMethod(createFieldSetterWithTransform(fieldName, null, fieldType, annotations));

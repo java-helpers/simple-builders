@@ -269,6 +269,51 @@ public class JavaCodeGenerator {
             .returns(returnType)
             .addAnnotation(Override.class);
 
+    // Validate mandatory constructor fields are set
+    for (FieldDto field : constructorFields) {
+      if (field.isMandatory()) {
+        mb.beginControlFlow("if (!this.$N.isSet())", field.getFieldName())
+            .addStatement(
+                "throw new $T($S)",
+                IllegalStateException.class,
+                "Required field '" + field.getFieldName() + "' must be set before calling build()")
+            .endControlFlow();
+      }
+    }
+
+    // Validate non-nullable fields don't have null values (both constructor and setter fields)
+    for (FieldDto field : constructorFields) {
+      if (field.isNonNullable()) {
+        mb.beginControlFlow(
+                "if (this.$N.isSet() && this.$N.value() == null)",
+                field.getFieldName(),
+                field.getFieldName())
+            .addStatement(
+                "throw new $T($S)",
+                IllegalStateException.class,
+                "Field '"
+                    + field.getFieldName()
+                    + "' is marked as non-null but null value was provided")
+            .endControlFlow();
+      }
+    }
+
+    for (FieldDto field : setterFields) {
+      if (field.isNonNullable()) {
+        mb.beginControlFlow(
+                "if (this.$N.isSet() && this.$N.value() == null)",
+                field.getFieldName(),
+                field.getFieldName())
+            .addStatement(
+                "throw new $T($S)",
+                IllegalStateException.class,
+                "Field '"
+                    + field.getFieldName()
+                    + "' is marked as non-null but null value was provided")
+            .endControlFlow();
+      }
+    }
+
     // Build constructor argument list: use backing fields' values in declared order
     String ctorArgs =
         constructorFields.stream()
