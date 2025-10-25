@@ -83,6 +83,9 @@ public record TrackedValue<T>(T value, boolean isChanged, boolean isInitial) {
    * Creates a tracked value representing an initial value copied from an existing instance. The
    * value is present but is not considered a change initiated by the builder.
    *
+   * <p>Note: If the field has a non-null constraint, validation will occur during {@code build()}.
+   * Null initial values for non-nullable fields will be caught at build time.
+   *
    * @param <T> the value type
    * @param value the initial value (may be {@code null})
    * @return an instance with the given value, {@code isChanged == false}, and {@code isInitial ==
@@ -94,6 +97,11 @@ public record TrackedValue<T>(T value, boolean isChanged, boolean isInitial) {
 
   /**
    * Creates a tracked value representing an explicit change performed via the builder API.
+   *
+   * <p>Note: Null values are allowed here to support supplier/consumer patterns. However, if the
+   * field has a non-null constraint, validation will occur during {@code build()} and throw an
+   * exception if null is detected. This catches cases where null values come from suppliers,
+   * providers, or consumers that static code analysis cannot detect.
    *
    * @param <T> the value type
    * @param value the changed value (may be {@code null})

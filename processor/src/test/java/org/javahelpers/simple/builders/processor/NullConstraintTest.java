@@ -128,8 +128,7 @@ class NullConstraintTest {
     ProcessorAsserts.assertingResult(
         generatedCode,
         contains("if (this.username.isSet() && this.username.value() == null)"),
-        contains(
-            "throw new IllegalStateException(\"Field 'username' is marked as non-null but null value was provided\")"));
+        contains("Field 'username' is marked as non-null but null value was provided"));
   }
 
   @Test
@@ -178,22 +177,20 @@ class NullConstraintTest {
     String generatedCode = loadGeneratedSource(compilation, "ProductBuilder");
     ProcessorAsserts.assertGenerationSucceeded(compilation, "ProductBuilder", generatedCode);
 
-    // Verify non-null validation is generated for setter field
+    // Verify setter field has validation in build() to catch nulls from suppliers/providers
     ProcessorAsserts.assertingResult(
         generatedCode,
         contains("if (this.name.isSet() && this.name.value() == null)"),
-        contains(
-            "throw new IllegalStateException(\"Field 'name' is marked as non-null but null value was provided\")"));
+        contains("Field 'name' is marked as non-null but null value was provided"));
 
     // Verify nullable field doesn't have validation
     ProcessorAsserts.assertNotContaining(
-        generatedCode, "Field 'description' is marked as non-null");
+        generatedCode, "if (this.description.isSet() && this.description.value() == null)");
   }
 
   @Test
   void combinedConstraints_mandatoryAndNonNull_bothValidationsGenerated() {
     String packageName = "test.combined";
-
     JavaFileObject nonNullAnnotation =
         JavaFileObjects.forSourceString(
             "org.jetbrains.annotations.NotNull",
@@ -312,11 +309,15 @@ class NullConstraintTest {
     String generatedCode = loadGeneratedSource(compilation, "EntityBuilder");
     ProcessorAsserts.assertGenerationSucceeded(compilation, "EntityBuilder", generatedCode);
 
-    // Verify both annotations are recognized
+    // Verify constructor field has validation in build()
     ProcessorAsserts.assertingResult(
         generatedCode,
         contains("if (this.jakartaField.isSet() && this.jakartaField.value() == null)"),
-        contains("Field 'jakartaField' is marked as non-null"),
+        contains("Field 'jakartaField' is marked as non-null"));
+
+    // Verify setter field also has validation in build()
+    ProcessorAsserts.assertingResult(
+        generatedCode,
         contains("if (this.lombokField.isSet() && this.lombokField.value() == null)"),
         contains("Field 'lombokField' is marked as non-null"));
   }

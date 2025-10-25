@@ -139,8 +139,6 @@ public class BuilderDefinitionCreator {
             createFieldFromConstructor(annotatedType, param, context);
         if (fieldFromCtor.isPresent()) {
           FieldDto field = fieldFromCtor.get();
-          // Constructor parameters are mandatory - must be set before build()
-          field.setMandatory(true);
           logFieldAddition(field, context);
           constructorFields.add(field);
         }

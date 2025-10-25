@@ -56,14 +56,9 @@ public class FieldDto {
   private String getterName;
 
   /**
-   * Whether this field is mandatory (must be set before build()). Typically true for constructor
-   * parameters.
-   */
-  private boolean mandatory = false;
-
-  /**
-   * Whether this field is marked as non-nullable via annotations like @NotNull, @NonNull, etc. If
-   * true, null values should be rejected or treated as unset.
+   * Whether this field is marked as non-nullable via annotations like @NotNull, @NonNull, etc. For
+   * constructor fields: must be set AND can't be null. For setter fields: if set, can't be null
+   * (optional to set).
    */
   private boolean nonNullable = false;
 
@@ -186,24 +181,6 @@ public class FieldDto {
    */
   public void setGetterName(String getterName) {
     this.getterName = getterName;
-  }
-
-  /**
-   * Checks if this field is mandatory (must be set before build()).
-   *
-   * @return true if the field is mandatory, false otherwise
-   */
-  public boolean isMandatory() {
-    return mandatory;
-  }
-
-  /**
-   * Marks this field as mandatory or optional.
-   *
-   * @param mandatory true if the field must be set before build()
-   */
-  public void setMandatory(boolean mandatory) {
-    this.mandatory = mandatory;
   }
 
   /**

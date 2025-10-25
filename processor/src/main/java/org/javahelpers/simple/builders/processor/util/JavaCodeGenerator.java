@@ -269,25 +269,17 @@ public class JavaCodeGenerator {
             .returns(returnType)
             .addAnnotation(Override.class);
 
-    // Validate mandatory constructor fields are set
+    // Validate non-nullable constructor fields: must be set AND can't be null
+    // If not annotated with @NotNull/@NonNull, constructor fields can be left unset (→ null passed)
     for (FieldDto field : constructorFields) {
-      if (field.isMandatory()) {
+      if (field.isNonNullable()) {
         mb.beginControlFlow("if (!this.$N.isSet())", field.getFieldName())
             .addStatement(
                 "throw new $T($S)",
                 IllegalStateException.class,
                 "Required field '" + field.getFieldName() + "' must be set before calling build()")
             .endControlFlow();
-      }
-    }
-
-    // Validate non-nullable fields don't have null values (both constructor and setter fields)
-    for (FieldDto field : constructorFields) {
-      if (field.isNonNullable()) {
-        mb.beginControlFlow(
-                "if (this.$N.isSet() && this.$N.value() == null)",
-                field.getFieldName(),
-                field.getFieldName())
+        mb.beginControlFlow("if (this.$N.value() == null)", field.getFieldName())
             .addStatement(
                 "throw new $T($S)",
                 IllegalStateException.class,
@@ -298,6 +290,8 @@ public class JavaCodeGenerator {
       }
     }
 
+    // Validate non-nullable setter fields don't have null values
+    // This catches null values from suppliers, providers, or direct setter calls
     for (FieldDto field : setterFields) {
       if (field.isNonNullable()) {
         mb.beginControlFlow(
