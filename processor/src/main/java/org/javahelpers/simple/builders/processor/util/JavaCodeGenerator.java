@@ -485,22 +485,15 @@ public class JavaCodeGenerator {
     MethodSpec.Builder methodBuilder =
         MethodSpec.methodBuilder(method.getMethodName()).addModifiers(PUBLIC);
 
-    // Set return type
-    if (method.getReturnType() != null) {
-      TypeName returnTypeName = method.getReturnType();
-      if (returnTypeName.getClassName().equals(dtoClass.simpleName())) {
-        methodBuilder.returns(dtoClass);
-      } else if (returnTypeName.getClassName().equals(builderClass.simpleName())) {
-        methodBuilder.returns(builderClass);
-      } else {
-        // Use the return type as-is (construct ClassName from TypeName)
-        if (returnTypeName.getPackageName() != null && !returnTypeName.getPackageName().isEmpty()) {
-          methodBuilder.returns(
-              ClassName.get(returnTypeName.getPackageName(), returnTypeName.getClassName()));
-        } else {
-          methodBuilder.returns(ClassName.bestGuess(returnTypeName.getClassName()));
-        }
-      }
+    // Set return type (returnType is mandatory in MethodDto)
+    TypeName returnTypeName = method.getReturnType();
+    if (returnTypeName.getClassName().equals(dtoClass.simpleName())) {
+      methodBuilder.returns(dtoClass);
+    } else if (returnTypeName.getClassName().equals(builderClass.simpleName())) {
+      methodBuilder.returns(builderClass);
+    } else {
+      // Use the mapper for other types
+      methodBuilder.returns(JavapoetMapper.map2ClassName(returnTypeName));
     }
 
     // Add parameters
