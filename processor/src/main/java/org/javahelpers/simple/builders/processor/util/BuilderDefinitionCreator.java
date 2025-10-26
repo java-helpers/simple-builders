@@ -99,6 +99,10 @@ public class BuilderDefinitionCreator {
     List<FieldDto> setterFields = extractSetterFields(annotatedType, result, context);
     result.addAllFields(setterFields);
 
+    // Create the With interface
+    NestedTypeDto withInterface = createWithInterface(result, context);
+    result.addNestedType(withInterface);
+
     return result;
   }
 
@@ -897,5 +901,104 @@ public class BuilderDefinitionCreator {
       }
     }
     return null;
+  }
+
+  /**
+   * Creates the "With" interface definition that allows the DTO to implement fluent modification
+   * methods.
+   *
+   * @param builderDef the builder definition containing type information
+   * @param context the processing context
+   * @return the nested type definition for the With interface
+   */
+  private static NestedTypeDto createWithInterface(
+      BuilderDefinitionDto builderDef, ProcessingContext context) {
+    context.debug(
+        "Creating With interface for: %s", builderDef.getBuilderTypeName().getClassName());
+
+    NestedTypeDto withInterface = new NestedTypeDto();
+    withInterface.setTypeName("With");
+    withInterface.setKind(NestedTypeDto.NestedTypeKind.INTERFACE);
+    withInterface.setPublic(true);
+    withInterface.setJavadoc(
+        "Interface that can be implemented by the DTO to provide fluent modification methods.");
+
+    // Create the first method: DtoType with(Consumer<BuilderType> b)
+    MethodDto withConsumerMethod = createWithConsumerMethod(builderDef);
+    withInterface.addMethod(withConsumerMethod);
+
+    // Create the second method: BuilderType with()
+    MethodDto withBuilderMethod = createWithBuilderMethod(builderDef);
+    withInterface.addMethod(withBuilderMethod);
+
+    return withInterface;
+  }
+
+  /**
+   * Creates the `DtoType with(Consumer<BuilderType> b)` method definition.
+   *
+   * @param builderDef the builder definition
+   * @return the method definition
+   */
+  private static MethodDto createWithConsumerMethod(BuilderDefinitionDto builderDef) {
+    MethodDto method = new MethodDto();
+    method.setMethodName("with");
+
+    // Return type is the DTO type
+    TypeName dtoType = builderDef.getBuildingTargetTypeName();
+    method.setReturnType(dtoType);
+
+    // Parameter: Consumer<BuilderType> b
+    MethodParameterDto parameter = new MethodParameterDto();
+    parameter.setParameterName("b");
+    // For interface methods, we store the full type as a string
+    TypeName consumerType =
+        new TypeName(
+            "java.util.function",
+            "Consumer<" + builderDef.getBuilderTypeName().getClassName() + ">");
+    parameter.setParameterTypeName(consumerType);
+    method.addParameter(parameter);
+
+    // Add implementation (cast this to the DTO type)
+    method.setCode(
+        """
+        $builderType:T builder = new $builderType:T(($dtoType:T) this);
+        b.accept(builder);
+        return builder.build();
+        """);
+    method.addArgument("builderType", builderDef.getBuilderTypeName());
+    method.addArgument("dtoType", builderDef.getBuildingTargetTypeName());
+
+    method.setJavadoc(
+        "Applies modifications to a builder initialized from this instance and returns the built object.\n\n"
+            + "@param b the consumer to apply modifications\n"
+            + "@return the modified instance");
+
+    return method;
+  }
+
+  /**
+   * Creates the `BuilderType with()` method definition.
+   *
+   * @param builderDef the builder definition
+   * @return the method definition
+   */
+  private static MethodDto createWithBuilderMethod(BuilderDefinitionDto builderDef) {
+    MethodDto method = new MethodDto();
+    method.setMethodName("with");
+
+    // Return type is the Builder type
+    method.setReturnType(builderDef.getBuilderTypeName());
+
+    // Add implementation (cast this to the DTO type)
+    method.setCode("return new $builderType:T(($dtoType:T) this);\n");
+    method.addArgument("builderType", builderDef.getBuilderTypeName());
+    method.addArgument("dtoType", builderDef.getBuildingTargetTypeName());
+
+    method.setJavadoc(
+        "Creates a builder initialized from this instance.\n\n"
+            + "@return a builder initialized with this instance's values");
+
+    return method;
   }
 }

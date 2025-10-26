@@ -52,6 +52,12 @@ public class BuilderDefinitionDto {
   private final List<FieldDto> fields = new LinkedList<>();
 
   /**
+   * Nested types (interfaces or classes) to be generated inside the builder, such as the "With"
+   * interface.
+   */
+  private final List<NestedTypeDto> nestedTypes = new LinkedList<>();
+
+  /**
    * Getting type of builder.
    *
    * @return {@code org.javahelpers.simple.builders.internal.dtos.Typename} package and name of
@@ -172,5 +178,23 @@ public class BuilderDefinitionDto {
    */
   public List<GenericParameterDto> getGenerics() {
     return generics;
+  }
+
+  /**
+   * Returns the list of nested types (interfaces or classes) to be generated inside the builder.
+   *
+   * @return the list of nested types
+   */
+  public List<NestedTypeDto> getNestedTypes() {
+    return nestedTypes;
+  }
+
+  /**
+   * Adds a nested type definition to the builder.
+   *
+   * @param nestedType the nested type to add
+   */
+  public void addNestedType(NestedTypeDto nestedType) {
+    this.nestedTypes.add(nestedType);
   }
 }

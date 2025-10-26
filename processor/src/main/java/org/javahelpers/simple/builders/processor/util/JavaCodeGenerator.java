@@ -149,6 +149,13 @@ public class JavaCodeGenerator {
     classBuilder.addMethod(createMethodConditional(builderTypeName));
     classBuilder.addMethod(createMethodConditionalPositiveOnly(builderTypeName));
 
+    // Adding nested types (e.g., With interface)
+    for (NestedTypeDto nestedType : builderDef.getNestedTypes()) {
+      TypeSpec nestedTypeSpec = createNestedType(nestedType, dtoBaseClass, builderBaseClass);
+      classBuilder.addType(nestedTypeSpec);
+      logger.debug("  Generated nested type: %s", nestedType.getTypeName());
+    }
+
     // Adding annotations
     classBuilder.addAnnotation(createAnnotationGenerated());
     classBuilder.addAnnotation(createAnnotationBuilderImplementation(dtoBaseClass));
@@ -428,6 +435,133 @@ public class JavaCodeGenerator {
             """)
         .addCode("return conditional(condition, yesCondition, null);\n")
         .build();
+  }
+
+  /**
+   * Creates a nested type (interface or class) from the DTO definition.
+   *
+   * @param nestedType the nested type definition
+   * @param dtoClass the DTO class name
+   * @param builderClass the builder class name
+   * @return the TypeSpec for the nested type
+   */
+  private TypeSpec createNestedType(
+      NestedTypeDto nestedType, ClassName dtoClass, ClassName builderClass) {
+    TypeSpec.Builder typeBuilder;
+
+    if (nestedType.getKind() == NestedTypeDto.NestedTypeKind.INTERFACE) {
+      typeBuilder = TypeSpec.interfaceBuilder(nestedType.getTypeName());
+    } else {
+      typeBuilder = TypeSpec.classBuilder(nestedType.getTypeName());
+    }
+
+    if (nestedType.isPublic()) {
+      typeBuilder.addModifiers(PUBLIC);
+    }
+
+    if (nestedType.getJavadoc() != null) {
+      typeBuilder.addJavadoc(nestedType.getJavadoc());
+    }
+
+    // Add methods to the nested type
+    for (MethodDto method : nestedType.getMethods()) {
+      MethodSpec methodSpec = createNestedTypeMethod(method, dtoClass, builderClass);
+      typeBuilder.addMethod(methodSpec);
+    }
+
+    return typeBuilder.build();
+  }
+
+  /**
+   * Creates a method for a nested type (default interface method with body).
+   *
+   * @param method the method DTO
+   * @param dtoClass the DTO class name
+   * @param builderClass the builder class name
+   * @return the MethodSpec
+   */
+  private MethodSpec createNestedTypeMethod(
+      MethodDto method, ClassName dtoClass, ClassName builderClass) {
+    MethodSpec.Builder methodBuilder =
+        MethodSpec.methodBuilder(method.getMethodName()).addModifiers(PUBLIC);
+
+    // Set return type
+    if (method.getReturnType() != null) {
+      TypeName returnTypeName = method.getReturnType();
+      if (returnTypeName.getClassName().equals(dtoClass.simpleName())) {
+        methodBuilder.returns(dtoClass);
+      } else if (returnTypeName.getClassName().equals(builderClass.simpleName())) {
+        methodBuilder.returns(builderClass);
+      } else {
+        // Use the return type as-is (construct ClassName from TypeName)
+        if (returnTypeName.getPackageName() != null && !returnTypeName.getPackageName().isEmpty()) {
+          methodBuilder.returns(
+              ClassName.get(returnTypeName.getPackageName(), returnTypeName.getClassName()));
+        } else {
+          methodBuilder.returns(ClassName.bestGuess(returnTypeName.getClassName()));
+        }
+      }
+    }
+
+    // Add parameters
+    for (MethodParameterDto param : method.getParameters()) {
+      com.palantir.javapoet.TypeName paramType;
+      String typeStr = param.getParameterType().getClassName();
+
+      // Handle Consumer<BuilderType>
+      if (typeStr.startsWith("Consumer<")) {
+        paramType =
+            ParameterizedTypeName.get(
+                ClassName.get(java.util.function.Consumer.class), builderClass);
+      } else {
+        paramType = ClassName.bestGuess(typeStr);
+      }
+
+      methodBuilder.addParameter(paramType, param.getParameterName());
+    }
+
+    // Add Javadoc
+    if (method.getJavadoc() != null) {
+      methodBuilder.addJavadoc(method.getJavadoc());
+    }
+
+    // Add default modifier and method body for interface methods
+    methodBuilder.addModifiers(javax.lang.model.element.Modifier.DEFAULT);
+
+    // Add method body from the MethodCodeDto
+    MethodCodeDto codeDto = method.getMethodCodeDto();
+    if (codeDto.getCodeFormat() != null && !codeDto.getCodeFormat().isEmpty()) {
+      // Build code with type arguments
+      String code = codeDto.getCodeFormat();
+      java.util.List<Object> args = new java.util.ArrayList<>();
+
+      // Replace placeholders with appropriate classes (count how many times each placeholder
+      // appears)
+      for (MethodCodePlaceholder<?> placeholder : codeDto.getCodeArguments()) {
+        if (placeholder instanceof MethodCodeTypePlaceholder) {
+          String placeholderStr = "$" + placeholder.getLabel() + ":T";
+          // Count occurrences
+          int count = 0;
+          int index = 0;
+          while ((index = code.indexOf(placeholderStr, index)) != -1) {
+            count++;
+            index += placeholderStr.length();
+          }
+          // Replace all occurrences with $T
+          code = code.replace(placeholderStr, "$T");
+          // Determine which class to use based on placeholder label
+          ClassName classToUse = placeholder.getLabel().equals("dtoType") ? dtoClass : builderClass;
+          // Add class to args for each occurrence
+          for (int i = 0; i < count; i++) {
+            args.add(classToUse);
+          }
+        }
+      }
+
+      methodBuilder.addCode(code, args.toArray());
+    }
+
+    return methodBuilder.build();
   }
 
   private List<MethodSpec> createFieldMethods(
