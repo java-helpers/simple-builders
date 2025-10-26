@@ -1107,8 +1107,6 @@ class BuilderProcessorTest {
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
 
-    // Note: Proxy methods are no longer supported; do not assert proxy method javadoc here.
-
     // Setter method javadoc and code (default values, when nothing is set)
     ProcessorAsserts.assertContaining(generatedCode, "@param name the name of a specific person");
 
