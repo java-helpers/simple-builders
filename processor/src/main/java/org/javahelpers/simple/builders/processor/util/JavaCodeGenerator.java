@@ -147,6 +147,7 @@ public class JavaCodeGenerator {
         createMethodStaticCreate(
             builderBaseClass, builderTypeName, dtoBaseClass, builderDef.getGenerics()));
     classBuilder.addMethod(createMethodConditional(builderTypeName));
+    classBuilder.addMethod(createMethodConditionalPositiveOnly(builderTypeName));
 
     // Adding annotations
     classBuilder.addAnnotation(createAnnotationGenerated());
@@ -392,18 +393,40 @@ public class JavaCodeGenerator {
 
             @param condition the condition to evaluate
             @param trueCase the consumer to apply if condition is true
-            @param falseCase the consumer to apply if condition is false
+            @param falseCase the consumer to apply if condition is false (can be null)
             @return this builder instance
             """)
         .addCode(
             """
             if (condition.getAsBoolean()) {
                 trueCase.accept(this);
-            } else {
+            } else if (falseCase != null) {
                 falseCase.accept(this);
             }
             return this;
             """)
+        .build();
+  }
+
+  private MethodSpec createMethodConditionalPositiveOnly(
+      com.palantir.javapoet.TypeName builderType) {
+    return MethodSpec.methodBuilder("conditional")
+        .addModifiers(PUBLIC)
+        .returns(builderType)
+        .addParameter(ClassName.get(java.util.function.BooleanSupplier.class), "condition")
+        .addParameter(
+            ParameterizedTypeName.get(
+                ClassName.get(java.util.function.Consumer.class), builderType),
+            "yesCondition")
+        .addJavadoc(
+            """
+            Conditionally applies builder modifications if the condition is true.
+
+            @param condition the condition to evaluate
+            @param yesCondition the consumer to apply if condition is true
+            @return this builder instance
+            """)
+        .addCode("return conditional(condition, yesCondition, null);\n")
         .build();
   }
 

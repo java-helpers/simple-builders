@@ -51,26 +51,25 @@ class ConditionalExecutionTest {
         public PersonBuilder conditional(BooleanSupplier condition, Consumer<PersonBuilder> trueCase, Consumer<PersonBuilder> falseCase) {
         """);
 
-    // Verify complete method implementation
-    ProcessorAsserts.assertContaining(
-        generatedCode,
-        """
-        if (condition.getAsBoolean()) {
-            trueCase.accept(this);
-        } else {
-            falseCase.accept(this);
-        }
-        return this;
-        """);
-
     // Verify Javadoc is present and complete
     ProcessorAsserts.assertingResult(
         generatedCode,
         contains("Conditionally applies builder modifications based on a condition"),
         contains("@param condition the condition to evaluate"),
         contains("@param trueCase the consumer to apply if condition is true"),
-        contains("@param falseCase the consumer to apply if condition is false"),
+        contains("@param falseCase the consumer to apply if condition is false (can be null)"),
         contains("@return this builder instance"));
+
+    // Verify null-safe implementation for falseCase
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        """
+        if (condition.getAsBoolean()) {
+            trueCase.accept(this);
+        } else if (falseCase != null) {
+            falseCase.accept(this);
+        }
+        """);
 
     // Verify imports are present
     ProcessorAsserts.assertingResult(
@@ -116,13 +115,13 @@ class ConditionalExecutionTest {
         public UserBuilder conditional(BooleanSupplier condition, Consumer<UserBuilder> trueCase, Consumer<UserBuilder> falseCase) {
         """);
 
-    // Verify the method body is correctly generated
+    // Verify the method body is correctly generated with null-safe falseCase
     ProcessorAsserts.assertContaining(
         generatedCode,
         """
         if (condition.getAsBoolean()) {
             trueCase.accept(this);
-        } else {
+        } else if (falseCase != null) {
             falseCase.accept(this);
         }
         return this;
@@ -186,5 +185,59 @@ class ConditionalExecutionTest {
         contains("public ConfigBuilder enabled(boolean enabled)"),
         contains("public ConfigBuilder timeout(int timeout)"),
         contains("public ConfigBuilder conditional("));
+  }
+
+  @Test
+  void conditionalMethod_positiveOnlyOverload_generated() {
+    String packageName = "test.conditional.positiveonly";
+
+    JavaFileObject settings =
+        JavaFileObjects.forSourceString(
+            packageName + ".Settings",
+            """
+            package test.conditional.positiveonly;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+            @SimpleBuilder
+            public class Settings {
+              private String theme;
+              private boolean darkMode;
+
+              public String getTheme() { return theme; }
+              public void setTheme(String theme) { this.theme = theme; }
+              public boolean isDarkMode() { return darkMode; }
+              public void setDarkMode(boolean darkMode) { this.darkMode = darkMode; }
+            }
+            """);
+
+    Compilation compilation = compileSources(settings);
+    String generatedCode = loadGeneratedSource(compilation, "SettingsBuilder");
+    ProcessorAsserts.assertGenerationSucceeded(compilation, "SettingsBuilder", generatedCode);
+
+    // Verify positive-only overload signature
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        """
+        public SettingsBuilder conditional(BooleanSupplier condition, Consumer<SettingsBuilder> yesCondition) {
+        """);
+
+    // Verify positive-only overload delegates to full method
+    ProcessorAsserts.assertContaining(
+        generatedCode, "return conditional(condition, yesCondition, null);");
+
+    // Verify positive-only Javadoc
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains("Conditionally applies builder modifications if the condition is true"),
+        contains("@param condition the condition to evaluate"),
+        contains("@param yesCondition the consumer to apply if condition is true"));
+
+    // Verify both overloads exist (2-parameter and 3-parameter)
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains(
+            "public SettingsBuilder conditional(BooleanSupplier condition, Consumer<SettingsBuilder> yesCondition)"),
+        contains(
+            "public SettingsBuilder conditional(BooleanSupplier condition, Consumer<SettingsBuilder> trueCase, Consumer<SettingsBuilder> falseCase)"));
   }
 }
