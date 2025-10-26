@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.processor.dtos.*;
 
 /** Helper functions to create JavaPoet types from DTOs of simple builder. */
@@ -106,7 +107,11 @@ public final class JavapoetMapper {
    */
   public static ClassName map2ClassName(
       org.javahelpers.simple.builders.processor.dtos.TypeName typeName) {
-    return ClassName.get(typeName.getPackageName(), typeName.getClassName());
+    if (StringUtils.isNoneEmpty(typeName.getPackageName())) {
+      return ClassName.get(typeName.getPackageName(), typeName.getClassName());
+    } else {
+      return ClassName.bestGuess(typeName.getClassName());
+    }
   }
 
   /**
