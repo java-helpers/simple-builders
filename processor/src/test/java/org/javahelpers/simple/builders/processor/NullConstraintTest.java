@@ -42,14 +42,14 @@ class NullConstraintTest {
   }
 
   @Test
-  void mandatoryField_validation_generatedInBuildMethod() {
-    String packageName = "test.mandatory";
+  void constructorFieldWithoutNotNull_noValidationGenerated() {
+    String packageName = "test.nullable";
 
     JavaFileObject person =
         JavaFileObjects.forSourceString(
             packageName + ".Person",
             """
-            package test.mandatory;
+            package test.nullable;
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 
             @SimpleBuilder
@@ -71,12 +71,9 @@ class NullConstraintTest {
     String generatedCode = loadGeneratedSource(compilation, "PersonBuilder");
     ProcessorAsserts.assertGenerationSucceeded(compilation, "PersonBuilder", generatedCode);
 
-    // Verify mandatory field validation is generated
-    ProcessorAsserts.assertingResult(
-        generatedCode,
-        contains("if (!this.name.isSet())"),
-        contains(
-            "throw new IllegalStateException(\"Required field 'name' must be set before calling build()\")"));
+    // Verify NO validation for constructor field without @NotNull (can be left unset → null passed)
+    ProcessorAsserts.assertNotContaining(
+        generatedCode, "if (!this.name.isSet())", "Required field 'name' must be set");
   }
 
   @Test
@@ -124,11 +121,13 @@ class NullConstraintTest {
     String generatedCode = loadGeneratedSource(compilation, "UserBuilder");
     ProcessorAsserts.assertGenerationSucceeded(compilation, "UserBuilder", generatedCode);
 
-    // Verify non-null validation is generated
+    // Verify non-null constructor field validation (must be set AND can't be null)
     ProcessorAsserts.assertingResult(
         generatedCode,
-        contains("if (this.username.isSet() && this.username.value() == null)"),
-        contains("Field 'username' is marked as non-null but null value was provided"));
+        contains("if (!this.username.isSet()"),
+        contains("Required field 'username' must be set"),
+        contains("if (this.username.value() == null)"),
+        contains("Field 'username' is marked as non-null"));
   }
 
   @Test
@@ -235,21 +234,17 @@ class NullConstraintTest {
     String generatedCode = loadGeneratedSource(compilation, "AccountBuilder");
     ProcessorAsserts.assertGenerationSucceeded(compilation, "AccountBuilder", generatedCode);
 
-    // Verify mandatory validation for both fields
+    // Verify both constructor fields have isSet() check and null value check
     ProcessorAsserts.assertingResult(
         generatedCode,
         contains("if (!this.accountId.isSet())"),
-        contains("Required field 'accountId' must be set before calling build()"),
+        contains("Required field 'accountId' must be set"),
+        contains("if (this.accountId.value() == null)"),
+        contains("Field 'accountId' is marked as non-null"),
         contains("if (!this.ownerId.isSet())"),
-        contains("Required field 'ownerId' must be set before calling build()"));
-
-    // Verify non-null validation for both fields
-    ProcessorAsserts.assertingResult(
-        generatedCode,
-        contains("if (this.accountId.isSet() && this.accountId.value() == null)"),
-        contains("Field 'accountId' is marked as non-null but null value was provided"),
-        contains("if (this.ownerId.isSet() && this.ownerId.value() == null)"),
-        contains("Field 'ownerId' is marked as non-null but null value was provided"));
+        contains("Required field 'ownerId' must be set"),
+        contains("if (this.ownerId.value() == null)"),
+        contains("Field 'ownerId' is marked as non-null"));
   }
 
   @Test
@@ -309,13 +304,15 @@ class NullConstraintTest {
     String generatedCode = loadGeneratedSource(compilation, "EntityBuilder");
     ProcessorAsserts.assertGenerationSucceeded(compilation, "EntityBuilder", generatedCode);
 
-    // Verify constructor field has validation in build()
+    // Verify constructor field has validation in build() (must be set AND can't be null)
     ProcessorAsserts.assertingResult(
         generatedCode,
-        contains("if (this.jakartaField.isSet() && this.jakartaField.value() == null)"),
+        contains("if (!this.jakartaField.isSet())"),
+        contains("Required field 'jakartaField' must be set"),
+        contains("if (this.jakartaField.value() == null)"),
         contains("Field 'jakartaField' is marked as non-null"));
 
-    // Verify setter field also has validation in build()
+    // Verify setter field also has validation in build() (if set, can't be null)
     ProcessorAsserts.assertingResult(
         generatedCode,
         contains("if (this.lombokField.isSet() && this.lombokField.value() == null)"),

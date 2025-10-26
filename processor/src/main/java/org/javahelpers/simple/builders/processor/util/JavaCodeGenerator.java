@@ -226,16 +226,31 @@ public class JavaCodeGenerator {
                 dtoBaseClass);
 
     for (FieldDto f : fields) {
-      f.getGetterName()
-          .ifPresent(
-              getter ->
-                  cb.addStatement(
-                      "this.$N = $T.initialValue(instance.$N())",
-                      f.getFieldName(),
-                      ClassName.get(TrackedValue.class),
-                      getter));
+      f.getGetterName().ifPresent(getter -> addFieldInitializationWithValidation(cb, f, getter));
     }
     return cb.build();
+  }
+
+  private void addFieldInitializationWithValidation(
+      MethodSpec.Builder cb, FieldDto field, String getter) {
+    // Initialize field from source instance
+    cb.addStatement(
+        "this.$N = $T.initialValue(instance.$N())",
+        field.getFieldName(),
+        ClassName.get(TrackedValue.class),
+        getter);
+
+    // Validate non-nullable fields immediately - fail fast if source object is invalid
+    if (field.isNonNullable()) {
+      cb.beginControlFlow("if (this.$N.value() == null)", field.getFieldName())
+          .addStatement(
+              "throw new $T($S)",
+              IllegalArgumentException.class,
+              "Cannot initialize builder from instance: field '"
+                  + field.getFieldName()
+                  + "' is marked as non-null but source object has null value")
+          .endControlFlow();
+    }
   }
 
   private FieldSpec createFieldMember(FieldDto fieldDto) {
