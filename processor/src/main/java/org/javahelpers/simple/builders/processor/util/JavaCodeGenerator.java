@@ -146,6 +146,7 @@ public class JavaCodeGenerator {
     classBuilder.addMethod(
         createMethodStaticCreate(
             builderBaseClass, builderTypeName, dtoBaseClass, builderDef.getGenerics()));
+    classBuilder.addMethod(createMethodConditional(builderTypeName));
 
     // Adding annotations
     classBuilder.addAnnotation(createAnnotationGenerated());
@@ -370,6 +371,40 @@ public class JavaCodeGenerator {
           .addCode("return new $1T<>();\n", builderBaseClass);
     }
     return methodBuilder.build();
+  }
+
+  private MethodSpec createMethodConditional(com.palantir.javapoet.TypeName builderType) {
+    return MethodSpec.methodBuilder("conditional")
+        .addModifiers(PUBLIC)
+        .returns(builderType)
+        .addParameter(ClassName.get(java.util.function.BooleanSupplier.class), "condition")
+        .addParameter(
+            ParameterizedTypeName.get(
+                ClassName.get(java.util.function.Consumer.class), builderType),
+            "trueCase")
+        .addParameter(
+            ParameterizedTypeName.get(
+                ClassName.get(java.util.function.Consumer.class), builderType),
+            "falseCase")
+        .addJavadoc(
+            """
+            Conditionally applies builder modifications based on a condition.
+
+            @param condition the condition to evaluate
+            @param trueCase the consumer to apply if condition is true
+            @param falseCase the consumer to apply if condition is false
+            @return this builder instance
+            """)
+        .addCode(
+            """
+            if (condition.getAsBoolean()) {
+                trueCase.accept(this);
+            } else {
+                falseCase.accept(this);
+            }
+            return this;
+            """)
+        .build();
   }
 
   private List<MethodSpec> createFieldMethods(
