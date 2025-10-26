@@ -15,6 +15,8 @@
 - [Installation](#installation)
 - [Usage](#usage)
   - [Basic Usage](#basic-usage)
+    - [Validation Annotations](#validation-annotations)
+    - [Conditional Builder Logic](#conditional-builder-logic)
   - [Collections and Nested Objects](#collections-and-nested-objects)
   - [Debug Logging](#debug-logging)
 - [Building from Source](#building-from-source)
@@ -155,6 +157,30 @@ User user = UserBuilder.create()
 ```
 
 This ensures validation frameworks work seamlessly with builder-generated objects.
+
+#### Conditional Builder Logic
+
+Apply builder modifications conditionally using the `conditional()` method:
+
+```java
+int age = 45;
+Person person = PersonBuilder.create()
+    .name("Jane Doe")
+    .conditional(
+        () -> age >= 18,
+        p -> p.role("ADULT"),
+        p -> p.role("MINOR"))
+    .build();
+```
+
+For simple conditions without an else case, use the two-parameter overload:
+
+```java
+PersonBuilder.create()
+    .name("John Doe")
+    .conditional(() -> isPremiumUser, p -> p.discountRate(0.15))
+    .build();
+```
 
 ### Collections and Nested Objects
 
