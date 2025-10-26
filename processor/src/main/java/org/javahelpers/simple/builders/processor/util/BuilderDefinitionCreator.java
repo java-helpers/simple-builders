@@ -1024,7 +1024,7 @@ public class BuilderDefinitionCreator {
     // Add implementation (cast this to the DTO type)
     method.setCode(
         """
-        $builderType:T builder = new $builderType:T(($dtoType:T) this);
+        $builderType:T builder = new $builderType:T($dtoType:T.class.cast(this));
         b.accept(builder);
         return builder.build();
         """);
@@ -1053,7 +1053,7 @@ public class BuilderDefinitionCreator {
     method.setReturnType(builderDef.getBuilderTypeName());
 
     // Add implementation (cast this to the DTO type)
-    method.setCode("return new $builderType:T(($dtoType:T) this);\n");
+    method.setCode("return new $builderType:T($dtoType:T.class.cast(this));\n");
     method.addArgument("builderType", builderDef.getBuilderTypeName());
     method.addArgument("dtoType", builderDef.getBuildingTargetTypeName());
 

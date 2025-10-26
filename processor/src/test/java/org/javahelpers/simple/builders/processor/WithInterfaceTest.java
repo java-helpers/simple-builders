@@ -58,7 +58,7 @@ class WithInterfaceTest {
              * @return the modified instance
              */
             default Project with(Consumer<ProjectBuilder> b) {
-                ProjectBuilder builder = new ProjectBuilder((Project) this);
+                ProjectBuilder builder = new ProjectBuilder(Project.class.cast(this));
                 b.accept(builder);
                 return builder.build();
             }
@@ -69,7 +69,7 @@ class WithInterfaceTest {
              * @return a builder initialized with this instance's values
              */
             default ProjectBuilder with() {
-                return new ProjectBuilder((Project) this);
+                return new ProjectBuilder(Project.class.cast(this));
             }
         }
         """;
@@ -121,7 +121,7 @@ class WithInterfaceTest {
              * @return the modified instance
              */
             default User with(Consumer<UserBuilder> b) {
-                UserBuilder builder = new UserBuilder((User) this);
+                UserBuilder builder = new UserBuilder(User.class.cast(this));
                 b.accept(builder);
                 return builder.build();
             }
@@ -132,7 +132,7 @@ class WithInterfaceTest {
              * @return a builder initialized with this instance's values
              */
             default UserBuilder with() {
-                return new UserBuilder((User) this);
+                return new UserBuilder(User.class.cast(this));
             }
         }
         """;
@@ -181,7 +181,7 @@ class WithInterfaceTest {
              * @return the modified instance
              */
             default Config with(Consumer<ConfigBuilder> b) {
-                ConfigBuilder builder = new ConfigBuilder((Config) this);
+                ConfigBuilder builder = new ConfigBuilder(Config.class.cast(this));
                 b.accept(builder);
                 return builder.build();
             }
@@ -192,7 +192,7 @@ class WithInterfaceTest {
              * @return a builder initialized with this instance's values
              */
             default ConfigBuilder with() {
-                return new ConfigBuilder((Config) this);
+                return new ConfigBuilder(Config.class.cast(this));
             }
         }
         """;
