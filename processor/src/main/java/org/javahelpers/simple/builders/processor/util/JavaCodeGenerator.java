@@ -226,16 +226,31 @@ public class JavaCodeGenerator {
                 dtoBaseClass);
 
     for (FieldDto f : fields) {
-      f.getGetterName()
-          .ifPresent(
-              getter ->
-                  cb.addStatement(
-                      "this.$N = $T.initialValue(instance.$N())",
-                      f.getFieldName(),
-                      ClassName.get(TrackedValue.class),
-                      getter));
+      f.getGetterName().ifPresent(getter -> addFieldInitializationWithValidation(cb, f, getter));
     }
     return cb.build();
+  }
+
+  private void addFieldInitializationWithValidation(
+      MethodSpec.Builder cb, FieldDto field, String getter) {
+    // Initialize field from source instance
+    cb.addStatement(
+        "this.$N = $T.initialValue(instance.$N())",
+        field.getFieldName(),
+        ClassName.get(TrackedValue.class),
+        getter);
+
+    // Validate non-nullable fields immediately - fail fast if source object is invalid
+    if (field.isNonNullable()) {
+      cb.beginControlFlow("if (this.$N.value() == null)", field.getFieldName())
+          .addStatement(
+              "throw new $T($S)",
+              IllegalArgumentException.class,
+              "Cannot initialize builder from instance: field '"
+                  + field.getFieldName()
+                  + "' is marked as non-null but source object has null value")
+          .endControlFlow();
+    }
   }
 
   private FieldSpec createFieldMember(FieldDto fieldDto) {
@@ -268,6 +283,45 @@ public class JavaCodeGenerator {
             .addModifiers(PUBLIC)
             .returns(returnType)
             .addAnnotation(Override.class);
+
+    // Validate non-nullable constructor fields: must be set AND can't be null
+    // If not annotated with @NotNull/@NonNull, constructor fields can be left unset (→ null passed)
+    for (FieldDto field : constructorFields) {
+      if (field.isNonNullable()) {
+        mb.beginControlFlow("if (!this.$N.isSet())", field.getFieldName())
+            .addStatement(
+                "throw new $T($S)",
+                IllegalStateException.class,
+                "Required field '" + field.getFieldName() + "' must be set before calling build()")
+            .endControlFlow();
+        mb.beginControlFlow("if (this.$N.value() == null)", field.getFieldName())
+            .addStatement(
+                "throw new $T($S)",
+                IllegalStateException.class,
+                "Field '"
+                    + field.getFieldName()
+                    + "' is marked as non-null but null value was provided")
+            .endControlFlow();
+      }
+    }
+
+    // Validate non-nullable setter fields don't have null values
+    // This catches null values from suppliers, providers, or direct setter calls
+    for (FieldDto field : setterFields) {
+      if (field.isNonNullable()) {
+        mb.beginControlFlow(
+                "if (this.$N.isSet() && this.$N.value() == null)",
+                field.getFieldName(),
+                field.getFieldName())
+            .addStatement(
+                "throw new $T($S)",
+                IllegalStateException.class,
+                "Field '"
+                    + field.getFieldName()
+                    + "' is marked as non-null but null value was provided")
+            .endControlFlow();
+      }
+    }
 
     // Build constructor argument list: use backing fields' values in declared order
     String ctorArgs =

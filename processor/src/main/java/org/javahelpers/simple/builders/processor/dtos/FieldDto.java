@@ -56,6 +56,13 @@ public class FieldDto {
   private String getterName;
 
   /**
+   * Whether this field is marked as non-nullable via annotations like @NotNull, @NonNull, etc. For
+   * constructor fields: must be set AND can't be null. For setter fields: if set, can't be null
+   * (optional to set).
+   */
+  private boolean nonNullable = false;
+
+  /**
    * Getting name of field.
    *
    * @return the name of the field
@@ -174,5 +181,23 @@ public class FieldDto {
    */
   public void setGetterName(String getterName) {
     this.getterName = getterName;
+  }
+
+  /**
+   * Checks if this field is marked as non-nullable.
+   *
+   * @return true if the field has @NotNull/@NonNull annotation
+   */
+  public boolean isNonNullable() {
+    return nonNullable;
+  }
+
+  /**
+   * Marks this field as non-nullable.
+   *
+   * @param nonNullable true if the field cannot be null
+   */
+  public void setNonNullable(boolean nonNullable) {
+    this.nonNullable = nonNullable;
   }
 }

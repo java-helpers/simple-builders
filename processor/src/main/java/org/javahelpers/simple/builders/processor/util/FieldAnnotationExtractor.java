@@ -204,4 +204,31 @@ public final class FieldAnnotationExtractor {
     // Skip compiler-only annotations that are not relevant for builder parameters
     return qualifiedName.equals("java.lang.SuppressWarnings");
   }
+
+  /**
+   * Checks if a parameter has a non-null constraint annotation.
+   *
+   * <p>Detects annotations named "NotNull" or "NonNull" (case-sensitive) from any package, making
+   * it framework-agnostic and future-proof.
+   *
+   * @param param the parameter element to check
+   * @return true if the parameter has a non-null constraint annotation
+   */
+  public static boolean hasNonNullConstraint(VariableElement param) {
+    return param.getAnnotationMirrors().stream()
+        .map(am -> am.getAnnotationType().asElement())
+        .filter(TypeElement.class::isInstance)
+        .map(el -> ((TypeElement) el).getSimpleName().toString())
+        .anyMatch(FieldAnnotationExtractor::isNonNullAnnotation);
+  }
+
+  /**
+   * Checks if the given annotation simple name represents a non-null constraint.
+   *
+   * @param simpleName the simple name of the annotation (e.g., "NotNull", "NonNull")
+   * @return true if it's a recognized non-null annotation name
+   */
+  private static boolean isNonNullAnnotation(String simpleName) {
+    return "NotNull".equals(simpleName) || "NonNull".equals(simpleName);
+  }
 }
