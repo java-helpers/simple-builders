@@ -551,8 +551,9 @@ public class BuilderDefinitionCreator {
     // Extract annotations from the field parameter
     List<AnnotationDto> annotations = FieldAnnotationExtractor.extractAnnotations(param, context);
 
-    // Check if field has non-null constraint
-    if (FieldAnnotationExtractor.hasNonNullConstraint(param)) {
+    // Check if field has non-null constraint (annotation or primitive type)
+    if (FieldAnnotationExtractor.hasNonNullConstraint(param)
+        || fieldTypeMirror.getKind().isPrimitive()) {
       field.setNonNullable(true);
     }
 

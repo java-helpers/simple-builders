@@ -318,4 +318,49 @@ class NullConstraintTest {
         contains("if (this.lombokField.isSet() && this.lombokField.value() == null)"),
         contains("Field 'lombokField' is marked as non-null"));
   }
+
+  @Test
+  void primitiveFields_treatedAsNonNullable() {
+    String packageName = "test.primitives";
+
+    JavaFileObject config =
+        JavaFileObjects.forSourceString(
+            packageName + ".Config",
+            """
+            package test.primitives;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+            @SimpleBuilder
+            public class Config {
+              private final int timeout;
+              private boolean enabled;
+
+              public Config(int timeout) {
+                this.timeout = timeout;
+              }
+
+              public int getTimeout() { return timeout; }
+              public boolean isEnabled() { return enabled; }
+              public void setEnabled(boolean enabled) { this.enabled = enabled; }
+            }
+            """);
+
+    Compilation compilation = compileSources(config);
+    String generatedCode = loadGeneratedSource(compilation, "ConfigBuilder");
+    ProcessorAsserts.assertGenerationSucceeded(compilation, "ConfigBuilder", generatedCode);
+
+    // Verify constructor primitive field has validation (must be set AND can't be null)
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains("if (!this.timeout.isSet())"),
+        contains("Required field 'timeout' must be set"),
+        contains("if (this.timeout.value() == null)"),
+        contains("Field 'timeout' is marked as non-null"));
+
+    // Verify setter primitive field has validation (if set, can't be null)
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains("if (this.enabled.isSet() && this.enabled.value() == null)"),
+        contains("Field 'enabled' is marked as non-null"));
+  }
 }

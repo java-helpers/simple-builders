@@ -876,11 +876,15 @@ class BuilderProcessorTest {
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
 
+    // Verify build method exists and calls setter, if not null
     ProcessorAsserts.assertContaining(
         generatedCode,
         """
         @Override
         public BuildDoc build() {
+            if (this.x.isSet() && this.x.value() == null) {
+                throw new IllegalStateException("Field 'x' is marked as non-null but null value was provided");
+            }
             BuildDoc result = new BuildDoc();
             this.x.ifSet(result::setX);
             return result;
