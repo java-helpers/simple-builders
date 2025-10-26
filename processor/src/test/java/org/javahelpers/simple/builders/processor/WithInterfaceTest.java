@@ -44,31 +44,37 @@ class WithInterfaceTest {
     String generatedCode = loadGeneratedSource(compilation, "ProjectBuilder");
     ProcessorAsserts.assertGenerationSucceeded(compilation, "ProjectBuilder", generatedCode);
 
-    // Verify With interface is declared
-    ProcessorAsserts.assertingResult(
-        generatedCode,
-        contains("public interface With {"),
-        contains(
-            "Interface that can be implemented by the DTO to provide fluent modification methods"));
+    // Verify complete With interface is generated with default implementations
+    String expectedWithInterface =
+        """
+        /**
+         * Interface that can be implemented by the DTO to provide fluent modification methods.
+         */
+        public interface With {
+            /**
+             * Applies modifications to a builder initialized from this instance and returns the built object.
+             *
+             * @param b the consumer to apply modifications
+             * @return the modified instance
+             */
+            default Project with(Consumer<ProjectBuilder> b) {
+                ProjectBuilder builder = new ProjectBuilder((Project) this);
+                b.accept(builder);
+                return builder.build();
+            }
 
-    // Verify first method with default implementation
-    ProcessorAsserts.assertingResult(
-        generatedCode,
-        contains("default Project with(Consumer<ProjectBuilder> b)"),
-        contains("Applies modifications to a builder initialized from this instance"),
-        contains("@param b the consumer to apply modifications"),
-        contains("@return the modified instance"),
-        contains("ProjectBuilder builder = new ProjectBuilder((Project) this)"),
-        contains("b.accept(builder)"),
-        contains("return builder.build()"));
+            /**
+             * Creates a builder initialized from this instance.
+             *
+             * @return a builder initialized with this instance's values
+             */
+            default ProjectBuilder with() {
+                return new ProjectBuilder((Project) this);
+            }
+        }
+        """;
 
-    // Verify second method with default implementation
-    ProcessorAsserts.assertingResult(
-        generatedCode,
-        contains("default ProjectBuilder with()"),
-        contains("Creates a builder initialized from this instance"),
-        contains("@return a builder initialized with this instance's values"),
-        contains("return new ProjectBuilder((Project) this)"));
+    ProcessorAsserts.assertingResult(generatedCode, contains(expectedWithInterface));
   }
 
   @Test
@@ -101,13 +107,37 @@ class WithInterfaceTest {
     String generatedCode = loadGeneratedSource(compilation, "UserBuilder");
     ProcessorAsserts.assertGenerationSucceeded(compilation, "UserBuilder", generatedCode);
 
-    // Verify With interface exists with default implementations
-    ProcessorAsserts.assertingResult(
-        generatedCode,
-        contains("public interface With {"),
-        contains("default User with(Consumer<UserBuilder> b)"),
-        contains("default UserBuilder with()"),
-        contains("return new UserBuilder((User) this)"));
+    // Verify complete With interface with default implementations for constructor fields
+    String expectedWithInterface =
+        """
+        /**
+         * Interface that can be implemented by the DTO to provide fluent modification methods.
+         */
+        public interface With {
+            /**
+             * Applies modifications to a builder initialized from this instance and returns the built object.
+             *
+             * @param b the consumer to apply modifications
+             * @return the modified instance
+             */
+            default User with(Consumer<UserBuilder> b) {
+                UserBuilder builder = new UserBuilder((User) this);
+                b.accept(builder);
+                return builder.build();
+            }
+
+            /**
+             * Creates a builder initialized from this instance.
+             *
+             * @return a builder initialized with this instance's values
+             */
+            default UserBuilder with() {
+                return new UserBuilder((User) this);
+            }
+        }
+        """;
+
+    ProcessorAsserts.assertingResult(generatedCode, contains(expectedWithInterface));
   }
 
   @Test
@@ -137,11 +167,36 @@ class WithInterfaceTest {
     String generatedCode = loadGeneratedSource(compilation, "ConfigBuilder");
     ProcessorAsserts.assertGenerationSucceeded(compilation, "ConfigBuilder", generatedCode);
 
-    // Verify return types match the correct classes with default implementations
-    ProcessorAsserts.assertingResult(
-        generatedCode,
-        contains("default Config with(Consumer<ConfigBuilder> b)"),
-        contains("default ConfigBuilder with()"),
-        contains("return new ConfigBuilder((Config) this)"));
+    // Verify complete With interface with correct type names (primitives)
+    String expectedWithInterface =
+        """
+        /**
+         * Interface that can be implemented by the DTO to provide fluent modification methods.
+         */
+        public interface With {
+            /**
+             * Applies modifications to a builder initialized from this instance and returns the built object.
+             *
+             * @param b the consumer to apply modifications
+             * @return the modified instance
+             */
+            default Config with(Consumer<ConfigBuilder> b) {
+                ConfigBuilder builder = new ConfigBuilder((Config) this);
+                b.accept(builder);
+                return builder.build();
+            }
+
+            /**
+             * Creates a builder initialized from this instance.
+             *
+             * @return a builder initialized with this instance's values
+             */
+            default ConfigBuilder with() {
+                return new ConfigBuilder((Config) this);
+            }
+        }
+        """;
+
+    ProcessorAsserts.assertingResult(generatedCode, contains(expectedWithInterface));
   }
 }
