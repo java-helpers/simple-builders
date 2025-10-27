@@ -1021,15 +1021,23 @@ public class BuilderDefinitionCreator {
     parameter.setParameterTypeName(consumerType);
     method.addParameter(parameter);
 
-    // Add implementation (cast this to the DTO type)
+    // Add implementation with validation to catch wrong implementations
     method.setCode(
         """
-        $builderType:T builder = new $builderType:T($dtoType:T.class.cast(this));
+        $builderType:T builder;
+        try {
+          builder = new $builderType:T($dtoType:T.class.cast(this));
+        } catch ($classcastexception:T ex) {
+          throw new $illegalargumentexception:T("The interface '$builderType:T.With' should only be implemented by classes, which could be casted to '$dtoType:T'", ex);
+        }
         b.accept(builder);
         return builder.build();
         """);
     method.addArgument("builderType", builderDef.getBuilderTypeName());
     method.addArgument("dtoType", builderDef.getBuildingTargetTypeName());
+    method.addArgument("classcastexception", new TypeName("java.lang", "ClassCastException"));
+    method.addArgument(
+        "illegalargumentexception", new TypeName("java.lang", "IllegalArgumentException"));
 
     method.setJavadoc(
         "Applies modifications to a builder initialized from this instance and returns the built object.\n\n"
@@ -1052,10 +1060,20 @@ public class BuilderDefinitionCreator {
     // Return type is the Builder type
     method.setReturnType(builderDef.getBuilderTypeName());
 
-    // Add implementation (cast this to the DTO type)
-    method.setCode("return new $builderType:T($dtoType:T.class.cast(this));\n");
+    // Add implementation with validation to catch wrong implementations
+    method.setCode(
+        """
+        try {
+          return new $builderType:T($dtoType:T.class.cast(this));
+        } catch ($classcastexception:T ex) {
+          throw new $illegalargumentexception:T("The interface '$builderType:T.With' should only be implemented by classes, which could be casted to '$dtoType:T'", ex);
+        }
+        """);
     method.addArgument("builderType", builderDef.getBuilderTypeName());
     method.addArgument("dtoType", builderDef.getBuildingTargetTypeName());
+    method.addArgument("classcastexception", new TypeName("java.lang", "ClassCastException"));
+    method.addArgument(
+        "illegalargumentexception", new TypeName("java.lang", "IllegalArgumentException"));
 
     method.setJavadoc(
         "Creates a builder initialized from this instance.\n\n"

@@ -58,7 +58,12 @@ class WithInterfaceTest {
              * @return the modified instance
              */
             default Project with(Consumer<ProjectBuilder> b) {
-                ProjectBuilder builder = new ProjectBuilder(Project.class.cast(this));
+                ProjectBuilder builder;
+                try {
+                    builder = new ProjectBuilder(Project.class.cast(this));
+                } catch (ClassCastException ex) {
+                    throw new IllegalArgumentException("The interface 'ProjectBuilder.With' should only be implemented by classes, which could be casted to 'Project'", ex);
+                }
                 b.accept(builder);
                 return builder.build();
             }
@@ -69,7 +74,11 @@ class WithInterfaceTest {
              * @return a builder initialized with this instance's values
              */
             default ProjectBuilder with() {
-                return new ProjectBuilder(Project.class.cast(this));
+                try {
+                    return new ProjectBuilder(Project.class.cast(this));
+                } catch (ClassCastException ex) {
+                    throw new IllegalArgumentException("The interface 'ProjectBuilder.With' should only be implemented by classes, which could be casted to 'Project'", ex);
+                }
             }
         }
         """;
@@ -121,7 +130,12 @@ class WithInterfaceTest {
              * @return the modified instance
              */
             default User with(Consumer<UserBuilder> b) {
-                UserBuilder builder = new UserBuilder(User.class.cast(this));
+                UserBuilder builder;
+                try {
+                    builder = new UserBuilder(User.class.cast(this));
+                } catch (ClassCastException ex) {
+                    throw new IllegalArgumentException("The interface 'UserBuilder.With' should only be implemented by classes, which could be casted to 'User'", ex);
+                }
                 b.accept(builder);
                 return builder.build();
             }
@@ -132,7 +146,11 @@ class WithInterfaceTest {
              * @return a builder initialized with this instance's values
              */
             default UserBuilder with() {
-                return new UserBuilder(User.class.cast(this));
+                try {
+                    return new UserBuilder(User.class.cast(this));
+                } catch (ClassCastException ex) {
+                    throw new IllegalArgumentException("The interface 'UserBuilder.With' should only be implemented by classes, which could be casted to 'User'", ex);
+                }
             }
         }
         """;
@@ -181,7 +199,12 @@ class WithInterfaceTest {
              * @return the modified instance
              */
             default Config with(Consumer<ConfigBuilder> b) {
-                ConfigBuilder builder = new ConfigBuilder(Config.class.cast(this));
+                ConfigBuilder builder;
+                try {
+                    builder = new ConfigBuilder(Config.class.cast(this));
+                } catch (ClassCastException ex) {
+                    throw new IllegalArgumentException("The interface 'ConfigBuilder.With' should only be implemented by classes, which could be casted to 'Config'", ex);
+                }
                 b.accept(builder);
                 return builder.build();
             }
@@ -192,7 +215,11 @@ class WithInterfaceTest {
              * @return a builder initialized with this instance's values
              */
             default ConfigBuilder with() {
-                return new ConfigBuilder(Config.class.cast(this));
+                try {
+                    return new ConfigBuilder(Config.class.cast(this));
+                } catch (ClassCastException ex) {
+                    throw new IllegalArgumentException("The interface 'ConfigBuilder.With' should only be implemented by classes, which could be casted to 'Config'", ex);
+                }
             }
         }
         """;

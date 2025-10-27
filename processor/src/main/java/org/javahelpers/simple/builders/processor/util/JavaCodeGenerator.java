@@ -528,8 +528,7 @@ public class JavaCodeGenerator {
       String code = codeDto.getCodeFormat();
       java.util.Map<String, Object> args = new java.util.HashMap<>();
 
-      // Replace placeholders with appropriate classes (count how many times each placeholder
-      // appears)
+      // Replace placeholders with appropriate classes
       for (MethodCodePlaceholder<?> placeholder : codeDto.getCodeArguments()) {
         if (placeholder instanceof MethodCodeTypePlaceholder) {
           // Determine which class to use based on placeholder label
@@ -537,6 +536,10 @@ public class JavaCodeGenerator {
             args.put(placeholder.getLabel(), dtoClass);
           } else if (placeholder.getLabel().equals("builderType")) {
             args.put(placeholder.getLabel(), builderClass);
+          } else if (placeholder.getValue()
+              instanceof org.javahelpers.simple.builders.processor.dtos.TypeName typeName) {
+            // Map TypeName to ClassName for proper import handling
+            args.put(placeholder.getLabel(), JavapoetMapper.map2ClassName(typeName));
           } else if (placeholder.getValue() instanceof String className) {
             args.put(placeholder.getLabel(), className);
           } else {
