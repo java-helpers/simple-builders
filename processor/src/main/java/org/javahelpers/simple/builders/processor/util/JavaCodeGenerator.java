@@ -464,8 +464,9 @@ public class JavaCodeGenerator {
     }
 
     // Add methods to the nested type
+    boolean isInterface = nestedType.getKind() == NestedTypeDto.NestedTypeKind.INTERFACE;
     for (MethodDto method : nestedType.getMethods()) {
-      MethodSpec methodSpec = createNestedTypeMethod(method, dtoClass, builderClass);
+      MethodSpec methodSpec = createNestedTypeMethod(method, isInterface);
       typeBuilder.addMethod(methodSpec);
     }
 
@@ -473,82 +474,41 @@ public class JavaCodeGenerator {
   }
 
   /**
-   * Creates a method for a nested type (default interface method with body).
+   * Creates a MethodSpec for a method of a nested type (e.g., With interface).
    *
-   * @param method the method DTO
-   * @param dtoClass the DTO class name
-   * @param builderClass the builder class name
+   * @param methodDto the method to create
+   * @param isInterface whether the nested type is an interface
    * @return the MethodSpec
    */
-  private MethodSpec createNestedTypeMethod(
-      MethodDto method, ClassName dtoClass, ClassName builderClass) {
+  private MethodSpec createNestedTypeMethod(MethodDto methodDto, boolean isInterface) {
     MethodSpec.Builder methodBuilder =
-        MethodSpec.methodBuilder(method.getMethodName()).addModifiers(PUBLIC);
+        MethodSpec.methodBuilder(methodDto.getMethodName()).addModifiers(PUBLIC);
 
-    // Set return type (returnType is mandatory in MethodDto)
-    TypeName returnTypeName = method.getReturnType();
-    if (returnTypeName.getClassName().equals(dtoClass.simpleName())) {
-      methodBuilder.returns(dtoClass);
-    } else if (returnTypeName.getClassName().equals(builderClass.simpleName())) {
-      methodBuilder.returns(builderClass);
-    } else {
-      // Use the mapper for other types
-      methodBuilder.returns(JavapoetMapper.map2ClassName(returnTypeName));
+    // Set return type using mapper
+    methodBuilder.returns(JavapoetMapper.map2ParameterType(methodDto.getReturnType()));
+
+    // Add parameters using mapper
+    for (MethodParameterDto paramDto : methodDto.getParameters()) {
+      methodBuilder.addParameter(createParameter(paramDto));
     }
 
-    // Add parameters
-    for (MethodParameterDto param : method.getParameters()) {
-      com.palantir.javapoet.TypeName paramType;
-      String typeStr = param.getParameterType().getClassName();
-
-      // Handle Consumer<BuilderType>
-      if (typeStr.startsWith("Consumer<")) {
-        paramType =
-            ParameterizedTypeName.get(
-                ClassName.get(java.util.function.Consumer.class), builderClass);
-      } else {
-        paramType = ClassName.bestGuess(typeStr);
-      }
-
-      methodBuilder.addParameter(paramType, param.getParameterName());
-    }
+    // Add modifiers if defined
+    methodDto.getModifier().ifPresent(methodBuilder::addModifiers);
 
     // Add Javadoc
-    if (method.getJavadoc() != null) {
-      methodBuilder.addJavadoc(method.getJavadoc());
+    if (methodDto.getJavadoc() != null) {
+      methodBuilder.addJavadoc(methodDto.getJavadoc());
     }
 
-    // Add default modifier and method body for interface methods
-    methodBuilder.addModifiers(javax.lang.model.element.Modifier.DEFAULT);
-
-    // Add method body from the MethodCodeDto
-    MethodCodeDto codeDto = method.getMethodCodeDto();
-    if (codeDto.getCodeFormat() != null && !codeDto.getCodeFormat().isEmpty()) {
-      // Build code with type arguments
-      String code = codeDto.getCodeFormat();
-      java.util.Map<String, Object> args = new java.util.HashMap<>();
-
-      // Replace placeholders with appropriate classes
-      for (MethodCodePlaceholder<?> placeholder : codeDto.getCodeArguments()) {
-        if (placeholder instanceof MethodCodeTypePlaceholder) {
-          // Determine which class to use based on placeholder label
-          if (placeholder.getLabel().equals("dtoType")) {
-            args.put(placeholder.getLabel(), dtoClass);
-          } else if (placeholder.getLabel().equals("builderType")) {
-            args.put(placeholder.getLabel(), builderClass);
-          } else if (placeholder.getValue()
-              instanceof org.javahelpers.simple.builders.processor.dtos.TypeName typeName) {
-            // Map TypeName to ClassName for proper import handling
-            args.put(placeholder.getLabel(), JavapoetMapper.map2ClassName(typeName));
-          } else if (placeholder.getValue() instanceof String className) {
-            args.put(placeholder.getLabel(), className);
-          } else {
-            throw new IllegalArgumentException("Unknown placeholder type: " + placeholder);
-          }
-        }
+    // Add method body if present
+    MethodCodeDto codeDto = methodDto.getMethodCodeDto();
+    if (codeDto != null) {
+      // Add default modifier for interface methods with implementation
+      if (isInterface) {
+        methodBuilder.addModifiers(javax.lang.model.element.Modifier.DEFAULT);
       }
 
-      methodBuilder.addNamedCode(code, args);
+      methodBuilder.addCode(map2CodeBlock(codeDto));
     }
 
     return methodBuilder.build();
