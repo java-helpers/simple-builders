@@ -1681,7 +1681,7 @@ class BuilderProcessorTest {
   }
 
   @Test
-  void shouldNotGenerateConsumersForPrimitiveAndArrayFields() {
+  void shouldNotGenerateConsumersForPrimitiveFields() {
     // Given
     String packageName = "test";
     String className = "PrimAndArray";
@@ -1708,13 +1708,13 @@ class BuilderProcessorTest {
     // Then
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-    // Expect simple setters and suppliers only; no consumer methods for primitive/array
+    // Primitives should not get consumer methods, but arrays now get ArrayListBuilder consumers
     ProcessorAsserts.assertingResult(
         generatedCode,
         contains("public PrimAndArrayBuilder count(Supplier"),
         contains("public PrimAndArrayBuilder names(Supplier"),
         notContains("public PrimAndArrayBuilder count(Consumer"),
-        notContains("public PrimAndArrayBuilder names(Consumer"));
+        contains("public PrimAndArrayBuilder names(Consumer<ArrayListBuilder<String>>"));
   }
 
   @Test
@@ -1896,9 +1896,12 @@ class BuilderProcessorTest {
         // primitive int: direct and supplier (boxed)
         contains("public HasMixedBuilder a(int a)"),
         contains("public HasMixedBuilder a(Supplier<Integer> aSupplier)"),
-        // array String[]: direct and supplier only (no varargs, no collection-builder consumers)
+        // array String[]: varargs, supplier, List parameter, and ArrayListBuilder consumer
         contains("public HasMixedBuilder names(String... names)"),
         contains("public HasMixedBuilder names(Supplier<String[]> namesSupplier)"),
+        contains("public HasMixedBuilder names(List<String> names)"),
+        contains(
+            "public HasMixedBuilder names(Consumer<ArrayListBuilder<String>> namesBuilderConsumer)"),
         // List<String>: direct, supplier, varargs convenience and consumer with ArrayListBuilder
         contains("public HasMixedBuilder list(List<String> list)"),
         contains("public HasMixedBuilder list(Supplier<List<String>> listSupplier)"),
@@ -1937,14 +1940,14 @@ class BuilderProcessorTest {
     // Then
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-    // Arrays should get setter and supplier
+    // Arrays should get setter, supplier, List parameter, and ArrayListBuilder consumer
     ProcessorAsserts.assertingResult(
         generatedCode,
         contains("public HasObjectArrayBuilder names(Supplier<String[]> namesSupplier)"),
         contains("public HasObjectArrayBuilder names(String... names)"),
         notContains("public HasObjectArrayBuilder names(String[] names)"),
-        notContains("public HasObjectArrayBuilder names(List<String> names)"), // TODO: feature
-        notContains("Consumer<ArrayListBuilder"), // TODO: feature
+        contains("public HasObjectArrayBuilder names(List<String> names)"),
+        contains("Consumer<ArrayListBuilder<String>> namesBuilderConsumer"),
         notContains("Consumer<HashSetBuilder"));
   }
 

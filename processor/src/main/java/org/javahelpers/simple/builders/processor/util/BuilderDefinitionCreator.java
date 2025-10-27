@@ -54,6 +54,8 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
 import org.javahelpers.simple.builders.processor.dtos.*;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 
+import com.google.common.graph.ElementOrder.Type;
+
 /** Class for creating a specific BuilderDefinitionDto for an annotated DTO class. */
 public class BuilderDefinitionCreator {
   private static final String BUILDER_SUFFIX = "Builder";
@@ -250,6 +252,22 @@ public class BuilderDefinitionCreator {
       result.addMethod(
           createStringFormatMethodWithTransform(
               fieldName, "String.format(format, args)", annotations, builderType));
+    }
+
+    if ((fieldType instanceof TypeNameArray arrayType)) {
+      TypeName elementType = arrayType.getTypeOfArray();
+
+      // Add method accepting List<ElementType> and converting to array
+      TypeNameGeneric listType = new TypeNameGeneric(map2TypeName(List.class), elementType);
+      result.addMethod(
+          createFieldSetterForArrayFromList(fieldName, listType, elementType, builderType));
+
+      // Add Consumer<ArrayListBuilder<ElementType>> method
+      TypeName collectionBuilderType = map2TypeName(ArrayListBuilder.class);
+      result.addMethod(
+          createFieldConsumerWithArrayBuilder(
+              fieldName, collectionBuilderType, elementType, builderType));
+      return;
     }
 
     // Only process generic types (List, Set, Map, Optional, etc.)
@@ -852,6 +870,78 @@ public class BuilderDefinitionCreator {
     methodDto.addArgument(ARG_FIELD_NAME, fieldName);
     methodDto.addArgument("transform", transform);
     methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
+    return methodDto;
+  }
+
+  /**
+   * Creates a field setter method that accepts a List and converts it to an array.
+   *
+   * @param fieldName the field name
+   * @param listType the List<ElementType> parameter type
+   * @param elementType the element type of the array
+   * @param builderType the builder type to return
+   * @return the method DTO for the setter
+   */
+  private static MethodDto createFieldSetterForArrayFromList(
+      String fieldName, TypeName listType, TypeName elementType, TypeName builderType) {
+    MethodParameterDto parameter = new MethodParameterDto();
+    parameter.setParameterName(fieldName);
+    parameter.setParameterTypeName(listType);
+
+    MethodDto methodDto = new MethodDto();
+    methodDto.setMethodName(fieldName);
+    methodDto.setReturnType(builderType);
+    methodDto.addParameter(parameter);
+    methodDto.setModifier(Modifier.PUBLIC);
+    methodDto.setMethodType(MethodTypes.PROXY);
+    methodDto.setCode(
+        """
+        this.$fieldName:N = $builderFieldWrapper:T.changedValue($dtoMethodParams:N.toArray(new $elementType:T[0]));
+        return this;
+        """);
+    methodDto.addArgument(ARG_FIELD_NAME, fieldName);
+    methodDto.addArgument(ARG_DTO_METHOD_PARAMS, fieldName);
+    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
+    methodDto.addArgument("elementType", elementType);
+    return methodDto;
+  }
+
+  /**
+   * Creates a consumer method for array fields with ArrayListBuilder. This allows building arrays
+   * using the fluent ArrayListBuilder API.
+   */
+  private static MethodDto createFieldConsumerWithArrayBuilder(
+      String fieldName,
+      TypeName collectionBuilderType,
+      TypeName elementType,
+      TypeName returnBuilderType) {
+    TypeNameGeneric builderTypeGeneric = new TypeNameGeneric(collectionBuilderType, elementType);
+    TypeNameGeneric consumerType =
+        new TypeNameGeneric(map2TypeName(Consumer.class), builderTypeGeneric);
+
+    MethodParameterDto parameter = new MethodParameterDto();
+    parameter.setParameterName(fieldName + BUILDER_SUFFIX + SUFFIX_CONSUMER);
+    parameter.setParameterTypeName(consumerType);
+
+    MethodDto methodDto = new MethodDto();
+    methodDto.setMethodName(fieldName);
+    methodDto.setReturnType(returnBuilderType);
+    methodDto.addParameter(parameter);
+    methodDto.setModifier(Modifier.PUBLIC);
+    methodDto.setMethodType(MethodTypes.CONSUMER_BY_BUILDER);
+
+    methodDto.setCode(
+        """
+        $helperType:T builder = this.$fieldName:N.isSet() ? new $helperType:T(java.util.List.of(this.$fieldName:N.value())) : new $helperType:T();
+        $dtoMethodParam:N.accept(builder);
+        this.$fieldName:N = $builderFieldWrapper:T.changedValue(builder.build().toArray(new $elementType:T[0]));
+        return this;
+        """);
+    methodDto.addArgument(ARG_FIELD_NAME, fieldName);
+    methodDto.addArgument(ARG_DTO_METHOD_PARAM, parameter.getParameterName());
+    methodDto.addArgument(ARG_HELPER_TYPE, builderTypeGeneric);
+    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
+    methodDto.addArgument("elementType", elementType);
     return methodDto;
   }
 
