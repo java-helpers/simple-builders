@@ -526,32 +526,26 @@ public class JavaCodeGenerator {
     if (codeDto.getCodeFormat() != null && !codeDto.getCodeFormat().isEmpty()) {
       // Build code with type arguments
       String code = codeDto.getCodeFormat();
-      java.util.List<Object> args = new java.util.ArrayList<>();
+      java.util.Map<String, Object> args = new java.util.HashMap<>();
 
       // Replace placeholders with appropriate classes (count how many times each placeholder
       // appears)
       for (MethodCodePlaceholder<?> placeholder : codeDto.getCodeArguments()) {
         if (placeholder instanceof MethodCodeTypePlaceholder) {
-          String placeholderStr = "$" + placeholder.getLabel() + ":T";
-          // Count occurrences
-          int count = 0;
-          int index = 0;
-          while ((index = code.indexOf(placeholderStr, index)) != -1) {
-            count++;
-            index += placeholderStr.length();
-          }
-          // Replace all occurrences with $T
-          code = code.replace(placeholderStr, "$T");
           // Determine which class to use based on placeholder label
-          ClassName classToUse = placeholder.getLabel().equals("dtoType") ? dtoClass : builderClass;
-          // Add class to args for each occurrence
-          for (int i = 0; i < count; i++) {
-            args.add(classToUse);
+          if (placeholder.getLabel().equals("dtoType")) {
+            args.put(placeholder.getLabel(), dtoClass);
+          } else if (placeholder.getLabel().equals("builderType")) {
+            args.put(placeholder.getLabel(), builderClass);
+          } else if (placeholder.getValue() instanceof String className) {
+            args.put(placeholder.getLabel(), className);
+          } else {
+            throw new IllegalArgumentException("Unknown placeholder type: " + placeholder);
           }
         }
       }
 
-      methodBuilder.addCode(code, args.toArray());
+      methodBuilder.addNamedCode(code, args);
     }
 
     return methodBuilder.build();
