@@ -110,6 +110,17 @@ public class ProcessingLogger {
   }
 
   /**
+   * Posts a warning message with a formatted string. Warnings are displayed by default and indicate
+   * potential issues that don't prevent compilation.
+   *
+   * @param format the format string
+   * @param args arguments referenced by the format specifiers in the format string
+   */
+  public void warning(String format, Object... args) {
+    messager.printMessage(Diagnostic.Kind.WARNING, String.format(format, args));
+  }
+
+  /**
    * Reports a warning at the location of the given element with a formatted message.
    *
    * @param e the element where the warning occurred, used for location information

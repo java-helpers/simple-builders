@@ -127,31 +127,35 @@ public class JavaCodeGenerator {
       classBuilder.addField(fieldSpec);
     }
 
-    // Collect all methods from all fields with their javadoc, then resolve conflicts
-    List<MethodDto> allMethodDtos = new ArrayList<>();
-    Map<MethodDto, String> methodToJavadoc = new HashMap<>();
+    // Collect all methods from all fields, setting javadoc and tracking field relationship
+    Map<MethodDto, FieldDto> methodToField = new HashMap<>();
 
     for (FieldDto fieldDto : builderDef.getConstructorFieldsForBuilder()) {
       for (MethodDto method : fieldDto.getMethods()) {
-        allMethodDtos.add(method);
-        methodToJavadoc.put(method, fieldDto.getJavaDoc());
+        // Set javadoc on method if not already set
+        if (method.getJavadoc() == null && fieldDto.getJavaDoc() != null) {
+          method.setJavadoc(fieldDto.getJavaDoc());
+        }
+        methodToField.put(method, fieldDto);
       }
     }
     for (FieldDto fieldDto : builderDef.getSetterFieldsForBuilder()) {
       for (MethodDto method : fieldDto.getMethods()) {
-        allMethodDtos.add(method);
-        methodToJavadoc.put(method, fieldDto.getJavaDoc());
+        // Set javadoc on method if not already set
+        if (method.getJavadoc() == null && fieldDto.getJavaDoc() != null) {
+          method.setJavadoc(fieldDto.getJavaDoc());
+        }
+        methodToField.put(method, fieldDto);
       }
     }
 
     // Resolve conflicts: keep only the highest priority method for each signature
-    List<MethodDto> resolvedMethods = resolveMethodConflicts(allMethodDtos);
+    List<MethodDto> resolvedMethods = resolveMethodConflicts(methodToField);
     logger.debug("  Resolved %d methods after conflict resolution", resolvedMethods.size());
 
     // Generate field-specific functions in Builder
     for (MethodDto methodDto : resolvedMethods) {
-      String javadoc = methodToJavadoc.get(methodDto);
-      MethodSpec methodSpec = createMethod(methodDto, builderTypeName, javadoc);
+      MethodSpec methodSpec = createMethod(methodDto, builderTypeName, methodDto.getJavadoc());
       classBuilder.addMethod(methodSpec);
     }
 
@@ -208,13 +212,15 @@ public class JavaCodeGenerator {
    * signature. This prevents compilation errors when methods from different fields have the same
    * signature.
    *
-   * @param methods all methods from all fields
+   * @param methodToField mapping from method to its source field
    * @return list of methods with conflicts resolved
    */
-  private List<MethodDto> resolveMethodConflicts(List<MethodDto> methods) {
+  private List<MethodDto> resolveMethodConflicts(Map<MethodDto, FieldDto> methodToField) {
     Map<String, MethodDto> signatureToMethod = new HashMap<>();
 
-    for (MethodDto method : methods) {
+    for (Map.Entry<MethodDto, FieldDto> entry : methodToField.entrySet()) {
+      MethodDto method = entry.getKey();
+      FieldDto field = entry.getValue();
       String signature = method.getSignatureKey();
       MethodDto existing = signatureToMethod.get(signature);
 
@@ -223,15 +229,33 @@ public class JavaCodeGenerator {
         signatureToMethod.put(signature, method);
       } else {
         // Conflict detected: keep the higher priority method
+        String existingFieldName = methodToField.get(existing).getFieldName();
+        String newFieldName = field.getFieldName();
+
         if (method.getPriority() > existing.getPriority()) {
+          // New method wins
           signatureToMethod.put(signature, method);
-          logger.debug(
-              "  Method conflict resolved: '%s' - kept priority %d over %d",
-              signature, method.getPriority(), existing.getPriority());
-        } else if (method.getPriority() == existing.getPriority()) {
-          logger.info(
-              "  Method conflict with equal priority: '%s' - keeping first occurrence (priority %d)",
-              signature, method.getPriority());
+          logger.warning(
+              "  Method conflict: '%s' from field '%s' (priority %d) dropped in favor of field '%s' (priority %d)",
+              signature,
+              existingFieldName,
+              existing.getPriority(),
+              newFieldName,
+              method.getPriority());
+        } else if (method.getPriority() < existing.getPriority()) {
+          // Existing method wins
+          logger.warning(
+              "  Method conflict: '%s' from field '%s' (priority %d) dropped in favor of field '%s' (priority %d)",
+              signature,
+              newFieldName,
+              method.getPriority(),
+              existingFieldName,
+              existing.getPriority());
+        } else {
+          // Equal priority - keep first
+          logger.warning(
+              "  Method conflict with equal priority: '%s' from field '%s' dropped, keeping first occurrence from field '%s' (priority %d)",
+              signature, newFieldName, existingFieldName, method.getPriority());
         }
       }
     }
