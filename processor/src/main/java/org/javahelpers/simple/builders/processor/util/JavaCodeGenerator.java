@@ -51,6 +51,9 @@ import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 /** JavaCodeGenerator generates with BuilderDefinitionDto JavaCode for the builder. */
 public class JavaCodeGenerator {
   /** Util class for source code generation of type {@code javax.annotation.processing.Filer}. */
+  private static final String CREATE_METHOD = "create";
+
+  private static final String THROW_EXCEPTION_FORMAT = "throw new $T($S)";
   private final Filer filer;
 
   /** Logger for debug output during code generation. */
@@ -151,7 +154,7 @@ public class JavaCodeGenerator {
 
     // Adding nested types (e.g., With interface)
     for (NestedTypeDto nestedType : builderDef.getNestedTypes()) {
-      TypeSpec nestedTypeSpec = createNestedType(nestedType, dtoBaseClass, builderBaseClass);
+      TypeSpec nestedTypeSpec = createNestedType(nestedType);
       classBuilder.addType(nestedTypeSpec);
       logger.debug("  Generated nested type: %s", nestedType.getTypeName());
     }
@@ -253,7 +256,7 @@ public class JavaCodeGenerator {
     if (field.isNonNullable()) {
       cb.beginControlFlow("if (this.$N.value() == null)", field.getFieldName())
           .addStatement(
-              "throw new $T($S)",
+              THROW_EXCEPTION_FORMAT,
               IllegalArgumentException.class,
               "Cannot initialize builder from instance: field '"
                   + field.getFieldName()
@@ -299,13 +302,13 @@ public class JavaCodeGenerator {
       if (field.isNonNullable()) {
         mb.beginControlFlow("if (!this.$N.isSet())", field.getFieldName())
             .addStatement(
-                "throw new $T($S)",
+                THROW_EXCEPTION_FORMAT,
                 IllegalStateException.class,
                 "Required field '" + field.getFieldName() + "' must be set before calling build()")
             .endControlFlow();
         mb.beginControlFlow("if (this.$N.value() == null)", field.getFieldName())
             .addStatement(
-                "throw new $T($S)",
+                THROW_EXCEPTION_FORMAT,
                 IllegalStateException.class,
                 "Field '"
                     + field.getFieldName()
@@ -323,7 +326,7 @@ public class JavaCodeGenerator {
                 field.getFieldName(),
                 field.getFieldName())
             .addStatement(
-                "throw new $T($S)",
+                THROW_EXCEPTION_FORMAT,
                 IllegalStateException.class,
                 "Field '"
                     + field.getFieldName()
@@ -360,7 +363,7 @@ public class JavaCodeGenerator {
       com.palantir.javapoet.ClassName dtoBaseClass,
       List<GenericParameterDto> generics) {
     MethodSpec.Builder methodBuilder =
-        MethodSpec.methodBuilder("create")
+        MethodSpec.methodBuilder(CREATE_METHOD)
             .addModifiers(STATIC, PUBLIC)
             .addJavadoc(
                 """
@@ -438,15 +441,12 @@ public class JavaCodeGenerator {
   }
 
   /**
-   * Creates a nested type (interface or class) from the DTO definition.
+   * Creates a TypeSpec for a nested type (e.g., With interface).
    *
    * @param nestedType the nested type definition
-   * @param dtoClass the DTO class name
-   * @param builderClass the builder class name
    * @return the TypeSpec for the nested type
    */
-  private TypeSpec createNestedType(
-      NestedTypeDto nestedType, ClassName dtoClass, ClassName builderClass) {
+  private TypeSpec createNestedType(NestedTypeDto nestedType) {
     TypeSpec.Builder typeBuilder;
 
     if (nestedType.getKind() == NestedTypeDto.NestedTypeKind.INTERFACE) {
