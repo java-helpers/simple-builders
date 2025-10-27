@@ -711,6 +711,7 @@ public class BuilderDefinitionCreator {
     methodDto.addArgument(ARG_DTO_METHOD_PARAM, parameter.getParameterName());
     methodDto.addArgument("transform", transform);
     methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
+    methodDto.setReturnType(builderType);
     return methodDto;
   }
 
