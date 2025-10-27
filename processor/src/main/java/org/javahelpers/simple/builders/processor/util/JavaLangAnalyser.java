@@ -363,14 +363,13 @@ public final class JavaLangAnalyser {
     if (dtoType == null || fieldName == null || fieldTypeMirror == null) {
       return Optional.empty();
     }
-    String cap = StringUtils.capitalize(fieldName);
-    String getterCandidate = "get" + cap;
-    String booleanGetterCandidate = "is" + cap;
     List<ExecutableElement> classMethods = ElementFilter.methodsIn(context.getAllMembers(dtoType));
-    // Prefer boolean-style getter if present
+
+    // Check for accessor methods:
+    // Record-style (fieldName), boolean-style (isXxx), or standard (getXxx)
     for (ExecutableElement candidate : classMethods) {
       String name = candidate.getSimpleName().toString();
-      if ((name.equals(booleanGetterCandidate) || name.equals(getterCandidate))
+      if (Strings.CI.equalsAny(name, fieldName, "is" + fieldName, "get" + fieldName)
           && candidate.getParameters().isEmpty()
           && context.isSameType(candidate.getReturnType(), fieldTypeMirror)) {
         return Optional.of(candidate);
