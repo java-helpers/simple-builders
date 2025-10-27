@@ -449,7 +449,8 @@ public class JavaCodeGenerator {
   private TypeSpec createNestedType(NestedTypeDto nestedType) {
     TypeSpec.Builder typeBuilder;
 
-    if (nestedType.getKind() == NestedTypeDto.NestedTypeKind.INTERFACE) {
+    boolean isInterface = nestedType.getKind() == NestedTypeDto.NestedTypeKind.INTERFACE;
+    if (isInterface) {
       typeBuilder = TypeSpec.interfaceBuilder(nestedType.getTypeName());
     } else {
       typeBuilder = TypeSpec.classBuilder(nestedType.getTypeName());
@@ -464,7 +465,6 @@ public class JavaCodeGenerator {
     }
 
     // Add methods to the nested type
-    boolean isInterface = nestedType.getKind() == NestedTypeDto.NestedTypeKind.INTERFACE;
     for (MethodDto method : nestedType.getMethods()) {
       MethodSpec methodSpec = createNestedTypeMethod(method, isInterface);
       typeBuilder.addMethod(methodSpec);
