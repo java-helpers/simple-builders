@@ -54,8 +54,6 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
 import org.javahelpers.simple.builders.processor.dtos.*;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 
-import com.google.common.graph.ElementOrder.Type;
-
 /** Class for creating a specific BuilderDefinitionDto for an annotated DTO class. */
 public class BuilderDefinitionCreator {
   private static final String BUILDER_SUFFIX = "Builder";
@@ -676,6 +674,8 @@ public class BuilderDefinitionCreator {
     methodDto.addArgument(ARG_FIELD_NAME, fieldName);
     methodDto.addArgument(ARG_DTO_METHOD_PARAMS, params);
     methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
+    // Direct setters have highest priority, transform methods have high priority
+    methodDto.setPriority(transform == null ? MethodDto.PRIORITY_HIGHEST : MethodDto.PRIORITY_HIGH);
     return methodDto;
   }
 
@@ -702,6 +702,7 @@ public class BuilderDefinitionCreator {
     methodDto.addArgument(ARG_DTO_METHOD_PARAM, parameter.getParameterName());
     methodDto.addArgument(ARG_HELPER_TYPE, fieldType);
     methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
+    methodDto.setPriority(MethodDto.PRIORITY_MEDIUM);
     return methodDto;
   }
 
@@ -730,6 +731,7 @@ public class BuilderDefinitionCreator {
     methodDto.addArgument("transform", transform);
     methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
     methodDto.setReturnType(builderType);
+    methodDto.setPriority(MethodDto.PRIORITY_LOW);
     return methodDto;
   }
 
@@ -815,6 +817,7 @@ public class BuilderDefinitionCreator {
     methodDto.addArgument(ARG_HELPER_TYPE, consumerBuilderType);
     additionalArguments.forEach(methodDto::addArgument);
     methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
+    methodDto.setPriority(MethodDto.PRIORITY_MEDIUM);
     return methodDto;
   }
 
@@ -838,6 +841,7 @@ public class BuilderDefinitionCreator {
     methodDto.addArgument(ARG_FIELD_NAME, fieldName);
     methodDto.addArgument(ARG_DTO_METHOD_PARAM, parameter.getParameterName());
     methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
+    methodDto.setPriority(MethodDto.PRIORITY_HIGH);
     return methodDto;
   }
 
@@ -870,6 +874,7 @@ public class BuilderDefinitionCreator {
     methodDto.addArgument(ARG_FIELD_NAME, fieldName);
     methodDto.addArgument("transform", transform);
     methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
+    methodDto.setPriority(MethodDto.PRIORITY_HIGH);
     return methodDto;
   }
 
@@ -903,6 +908,7 @@ public class BuilderDefinitionCreator {
     methodDto.addArgument(ARG_DTO_METHOD_PARAMS, fieldName);
     methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
     methodDto.addArgument("elementType", elementType);
+    methodDto.setPriority(MethodDto.PRIORITY_HIGH);
     return methodDto;
   }
 
@@ -942,6 +948,7 @@ public class BuilderDefinitionCreator {
     methodDto.addArgument(ARG_HELPER_TYPE, builderTypeGeneric);
     methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
     methodDto.addArgument("elementType", elementType);
+    methodDto.setPriority(MethodDto.PRIORITY_MEDIUM);
     return methodDto;
   }
 

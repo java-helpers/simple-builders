@@ -38,7 +38,10 @@ import com.palantir.javapoet.ParameterSpec;
 import com.palantir.javapoet.ParameterizedTypeName;
 import com.palantir.javapoet.TypeSpec;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Generated;
 import javax.lang.model.element.Modifier;
@@ -124,18 +127,32 @@ public class JavaCodeGenerator {
       classBuilder.addField(fieldSpec);
     }
 
-    // Generate field-specific functions in Builder (constructor fields first, then setter fields)
+    // Collect all methods from all fields with their javadoc, then resolve conflicts
+    List<MethodDto> allMethodDtos = new ArrayList<>();
+    Map<MethodDto, String> methodToJavadoc = new HashMap<>();
+
     for (FieldDto fieldDto : builderDef.getConstructorFieldsForBuilder()) {
-      List<MethodSpec> methodSpecs = createFieldMethods(fieldDto, builderTypeName);
-      logger.debug(
-          "  Generated %d methods for field: %s", methodSpecs.size(), fieldDto.getFieldName());
-      classBuilder.addMethods(methodSpecs);
+      for (MethodDto method : fieldDto.getMethods()) {
+        allMethodDtos.add(method);
+        methodToJavadoc.put(method, fieldDto.getJavaDoc());
+      }
     }
     for (FieldDto fieldDto : builderDef.getSetterFieldsForBuilder()) {
-      List<MethodSpec> methodSpecs = createFieldMethods(fieldDto, builderTypeName);
-      logger.debug(
-          "  Generated %d methods for field: %s", methodSpecs.size(), fieldDto.getFieldName());
-      classBuilder.addMethods(methodSpecs);
+      for (MethodDto method : fieldDto.getMethods()) {
+        allMethodDtos.add(method);
+        methodToJavadoc.put(method, fieldDto.getJavaDoc());
+      }
+    }
+
+    // Resolve conflicts: keep only the highest priority method for each signature
+    List<MethodDto> resolvedMethods = resolveMethodConflicts(allMethodDtos);
+    logger.debug("  Resolved %d methods after conflict resolution", resolvedMethods.size());
+
+    // Generate field-specific functions in Builder
+    for (MethodDto methodDto : resolvedMethods) {
+      String javadoc = methodToJavadoc.get(methodDto);
+      MethodSpec methodSpec = createMethod(methodDto, builderTypeName, javadoc);
+      classBuilder.addMethod(methodSpec);
     }
 
     // Adding builder-specific methods
@@ -184,6 +201,42 @@ public class JavaCodeGenerator {
     } catch (IOException ex) {
       throw new BuilderException(null, ex);
     }
+  }
+
+  /**
+   * Resolves method conflicts by keeping only the highest priority method for each unique
+   * signature. This prevents compilation errors when methods from different fields have the same
+   * signature.
+   *
+   * @param methods all methods from all fields
+   * @return list of methods with conflicts resolved
+   */
+  private List<MethodDto> resolveMethodConflicts(List<MethodDto> methods) {
+    Map<String, MethodDto> signatureToMethod = new HashMap<>();
+
+    for (MethodDto method : methods) {
+      String signature = method.getSignatureKey();
+      MethodDto existing = signatureToMethod.get(signature);
+
+      if (existing == null) {
+        // No conflict, add the method
+        signatureToMethod.put(signature, method);
+      } else {
+        // Conflict detected: keep the higher priority method
+        if (method.getPriority() > existing.getPriority()) {
+          signatureToMethod.put(signature, method);
+          logger.debug(
+              "  Method conflict resolved: '%s' - kept priority %d over %d",
+              signature, method.getPriority(), existing.getPriority());
+        } else if (method.getPriority() == existing.getPriority()) {
+          logger.info(
+              "  Method conflict with equal priority: '%s' - keeping first occurrence (priority %d)",
+              signature, method.getPriority());
+        }
+      }
+    }
+
+    return new ArrayList<>(signatureToMethod.values());
   }
 
   private CodeBlock createJavadocForClass(ClassName dtoClass) {
@@ -512,13 +565,6 @@ public class JavaCodeGenerator {
     }
 
     return methodBuilder.build();
-  }
-
-  private List<MethodSpec> createFieldMethods(
-      FieldDto fieldDto, com.palantir.javapoet.TypeName builderTypeName) {
-    return fieldDto.getMethods().stream()
-        .map(m -> createMethod(m, builderTypeName, fieldDto.getJavaDoc()))
-        .toList();
   }
 
   private MethodSpec createMethod(

@@ -34,6 +34,12 @@ import org.apache.commons.lang3.StringUtils;
 
 /** MethodDto containing all information to generate a method in builder. */
 public class MethodDto {
+  // Priority constants for method conflict resolution (higher values win)
+  public static final int PRIORITY_HIGHEST = 100; // Direct setters, with() methods
+  public static final int PRIORITY_HIGH = 80; // Supplier, transform methods
+  public static final int PRIORITY_MEDIUM = 70; // Consumer, builder consumers
+  public static final int PRIORITY_LOW = 60; // Specialized consumers
+
   /** Access modifier for method. */
   private Optional<Modifier> modifier = Optional.empty();
 
@@ -42,6 +48,9 @@ public class MethodDto {
    * DTO with same parameters and returning builder.
    */
   private MethodTypes methodType = PROXY;
+
+  /** Priority for method conflict resolution. Higher wins. */
+  private int priority = 0;
 
   /** Name of method. */
   private String methodName;
@@ -78,6 +87,32 @@ public class MethodDto {
    */
   public void setMethodType(MethodTypes methodType) {
     this.methodType = methodType;
+  }
+
+  /**
+   * Sets the priority for this method. Higher values win when signatures clash. Priority levels:
+   *
+   * <ul>
+   *   <li>{@link #PRIORITY_HIGHEST} (100): Direct setters, with() methods
+   *   <li>{@link #PRIORITY_HIGH} (80): Supplier methods, transform methods (e.g., format, toArray)
+   *   <li>{@link #PRIORITY_MEDIUM} (70): Consumer methods, builder consumers
+   *   <li>{@link #PRIORITY_LOW} (60): Specialized consumers (e.g., StringBuilder)
+   *   <li>0: Default (no priority set)
+   * </ul>
+   *
+   * @param priority the priority value (higher values take precedence in conflicts)
+   */
+  public void setPriority(int priority) {
+    this.priority = priority;
+  }
+
+  /**
+   * Returns the priority of this method for conflict resolution.
+   *
+   * @return the priority value
+   */
+  public int getPriority() {
+    return priority;
   }
 
   /**
@@ -204,10 +239,28 @@ public class MethodDto {
   }
 
   /**
-   * Gets the Javadoc comment for the method.
+   * Returns a unique signature key for the method based on name and parameter types. Used for
+   * conflict resolution. The signature matches Java's method signature rules (name + parameter
+   * types, ignoring generics due to type erasure).
    *
-   * @return the Javadoc comment
+   * @return the signature key (e.g., "fieldName(java.lang.String,java.util.List)")
    */
+  public String getSignatureKey() {
+    StringBuilder sb = new StringBuilder();
+    sb.append(methodName).append('(');
+    for (int i = 0; i < parameters.size(); i++) {
+      if (i > 0) sb.append(',');
+      TypeName tn = parameters.get(i).getParameterType();
+      // Handle null package names
+      if (StringUtils.isNoneBlank(tn.getPackageName())) {
+        sb.append(tn.getPackageName()).append('.');
+      }
+      sb.append(tn.getClassName());
+    }
+    sb.append(')');
+    return sb.toString();
+  }
+
   public String getJavadoc() {
     return javadoc;
   }
