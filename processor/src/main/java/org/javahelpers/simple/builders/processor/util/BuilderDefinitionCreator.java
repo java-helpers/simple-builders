@@ -1034,11 +1034,10 @@ public class BuilderDefinitionCreator {
     method.addArgument("builderType", builderDef.getBuilderTypeName());
     method.addArgument("dtoType", builderDef.getBuildingTargetTypeName());
     method.addArgument("classcastexception", map2TypeName(ClassCastException.class));
-    method.addArgument(
-        "illegalargumentexception", map2TypeName(IllegalArgumentException.class));
+    method.addArgument("illegalargumentexception", map2TypeName(IllegalArgumentException.class));
 
     method.setJavadoc(
-      """
+        """
       Applies modifications to a builder initialized from this instance and returns the built object.
 
       @param b the consumer to apply modifications
@@ -1073,11 +1072,10 @@ public class BuilderDefinitionCreator {
     method.addArgument("builderType", builderDef.getBuilderTypeName());
     method.addArgument("dtoType", builderDef.getBuildingTargetTypeName());
     method.addArgument("classcastexception", map2TypeName(ClassCastException.class));
-    method.addArgument(
-        "illegalargumentexception", map2TypeName(IllegalArgumentException.class));
+    method.addArgument("illegalargumentexception", map2TypeName(IllegalArgumentException.class));
 
     method.setJavadoc(
-      """
+        """
       Creates a builder initialized from this instance.
 
       @return a builder initialized with this instance's values
