@@ -18,10 +18,10 @@
     - [Validation Annotations](#validation-annotations)
     - [Conditional Builder Logic](#conditional-builder-logic)
   - [Collections and Nested Objects](#collections-and-nested-objects)
-  - [Debug Logging](#debug-logging)
-- [Building from Source](#building-from-source)
+  - [With Interface Pattern](#with-interface-pattern)
 - [Contributing](#contributing)
 - [License](#license)
+- [Acknowledgements](#acknowledgements)
 - [Links](#links)
 
 ## What is Simple Builders?
@@ -34,8 +34,8 @@ Simple Builders is a Java [annotation processor](https://docs.oracle.com/en/java
 - **Type-Safe Builders**: Compile-time type checking for all builder methods
 - **Fluent API**: Clean, chainable API for object construction
 - **Collections Support**: Built-in support for collections and maps
-- **Nested Builders**: Automatic generation of nested object builders
 - **Annotation Preservation**: Validation annotations are automatically copied to builder methods
+- **With Interface Pattern**: Type-safe object modifications using generated With interfaces
 
 ## Requirements
 
@@ -234,51 +234,68 @@ Project project = ProjectBuilder.create()
     .build();
 ```
 
-### Debug Logging
 
-Simple Builders supports detailed debug logging to trace the builder generation process. Enable it with the `-Averbose=true` compiler argument for detailed insights into field discovery, method analysis, and code generation.
+### With Interface Pattern
 
-For complete documentation on enabling and using debug logging, see [DEBUG_LOGGING.md](DEBUG_LOGGING.md).
+Simple Builders generates a nested `With` interface for each builder field, enabling a clean, type-safe way to create modified copies of objects. This pattern is particularly useful for creating variations of an object:
 
-## Building from Source
+```java
+Person person = PersonBuilder.create()
+    .name("John Doe")
+    .age(30)
+    .build();
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/java-helpers/simple-builders.git
-   cd simple-builders
-   ```
+// Create a modified copy using the With interface
+Person olderPerson = PersonBuilder.create()
+    .with(person)
+    .age(31)  // Only change the age
+    .build();
 
-2. Build the project:
-   ```bash
-   mvn clean install
-   ```
+// By implementing the With interface, you can create modified copies of objects in a type-safe way
+Person youngerPerson = person.with(p -> p.age(29));
+```
 
-3. Run tests:
-   ```bash
-   mvn test
-   ```
+The `With` interface provides type-safe setter methods that mirror the builder's API, making it easy to create object variations without manually copying all fields.
 
 ## Contributing
 
-Contributions are welcome! Please follow these steps:
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for:
 
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a new Pull Request
+- Development setup and project structure
+- Building and testing strategies (important for annotation processor modules)
+- Debugging with verbose output
+- Code style and formatting
+- Pull request process
 
-Please ensure your code follows the project's code style and includes appropriate tests.
-
-### Releasing
-
-For maintainers:
-- **Release process:** See [RELEASE.md](RELEASE.md) for releasing new versions
+For maintainers, see [RELEASE.md](RELEASE.md) for the release process.
 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+## Acknowledgements
+
+This project was made possible thanks to the following:
+
+### Inspiration and Patterns
+
+- **[Benji Weber](https://benjiweber.co.uk/blog/2020/09/19/fun-with-java-records/)** - The With interface pattern is inspired by Benji's innovative work on functional builders and extending Java Records.
+- **[RecordBuilder](https://github.com/Randgalt/record-builder)** by Randall Hauch - A state-of-the-art builder solution for Java records. If your project uses records exclusively, RecordBuilder is an excellent choice. Simple Builders extends these concepts to traditional Java classes.
+
+### Tools and Libraries
+
+- **[JavaPoet](https://github.com/palantir/javapoet)** - An excellent library for generating Java source code. Originally created by Square, now maintained by Palantir. JavaPoet made it straightforward to generate clean, readable builder code.
+- **[Google Compile Testing](https://github.com/google/compile-testing)** - Essential for testing annotation processors with comprehensive compilation diagnostics.
+
+### Learning Resources
+
+The following resources were invaluable for understanding annotation processing:
+
+- **[Baeldung: Java Annotation Processing and Creating a Builder](https://www.baeldung.com/java-annotation-processing-builder)** - Comprehensive guide to annotation processing fundamentals
+- **[SkyRo Tech: Code Generation with JavaPoet in Practice](https://medium.com/skyro-tech/code-generation-with-javapoet-on-practice-bfbe8ca56a61)** - Practical examples of using JavaPoet
+- **[Annotation Processing Demo](https://github.com/ledungcobra/annotation-processing-demo)** by Le Dung - Hands-on examples of annotation processor implementation
+
+Thank you to all contributors and the Java community for making this project possible!
 
 ## Links
 

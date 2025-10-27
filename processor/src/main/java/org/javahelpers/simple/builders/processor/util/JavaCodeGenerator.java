@@ -51,6 +51,9 @@ import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 /** JavaCodeGenerator generates with BuilderDefinitionDto JavaCode for the builder. */
 public class JavaCodeGenerator {
   /** Util class for source code generation of type {@code javax.annotation.processing.Filer}. */
+  private static final String METHOD_NAME_CREATE = "create";
+
+  private static final String THROW_EXCEPTION_FORMAT = "throw new $T($S)";
   private final Filer filer;
 
   /** Logger for debug output during code generation. */
@@ -149,6 +152,13 @@ public class JavaCodeGenerator {
     classBuilder.addMethod(createMethodConditional(builderTypeName));
     classBuilder.addMethod(createMethodConditionalPositiveOnly(builderTypeName));
 
+    // Adding nested types (e.g., With interface)
+    for (NestedTypeDto nestedType : builderDef.getNestedTypes()) {
+      TypeSpec nestedTypeSpec = createNestedType(nestedType);
+      classBuilder.addType(nestedTypeSpec);
+      logger.debug("  Generated nested type: %s", nestedType.getTypeName());
+    }
+
     // Adding annotations
     classBuilder.addAnnotation(createAnnotationGenerated());
     classBuilder.addAnnotation(createAnnotationBuilderImplementation(dtoBaseClass));
@@ -246,7 +256,7 @@ public class JavaCodeGenerator {
     if (field.isNonNullable()) {
       cb.beginControlFlow("if (this.$N.value() == null)", field.getFieldName())
           .addStatement(
-              "throw new $T($S)",
+              THROW_EXCEPTION_FORMAT,
               IllegalArgumentException.class,
               "Cannot initialize builder from instance: field '"
                   + field.getFieldName()
@@ -292,13 +302,13 @@ public class JavaCodeGenerator {
       if (field.isNonNullable()) {
         mb.beginControlFlow("if (!this.$N.isSet())", field.getFieldName())
             .addStatement(
-                "throw new $T($S)",
+                THROW_EXCEPTION_FORMAT,
                 IllegalStateException.class,
                 "Required field '" + field.getFieldName() + "' must be set before calling build()")
             .endControlFlow();
         mb.beginControlFlow("if (this.$N.value() == null)", field.getFieldName())
             .addStatement(
-                "throw new $T($S)",
+                THROW_EXCEPTION_FORMAT,
                 IllegalStateException.class,
                 "Field '"
                     + field.getFieldName()
@@ -316,7 +326,7 @@ public class JavaCodeGenerator {
                 field.getFieldName(),
                 field.getFieldName())
             .addStatement(
-                "throw new $T($S)",
+                THROW_EXCEPTION_FORMAT,
                 IllegalStateException.class,
                 "Field '"
                     + field.getFieldName()
@@ -353,7 +363,7 @@ public class JavaCodeGenerator {
       com.palantir.javapoet.ClassName dtoBaseClass,
       List<GenericParameterDto> generics) {
     MethodSpec.Builder methodBuilder =
-        MethodSpec.methodBuilder("create")
+        MethodSpec.methodBuilder(METHOD_NAME_CREATE)
             .addModifiers(STATIC, PUBLIC)
             .addJavadoc(
                 """
@@ -428,6 +438,80 @@ public class JavaCodeGenerator {
             """)
         .addCode("return conditional(condition, yesCondition, null);\n")
         .build();
+  }
+
+  /**
+   * Creates a TypeSpec for a nested type (e.g., With interface).
+   *
+   * @param nestedType the nested type definition
+   * @return the TypeSpec for the nested type
+   */
+  private TypeSpec createNestedType(NestedTypeDto nestedType) {
+    TypeSpec.Builder typeBuilder;
+
+    boolean isInterface = nestedType.getKind() == NestedTypeDto.NestedTypeKind.INTERFACE;
+    if (isInterface) {
+      typeBuilder = TypeSpec.interfaceBuilder(nestedType.getTypeName());
+    } else {
+      typeBuilder = TypeSpec.classBuilder(nestedType.getTypeName());
+    }
+
+    if (nestedType.isPublic()) {
+      typeBuilder.addModifiers(PUBLIC);
+    }
+
+    if (nestedType.getJavadoc() != null) {
+      typeBuilder.addJavadoc(nestedType.getJavadoc());
+    }
+
+    // Add methods to the nested type
+    for (MethodDto method : nestedType.getMethods()) {
+      MethodSpec methodSpec = createNestedTypeMethod(method, isInterface);
+      typeBuilder.addMethod(methodSpec);
+    }
+
+    return typeBuilder.build();
+  }
+
+  /**
+   * Creates a MethodSpec for a method of a nested type (e.g., With interface).
+   *
+   * @param methodDto the method to create
+   * @param isInterface whether the nested type is an interface
+   * @return the MethodSpec
+   */
+  private MethodSpec createNestedTypeMethod(MethodDto methodDto, boolean isInterface) {
+    MethodSpec.Builder methodBuilder =
+        MethodSpec.methodBuilder(methodDto.getMethodName()).addModifiers(PUBLIC);
+
+    // Set return type using mapper
+    methodBuilder.returns(JavapoetMapper.map2ParameterType(methodDto.getReturnType()));
+
+    // Add parameters using mapper
+    for (MethodParameterDto paramDto : methodDto.getParameters()) {
+      methodBuilder.addParameter(createParameter(paramDto));
+    }
+
+    // Add modifiers if defined
+    methodDto.getModifier().ifPresent(methodBuilder::addModifiers);
+
+    // Add Javadoc
+    if (methodDto.getJavadoc() != null) {
+      methodBuilder.addJavadoc(methodDto.getJavadoc());
+    }
+
+    // Add method body if present
+    MethodCodeDto codeDto = methodDto.getMethodCodeDto();
+    if (codeDto != null) {
+      // Add default modifier for interface methods with implementation
+      if (isInterface) {
+        methodBuilder.addModifiers(javax.lang.model.element.Modifier.DEFAULT);
+      }
+
+      methodBuilder.addCode(map2CodeBlock(codeDto));
+    }
+
+    return methodBuilder.build();
   }
 
   private List<MethodSpec> createFieldMethods(

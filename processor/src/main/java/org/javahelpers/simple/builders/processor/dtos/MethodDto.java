@@ -46,6 +46,12 @@ public class MethodDto {
   /** Name of method. */
   private String methodName;
 
+  /** Return type of method. */
+  private TypeName returnType;
+
+  /** Javadoc comment for the method. */
+  private String javadoc;
+
   /** List of parameters of Method. */
   private final LinkedList<MethodParameterDto> parameters = new LinkedList<>();
 
@@ -177,5 +183,41 @@ public class MethodDto {
    */
   public void setModifier(Modifier modifier) {
     this.modifier = Optional.ofNullable(modifier);
+  }
+
+  /**
+   * Gets the return type of the method.
+   *
+   * @return the return type as TypeName
+   */
+  public TypeName getReturnType() {
+    return returnType;
+  }
+
+  /**
+   * Sets the return type of the method.
+   *
+   * @param returnType the return type as TypeName
+   */
+  public void setReturnType(TypeName returnType) {
+    this.returnType = returnType;
+  }
+
+  /**
+   * Gets the Javadoc comment for the method.
+   *
+   * @return the Javadoc comment
+   */
+  public String getJavadoc() {
+    return javadoc;
+  }
+
+  /**
+   * Sets the Javadoc comment for the method.
+   *
+   * @param javadoc the Javadoc comment
+   */
+  public void setJavadoc(String javadoc) {
+    this.javadoc = javadoc;
   }
 }
