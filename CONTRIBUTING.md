@@ -60,7 +60,7 @@ If you're changing code in the `processor` module:
 # Test only the processor
 mvn test -pl processor
 
-# With annotation processor verbose output (requires pom.xml configuration)
+# With annotation processor verbose output (shows detailed field/method analysis)
 mvn test -pl processor -Dsimplebuilder.verbose=true
 ```
 
@@ -126,15 +126,36 @@ mvn test -X -pl processor
 
 The annotation processor has its own verbose logging that shows detailed information about field discovery, method analysis, and code generation. This is **different** from Maven's `-X` debug flag.
 
-The `example` module is already configured to support verbose output. Enable it with:
+Both `processor` and `example` modules now support the `simplebuilder.verbose` property:
 
 ```bash
-# Compile/test example with processor verbose output
+# Enable verbose output for processor tests
+mvn test -pl processor -Dsimplebuilder.verbose=true
+
+# Enable verbose output for example compilation
 mvn compile -pl example -Dsimplebuilder.verbose=true
-mvn test -pl example -Dsimplebuilder.verbose=true
+
+# Enable for all modules
+mvn test -Dsimplebuilder.verbose=true
 ```
 
-**Note**: The `processor` module's tests already use verbose output internally via `.withOptions("-Averbose=true")` in the test code itself. No Maven property is needed for processor tests.
+**How it works**: 
+1. The `ProcessorTestUtils.createCompiler()` utility automatically checks for the `simplebuilder.verbose` system property and applies `-Averbose=true` to all test compilations when enabled.
+2. The `printDiagnosticsOnVerbose()` helper prints the processor's detailed debug output to the console, making it visible in test output and CI logs.
+3. This is especially useful when debugging failing tests - you'll see exactly what the processor is doing.
+
+**Example verbose output**:
+```
+========== Compilation Diagnostics ==========
+--- NOTES ---
+[DEBUG] simple-builders: Processing element: Project
+[DEBUG] Extracting builder definition from: test.Project
+[DEBUG] Analyzing method: setName with 1 parameter(s)
+[DEBUG]   -> Adding field: name (type: java.lang.String)
+[DEBUG] Generated 4 methods for field: name
+[DEBUG] Successfully generated builder: ProjectBuilder
+=============================================
+```
 
 For complete documentation on debug logging and configuration, see [DEBUG_LOGGING.md](DEBUG_LOGGING.md).
 

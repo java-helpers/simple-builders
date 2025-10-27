@@ -1,10 +1,11 @@
 package org.javahelpers.simple.builders.processor;
 
 import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.contains;
+import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils.createCompiler;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils.loadGeneratedSource;
+import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils.printDiagnosticsOnVerbose;
 
 import com.google.testing.compile.Compilation;
-import com.google.testing.compile.Compiler;
 import com.google.testing.compile.JavaFileObjects;
 import javax.tools.JavaFileObject;
 import org.javahelpers.simple.builders.processor.testing.ProcessorAsserts;
@@ -14,7 +15,9 @@ import org.junit.jupiter.api.Test;
 class WithInterfaceTest {
 
   private Compilation compileSources(JavaFileObject... sources) {
-    return Compiler.javac().withProcessors(new BuilderProcessor()).compile(sources);
+    Compilation compilation = createCompiler().compile(sources);
+    printDiagnosticsOnVerbose(compilation); // Print diagnostics when verbose mode is enabled
+    return compilation;
   }
 
   @Test

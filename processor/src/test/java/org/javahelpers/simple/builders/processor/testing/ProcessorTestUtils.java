@@ -1,11 +1,14 @@
 package org.javahelpers.simple.builders.processor.testing;
 
 import com.google.testing.compile.Compilation;
+import com.google.testing.compile.Compiler;
 import com.google.testing.compile.JavaFileObjects;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.tools.JavaFileObject;
+import org.apache.commons.lang3.Strings;
+import org.javahelpers.simple.builders.processor.BuilderProcessor;
 
 /**
  * Utilities to simplify annotation-processor tests by reducing boilerplate for building sources,
@@ -14,6 +17,77 @@ import javax.tools.JavaFileObject;
 public final class ProcessorTestUtils {
 
   private ProcessorTestUtils() {}
+
+  /**
+   * Creates a configured {@link Compiler} instance with the BuilderProcessor.
+   *
+   * <p>This method checks for the system property {@code simplebuilder.verbose} (or {@code
+   * Averbose}) and automatically adds {@code -Averbose=true} to the compiler options if either is
+   * set to "true".
+   *
+   * <p>This allows developers to enable verbose processor output for all tests by running: {@code
+   * mvn test -Dsimplebuilder.verbose=true}
+   *
+   * @return a Compiler instance configured with BuilderProcessor and optional verbose output
+   */
+  public static Compiler createCompiler() {
+    Compiler compiler = Compiler.javac().withProcessors(new BuilderProcessor());
+
+    // Check for verbose flag from Maven property
+    if (isVerboseEnabled()) {
+      compiler = compiler.withOptions("-Averbose=true");
+    }
+
+    return compiler;
+  }
+
+  /**
+   * Checks if verbose mode is enabled via system properties.
+   *
+   * @return true if simplebuilder.verbose or Averbose is set to "true"
+   */
+  public static boolean isVerboseEnabled() {
+    String verboseProperty = System.getProperty("simplebuilder.verbose");
+    String averboseProperty = System.getProperty("Averbose");
+    return Strings.CI.equalsAny("true", verboseProperty, averboseProperty);
+  }
+
+  /**
+   * Prints compilation diagnostics (notes, warnings, errors) to System.out if verbose mode is
+   * enabled.
+   *
+   * <p>This is useful for debugging test failures, as it makes the processor's debug output visible
+   * in the test console output and CI logs.
+   *
+   * @param compilation the compilation result to print diagnostics from
+   */
+  public static void printDiagnosticsOnVerbose(Compilation compilation) {
+    if (!isVerboseEnabled()) {
+      return;
+    }
+
+    System.out.println("\n========== Compilation Diagnostics ==========");
+
+    // Print notes (includes debug messages)
+    if (!compilation.notes().isEmpty()) {
+      System.out.println("--- NOTES ---");
+      compilation.notes().forEach(diag -> System.out.println(diag.getMessage(null)));
+    }
+
+    // Print warnings
+    if (!compilation.warnings().isEmpty()) {
+      System.out.println("\n--- WARNINGS ---");
+      compilation.warnings().forEach(diag -> System.out.println(diag.getMessage(null)));
+    }
+
+    // Print errors
+    if (!compilation.errors().isEmpty()) {
+      System.out.println("\n--- ERRORS ---");
+      compilation.errors().forEach(diag -> System.out.println(diag.getMessage(null)));
+    }
+
+    System.out.println("=============================================\n");
+  }
 
   /**
    * Creates a {@link JavaFileObject} for a simple class annotated with @SimpleBuilder. You pass the
