@@ -155,7 +155,7 @@ public class JavaCodeGenerator {
 
     // Generate field-specific functions in Builder
     for (MethodDto methodDto : resolvedMethods) {
-      MethodSpec methodSpec = createMethod(methodDto, builderTypeName, methodDto.getJavadoc());
+      MethodSpec methodSpec = createMethod(methodDto, builderTypeName);
       classBuilder.addMethod(methodSpec);
     }
 
@@ -591,67 +591,27 @@ public class JavaCodeGenerator {
     return methodBuilder.build();
   }
 
-  private MethodSpec createMethod(
-      MethodDto methodDto,
-      com.palantir.javapoet.TypeName returnType,
-      String optionalFieldParamJavaDoc) {
+  private MethodSpec createMethod(MethodDto methodDto, com.palantir.javapoet.TypeName returnType) {
     MethodSpec.Builder methodBuilder =
         MethodSpec.methodBuilder(methodDto.getMethodName()).returns(returnType);
     methodDto.getModifier().ifPresent(methodBuilder::addModifiers);
-    int maxIndexParameters = methodDto.getParameters().size() - 1;
 
-    // Adding javadoc for method
-    switch (methodDto.getMethodType()) {
-      case PROXY ->
-          methodBuilder.addJavadoc(
-              "Sets the value for <code>$1N</code>.\n", methodDto.getMethodName());
-      case CONSUMER ->
-          methodBuilder.addJavadoc(
-              "Sets the value for <code>$1N</code> by executing the provided consumer.\n",
-              methodDto.createFieldSetterMethodName());
-      case CONSUMER_BY_BUILDER ->
-          methodBuilder.addJavadoc(
-              "Sets the value for <code>$1N</code> using a builder consumer that produces the value.\n",
-              methodDto.createFieldSetterMethodName());
-      case SUPPLIER ->
-          methodBuilder.addJavadoc(
-              "Sets the value for <code>$1N</code> by invoking the provided supplier.\n",
-              methodDto.createFieldSetterMethodName());
+    // Use javadoc from MethodDto if available
+    String javadoc = methodDto.getJavadoc();
+    if (javadoc != null && !javadoc.isBlank()) {
+      methodBuilder.addJavadoc(javadoc);
     }
 
-    for (int i = 0; i <= maxIndexParameters; i++) {
-      MethodParameterDto paramDto = methodDto.getParameters().get(i);
+    // Add parameters
+    for (MethodParameterDto paramDto : methodDto.getParameters()) {
       methodBuilder.addParameter(createParameter(paramDto));
-
-      if (i == maxIndexParameters && paramDto.getParameterType() instanceof TypeNameArray) {
+      if (paramDto.getParameterType() instanceof TypeNameArray) {
         methodBuilder.varargs(); // Arrays should be mapped to be generics
-      }
-
-      // Extending Javadoc with parameters
-      switch (methodDto.getMethodType()) {
-        case PROXY ->
-            methodBuilder.addJavadoc(
-                "\n@param $1N $2L", paramDto.getParameterName(), optionalFieldParamJavaDoc);
-        case CONSUMER ->
-            methodBuilder.addJavadoc(
-                "\n@param $1N consumer providing an instance of $2L",
-                paramDto.getParameterName(),
-                optionalFieldParamJavaDoc);
-        case CONSUMER_BY_BUILDER ->
-            methodBuilder.addJavadoc(
-                "\n@param $1N consumer providing an instance of a builder for $2L",
-                paramDto.getParameterName(),
-                optionalFieldParamJavaDoc);
-        case SUPPLIER ->
-            methodBuilder.addJavadoc(
-                "\n@param $1N supplier for $2L",
-                paramDto.getParameterName(),
-                optionalFieldParamJavaDoc);
       }
     }
 
     CodeBlock codeBlock = map2CodeBlock(methodDto.getMethodCodeDto());
-    methodBuilder.addCode(codeBlock).addJavadoc("\n@return current instance of builder");
+    methodBuilder.addCode(codeBlock);
     return methodBuilder.build();
   }
 
