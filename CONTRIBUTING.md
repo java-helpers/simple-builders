@@ -222,6 +222,9 @@ mvn test -Dsimplebuilder.verbose=true
 - Annotation processing steps
 - Code generation details
 - Exact error locations
+- Complete generated source code (printed before assertions run)
+
+For complete documentation, see [DEBUG_LOGGING.md](DEBUG_LOGGING.md).
 
 **Example output:**
 ```
@@ -233,11 +236,30 @@ mvn test -Dsimplebuilder.verbose=true
 [DEBUG]   -> Adding field: name (type: java.lang.String)
 [DEBUG] Generated 4 methods for field: name
 =============================================
+
+========== Generated Source Files ==========
+
+--- ProjectBuilder.java ---
+package test;
+
+public class ProjectBuilder {
+    private String name;
+    
+    public ProjectBuilder name(String name) {
+        this.name = name;
+        return this;
+    }
+    ...
+}
+--- End of ProjectBuilder.java ---
+=============================================
 ```
 
-This is **critical** for debugging because annotation processing happens inside Google's compile-testing framework, making it otherwise invisible.
+This makes it easy to compare expected vs actual generated code without needing a debugger.
 
-For complete documentation, see [DEBUG_LOGGING.md](DEBUG_LOGGING.md).
+**Why is this important?**
+
+This is **critical** for debugging because annotation processing happens inside Google's compile-testing framework, making it otherwise invisible.
 
 ## Code Style
 

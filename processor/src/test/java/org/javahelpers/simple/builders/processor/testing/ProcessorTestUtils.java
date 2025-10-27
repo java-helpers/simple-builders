@@ -53,11 +53,11 @@ public final class ProcessorTestUtils {
   }
 
   /**
-   * Prints compilation diagnostics (notes, warnings, errors) to System.out if verbose mode is
-   * enabled.
+   * Prints compilation diagnostics (notes, warnings, errors) and generated source files to
+   * System.out if verbose mode is enabled.
    *
-   * <p>This is useful for debugging test failures, as it makes the processor's debug output visible
-   * in the test console output and CI logs.
+   * <p>This is useful for debugging test failures, as it makes the processor's debug output and
+   * generated code visible in the test console output and CI logs.
    *
    * @param compilation the compilation result to print diagnostics from
    */
@@ -86,6 +86,44 @@ public final class ProcessorTestUtils {
       compilation.errors().forEach(diag -> System.out.println(diag.getMessage(null)));
     }
 
+    System.out.println("=============================================\n");
+
+    // Print generated source files
+    printGeneratedSourcesOnVerbose(compilation);
+  }
+
+  /**
+   * Prints all generated source files to System.out if verbose mode is enabled.
+   *
+   * <p>This displays the actual generated code before assertions run, making it easy to compare
+   * expected vs actual output without debugging.
+   *
+   * @param compilation the compilation result containing generated files
+   */
+  public static void printGeneratedSourcesOnVerbose(Compilation compilation) {
+    if (!isVerboseEnabled()) {
+      return;
+    }
+
+    var generatedFiles = compilation.generatedSourceFiles();
+    if (generatedFiles.isEmpty()) {
+      System.out.println("========== No Source Files Generated ==========\n");
+      return;
+    }
+
+    System.out.println("========== Generated Source Files ==========");
+    generatedFiles.forEach(
+        file -> {
+          try {
+            String fileName = file.getName();
+            String content = file.getCharContent(false).toString();
+            System.out.println("\n--- " + fileName + " ---");
+            System.out.println(content);
+            System.out.println("--- End of " + fileName + " ---");
+          } catch (Exception e) {
+            System.err.println("Failed to read generated file: " + e.getMessage());
+          }
+        });
     System.out.println("=============================================\n");
   }
 
