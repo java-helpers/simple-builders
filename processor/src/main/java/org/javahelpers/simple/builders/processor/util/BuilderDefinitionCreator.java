@@ -1014,10 +1014,8 @@ public class BuilderDefinitionCreator {
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName("b");
     // For interface methods, we store the full type as a string
-    TypeName consumerType =
-        new TypeName(
-            "java.util.function",
-            "Consumer<" + builderDef.getBuilderTypeName().getClassName() + ">");
+    TypeNameGeneric consumerType =
+        new TypeNameGeneric(map2TypeName(Consumer.class), builderDef.getBuilderTypeName());
     parameter.setParameterTypeName(consumerType);
     method.addParameter(parameter);
 
