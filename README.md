@@ -260,15 +260,24 @@ For complete documentation on enabling and using debug logging, see [DEBUG_LOGGI
 
 ## Contributing
 
-Contributions are welcome! Please follow these steps:
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines on:
 
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a new Pull Request
+- Development setup and project structure
+- Building and testing strategies (important for annotation processor modules)
+- Code style and formatting
+- Pull request process
 
-Please ensure your code follows the project's code style and includes appropriate tests.
+**Quick Start for Contributors:**
+
+```bash
+# Clone and build
+git clone https://github.com/java-helpers/simple-builders.git
+cd simple-builders
+mvn clean install
+
+# Run tests (requires processor to be installed first)
+mvn test -pl processor,example -am
+```
 
 ### Releasing
 
