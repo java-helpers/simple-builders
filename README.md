@@ -18,6 +18,7 @@
     - [Validation Annotations](#validation-annotations)
     - [Conditional Builder Logic](#conditional-builder-logic)
   - [Collections and Nested Objects](#collections-and-nested-objects)
+  - [With Interface Pattern](#with-interface-pattern)
 - [Contributing](#contributing)
 - [License](#license)
 - [Links](#links)
@@ -32,8 +33,8 @@ Simple Builders is a Java [annotation processor](https://docs.oracle.com/en/java
 - **Type-Safe Builders**: Compile-time type checking for all builder methods
 - **Fluent API**: Clean, chainable API for object construction
 - **Collections Support**: Built-in support for collections and maps
-- **Nested Builders**: Automatic generation of nested object builders
 - **Annotation Preservation**: Validation annotations are automatically copied to builder methods
+- **With Interface Pattern**: Type-safe object modifications using generated With interfaces
 
 ## Requirements
 
@@ -231,6 +232,29 @@ Project project = ProjectBuilder.create()
         .put("owner", "dev-team"))
     .build();
 ```
+
+
+### With Interface Pattern
+
+Simple Builders generates a nested `With` interface for each builder field, enabling a clean, type-safe way to create modified copies of objects. This pattern is particularly useful for creating variations of an object:
+
+```java
+Person person = PersonBuilder.create()
+    .name("John Doe")
+    .age(30)
+    .build();
+
+// Create a modified copy using the With interface
+Person olderPerson = PersonBuilder.create()
+    .with(person)
+    .age(31)  // Only change the age
+    .build();
+
+// By implementing the With interface, you can create modified copies of objects in a type-safe way
+Person youngerPerson = person.with(p -> p.age(29));
+```
+
+The `With` interface provides type-safe setter methods that mirror the builder's API, making it easy to create object variations without manually copying all fields.
 
 ## Contributing
 
