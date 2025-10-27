@@ -51,7 +51,7 @@ import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 /** JavaCodeGenerator generates with BuilderDefinitionDto JavaCode for the builder. */
 public class JavaCodeGenerator {
   /** Util class for source code generation of type {@code javax.annotation.processing.Filer}. */
-  private static final String CREATE_METHOD = "create";
+  private static final String METHOD_NAME_CREATE = "create";
 
   private static final String THROW_EXCEPTION_FORMAT = "throw new $T($S)";
   private final Filer filer;
@@ -363,7 +363,7 @@ public class JavaCodeGenerator {
       com.palantir.javapoet.ClassName dtoBaseClass,
       List<GenericParameterDto> generics) {
     MethodSpec.Builder methodBuilder =
-        MethodSpec.methodBuilder(CREATE_METHOD)
+        MethodSpec.methodBuilder(METHOD_NAME_CREATE)
             .addModifiers(STATIC, PUBLIC)
             .addJavadoc(
                 """

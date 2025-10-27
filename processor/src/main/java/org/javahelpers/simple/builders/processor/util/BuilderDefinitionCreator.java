@@ -689,7 +689,7 @@ public class BuilderDefinitionCreator {
 
   private static MethodDto createStringBuilderConsumer(
       String fieldName, String transform, TypeName builderType) {
-    TypeName stringBuilderType = new TypeName("java.lang", "StringBuilder");
+    TypeName stringBuilderType = map2TypeName(StringBuilder.class);
     TypeNameGeneric consumerType =
         new TypeNameGeneric(map2TypeName(Consumer.class), stringBuilderType);
     MethodParameterDto parameter = new MethodParameterDto();
@@ -824,7 +824,7 @@ public class BuilderDefinitionCreator {
 
   private static MethodDto createStringFormatMethodWithTransform(
       String fieldName, String transform, List<AnnotationDto> annotations, TypeName builderType) {
-    TypeName stringType = new TypeName("java.lang", "String");
+    TypeName stringType = map2TypeName(String.class);
 
     MethodParameterDto formatParam = new MethodParameterDto();
     formatParam.setParameterName("format");
@@ -1033,9 +1033,9 @@ public class BuilderDefinitionCreator {
         """);
     method.addArgument("builderType", builderDef.getBuilderTypeName());
     method.addArgument("dtoType", builderDef.getBuildingTargetTypeName());
-    method.addArgument("classcastexception", new TypeName("java.lang", "ClassCastException"));
+    method.addArgument("classcastexception", map2TypeName(ClassCastException.class));
     method.addArgument(
-        "illegalargumentexception", new TypeName("java.lang", "IllegalArgumentException"));
+        "illegalargumentexception", map2TypeName(IllegalArgumentException.class));
 
     method.setJavadoc(
         "Applies modifications to a builder initialized from this instance and returns the built object.\n\n"
@@ -1069,9 +1069,9 @@ public class BuilderDefinitionCreator {
         """);
     method.addArgument("builderType", builderDef.getBuilderTypeName());
     method.addArgument("dtoType", builderDef.getBuildingTargetTypeName());
-    method.addArgument("classcastexception", new TypeName("java.lang", "ClassCastException"));
+    method.addArgument("classcastexception", map2TypeName(ClassCastException.class));
     method.addArgument(
-        "illegalargumentexception", new TypeName("java.lang", "IllegalArgumentException"));
+        "illegalargumentexception", map2TypeName(IllegalArgumentException.class));
 
     method.setJavadoc(
         "Creates a builder initialized from this instance.\n\n"
