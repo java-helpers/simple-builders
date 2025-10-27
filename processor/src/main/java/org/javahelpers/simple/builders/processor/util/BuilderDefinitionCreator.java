@@ -1038,9 +1038,12 @@ public class BuilderDefinitionCreator {
         "illegalargumentexception", map2TypeName(IllegalArgumentException.class));
 
     method.setJavadoc(
-        "Applies modifications to a builder initialized from this instance and returns the built object.\n\n"
-            + "@param b the consumer to apply modifications\n"
-            + "@return the modified instance");
+      """
+      Applies modifications to a builder initialized from this instance and returns the built object.
+
+      @param b the consumer to apply modifications
+      @return the modified instance
+      """);
 
     return method;
   }
@@ -1074,8 +1077,11 @@ public class BuilderDefinitionCreator {
         "illegalargumentexception", map2TypeName(IllegalArgumentException.class));
 
     method.setJavadoc(
-        "Creates a builder initialized from this instance.\n\n"
-            + "@return a builder initialized with this instance's values");
+      """
+      Creates a builder initialized from this instance.
+
+      @return a builder initialized with this instance's values
+      """);
 
     return method;
   }
