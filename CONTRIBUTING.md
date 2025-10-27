@@ -5,7 +5,9 @@ Thank you for your interest in contributing to Simple Builders! This document pr
 ## Table of Contents
 - [Development Setup](#development-setup)
 - [Project Structure](#project-structure)
+- [Development Guidelines](#development-guidelines)
 - [Building and Testing](#building-and-testing)
+- [Debugging](#debugging)
 - [Code Style](#code-style)
 - [Submitting Changes](#submitting-changes)
 
@@ -44,11 +46,41 @@ simple-builders/
 2. The example uses `@SimpleBuilder` annotations that trigger code generation
 3. Tests in example validate the generated builders
 
+## Development Guidelines
+
+### Working with Annotation Processors
+
+This project uses annotation processing for code generation. Understanding this architecture is crucial:
+
+- The `processor` module generates code at **compile-time**
+- The `example` module depends on the processor being installed in your local Maven repository
+- Tests use Google's compile-testing library, which makes compilation happen inside test code
+
+### Code Changes Workflow
+
+After making code changes:
+1. **Always run tests**
+2. **Use appropriate scope**: 
+   - Processor changes: `mvn test -pl processor`
+   - Changes affecting generation: `mvn test -pl processor,example -am`
+3. **Full validation before committing**: `mvn clean test`
+
+### Test Assertions Best Practices
+
+- **Use explicit string literals** for expected values, not variables
+- This improves readability and makes failures easier to diagnose
+- ✅ Good: Use complete method bodies in assertions
+  ```java
+  assertContains(code, """
+      public PersonBuilder name(String name) {
+          this.name = name;
+          return this;
+      }
+      """);
+  ```
+- ❌ Avoid: Building assertion strings dynamically from variables
+
 ## Building and Testing
-
-### Understanding Module Dependencies
-
-Due to the annotation processor architecture, you must follow specific test strategies based on what you're modifying:
 
 ### Test Strategies
 
@@ -59,9 +91,6 @@ If you're changing code in the `processor` module:
 ```bash
 # Test only the processor
 mvn test -pl processor
-
-# With annotation processor verbose output (shows detailed field/method analysis)
-mvn test -pl processor -Dsimplebuilder.verbose=true
 ```
 
 #### 2. When Modifying Example Code
@@ -118,46 +147,12 @@ mvn test -pl processor,example
 # Run a specific test class
 mvn test -Dtest=BuilderProcessorTest -pl processor
 
-# Run with Maven debug output (shows Maven internals, not processor details)
-mvn test -X -pl processor
+# Run a single test method
+mvn test -Dtest=BuilderProcessorTest#shouldGenerateBasicBuilder -pl processor
+
+# Run tests matching a pattern
+mvn test -Dtest=*ProcessorTest -pl processor
 ```
-
-### Debug Logging for Annotation Processor
-
-The annotation processor has its own verbose logging that shows detailed information about field discovery, method analysis, and code generation. This is **different** from Maven's `-X` debug flag.
-
-Both `processor` and `example` modules now support the `simplebuilder.verbose` property:
-
-```bash
-# Enable verbose output for processor tests
-mvn test -pl processor -Dsimplebuilder.verbose=true
-
-# Enable verbose output for example compilation
-mvn compile -pl example -Dsimplebuilder.verbose=true
-
-# Enable for all modules
-mvn test -Dsimplebuilder.verbose=true
-```
-
-**How it works**: 
-1. The `ProcessorTestUtils.createCompiler()` utility automatically checks for the `simplebuilder.verbose` system property and applies `-Averbose=true` to all test compilations when enabled.
-2. The `printDiagnosticsOnVerbose()` helper prints the processor's detailed debug output to the console, making it visible in test output and CI logs.
-3. This is especially useful when debugging failing tests - you'll see exactly what the processor is doing.
-
-**Example verbose output**:
-```
-========== Compilation Diagnostics ==========
---- NOTES ---
-[DEBUG] simple-builders: Processing element: Project
-[DEBUG] Extracting builder definition from: test.Project
-[DEBUG] Analyzing method: setName with 1 parameter(s)
-[DEBUG]   -> Adding field: name (type: java.lang.String)
-[DEBUG] Generated 4 methods for field: name
-[DEBUG] Successfully generated builder: ProjectBuilder
-=============================================
-```
-
-For complete documentation on debug logging and configuration, see [DEBUG_LOGGING.md](DEBUG_LOGGING.md).
 
 ### Troubleshooting Build Issues
 
@@ -194,6 +189,55 @@ mvn install -pl processor -DskipTests
 mvn clean compile -pl example
 mvn test -pl example
 ```
+
+## Debugging
+
+### When Tests Fail
+
+**Always run failing tests with verbose mode first** to see what the annotation processor is doing:
+
+```bash
+# Debug a specific failing test
+mvn test -pl processor -Dtest=YourFailingTest -Dsimplebuilder.verbose=true
+```
+
+### Verbose Output
+
+The annotation processor has its own verbose logging (different from Maven's `-X` flag):
+
+```bash
+# Enable for processor tests
+mvn test -pl processor -Dsimplebuilder.verbose=true
+
+# Enable for example compilation
+mvn compile -pl example -Dsimplebuilder.verbose=true
+
+# Enable for all tests
+mvn test -Dsimplebuilder.verbose=true
+```
+
+**What verbose output shows:**
+- Field discovery and type analysis
+- Method parameter extraction  
+- Annotation processing steps
+- Code generation details
+- Exact error locations
+
+**Example output:**
+```
+========== Compilation Diagnostics ==========
+--- NOTES ---
+[DEBUG] simple-builders: Processing element: Project
+[DEBUG] Extracting builder definition from: test.Project
+[DEBUG] Analyzing method: setName with 1 parameter(s)
+[DEBUG]   -> Adding field: name (type: java.lang.String)
+[DEBUG] Generated 4 methods for field: name
+=============================================
+```
+
+This is **critical** for debugging because annotation processing happens inside Google's compile-testing framework, making it otherwise invisible.
+
+For complete documentation, see [DEBUG_LOGGING.md](DEBUG_LOGGING.md).
 
 ## Code Style
 
@@ -271,27 +315,6 @@ mvn fmt:check
 - **Keep it focused**: One feature or fix per PR
 - **Include tests**: Add tests for new functionality
 - **Update docs**: Update README.md or other docs if needed
-
-## Testing Philosophy
-
-### Test Preferences
-
-1. **Explicit assertions**: Prefer explicit expected string literals over building assertion strings from variables
-2. **Readable tests**: Tests should be self-documenting and easy to understand
-3. **Comprehensive coverage**: Test edge cases, error conditions, and happy paths
-
-### Running Specific Tests
-
-```bash
-# Run a single test method
-mvn test -Dtest=BuilderProcessorTest#shouldGenerateBasicBuilder -pl processor
-
-# Run all tests in a class
-mvn test -Dtest=BuilderProcessorTest -pl processor
-
-# Run tests matching a pattern
-mvn test -Dtest=*ProcessorTest -pl processor
-```
 
 ## Questions?
 

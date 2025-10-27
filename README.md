@@ -18,8 +18,6 @@
     - [Validation Annotations](#validation-annotations)
     - [Conditional Builder Logic](#conditional-builder-logic)
   - [Collections and Nested Objects](#collections-and-nested-objects)
-  - [Debug Logging](#debug-logging)
-- [Building from Source](#building-from-source)
 - [Contributing](#contributing)
 - [License](#license)
 - [Links](#links)
@@ -234,55 +232,17 @@ Project project = ProjectBuilder.create()
     .build();
 ```
 
-### Debug Logging
-
-Simple Builders supports detailed debug logging to trace the builder generation process. Enable it with the `-Averbose=true` compiler argument for detailed insights into field discovery, method analysis, and code generation.
-
-For complete documentation on enabling and using debug logging, see [DEBUG_LOGGING.md](DEBUG_LOGGING.md).
-
-## Building from Source
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/java-helpers/simple-builders.git
-   cd simple-builders
-   ```
-
-2. Build the project:
-   ```bash
-   mvn clean install
-   ```
-
-3. Run tests:
-   ```bash
-   mvn test
-   ```
-
 ## Contributing
 
-Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines on:
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for:
 
 - Development setup and project structure
 - Building and testing strategies (important for annotation processor modules)
+- Debugging with verbose output
 - Code style and formatting
 - Pull request process
 
-**Quick Start for Contributors:**
-
-```bash
-# Clone and build
-git clone https://github.com/java-helpers/simple-builders.git
-cd simple-builders
-mvn clean install
-
-# Run tests (requires processor to be installed first)
-mvn test -pl processor,example -am
-```
-
-### Releasing
-
-For maintainers:
-- **Release process:** See [RELEASE.md](RELEASE.md) for releasing new versions
+For maintainers, see [RELEASE.md](RELEASE.md) for the release process.
 
 ## License
 
