@@ -21,6 +21,7 @@
   - [With Interface Pattern](#with-interface-pattern)
 - [Contributing](#contributing)
 - [License](#license)
+- [Acknowledgements](#acknowledgements)
 - [Links](#links)
 
 ## What is Simple Builders?
@@ -272,6 +273,29 @@ For maintainers, see [RELEASE.md](RELEASE.md) for the release process.
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+## Acknowledgements
+
+This project was made possible thanks to the following:
+
+### Inspiration and Patterns
+
+- **[Benji Weber](https://benjiweber.co.uk/blog/2020/09/19/fun-with-java-records/)** - The With interface pattern is inspired by Benji's innovative work on functional builders and extending Java Records.
+- **[RecordBuilder](https://github.com/Randgalt/record-builder)** by Randall Hauch - A state-of-the-art builder solution for Java records. If your project uses records exclusively, RecordBuilder is an excellent choice. Simple Builders extends these concepts to traditional Java classes.
+
+### Tools and Libraries
+
+- **[JavaPoet](https://github.com/palantir/javapoet)** - An excellent library for generating Java source code. Originally created by Square, now maintained by Palantir. JavaPoet made it straightforward to generate clean, readable builder code.
+- **[Google Compile Testing](https://github.com/google/compile-testing)** - Essential for testing annotation processors with comprehensive compilation diagnostics.
+
+### Learning Resources
+
+The following resources were invaluable for understanding annotation processing:
+
+- **[Baeldung: Java Annotation Processing and Creating a Builder](https://www.baeldung.com/java-annotation-processing-builder)** - Comprehensive guide to annotation processing fundamentals
+- **[SkyRo Tech: Code Generation with JavaPoet in Practice](https://medium.com/skyro-tech/code-generation-with-javapoet-on-practice-bfbe8ca56a61)** - Practical examples of using JavaPoet
+- **[Annotation Processing Demo](https://github.com/ledungcobra/annotation-processing-demo)** by Le Dung - Hands-on examples of annotation processor implementation
+
+Thank you to all contributors and the Java community for making this project possible!
 
 ## Links
 
