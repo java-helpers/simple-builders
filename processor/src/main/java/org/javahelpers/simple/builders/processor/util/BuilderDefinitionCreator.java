@@ -72,66 +72,8 @@ public class BuilderDefinitionCreator {
   private static final String SUFFIX_CONSUMER = "Consumer";
   private static final String SUFFIX_SUPPLIER = "Supplier";
 
-  // Javadoc templates
-  private static final String JAVADOC_PROXY = "Sets the value for <code>%s</code>.";
-  private static final String JAVADOC_CONSUMER =
-      "Sets the value for <code>%s</code> by executing the provided consumer.";
-  private static final String JAVADOC_CONSUMER_BY_BUILDER =
-      "Sets the value for <code>%s</code> using a builder consumer that produces the value.";
-  private static final String JAVADOC_SUPPLIER =
-      "Sets the value for <code>%s</code> by invoking the provided supplier.";
-  private static final String JAVADOC_PARAM_PROXY = "%s";
-  private static final String JAVADOC_PARAM_CONSUMER = "consumer providing an instance of %s";
-  private static final String JAVADOC_PARAM_CONSUMER_BY_BUILDER =
-      "consumer providing an instance of a builder for %s";
-  private static final String JAVADOC_PARAM_SUPPLIER = "supplier for %s";
-
   private BuilderDefinitionCreator() {
     // Private constructor to prevent instantiation
-  }
-
-  /**
-   * Builds complete Javadoc for a method including main description, parameters, and return value.
-   *
-   * @param methodType the type of method (PROXY, CONSUMER, SUPPLIER, etc.)
-   * @param fieldName the name of the field this method operates on
-   * @param fieldJavadoc javadoc description from the field (for use in @param documentation)
-   * @param parameters list of method parameters
-   * @return formatted Javadoc string
-   */
-  private static String buildMethodJavadoc(
-      MethodTypes methodType,
-      String fieldName,
-      String fieldJavadoc,
-      List<MethodParameterDto> parameters) {
-    StringBuilder javadoc = new StringBuilder();
-
-    // Main description based on method type
-    switch (methodType) {
-      case PROXY -> javadoc.append(String.format(JAVADOC_PROXY, fieldName));
-      case CONSUMER -> javadoc.append(String.format(JAVADOC_CONSUMER, fieldName));
-      case CONSUMER_BY_BUILDER ->
-          javadoc.append(String.format(JAVADOC_CONSUMER_BY_BUILDER, fieldName));
-      case SUPPLIER -> javadoc.append(String.format(JAVADOC_SUPPLIER, fieldName));
-    }
-    javadoc.append("\n");
-
-    // Parameter documentation - use fieldJavadoc for better descriptions
-    for (MethodParameterDto param : parameters) {
-      javadoc.append("\n@param ").append(param.getParameterName()).append(" ");
-      switch (methodType) {
-        case PROXY -> javadoc.append(String.format(JAVADOC_PARAM_PROXY, fieldJavadoc));
-        case CONSUMER -> javadoc.append(String.format(JAVADOC_PARAM_CONSUMER, fieldJavadoc));
-        case CONSUMER_BY_BUILDER ->
-            javadoc.append(String.format(JAVADOC_PARAM_CONSUMER_BY_BUILDER, fieldJavadoc));
-        case SUPPLIER -> javadoc.append(String.format(JAVADOC_PARAM_SUPPLIER, fieldJavadoc));
-      }
-    }
-
-    // Return documentation
-    javadoc.append("\n@return current instance of builder");
-
-    return javadoc.toString();
   }
 
   /**
@@ -786,7 +728,13 @@ public class BuilderDefinitionCreator {
     methodDto.setPriority(transform == null ? MethodDto.PRIORITY_HIGHEST : MethodDto.PRIORITY_HIGH);
     // Set javadoc
     methodDto.setJavadoc(
-        buildMethodJavadoc(MethodTypes.PROXY, fieldName, fieldJavadoc, methodDto.getParameters()));
+        """
+        Sets the value for <code>%s</code>.
+
+        @param %s %s
+        @return current instance of builder
+        """
+            .formatted(fieldName, parameter.getParameterName(), fieldJavadoc));
     return methodDto;
   }
 
@@ -815,7 +763,13 @@ public class BuilderDefinitionCreator {
     methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
     methodDto.setPriority(MethodDto.PRIORITY_MEDIUM);
     methodDto.setJavadoc(
-        buildMethodJavadoc(MethodTypes.CONSUMER, fieldName, fieldJavadoc, methodDto.getParameters()));
+        """
+        Sets the value for <code>%s</code> by executing the provided consumer.
+
+        @param %s consumer providing an instance of %s
+        @return current instance of builder
+        """
+            .formatted(fieldName, parameter.getParameterName(), fieldJavadoc));
     return methodDto;
   }
 
@@ -846,7 +800,13 @@ public class BuilderDefinitionCreator {
     methodDto.setReturnType(builderType);
     methodDto.setPriority(MethodDto.PRIORITY_LOW);
     methodDto.setJavadoc(
-        buildMethodJavadoc(MethodTypes.CONSUMER, fieldName, fieldJavadoc, methodDto.getParameters()));
+        """
+        Sets the value for <code>%s</code> by executing the provided consumer.
+
+        @param %s consumer providing an instance of %s
+        @return current instance of builder
+        """
+            .formatted(fieldName, parameter.getParameterName(), fieldJavadoc));
     return methodDto;
   }
 
@@ -942,8 +902,13 @@ public class BuilderDefinitionCreator {
     methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
     methodDto.setPriority(MethodDto.PRIORITY_MEDIUM);
     methodDto.setJavadoc(
-        buildMethodJavadoc(
-            MethodTypes.CONSUMER_BY_BUILDER, fieldName, fieldJavaDoc, methodDto.getParameters()));
+        """
+        Sets the value for <code>%s</code> using a builder consumer that produces the value.
+
+        @param %s consumer providing an instance of a builder for %s
+        @return current instance of builder
+        """
+            .formatted(fieldName, parameter.getParameterName(), fieldJavaDoc));
     return methodDto;
   }
 
@@ -969,7 +934,13 @@ public class BuilderDefinitionCreator {
     methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
     methodDto.setPriority(MethodDto.PRIORITY_HIGH);
     methodDto.setJavadoc(
-        buildMethodJavadoc(MethodTypes.SUPPLIER, fieldName, fieldJavaDoc, methodDto.getParameters()));
+        """
+        Sets the value for <code>%s</code> by invoking the provided supplier.
+
+        @param %s supplier for %s
+        @return current instance of builder
+        """
+            .formatted(fieldName, parameter.getParameterName(), fieldJavaDoc));
     return methodDto;
   }
 
@@ -1008,7 +979,19 @@ public class BuilderDefinitionCreator {
     methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
     methodDto.setPriority(MethodDto.PRIORITY_HIGH);
     methodDto.setJavadoc(
-        buildMethodJavadoc(MethodTypes.PROXY, fieldName, fieldJavadoc, methodDto.getParameters()));
+        """
+        Sets the value for <code>%s</code>.
+
+        @param %s %s
+        @param %s %s
+        @return current instance of builder
+        """
+            .formatted(
+                fieldName,
+                formatParam.getParameterName(),
+                fieldJavadoc,
+                argsParam.getParameterName(),
+                fieldJavadoc));
     return methodDto;
   }
 
@@ -1044,7 +1027,13 @@ public class BuilderDefinitionCreator {
     methodDto.addArgument("elementType", elementType);
     methodDto.setPriority(MethodDto.PRIORITY_HIGH);
     methodDto.setJavadoc(
-        buildMethodJavadoc(MethodTypes.PROXY, fieldName, null, methodDto.getParameters()));
+        """
+        Sets the value for <code>%s</code>.
+
+        @param %s %s
+        @return current instance of builder
+        """
+            .formatted(fieldName, parameter.getParameterName(), fieldName));
     return methodDto;
   }
 
@@ -1086,8 +1075,13 @@ public class BuilderDefinitionCreator {
     methodDto.addArgument("elementType", elementType);
     methodDto.setPriority(MethodDto.PRIORITY_MEDIUM);
     methodDto.setJavadoc(
-        buildMethodJavadoc(
-            MethodTypes.CONSUMER_BY_BUILDER, fieldName, null, methodDto.getParameters()));
+        """
+        Sets the value for <code>%s</code> using a builder consumer that produces the value.
+
+        @param %s consumer providing an instance of a builder for %s
+        @return current instance of builder
+        """
+            .formatted(fieldName, parameter.getParameterName(), fieldName));
     return methodDto;
   }
 
