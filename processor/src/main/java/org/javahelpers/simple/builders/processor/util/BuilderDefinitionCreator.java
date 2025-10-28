@@ -339,11 +339,19 @@ public class BuilderDefinitionCreator {
     if (isList(fieldType) && innerTypesCnt == 1) {
       result.addMethod(
           createFieldSetterWithTransform(
-              fieldName, fieldJavadoc, "List.of(%s)", new TypeNameArray(innerTypes.get(0), false), builderType));
+              fieldName,
+              fieldJavadoc,
+              "List.of(%s)",
+              new TypeNameArray(innerTypes.get(0), false),
+              builderType));
     } else if (isSet(fieldType) && innerTypesCnt == 1) {
       result.addMethod(
           createFieldSetterWithTransform(
-              fieldName, fieldJavadoc, "Set.of(%s)", new TypeNameArray(innerTypes.get(0), true), builderType));
+              fieldName,
+              fieldJavadoc,
+              "Set.of(%s)",
+              new TypeNameArray(innerTypes.get(0), true),
+              builderType));
     } else if (isMap(fieldType) && innerTypesCnt == 2) {
       TypeName mapEntryType =
           new TypeNameArray(
@@ -363,7 +371,11 @@ public class BuilderDefinitionCreator {
       if (isString(innerType)) {
         result.addMethod(
             createStringFormatMethodWithTransform(
-                fieldName, fieldJavadoc, "Optional.of(String.format(format, args))", List.of(), builderType));
+                fieldName,
+                fieldJavadoc,
+                "Optional.of(String.format(format, args))",
+                List.of(),
+                builderType));
       }
     }
   }
@@ -386,12 +398,15 @@ public class BuilderDefinitionCreator {
       return;
     }
 
-    if (!tryAddBuilderConsumer(result, fieldName, fieldJavadoc, fieldParameter, builderType, context)
+    if (!tryAddBuilderConsumer(
+            result, fieldName, fieldJavadoc, fieldParameter, builderType, context)
         && !tryAddFieldConsumer(
             result, fieldName, fieldJavadoc, fieldType, fieldTypeElement, builderType, context)
-        && !tryAddListConsumer(result, fieldName, fieldJavadoc, fieldType, fieldParameter, builderType, context)
+        && !tryAddListConsumer(
+            result, fieldName, fieldJavadoc, fieldType, fieldParameter, builderType, context)
         && !tryAddMapConsumer(result, fieldName, fieldJavadoc, fieldType, builderType)
-        && !tryAddSetConsumer(result, fieldName, fieldJavadoc, fieldType, fieldParameter, builderType, context)) {
+        && !tryAddSetConsumer(
+            result, fieldName, fieldJavadoc, fieldType, fieldParameter, builderType, context)) {
       tryAddStringBuilderConsumer(result, fieldName, fieldJavadoc, fieldType, builderType);
     }
   }
@@ -438,11 +453,16 @@ public class BuilderDefinitionCreator {
 
   /** Tries to add StringBuilder-based consumer for String and Optional<String>. */
   private static boolean tryAddStringBuilderConsumer(
-      FieldDto result, String fieldName, String fieldJavadoc, TypeName fieldType, TypeName builderType) {
+      FieldDto result,
+      String fieldName,
+      String fieldJavadoc,
+      TypeName fieldType,
+      TypeName builderType) {
     if (shouldGenerateStringBuilderConsumer(fieldType)) {
       String transform =
           isOptionalString(fieldType) ? "Optional.of(builder.toString())" : "builder.toString()";
-      result.addMethod(createStringBuilderConsumer(fieldName, fieldJavadoc, transform, builderType));
+      result.addMethod(
+          createStringBuilderConsumer(fieldName, fieldJavadoc, transform, builderType));
       return true;
     }
     return false;
@@ -481,7 +501,11 @@ public class BuilderDefinitionCreator {
               elementBuilderType.get());
       result.addMethod(
           createFieldConsumerWithElementBuilders(
-              fieldName, fieldJavadoc,collectionBuilderType, elementBuilderType.get(), builderType));
+              fieldName,
+              fieldJavadoc,
+              collectionBuilderType,
+              elementBuilderType.get(),
+              builderType));
     } else {
       // Regular ArrayListBuilder
       TypeName collectionBuilderType = map2TypeName(ArrayListBuilder.class);
@@ -494,7 +518,11 @@ public class BuilderDefinitionCreator {
 
   /** Tries to add Map-specific consumer methods. Returns true if handled. */
   private static boolean tryAddMapConsumer(
-      FieldDto result, String fieldName, String fieldJavaDoc, TypeName fieldType, TypeName builderType) {
+      FieldDto result,
+      String fieldName,
+      String fieldJavaDoc,
+      TypeName fieldType,
+      TypeName builderType) {
     if (!(isMap(fieldType)
         && fieldType instanceof TypeNameGeneric fieldTypeGeneric
         && fieldTypeGeneric.getInnerTypeArguments().size() == 2)) {
@@ -546,7 +574,11 @@ public class BuilderDefinitionCreator {
               elementBuilderType.get());
       result.addMethod(
           createFieldConsumerWithElementBuilders(
-              fieldName, fieldJavaDoc, collectionBuilderType, elementBuilderType.get(), builderType));
+              fieldName,
+              fieldJavaDoc,
+              collectionBuilderType,
+              elementBuilderType.get(),
+              builderType));
     } else {
       // Regular HashSetBuilder
       TypeName collectionBuilderType = map2TypeName(HashSetBuilder.class);
@@ -676,13 +708,15 @@ public class BuilderDefinitionCreator {
 
     // Add basic setter method with annotations
     field.addMethod(
-        createFieldSetterWithTransform(fieldName, javaDoc, null, fieldType, annotations, builderType));
+        createFieldSetterWithTransform(
+            fieldName, javaDoc, null, fieldType, annotations, builderType));
 
     // Add consumer/supplier/helper methods
     addConsumerMethodsForField(
         field, fieldName, javaDoc, fieldType, param, fieldTypeElement, builderType, context);
     addSupplierMethodsForField(field, fieldName, javaDoc, fieldType, fieldTypeElement, builderType);
-    addAdditionalHelperMethodsForField(field, fieldName, javaDoc, fieldType, annotations, builderType);
+    addAdditionalHelperMethodsForField(
+        field, fieldName, javaDoc, fieldType, annotations, builderType);
 
     return Optional.of(field);
   }
@@ -697,8 +731,13 @@ public class BuilderDefinitionCreator {
    * @return the method DTO for the setter
    */
   private static MethodDto createFieldSetterWithTransform(
-      String fieldName, String fieldJavadoc, String transform, TypeName fieldType, TypeName builderType) {
-    return createFieldSetterWithTransform(fieldName, fieldJavadoc, transform, fieldType, List.of(), builderType);
+      String fieldName,
+      String fieldJavadoc,
+      String transform,
+      TypeName fieldType,
+      TypeName builderType) {
+    return createFieldSetterWithTransform(
+        fieldName, fieldJavadoc, transform, fieldType, List.of(), builderType);
   }
 
   /**
@@ -824,7 +863,10 @@ public class BuilderDefinitionCreator {
   }
 
   private static MethodDto createFieldConsumerWithBuilder(
-      String fieldName, String fieldJavaDoc, TypeName consumerBuilderType, TypeName returnBuilderType) {
+      String fieldName,
+      String fieldJavaDoc,
+      TypeName consumerBuilderType,
+      TypeName returnBuilderType) {
     return createFieldConsumerWithBuilder(
         fieldName,
         fieldJavaDoc,
@@ -932,7 +974,11 @@ public class BuilderDefinitionCreator {
   }
 
   private static MethodDto createStringFormatMethodWithTransform(
-      String fieldName, String fieldJavadoc, String transform, List<AnnotationDto> annotations, TypeName builderType) {
+      String fieldName,
+      String fieldJavadoc,
+      String transform,
+      List<AnnotationDto> annotations,
+      TypeName builderType) {
     TypeName stringType = map2TypeName(String.class);
 
     MethodParameterDto formatParam = new MethodParameterDto();

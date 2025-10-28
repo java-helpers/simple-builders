@@ -45,7 +45,6 @@ import java.util.Map;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Generated;
 import javax.lang.model.element.Modifier;
-
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.annotations.BuilderImplementation;
 import org.javahelpers.simple.builders.core.interfaces.IBuilderBase;
@@ -591,8 +590,8 @@ public class JavaCodeGenerator {
     methodDto.getModifier().ifPresent(methodBuilder::addModifiers);
 
     // Use javadoc from MethodDto if available
-    if (StringUtils.isNoneBlank( methodDto.getJavadoc())) {
-      methodBuilder.addJavadoc( methodDto.getJavadoc());
+    if (StringUtils.isNoneBlank(methodDto.getJavadoc())) {
+      methodBuilder.addJavadoc(methodDto.getJavadoc());
     }
 
     // Add parameters
