@@ -45,6 +45,8 @@ import java.util.Map;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Generated;
 import javax.lang.model.element.Modifier;
+
+import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.annotations.BuilderImplementation;
 import org.javahelpers.simple.builders.core.interfaces.IBuilderBase;
 import org.javahelpers.simple.builders.core.util.TrackedValue;
@@ -132,19 +134,11 @@ public class JavaCodeGenerator {
 
     for (FieldDto fieldDto : builderDef.getConstructorFieldsForBuilder()) {
       for (MethodDto method : fieldDto.getMethods()) {
-        // Set javadoc on method if not already set
-        if (method.getJavadoc() == null && fieldDto.getJavaDoc() != null) {
-          method.setJavadoc(fieldDto.getJavaDoc());
-        }
         methodToField.put(method, fieldDto);
       }
     }
     for (FieldDto fieldDto : builderDef.getSetterFieldsForBuilder()) {
       for (MethodDto method : fieldDto.getMethods()) {
-        // Set javadoc on method if not already set
-        if (method.getJavadoc() == null && fieldDto.getJavaDoc() != null) {
-          method.setJavadoc(fieldDto.getJavaDoc());
-        }
         methodToField.put(method, fieldDto);
       }
     }
@@ -597,9 +591,8 @@ public class JavaCodeGenerator {
     methodDto.getModifier().ifPresent(methodBuilder::addModifiers);
 
     // Use javadoc from MethodDto if available
-    String javadoc = methodDto.getJavadoc();
-    if (javadoc != null && !javadoc.isBlank()) {
-      methodBuilder.addJavadoc(javadoc);
+    if (StringUtils.isNoneBlank( methodDto.getJavadoc())) {
+      methodBuilder.addJavadoc( methodDto.getJavadoc());
     }
 
     // Add parameters
