@@ -325,4 +325,66 @@ class MethodConflictResolutionTest {
                 System.out.println(
                     "✓ User error detected (duplicate setter names): " + d.getMessage(null)));
   }
+
+  @Test
+  void shouldDropLowerPriorityMethodInFavorOfHigherPriority() {
+    // Given: A DTO where auto-generated supplier method (priority 80) conflicts with
+    // direct setter from Supplier field (priority 100)
+    // This tests the path: method.getPriority() < existing.getPriority()
+    String packageName = "test";
+    String className = "PriorityConflict";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private String value;
+                private java.util.function.Supplier<String> valueSupplier;
+
+                public String getValue() { return value; }
+                public void setValue(String value) { this.value = value; }
+
+                public java.util.function.Supplier<String> getValueSupplier() { return valueSupplier; }
+                // Direct setter creates method with priority 100
+                public void setValue(java.util.function.Supplier<String> valueSupplier) {
+                    this.valueSupplier = valueSupplier;
+                }
+            """);
+
+    // When
+    Compilation compilation = compile(sourceFile);
+
+    // Then - Should compile successfully
+    assertThat(compilation).succeeded();
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+
+    // Verify the conflict warning for lower priority method being dropped
+    long lowerPriorityDroppedCount =
+        compilation.diagnostics().stream()
+            .filter(d -> d.getKind() == Diagnostic.Kind.WARNING)
+            .filter(
+                d ->
+                    d.getMessage(null).contains("Method conflict")
+                        && d.getMessage(null).contains("dropped in favor of field"))
+            .filter(d -> d.getMessage(null).contains("priority 80"))
+            .filter(d -> d.getMessage(null).contains("priority 100"))
+            .count();
+
+    assert lowerPriorityDroppedCount > 0
+        : "Expected warning about lower priority method (80) being dropped in favor of higher priority (100)";
+
+    // Verify that only the higher priority method exists (the direct setter from Supplier field)
+    // The auto-generated supplier method from String field should have been dropped
+    ProcessorAsserts.assertContaining(
+        generatedCode, "public PriorityConflictBuilder value(Supplier<String> value)");
+
+    // Print the conflict warnings for verification
+    compilation.diagnostics().stream()
+        .filter(d -> d.getKind() == Diagnostic.Kind.WARNING)
+        .filter(d -> d.getMessage(null).contains("Method conflict"))
+        .forEach(
+            d -> System.out.println("✓ Lower priority dropped correctly: " + d.getMessage(null)));
+  }
 }
