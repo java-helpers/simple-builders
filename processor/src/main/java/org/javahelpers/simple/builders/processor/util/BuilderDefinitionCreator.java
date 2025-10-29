@@ -32,6 +32,7 @@ import static org.javahelpers.simple.builders.processor.util.JavaLangMapper.map2
 import static org.javahelpers.simple.builders.processor.util.JavaLangMapper.map2TypeName;
 import static org.javahelpers.simple.builders.processor.util.TypeNameAnalyser.*;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -93,10 +94,15 @@ public class BuilderDefinitionCreator {
 
     BuilderDefinitionDto result = initializeBuilderDefinition(annotatedType, context);
 
-    List<FieldDto> constructorFields = extractConstructorFields(annotatedType, result, context);
+    // Track field names to resolve conflicts during field creation
+    Map<String, FieldDto> fieldNameRegistry = new HashMap<>();
+
+    List<FieldDto> constructorFields =
+        extractConstructorFields(annotatedType, result, context, fieldNameRegistry);
     result.addAllFieldsInConstructor(constructorFields);
 
-    List<FieldDto> setterFields = extractSetterFields(annotatedType, result, context);
+    List<FieldDto> setterFields =
+        extractSetterFields(annotatedType, result, context, fieldNameRegistry);
     result.addAllFields(setterFields);
 
     // Create the With interface
@@ -127,10 +133,17 @@ public class BuilderDefinitionCreator {
   /**
    * Extracts fields from the constructor parameters.
    *
+   * @param annotatedType the type being processed
+   * @param builderDef the builder definition being constructed
+   * @param context processing context
+   * @param fieldNameRegistry registry to track field names and resolve conflicts
    * @return list of fields extracted from constructor parameters
    */
   private static List<FieldDto> extractConstructorFields(
-      TypeElement annotatedType, BuilderDefinitionDto builderDef, ProcessingContext context) {
+      TypeElement annotatedType,
+      BuilderDefinitionDto builderDef,
+      ProcessingContext context,
+      Map<String, FieldDto> fieldNameRegistry) {
     List<FieldDto> constructorFields = new LinkedList<>();
     Optional<ExecutableElement> constructorOpt = findConstructorForBuilder(annotatedType, context);
     if (constructorOpt.isPresent()) {
@@ -141,7 +154,7 @@ public class BuilderDefinitionCreator {
       for (VariableElement param : ctor.getParameters()) {
         Optional<FieldDto> fieldFromCtor =
             createFieldFromConstructor(
-                annotatedType, param, builderDef.getBuilderTypeName(), context);
+                annotatedType, param, builderDef.getBuilderTypeName(), context, fieldNameRegistry);
         if (fieldFromCtor.isPresent()) {
           FieldDto field = fieldFromCtor.get();
           logFieldAddition(field, context);
@@ -159,7 +172,10 @@ public class BuilderDefinitionCreator {
    * @return list of fields extracted from setter methods
    */
   private static List<FieldDto> extractSetterFields(
-      TypeElement annotatedType, BuilderDefinitionDto result, ProcessingContext context) {
+      TypeElement annotatedType,
+      BuilderDefinitionDto result,
+      ProcessingContext context,
+      Map<String, FieldDto> fieldNameRegistry) {
     List<FieldDto> setterFields = new LinkedList<>();
 
     // Build a set of constructor field names to avoid duplicates from setters
@@ -179,22 +195,33 @@ public class BuilderDefinitionCreator {
           mth.getSimpleName(), mth.getParameters().size());
 
       if (isMethodRelevantForBuilder(mth, context)) {
+        // Extract the original field name from the setter method (before any renaming)
+        String methodName = mth.getSimpleName().toString();
+        String originalFieldName =
+            StringUtils.uncapitalize(Strings.CI.removeStart(methodName, "set"));
+
+        // Skip if constructor already handles this field
+        if (ctorFieldNames.contains(originalFieldName)) {
+          skippedCount++;
+          context.debug(
+              "Skipping setter field '%s' - already handled by constructor", originalFieldName);
+          continue;
+        }
+
         Optional<FieldDto> maybeField =
-            createFieldFromSetter(mth, result.getBuilderTypeName(), context);
+            createFieldFromSetter(mth, result.getBuilderTypeName(), context, fieldNameRegistry);
         if (maybeField.isPresent()) {
           processedCount++;
           FieldDto field = maybeField.get();
-          if (!ctorFieldNames.contains(field.getFieldName())) {
-            addedCount++;
-            logFieldAddition(field, context);
-            setterFields.add(field);
-            continue;
-          }
+          addedCount++;
+          logFieldAddition(field, context);
+          setterFields.add(field);
         } else {
-          context.debug("  -> Skipping method (already in constructor): %s", mth.getSimpleName());
+          skippedCount++;
         }
+      } else {
+        skippedCount++;
       }
-      skippedCount++;
     }
 
     context.debug(
@@ -241,13 +268,19 @@ public class BuilderDefinitionCreator {
 
   private static void addAdditionalHelperMethodsForField(
       FieldDto field, List<AnnotationDto> annotations, TypeName builderType) {
-    String fieldName = field.getFieldName();
+    String fieldNameInBuilder = field.getFieldName();
     String fieldJavaDoc = field.getJavaDoc();
     // Check for String type (not array) and add format method
     if (isString(field.getFieldType()) && !(field.getFieldType() instanceof TypeNameArray)) {
+      String fieldName = field.getFieldNameEstimated();
       field.addMethod(
           createStringFormatMethodWithTransform(
-              fieldName, fieldJavaDoc, "String.format(format, args)", annotations, builderType));
+              fieldName,
+              fieldNameInBuilder,
+              fieldJavaDoc,
+              "String.format(format, args)",
+              annotations,
+              builderType));
     }
 
     if ((field.getFieldType() instanceof TypeNameArray arrayType)) {
@@ -255,14 +288,16 @@ public class BuilderDefinitionCreator {
 
       // Add method accepting List<ElementType> and converting to array
       TypeNameGeneric listType = new TypeNameGeneric(map2TypeName(List.class), elementType);
+      String fieldName = field.getFieldNameEstimated();
       field.addMethod(
-          createFieldSetterForArrayFromList(fieldName, listType, elementType, builderType));
+          createFieldSetterForArrayFromList(
+              fieldName, fieldNameInBuilder, listType, elementType, builderType));
 
       // Add Consumer<ArrayListBuilder<ElementType>> method
       TypeName collectionBuilderType = map2TypeName(ArrayListBuilder.class);
       field.addMethod(
           createFieldConsumerWithArrayBuilder(
-              fieldName, collectionBuilderType, elementType, builderType));
+              fieldName, fieldNameInBuilder, collectionBuilderType, elementType, builderType));
       return;
     }
 
@@ -274,17 +309,21 @@ public class BuilderDefinitionCreator {
     List<TypeName> innerTypes = fieldTypeGeneric.getInnerTypeArguments();
     int innerTypesCnt = innerTypes.size();
     if (isList(field.getFieldType()) && innerTypesCnt == 1) {
+      String fieldName = field.getFieldNameEstimated();
       field.addMethod(
           createFieldSetterWithTransform(
               fieldName,
+              fieldNameInBuilder,
               fieldJavaDoc,
               "List.of(%s)",
               new TypeNameArray(innerTypes.get(0), false),
               builderType));
     } else if (isSet(field.getFieldType()) && innerTypesCnt == 1) {
+      String fieldName = field.getFieldNameEstimated();
       field.addMethod(
           createFieldSetterWithTransform(
               fieldName,
+              fieldNameInBuilder,
               fieldJavaDoc,
               "Set.of(%s)",
               new TypeNameArray(innerTypes.get(0), true),
@@ -294,14 +333,26 @@ public class BuilderDefinitionCreator {
           new TypeNameArray(
               new TypeNameGeneric("java.util", "Map.Entry", innerTypes.get(0), innerTypes.get(1)),
               false);
+      String fieldName = field.getFieldNameEstimated();
       field.addMethod(
           createFieldSetterWithTransform(
-              fieldName, fieldJavaDoc, "Map.ofEntries(%s)", mapEntryType, builderType));
+              fieldName,
+              fieldNameInBuilder,
+              fieldJavaDoc,
+              "Map.ofEntries(%s)",
+              mapEntryType,
+              builderType));
     } else if (isOptional(field.getFieldType()) && innerTypesCnt == 1) {
       // Add setter that accepts the inner type T and wraps it in Optional.ofNullable()
+      String fieldName = field.getFieldNameEstimated();
       field.addMethod(
           createFieldSetterWithTransform(
-              fieldName, fieldJavaDoc, "Optional.ofNullable(%s)", innerTypes.get(0), builderType));
+              fieldName,
+              fieldNameInBuilder,
+              fieldJavaDoc,
+              "Optional.ofNullable(%s)",
+              innerTypes.get(0),
+              builderType));
 
       // If Optional<String>, add format method
       TypeName innerType = innerTypes.get(0);
@@ -309,6 +360,7 @@ public class BuilderDefinitionCreator {
         field.addMethod(
             createStringFormatMethodWithTransform(
                 fieldName,
+                fieldNameInBuilder,
                 fieldJavaDoc,
                 "Optional.of(String.format(format, args))",
                 List.of(),
@@ -518,13 +570,18 @@ public class BuilderDefinitionCreator {
       return;
     }
     // For all fields including Optional<T>, use the real field type for suppliers
+    String fieldName = field.getFieldNameEstimated();
+    String fieldNameInBuilder = field.getFieldName();
     field.addMethod(
         createFieldSupplier(
-            field.getFieldName(), field.getJavaDoc(), field.getFieldType(), builderType));
+            fieldName, fieldNameInBuilder, field.getJavaDoc(), field.getFieldType(), builderType));
   }
 
   private static Optional<FieldDto> createFieldFromSetter(
-      ExecutableElement mth, TypeName builderType, ProcessingContext context) {
+      ExecutableElement mth,
+      TypeName builderType,
+      ProcessingContext context,
+      Map<String, FieldDto> fieldNameRegistry) {
     String methodName = mth.getSimpleName().toString();
     String fieldName = StringUtils.uncapitalize(Strings.CI.removeStart(methodName, "set"));
 
@@ -557,7 +614,20 @@ public class BuilderDefinitionCreator {
       javaDoc = fieldName;
     }
 
-    return createFieldDto(fieldName, javaDoc, fieldParameter, dtoType, builderType, context);
+    // Check for field name conflicts and rename if necessary
+    String finalFieldName =
+        resolveFieldNameConflict(fieldName, fieldParameter, fieldNameRegistry, context);
+
+    // Pass both original field name (for methods) and final field name (for builder field)
+    Optional<FieldDto> result =
+        createFieldDto(
+            fieldName, finalFieldName, javaDoc, fieldParameter, dtoType, builderType, context);
+
+    if (result.isPresent()) {
+      fieldNameRegistry.put(finalFieldName, result.get());
+    }
+
+    return result;
   }
 
   /**
@@ -568,7 +638,8 @@ public class BuilderDefinitionCreator {
       TypeElement annotatedType,
       VariableElement param,
       TypeName builderType,
-      ProcessingContext context) {
+      ProcessingContext context,
+      Map<String, FieldDto> fieldNameRegistry) {
     String fieldName = param.getSimpleName().toString();
     // Set javadoc (default to field name if no javadoc found)
     String javaDoc =
@@ -576,14 +647,78 @@ public class BuilderDefinitionCreator {
     if (javaDoc == null) {
       javaDoc = fieldName;
     }
-    return createFieldDto(fieldName, javaDoc, param, annotatedType, builderType, context);
+
+    // Check for field name conflicts and rename if necessary
+    String finalFieldName = resolveFieldNameConflict(fieldName, param, fieldNameRegistry, context);
+
+    // Pass both original field name (for methods) and final field name (for builder field)
+    Optional<FieldDto> result =
+        createFieldDto(
+            fieldName, finalFieldName, javaDoc, param, annotatedType, builderType, context);
+
+    if (result.isPresent()) {
+      fieldNameRegistry.put(finalFieldName, result.get());
+    }
+
+    return result;
+  }
+
+  /**
+   * Resolves field name conflicts by checking the registry and renaming if necessary. If a field
+   * with the same name already exists but has a different type, the new field is renamed by
+   * appending the simple type name.
+   *
+   * @param fieldName the proposed field name
+   * @param param the parameter element (to get type information)
+   * @param fieldNameRegistry the registry tracking existing field names
+   * @param context the processing context for logging warnings
+   * @return the final field name (either original or renamed)
+   */
+  private static String resolveFieldNameConflict(
+      String fieldName,
+      VariableElement param,
+      Map<String, FieldDto> fieldNameRegistry,
+      ProcessingContext context) {
+
+    FieldDto existing = fieldNameRegistry.get(fieldName);
+    if (existing == null) {
+      // No conflict
+      return fieldName;
+    }
+
+    // Conflict detected: rename the new field by appending the simple type name
+    MethodParameterDto paramDto = map2MethodParameter(param, context);
+    if (paramDto == null) {
+      // If we can't determine the type, just return the original name
+      return fieldName;
+    }
+
+    TypeName newType = paramDto.getParameterType();
+    String existingTypeName = existing.getFieldType().getClassName();
+    String newTypeName = newType.getClassName();
+    String renamedFieldName = fieldName + newTypeName;
+
+    context.warning(
+        null,
+        """
+          Builder field conflict: field '%s' (type %s) renamed to '%s' in builder to avoid conflict with existing field (type %s). \
+        The reason could be having helperfunctions in the DTO or a mistake in the DTO (e.g., two setters with the same name but different field types). \
+        Please check it and if the DTO is correct, you can get rid of this warning by setting the IgnoreInBuilder annotation on one of the setters for this field.\
+        """,
+        fieldName,
+        newTypeName,
+        renamedFieldName,
+        existingTypeName);
+
+    return renamedFieldName;
   }
 
   /**
    * Common method to create a FieldDto with all builder methods (setter, supplier, consumer,
    * helpers).
    *
-   * @param fieldName the name of the field
+   * @param fieldName the estimated field name (used for method names)
+   * @param fieldNameInBuilder the builder field name (used for storage, may be renamed)
    * @param javaDoc the javadoc for the field
    * @param param the parameter element (from constructor or setter)
    * @param dtoType the DTO type containing this field
@@ -592,6 +727,7 @@ public class BuilderDefinitionCreator {
    */
   private static Optional<FieldDto> createFieldDto(
       String fieldName,
+      String fieldNameInBuilder,
       String javaDoc,
       VariableElement param,
       TypeElement dtoType,
@@ -608,12 +744,15 @@ public class BuilderDefinitionCreator {
     TypeElement fieldTypeElement = rawElement instanceof TypeElement te ? te : null;
 
     FieldDto field = new FieldDto();
-    field.setFieldName(fieldName);
+    field.setFieldName(fieldNameInBuilder); // Use renamed field name for builder field storage
+    field.setFieldNameEstimated(fieldName);
     field.setFieldType(fieldType);
     field.setJavaDoc(javaDoc);
 
-    // Find matching getter on the DTO type
-    JavaLangAnalyser.findGetterForField(dtoType, fieldName, fieldTypeMirror, context)
+    // Note: setterName will be set explicitly by the caller before field renaming
+
+    // Find matching getter on the DTO type using the builder field name
+    JavaLangAnalyser.findGetterForField(dtoType, fieldNameInBuilder, fieldTypeMirror, context)
         .ifPresent(getter -> field.setGetterName(getter.getSimpleName().toString()));
 
     // Extract annotations from the field parameter
@@ -625,12 +764,12 @@ public class BuilderDefinitionCreator {
       field.setNonNullable(true);
     }
 
-    // Add basic setter method with annotations
+    // Add basic setter method with annotations - use ORIGINAL field name for method name
     field.addMethod(
         createFieldSetterWithTransform(
-            fieldName, javaDoc, null, fieldType, annotations, builderType));
+            fieldName, fieldNameInBuilder, javaDoc, null, fieldType, annotations, builderType));
 
-    // Add consumer/supplier/helper methods
+    // Add consumer/supplier/helper methods - use ORIGINAL field name for method names
     addConsumerMethodsForField(field, param, fieldTypeElement, builderType, context);
     addSupplierMethodsForField(field, fieldTypeElement, builderType);
     addAdditionalHelperMethodsForField(field, annotations, builderType);
@@ -641,7 +780,8 @@ public class BuilderDefinitionCreator {
   /**
    * Creates a field setter method with optional transform, without annotations.
    *
-   * @param fieldName the name of the field
+   * @param fieldName the name of the method
+   * @param fieldNameInBuilder the name of the builder field
    * @param transform optional transform expression (e.g., "Optional.of(%s)")
    * @param fieldType the type of the field
    * @param fieldJavadoc the javadoc for the field
@@ -649,12 +789,13 @@ public class BuilderDefinitionCreator {
    */
   private static MethodDto createFieldSetterWithTransform(
       String fieldName,
+      String fieldNameInBuilder,
       String fieldJavadoc,
       String transform,
       TypeName fieldType,
       TypeName builderType) {
     return createFieldSetterWithTransform(
-        fieldName, fieldJavadoc, transform, fieldType, List.of(), builderType);
+        fieldName, fieldNameInBuilder, fieldJavadoc, transform, fieldType, List.of(), builderType);
   }
 
   /**
@@ -669,6 +810,7 @@ public class BuilderDefinitionCreator {
    */
   private static MethodDto createFieldSetterWithTransform(
       String fieldName,
+      String fieldNameInBuilder,
       String fieldJavadoc,
       String transform,
       TypeName fieldType,
@@ -695,7 +837,7 @@ public class BuilderDefinitionCreator {
         this.$fieldName:N = $builderFieldWrapper:T.changedValue($dtoMethodParams:N);
         return this;
         """);
-    methodDto.addArgument(ARG_FIELD_NAME, fieldName);
+    methodDto.addArgument(ARG_FIELD_NAME, fieldNameInBuilder);
     methodDto.addArgument(ARG_DTO_METHOD_PARAMS, params);
     methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
     // Direct setters have highest priority, transform methods have high priority
@@ -884,7 +1026,11 @@ public class BuilderDefinitionCreator {
   }
 
   private static MethodDto createFieldSupplier(
-      String fieldName, String fieldJavaDoc, TypeName fieldType, TypeName builderType) {
+      String fieldName,
+      String fieldNameInBuilder,
+      String fieldJavaDoc,
+      TypeName fieldType,
+      TypeName builderType) {
     TypeNameGeneric supplierType = new TypeNameGeneric(map2TypeName(Supplier.class), fieldType);
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName(fieldName + SUFFIX_SUPPLIER);
@@ -899,7 +1045,7 @@ public class BuilderDefinitionCreator {
         this.$fieldName:N = $builderFieldWrapper:T.changedValue($dtoMethodParam:N.get());
         return this;
         """);
-    methodDto.addArgument(ARG_FIELD_NAME, fieldName);
+    methodDto.addArgument(ARG_FIELD_NAME, fieldNameInBuilder);
     methodDto.addArgument(ARG_DTO_METHOD_PARAM, parameter.getParameterName());
     methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
     methodDto.setPriority(MethodDto.PRIORITY_HIGH);
@@ -916,6 +1062,7 @@ public class BuilderDefinitionCreator {
 
   private static MethodDto createStringFormatMethodWithTransform(
       String fieldName,
+      String fieldNameInBuilder,
       String fieldJavadoc,
       String transform,
       List<AnnotationDto> annotations,
@@ -943,7 +1090,7 @@ public class BuilderDefinitionCreator {
         this.$fieldName:N = $builderFieldWrapper:T.changedValue($transform:N);
         return this;
         """);
-    methodDto.addArgument(ARG_FIELD_NAME, fieldName);
+    methodDto.addArgument(ARG_FIELD_NAME, fieldNameInBuilder);
     methodDto.addArgument("transform", transform);
     methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
     methodDto.setPriority(MethodDto.PRIORITY_HIGH);
@@ -974,7 +1121,11 @@ public class BuilderDefinitionCreator {
    * @return the method DTO for the setter
    */
   private static MethodDto createFieldSetterForArrayFromList(
-      String fieldName, TypeName listType, TypeName elementType, TypeName builderType) {
+      String fieldName,
+      String fieldNameInBuilder,
+      TypeName listType,
+      TypeName elementType,
+      TypeName builderType) {
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName(fieldName);
     parameter.setParameterTypeName(listType);
@@ -989,7 +1140,7 @@ public class BuilderDefinitionCreator {
         this.$fieldName:N = $builderFieldWrapper:T.changedValue($dtoMethodParams:N.toArray(new $elementType:T[0]));
         return this;
         """);
-    methodDto.addArgument(ARG_FIELD_NAME, fieldName);
+    methodDto.addArgument(ARG_FIELD_NAME, fieldNameInBuilder);
     methodDto.addArgument(ARG_DTO_METHOD_PARAMS, fieldName);
     methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
     methodDto.addArgument("elementType", elementType);
@@ -1011,6 +1162,7 @@ public class BuilderDefinitionCreator {
    */
   private static MethodDto createFieldConsumerWithArrayBuilder(
       String fieldName,
+      String fieldNameInBuilder,
       TypeName collectionBuilderType,
       TypeName elementType,
       TypeName returnBuilderType) {
@@ -1035,7 +1187,7 @@ public class BuilderDefinitionCreator {
         this.$fieldName:N = $builderFieldWrapper:T.changedValue(builder.build().toArray(new $elementType:T[0]));
         return this;
         """);
-    methodDto.addArgument(ARG_FIELD_NAME, fieldName);
+    methodDto.addArgument(ARG_FIELD_NAME, fieldNameInBuilder);
     methodDto.addArgument(ARG_DTO_METHOD_PARAM, parameter.getParameterName());
     methodDto.addArgument(ARG_HELPER_TYPE, builderTypeGeneric);
     methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
@@ -1043,9 +1195,9 @@ public class BuilderDefinitionCreator {
     methodDto.setPriority(MethodDto.PRIORITY_MEDIUM);
     methodDto.setJavadoc(
         """
-        Sets the value for <code>%s</code> using a builder consumer that produces the value.
+        Sets the value for <code>%s</code> using the fluent builder consumer.
 
-        @param %s consumer providing an instance of a builder for %s
+        @param %s consumer for %s
         @return current instance of builder
         """
             .formatted(fieldName, parameter.getParameterName(), fieldName));

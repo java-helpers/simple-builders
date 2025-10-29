@@ -119,13 +119,7 @@ public class JavaCodeGenerator {
         builderDef.getSetterFieldsForBuilder().size());
 
     // Generate backing fields for each DTO field (constructor and setter fields)
-    // Resolve builder field name conflicts
-    List<FieldDto> allFields = new ArrayList<>();
-    allFields.addAll(builderDef.getConstructorFieldsForBuilder());
-    allFields.addAll(builderDef.getSetterFieldsForBuilder());
-
-    resolveBuilderFieldConflicts(allFields);
-
+    // Note: Builder field name conflicts are now resolved in BuilderDefinitionCreator
     for (FieldDto fieldDto : builderDef.getConstructorFieldsForBuilder()) {
       FieldSpec fieldSpec = createFieldMember(fieldDto);
       classBuilder.addField(fieldSpec);
@@ -261,44 +255,6 @@ public class JavaCodeGenerator {
     }
 
     return new ArrayList<>(signatureToMethod.values());
-  }
-
-  /**
-   * Resolves builder field name conflicts by renaming fields when necessary. If two fields have the
-   * same name but different types (e.g., from mistaken setter names in the DTO), the second field
-   * is renamed by appending the simple type name.
-   *
-   * @param fields list of all builder fields to check for conflicts
-   */
-  private void resolveBuilderFieldConflicts(List<FieldDto> fields) {
-    Map<String, FieldDto> nameToField = new HashMap<>();
-
-    for (FieldDto field : fields) {
-      String fieldName = field.getFieldName();
-      FieldDto existing = nameToField.get(fieldName);
-
-      if (existing == null) {
-        // No conflict, register the field
-        nameToField.put(fieldName, field);
-      } else {
-        // Conflict detected: rename the new field by appending the simple type name
-        String existingTypeName = existing.getFieldType().getClassName();
-        String newTypeName = field.getFieldType().getClassName();
-        String renamedFieldName = fieldName + newTypeName;
-
-        logger.warning(
-            """
-              Builder field conflict: field '%s' (type %s) renamed to '%s' in builder to avoid conflict with existing field (type %s). \
-            The reason could be having helperfunctions in the DTO or a mistake in the DTO (e.g., two setters with the same name but different field types). \
-            Please check it and if the DTO is correct, you can get rid of this warning by setting the IgnoreInBuilder annotation on one of the setters for this field.\
-            """,
-            fieldName, newTypeName, renamedFieldName, existingTypeName);
-
-        // Rename the field in the FieldDto
-        field.setFieldName(renamedFieldName);
-        nameToField.put(renamedFieldName, field);
-      }
-    }
   }
 
   private CodeBlock createJavadocForClass(ClassName dtoClass) {
