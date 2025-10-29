@@ -24,8 +24,6 @@
 
 package org.javahelpers.simple.builders.processor.dtos;
 
-import static org.javahelpers.simple.builders.processor.dtos.MethodTypes.PROXY;
-
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -42,12 +40,6 @@ public class MethodDto {
 
   /** Access modifier for method. */
   private Optional<Modifier> modifier = Optional.empty();
-
-  /**
-   * Type of method for source code generation. Default is proxy, so just calling the same method on
-   * DTO with same parameters and returning builder.
-   */
-  private MethodTypes methodType = PROXY;
 
   /** Priority for method conflict resolution. Higher wins. */
   private int priority = 0;
@@ -66,28 +58,6 @@ public class MethodDto {
 
   /** Definition of inner implementation for method. */
   private final MethodCodeDto methodCodeDto = new MethodCodeDto();
-
-  /**
-   * Getting type of method for source code generation. Defaults to {@code
-   * org.javahelpers.simple.builders.internal.dtos.MethodTypes.PROXY}.
-   *
-   * @return Enum value for method type - {@code
-   *     org.javahelpers.simple.builders.internal.dtos.MethodTypes}.
-   */
-  public MethodTypes getMethodType() {
-    return methodType;
-  }
-
-  /**
-   * Setting type of method for source code generation. If not changed, it defaults to {@code
-   * org.javahelpers.simple.builders.internal.dtos.MethodTypes.PROXY}.
-   *
-   * @param methodType Enum value for method type - {@code
-   *     org.javahelpers.simple.builders.internal.dtos.MethodTypes}
-   */
-  public void setMethodType(MethodTypes methodType) {
-    this.methodType = methodType;
-  }
 
   /**
    * Sets the priority for this method. Higher values win when signatures clash. Priority levels:

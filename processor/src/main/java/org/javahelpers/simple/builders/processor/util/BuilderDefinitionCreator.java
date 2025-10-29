@@ -684,7 +684,6 @@ public class BuilderDefinitionCreator {
     methodDto.setReturnType(builderType);
     methodDto.addParameter(parameter);
     methodDto.setModifier(Modifier.PUBLIC);
-    methodDto.setMethodType(MethodTypes.PROXY);
     String params;
     if (StringUtils.isBlank(transform)) {
       params = parameter.getParameterName();
@@ -724,7 +723,6 @@ public class BuilderDefinitionCreator {
     methodDto.setReturnType(builderType);
     methodDto.addParameter(parameter);
     methodDto.setModifier(Modifier.PUBLIC);
-    methodDto.setMethodType(MethodTypes.CONSUMER);
     methodDto.setCode(
         """
         $helperType:T consumer = this.$fieldName:N.isSet() ? this.$fieldName:N.value() : new $helperType:T();
@@ -760,7 +758,6 @@ public class BuilderDefinitionCreator {
     methodDto.setMethodName(fieldName);
     methodDto.addParameter(parameter);
     methodDto.setModifier(Modifier.PUBLIC);
-    methodDto.setMethodType(MethodTypes.CONSUMER);
     methodDto.setCode(
         """
         StringBuilder builder = new StringBuilder();
@@ -861,7 +858,6 @@ public class BuilderDefinitionCreator {
     methodDto.setReturnType(returnBuilderType);
     methodDto.addParameter(parameter);
     methodDto.setModifier(Modifier.PUBLIC);
-    methodDto.setMethodType(MethodTypes.CONSUMER_BY_BUILDER);
     methodDto.setCode(
         """
         $helperType:T builder = this.$fieldName:N.isSet() ? new $helperType:T(%s) : new $helperType:T(%s);
@@ -898,7 +894,6 @@ public class BuilderDefinitionCreator {
     methodDto.setReturnType(builderType);
     methodDto.addParameter(parameter);
     methodDto.setModifier(Modifier.PUBLIC);
-    methodDto.setMethodType(MethodTypes.SUPPLIER);
     methodDto.setCode(
         """
         this.$fieldName:N = $builderFieldWrapper:T.changedValue($dtoMethodParam:N.get());
@@ -943,7 +938,6 @@ public class BuilderDefinitionCreator {
     methodDto.addParameter(formatParam);
     methodDto.addParameter(argsParam);
     methodDto.setModifier(Modifier.PUBLIC);
-    methodDto.setMethodType(MethodTypes.PROXY);
     methodDto.setCode(
         """
         this.$fieldName:N = $builderFieldWrapper:T.changedValue($transform:N);
@@ -990,7 +984,6 @@ public class BuilderDefinitionCreator {
     methodDto.setReturnType(builderType);
     methodDto.addParameter(parameter);
     methodDto.setModifier(Modifier.PUBLIC);
-    methodDto.setMethodType(MethodTypes.PROXY);
     methodDto.setCode(
         """
         this.$fieldName:N = $builderFieldWrapper:T.changedValue($dtoMethodParams:N.toArray(new $elementType:T[0]));
@@ -1034,7 +1027,6 @@ public class BuilderDefinitionCreator {
     methodDto.setReturnType(returnBuilderType);
     methodDto.addParameter(parameter);
     methodDto.setModifier(Modifier.PUBLIC);
-    methodDto.setMethodType(MethodTypes.CONSUMER_BY_BUILDER);
 
     methodDto.setCode(
         """
