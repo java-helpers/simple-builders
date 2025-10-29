@@ -218,8 +218,7 @@ class MethodConflictResolutionTest {
     ProcessorAsserts.assertContaining(
         generatedCode,
         "public WithHelperFunctionBuilder name(String name) { this.name = changedValue(name); return this; }",
-        "public WithHelperFunctionBuilder name(Supplier<String> name) { this.nameSupplier = changedValue(name); return this; }"
-        );
+        "public WithHelperFunctionBuilder name(Supplier<String> name) { this.nameSupplier = changedValue(name); return this; }");
 
     // Verify the build() method uses the original setter names
     String expectedBuildMethod =
@@ -233,7 +232,6 @@ class MethodConflictResolutionTest {
         }
         """;
     ProcessorAsserts.assertContaining(generatedCode, expectedBuildMethod);
-
 
     // Print the conflict warnings for verification
     compilation.diagnostics().stream()
