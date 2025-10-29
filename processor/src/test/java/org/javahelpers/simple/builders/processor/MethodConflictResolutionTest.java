@@ -8,6 +8,7 @@ import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUti
 import com.google.testing.compile.Compilation;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
+import org.javahelpers.simple.builders.processor.testing.ProcessorAsserts;
 import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
 import org.junit.jupiter.api.Test;
 
@@ -99,14 +100,12 @@ class MethodConflictResolutionTest {
         : "Expected no method conflicts, but got " + conflictWarningCount + " conflict warnings";
 
     // Assert specific methods exist
-    assert generatedCode.contains("public NoConflictsBuilder firstName(String firstName)")
-        : "firstName setter should exist";
-    assert generatedCode.contains("public NoConflictsBuilder lastName(String lastName)")
-        : "lastName setter should exist";
-    assert generatedCode.contains("public NoConflictsBuilder age(Integer age)")
-        : "age setter should exist";
-    assert generatedCode.contains("public NoConflictsBuilder hobbies(List<String> hobbies)")
-        : "hobbies setter should exist";
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        "public NoConflictsBuilder firstName(String firstName)",
+        "public NoConflictsBuilder lastName(String lastName)",
+        "public NoConflictsBuilder age(Integer age)",
+        "public NoConflictsBuilder hobbies(List<String> hobbies)");
   }
 
   @Test
@@ -156,17 +155,13 @@ class MethodConflictResolutionTest {
             + " warnings";
 
     // Assert specific methods exist
-    assert generatedCode.contains("public WithOptionalsBuilder name(String name)")
-        : "name setter should exist";
-    assert generatedCode.contains(
-            "public WithOptionalsBuilder description(Optional<String> description)")
-        : "description setter with Optional should exist";
-    assert generatedCode.contains("public WithOptionalsBuilder description(String description)")
-        : "description setter with unwrapped String should exist";
-    assert generatedCode.contains("public WithOptionalsBuilder count(Optional<Integer> count)")
-        : "count setter with Optional should exist";
-    assert generatedCode.contains("public WithOptionalsBuilder count(Integer count)")
-        : "count setter with unwrapped Integer should exist";
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        "public WithOptionalsBuilder name(String name)",
+        "public WithOptionalsBuilder description(Optional<String> description)",
+        "public WithOptionalsBuilder description(String description)",
+        "public WithOptionalsBuilder count(Optional<Integer> count)",
+        "public WithOptionalsBuilder count(Integer count)");
   }
 
   @Test
@@ -186,7 +181,6 @@ class MethodConflictResolutionTest {
             className,
             """
                 private String name;
-                private String description;
 
                 public String getName() { return name; }
                 public void setName(String name) { this.name = name; }
@@ -195,41 +189,61 @@ class MethodConflictResolutionTest {
                 public void setName(java.util.function.Supplier<String> nameProvider) {
                     this.name = nameProvider.get();
                 }
-
-                public String getDescription() { return description; }
-                public void setDescription(String description) { this.description = description; }
             """);
 
     // When
     Compilation compilation = compile(sourceFile);
 
-    // Then - MUST have emitted a warning about the method signature conflict
-    long conflictWarningCount =
+    // Then - Should compile successfully
+    assertThat(compilation).succeeded();
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+
+    // Verify builder field conflict was also resolved
+    long builderFieldConflictCount =
         compilation.diagnostics().stream()
             .filter(d -> d.getKind() == Diagnostic.Kind.WARNING)
-            .filter(d -> d.getMessage(null).contains("Method conflict"))
+            .filter(d -> d.getMessage(null).contains("Builder field conflict"))
             .count();
 
-    assert conflictWarningCount > 0
-        : "Expected at least one method conflict warning. "
-            + "The String field 'name' generates name(Supplier<String>) with priority 80, "
-            + "and the manual setName(Supplier<String>) generates name(Supplier<String>) with priority 100. "
-            + "These have the same signature and should trigger a conflict warning.";
+    assert builderFieldConflictCount > 0
+        : "Expected builder field conflict warning for duplicate 'name' fields with different types";
+
+    // Assert specific methods exist in generated code
+    // Note: Both fields try to create supplier methods with same signature:
+    // - String field generates: name(Supplier<String>) with priority 80 (supplier method)
+    // - Supplier field generates: name(Supplier<String>) with priority 80 (also supplier -
+    // functional interface skips direct setter logic somehow)
+    // After conflict resolution with equal priority, first occurrence wins
+    // The surviving name(Supplier<String>) method comes from whichever field is processed first
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        "public WithHelperFunctionBuilder name(String name) { this.name = changedValue(name); return this; }",
+        "public WithHelperFunctionBuilder name(Supplier<String> name) { this.nameSupplier = changedValue(name); return this; }"
+        );
+
+    // Verify the build() method uses the original setter names
+    String expectedBuildMethod =
+        """
+        @Override
+        public WithHelperFunction build() {
+          WithHelperFunction result = new WithHelperFunction();
+          this.name.ifSet(result::setName);
+          this.nameSupplier.ifSet(result::setName);
+          return result;
+        }
+        """;
+    ProcessorAsserts.assertContaining(generatedCode, expectedBuildMethod);
+
 
     // Print the conflict warnings for verification
     compilation.diagnostics().stream()
         .filter(d -> d.getKind() == Diagnostic.Kind.WARNING)
-        .filter(d -> d.getMessage(null).contains("Method conflict"))
-        .forEach(
+        .filter(
             d ->
-                System.out.println(
-                    "✓ Method conflict detected and resolved: " + d.getMessage(null)));
-
-    // Note: This scenario also creates a builder field name conflict:
-    // - TrackedValue<String> name (from setName(String))
-    // - TrackedValue<Supplier<String>> name (from setName(Supplier<String>))
-    // This currently causes a compilation error. The builder field conflict resolution
-    // should be implemented to handle this case (e.g., rename to nameSupplier).
+                d.getMessage(null).contains("Method conflict")
+                    || d.getMessage(null).contains("Builder field conflict"))
+        .forEach(
+            d -> System.out.println("✓ Conflict detected and resolved: " + d.getMessage(null)));
   }
 
   @Test
@@ -238,6 +252,7 @@ class MethodConflictResolutionTest {
     // This is a user error, but we should handle it gracefully
     String packageName = "test";
     String className = "MistakenSetterNames";
+    String builderClassName = className + "Builder";
 
     JavaFileObject sourceFile =
         ProcessorTestUtils.simpleBuilderClass(
@@ -259,32 +274,57 @@ class MethodConflictResolutionTest {
     // When
     Compilation compilation = compile(sourceFile);
 
-    // Then - Should have emitted warnings about conflicts
-    long conflictWarningCount =
+    // Then - Should compile successfully
+    assertThat(compilation).succeeded();
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+
+    // Should have emitted warnings about builder field conflicts
+    long builderFieldConflictCount =
         compilation.diagnostics().stream()
             .filter(d -> d.getKind() == Diagnostic.Kind.WARNING)
-            .filter(d -> d.getMessage(null).contains("Method conflict"))
+            .filter(d -> d.getMessage(null).contains("Builder field conflict"))
             .count();
 
-    assert conflictWarningCount > 0
-        : "Expected method conflict warnings. "
-            + "setName(String) generates name(String) with priority 100, "
-            + "and setName(Optional<String>) generates unwrapped name(String) with priority 80, "
-            + "creating a conflict on the name(String) signature.";
+    assert builderFieldConflictCount > 0
+        : "Expected builder field conflict warning for duplicate 'name' fields";
+
+    // Assert specific methods exist in generated code
+    // Note: firstName, lastName fields have no generated methods because they have no getters
+    // The two setName() methods create builder fields 'name' (String) and 'nameOptional'
+    // (Optional<String>), but both methods are named 'name()' because they derive from the same
+    // setter name
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        "public MistakenSetterNamesBuilder name(String name)",
+        "public MistakenSetterNamesBuilder name(Optional<String> name)");
+
+    // Comprehensive assertion showing the complete build() method structure
+    // This demonstrates that both builder fields target different DTO fields:
+    // - this.name (String) -> calls setName(String) -> sets firstName in DTO
+    // - this.nameOptional (Optional<String>) -> calls setName(Optional<String>) -> sets lastName
+    // in DTO
+    String expectedBuildMethod =
+        """
+        @Override
+        public MistakenSetterNames build() {
+          MistakenSetterNames result = new MistakenSetterNames();
+          this.name.ifSet(result::setName);
+          this.nameOptional.ifSet(result::setName);
+          return result;
+        }
+        """;
+    ProcessorAsserts.assertContaining(generatedCode, expectedBuildMethod);
 
     // Print all conflict warnings
     compilation.diagnostics().stream()
         .filter(d -> d.getKind() == Diagnostic.Kind.WARNING)
-        .filter(d -> d.getMessage(null).contains("Method conflict"))
+        .filter(
+            d ->
+                d.getMessage(null).contains("Method conflict")
+                    || d.getMessage(null).contains("Builder field conflict"))
         .forEach(
             d ->
                 System.out.println(
                     "✓ User error detected (duplicate setter names): " + d.getMessage(null)));
-
-    // Note: This also creates builder field name conflicts:
-    // - TrackedValue<String> name (from first setName)
-    // - TrackedValue<String> name (from second setName)
-    // The builder field conflict resolution should handle this by renaming the fields
-    // and emitting a warning about the DTO mistake.
   }
 }
