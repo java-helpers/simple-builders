@@ -38,10 +38,14 @@ import com.palantir.javapoet.ParameterSpec;
 import com.palantir.javapoet.ParameterizedTypeName;
 import com.palantir.javapoet.TypeSpec;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Generated;
 import javax.lang.model.element.Modifier;
+import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.annotations.BuilderImplementation;
 import org.javahelpers.simple.builders.core.interfaces.IBuilderBase;
 import org.javahelpers.simple.builders.core.util.TrackedValue;
@@ -115,6 +119,7 @@ public class JavaCodeGenerator {
         builderDef.getSetterFieldsForBuilder().size());
 
     // Generate backing fields for each DTO field (constructor and setter fields)
+    // Note: Builder field name conflicts are now resolved in BuilderDefinitionCreator
     for (FieldDto fieldDto : builderDef.getConstructorFieldsForBuilder()) {
       FieldSpec fieldSpec = createFieldMember(fieldDto);
       classBuilder.addField(fieldSpec);
@@ -124,18 +129,28 @@ public class JavaCodeGenerator {
       classBuilder.addField(fieldSpec);
     }
 
-    // Generate field-specific functions in Builder (constructor fields first, then setter fields)
+    // Collect all methods from all fields, setting javadoc and tracking field relationship
+    Map<MethodDto, FieldDto> methodToField = new HashMap<>();
+
     for (FieldDto fieldDto : builderDef.getConstructorFieldsForBuilder()) {
-      List<MethodSpec> methodSpecs = createFieldMethods(fieldDto, builderTypeName);
-      logger.debug(
-          "  Generated %d methods for field: %s", methodSpecs.size(), fieldDto.getFieldName());
-      classBuilder.addMethods(methodSpecs);
+      for (MethodDto method : fieldDto.getMethods()) {
+        methodToField.put(method, fieldDto);
+      }
     }
     for (FieldDto fieldDto : builderDef.getSetterFieldsForBuilder()) {
-      List<MethodSpec> methodSpecs = createFieldMethods(fieldDto, builderTypeName);
-      logger.debug(
-          "  Generated %d methods for field: %s", methodSpecs.size(), fieldDto.getFieldName());
-      classBuilder.addMethods(methodSpecs);
+      for (MethodDto method : fieldDto.getMethods()) {
+        methodToField.put(method, fieldDto);
+      }
+    }
+
+    // Resolve conflicts: keep only the highest priority method for each signature
+    List<MethodDto> resolvedMethods = resolveMethodConflicts(methodToField);
+    logger.debug("  Resolved %d methods after conflict resolution", resolvedMethods.size());
+
+    // Generate field-specific functions in Builder
+    for (MethodDto methodDto : resolvedMethods) {
+      MethodSpec methodSpec = createMethod(methodDto, builderTypeName);
+      classBuilder.addMethod(methodSpec);
     }
 
     // Adding builder-specific methods
@@ -184,6 +199,62 @@ public class JavaCodeGenerator {
     } catch (IOException ex) {
       throw new BuilderException(null, ex);
     }
+  }
+
+  /**
+   * Resolves method conflicts by keeping only the highest priority method for each unique
+   * signature. This prevents compilation errors when methods from different fields have the same
+   * signature.
+   *
+   * @param methodToField mapping from method to its source field
+   * @return list of methods with conflicts resolved
+   */
+  private List<MethodDto> resolveMethodConflicts(Map<MethodDto, FieldDto> methodToField) {
+    Map<String, MethodDto> signatureToMethod = new HashMap<>();
+
+    for (Map.Entry<MethodDto, FieldDto> entry : methodToField.entrySet()) {
+      MethodDto method = entry.getKey();
+      FieldDto field = entry.getValue();
+      String signature = method.getSignatureKey();
+      MethodDto existing = signatureToMethod.get(signature);
+
+      if (existing == null) {
+        // No conflict, add the method
+        signatureToMethod.put(signature, method);
+      } else {
+        // Conflict detected: keep the higher priority method
+        String existingFieldName = methodToField.get(existing).getFieldName();
+        String newFieldName = field.getFieldName();
+
+        if (method.getPriority() > existing.getPriority()) {
+          // New method wins
+          signatureToMethod.put(signature, method);
+          logger.warning(
+              "  Method conflict: '%s' from field '%s' (priority %d) dropped in favor of field '%s' (priority %d)",
+              signature,
+              existingFieldName,
+              existing.getPriority(),
+              newFieldName,
+              method.getPriority());
+        } else if (method.getPriority() < existing.getPriority()) {
+          // Existing method wins
+          logger.warning(
+              "  Method conflict: '%s' from field '%s' (priority %d) dropped in favor of field '%s' (priority %d)",
+              signature,
+              newFieldName,
+              method.getPriority(),
+              existingFieldName,
+              existing.getPriority());
+        } else {
+          // Equal priority - keep first
+          logger.warning(
+              "  Method conflict with equal priority: '%s' from field '%s' dropped, keeping first occurrence from field '%s' (priority %d)",
+              signature, newFieldName, existingFieldName, method.getPriority());
+        }
+      }
+    }
+
+    return new ArrayList<>(signatureToMethod.values());
   }
 
   private CodeBlock createJavadocForClass(ClassName dtoClass) {
@@ -514,74 +585,26 @@ public class JavaCodeGenerator {
     return methodBuilder.build();
   }
 
-  private List<MethodSpec> createFieldMethods(
-      FieldDto fieldDto, com.palantir.javapoet.TypeName builderTypeName) {
-    return fieldDto.getMethods().stream()
-        .map(m -> createMethod(m, builderTypeName, fieldDto.getJavaDoc()))
-        .toList();
-  }
-
-  private MethodSpec createMethod(
-      MethodDto methodDto,
-      com.palantir.javapoet.TypeName returnType,
-      String optionalFieldParamJavaDoc) {
+  private MethodSpec createMethod(MethodDto methodDto, com.palantir.javapoet.TypeName returnType) {
     MethodSpec.Builder methodBuilder =
         MethodSpec.methodBuilder(methodDto.getMethodName()).returns(returnType);
     methodDto.getModifier().ifPresent(methodBuilder::addModifiers);
-    int maxIndexParameters = methodDto.getParameters().size() - 1;
 
-    // Adding javadoc for method
-    switch (methodDto.getMethodType()) {
-      case PROXY ->
-          methodBuilder.addJavadoc(
-              "Sets the value for <code>$1N</code>.\n", methodDto.getMethodName());
-      case CONSUMER ->
-          methodBuilder.addJavadoc(
-              "Sets the value for <code>$1N</code> by executing the provided consumer.\n",
-              methodDto.createFieldSetterMethodName());
-      case CONSUMER_BY_BUILDER ->
-          methodBuilder.addJavadoc(
-              "Sets the value for <code>$1N</code> using a builder consumer that produces the value.\n",
-              methodDto.createFieldSetterMethodName());
-      case SUPPLIER ->
-          methodBuilder.addJavadoc(
-              "Sets the value for <code>$1N</code> by invoking the provided supplier.\n",
-              methodDto.createFieldSetterMethodName());
+    // Use javadoc from MethodDto if available
+    if (StringUtils.isNoneBlank(methodDto.getJavadoc())) {
+      methodBuilder.addJavadoc(methodDto.getJavadoc());
     }
 
-    for (int i = 0; i <= maxIndexParameters; i++) {
-      MethodParameterDto paramDto = methodDto.getParameters().get(i);
+    // Add parameters
+    for (MethodParameterDto paramDto : methodDto.getParameters()) {
       methodBuilder.addParameter(createParameter(paramDto));
-
-      if (i == maxIndexParameters && paramDto.getParameterType() instanceof TypeNameArray) {
+      if (paramDto.getParameterType() instanceof TypeNameArray) {
         methodBuilder.varargs(); // Arrays should be mapped to be generics
-      }
-
-      // Extending Javadoc with parameters
-      switch (methodDto.getMethodType()) {
-        case PROXY ->
-            methodBuilder.addJavadoc(
-                "\n@param $1N $2L", paramDto.getParameterName(), optionalFieldParamJavaDoc);
-        case CONSUMER ->
-            methodBuilder.addJavadoc(
-                "\n@param $1N consumer providing an instance of $2L",
-                paramDto.getParameterName(),
-                optionalFieldParamJavaDoc);
-        case CONSUMER_BY_BUILDER ->
-            methodBuilder.addJavadoc(
-                "\n@param $1N consumer providing an instance of a builder for $2L",
-                paramDto.getParameterName(),
-                optionalFieldParamJavaDoc);
-        case SUPPLIER ->
-            methodBuilder.addJavadoc(
-                "\n@param $1N supplier for $2L",
-                paramDto.getParameterName(),
-                optionalFieldParamJavaDoc);
       }
     }
 
     CodeBlock codeBlock = map2CodeBlock(methodDto.getMethodCodeDto());
-    methodBuilder.addCode(codeBlock).addJavadoc("\n@return current instance of builder");
+    methodBuilder.addCode(codeBlock);
     return methodBuilder.build();
   }
 

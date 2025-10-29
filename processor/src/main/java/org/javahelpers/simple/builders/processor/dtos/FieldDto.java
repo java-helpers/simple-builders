@@ -34,8 +34,11 @@ import org.apache.commons.lang3.StringUtils;
  * that field.
  */
 public class FieldDto {
-  /** Name of field. */
+  /** Name of field in Builder. */
   private String fieldName;
+
+  /** Name of field according to estimation by constructors and setters. */
+  private String fieldNameEstimated;
 
   /** Type of field. Containing generic, name of package and class */
   private TypeName fieldType;
@@ -81,12 +84,31 @@ public class FieldDto {
   }
 
   /**
-   * Getting name of setter method.
+   * Getting name of field estimated by constructor and setter.
    *
-   * @return name of setter for field
+   * @return the estimated name of the field
+   */
+  public String getFieldNameEstimated() {
+    return fieldNameEstimated;
+  }
+
+  /**
+   * Setting name of field estimated by constructor and setter.
+   *
+   * @param fieldNameEstimated the estimated name to set for this field
+   */
+  public void setFieldNameEstimated(String fieldNameEstimated) {
+    this.fieldNameEstimated = fieldNameEstimated;
+  }
+
+  /**
+   * Getting name of setter method to use in build() method. This is always set during field
+   * creation and represents the actual setter method name in the DTO.
+   *
+   * @return name of setter for field (never null)
    */
   public String getSetterName() {
-    return "set" + StringUtils.capitalize(fieldName);
+    return "set" + StringUtils.capitalize(fieldNameEstimated);
   }
 
   /**
