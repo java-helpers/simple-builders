@@ -25,40 +25,38 @@
 package org.javahelpers.simple.builders.core.enums;
 
 /**
- * Enum representing Java access modifiers for generated builder classes and methods.
+ * Represents the three-state configuration for builder options.
  *
- * <p>This enum is used to control the visibility of generated builders and their methods through
- * the {@link org.javahelpers.simple.builders.core.annotations.SimpleBuilder.Options} annotation.
+ * <p>This enum allows distinguishing between:
+ *
+ * <ul>
+ *   <li><b>DEFAULT</b> - Use inherited value (from compiler options or built-in defaults)
+ *   <li><b>ENABLED</b> - Explicitly enable this option (override global/default)
+ *   <li><b>DISABLED</b> - Explicitly disable this option (override global/default)
+ * </ul>
+ *
+ * <p>Priority resolution: Annotation (ENABLED/DISABLED) > Compiler Options > Built-in Defaults
+ *
+ * <p>Example:
+ *
+ * <pre>{@code
+ * // Global config via compiler option: -Asimplebuilder.generateFieldSupplier=false
+ *
+ * // Per-class override to enable:
+ * @SimpleBuilder.Options(generateFieldSupplier = OptionState.ENABLED)
+ * public class MyDto { }
+ * }</pre>
  */
-public enum AccessModifier {
-
-  /** Default access */
-  DEFAULT("public"),
-
-  /** Public access - accessible from anywhere */
-  PUBLIC("public"),
-
-  /** Protected access - accessible within the same package and subclasses */
-  PROTECTED("protected"),
-
-  /** Package-private access (default) - accessible only within the same package */
-  PACKAGE_PRIVATE(""),
-
-  /** Private access - accessible only within the same class */
-  PRIVATE("private");
-
-  private final String javaKeyword;
-
-  AccessModifier(String javaKeyword) {
-    this.javaKeyword = javaKeyword;
-  }
-
+public enum OptionState {
   /**
-   * Get the Java keyword for this access modifier.
-   *
-   * @return the Java keyword (e.g., "public", "private"), or empty string for package-private
+   * Use the inherited value from compiler options or built-in defaults. This is the default state
+   * when no explicit override is specified.
    */
-  public String getJavaKeyword() {
-    return javaKeyword;
-  }
+  DEFAULT,
+
+  /** Explicitly enable this option, overriding any global configuration or defaults. */
+  ENABLED,
+
+  /** Explicitly disable this option, overriding any global configuration or defaults. */
+  DISABLED
 }

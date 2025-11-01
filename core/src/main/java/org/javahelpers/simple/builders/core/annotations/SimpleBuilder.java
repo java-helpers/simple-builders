@@ -30,6 +30,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
+import org.javahelpers.simple.builders.core.enums.OptionState;
 
 /**
  * Annotation to mark classes for builder generation.
@@ -76,33 +77,33 @@ public @interface SimpleBuilder {
      * Generate a supplier method by which the user of this builder could define a function, which
      * supplies the value for this field. <br>
      * The generated method has the parameter-type {@code Supplier<T>} with T being the type of the
-     * field. Default: true Compiler option: -Asimplebuilder.generateFieldSupplier
+     * field. Default: ENABLED Compiler option: -Asimplebuilder.generateFieldSupplier
      */
-    boolean generateFieldSupplier() default true;
+    OptionState generateFieldSupplier() default OptionState.DEFAULT;
 
     /**
      * Generate a provider method with parameter-type {@code Provider<T>} with T being the type of
      * the field. <br>
      * This is only done for complex field types, so that users could use setter to change the
-     * properties of that parameter. Default: true Compiler option:
+     * properties of that parameter. Default: ENABLED Compiler option:
      * -Asimplebuilder.generateFieldProvider
      */
-    boolean generateFieldProvider() default true;
+    OptionState generateFieldProvider() default OptionState.DEFAULT;
 
     /**
      * Generate a builder provider method with parameter-type {@code Provider<Builder<T>>} with T
      * being the type of the field <br>
      * This is only done for complex field types, which have a recognized builder so that users
      * could use the chained builder methods to set the value of this complex field. <br>
-     * Default: true Compiler option: -Asimplebuilder.generateBuilderProvider
+     * Default: ENABLED Compiler option: -Asimplebuilder.generateBuilderProvider
      */
-    boolean generateBuilderProvider() default true;
+    OptionState generateBuilderProvider() default OptionState.DEFAULT;
 
     /**
      * Generate conditional logic method (conditional) <br>
-     * Default: true Compiler option: -Asimplebuilder.generateConditionalHelper
+     * Default: ENABLED Compiler option: -Asimplebuilder.generateConditionalHelper
      */
-    boolean generateConditionalHelper() default true;
+    OptionState generateConditionalHelper() default OptionState.DEFAULT;
 
     // === Access Control ===
     /**
@@ -128,9 +129,9 @@ public @interface SimpleBuilder {
     // === Collection Options ===
     /**
      * Generate helper methods with VarArgs for Lists and Sets. <br>
-     * Default: true Compiler option: -Asimplebuilder.generateVarArgsHelpers
+     * Default: ENABLED Compiler option: -Asimplebuilder.generateVarArgsHelpers
      */
-    boolean generateVarArgsHelpers() default true;
+    OptionState generateVarArgsHelpers() default OptionState.DEFAULT;
 
     /**
      * Generate helper methods with a ArrayListBuilder supplier for lists instead of simple
@@ -156,9 +157,9 @@ public @interface SimpleBuilder {
      *     .build();
      * }</pre>
      *
-     * Default: true Compiler option: -Asimplebuilder.usingArrayListBuilder
+     * Default: ENABLED Compiler option: -Asimplebuilder.usingArrayListBuilder
      */
-    boolean usingArrayListBuilder() default true;
+    OptionState usingArrayListBuilder() default OptionState.DEFAULT;
 
     /**
      * Generate helper methods with a ArrayListBuilderWithElementBuilders supplier for lists of
@@ -187,9 +188,9 @@ public @interface SimpleBuilder {
      *     .build();
      * }</pre>
      *
-     * Default: true Compiler option: -Asimplebuilder.usingArrayListBuilderWithElementBuilders
+     * Default: ENABLED Compiler option: -Asimplebuilder.usingArrayListBuilderWithElementBuilders
      */
-    boolean usingArrayListBuilderWithElementBuilders() default true;
+    OptionState usingArrayListBuilderWithElementBuilders() default OptionState.DEFAULT;
 
     /**
      * Generate helper methods with a ArrayListBuilder supplier for lists instead of simple
@@ -215,9 +216,9 @@ public @interface SimpleBuilder {
      *     .build();
      * }</pre>
      *
-     * Default: true Compiler option: -Asimplebuilder.usingHashSetBuilder
+     * Default: ENABLED Compiler option: -Asimplebuilder.usingHashSetBuilder
      */
-    boolean usingHashSetBuilder() default true;
+    OptionState usingHashSetBuilder() default OptionState.DEFAULT;
 
     /**
      * Generate helper methods with a HashSetBuilderWithElementBuilders supplier for lists of
@@ -246,9 +247,9 @@ public @interface SimpleBuilder {
      *     .build();
      * }</pre>
      *
-     * Default: true Compiler option: -Asimplebuilder.usingHashSetBuilderWithElementBuilders
+     * Default: ENABLED Compiler option: -Asimplebuilder.usingHashSetBuilderWithElementBuilders
      */
-    boolean usingHashSetBuilderWithElementBuilders() default true;
+    OptionState usingHashSetBuilderWithElementBuilders() default OptionState.DEFAULT;
 
     /**
      * Generate helper methods with a HashMapBuilder supplier for maps instead of simple supplier,
@@ -274,15 +275,15 @@ public @interface SimpleBuilder {
      *     .build();
      * }</pre>
      *
-     * Default: true Compiler option: -Asimplebuilder.usingHashMapBuilder
+     * Default: ENABLED Compiler option: -Asimplebuilder.usingHashMapBuilder
      */
-    boolean usingHashMapBuilder() default true;
+    OptionState usingHashMapBuilder() default OptionState.DEFAULT;
 
     /**
      * Generate With interface for integrating builder into DTOs. <br>
-     * Default: true Compiler option: -Asimplebuilder.generateWithInterface
+     * Default: ENABLED Compiler option: -Asimplebuilder.generateWithInterface
      */
-    boolean generateWithInterface() default true;
+    OptionState generateWithInterface() default OptionState.DEFAULT;
   }
 
   /**

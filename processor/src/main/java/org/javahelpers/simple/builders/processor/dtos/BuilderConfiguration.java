@@ -24,8 +24,10 @@
 
 package org.javahelpers.simple.builders.processor.dtos;
 
-import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
-import org.javahelpers.simple.builders.processor.util.AnnotationDefaultReader;
+import org.javahelpers.simple.builders.core.enums.AccessModifier;
+import org.javahelpers.simple.builders.core.enums.OptionState;
+import static org.javahelpers.simple.builders.core.enums.OptionState.*;
+import static org.javahelpers.simple.builders.core.enums.AccessModifier.*;
 
 /**
  * Configuration for builder generation. Combines annotation values with compiler options. Priority:
@@ -50,203 +52,262 @@ import org.javahelpers.simple.builders.processor.util.AnnotationDefaultReader;
  * @param hasAnnotationOverride Whether annotation was used (vs just compiler options)
  */
 public record BuilderConfiguration(
-    boolean generateFieldSupplier,
-    boolean generateFieldProvider,
-    boolean generateBuilderProvider,
-    boolean generateConditionalHelper,
-    String builderAccess,
-    String methodAccess,
-    boolean generateVarArgsHelpers,
-    boolean usingArrayListBuilder,
-    boolean usingArrayListBuilderWithElementBuilders,
-    boolean usingHashSetBuilder,
-    boolean usingHashSetBuilderWithElementBuilders,
-    boolean usingHashMapBuilder,
-    boolean generateWithInterface,
-    boolean hasAnnotationOverride) {
+    OptionState generateFieldSupplier,
+    OptionState generateFieldProvider,
+    OptionState generateBuilderProvider,
+    OptionState generateConditionalHelper,
+    AccessModifier builderAccess,
+    AccessModifier methodAccess,
+    OptionState generateVarArgsHelpers,
+    OptionState usingArrayListBuilder,
+    OptionState usingArrayListBuilderWithElementBuilders,
+    OptionState usingHashSetBuilder,
+    OptionState usingHashSetBuilderWithElementBuilders,
+    OptionState usingHashMapBuilder,
+    OptionState generateWithInterface,
+    OptionState hasAnnotationOverride) {
+
+  public static final BuilderConfiguration DEFAULT =
+      builder()
+          .generateSupplier(ENABLED)
+          .generateProvider(ENABLED)
+          .generateBuilderProvider(ENABLED)
+          .generateConditionalLogic(ENABLED)
+          .builderAccess(PUBLIC)
+          .methodAccess(PUBLIC)
+          .generateVarArgsHelpers(ENABLED)
+          .usingArrayListBuilder(ENABLED)
+          .usingArrayListBuilderWithElementBuilders(ENABLED)
+          .usingHashSetBuilder(ENABLED)
+          .usingHashSetBuilderWithElementBuilders(ENABLED)
+          .usingHashMapBuilder(ENABLED)
+          .generateWithInterface(ENABLED)
+          .hasAnnotationOverride(ENABLED)
+          .build();
 
   // === Convenience accessors with 'is' prefix for boolean properties ===
   public boolean isGenerateSupplier() {
-    return generateFieldSupplier;
+    return generateFieldSupplier == ENABLED;
   }
 
   public boolean isGenerateProvider() {
-    return generateFieldProvider;
+    return generateFieldProvider == ENABLED;
   }
 
   public boolean isGenerateBuilderProvider() {
-    return generateBuilderProvider;
+    return generateBuilderProvider == ENABLED;
   }
 
   public boolean isGenerateConditionalLogic() {
-    return generateConditionalHelper;
+    return generateConditionalHelper == ENABLED;
   }
 
   public boolean isGenerateWithInterface() {
-    return generateWithInterface;
+    return generateWithInterface == ENABLED;
   }
 
   public boolean isGenerateVarArgsHelpers() {
-    return generateVarArgsHelpers;
+    return generateVarArgsHelpers == ENABLED;
   }
 
   public boolean isUsingArrayListBuilder() {
-    return usingArrayListBuilder;
+    return usingArrayListBuilder == ENABLED;
   }
 
   public boolean isUsingArrayListBuilderWithElementBuilders() {
-    return usingArrayListBuilderWithElementBuilders;
+    return usingArrayListBuilderWithElementBuilders == ENABLED;
   }
 
   public boolean isUsingHashSetBuilder() {
-    return usingHashSetBuilder;
+    return usingHashSetBuilder == ENABLED;
   }
 
   public boolean isUsingHashSetBuilderWithElementBuilders() {
-    return usingHashSetBuilderWithElementBuilders;
+    return usingHashSetBuilderWithElementBuilders == ENABLED;
   }
 
   public boolean isUsingHashMapBuilder() {
-    return usingHashMapBuilder;
+    return usingHashMapBuilder == ENABLED;
   }
 
   // === String accessors ===
-  public String getBuilderAccess() {
+  public AccessModifier getBuilderAccess() {
     return builderAccess;
   }
 
-  public String getMethodAccess() {
+  public AccessModifier getMethodAccess() {
     return methodAccess;
   }
 
   // === Builder Pattern ===
-  // Default values are read from SimpleBuilder.Options annotation via reflection
+  // All defaults are DEFAULT to allow proper three-state resolution
   public static class Builder {
-    // === Field Setter Generation (defaults from SimpleBuilder.Options) ===
-    private boolean generateFieldSupplier =
-        AnnotationDefaultReader.getBooleanDefault(
-            SimpleBuilder.Options.class, "generateFieldSupplier", true);
-    private boolean generateFieldProvider =
-        AnnotationDefaultReader.getBooleanDefault(
-            SimpleBuilder.Options.class, "generateFieldProvider", true);
-    private boolean generateBuilderProvider =
-        AnnotationDefaultReader.getBooleanDefault(
-            SimpleBuilder.Options.class, "generateBuilderProvider", true);
+    // === Field Setter Generation ===
+    private OptionState generateFieldSupplier = OptionState.DEFAULT;
+    private OptionState generateFieldProvider = OptionState.DEFAULT;
+    private OptionState generateBuilderProvider = OptionState.DEFAULT;
 
     // === Conditional Logic ===
-    private boolean generateConditionalHelper =
-        AnnotationDefaultReader.getBooleanDefault(
-            SimpleBuilder.Options.class, "generateConditionalHelper", true);
+    private OptionState generateConditionalHelper = OptionState.DEFAULT;
 
     // === Access Control ===
-    private String builderAccess =
-        AnnotationDefaultReader.getEnumDefaultAsString(
-            SimpleBuilder.Options.class, "builderAccess", "PUBLIC");
-    private String methodAccess =
-        AnnotationDefaultReader.getEnumDefaultAsString(
-            SimpleBuilder.Options.class, "methodAccess", "PUBLIC");
+    private AccessModifier builderAccess = AccessModifier.DEFAULT;
+    private AccessModifier methodAccess = AccessModifier.DEFAULT;
 
     // === Collection Options ===
-    private boolean generateVarArgsHelpers =
-        AnnotationDefaultReader.getBooleanDefault(
-            SimpleBuilder.Options.class, "generateVarArgsHelpers", true);
-    private boolean usingArrayListBuilder =
-        AnnotationDefaultReader.getBooleanDefault(
-            SimpleBuilder.Options.class, "usingArrayListBuilder", true);
-    private boolean usingArrayListBuilderWithElementBuilders =
-        AnnotationDefaultReader.getBooleanDefault(
-            SimpleBuilder.Options.class, "usingArrayListBuilderWithElementBuilders", true);
-    private boolean usingHashSetBuilder =
-        AnnotationDefaultReader.getBooleanDefault(
-            SimpleBuilder.Options.class, "usingHashSetBuilder", true);
-    private boolean usingHashSetBuilderWithElementBuilders =
-        AnnotationDefaultReader.getBooleanDefault(
-            SimpleBuilder.Options.class, "usingHashSetBuilderWithElementBuilders", true);
-    private boolean usingHashMapBuilder =
-        AnnotationDefaultReader.getBooleanDefault(
-            SimpleBuilder.Options.class, "usingHashMapBuilder", true);
+    private OptionState generateVarArgsHelpers = OptionState.DEFAULT;
+    private OptionState usingArrayListBuilder = OptionState.DEFAULT;
+    private OptionState usingArrayListBuilderWithElementBuilders = OptionState.DEFAULT;
+    private OptionState usingHashSetBuilder = OptionState.DEFAULT;
+    private OptionState usingHashSetBuilderWithElementBuilders = OptionState.DEFAULT;
+    private OptionState usingHashMapBuilder = OptionState.DEFAULT;
 
     // === Integration ===
-    private boolean generateWithInterface =
-        AnnotationDefaultReader.getBooleanDefault(
-            SimpleBuilder.Options.class, "generateWithInterface", true);
+    private OptionState generateWithInterface = OptionState.DEFAULT;
 
     // === Source Information ===
-    private boolean hasAnnotationOverride = false;
+    private OptionState hasAnnotationOverride = OptionState.DEFAULT;
 
     // === Setters ===
-    public Builder generateSupplier(boolean value) {
+    public Builder generateSupplier(OptionState value) {
       this.generateFieldSupplier = value;
       return this;
     }
 
-    public Builder generateProvider(boolean value) {
+    public Builder generateSupplier(boolean value) {
+      this.generateFieldSupplier = value ? ENABLED : DISABLED;
+      return this;
+    }
+
+    public Builder generateProvider(OptionState value) {
       this.generateFieldProvider = value;
       return this;
     }
 
-    public Builder generateBuilderProvider(boolean value) {
+    public Builder generateProvider(boolean value) {
+      this.generateFieldProvider = value ? ENABLED : DISABLED;
+      return this;
+    }
+
+    public Builder generateBuilderProvider(OptionState value) {
       this.generateBuilderProvider = value;
       return this;
     }
 
-    public Builder generateConditionalLogic(boolean value) {
+    public Builder generateBuilderProvider(boolean value) {
+      this.generateBuilderProvider = value ? ENABLED : DISABLED;
+      return this;
+    }
+
+    public Builder generateConditionalLogic(OptionState value) {
       this.generateConditionalHelper = value;
       return this;
     }
 
-    public Builder generateWithInterface(boolean value) {
+    public Builder generateConditionalLogic(boolean value) {
+      this.generateConditionalHelper = value ? ENABLED : DISABLED;
+      return this;
+    }
+
+    public Builder generateWithInterface(OptionState value) {
       this.generateWithInterface = value;
       return this;
     }
 
-    public Builder generateVarArgsHelpers(boolean value) {
+    public Builder generateWithInterface(boolean value) {
+      this.generateWithInterface = value ? ENABLED : DISABLED;
+      return this;
+    }
+
+    public Builder generateVarArgsHelpers(OptionState value) {
       this.generateVarArgsHelpers = value;
       return this;
     }
 
-    public Builder usingUtilBuilderForGenerate(boolean value) {
+    public Builder generateVarArgsHelpers(boolean value) {
+      this.generateVarArgsHelpers = value ? ENABLED : DISABLED;
+      return this;
+    }
+
+    public Builder usingArrayListBuilder(OptionState value) {
       this.usingArrayListBuilder = value;
       return this;
     }
 
     public Builder usingArrayListBuilder(boolean value) {
-      this.usingArrayListBuilder = value;
+      this.usingArrayListBuilder = value ? ENABLED : DISABLED;
       return this;
     }
 
-    public Builder usingArrayListBuilderWithElementBuilders(boolean value) {
+    public Builder usingArrayListBuilderWithElementBuilders(OptionState value) {
       this.usingArrayListBuilderWithElementBuilders = value;
       return this;
     }
 
-    public Builder usingHashSetBuilder(boolean value) {
+    public Builder usingArrayListBuilderWithElementBuilders(boolean value) {
+      this.usingArrayListBuilderWithElementBuilders =
+          value ? ENABLED : DISABLED;
+      return this;
+    }
+
+    public Builder usingHashSetBuilder(OptionState value) {
       this.usingHashSetBuilder = value;
       return this;
     }
 
-    public Builder usingHashSetBuilderWithElementBuilders(boolean value) {
+    public Builder usingHashSetBuilder(boolean value) {
+      this.usingHashSetBuilder = value ? ENABLED : DISABLED;
+      return this;
+    }
+
+    public Builder usingHashSetBuilderWithElementBuilders(OptionState value) {
       this.usingHashSetBuilderWithElementBuilders = value;
       return this;
     }
 
-    public Builder usingHashMapBuilder(boolean value) {
+    public Builder usingHashSetBuilderWithElementBuilders(boolean value) {
+      this.usingHashSetBuilderWithElementBuilders =
+          value ? ENABLED : DISABLED;
+      return this;
+    }
+
+    public Builder usingHashMapBuilder(OptionState value) {
       this.usingHashMapBuilder = value;
       return this;
     }
 
-    public Builder builderAccess(String value) {
+    public Builder usingHashMapBuilder(boolean value) {
+      this.usingHashMapBuilder = value ? ENABLED : DISABLED;
+      return this;
+    }
+
+    public Builder builderAccess(AccessModifier value) {
       this.builderAccess = value;
       return this;
     }
 
-    public Builder methodAccess(String value) {
+    public Builder builderAccess(String value) {
+      this.builderAccess = AccessModifier.valueOf(value.toUpperCase());
+      return this;
+    }
+
+    public Builder methodAccess(AccessModifier value) {
       this.methodAccess = value;
       return this;
     }
 
-    public Builder hasAnnotationOverride(boolean value) {
+    public Builder methodAccess(String value) {
+      this.methodAccess = AccessModifier.valueOf(value.toUpperCase());
+      return this;
+    }
+
+    public Builder hasAnnotationOverride(OptionState value) {
       this.hasAnnotationOverride = value;
+      return this;
+    }
+
+    public Builder hasAnnotationOverride(boolean value) {
+      this.hasAnnotationOverride = value ? ENABLED : DISABLED;
       return this;
     }
 
