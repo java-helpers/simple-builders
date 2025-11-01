@@ -164,8 +164,12 @@ public class JavaCodeGenerator {
     classBuilder.addMethod(
         createMethodStaticCreate(
             builderBaseClass, builderTypeName, dtoBaseClass, builderDef.getGenerics()));
-    classBuilder.addMethod(createMethodConditional(builderTypeName));
-    classBuilder.addMethod(createMethodConditionalPositiveOnly(builderTypeName));
+
+    // Add conditional methods only if enabled in configuration
+    if (builderDef.getConfiguration().shouldGenerateConditionalLogic()) {
+      classBuilder.addMethod(createMethodConditional(builderTypeName));
+      classBuilder.addMethod(createMethodConditionalPositiveOnly(builderTypeName));
+    }
 
     // Adding nested types (e.g., With interface)
     for (NestedTypeDto nestedType : builderDef.getNestedTypes()) {

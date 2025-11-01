@@ -221,7 +221,7 @@ class ConfigurationProcessingTest {
         "public MinimalDtoBuilder description(Consumer<StringBuilder> descriptionStringBuilderConsumer)");
 
     // With generateConditionalHelper=false, NO conditional methods
-    ProcessorAsserts.assertContaining(
+    ProcessorAsserts.assertNotContaining(
         generatedCode, "public MinimalDtoBuilder conditional(BooleanSupplier condition");
 
     // With generateWithInterface=false, NO With interface
