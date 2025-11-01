@@ -564,7 +564,14 @@ public class BuilderDefinitionCreator {
   }
 
   private static void addSupplierMethodsForField(
-      FieldDto field, TypeElement fieldTypeElement, TypeName builderType) {
+      FieldDto field,
+      TypeElement fieldTypeElement,
+      TypeName builderType,
+      ProcessingContext context) {
+    // Check if supplier generation is enabled in configuration
+    if (!context.getBuilderConfigurationForElement().isGenerateSupplier()) {
+      return;
+    }
     // Skip supplier generation for functional interfaces
     if (isFunctionalInterface(fieldTypeElement)) {
       return;
@@ -771,7 +778,7 @@ public class BuilderDefinitionCreator {
 
     // Add consumer/supplier/helper methods - use ORIGINAL field name for method names
     addConsumerMethodsForField(field, param, fieldTypeElement, builderType, context);
-    addSupplierMethodsForField(field, fieldTypeElement, builderType);
+    addSupplierMethodsForField(field, fieldTypeElement, builderType, context);
     addAdditionalHelperMethodsForField(field, annotations, builderType);
 
     return Optional.of(field);
