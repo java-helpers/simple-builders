@@ -76,7 +76,7 @@ public @interface SimpleBuilder {
      * Generate a supplier method by which the user of this builder could define a function, which
      * supplies the value for this field. <br>
      * The generated method has the parameter-type {@code Supplier<T>} with T being the type of the
-     * field. Default: true Compiler option: -Asimple.builders.generateFieldSupplier
+     * field. Default: true Compiler option: -Asimplebuilder.generateFieldSupplier
      */
     boolean generateFieldSupplier() default true;
 
@@ -85,7 +85,7 @@ public @interface SimpleBuilder {
      * the field. <br>
      * This is only done for complex field types, so that users could use setter to change the
      * properties of that parameter. Default: true Compiler option:
-     * -Asimple.builders.generateFieldProvider
+     * -Asimplebuilder.generateFieldProvider
      */
     boolean generateFieldProvider() default true;
 
@@ -94,13 +94,13 @@ public @interface SimpleBuilder {
      * being the type of the field <br>
      * This is only done for complex field types, which have a recognized builder so that users
      * could use the chained builder methods to set the value of this complex field. <br>
-     * Default: true Compiler option: -Asimple.builders.generateBuilderProvider
+     * Default: true Compiler option: -Asimplebuilder.generateBuilderProvider
      */
     boolean generateBuilderProvider() default true;
 
     /**
      * Generate conditional logic method (conditional) <br>
-     * Default: true Compiler option: -Asimple.builders.generateConditionalHelper
+     * Default: true Compiler option: -Asimplebuilder.generateConditionalHelper
      */
     boolean generateConditionalHelper() default true;
 
@@ -110,7 +110,7 @@ public @interface SimpleBuilder {
      *
      * <p>Default: {@link AccessModifier#PUBLIC PUBLIC}
      *
-     * <p>Compiler option: -Asimple.builders.builderAccess (values: PUBLIC, PROTECTED,
+     * <p>Compiler option: -Asimplebuilder.builderAccess (values: PUBLIC, PROTECTED,
      * PACKAGE_PRIVATE, PRIVATE)
      */
     AccessModifier builderAccess() default AccessModifier.PUBLIC;
@@ -120,7 +120,7 @@ public @interface SimpleBuilder {
      *
      * <p>Default: {@link AccessModifier#PUBLIC PUBLIC}
      *
-     * <p>Compiler option: -Asimple.builders.methodAccess (values: PUBLIC, PROTECTED,
+     * <p>Compiler option: -Asimplebuilder.methodAccess (values: PUBLIC, PROTECTED,
      * PACKAGE_PRIVATE, PRIVATE)
      */
     AccessModifier methodAccess() default AccessModifier.PUBLIC;
@@ -128,7 +128,7 @@ public @interface SimpleBuilder {
     // === Collection Options ===
     /**
      * Generate helper methods with VarArgs for Lists and Sets. <br>
-     * Default: true Compiler option: -Asimple.builders.generateVarArgsHelpers
+     * Default: true Compiler option: -Asimplebuilder.generateVarArgsHelpers
      */
     boolean generateVarArgsHelpers() default true;
 
@@ -156,7 +156,7 @@ public @interface SimpleBuilder {
      *     .build();
      * }</pre>
      *
-     * Default: true Compiler option: -Asimple.builders.usingArrayListBuilder
+     * Default: true Compiler option: -Asimplebuilder.usingArrayListBuilder
      */
     boolean usingArrayListBuilder() default true;
 
@@ -187,7 +187,7 @@ public @interface SimpleBuilder {
      *     .build();
      * }</pre>
      *
-     * Default: true Compiler option: -Asimple.builders.generateWithInterface
+     * Default: true Compiler option: -Asimplebuilder.usingArrayListBuilderWithElementBuilders
      */
     boolean usingArrayListBuilderWithElementBuilders() default true;
 
@@ -215,7 +215,7 @@ public @interface SimpleBuilder {
      *     .build();
      * }</pre>
      *
-     * Default: true Compiler option: -Asimple.builders.usingHashSetBuilder
+     * Default: true Compiler option: -Asimplebuilder.usingHashSetBuilder
      */
     boolean usingHashSetBuilder() default true;
 
@@ -246,7 +246,7 @@ public @interface SimpleBuilder {
      *     .build();
      * }</pre>
      *
-     * Default: true Compiler option: -Asimple.builders.generateWithInterface
+     * Default: true Compiler option: -Asimplebuilder.usingHashSetBuilderWithElementBuilders
      */
     boolean usingHashSetBuilderWithElementBuilders() default true;
 
@@ -274,13 +274,13 @@ public @interface SimpleBuilder {
      *     .build();
      * }</pre>
      *
-     * Default: true Compiler option: -Asimple.builders.usingHashMapBuilder
+     * Default: true Compiler option: -Asimplebuilder.usingHashMapBuilder
      */
     boolean usingHashMapBuilder() default true;
 
     /**
      * Generate With interface for integrating builder into DTOs. <br>
-     * Default: true Compiler option: -Asimple.builders.generateWithInterface
+     * Default: true Compiler option: -Asimplebuilder.generateWithInterface
      */
     boolean generateWithInterface() default true;
   }
