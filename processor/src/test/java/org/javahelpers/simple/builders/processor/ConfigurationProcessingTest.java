@@ -214,29 +214,34 @@ class ConfigurationProcessingTest {
 
     // With generateBuilderProvider=false, NO builder consumer methods should be generated
     // Builder consumers include: StringBuilder, collection builders, nested DTO builders
-    ProcessorAsserts.assertContaining(
+    ProcessorAsserts.assertNotContaining(
         generatedCode,
-        "public MinimalDtoBuilder nested(Consumer<NestedDtoBuilder> nestedBuilderConsumer)");
+        "public MinimalDtoBuilder nested(Consumer<NestedDtoBuilder> nestedBuilderConsumer)",
+        "public MinimalDtoBuilder name(Consumer<StringBuilder> nameStringBuilderConsumer)",
+        "public MinimalDtoBuilder description(Consumer<StringBuilder> descriptionStringBuilderConsumer)");
 
     // With generateConditionalHelper=false, NO conditional methods
     ProcessorAsserts.assertContaining(
         generatedCode, "public MinimalDtoBuilder conditional(BooleanSupplier condition");
 
     // With generateWithInterface=false, NO With interface
-    ProcessorAsserts.assertContaining(generatedCode, "public interface With");
+    ProcessorAsserts.assertNotContaining(generatedCode, "public interface With");
 
-    // With usingArrayListBuilder=false, NO ArrayListBuilder should be used
-    ProcessorAsserts.assertContaining(
+    // With usingArrayListBuilder=false AND generateBuilderProvider=false, NO ArrayListBuilder
+    // should be used
+    ProcessorAsserts.assertNotContaining(
         generatedCode,
         "public MinimalDtoBuilder items(Consumer<ArrayListBuilder<String>> itemsBuilderConsumer)");
 
-    // With usingHashSetBuilder=false, NO HashSetBuilder should be used
-    ProcessorAsserts.assertContaining(
+    // With usingHashSetBuilder=false AND generateBuilderProvider=false, NO HashSetBuilder should be
+    // used
+    ProcessorAsserts.assertNotContaining(
         generatedCode,
         "public MinimalDtoBuilder tags(Consumer<HashSetBuilder<String>> tagsBuilderConsumer)");
 
-    // With usingHashMapBuilder=false, NO HashMapBuilder should be used
-    ProcessorAsserts.assertContaining(
+    // With usingHashMapBuilder=false AND generateBuilderProvider=false, NO HashMapBuilder should be
+    // used
+    ProcessorAsserts.assertNotContaining(
         generatedCode,
         "public MinimalDtoBuilder properties(Consumer<HashMapBuilder<String, Integer>> propertiesBuilderConsumer)");
 
@@ -246,8 +251,6 @@ class ConfigurationProcessingTest {
         "public MinimalDtoBuilder name(String name)",
         "public MinimalDtoBuilder name(String format, Object... args)",
         "public MinimalDtoBuilder description(String format, Object... args)",
-        "public MinimalDtoBuilder name(Consumer<StringBuilder> nameStringBuilderConsumer)",
-        "public MinimalDtoBuilder description(Consumer<StringBuilder> descriptionStringBuilderConsumer)",
         "public MinimalDtoBuilder items(List<String> items)",
         "public MinimalDtoBuilder properties(Map<String, Integer> properties)",
         "public MinimalDtoBuilder properties(Map.Entry<String, Integer>... properties)",

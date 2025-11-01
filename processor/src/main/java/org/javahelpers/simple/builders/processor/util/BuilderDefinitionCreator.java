@@ -105,9 +105,11 @@ public class BuilderDefinitionCreator {
         extractSetterFields(annotatedType, result, context, fieldNameRegistry);
     result.addAllFields(setterFields);
 
-    // Create the With interface
-    NestedTypeDto withInterface = createWithInterface(result, context);
-    result.addNestedType(withInterface);
+    // Create the With interface if enabled in configuration
+    if (context.getBuilderConfigurationForElement().shouldGenerateWithInterface()) {
+      NestedTypeDto withInterface = createWithInterface(result, context);
+      result.addNestedType(withInterface);
+    }
 
     return result;
   }
@@ -120,6 +122,7 @@ public class BuilderDefinitionCreator {
     String simpleClassName = annotatedType.getSimpleName().toString();
     result.setBuilderTypeName(new TypeName(packageName, simpleClassName + BUILDER_SUFFIX));
     result.setBuildingTargetTypeName(new TypeName(packageName, simpleClassName));
+    result.setConfiguration(context.getBuilderConfigurationForElement());
 
     context.debug(
         "Builder will be generated as: %s.%s", packageName, simpleClassName + BUILDER_SUFFIX);
@@ -387,9 +390,9 @@ public class BuilderDefinitionCreator {
     if (!tryAddBuilderConsumer(field, fieldParameter, builderType, context)
         && !tryAddFieldConsumer(field, fieldTypeElement, builderType, context)
         && !tryAddListConsumer(field, fieldParameter, builderType, context)
-        && !tryAddMapConsumer(field, builderType)
+        && !tryAddMapConsumer(field, builderType, context)
         && !tryAddSetConsumer(field, fieldParameter, builderType, context)) {
-      tryAddStringBuilderConsumer(field, builderType);
+      tryAddStringBuilderConsumer(field, builderType, context);
     }
   }
 
@@ -399,6 +402,10 @@ public class BuilderDefinitionCreator {
       VariableElement fieldParameter,
       TypeName builderType,
       ProcessingContext context) {
+    // Builder consumers are controlled by generateBuilderProvider
+    if (!context.getBuilderConfigurationForElement().shouldGenerateBuilderProvider()) {
+      return false;
+    }
     Optional<TypeName> fieldBuilderOpt = resolveBuilderType(fieldParameter, context);
     if (fieldBuilderOpt.isPresent()) {
       TypeName fieldBuilderType = fieldBuilderOpt.get();
@@ -435,7 +442,12 @@ public class BuilderDefinitionCreator {
   }
 
   /** Tries to add StringBuilder-based consumer for String and Optional<String>. */
-  private static boolean tryAddStringBuilderConsumer(FieldDto field, TypeName builderType) {
+  private static boolean tryAddStringBuilderConsumer(
+      FieldDto field, TypeName builderType, ProcessingContext context) {
+    // StringBuilder is a builder pattern, controlled by generateBuilderProvider
+    if (!context.getBuilderConfigurationForElement().shouldGenerateBuilderProvider()) {
+      return false;
+    }
     if (shouldGenerateStringBuilderConsumer(field.getFieldType())) {
       String transform =
           isOptionalString(field.getFieldType())
@@ -470,8 +482,11 @@ public class BuilderDefinitionCreator {
     Optional<TypeName> elementBuilderType =
         resolveBuilderType(elementType, elementTypeMirror, context);
 
-    if (elementBuilderType.isPresent()) {
-      // Element type has a builder - use ArrayListBuilderWithElementBuilders
+    if (elementBuilderType.isPresent()
+        && context
+            .getBuilderConfigurationForElement()
+            .shouldUseArrayListBuilderWithElementBuilders()) {
+      // Element type has a builder - use ArrayListBuilderWithElementBuilders if enabled
       TypeName collectionBuilderType =
           new TypeNameGeneric(
               map2TypeName(ArrayListBuilderWithElementBuilders.class),
@@ -484,8 +499,8 @@ public class BuilderDefinitionCreator {
               collectionBuilderType,
               elementBuilderType.get(),
               builderType));
-    } else {
-      // Regular ArrayListBuilder
+    } else if (context.getBuilderConfigurationForElement().shouldUseArrayListBuilder()) {
+      // Regular ArrayListBuilder if enabled
       TypeName collectionBuilderType = map2TypeName(ArrayListBuilder.class);
       field.addMethod(
           createFieldConsumerWithBuilder(
@@ -494,12 +509,19 @@ public class BuilderDefinitionCreator {
               collectionBuilderType,
               elementType,
               builderType));
+    } else {
+      return false;
     }
     return true;
   }
 
   /** Tries to add Map-specific consumer methods. Returns true if handled. */
-  private static boolean tryAddMapConsumer(FieldDto field, TypeName builderType) {
+  private static boolean tryAddMapConsumer(
+      FieldDto field, TypeName builderType, ProcessingContext context) {
+    // Check if HashMapBuilder is enabled
+    if (!context.getBuilderConfigurationForElement().shouldUseHashMapBuilder()) {
+      return false;
+    }
     if (!(isMap(field.getFieldType())
         && field.getFieldType() instanceof TypeNameGeneric fieldTypeGeneric
         && fieldTypeGeneric.getInnerTypeArguments().size() == 2)) {
@@ -539,8 +561,11 @@ public class BuilderDefinitionCreator {
     Optional<TypeName> elementBuilderType =
         resolveBuilderType(elementType, elementTypeMirror, context);
 
-    if (elementBuilderType.isPresent()) {
-      // Element type has a builder - use HashSetBuilderWithElementBuilders
+    if (elementBuilderType.isPresent()
+        && context
+            .getBuilderConfigurationForElement()
+            .shouldUseHashSetBuilderWithElementBuilders()) {
+      // Element type has a builder - use HashSetBuilderWithElementBuilders if enabled
       TypeName collectionBuilderType =
           new TypeNameGeneric(
               map2TypeName(HashSetBuilderWithElementBuilders.class),
@@ -553,8 +578,8 @@ public class BuilderDefinitionCreator {
               collectionBuilderType,
               elementBuilderType.get(),
               builderType));
-    } else {
-      // Regular HashSetBuilder
+    } else if (context.getBuilderConfigurationForElement().shouldUseHashSetBuilder()) {
+      // Regular HashSetBuilder if enabled
       TypeName collectionBuilderType = map2TypeName(HashSetBuilder.class);
       field.addMethod(
           createFieldConsumerWithBuilder(
@@ -563,6 +588,8 @@ public class BuilderDefinitionCreator {
               collectionBuilderType,
               elementType,
               builderType));
+    } else {
+      return false;
     }
     return true;
   }
