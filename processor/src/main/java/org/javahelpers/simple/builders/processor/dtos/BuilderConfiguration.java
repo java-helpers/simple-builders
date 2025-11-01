@@ -144,30 +144,30 @@ public record BuilderConfiguration(
   // All defaults are DEFAULT to allow proper three-state resolution
   public static class Builder {
     // === Field Setter Generation ===
-    private OptionState generateFieldSupplier = OptionState.DEFAULT;
-    private OptionState generateFieldProvider = OptionState.DEFAULT;
-    private OptionState generateBuilderProvider = OptionState.DEFAULT;
+    private OptionState generateFieldSupplier = OptionState.UNSET;
+    private OptionState generateFieldProvider = OptionState.UNSET;
+    private OptionState generateBuilderProvider = OptionState.UNSET;
 
     // === Conditional Logic ===
-    private OptionState generateConditionalHelper = OptionState.DEFAULT;
+    private OptionState generateConditionalHelper = OptionState.UNSET;
 
     // === Access Control ===
     private AccessModifier builderAccess = AccessModifier.DEFAULT;
     private AccessModifier methodAccess = AccessModifier.DEFAULT;
 
     // === Collection Options ===
-    private OptionState generateVarArgsHelpers = OptionState.DEFAULT;
-    private OptionState usingArrayListBuilder = OptionState.DEFAULT;
-    private OptionState usingArrayListBuilderWithElementBuilders = OptionState.DEFAULT;
-    private OptionState usingHashSetBuilder = OptionState.DEFAULT;
-    private OptionState usingHashSetBuilderWithElementBuilders = OptionState.DEFAULT;
-    private OptionState usingHashMapBuilder = OptionState.DEFAULT;
+    private OptionState generateVarArgsHelpers = OptionState.UNSET;
+    private OptionState usingArrayListBuilder = OptionState.UNSET;
+    private OptionState usingArrayListBuilderWithElementBuilders = OptionState.UNSET;
+    private OptionState usingHashSetBuilder = OptionState.UNSET;
+    private OptionState usingHashSetBuilderWithElementBuilders = OptionState.UNSET;
+    private OptionState usingHashMapBuilder = OptionState.UNSET;
 
     // === Integration ===
-    private OptionState generateWithInterface = OptionState.DEFAULT;
+    private OptionState generateWithInterface = OptionState.UNSET;
 
     // === Source Information ===
-    private OptionState hasAnnotationOverride = OptionState.DEFAULT;
+    private OptionState hasAnnotationOverride = OptionState.UNSET;
 
     // === Setters ===
     public Builder generateSupplier(OptionState value) {

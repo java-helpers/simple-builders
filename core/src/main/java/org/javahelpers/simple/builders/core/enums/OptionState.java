@@ -49,10 +49,10 @@ package org.javahelpers.simple.builders.core.enums;
  */
 public enum OptionState {
   /**
-   * Use the inherited value from compiler options or built-in defaults. This is the default state
-   * when no explicit override is specified.
+   * Use inherited value from compiler options or built-in defaults. This is the default state when
+   * the option is not explicitly configured at the annotation level.
    */
-  DEFAULT,
+  UNSET,
 
   /** Explicitly enable this option, overriding any global configuration or defaults. */
   ENABLED,
