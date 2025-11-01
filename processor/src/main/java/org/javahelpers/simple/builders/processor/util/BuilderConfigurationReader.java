@@ -88,6 +88,7 @@ public class BuilderConfigurationReader {
         .usingHashSetBuilder(options.usingHashSetBuilder())
         .usingHashSetBuilderWithElementBuilders(options.usingHashSetBuilderWithElementBuilders())
         .usingHashMapBuilder(options.usingHashMapBuilder())
+        .usingGeneratedAnnotation(options.usingGeneratedAnnotation())
         .generateWithInterface(options.generateWithInterface())
         .build();
   }
@@ -138,6 +139,7 @@ public class BuilderConfigurationReader {
               .usingHashSetBuilderWithElementBuilders(
                   options.usingHashSetBuilderWithElementBuilders())
               .usingHashMapBuilder(options.usingHashMapBuilder())
+              .usingGeneratedAnnotation(options.usingGeneratedAnnotation())
               .generateWithInterface(options.generateWithInterface())
               .build();
         }

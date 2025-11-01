@@ -288,6 +288,14 @@ public @interface SimpleBuilder {
      */
     OptionState usingHashMapBuilder() default OptionState.UNSET;
 
+    // === Annotations ===
+    /**
+     * Use {@code @Generated} annotation on the generated builder class. <br>
+     * Default: ENABLED Compiler option: -Asimplebuilder.usingGeneratedAnnotation
+     */
+    OptionState usingGeneratedAnnotation() default OptionState.UNSET;
+
+    // === Integration ===
     /**
      * Generate With interface for integrating builder into DTOs. <br>
      * Default: ENABLED Compiler option: -Asimplebuilder.generateWithInterface

@@ -81,6 +81,10 @@ public enum CompilerArgumentsEnum {
   /** Option for HashMap builder usage. */
   USING_HASH_MAP_BUILDER("usingHashMapBuilder"),
 
+  // === Annotations ===
+  /** Option for using Generated annotation. */
+  USING_GENERATED_ANNOTATION("usingGeneratedAnnotation"),
+
   // === Integration ===
   /** Option for With interface generation. */
   GENERATE_WITH_INTERFACE("generateWithInterface"),

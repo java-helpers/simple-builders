@@ -179,7 +179,9 @@ public class JavaCodeGenerator {
     }
 
     // Adding annotations
-    classBuilder.addAnnotation(createAnnotationGenerated());
+    if (builderDef.getConfiguration().shouldUseGeneratedAnnotation()) {
+      classBuilder.addAnnotation(createAnnotationGenerated());
+    }
     classBuilder.addAnnotation(createAnnotationBuilderImplementation(dtoBaseClass));
 
     logger.debug(
