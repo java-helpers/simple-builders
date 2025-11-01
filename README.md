@@ -19,6 +19,7 @@
     - [Conditional Builder Logic](#conditional-builder-logic)
   - [Collections and Nested Objects](#collections-and-nested-objects)
   - [With Interface Pattern](#with-interface-pattern)
+  - [Builder Configuration](#builder-configuration)
 - [Contributing](#contributing)
 - [License](#license)
 - [Acknowledgements](#acknowledgements)
@@ -256,6 +257,20 @@ Person youngerPerson = person.with(p -> p.age(29));
 ```
 
 The `With` interface provides type-safe setter methods that mirror the builder's API, making it easy to create object variations without manually copying all fields.
+
+## Builder Configuration
+
+Simple Builders provides extensive configuration options to customize the generated builder code. You can control:
+
+- Field setter generation (Supplier, Provider, Builder patterns)
+- Conditional logic helpers
+- Access modifiers for builders and methods
+- Collection helper methods
+- Integration features
+
+Configuration can be applied per-class using `@SimpleBuilder.Options` annotation or project-wide using compiler options.
+
+📖 **For complete documentation, examples, and all available options, see the [Configuration Guide](docs/CONFIGURATION.md).**
 
 ## Contributing
 
