@@ -301,7 +301,7 @@ Or in Maven:
 
 ## Contributing
 
-Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for:
+Contributions are welcome! Please see [CONTRIBUTING.md](docs/CONTRIBUTING.md) for:
 
 - Development setup and project structure
 - Building and testing strategies (important for annotation processor modules)
