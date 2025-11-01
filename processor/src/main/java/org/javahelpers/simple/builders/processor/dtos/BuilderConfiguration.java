@@ -27,6 +27,8 @@ package org.javahelpers.simple.builders.processor.dtos;
 import static org.javahelpers.simple.builders.core.enums.AccessModifier.*;
 import static org.javahelpers.simple.builders.core.enums.OptionState.*;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.core.enums.OptionState;
 
@@ -138,6 +140,58 @@ public record BuilderConfiguration(
 
   public AccessModifier getMethodAccess() {
     return methodAccess;
+  }
+
+  @Override
+  public String toString() {
+    ToStringBuilder builder = new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE);
+
+    if (generateFieldSupplier != UNSET) {
+      builder.append("generateFieldSupplier", generateFieldSupplier);
+    }
+    if (generateFieldProvider != UNSET) {
+      builder.append("generateFieldProvider", generateFieldProvider);
+    }
+    if (generateBuilderProvider != UNSET) {
+      builder.append("generateBuilderProvider", generateBuilderProvider);
+    }
+    if (generateConditionalHelper != UNSET) {
+      builder.append("generateConditionalHelper", generateConditionalHelper);
+    }
+    if (builderAccess != AccessModifier.DEFAULT) {
+      builder.append("builderAccess", builderAccess);
+    }
+    if (methodAccess != AccessModifier.DEFAULT) {
+      builder.append("methodAccess", methodAccess);
+    }
+    if (generateVarArgsHelpers != UNSET) {
+      builder.append("generateVarArgsHelpers", generateVarArgsHelpers);
+    }
+    if (usingArrayListBuilder != UNSET) {
+      builder.append("usingArrayListBuilder", usingArrayListBuilder);
+    }
+    if (usingArrayListBuilderWithElementBuilders != UNSET) {
+      builder.append(
+          "usingArrayListBuilderWithElementBuilders", usingArrayListBuilderWithElementBuilders);
+    }
+    if (usingHashSetBuilder != UNSET) {
+      builder.append("usingHashSetBuilder", usingHashSetBuilder);
+    }
+    if (usingHashSetBuilderWithElementBuilders != UNSET) {
+      builder.append(
+          "usingHashSetBuilderWithElementBuilders", usingHashSetBuilderWithElementBuilders);
+    }
+    if (usingHashMapBuilder != UNSET) {
+      builder.append("usingHashMapBuilder", usingHashMapBuilder);
+    }
+    if (generateWithInterface != UNSET) {
+      builder.append("generateWithInterface", generateWithInterface);
+    }
+    if (hasAnnotationOverride != UNSET) {
+      builder.append("hasAnnotationOverride", hasAnnotationOverride);
+    }
+
+    return builder.toString();
   }
 
   // === Builder Pattern ===

@@ -43,6 +43,8 @@ public final class ProcessingContext {
   private final Elements elementUtils;
   private final Types typeUtils;
   private final ProcessingLogger logger;
+  private final BuilderConfiguration globalConfiguration;
+  private final BuilderConfigurationReader configurationReader;
   private BuilderConfiguration configuration;
 
   /**
@@ -51,11 +53,37 @@ public final class ProcessingContext {
    * @param elementUtils utility for operating on program elements
    * @param typeUtils utility for operating on types
    * @param logger the logging utility for the annotation processor
+   * @param globalConfiguration the global builder configuration read from compiler arguments
    */
-  public ProcessingContext(Elements elementUtils, Types typeUtils, ProcessingLogger logger) {
+  public ProcessingContext(
+      Elements elementUtils,
+      Types typeUtils,
+      ProcessingLogger logger,
+      BuilderConfiguration globalConfiguration) {
     this.elementUtils = elementUtils;
     this.typeUtils = typeUtils;
     this.logger = logger;
+    this.globalConfiguration = globalConfiguration;
+    this.configurationReader = new BuilderConfigurationReader();
+  }
+
+  /**
+   * Get the global builder configuration read from compiler arguments. This configuration applies
+   * to all builders unless overridden by annotation.
+   *
+   * @return the global builder configuration
+   */
+  public BuilderConfiguration getGlobalConfiguration() {
+    return globalConfiguration;
+  }
+
+  /**
+   * Get the configuration reader for reading configuration from annotations.
+   *
+   * @return the builder configuration reader
+   */
+  public BuilderConfigurationReader getConfigurationReader() {
+    return configurationReader;
   }
 
   /**

@@ -37,9 +37,11 @@ import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
+import org.javahelpers.simple.builders.processor.dtos.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.dtos.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.enums.CompilerArgumentsEnum;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
+import org.javahelpers.simple.builders.processor.util.CompilerArgumentsReader;
 import org.javahelpers.simple.builders.processor.util.JavaCodeGenerator;
 import org.javahelpers.simple.builders.processor.util.ProcessingContext;
 import org.javahelpers.simple.builders.processor.util.ProcessingLogger;
@@ -60,10 +62,17 @@ public class BuilderProcessor extends AbstractProcessor {
   public synchronized void init(ProcessingEnvironment processingEnv) {
     super.init(processingEnv);
     ProcessingLogger logger = new ProcessingLogger(processingEnv);
+
+    // Read global configuration from compiler arguments
+    CompilerArgumentsReader reader = new CompilerArgumentsReader(processingEnv);
+    BuilderConfiguration globalConfig = reader.readBuilderConfiguration();
+
     this.context =
         new ProcessingContext(
-            processingEnv.getElementUtils(), processingEnv.getTypeUtils(), logger);
+            processingEnv.getElementUtils(), processingEnv.getTypeUtils(), logger, globalConfig);
+    context.debug("Loaded global configuration from compiler arguments: %s", globalConfig);
     this.codeGenerator = new JavaCodeGenerator(processingEnv.getFiler(), logger);
+
     SourceVersion current = processingEnv.getSourceVersion();
     this.supportedJdk = isAtLeastJava17(current);
     if (!this.supportedJdk) {
