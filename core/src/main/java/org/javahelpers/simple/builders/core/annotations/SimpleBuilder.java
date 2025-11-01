@@ -121,8 +121,8 @@ public @interface SimpleBuilder {
      *
      * <p>Default: {@link AccessModifier#PUBLIC PUBLIC}
      *
-     * <p>Compiler option: -Asimplebuilder.methodAccess (values: PUBLIC, PROTECTED,
-     * PACKAGE_PRIVATE, PRIVATE)
+     * <p>Compiler option: -Asimplebuilder.methodAccess (values: PUBLIC, PROTECTED, PACKAGE_PRIVATE,
+     * PRIVATE)
      */
     AccessModifier methodAccess() default AccessModifier.PUBLIC;
 

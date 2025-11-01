@@ -24,10 +24,11 @@
 
 package org.javahelpers.simple.builders.processor.dtos;
 
+import static org.javahelpers.simple.builders.core.enums.AccessModifier.*;
+import static org.javahelpers.simple.builders.core.enums.OptionState.*;
+
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.core.enums.OptionState;
-import static org.javahelpers.simple.builders.core.enums.OptionState.*;
-import static org.javahelpers.simple.builders.core.enums.AccessModifier.*;
 
 /**
  * Configuration for builder generation. Combines annotation values with compiler options. Priority:
@@ -245,8 +246,7 @@ public record BuilderConfiguration(
     }
 
     public Builder usingArrayListBuilderWithElementBuilders(boolean value) {
-      this.usingArrayListBuilderWithElementBuilders =
-          value ? ENABLED : DISABLED;
+      this.usingArrayListBuilderWithElementBuilders = value ? ENABLED : DISABLED;
       return this;
     }
 
@@ -266,8 +266,7 @@ public record BuilderConfiguration(
     }
 
     public Builder usingHashSetBuilderWithElementBuilders(boolean value) {
-      this.usingHashSetBuilderWithElementBuilders =
-          value ? ENABLED : DISABLED;
+      this.usingHashSetBuilderWithElementBuilders = value ? ENABLED : DISABLED;
       return this;
     }
 
