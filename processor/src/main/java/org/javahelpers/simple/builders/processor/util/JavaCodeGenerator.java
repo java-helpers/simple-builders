@@ -182,7 +182,9 @@ public class JavaCodeGenerator {
     if (builderDef.getConfiguration().shouldUseGeneratedAnnotation()) {
       classBuilder.addAnnotation(createAnnotationGenerated());
     }
-    classBuilder.addAnnotation(createAnnotationBuilderImplementation(dtoBaseClass));
+    if (builderDef.getConfiguration().shouldUseBuilderImplementationAnnotation()) {
+      classBuilder.addAnnotation(createAnnotationBuilderImplementation(dtoBaseClass));
+    }
 
     logger.debug(
         "Writing builder class to file: %s.%s",

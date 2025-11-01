@@ -160,6 +160,8 @@ public class CompilerArgumentsReader {
             readOptionState(CompilerArgumentsEnum.USING_HASH_SET_BUILDER_WITH_ELEMENT_BUILDERS))
         .usingHashMapBuilder(readOptionState(CompilerArgumentsEnum.USING_HASH_MAP_BUILDER))
         .usingGeneratedAnnotation(readOptionState(CompilerArgumentsEnum.USING_GENERATED_ANNOTATION))
+        .usingBuilderImplementationAnnotation(
+            readOptionState(CompilerArgumentsEnum.USING_BUILDER_IMPLEMENTATION_ANNOTATION))
         .generateWithInterface(readOptionState(CompilerArgumentsEnum.GENERATE_WITH_INTERFACE))
         .build();
   }

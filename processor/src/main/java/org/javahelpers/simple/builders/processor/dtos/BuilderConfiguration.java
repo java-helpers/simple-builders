@@ -53,6 +53,7 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
  * @param usingHashSetBuilderWithElementBuilders Use HashSetBuilderWithElementBuilders
  * @param usingHashMapBuilder Use HashMapBuilder for maps
  * @param usingGeneratedAnnotation Use Generated annotation
+ * @param usingBuilderImplementationAnnotation Use BuilderImplementation annotation
  * @param generateWithInterface Generate With interface
  */
 public record BuilderConfiguration(
@@ -70,6 +71,7 @@ public record BuilderConfiguration(
     OptionState usingHashSetBuilderWithElementBuilders,
     OptionState usingHashMapBuilder,
     OptionState usingGeneratedAnnotation,
+    OptionState usingBuilderImplementationAnnotation,
     OptionState generateWithInterface) {
 
   public static final BuilderConfiguration DEFAULT =
@@ -88,6 +90,7 @@ public record BuilderConfiguration(
           .usingHashSetBuilderWithElementBuilders(ENABLED)
           .usingHashMapBuilder(ENABLED)
           .usingGeneratedAnnotation(ENABLED)
+          .usingBuilderImplementationAnnotation(ENABLED)
           .generateWithInterface(ENABLED)
           .build();
 
@@ -142,6 +145,10 @@ public record BuilderConfiguration(
 
   public boolean shouldUseGeneratedAnnotation() {
     return usingGeneratedAnnotation == ENABLED;
+  }
+
+  public boolean shouldUseBuilderImplementationAnnotation() {
+    return usingBuilderImplementationAnnotation == ENABLED;
   }
 
   // === String accessors ===
@@ -223,6 +230,10 @@ public record BuilderConfiguration(
             other.usingGeneratedAnnotation != UNSET
                 ? other.usingGeneratedAnnotation
                 : this.usingGeneratedAnnotation)
+        .usingBuilderImplementationAnnotation(
+            other.usingBuilderImplementationAnnotation != UNSET
+                ? other.usingBuilderImplementationAnnotation
+                : this.usingBuilderImplementationAnnotation)
         .generateWithInterface(
             other.generateWithInterface != UNSET
                 ? other.generateWithInterface
@@ -305,6 +316,7 @@ public record BuilderConfiguration(
 
     // === Annotations ===
     private OptionState usingGeneratedAnnotation = OptionState.UNSET;
+    private OptionState usingBuilderImplementationAnnotation = OptionState.UNSET;
 
     // === Integration ===
     private OptionState generateWithInterface = OptionState.UNSET;
@@ -440,6 +452,16 @@ public record BuilderConfiguration(
       return this;
     }
 
+    public Builder usingBuilderImplementationAnnotation(OptionState value) {
+      this.usingBuilderImplementationAnnotation = value;
+      return this;
+    }
+
+    public Builder usingBuilderImplementationAnnotation(boolean value) {
+      this.usingBuilderImplementationAnnotation = value ? ENABLED : DISABLED;
+      return this;
+    }
+
     public Builder builderAccess(AccessModifier value) {
       this.builderAccess = value;
       return this;
@@ -476,6 +498,7 @@ public record BuilderConfiguration(
           usingHashSetBuilderWithElementBuilders,
           usingHashMapBuilder,
           usingGeneratedAnnotation,
+          usingBuilderImplementationAnnotation,
           generateWithInterface);
     }
   }

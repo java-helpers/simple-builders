@@ -183,6 +183,7 @@ class ConfigurationProcessingTest {
                 "-Asimplebuilder.usingHashSetBuilderWithElementBuilders=false",
                 "-Asimplebuilder.usingHashMapBuilder=false",
                 "-Asimplebuilder.usingGeneratedAnnotation=false",
+                "-Asimplebuilder.usingBuilderImplementationAnnotation=false",
                 "-Asimplebuilder.generateWithInterface=false")
             .compile(nestedDto, addressDto, source);
 
@@ -243,6 +244,10 @@ class ConfigurationProcessingTest {
     // With usingGeneratedAnnotation=false, NO @Generated annotation should be used
     ProcessorAsserts.assertNotContaining(generatedCode, "@Generated(");
 
+    // With usingBuilderImplementationAnnotation=false, NO @BuilderImplementation annotation should
+    // be used
+    ProcessorAsserts.assertNotContaining(generatedCode, "@BuilderImplementation");
+
     // With usingArrayListBuilder=false AND generateBuilderProvider=false, NO ArrayListBuilder
     // should be used
     ProcessorAsserts.assertNotContaining(
@@ -261,10 +266,9 @@ class ConfigurationProcessingTest {
         generatedCode,
         "public MinimalDtoBuilder properties(Consumer<HashMapBuilder<String, Integer>> propertiesBuilderConsumer)");
 
-    // Still generates: basic setters, String.format for String fields, annotations
+    // Still generates: basic setters, String.format for String fields
     ProcessorAsserts.assertContaining(
         generatedCode,
-        "@BuilderImplementation(forClass = MinimalDto.class)",
         "class MinimalDtoBuilder implements IBuilderBase<MinimalDto>",
         "public MinimalDtoBuilder(MinimalDto instance)",
         "public MinimalDtoBuilder name(String name)",

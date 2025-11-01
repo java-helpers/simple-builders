@@ -295,6 +295,12 @@ public @interface SimpleBuilder {
      */
     OptionState usingGeneratedAnnotation() default OptionState.UNSET;
 
+    /**
+     * Use {@code @BuilderImplementation} annotation on the generated builder class. <br>
+     * Default: ENABLED Compiler option: -Asimplebuilder.usingBuilderImplementationAnnotation
+     */
+    OptionState usingBuilderImplementationAnnotation() default OptionState.UNSET;
+
     // === Integration ===
     /**
      * Generate With interface for integrating builder into DTOs. <br>

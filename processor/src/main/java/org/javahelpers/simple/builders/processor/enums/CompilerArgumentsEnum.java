@@ -85,6 +85,9 @@ public enum CompilerArgumentsEnum {
   /** Option for using Generated annotation. */
   USING_GENERATED_ANNOTATION("usingGeneratedAnnotation"),
 
+  /** Option for using BuilderImplementation annotation. */
+  USING_BUILDER_IMPLEMENTATION_ANNOTATION("usingBuilderImplementationAnnotation"),
+
   // === Integration ===
   /** Option for With interface generation. */
   GENERATE_WITH_INTERFACE("generateWithInterface"),
