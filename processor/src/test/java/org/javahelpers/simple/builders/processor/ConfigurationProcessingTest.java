@@ -224,6 +224,13 @@ class ConfigurationProcessingTest {
     ProcessorAsserts.assertNotContaining(
         generatedCode, "public MinimalDtoBuilder conditional(BooleanSupplier condition");
 
+    // With generateVarArgsHelpers=false, NO VarArgs helpers should be generated
+    ProcessorAsserts.assertNotContaining(
+        generatedCode,
+        "public MinimalDtoBuilder items(String... items)",
+        "public MinimalDtoBuilder properties(Map.Entry<String, Integer>... properties)",
+        "public MinimalDtoBuilder tags(String... tags)");
+
     // With generateWithInterface=false, NO With interface
     ProcessorAsserts.assertNotContaining(generatedCode, "public interface With");
 
@@ -253,7 +260,6 @@ class ConfigurationProcessingTest {
         "public MinimalDtoBuilder description(String format, Object... args)",
         "public MinimalDtoBuilder items(List<String> items)",
         "public MinimalDtoBuilder properties(Map<String, Integer> properties)",
-        "public MinimalDtoBuilder properties(Map.Entry<String, Integer>... properties)",
         "public MinimalDtoBuilder description(Optional<String> description)",
         "public MinimalDtoBuilder description(String description)",
         "public MinimalDtoBuilder tags(Set<String> tags)",

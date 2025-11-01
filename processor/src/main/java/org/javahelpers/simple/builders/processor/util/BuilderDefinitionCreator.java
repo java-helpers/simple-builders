@@ -270,7 +270,10 @@ public class BuilderDefinitionCreator {
   }
 
   private static void addAdditionalHelperMethodsForField(
-      FieldDto field, List<AnnotationDto> annotations, TypeName builderType) {
+      FieldDto field,
+      List<AnnotationDto> annotations,
+      TypeName builderType,
+      ProcessingContext context) {
     String fieldNameInBuilder = field.getFieldName();
     String fieldJavaDoc = field.getJavaDoc();
     // Check for String type (not array) and add format method
@@ -312,39 +315,48 @@ public class BuilderDefinitionCreator {
     List<TypeName> innerTypes = fieldTypeGeneric.getInnerTypeArguments();
     int innerTypesCnt = innerTypes.size();
     if (isList(field.getFieldType()) && innerTypesCnt == 1) {
-      String fieldName = field.getFieldNameEstimated();
-      field.addMethod(
-          createFieldSetterWithTransform(
-              fieldName,
-              fieldNameInBuilder,
-              fieldJavaDoc,
-              "List.of(%s)",
-              new TypeNameArray(innerTypes.get(0), false),
-              builderType));
+      // Only add varargs helper if enabled in configuration
+      if (context.getBuilderConfigurationForElement().shouldGenerateVarArgsHelpers()) {
+        String fieldName = field.getFieldNameEstimated();
+        field.addMethod(
+            createFieldSetterWithTransform(
+                fieldName,
+                fieldNameInBuilder,
+                fieldJavaDoc,
+                "List.of(%s)",
+                new TypeNameArray(innerTypes.get(0), false),
+                builderType));
+      }
     } else if (isSet(field.getFieldType()) && innerTypesCnt == 1) {
-      String fieldName = field.getFieldNameEstimated();
-      field.addMethod(
-          createFieldSetterWithTransform(
-              fieldName,
-              fieldNameInBuilder,
-              fieldJavaDoc,
-              "Set.of(%s)",
-              new TypeNameArray(innerTypes.get(0), true),
-              builderType));
+      // Only add varargs helper if enabled in configuration
+      if (context.getBuilderConfigurationForElement().shouldGenerateVarArgsHelpers()) {
+        String fieldName = field.getFieldNameEstimated();
+        field.addMethod(
+            createFieldSetterWithTransform(
+                fieldName,
+                fieldNameInBuilder,
+                fieldJavaDoc,
+                "Set.of(%s)",
+                new TypeNameArray(innerTypes.get(0), true),
+                builderType));
+      }
     } else if (isMap(field.getFieldType()) && innerTypesCnt == 2) {
-      TypeName mapEntryType =
-          new TypeNameArray(
-              new TypeNameGeneric("java.util", "Map.Entry", innerTypes.get(0), innerTypes.get(1)),
-              false);
-      String fieldName = field.getFieldNameEstimated();
-      field.addMethod(
-          createFieldSetterWithTransform(
-              fieldName,
-              fieldNameInBuilder,
-              fieldJavaDoc,
-              "Map.ofEntries(%s)",
-              mapEntryType,
-              builderType));
+      // Only add varargs helper if enabled in configuration
+      if (context.getBuilderConfigurationForElement().shouldGenerateVarArgsHelpers()) {
+        TypeName mapEntryType =
+            new TypeNameArray(
+                new TypeNameGeneric("java.util", "Map.Entry", innerTypes.get(0), innerTypes.get(1)),
+                false);
+        String fieldName = field.getFieldNameEstimated();
+        field.addMethod(
+            createFieldSetterWithTransform(
+                fieldName,
+                fieldNameInBuilder,
+                fieldJavaDoc,
+                "Map.ofEntries(%s)",
+                mapEntryType,
+                builderType));
+      }
     } else if (isOptional(field.getFieldType()) && innerTypesCnt == 1) {
       // Add setter that accepts the inner type T and wraps it in Optional.ofNullable()
       String fieldName = field.getFieldNameEstimated();
@@ -810,7 +822,7 @@ public class BuilderDefinitionCreator {
     // Add consumer/supplier/helper methods - use ORIGINAL field name for method names
     addConsumerMethodsForField(field, param, fieldTypeElement, builderType, context);
     addSupplierMethodsForField(field, fieldTypeElement, builderType, context);
-    addAdditionalHelperMethodsForField(field, annotations, builderType);
+    addAdditionalHelperMethodsForField(field, annotations, builderType, context);
 
     return Optional.of(field);
   }
