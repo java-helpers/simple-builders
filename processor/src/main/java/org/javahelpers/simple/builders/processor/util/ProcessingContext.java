@@ -31,6 +31,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+import org.javahelpers.simple.builders.processor.dtos.BuilderConfiguration;
 
 /**
  * Context object that wraps Elements, Types, and logging utilities from annotation processing,
@@ -42,6 +43,7 @@ public final class ProcessingContext {
   private final Elements elementUtils;
   private final Types typeUtils;
   private final ProcessingLogger logger;
+  private BuilderConfiguration configuration;
 
   /**
    * Creates a new processing context.
@@ -54,6 +56,24 @@ public final class ProcessingContext {
     this.elementUtils = elementUtils;
     this.typeUtils = typeUtils;
     this.logger = logger;
+  }
+
+  /**
+   * Get the builder configuration for the current element being processed.
+   *
+   * @return the builder configuration
+   */
+  public BuilderConfiguration getConfiguration() {
+    return configuration;
+  }
+
+  /**
+   * Set the builder configuration for the current element being processed.
+   *
+   * @param configuration the builder configuration
+   */
+  public void setConfiguration(BuilderConfiguration configuration) {
+    this.configuration = configuration;
   }
 
   /**
