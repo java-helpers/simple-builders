@@ -151,6 +151,8 @@ public class CompilerArgumentsReader {
         .builderAccess(readAccessModifier(CompilerArgumentsEnum.BUILDER_ACCESS))
         .methodAccess(readAccessModifier(CompilerArgumentsEnum.METHOD_ACCESS))
         .generateVarArgsHelpers(readOptionState(CompilerArgumentsEnum.GENERATE_VAR_ARGS_HELPERS))
+        .generateStringFormatHelpers(
+            readOptionState(CompilerArgumentsEnum.GENERATE_STRING_FORMAT_HELPERS))
         .generateUnboxedOptional(readOptionState(CompilerArgumentsEnum.GENERATE_UNBOXED_OPTIONAL))
         .usingArrayListBuilder(readOptionState(CompilerArgumentsEnum.USING_ARRAY_LIST_BUILDER))
         .usingArrayListBuilderWithElementBuilders(

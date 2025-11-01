@@ -81,6 +81,7 @@ public class BuilderConfigurationReader {
         .builderAccess(options.builderAccess())
         .methodAccess(options.methodAccess())
         .generateVarArgsHelpers(options.generateVarArgsHelpers())
+        .generateStringFormatHelpers(options.generateStringFormatHelpers())
         .generateUnboxedOptional(options.generateUnboxedOptional())
         .usingArrayListBuilder(options.usingArrayListBuilder())
         .usingArrayListBuilderWithElementBuilders(
@@ -132,6 +133,7 @@ public class BuilderConfigurationReader {
               .builderAccess(options.builderAccess())
               .methodAccess(options.methodAccess())
               .generateVarArgsHelpers(options.generateVarArgsHelpers())
+              .generateStringFormatHelpers(options.generateStringFormatHelpers())
               .generateUnboxedOptional(options.generateUnboxedOptional())
               .usingArrayListBuilder(options.usingArrayListBuilder())
               .usingArrayListBuilderWithElementBuilders(

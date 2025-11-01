@@ -46,6 +46,7 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
  * @param builderAccess Access level for builder class
  * @param methodAccess Access level for builder methods
  * @param generateVarArgsHelpers Generate varargs helper methods
+ * @param generateStringFormatHelpers Generate string format helper methods
  * @param generateUnboxedOptional Generate unboxed optional methods
  * @param usingArrayListBuilder Use ArrayListBuilder for lists
  * @param usingArrayListBuilderWithElementBuilders Use ArrayListBuilderWithElementBuilders
@@ -64,6 +65,7 @@ public record BuilderConfiguration(
     AccessModifier builderAccess,
     AccessModifier methodAccess,
     OptionState generateVarArgsHelpers,
+    OptionState generateStringFormatHelpers,
     OptionState generateUnboxedOptional,
     OptionState usingArrayListBuilder,
     OptionState usingArrayListBuilderWithElementBuilders,
@@ -83,6 +85,7 @@ public record BuilderConfiguration(
           .builderAccess(PUBLIC)
           .methodAccess(PUBLIC)
           .generateVarArgsHelpers(ENABLED)
+          .generateStringFormatHelpers(ENABLED)
           .generateUnboxedOptional(ENABLED)
           .usingArrayListBuilder(ENABLED)
           .usingArrayListBuilderWithElementBuilders(ENABLED)
@@ -117,6 +120,10 @@ public record BuilderConfiguration(
 
   public boolean shouldGenerateVarArgsHelpers() {
     return generateVarArgsHelpers == ENABLED;
+  }
+
+  public boolean shouldGenerateStringFormatHelpers() {
+    return generateStringFormatHelpers == ENABLED;
   }
 
   public boolean shouldUseArrayListBuilder() {
@@ -202,6 +209,10 @@ public record BuilderConfiguration(
             other.generateVarArgsHelpers != UNSET
                 ? other.generateVarArgsHelpers
                 : this.generateVarArgsHelpers)
+        .generateStringFormatHelpers(
+            other.generateStringFormatHelpers != UNSET
+                ? other.generateStringFormatHelpers
+                : this.generateStringFormatHelpers)
         .generateUnboxedOptional(
             other.generateUnboxedOptional != UNSET
                 ? other.generateUnboxedOptional
@@ -307,6 +318,7 @@ public record BuilderConfiguration(
 
     // === Collection Options ===
     private OptionState generateVarArgsHelpers = OptionState.UNSET;
+    private OptionState generateStringFormatHelpers = OptionState.UNSET;
     private OptionState generateUnboxedOptional = OptionState.UNSET;
     private OptionState usingArrayListBuilder = OptionState.UNSET;
     private OptionState usingArrayListBuilderWithElementBuilders = OptionState.UNSET;
@@ -379,6 +391,16 @@ public record BuilderConfiguration(
 
     public Builder generateVarArgsHelpers(boolean value) {
       this.generateVarArgsHelpers = value ? ENABLED : DISABLED;
+      return this;
+    }
+
+    public Builder generateStringFormatHelpers(OptionState value) {
+      this.generateStringFormatHelpers = value;
+      return this;
+    }
+
+    public Builder generateStringFormatHelpers(boolean value) {
+      this.generateStringFormatHelpers = value ? ENABLED : DISABLED;
       return this;
     }
 
@@ -491,6 +513,7 @@ public record BuilderConfiguration(
           builderAccess,
           methodAccess,
           generateVarArgsHelpers,
+          generateStringFormatHelpers,
           generateUnboxedOptional,
           usingArrayListBuilder,
           usingArrayListBuilderWithElementBuilders,

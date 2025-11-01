@@ -63,6 +63,9 @@ public enum CompilerArgumentsEnum {
   /** Option for varargs helper generation. */
   GENERATE_VAR_ARGS_HELPERS("generateVarArgsHelpers"),
 
+  /** Option for string format helper generation. */
+  GENERATE_STRING_FORMAT_HELPERS("generateStringFormatHelpers"),
+
   /** Option for unboxed optional generation. */
   GENERATE_UNBOXED_OPTIONAL("generateUnboxedOptional"),
 

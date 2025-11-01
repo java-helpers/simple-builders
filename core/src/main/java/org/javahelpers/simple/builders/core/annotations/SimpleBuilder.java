@@ -134,6 +134,12 @@ public @interface SimpleBuilder {
     OptionState generateVarArgsHelpers() default OptionState.UNSET;
 
     /**
+     * Generate String format helper methods for String fields. <br>
+     * Default: ENABLED Compiler option: -Asimplebuilder.generateStringFormatHelpers
+     */
+    OptionState generateStringFormatHelpers() default OptionState.UNSET;
+
+    /**
      * Generate unboxed optional methods that accept the inner type T directly instead of
      * Optional&lt;T&gt;. <br>
      * For Optional fields, this generates a setter that accepts T and wraps it with

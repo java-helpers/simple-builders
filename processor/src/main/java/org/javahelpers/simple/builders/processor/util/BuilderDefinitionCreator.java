@@ -277,7 +277,9 @@ public class BuilderDefinitionCreator {
     String fieldNameInBuilder = field.getFieldName();
     String fieldJavaDoc = field.getJavaDoc();
     // Check for String type (not array) and add format method
-    if (isString(field.getFieldType()) && !(field.getFieldType() instanceof TypeNameArray)) {
+    if (isString(field.getFieldType())
+        && !(field.getFieldType() instanceof TypeNameArray)
+        && context.getBuilderConfigurationForElement().shouldGenerateStringFormatHelpers()) {
       String fieldName = field.getFieldNameEstimated();
       field.addMethod(
           createStringFormatMethodWithTransform(
@@ -375,7 +377,8 @@ public class BuilderDefinitionCreator {
 
       // If Optional<String>, add format method
       TypeName innerType = innerTypes.get(0);
-      if (isString(innerType)) {
+      if (isString(innerType)
+          && context.getBuilderConfigurationForElement().shouldGenerateStringFormatHelpers()) {
         field.addMethod(
             createStringFormatMethodWithTransform(
                 fieldName,

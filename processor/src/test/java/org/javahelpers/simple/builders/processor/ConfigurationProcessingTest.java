@@ -176,6 +176,7 @@ class ConfigurationProcessingTest {
                 "-Asimplebuilder.generateBuilderProvider=false",
                 "-Asimplebuilder.generateConditionalHelper=false",
                 "-Asimplebuilder.generateVarArgsHelpers=false",
+                "-Asimplebuilder.generateStringFormatHelpers=false",
                 "-Asimplebuilder.generateUnboxedOptional=false",
                 "-Asimplebuilder.usingArrayListBuilder=false",
                 "-Asimplebuilder.usingArrayListBuilderWithElementBuilders=false",
@@ -241,6 +242,12 @@ class ConfigurationProcessingTest {
     ProcessorAsserts.assertNotContaining(
         generatedCode, "public MinimalDtoBuilder description(String description)");
 
+    // With generateStringFormatHelpers=false, NO String format methods should be generated
+    ProcessorAsserts.assertNotContaining(
+        generatedCode,
+        "public MinimalDtoBuilder name(String format, Object... args)",
+        "public MinimalDtoBuilder description(String format, Object... args)");
+
     // With usingGeneratedAnnotation=false, NO @Generated annotation should be used
     ProcessorAsserts.assertNotContaining(generatedCode, "@Generated(");
 
@@ -266,14 +273,12 @@ class ConfigurationProcessingTest {
         generatedCode,
         "public MinimalDtoBuilder properties(Consumer<HashMapBuilder<String, Integer>> propertiesBuilderConsumer)");
 
-    // Still generates: basic setters, String.format for String fields
+    // Still generates: basic setters
     ProcessorAsserts.assertContaining(
         generatedCode,
         "class MinimalDtoBuilder implements IBuilderBase<MinimalDto>",
         "public MinimalDtoBuilder(MinimalDto instance)",
         "public MinimalDtoBuilder name(String name)",
-        "public MinimalDtoBuilder name(String format, Object... args)",
-        "public MinimalDtoBuilder description(String format, Object... args)",
         "public MinimalDtoBuilder items(List<String> items)",
         "public MinimalDtoBuilder properties(Map<String, Integer> properties)",
         "public MinimalDtoBuilder description(Optional<String> description)",
