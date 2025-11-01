@@ -142,6 +142,10 @@ public class BuilderProcessor extends AbstractProcessor {
   }
 
   private void process(Element annotatedElement) throws BuilderException {
+    // Initialize configuration for this element (merges DEFAULT -> compiler args -> template ->
+    // options)
+    context.initConfiguration(annotatedElement);
+
     BuilderDefinitionDto builderDef = extractFromElement(annotatedElement, context);
     codeGenerator.generateBuilder(builderDef);
   }

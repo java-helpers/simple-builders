@@ -142,6 +142,79 @@ public record BuilderConfiguration(
     return methodAccess;
   }
 
+  /**
+   * Merges this configuration with another configuration.
+   *
+   * <p>The other configuration takes priority: if a field in the other configuration is not
+   * UNSET/DEFAULT, it will override the value from this configuration. If the other configuration
+   * is null, this configuration is returned unchanged.
+   *
+   * @param other the configuration to merge with this one (can be null)
+   * @return a new BuilderConfiguration with merged values
+   */
+  public BuilderConfiguration merge(BuilderConfiguration other) {
+    if (other == null) {
+      return this;
+    }
+
+    return BuilderConfiguration.builder()
+        .generateSupplier(
+            other.generateFieldSupplier != UNSET
+                ? other.generateFieldSupplier
+                : this.generateFieldSupplier)
+        .generateProvider(
+            other.generateFieldProvider != UNSET
+                ? other.generateFieldProvider
+                : this.generateFieldProvider)
+        .generateBuilderProvider(
+            other.generateBuilderProvider != UNSET
+                ? other.generateBuilderProvider
+                : this.generateBuilderProvider)
+        .generateConditionalLogic(
+            other.generateConditionalHelper != UNSET
+                ? other.generateConditionalHelper
+                : this.generateConditionalHelper)
+        .builderAccess(
+            other.builderAccess != AccessModifier.DEFAULT
+                ? other.builderAccess
+                : this.builderAccess)
+        .methodAccess(
+            other.methodAccess != AccessModifier.DEFAULT ? other.methodAccess : this.methodAccess)
+        .generateVarArgsHelpers(
+            other.generateVarArgsHelpers != UNSET
+                ? other.generateVarArgsHelpers
+                : this.generateVarArgsHelpers)
+        .usingArrayListBuilder(
+            other.usingArrayListBuilder != UNSET
+                ? other.usingArrayListBuilder
+                : this.usingArrayListBuilder)
+        .usingArrayListBuilderWithElementBuilders(
+            other.usingArrayListBuilderWithElementBuilders != UNSET
+                ? other.usingArrayListBuilderWithElementBuilders
+                : this.usingArrayListBuilderWithElementBuilders)
+        .usingHashSetBuilder(
+            other.usingHashSetBuilder != UNSET
+                ? other.usingHashSetBuilder
+                : this.usingHashSetBuilder)
+        .usingHashSetBuilderWithElementBuilders(
+            other.usingHashSetBuilderWithElementBuilders != UNSET
+                ? other.usingHashSetBuilderWithElementBuilders
+                : this.usingHashSetBuilderWithElementBuilders)
+        .usingHashMapBuilder(
+            other.usingHashMapBuilder != UNSET
+                ? other.usingHashMapBuilder
+                : this.usingHashMapBuilder)
+        .generateWithInterface(
+            other.generateWithInterface != UNSET
+                ? other.generateWithInterface
+                : this.generateWithInterface)
+        .hasAnnotationOverride(
+            other.hasAnnotationOverride != UNSET
+                ? other.hasAnnotationOverride
+                : this.hasAnnotationOverride)
+        .build();
+  }
+
   @Override
   public String toString() {
     ToStringBuilder builder = new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE);

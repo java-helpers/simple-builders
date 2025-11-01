@@ -43,9 +43,8 @@ public final class ProcessingContext {
   private final Elements elementUtils;
   private final Types typeUtils;
   private final ProcessingLogger logger;
-  private final BuilderConfiguration globalConfiguration;
   private final BuilderConfigurationReader configurationReader;
-  private BuilderConfiguration configuration;
+  private BuilderConfiguration builderConfigurationForElement;
 
   /**
    * Creates a new processing context.
@@ -63,27 +62,12 @@ public final class ProcessingContext {
     this.elementUtils = elementUtils;
     this.typeUtils = typeUtils;
     this.logger = logger;
-    this.globalConfiguration = globalConfiguration;
-    this.configurationReader = new BuilderConfigurationReader();
+    this.configurationReader = new BuilderConfigurationReader(globalConfiguration);
   }
 
-  /**
-   * Get the global builder configuration read from compiler arguments. This configuration applies
-   * to all builders unless overridden by annotation.
-   *
-   * @return the global builder configuration
-   */
-  public BuilderConfiguration getGlobalConfiguration() {
-    return globalConfiguration;
-  }
-
-  /**
-   * Get the configuration reader for reading configuration from annotations.
-   *
-   * @return the builder configuration reader
-   */
-  public BuilderConfigurationReader getConfigurationReader() {
-    return configurationReader;
+  public void initConfiguration(Element element) {
+    this.builderConfigurationForElement = configurationReader.resolveConfiguration(element);
+    logger.debug("Resolved builder configuration for element: {}", builderConfigurationForElement);
   }
 
   /**
@@ -91,8 +75,8 @@ public final class ProcessingContext {
    *
    * @return the builder configuration
    */
-  public BuilderConfiguration getConfiguration() {
-    return configuration;
+  public BuilderConfiguration getBuilderConfigurationForElement() {
+    return builderConfigurationForElement;
   }
 
   /**
@@ -100,8 +84,8 @@ public final class ProcessingContext {
    *
    * @param configuration the builder configuration
    */
-  public void setConfiguration(BuilderConfiguration configuration) {
-    this.configuration = configuration;
+  public void setBuilderConfigurationForElement(BuilderConfiguration configuration) {
+    this.builderConfigurationForElement = configuration;
   }
 
   /**
