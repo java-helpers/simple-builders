@@ -24,8 +24,6 @@
 
 package org.javahelpers.simple.builders.processor.util;
 
-import static org.javahelpers.simple.builders.core.enums.OptionState.ENABLED;
-
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
@@ -90,7 +88,6 @@ public class BuilderConfigurationReader {
         .usingHashSetBuilderWithElementBuilders(options.usingHashSetBuilderWithElementBuilders())
         .usingHashMapBuilder(options.usingHashMapBuilder())
         .generateWithInterface(options.generateWithInterface())
-        .hasAnnotationOverride(ENABLED)
         .build();
   }
 
@@ -140,7 +137,6 @@ public class BuilderConfigurationReader {
                   options.usingHashSetBuilderWithElementBuilders())
               .usingHashMapBuilder(options.usingHashMapBuilder())
               .generateWithInterface(options.generateWithInterface())
-              .hasAnnotationOverride(ENABLED)
               .build();
         }
       } catch (ClassNotFoundException e) {

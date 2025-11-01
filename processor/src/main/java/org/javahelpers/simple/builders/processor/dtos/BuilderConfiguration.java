@@ -52,7 +52,6 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
  * @param usingHashSetBuilderWithElementBuilders Use HashSetBuilderWithElementBuilders
  * @param usingHashMapBuilder Use HashMapBuilder for maps
  * @param generateWithInterface Generate With interface
- * @param hasAnnotationOverride Whether annotation was used (vs just compiler options)
  */
 public record BuilderConfiguration(
     OptionState generateFieldSupplier,
@@ -67,8 +66,7 @@ public record BuilderConfiguration(
     OptionState usingHashSetBuilder,
     OptionState usingHashSetBuilderWithElementBuilders,
     OptionState usingHashMapBuilder,
-    OptionState generateWithInterface,
-    OptionState hasAnnotationOverride) {
+    OptionState generateWithInterface) {
 
   public static final BuilderConfiguration DEFAULT =
       builder()
@@ -85,7 +83,6 @@ public record BuilderConfiguration(
           .usingHashSetBuilderWithElementBuilders(ENABLED)
           .usingHashMapBuilder(ENABLED)
           .generateWithInterface(ENABLED)
-          .hasAnnotationOverride(ENABLED)
           .build();
 
   // === Convenience accessors with 'is' prefix for boolean properties ===
@@ -208,10 +205,6 @@ public record BuilderConfiguration(
             other.generateWithInterface != UNSET
                 ? other.generateWithInterface
                 : this.generateWithInterface)
-        .hasAnnotationOverride(
-            other.hasAnnotationOverride != UNSET
-                ? other.hasAnnotationOverride
-                : this.hasAnnotationOverride)
         .build();
   }
 
@@ -260,9 +253,6 @@ public record BuilderConfiguration(
     if (generateWithInterface != UNSET) {
       builder.append("generateWithInterface", generateWithInterface);
     }
-    if (hasAnnotationOverride != UNSET) {
-      builder.append("hasAnnotationOverride", hasAnnotationOverride);
-    }
 
     return builder.toString();
   }
@@ -292,9 +282,6 @@ public record BuilderConfiguration(
 
     // === Integration ===
     private OptionState generateWithInterface = OptionState.UNSET;
-
-    // === Source Information ===
-    private OptionState hasAnnotationOverride = OptionState.UNSET;
 
     // === Setters ===
     public Builder generateSupplier(OptionState value) {
@@ -427,16 +414,6 @@ public record BuilderConfiguration(
       return this;
     }
 
-    public Builder hasAnnotationOverride(OptionState value) {
-      this.hasAnnotationOverride = value;
-      return this;
-    }
-
-    public Builder hasAnnotationOverride(boolean value) {
-      this.hasAnnotationOverride = value ? ENABLED : DISABLED;
-      return this;
-    }
-
     public BuilderConfiguration build() {
       return new BuilderConfiguration(
           generateFieldSupplier,
@@ -451,8 +428,7 @@ public record BuilderConfiguration(
           usingHashSetBuilder,
           usingHashSetBuilderWithElementBuilders,
           usingHashMapBuilder,
-          generateWithInterface,
-          hasAnnotationOverride);
+          generateWithInterface);
     }
   }
 

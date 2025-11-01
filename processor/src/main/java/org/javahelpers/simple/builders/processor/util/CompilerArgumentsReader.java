@@ -137,9 +137,7 @@ public class CompilerArgumentsReader {
    *   <li>etc.
    * </ul>
    *
-   * <p>All values default to UNSET or DEFAULT if not specified in compiler arguments. The {@code
-   * hasAnnotationOverride} field is set to DISABLED since compiler arguments don't count as
-   * annotation overrides.
+   * <p>All values default to UNSET or DEFAULT if not specified in compiler arguments.
    *
    * @return a BuilderConfiguration with values read from compiler arguments
    */
@@ -161,8 +159,6 @@ public class CompilerArgumentsReader {
             readOptionState(CompilerArgumentsEnum.USING_HASH_SET_BUILDER_WITH_ELEMENT_BUILDERS))
         .usingHashMapBuilder(readOptionState(CompilerArgumentsEnum.USING_HASH_MAP_BUILDER))
         .generateWithInterface(readOptionState(CompilerArgumentsEnum.GENERATE_WITH_INTERFACE))
-        .hasAnnotationOverride(
-            OptionState.DISABLED) // Compiler arguments don't count as annotation override
         .build();
   }
 }
