@@ -27,17 +27,18 @@ package org.javahelpers.simple.builders.processor;
 import static org.javahelpers.simple.builders.processor.util.BuilderDefinitionCreator.extractFromElement;
 
 import com.google.auto.service.AutoService;
+import java.util.HashSet;
 import java.util.Set;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
-import javax.annotation.processing.SupportedOptions;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import org.javahelpers.simple.builders.processor.dtos.BuilderDefinitionDto;
+import org.javahelpers.simple.builders.processor.enums.CompilerArgumentsEnum;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 import org.javahelpers.simple.builders.processor.util.JavaCodeGenerator;
 import org.javahelpers.simple.builders.processor.util.ProcessingContext;
@@ -50,7 +51,6 @@ import org.javahelpers.simple.builders.processor.util.ProcessingLogger;
  */
 @AutoService(Processor.class)
 @SupportedAnnotationTypes("org.javahelpers.simple.builders.core.annotations.SimpleBuilder")
-@SupportedOptions("verbose")
 public class BuilderProcessor extends AbstractProcessor {
   private ProcessingContext context;
   private JavaCodeGenerator codeGenerator;
@@ -115,6 +115,16 @@ public class BuilderProcessor extends AbstractProcessor {
       }
     }
     return true;
+  }
+
+  @Override
+  public Set<String> getSupportedOptions() {
+    Set<String> options = new HashSet<>();
+    for (CompilerArgumentsEnum arg : CompilerArgumentsEnum.values()) {
+      options.add(arg.getOptionName()); // e.g., "verbose"
+      options.add(arg.getCompilerArgument()); // e.g., "simplebuilder.verbose"
+    }
+    return options;
   }
 
   @Override
