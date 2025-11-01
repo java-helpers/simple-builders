@@ -569,7 +569,7 @@ public class BuilderDefinitionCreator {
       TypeName builderType,
       ProcessingContext context) {
     // Check if supplier generation is enabled in configuration
-    if (!context.getBuilderConfigurationForElement().isGenerateSupplier()) {
+    if (!context.getBuilderConfigurationForElement().shouldGenerateFieldSupplier()) {
       return;
     }
     // Skip supplier generation for functional interfaces

@@ -86,47 +86,47 @@ public record BuilderConfiguration(
           .build();
 
   // === Convenience accessors with 'is' prefix for boolean properties ===
-  public boolean isGenerateSupplier() {
+  public boolean shouldGenerateFieldSupplier() {
     return generateFieldSupplier == ENABLED;
   }
 
-  public boolean isGenerateProvider() {
+  public boolean shouldGenerateFieldProvider() {
     return generateFieldProvider == ENABLED;
   }
 
-  public boolean isGenerateBuilderProvider() {
+  public boolean shouldGenerateBuilderProvider() {
     return generateBuilderProvider == ENABLED;
   }
 
-  public boolean isGenerateConditionalLogic() {
+  public boolean shouldGenerateConditionalLogic() {
     return generateConditionalHelper == ENABLED;
   }
 
-  public boolean isGenerateWithInterface() {
+  public boolean shouldGenerateWithInterface() {
     return generateWithInterface == ENABLED;
   }
 
-  public boolean isGenerateVarArgsHelpers() {
+  public boolean shouldGenerateVarArgsHelpers() {
     return generateVarArgsHelpers == ENABLED;
   }
 
-  public boolean isUsingArrayListBuilder() {
+  public boolean shouldUseArrayListBuilder() {
     return usingArrayListBuilder == ENABLED;
   }
 
-  public boolean isUsingArrayListBuilderWithElementBuilders() {
+  public boolean shouldUseArrayListBuilderWithElementBuilders() {
     return usingArrayListBuilderWithElementBuilders == ENABLED;
   }
 
-  public boolean isUsingHashSetBuilder() {
+  public boolean shouldUseHashSetBuilder() {
     return usingHashSetBuilder == ENABLED;
   }
 
-  public boolean isUsingHashSetBuilderWithElementBuilders() {
+  public boolean shouldUseHashSetBuilderWithElementBuilders() {
     return usingHashSetBuilderWithElementBuilders == ENABLED;
   }
 
-  public boolean isUsingHashMapBuilder() {
+  public boolean shouldUseHashMapBuilder() {
     return usingHashMapBuilder == ENABLED;
   }
 
