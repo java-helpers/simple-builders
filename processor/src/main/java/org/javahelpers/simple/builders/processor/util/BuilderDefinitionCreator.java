@@ -358,16 +358,20 @@ public class BuilderDefinitionCreator {
                 builderType));
       }
     } else if (isOptional(field.getFieldType()) && innerTypesCnt == 1) {
-      // Add setter that accepts the inner type T and wraps it in Optional.ofNullable()
       String fieldName = field.getFieldNameEstimated();
-      field.addMethod(
-          createFieldSetterWithTransform(
-              fieldName,
-              fieldNameInBuilder,
-              fieldJavaDoc,
-              "Optional.ofNullable(%s)",
-              innerTypes.get(0),
-              builderType));
+
+      // Only generate unboxed optional method if enabled in configuration
+      if (context.getBuilderConfigurationForElement().shouldGenerateUnboxedOptional()) {
+        // Add setter that accepts the inner type T and wraps it in Optional.ofNullable()
+        field.addMethod(
+            createFieldSetterWithTransform(
+                fieldName,
+                fieldNameInBuilder,
+                fieldJavaDoc,
+                "Optional.ofNullable(%s)",
+                innerTypes.get(0),
+                builderType));
+      }
 
       // If Optional<String>, add format method
       TypeName innerType = innerTypes.get(0);

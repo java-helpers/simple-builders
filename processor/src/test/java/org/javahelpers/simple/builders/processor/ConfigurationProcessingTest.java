@@ -176,6 +176,7 @@ class ConfigurationProcessingTest {
                 "-Asimplebuilder.generateBuilderProvider=false",
                 "-Asimplebuilder.generateConditionalHelper=false",
                 "-Asimplebuilder.generateVarArgsHelpers=false",
+                "-Asimplebuilder.generateUnboxedOptional=false",
                 "-Asimplebuilder.usingArrayListBuilder=false",
                 "-Asimplebuilder.usingArrayListBuilderWithElementBuilders=false",
                 "-Asimplebuilder.usingHashSetBuilder=false",
@@ -234,6 +235,10 @@ class ConfigurationProcessingTest {
     // With generateWithInterface=false, NO With interface
     ProcessorAsserts.assertNotContaining(generatedCode, "public interface With");
 
+    // With generateUnboxedOptional=false, NO unboxed optional methods should be generated
+    ProcessorAsserts.assertNotContaining(
+        generatedCode, "public MinimalDtoBuilder description(String description)");
+
     // With usingArrayListBuilder=false AND generateBuilderProvider=false, NO ArrayListBuilder
     // should be used
     ProcessorAsserts.assertNotContaining(
@@ -265,7 +270,6 @@ class ConfigurationProcessingTest {
         "public MinimalDtoBuilder items(List<String> items)",
         "public MinimalDtoBuilder properties(Map<String, Integer> properties)",
         "public MinimalDtoBuilder description(Optional<String> description)",
-        "public MinimalDtoBuilder description(String description)",
         "public MinimalDtoBuilder tags(Set<String> tags)",
         "public MinimalDtoBuilder nested(NestedDto nested)",
         "public MinimalDtoBuilder address(Address address)",

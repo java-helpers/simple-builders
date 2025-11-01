@@ -63,6 +63,9 @@ public enum CompilerArgumentsEnum {
   /** Option for varargs helper generation. */
   GENERATE_VAR_ARGS_HELPERS("generateVarArgsHelpers"),
 
+  /** Option for unboxed optional generation. */
+  GENERATE_UNBOXED_OPTIONAL("generateUnboxedOptional"),
+
   /** Option for ArrayList builder usage. */
   USING_ARRAY_LIST_BUILDER("usingArrayListBuilder"),
 

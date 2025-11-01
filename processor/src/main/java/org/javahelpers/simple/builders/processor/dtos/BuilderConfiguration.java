@@ -46,6 +46,7 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
  * @param builderAccess Access level for builder class
  * @param methodAccess Access level for builder methods
  * @param generateVarArgsHelpers Generate varargs helper methods
+ * @param generateUnboxedOptional Generate unboxed optional methods
  * @param usingArrayListBuilder Use ArrayListBuilder for lists
  * @param usingArrayListBuilderWithElementBuilders Use ArrayListBuilderWithElementBuilders
  * @param usingHashSetBuilder Use HashSetBuilder for sets
@@ -61,6 +62,7 @@ public record BuilderConfiguration(
     AccessModifier builderAccess,
     AccessModifier methodAccess,
     OptionState generateVarArgsHelpers,
+    OptionState generateUnboxedOptional,
     OptionState usingArrayListBuilder,
     OptionState usingArrayListBuilderWithElementBuilders,
     OptionState usingHashSetBuilder,
@@ -77,6 +79,7 @@ public record BuilderConfiguration(
           .builderAccess(PUBLIC)
           .methodAccess(PUBLIC)
           .generateVarArgsHelpers(ENABLED)
+          .generateUnboxedOptional(ENABLED)
           .usingArrayListBuilder(ENABLED)
           .usingArrayListBuilderWithElementBuilders(ENABLED)
           .usingHashSetBuilder(ENABLED)
@@ -130,6 +133,10 @@ public record BuilderConfiguration(
     return usingHashMapBuilder == ENABLED;
   }
 
+  public boolean shouldGenerateUnboxedOptional() {
+    return generateUnboxedOptional == ENABLED;
+  }
+
   // === String accessors ===
   public AccessModifier getBuilderAccess() {
     return builderAccess;
@@ -181,6 +188,10 @@ public record BuilderConfiguration(
             other.generateVarArgsHelpers != UNSET
                 ? other.generateVarArgsHelpers
                 : this.generateVarArgsHelpers)
+        .generateUnboxedOptional(
+            other.generateUnboxedOptional != UNSET
+                ? other.generateUnboxedOptional
+                : this.generateUnboxedOptional)
         .usingArrayListBuilder(
             other.usingArrayListBuilder != UNSET
                 ? other.usingArrayListBuilder
@@ -274,6 +285,7 @@ public record BuilderConfiguration(
 
     // === Collection Options ===
     private OptionState generateVarArgsHelpers = OptionState.UNSET;
+    private OptionState generateUnboxedOptional = OptionState.UNSET;
     private OptionState usingArrayListBuilder = OptionState.UNSET;
     private OptionState usingArrayListBuilderWithElementBuilders = OptionState.UNSET;
     private OptionState usingHashSetBuilder = OptionState.UNSET;
@@ -341,6 +353,16 @@ public record BuilderConfiguration(
 
     public Builder generateVarArgsHelpers(boolean value) {
       this.generateVarArgsHelpers = value ? ENABLED : DISABLED;
+      return this;
+    }
+
+    public Builder generateUnboxedOptional(OptionState value) {
+      this.generateUnboxedOptional = value;
+      return this;
+    }
+
+    public Builder generateUnboxedOptional(boolean value) {
+      this.generateUnboxedOptional = value ? ENABLED : DISABLED;
       return this;
     }
 
@@ -423,6 +445,7 @@ public record BuilderConfiguration(
           builderAccess,
           methodAccess,
           generateVarArgsHelpers,
+          generateUnboxedOptional,
           usingArrayListBuilder,
           usingArrayListBuilderWithElementBuilders,
           usingHashSetBuilder,

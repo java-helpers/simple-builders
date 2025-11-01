@@ -134,6 +134,15 @@ public @interface SimpleBuilder {
     OptionState generateVarArgsHelpers() default OptionState.UNSET;
 
     /**
+     * Generate unboxed optional methods that accept the inner type T directly instead of
+     * Optional&lt;T&gt;. <br>
+     * For Optional fields, this generates a setter that accepts T and wraps it with
+     * Optional.ofNullable(). <br>
+     * Default: ENABLED Compiler option: -Asimplebuilder.generateUnboxedOptional
+     */
+    OptionState generateUnboxedOptional() default OptionState.UNSET;
+
+    /**
      * Generate helper methods with a ArrayListBuilder supplier for lists instead of simple
      * supplier, which would not allow to use in a chanined way: <br>
      * Example with ArrayListBuilder: <br>
