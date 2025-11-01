@@ -82,13 +82,13 @@ public @interface SimpleBuilder {
     OptionState generateFieldSupplier() default OptionState.UNSET;
 
     /**
-     * Generate a provider method with parameter-type {@code Provider<T>} with T being the type of
+     * Generate a consumer method with parameter-type {@code Consumer<T>} with T being the type of
      * the field. <br>
      * This is only done for complex field types, so that users could use setter to change the
      * properties of that parameter. Default: ENABLED Compiler option:
-     * -Asimplebuilder.generateFieldProvider
+     * -Asimplebuilder.generateFieldConsumer
      */
-    OptionState generateFieldProvider() default OptionState.UNSET;
+    OptionState generateFieldConsumer() default OptionState.UNSET;
 
     /**
      * Generate a builder provider method with parameter-type {@code Provider<Builder<T>>} with T

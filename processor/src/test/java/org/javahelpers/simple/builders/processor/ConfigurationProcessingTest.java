@@ -55,7 +55,7 @@ class ConfigurationProcessingTest {
         BuilderConfiguration.builder()
             // Field setter generation options
             .generateSupplier(OptionState.ENABLED)
-            .generateProvider(OptionState.ENABLED)
+            .generateConsumer(OptionState.ENABLED)
             .generateBuilderProvider(OptionState.ENABLED)
             // Conditional logic
             .generateConditionalLogic(OptionState.ENABLED)
@@ -76,7 +76,7 @@ class ConfigurationProcessingTest {
     // Verify all options are accessible (this will fail to compile if accessors are missing)
     assertNotNull(config);
     assertEquals(OptionState.ENABLED, config.generateFieldSupplier());
-    assertEquals(OptionState.ENABLED, config.generateFieldProvider());
+    assertEquals(OptionState.ENABLED, config.generateFieldConsumer());
     assertEquals(OptionState.ENABLED, config.generateBuilderProvider());
     assertEquals(OptionState.ENABLED, config.generateConditionalHelper());
     assertEquals(AccessModifier.PACKAGE_PRIVATE, config.getBuilderAccess());
@@ -100,7 +100,8 @@ class ConfigurationProcessingTest {
    */
   @Test
   void compilerArguments_AllDisabled_ShouldGenerateMinimalBuilder() {
-    // Given: DTO with various property types including nested DTO with builder
+    // Given: DTO with various property types including nested DTO with builder and Address without
+    // builder
     JavaFileObject nestedDto =
         ProcessorTestUtils.simpleBuilderClass(
             "test",
@@ -109,6 +110,25 @@ class ConfigurationProcessingTest {
             private String value;
             public String getValue() { return value; }
             public void setValue(String value) { this.value = value; }
+            """);
+
+    JavaFileObject addressDto =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+
+            public class Address {
+              private String street;
+              private String city;
+
+              public Address() {}
+
+              public String getStreet() { return street; }
+              public void setStreet(String street) { this.street = street; }
+
+              public String getCity() { return city; }
+              public void setCity(String city) { this.city = city; }
+            }
             """);
 
     JavaFileObject source =
@@ -122,6 +142,7 @@ class ConfigurationProcessingTest {
             private java.util.Optional<String> description;
             private java.util.Set<String> tags;
             private NestedDto nested;
+            private Address address;
 
             public String getName() { return name; }
             public void setName(String name) { this.name = name; }
@@ -140,6 +161,9 @@ class ConfigurationProcessingTest {
 
             public NestedDto getNested() { return nested; }
             public void setNested(NestedDto nested) { this.nested = nested; }
+
+            public Address getAddress() { return address; }
+            public void setAddress(Address address) { this.address = address; }
             """);
 
     // When: Compile with ALL compiler arguments disabled
@@ -148,7 +172,7 @@ class ConfigurationProcessingTest {
             .withProcessors(new BuilderProcessor())
             .withOptions(
                 "-Asimplebuilder.generateFieldSupplier=false",
-                "-Asimplebuilder.generateFieldProvider=false",
+                "-Asimplebuilder.generateFieldConsumer=false",
                 "-Asimplebuilder.generateBuilderProvider=false",
                 "-Asimplebuilder.generateConditionalHelper=false",
                 "-Asimplebuilder.generateVarArgsHelpers=false",
@@ -158,7 +182,7 @@ class ConfigurationProcessingTest {
                 "-Asimplebuilder.usingHashSetBuilderWithElementBuilders=false",
                 "-Asimplebuilder.usingHashMapBuilder=false",
                 "-Asimplebuilder.generateWithInterface=false")
-            .compile(nestedDto, source);
+            .compile(nestedDto, addressDto, source);
 
     // Then: Compilation should succeed
     assertThat(compilation).succeeded();
@@ -174,32 +198,64 @@ class ConfigurationProcessingTest {
         "public MinimalDtoBuilder properties(Supplier<Map<String, Integer>> propertiesSupplier)",
         "public MinimalDtoBuilder description(Supplier<Optional<String>> descriptionSupplier)",
         "public MinimalDtoBuilder tags(Supplier<Set<String>> tagsSupplier)",
-        "public MinimalDtoBuilder nested(Supplier<NestedDto> nestedSupplier)");
+        "public MinimalDtoBuilder nested(Supplier<NestedDto> nestedSupplier)",
+        "public MinimalDtoBuilder address(Supplier<Address> addressSupplier)");
 
-    // Still generates: basic setters, StringBuilder consumer, String.format for String fields
+    // With generateFieldConsumer=false, NO field consumer methods should be generated
+    // Field consumer = Consumer<T> where T is a custom type with empty constructor
+    ProcessorAsserts.assertNotContaining(
+        generatedCode,
+        "public MinimalDtoBuilder address(Consumer<Address> addressConsumer)",
+        "public MinimalDtoBuilder address(Consumer<Address> addressConsumer)",
+        "public MinimalDtoBuilder nested(Consumer<NestedDto> nestedConsumer)",
+        "public MinimalDtoBuilder items(Consumer<List<String>> itemsConsumer)",
+        "public MinimalDtoBuilder tags(Consumer<Set<String>> tagsConsumer)",
+        "public MinimalDtoBuilder properties(Consumer<Map<String, Integer>> propertiesConsumer)");
+
+    // With generateBuilderProvider=false, NO builder consumer methods should be generated
+    // Builder consumers include: StringBuilder, collection builders, nested DTO builders
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        "public MinimalDtoBuilder nested(Consumer<NestedDtoBuilder> nestedBuilderConsumer)");
+
+    // With generateConditionalHelper=false, NO conditional methods
+    ProcessorAsserts.assertContaining(
+        generatedCode, "public MinimalDtoBuilder conditional(BooleanSupplier condition");
+
+    // With generateWithInterface=false, NO With interface
+    ProcessorAsserts.assertContaining(generatedCode, "public interface With");
+
+    // With usingArrayListBuilder=false, NO ArrayListBuilder should be used
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        "public MinimalDtoBuilder items(Consumer<ArrayListBuilder<String>> itemsBuilderConsumer)");
+
+    // With usingHashSetBuilder=false, NO HashSetBuilder should be used
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        "public MinimalDtoBuilder tags(Consumer<HashSetBuilder<String>> tagsBuilderConsumer)");
+
+    // With usingHashMapBuilder=false, NO HashMapBuilder should be used
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        "public MinimalDtoBuilder properties(Consumer<HashMapBuilder<String, Integer>> propertiesBuilderConsumer)");
+
+    // Still generates: basic setters, String.format for String fields, varargs
     ProcessorAsserts.assertContaining(
         generatedCode,
         "public MinimalDtoBuilder name(String name)",
         "public MinimalDtoBuilder name(String format, Object... args)",
+        "public MinimalDtoBuilder description(String format, Object... args)",
         "public MinimalDtoBuilder name(Consumer<StringBuilder> nameStringBuilderConsumer)",
+        "public MinimalDtoBuilder description(Consumer<StringBuilder> descriptionStringBuilderConsumer)",
         "public MinimalDtoBuilder items(List<String> items)",
-        "public MinimalDtoBuilder items(String... items)",
         "public MinimalDtoBuilder properties(Map<String, Integer> properties)",
+        "public MinimalDtoBuilder properties(Map.Entry<String, Integer>... properties)",
         "public MinimalDtoBuilder description(Optional<String> description)",
         "public MinimalDtoBuilder description(String description)",
         "public MinimalDtoBuilder tags(Set<String> tags)",
-        "public MinimalDtoBuilder tags(String... tags)",
         "public MinimalDtoBuilder nested(NestedDto nested)",
-        // Builder consumer methods for collections and nested builders
-        "public MinimalDtoBuilder items(Consumer<ArrayListBuilder<String>> itemsBuilderConsumer)",
-        "public MinimalDtoBuilder tags(Consumer<HashSetBuilder<String>> tagsBuilderConsumer)",
-        "public MinimalDtoBuilder properties(Consumer<HashMapBuilder<String, Integer>> propertiesBuilderConsumer)",
-        "public MinimalDtoBuilder nested(Consumer<NestedDtoBuilder> nestedBuilderConsumer)",
-        // Conditional methods
-        "public MinimalDtoBuilder conditional(BooleanSupplier condition, Consumer<MinimalDtoBuilder> trueCase, Consumer<MinimalDtoBuilder> falseCase)",
-        // With interface
-        "public interface With",
-        "default MinimalDto with(Consumer<MinimalDtoBuilder> b)");
+        "public MinimalDtoBuilder address(Address address)");
   }
 
   /**
@@ -213,7 +269,7 @@ class ConfigurationProcessingTest {
     BuilderConfiguration base =
         BuilderConfiguration.builder()
             .generateSupplier(OptionState.ENABLED)
-            .generateProvider(OptionState.ENABLED)
+            .generateConsumer(OptionState.ENABLED)
             .builderAccess(AccessModifier.PUBLIC)
             .build();
 
@@ -222,7 +278,7 @@ class ConfigurationProcessingTest {
         BuilderConfiguration.builder()
             .generateSupplier(OptionState.DISABLED) // Override
             .generateBuilderProvider(OptionState.DISABLED) // New value
-            // generateProvider not set, should keep base value
+            // generateConsumer not set, should keep base value
             .build();
 
     BuilderConfiguration merged = base.merge(override);
@@ -234,7 +290,7 @@ class ConfigurationProcessingTest {
         "Override should win for generateFieldSupplier");
     assertEquals(
         OptionState.ENABLED,
-        merged.generateFieldProvider(),
+        merged.generateFieldConsumer(),
         "Base value should be kept when override is UNSET");
     assertEquals(
         OptionState.DISABLED, merged.generateBuilderProvider(), "Override should set new value");
@@ -254,7 +310,7 @@ class ConfigurationProcessingTest {
     BuilderConfiguration config =
         BuilderConfiguration.builder()
             .generateSupplier(OptionState.DISABLED)
-            .generateProvider(OptionState.ENABLED)
+            .generateConsumer(OptionState.ENABLED)
             .builderAccess(AccessModifier.PRIVATE)
             .methodAccess(AccessModifier.PROTECTED)
             .build();
@@ -308,7 +364,7 @@ class ConfigurationProcessingTest {
 
     // Layer 4: Direct options (highest priority)
     BuilderConfiguration options =
-        BuilderConfiguration.builder().generateProvider(OptionState.DISABLED).build();
+        BuilderConfiguration.builder().generateConsumer(OptionState.DISABLED).build();
 
     // Apply chain: defaults -> compiler -> template -> options
     BuilderConfiguration finalConfig = defaults.merge(compilerArgs).merge(template).merge(options);
@@ -320,7 +376,7 @@ class ConfigurationProcessingTest {
         "Template should override compiler args");
     assertEquals(
         OptionState.DISABLED,
-        finalConfig.generateFieldProvider(),
+        finalConfig.generateFieldConsumer(),
         "Options should override all others");
     assertEquals(
         AccessModifier.PROTECTED,

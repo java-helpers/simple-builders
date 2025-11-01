@@ -144,7 +144,7 @@ public class CompilerArgumentsReader {
   public BuilderConfiguration readBuilderConfiguration() {
     return BuilderConfiguration.builder()
         .generateSupplier(readOptionState(CompilerArgumentsEnum.GENERATE_FIELD_SUPPLIER))
-        .generateProvider(readOptionState(CompilerArgumentsEnum.GENERATE_FIELD_PROVIDER))
+        .generateConsumer(readOptionState(CompilerArgumentsEnum.GENERATE_FIELD_CONSUMER))
         .generateBuilderProvider(readOptionState(CompilerArgumentsEnum.GENERATE_BUILDER_PROVIDER))
         .generateConditionalLogic(
             readOptionState(CompilerArgumentsEnum.GENERATE_CONDITIONAL_HELPER))

@@ -42,8 +42,8 @@ public enum CompilerArgumentsEnum {
   /** Option for field supplier generation. */
   GENERATE_FIELD_SUPPLIER("generateFieldSupplier"),
 
-  /** Option for field provider generation. */
-  GENERATE_FIELD_PROVIDER("generateFieldProvider"),
+  /** Option for field consumer generation. */
+  GENERATE_FIELD_CONSUMER("generateFieldConsumer"),
 
   /** Option for builder provider generation. */
   GENERATE_BUILDER_PROVIDER("generateBuilderProvider"),

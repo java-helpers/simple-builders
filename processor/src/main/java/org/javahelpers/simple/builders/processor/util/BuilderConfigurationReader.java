@@ -75,7 +75,7 @@ public class BuilderConfigurationReader {
     // Read raw values from annotation without merging
     return BuilderConfiguration.builder()
         .generateSupplier(options.generateFieldSupplier())
-        .generateProvider(options.generateFieldProvider())
+        .generateConsumer(options.generateFieldConsumer())
         .generateBuilderProvider(options.generateBuilderProvider())
         .generateConditionalLogic(options.generateConditionalHelper())
         .builderAccess(options.builderAccess())
@@ -123,7 +123,7 @@ public class BuilderConfigurationReader {
 
           return BuilderConfiguration.builder()
               .generateSupplier(options.generateFieldSupplier())
-              .generateProvider(options.generateFieldProvider())
+              .generateConsumer(options.generateFieldConsumer())
               .generateBuilderProvider(options.generateBuilderProvider())
               .generateConditionalLogic(options.generateConditionalHelper())
               .builderAccess(options.builderAccess())

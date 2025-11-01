@@ -410,12 +410,16 @@ public class BuilderDefinitionCreator {
     return false;
   }
 
-  /** Tries to add a consumer using an empty constructor of a concrete non-java class. */
+  /** Tries to add a field consumer when the field type has an accessible empty constructor. */
   private static boolean tryAddFieldConsumer(
       FieldDto field,
       TypeElement fieldTypeElement,
       TypeName builderType,
       ProcessingContext context) {
+    // Check if field consumer generation is enabled in configuration
+    if (!context.getBuilderConfigurationForElement().shouldGenerateFieldConsumer()) {
+      return false;
+    }
     if (!isJavaClass(field.getFieldType())
         && fieldTypeElement != null
         && fieldTypeElement.getKind() == javax.lang.model.element.ElementKind.CLASS
