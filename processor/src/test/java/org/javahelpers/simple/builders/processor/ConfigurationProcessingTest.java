@@ -61,17 +61,26 @@ class ConfigurationProcessingTest {
             .generateConditionalLogic(OptionState.ENABLED)
             // Access control
             .builderAccess(AccessModifier.PACKAGE_PRIVATE)
+            .builderConstructorAccess(AccessModifier.PRIVATE)
             .methodAccess(AccessModifier.PACKAGE_PRIVATE)
-            // Collection options
+            // Helper method generation
             .generateVarArgsHelpers(OptionState.ENABLED)
+            .generateStringFormatHelpers(OptionState.ENABLED)
+            .generateUnboxedOptional(OptionState.ENABLED)
+            // Collection builder options
             .usingArrayListBuilder(OptionState.ENABLED)
             .usingArrayListBuilderWithElementBuilders(OptionState.ENABLED)
             .usingHashSetBuilder(OptionState.ENABLED)
             .usingHashSetBuilderWithElementBuilders(OptionState.ENABLED)
             .usingHashMapBuilder(OptionState.ENABLED)
+            // Annotations
+            .usingGeneratedAnnotation(OptionState.ENABLED)
+            .usingBuilderImplementationAnnotation(OptionState.ENABLED)
             // Integration
+            .implementsBuilderBase(OptionState.ENABLED)
             .generateWithInterface(OptionState.ENABLED)
             // Naming
+            .builderSuffix("Builder")
             .setterSuffix("")
             .build();
 
@@ -82,14 +91,22 @@ class ConfigurationProcessingTest {
     assertEquals(OptionState.ENABLED, config.generateBuilderProvider());
     assertEquals(OptionState.ENABLED, config.generateConditionalHelper());
     assertEquals(AccessModifier.PACKAGE_PRIVATE, config.getBuilderAccess());
+    assertEquals(AccessModifier.PRIVATE, config.getBuilderConstructorAccess());
     assertEquals(AccessModifier.PACKAGE_PRIVATE, config.getMethodAccess());
     assertEquals(OptionState.ENABLED, config.generateVarArgsHelpers());
+    assertEquals(OptionState.ENABLED, config.generateStringFormatHelpers());
+    assertEquals(OptionState.ENABLED, config.generateUnboxedOptional());
     assertEquals(OptionState.ENABLED, config.usingArrayListBuilder());
     assertEquals(OptionState.ENABLED, config.usingArrayListBuilderWithElementBuilders());
     assertEquals(OptionState.ENABLED, config.usingHashSetBuilder());
     assertEquals(OptionState.ENABLED, config.usingHashSetBuilderWithElementBuilders());
     assertEquals(OptionState.ENABLED, config.usingHashMapBuilder());
+    assertEquals(OptionState.ENABLED, config.usingGeneratedAnnotation());
+    assertEquals(OptionState.ENABLED, config.usingBuilderImplementationAnnotation());
+    assertEquals(OptionState.ENABLED, config.implementsBuilderBase());
     assertEquals(OptionState.ENABLED, config.generateWithInterface());
+    assertEquals("Builder", config.getBuilderSuffix());
+    assertEquals("", config.getSetterSuffix());
   }
 
   /**
@@ -305,7 +322,7 @@ class ConfigurationProcessingTest {
         generatedCode,
         "MinimalDtoCustomBuilder withProperties(Consumer<HashMapBuilder<String, Integer>> propertiesBuilderConsumer)");
 
-    // Still generates: basic setters and build method 
+    // Still generates: basic setters and build method
     // With setterSuffix="with", all setter methods should be prefixed with "with" and capitalized
     ProcessorAsserts.assertContaining(
         generatedCode,
@@ -336,6 +353,7 @@ class ConfigurationProcessingTest {
             .generateSupplier(OptionState.ENABLED)
             .generateConsumer(OptionState.ENABLED)
             .builderAccess(AccessModifier.PUBLIC)
+            .setterSuffix("")
             .build();
 
     // When: Merge with override configuration
@@ -343,6 +361,7 @@ class ConfigurationProcessingTest {
         BuilderConfiguration.builder()
             .generateSupplier(OptionState.DISABLED) // Override
             .generateBuilderProvider(OptionState.DISABLED) // New value
+            .setterSuffix("with") // Override setterSuffix
             // generateConsumer not set, should keep base value
             .build();
 
@@ -363,6 +382,7 @@ class ConfigurationProcessingTest {
         AccessModifier.PUBLIC,
         merged.getBuilderAccess(),
         "Base value should be kept when override is DEFAULT");
+    assertEquals("with", merged.getSetterSuffix(), "Override should win for setterSuffix");
   }
 
   /**
@@ -378,6 +398,7 @@ class ConfigurationProcessingTest {
             .generateConsumer(OptionState.ENABLED)
             .builderAccess(AccessModifier.PRIVATE)
             .methodAccess(AccessModifier.PROTECTED)
+            .setterSuffix("with")
             .build();
 
     String configString = config.toString();
@@ -390,6 +411,10 @@ class ConfigurationProcessingTest {
     assertTrue(configString.contains("ENABLED"), "toString should show enum values");
     assertTrue(configString.contains("PRIVATE"), "toString should show AccessModifier values");
     assertTrue(configString.contains("PROTECTED"), "toString should show AccessModifier values");
+    assertTrue(
+        configString.contains("setterSuffix"),
+        "toString should mention setterSuffix when non-default");
+    assertTrue(configString.contains("with"), "toString should show setterSuffix value");
 
     // Verify it's not just a hash code
     assertTrue(configString.length() > 100, "toString should be detailed, not just class@hashcode");
