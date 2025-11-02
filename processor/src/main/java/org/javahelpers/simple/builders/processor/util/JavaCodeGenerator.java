@@ -106,14 +106,21 @@ public class JavaCodeGenerator {
             .addTypeVariables(map2TypeVariables(builderDef.getGenerics()))
             .addJavadoc(createJavadocForClass(dtoBaseClass));
 
+    // Set builder class access level
+    Modifier builderAccessModifier = map2Modifier(builderDef.getConfiguration().getBuilderAccess());
+    if (builderAccessModifier != null) {
+      classBuilder.addModifiers(builderAccessModifier);
+    }
+
     // Conditionally add IBuilderBase interface
     if (builderDef.getConfiguration().shouldImplementBuilderBase()) {
       classBuilder.addSuperinterface(createInterfaceBuilderBase(dtoTypeName));
     }
 
-    // Adding Constructors for builder
+    // Get access modifiers from configuration
     Modifier constructorAccessModifier =
         map2Modifier(builderDef.getConfiguration().getBuilderConstructorAccess());
+    Modifier methodAccessModifier = map2Modifier(builderDef.getConfiguration().getMethodAccess());
     classBuilder.addMethod(
         createConstructorWithInstance(
             dtoBaseClass,
@@ -170,15 +177,21 @@ public class JavaCodeGenerator {
             builderDef.getConstructorFieldsForBuilder(),
             builderDef.getSetterFieldsForBuilder(),
             builderDef.getGenerics(),
-            builderDef.getConfiguration().shouldImplementBuilderBase()));
+            builderDef.getConfiguration().shouldImplementBuilderBase(),
+            methodAccessModifier));
     classBuilder.addMethod(
         createMethodStaticCreate(
-            builderBaseClass, builderTypeName, dtoBaseClass, builderDef.getGenerics()));
+            builderBaseClass,
+            builderTypeName,
+            dtoBaseClass,
+            builderDef.getGenerics(),
+            methodAccessModifier));
 
     // Add conditional methods only if enabled in configuration
     if (builderDef.getConfiguration().shouldGenerateConditionalLogic()) {
-      classBuilder.addMethod(createMethodConditional(builderTypeName));
-      classBuilder.addMethod(createMethodConditionalPositiveOnly(builderTypeName));
+      classBuilder.addMethod(createMethodConditional(builderTypeName, methodAccessModifier));
+      classBuilder.addMethod(
+          createMethodConditionalPositiveOnly(builderTypeName, methodAccessModifier));
     }
 
     // Adding nested types (e.g., With interface)
@@ -382,9 +395,12 @@ public class JavaCodeGenerator {
       List<FieldDto> constructorFields,
       List<FieldDto> setterFields,
       List<GenericParameterDto> generics,
-      boolean implementsBuilderBase) {
-    MethodSpec.Builder mb =
-        MethodSpec.methodBuilder("build").addModifiers(PUBLIC).returns(returnType);
+      boolean implementsBuilderBase,
+      Modifier methodAccessModifier) {
+    MethodSpec.Builder mb = MethodSpec.methodBuilder("build").returns(returnType);
+    if (methodAccessModifier != null) {
+      mb.addModifiers(methodAccessModifier);
+    }
 
     // Only add @Override annotation if implementing IBuilderBase interface
     if (implementsBuilderBase) {
@@ -453,21 +469,25 @@ public class JavaCodeGenerator {
   }
 
   private MethodSpec createMethodStaticCreate(
-      com.palantir.javapoet.ClassName builderBaseClass,
+      ClassName builderBaseClass,
       com.palantir.javapoet.TypeName builderType,
-      com.palantir.javapoet.ClassName dtoBaseClass,
-      List<GenericParameterDto> generics) {
+      ClassName dtoBaseClass,
+      List<GenericParameterDto> generics,
+      Modifier methodAccessModifier) {
     MethodSpec.Builder methodBuilder =
-        MethodSpec.methodBuilder(METHOD_NAME_CREATE)
-            .addModifiers(STATIC, PUBLIC)
-            .addJavadoc(
-                """
+        MethodSpec.methodBuilder(METHOD_NAME_CREATE).addModifiers(STATIC);
+    if (methodAccessModifier != null) {
+      methodBuilder.addModifiers(methodAccessModifier);
+    }
+
+    methodBuilder.addJavadoc(
+        """
             Creating a new builder for {@code $1N.$2T}.
 
             @return builder for {@code $1N.$2T}
             """,
-                dtoBaseClass.packageName(),
-                dtoBaseClass);
+        dtoBaseClass.packageName(),
+        dtoBaseClass);
     if (generics.isEmpty()) {
       methodBuilder.returns(builderBaseClass).addCode("return new $1T();\n", builderBaseClass);
     } else {
@@ -479,10 +499,14 @@ public class JavaCodeGenerator {
     return methodBuilder.build();
   }
 
-  private MethodSpec createMethodConditional(com.palantir.javapoet.TypeName builderType) {
-    return MethodSpec.methodBuilder("conditional")
-        .addModifiers(PUBLIC)
-        .returns(builderType)
+  private MethodSpec createMethodConditional(
+      com.palantir.javapoet.TypeName builderType, Modifier methodAccessModifier) {
+    MethodSpec.Builder mb = MethodSpec.methodBuilder("conditional");
+    if (methodAccessModifier != null) {
+      mb.addModifiers(methodAccessModifier);
+    }
+
+    mb.returns(builderType)
         .addParameter(ClassName.get(java.util.function.BooleanSupplier.class), "condition")
         .addParameter(
             ParameterizedTypeName.get(
@@ -494,30 +518,33 @@ public class JavaCodeGenerator {
             "falseCase")
         .addJavadoc(
             """
-            Conditionally applies builder modifications based on a condition.
+            Conditionally applies builder modifications based on a condition evaluation.
 
-            @param condition the condition to evaluate
-            @param trueCase the consumer to apply if condition is true
-            @param falseCase the consumer to apply if condition is false (can be null)
-            @return this builder instance
+            @param condition condition supplier that is evaluated
+            @param trueCase consumer to apply when condition is true
+            @param falseCase consumer to apply when condition is false
+            @return current instance of builder
             """)
         .addCode(
             """
-            if (condition.getAsBoolean()) {
+            if (condition.getAsBoolean() && trueCase != null) {
                 trueCase.accept(this);
             } else if (falseCase != null) {
                 falseCase.accept(this);
             }
             return this;
-            """)
-        .build();
+            """);
+    return mb.build();
   }
 
   private MethodSpec createMethodConditionalPositiveOnly(
-      com.palantir.javapoet.TypeName builderType) {
-    return MethodSpec.methodBuilder("conditional")
-        .addModifiers(PUBLIC)
-        .returns(builderType)
+      com.palantir.javapoet.TypeName builderType, Modifier methodAccessModifier) {
+    MethodSpec.Builder mb = MethodSpec.methodBuilder("conditional");
+    if (methodAccessModifier != null) {
+      mb.addModifiers(methodAccessModifier);
+    }
+
+    mb.returns(builderType)
         .addParameter(ClassName.get(java.util.function.BooleanSupplier.class), "condition")
         .addParameter(
             ParameterizedTypeName.get(
@@ -527,23 +554,22 @@ public class JavaCodeGenerator {
             """
             Conditionally applies builder modifications if the condition is true.
 
-            @param condition the condition to evaluate
-            @param yesCondition the consumer to apply if condition is true
-            @return this builder instance
+            @param condition condition supplier that is evaluated
+            @param yesCondition consumer to apply when condition is true
+            @return current instance of builder
             """)
-        .addCode("return conditional(condition, yesCondition, null);\n")
-        .build();
+        .addCode(
+            """
+            if (condition.getAsBoolean() && yesCondition != null) {
+                yesCondition.accept(this);
+            }
+            return this;
+            """);
+    return mb.build();
   }
 
-  /**
-   * Creates a TypeSpec for a nested type (e.g., With interface).
-   *
-   * @param nestedType the nested type definition
-   * @return the TypeSpec for the nested type
-   */
   private TypeSpec createNestedType(NestedTypeDto nestedType) {
     TypeSpec.Builder typeBuilder;
-
     boolean isInterface = nestedType.getKind() == NestedTypeDto.NestedTypeKind.INTERFACE;
     if (isInterface) {
       typeBuilder = TypeSpec.interfaceBuilder(nestedType.getTypeName());
@@ -559,9 +585,8 @@ public class JavaCodeGenerator {
       typeBuilder.addJavadoc(nestedType.getJavadoc());
     }
 
-    // Add methods to the nested type
-    for (MethodDto method : nestedType.getMethods()) {
-      MethodSpec methodSpec = createNestedTypeMethod(method, isInterface);
+    for (MethodDto methodDto : nestedType.getMethods()) {
+      MethodSpec methodSpec = createNestedTypeMethod(methodDto, isInterface);
       typeBuilder.addMethod(methodSpec);
     }
 
@@ -569,11 +594,12 @@ public class JavaCodeGenerator {
   }
 
   /**
-   * Creates a MethodSpec for a method of a nested type (e.g., With interface).
+   * Creates a method specification from a MethodDto for nested types (e.g., With interface
+   * methods).
    *
-   * @param methodDto the method to create
-   * @param isInterface whether the nested type is an interface
-   * @return the MethodSpec
+   * @param methodDto the method definition
+   * @param isInterface whether the containing type is an interface
+   * @return the generated MethodSpec
    */
   private MethodSpec createNestedTypeMethod(MethodDto methodDto, boolean isInterface) {
     MethodSpec.Builder methodBuilder =
@@ -587,23 +613,17 @@ public class JavaCodeGenerator {
       methodBuilder.addParameter(createParameter(paramDto));
     }
 
-    // Add modifiers if defined
-    methodDto.getModifier().ifPresent(methodBuilder::addModifiers);
-
-    // Add Javadoc
     if (methodDto.getJavadoc() != null) {
       methodBuilder.addJavadoc(methodDto.getJavadoc());
     }
 
-    // Add method body if present
-    MethodCodeDto codeDto = methodDto.getMethodCodeDto();
-    if (codeDto != null) {
-      // Add default modifier for interface methods with implementation
+    // Add code only if method has implementation (even for interfaces with default methods)
+    if (methodDto.getMethodCodeDto() != null) {
       if (isInterface) {
         methodBuilder.addModifiers(javax.lang.model.element.Modifier.DEFAULT);
       }
 
-      methodBuilder.addCode(map2CodeBlock(codeDto));
+      methodBuilder.addCode(map2CodeBlock(methodDto.getMethodCodeDto()));
     }
 
     return methodBuilder.build();
@@ -612,6 +632,8 @@ public class JavaCodeGenerator {
   private MethodSpec createMethod(MethodDto methodDto, com.palantir.javapoet.TypeName returnType) {
     MethodSpec.Builder methodBuilder =
         MethodSpec.methodBuilder(methodDto.getMethodName()).returns(returnType);
+
+    // Use modifier from MethodDto if present
     methodDto.getModifier().ifPresent(methodBuilder::addModifiers);
 
     // Use javadoc from MethodDto if available

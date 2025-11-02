@@ -117,7 +117,7 @@ public class CompilerArgumentsReader {
       return AccessModifier.PUBLIC;
     } else if (Strings.CI.equals(value, "private")) {
       return AccessModifier.PRIVATE;
-    } else if (Strings.CI.equals(value, "package-private")) {
+    } else if (Strings.CI.equalsAny(value, "package-private", "package_private")) {
       return AccessModifier.PACKAGE_PRIVATE;
     } else if (Strings.CI.equals(value, "protected")) {
       return AccessModifier.PROTECTED;
