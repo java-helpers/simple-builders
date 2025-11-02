@@ -31,6 +31,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+import org.javahelpers.simple.builders.processor.dtos.BuilderConfiguration;
 
 /**
  * Context object that wraps Elements, Types, and logging utilities from annotation processing,
@@ -42,6 +43,8 @@ public final class ProcessingContext {
   private final Elements elementUtils;
   private final Types typeUtils;
   private final ProcessingLogger logger;
+  private final BuilderConfigurationReader configurationReader;
+  private BuilderConfiguration builderConfigurationForElement;
 
   /**
    * Creates a new processing context.
@@ -49,11 +52,40 @@ public final class ProcessingContext {
    * @param elementUtils utility for operating on program elements
    * @param typeUtils utility for operating on types
    * @param logger the logging utility for the annotation processor
+   * @param globalConfiguration the global builder configuration read from compiler arguments
    */
-  public ProcessingContext(Elements elementUtils, Types typeUtils, ProcessingLogger logger) {
+  public ProcessingContext(
+      Elements elementUtils,
+      Types typeUtils,
+      ProcessingLogger logger,
+      BuilderConfiguration globalConfiguration) {
     this.elementUtils = elementUtils;
     this.typeUtils = typeUtils;
     this.logger = logger;
+    this.configurationReader = new BuilderConfigurationReader(globalConfiguration);
+  }
+
+  public void initConfiguration(Element element) {
+    this.builderConfigurationForElement = configurationReader.resolveConfiguration(element);
+    logger.debug("Resolved builder configuration for element: {}", builderConfigurationForElement);
+  }
+
+  /**
+   * Get the builder configuration for the current element being processed.
+   *
+   * @return the builder configuration
+   */
+  public BuilderConfiguration getBuilderConfigurationForElement() {
+    return builderConfigurationForElement;
+  }
+
+  /**
+   * Set the builder configuration for the current element being processed.
+   *
+   * @param configuration the builder configuration
+   */
+  public void setBuilderConfigurationForElement(BuilderConfiguration configuration) {
+    this.builderConfigurationForElement = configuration;
   }
 
   /**

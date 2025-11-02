@@ -28,6 +28,7 @@ import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.tools.Diagnostic;
+import org.javahelpers.simple.builders.processor.enums.CompilerArgumentsEnum;
 
 /**
  * Logger for all messages during annotation processing. Providing util-functions for posting
@@ -44,13 +45,14 @@ public class ProcessingLogger {
   /**
    * Constructs a new ProcessingLogger with the specified ProcessingEnvironment. The Messager is
    * used to report errors, warnings, and other notices during annotation processing. Debug logging
-   * is enabled by setting the compiler argument: -Averbose=true
+   * is enabled by setting the compiler argument: -Averbose=true or -Asimplebuilder.verbose=true
    *
    * @param processingEnv the processing environment providing messager and options
    */
   public ProcessingLogger(ProcessingEnvironment processingEnv) {
     this.messager = processingEnv.getMessager();
-    this.debugEnabled = "true".equalsIgnoreCase(processingEnv.getOptions().get("verbose"));
+    CompilerArgumentsReader reader = new CompilerArgumentsReader(processingEnv);
+    this.debugEnabled = reader.readBooleanValue(CompilerArgumentsEnum.VERBOSE);
   }
 
   /**
@@ -85,7 +87,8 @@ public class ProcessingLogger {
 
   /**
    * Posts a debug message with OTHER level. Used for detailed tracing of the builder generation
-   * process. Only visible when enabled via -Averbose=true compiler argument.
+   * process. Only visible when enabled via -Averbose=true or -Asimplebuilder.verbose=true compiler
+   * argument.
    *
    * @param message the debug message to be posted
    */
@@ -97,7 +100,8 @@ public class ProcessingLogger {
   }
 
   /**
-   * Posts a debug message with a formatted string. Only visible when enabled via -Averbose=true.
+   * Posts a debug message with a formatted string. Only visible when enabled via -Averbose=true or
+   * -Asimplebuilder.verbose=true.
    *
    * @param format the format string
    * @param args arguments referenced by the format specifiers in the format string

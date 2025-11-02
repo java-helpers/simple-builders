@@ -27,18 +27,21 @@ package org.javahelpers.simple.builders.processor;
 import static org.javahelpers.simple.builders.processor.util.BuilderDefinitionCreator.extractFromElement;
 
 import com.google.auto.service.AutoService;
+import java.util.HashSet;
 import java.util.Set;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
-import javax.annotation.processing.SupportedOptions;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
+import org.javahelpers.simple.builders.processor.dtos.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.dtos.BuilderDefinitionDto;
+import org.javahelpers.simple.builders.processor.enums.CompilerArgumentsEnum;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
+import org.javahelpers.simple.builders.processor.util.CompilerArgumentsReader;
 import org.javahelpers.simple.builders.processor.util.JavaCodeGenerator;
 import org.javahelpers.simple.builders.processor.util.ProcessingContext;
 import org.javahelpers.simple.builders.processor.util.ProcessingLogger;
@@ -50,7 +53,6 @@ import org.javahelpers.simple.builders.processor.util.ProcessingLogger;
  */
 @AutoService(Processor.class)
 @SupportedAnnotationTypes("org.javahelpers.simple.builders.core.annotations.SimpleBuilder")
-@SupportedOptions("verbose")
 public class BuilderProcessor extends AbstractProcessor {
   private ProcessingContext context;
   private JavaCodeGenerator codeGenerator;
@@ -60,10 +62,17 @@ public class BuilderProcessor extends AbstractProcessor {
   public synchronized void init(ProcessingEnvironment processingEnv) {
     super.init(processingEnv);
     ProcessingLogger logger = new ProcessingLogger(processingEnv);
+
+    // Read global configuration from compiler arguments
+    CompilerArgumentsReader reader = new CompilerArgumentsReader(processingEnv);
+    BuilderConfiguration globalConfig = reader.readBuilderConfiguration();
+
     this.context =
         new ProcessingContext(
-            processingEnv.getElementUtils(), processingEnv.getTypeUtils(), logger);
+            processingEnv.getElementUtils(), processingEnv.getTypeUtils(), logger, globalConfig);
+    context.debug("Loaded global configuration from compiler arguments: %s", globalConfig);
     this.codeGenerator = new JavaCodeGenerator(processingEnv.getFiler(), logger);
+
     SourceVersion current = processingEnv.getSourceVersion();
     this.supportedJdk = isAtLeastJava17(current);
     if (!this.supportedJdk) {
@@ -118,11 +127,25 @@ public class BuilderProcessor extends AbstractProcessor {
   }
 
   @Override
+  public Set<String> getSupportedOptions() {
+    Set<String> options = new HashSet<>();
+    for (CompilerArgumentsEnum arg : CompilerArgumentsEnum.values()) {
+      options.add(arg.getOptionName()); // e.g., "verbose"
+      options.add(arg.getCompilerArgument()); // e.g., "simplebuilder.verbose"
+    }
+    return options;
+  }
+
+  @Override
   public SourceVersion getSupportedSourceVersion() {
     return SourceVersion.latestSupported();
   }
 
   private void process(Element annotatedElement) throws BuilderException {
+    // Initialize configuration for this element (merges DEFAULT -> compiler args -> template ->
+    // options)
+    context.initConfiguration(annotatedElement);
+
     BuilderDefinitionDto builderDef = extractFromElement(annotatedElement, context);
     codeGenerator.generateBuilder(builderDef);
   }

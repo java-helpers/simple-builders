@@ -19,6 +19,7 @@
     - [Conditional Builder Logic](#conditional-builder-logic)
   - [Collections and Nested Objects](#collections-and-nested-objects)
   - [With Interface Pattern](#with-interface-pattern)
+  - [Builder Configuration](#builder-configuration)
 - [Contributing](#contributing)
 - [License](#license)
 - [Acknowledgements](#acknowledgements)
@@ -257,9 +258,50 @@ Person youngerPerson = person.with(p -> p.age(29));
 
 The `With` interface provides type-safe setter methods that mirror the builder's API, making it easy to create object variations without manually copying all fields.
 
+## Builder Configuration
+
+Simple Builders provides extensive configuration options to customize the generated builder code. You can control:
+
+- Field setter generation (Supplier, Provider, Builder patterns)
+- Conditional logic helpers
+- Access modifiers for builders and methods
+- Collection helper methods
+- Integration features
+
+Configuration can be applied per-class using `@SimpleBuilder.Options` annotation or project-wide using compiler options.
+
+### Compiler Arguments
+
+All configuration options are available as compiler arguments using the `-A` flag. For example:
+
+```bash
+javac -Asimplebuilder.verbose=true \
+      -Asimplebuilder.generateFieldSupplier=false \
+      YourClass.java
+```
+
+Or in Maven:
+
+```xml
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <configuration>
+        <compilerArgs>
+            <arg>-Asimplebuilder.verbose=true</arg>
+            <arg>-Asimplebuilder.generateFieldSupplier=false</arg>
+        </compilerArgs>
+    </configuration>
+</plugin>
+```
+
+📋 **For a complete list of all available compiler arguments, see [`CompilerArgumentsEnum`](processor/src/main/java/org/javahelpers/simple/builders/processor/enums/CompilerArgumentsEnum.java).**
+
+📖 **For complete documentation, examples, and all available options, see the [Configuration Guide](docs/CONFIGURATION.md).**
+
 ## Contributing
 
-Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for:
+Contributions are welcome! Please see [CONTRIBUTING.md](docs/CONTRIBUTING.md) for:
 
 - Development setup and project structure
 - Building and testing strategies (important for annotation processor modules)
