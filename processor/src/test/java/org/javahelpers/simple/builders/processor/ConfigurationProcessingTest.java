@@ -166,7 +166,7 @@ class ConfigurationProcessingTest {
             public void setAddress(Address address) { this.address = address; }
             """);
 
-    // When: Compile with ALL compiler arguments disabled
+    // When: Compile with ALL compiler arguments disabled and custom builder suffix
     Compilation compilation =
         Compiler.javac()
             .withProcessors(new BuilderProcessor())
@@ -189,68 +189,70 @@ class ConfigurationProcessingTest {
                 "-Asimplebuilder.usingGeneratedAnnotation=false",
                 "-Asimplebuilder.usingBuilderImplementationAnnotation=false",
                 "-Asimplebuilder.implementsBuilderBase=false",
-                "-Asimplebuilder.generateWithInterface=false")
+                "-Asimplebuilder.generateWithInterface=false",
+                "-Asimplebuilder.builderSuffix=CustomBuilder")
             .compile(nestedDto, addressDto, source);
 
     // Then: Compilation should succeed
     assertThat(compilation).succeeded();
 
     // And: Generated builder should contain only basic functionality
-    String generatedCode = ProcessorTestUtils.loadGeneratedSource(compilation, "MinimalDtoBuilder");
+    String generatedCode =
+        ProcessorTestUtils.loadGeneratedSource(compilation, "MinimalDtoCustomBuilder");
 
     // With generateFieldSupplier=false, NO supplier methods should be generated
     ProcessorAsserts.assertNotContaining(
         generatedCode,
-        "public MinimalDtoBuilder name(Supplier<String> nameSupplier)",
-        "public MinimalDtoBuilder items(Supplier<List<String>> itemsSupplier)",
-        "public MinimalDtoBuilder properties(Supplier<Map<String, Integer>> propertiesSupplier)",
-        "public MinimalDtoBuilder description(Supplier<Optional<String>> descriptionSupplier)",
-        "public MinimalDtoBuilder tags(Supplier<Set<String>> tagsSupplier)",
-        "public MinimalDtoBuilder nested(Supplier<NestedDto> nestedSupplier)",
-        "public MinimalDtoBuilder address(Supplier<Address> addressSupplier)");
+        "public MinimalDtoCustomBuilder name(Supplier<String> nameSupplier)",
+        "public MinimalDtoCustomBuilder items(Supplier<List<String>> itemsSupplier)",
+        "public MinimalDtoCustomBuilder properties(Supplier<Map<String, Integer>> propertiesSupplier)",
+        "public MinimalDtoCustomBuilder description(Supplier<Optional<String>> descriptionSupplier)",
+        "public MinimalDtoCustomBuilder tags(Supplier<Set<String>> tagsSupplier)",
+        "public MinimalDtoCustomBuilder nested(Supplier<NestedDto> nestedSupplier)",
+        "public MinimalDtoCustomBuilder address(Supplier<Address> addressSupplier)");
 
     // With generateFieldConsumer=false, NO field consumer methods should be generated
     // Field consumer = Consumer<T> where T is a custom type with empty constructor
     ProcessorAsserts.assertNotContaining(
         generatedCode,
-        "public MinimalDtoBuilder address(Consumer<Address> addressConsumer)",
-        "public MinimalDtoBuilder address(Consumer<Address> addressConsumer)",
-        "public MinimalDtoBuilder nested(Consumer<NestedDto> nestedConsumer)",
-        "public MinimalDtoBuilder items(Consumer<List<String>> itemsConsumer)",
-        "public MinimalDtoBuilder tags(Consumer<Set<String>> tagsConsumer)",
-        "public MinimalDtoBuilder properties(Consumer<Map<String, Integer>> propertiesConsumer)");
+        "public MinimalDtoCustomBuilder address(Consumer<Address> addressConsumer)",
+        "public MinimalDtoCustomBuilder address(Consumer<Address> addressConsumer)",
+        "public MinimalDtoCustomBuilder nested(Consumer<NestedDto> nestedConsumer)",
+        "public MinimalDtoCustomBuilder items(Consumer<List<String>> itemsConsumer)",
+        "public MinimalDtoCustomBuilder tags(Consumer<Set<String>> tagsConsumer)",
+        "public MinimalDtoCustomBuilder properties(Consumer<Map<String, Integer>> propertiesConsumer)");
 
     // With generateBuilderProvider=false, NO builder consumer methods should be generated
     // Builder consumers include: StringBuilder, collection builders, nested DTO builders
     ProcessorAsserts.assertNotContaining(
         generatedCode,
-        "public MinimalDtoBuilder nested(Consumer<NestedDtoBuilder> nestedBuilderConsumer)",
-        "public MinimalDtoBuilder name(Consumer<StringBuilder> nameStringBuilderConsumer)",
-        "public MinimalDtoBuilder description(Consumer<StringBuilder> descriptionStringBuilderConsumer)");
+        "public MinimalDtoCustomBuilder nested(Consumer<NestedDtoBuilder> nestedBuilderConsumer)",
+        "public MinimalDtoCustomBuilder name(Consumer<StringBuilder> nameStringBuilderConsumer)",
+        "public MinimalDtoCustomBuilder description(Consumer<StringBuilder> descriptionStringBuilderConsumer)");
 
     // With generateConditionalHelper=false, NO conditional methods
     ProcessorAsserts.assertNotContaining(
-        generatedCode, "public MinimalDtoBuilder conditional(BooleanSupplier condition");
+        generatedCode, "public MinimalDtoCustomBuilder conditional(BooleanSupplier condition");
 
     // With generateVarArgsHelpers=false, NO VarArgs helpers should be generated
     ProcessorAsserts.assertNotContaining(
         generatedCode,
-        "public MinimalDtoBuilder items(String... items)",
-        "public MinimalDtoBuilder properties(Map.Entry<String, Integer>... properties)",
-        "public MinimalDtoBuilder tags(String... tags)");
+        "public MinimalDtoCustomBuilder items(String... items)",
+        "public MinimalDtoCustomBuilder properties(Map.Entry<String, Integer>... properties)",
+        "public MinimalDtoCustomBuilder tags(String... tags)");
 
     // With generateWithInterface=false, NO With interface
     ProcessorAsserts.assertNotContaining(generatedCode, "public interface With");
 
     // With generateUnboxedOptional=false, NO unboxed optional methods should be generated
     ProcessorAsserts.assertNotContaining(
-        generatedCode, "public MinimalDtoBuilder description(String description)");
+        generatedCode, "public MinimalDtoCustomBuilder description(String description)");
 
     // With generateStringFormatHelpers=false, NO String format methods should be generated
     ProcessorAsserts.assertNotContaining(
         generatedCode,
-        "public MinimalDtoBuilder name(String format, Object... args)",
-        "public MinimalDtoBuilder description(String format, Object... args)");
+        "public MinimalDtoCustomBuilder name(String format, Object... args)",
+        "public MinimalDtoCustomBuilder description(String format, Object... args)");
 
     // With usingGeneratedAnnotation=false, NO @Generated annotation should be used
     ProcessorAsserts.assertNotContaining(generatedCode, "@Generated(");
@@ -264,59 +266,59 @@ class ConfigurationProcessingTest {
         generatedCode, "implements IBuilderBase", "@Override public MinimalDto build()");
 
     // With builderAccess=PACKAGE_PRIVATE, builder class should NOT have public modifier
-    ProcessorAsserts.assertNotContaining(generatedCode, "public class MinimalDtoBuilder");
+    ProcessorAsserts.assertNotContaining(generatedCode, "public class MinimalDtoCustomBuilder");
 
     // But package-private class should exist
-    ProcessorAsserts.assertContaining(generatedCode, "class MinimalDtoBuilder");
+    ProcessorAsserts.assertContaining(generatedCode, "class MinimalDtoCustomBuilder");
 
     // With methodAccess=PACKAGE_PRIVATE, methods should NOT have public modifier
     ProcessorAsserts.assertNotContaining(
         generatedCode,
-        "public MinimalDtoBuilder name(String name)",
+        "public MinimalDtoCustomBuilder name(String name)",
         "public MinimalDto build()",
-        "public static MinimalDtoBuilder create()");
+        "public static MinimalDtoCustomBuilder create()");
 
     // But package-private methods should exist
     ProcessorAsserts.assertContaining(
         generatedCode,
-        "MinimalDtoBuilder name(String name)",
+        "MinimalDtoCustomBuilder name(String name)",
         "MinimalDto build()",
-        "static MinimalDtoBuilder create()");
+        "static MinimalDtoCustomBuilder create()");
 
     // With usingArrayListBuilder=false AND generateBuilderProvider=false, NO ArrayListBuilder
     // should be used
     ProcessorAsserts.assertNotContaining(
         generatedCode,
-        "MinimalDtoBuilder items(Consumer<ArrayListBuilder<String>> itemsBuilderConsumer)");
+        "MinimalDtoCustomBuilder items(Consumer<ArrayListBuilder<String>> itemsBuilderConsumer)");
 
     // With usingHashSetBuilder=false AND generateBuilderProvider=false, NO HashSetBuilder should be
     // used
     ProcessorAsserts.assertNotContaining(
         generatedCode,
-        "MinimalDtoBuilder tags(Consumer<HashSetBuilder<String>> tagsBuilderConsumer)");
+        "MinimalDtoCustomBuilder tags(Consumer<HashSetBuilder<String>> tagsBuilderConsumer)");
 
     // With usingHashMapBuilder=false AND generateBuilderProvider=false, NO HashMapBuilder should be
     // used
     ProcessorAsserts.assertNotContaining(
         generatedCode,
-        "MinimalDtoBuilder properties(Consumer<HashMapBuilder<String, Integer>> propertiesBuilderConsumer)");
+        "MinimalDtoCustomBuilder properties(Consumer<HashMapBuilder<String, Integer>> propertiesBuilderConsumer)");
 
     // Still generates: basic setters and build method (package-private methods, private
     // constructors)
     ProcessorAsserts.assertContaining(
         generatedCode,
-        "class MinimalDtoBuilder",
-        "private MinimalDtoBuilder()",
-        "private MinimalDtoBuilder(MinimalDto instance)",
-        "MinimalDtoBuilder name(String name)",
-        "MinimalDtoBuilder items(List<String> items)",
-        "MinimalDtoBuilder properties(Map<String, Integer> properties)",
-        "MinimalDtoBuilder description(Optional<String> description)",
-        "MinimalDtoBuilder tags(Set<String> tags)",
-        "MinimalDtoBuilder nested(NestedDto nested)",
-        "MinimalDtoBuilder address(Address address)",
+        "class MinimalDtoCustomBuilder",
+        "private MinimalDtoCustomBuilder()",
+        "private MinimalDtoCustomBuilder(MinimalDto instance)",
+        "MinimalDtoCustomBuilder name(String name)",
+        "MinimalDtoCustomBuilder items(List<String> items)",
+        "MinimalDtoCustomBuilder properties(Map<String, Integer> properties)",
+        "MinimalDtoCustomBuilder description(Optional<String> description)",
+        "MinimalDtoCustomBuilder tags(Set<String> tags)",
+        "MinimalDtoCustomBuilder nested(NestedDto nested)",
+        "MinimalDtoCustomBuilder address(Address address)",
         "MinimalDto build()",
-        "static MinimalDtoBuilder create()");
+        "static MinimalDtoCustomBuilder create()");
   }
 
   /**
@@ -447,5 +449,87 @@ class ConfigurationProcessingTest {
         OptionState.ENABLED,
         finalConfig.generateConditionalHelper(),
         "Default should remain when not overridden");
+  }
+
+  /**
+   * Custom builder suffix with nested DTOs test.
+   *
+   * <p>Verifies that when using a custom builderSuffix, the builder correctly recognizes nested DTO
+   * builders with the same custom suffix.
+   *
+   * <p>For example, if PersonDto has an AddressDto field, and both use suffix "Factory", then
+   * PersonDtoFactory should have a method accepting Consumer&lt;AddressDtoFactory&gt;.
+   */
+  @Test
+  void builderSuffix_WithNestedDto_ShouldRecognizeNestedBuilder() {
+    // Given: A nested DTO with @SimpleBuilder annotation
+    JavaFileObject nestedDto =
+        ProcessorTestUtils.simpleBuilderClass(
+            "com.example",
+            "AddressDto",
+            """
+            private String street;
+            private String city;
+
+            public String getStreet() { return street; }
+            public void setStreet(String street) { this.street = street; }
+
+            public String getCity() { return city; }
+            public void setCity(String city) { this.city = city; }
+            """);
+
+    // And: A parent DTO with @SimpleBuilder annotation that has the nested DTO as a field
+    JavaFileObject parentDto =
+        ProcessorTestUtils.simpleBuilderClass(
+            "com.example",
+            "PersonDto",
+            """
+            private String name;
+            private AddressDto address;
+
+            public String getName() { return name; }
+            public void setName(String name) { this.name = name; }
+
+            public AddressDto getAddress() { return address; }
+            public void setAddress(AddressDto address) { this.address = address; }
+            """);
+
+    // When: Compile with custom builderSuffix
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new BuilderProcessor())
+            .withOptions("-Asimplebuilder.builderSuffix=Factory")
+            .compile(nestedDto, parentDto);
+
+    // Then: Compilation should succeed
+    assertThat(compilation).succeeded();
+
+    // And: Parent builder should be generated with custom suffix
+    String parentBuilderCode =
+        ProcessorTestUtils.loadGeneratedSource(compilation, "PersonDtoFactory");
+    assertNotNull(parentBuilderCode, "PersonDtoFactory should be generated");
+
+    // And: Nested builder should be generated with custom suffix
+    String nestedBuilderCode =
+        ProcessorTestUtils.loadGeneratedSource(compilation, "AddressDtoFactory");
+    assertNotNull(nestedBuilderCode, "AddressDtoFactory should be generated");
+
+    // And: Parent builder should reference nested builder with custom suffix
+    ProcessorAsserts.assertContaining(
+        parentBuilderCode,
+        "class PersonDtoFactory",
+        "PersonDtoFactory address(AddressDto address)",
+        "PersonDtoFactory address(Consumer<AddressDtoFactory> addressBuilderConsumer)");
+
+    // And: Parent builder's create method should use custom suffix
+    ProcessorAsserts.assertContaining(parentBuilderCode, "static PersonDtoFactory create()");
+
+    // And: Nested builder should also use custom suffix in its methods
+    ProcessorAsserts.assertContaining(
+        nestedBuilderCode,
+        "class AddressDtoFactory",
+        "AddressDtoFactory street(String street)",
+        "AddressDtoFactory city(String city)",
+        "static AddressDtoFactory create()");
   }
 }

@@ -120,12 +120,13 @@ public class BuilderDefinitionCreator {
     BuilderDefinitionDto result = new BuilderDefinitionDto();
     String packageName = context.getPackageName(annotatedType);
     String simpleClassName = annotatedType.getSimpleName().toString();
-    result.setBuilderTypeName(new TypeName(packageName, simpleClassName + BUILDER_SUFFIX));
+    String builderSuffix = context.getBuilderConfigurationForElement().getBuilderSuffix();
+    result.setBuilderTypeName(new TypeName(packageName, simpleClassName + builderSuffix));
     result.setBuildingTargetTypeName(new TypeName(packageName, simpleClassName));
     result.setConfiguration(context.getBuilderConfigurationForElement());
 
     context.debug(
-        "Builder will be generated as: %s.%s", packageName, simpleClassName + BUILDER_SUFFIX);
+        "Builder will be generated as: %s.%s", packageName, simpleClassName + builderSuffix);
 
     // Extract generics from the annotated type via mapper (stream-based)
     JavaLangMapper.map2GenericParameterDtos(annotatedType, context).forEach(result::addGeneric);
@@ -351,6 +352,8 @@ public class BuilderDefinitionCreator {
                 "Set.of(%s)",
                 new TypeNameArray(innerTypes.get(0), true),
                 builderType);
+                builderType,
+                context);
         setMethodAccessModifier(method, methodAccessModifier);
         field.addMethod(method);
       }
@@ -369,7 +372,8 @@ public class BuilderDefinitionCreator {
                 fieldJavaDoc,
                 "Map.ofEntries(%s)",
                 mapEntryType,
-                builderType);
+                builderType,
+                context);
         setMethodAccessModifier(method, methodAccessModifier);
         field.addMethod(method);
       }
@@ -386,7 +390,8 @@ public class BuilderDefinitionCreator {
                 fieldJavaDoc,
                 "Optional.ofNullable(%s)",
                 innerTypes.get(0),
-                builderType);
+                builderType,
+                context);
         setMethodAccessModifier(method, methodAccessModifier);
         field.addMethod(method);
       }
@@ -889,7 +894,14 @@ public class BuilderDefinitionCreator {
       TypeName fieldType,
       TypeName builderType) {
     return createFieldSetterWithTransform(
-        fieldName, fieldNameInBuilder, fieldJavadoc, transform, fieldType, List.of(), builderType);
+        fieldName,
+        fieldNameInBuilder,
+        fieldJavadoc,
+        transform,
+        fieldType,
+        List.of(),
+        builderType,
+        context);
   }
 
   /**
@@ -909,14 +921,15 @@ public class BuilderDefinitionCreator {
       String transform,
       TypeName fieldType,
       List<AnnotationDto> annotations,
-      TypeName builderType) {
+      TypeName builderType,
+      ProcessingContext context) {
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName(fieldName);
     parameter.setParameterTypeName(fieldType);
     // Add annotations to the parameter
     annotations.forEach(parameter::addAnnotation);
     MethodDto methodDto = new MethodDto();
-    methodDto.setMethodName(fieldName);
+    methodDto.setMethodName(applySetterSuffix(fieldName, context));
     methodDto.setReturnType(builderType);
     methodDto.addParameter(parameter);
     // Modifier is controlled by configuration, not set here
@@ -949,13 +962,18 @@ public class BuilderDefinitionCreator {
   }
 
   private static MethodDto createFieldConsumer(
-      String fieldName, String fieldJavadoc, TypeName fieldType, TypeName builderType) {
+      String fieldName,
+      String fieldNameInBuilder,
+      String fieldJavadoc,
+      TypeName fieldType,
+      TypeName builderType,
+      ProcessingContext context) {
     TypeNameGeneric consumerType = new TypeNameGeneric(map2TypeName(Consumer.class), fieldType);
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName(fieldName + SUFFIX_CONSUMER);
     parameter.setParameterTypeName(consumerType);
     MethodDto methodDto = new MethodDto();
-    methodDto.setMethodName(fieldName);
+    methodDto.setMethodName(applySetterSuffix(fieldName, context));
     methodDto.setReturnType(builderType);
     methodDto.addParameter(parameter);
     // Modifier is controlled by configuration, not set here
@@ -966,7 +984,7 @@ public class BuilderDefinitionCreator {
         this.$fieldName:N = $builderFieldWrapper:T.changedValue(consumer);
         return this;
         """);
-    methodDto.addArgument(ARG_FIELD_NAME, fieldName);
+    methodDto.addArgument(ARG_FIELD_NAME, fieldNameInBuilder);
     methodDto.addArgument(ARG_DTO_METHOD_PARAM, parameter.getParameterName());
     methodDto.addArgument(ARG_HELPER_TYPE, fieldType);
     methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
@@ -983,7 +1001,12 @@ public class BuilderDefinitionCreator {
   }
 
   private static MethodDto createStringBuilderConsumer(
-      String fieldName, String fieldJavadoc, String transform, TypeName builderType) {
+      String fieldName,
+      String fieldNameInBuilder,
+      String fieldJavadoc,
+      String transform,
+      TypeName builderType,
+      ProcessingContext context) {
     TypeName stringBuilderType = map2TypeName(StringBuilder.class);
     TypeNameGeneric consumerType =
         new TypeNameGeneric(map2TypeName(Consumer.class), stringBuilderType);
@@ -991,7 +1014,7 @@ public class BuilderDefinitionCreator {
     parameter.setParameterName(fieldName + "StringBuilderConsumer");
     parameter.setParameterTypeName(consumerType);
     MethodDto methodDto = new MethodDto();
-    methodDto.setMethodName(fieldName);
+    methodDto.setMethodName(applySetterSuffix(fieldName, context));
     methodDto.addParameter(parameter);
     // Modifier is controlled by configuration, not set here
     methodDto.setCode(
@@ -1001,7 +1024,7 @@ public class BuilderDefinitionCreator {
         this.$fieldName:N = $builderFieldWrapper:T.changedValue($transform:N);
         return this;
         """);
-    methodDto.addArgument(ARG_FIELD_NAME, fieldName);
+    methodDto.addArgument(ARG_FIELD_NAME, fieldNameInBuilder);
     methodDto.addArgument(ARG_DTO_METHOD_PARAM, parameter.getParameterName());
     methodDto.addArgument("transform", transform);
     methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
@@ -1023,18 +1046,20 @@ public class BuilderDefinitionCreator {
       String fieldJavadoc,
       TypeName consumerBuilderType,
       TypeName builderTargetType,
-      TypeName returnBuilderType) {
+      TypeName returnBuilderType,
+      ProcessingContext context) {
     TypeNameGeneric builderTypeGeneric =
         new TypeNameGeneric(consumerBuilderType, builderTargetType);
     return BuilderDefinitionCreator.createFieldConsumerWithBuilder(
-        fieldName, fieldJavadoc, builderTypeGeneric, returnBuilderType);
+        fieldName, fieldJavadoc, builderTypeGeneric, returnBuilderType, context);
   }
 
   private static MethodDto createFieldConsumerWithBuilder(
       String fieldName,
       String fieldJavaDoc,
       TypeName consumerBuilderType,
-      TypeName returnBuilderType) {
+      TypeName returnBuilderType,
+      ProcessingContext context) {
     return createFieldConsumerWithBuilder(
         fieldName,
         fieldJavaDoc,
@@ -1042,7 +1067,8 @@ public class BuilderDefinitionCreator {
         "this.$fieldName:N.value()",
         "",
         Map.of(),
-        returnBuilderType);
+        returnBuilderType,
+        context);
   }
 
   /**
@@ -1054,7 +1080,8 @@ public class BuilderDefinitionCreator {
       String fieldJavaDoc,
       TypeName collectionBuilderType,
       TypeName elementBuilderType,
-      TypeName returnBuilderType) {
+      TypeName returnBuilderType,
+      ProcessingContext context) {
     return createFieldConsumerWithBuilder(
         fieldName,
         fieldJavaDoc,
@@ -1062,7 +1089,8 @@ public class BuilderDefinitionCreator {
         "this.$fieldName:N.value(), $elementBuilderType:T::create",
         "$elementBuilderType:T::create",
         Map.of("elementBuilderType", elementBuilderType),
-        returnBuilderType);
+        returnBuilderType,
+        context);
   }
 
   /**
@@ -1075,6 +1103,7 @@ public class BuilderDefinitionCreator {
    * @param constructorArgsEmpty constructor arguments when field is empty
    * @param additionalArguments additional template arguments to add to the method (must be TypeName
    *     values)
+   * @param context processing context
    */
   private static MethodDto createFieldConsumerWithBuilder(
       String fieldName,
@@ -1083,14 +1112,15 @@ public class BuilderDefinitionCreator {
       String constructorArgsWithValue,
       String additionalConstructorArgs,
       Map<String, TypeName> additionalArguments,
-      TypeName returnBuilderType) {
+      TypeName returnBuilderType,
+      ProcessingContext context) {
     TypeNameGeneric consumerType =
         new TypeNameGeneric(map2TypeName(Consumer.class), consumerBuilderType);
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName(fieldName + BUILDER_SUFFIX + SUFFIX_CONSUMER);
     parameter.setParameterTypeName(consumerType);
     MethodDto methodDto = new MethodDto();
-    methodDto.setMethodName(fieldName);
+    methodDto.setMethodName(applySetterSuffix(fieldName, context));
     methodDto.setReturnType(returnBuilderType);
     methodDto.addParameter(parameter);
     // Modifier is controlled by configuration, not set here
@@ -1124,13 +1154,14 @@ public class BuilderDefinitionCreator {
       String fieldNameInBuilder,
       String fieldJavaDoc,
       TypeName fieldType,
-      TypeName builderType) {
+      TypeName builderType,
+      ProcessingContext context) {
     TypeNameGeneric supplierType = new TypeNameGeneric(map2TypeName(Supplier.class), fieldType);
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName(fieldName + SUFFIX_SUPPLIER);
     parameter.setParameterTypeName(supplierType);
     MethodDto methodDto = new MethodDto();
-    methodDto.setMethodName(fieldName);
+    methodDto.setMethodName(applySetterSuffix(fieldName, context));
     methodDto.setReturnType(builderType);
     methodDto.addParameter(parameter);
     // Modifier is controlled by configuration, not set here
@@ -1160,7 +1191,8 @@ public class BuilderDefinitionCreator {
       String fieldJavadoc,
       String transform,
       List<AnnotationDto> annotations,
-      TypeName builderType) {
+      TypeName builderType,
+      ProcessingContext context) {
     TypeName stringType = map2TypeName(String.class);
 
     MethodParameterDto formatParam = new MethodParameterDto();
@@ -1174,7 +1206,7 @@ public class BuilderDefinitionCreator {
     argsParam.setParameterTypeName(new TypeNameArray(TypeName.of(Object.class), false));
 
     MethodDto methodDto = new MethodDto();
-    methodDto.setMethodName(fieldName);
+    methodDto.setMethodName(applySetterSuffix(fieldName, context));
     methodDto.setReturnType(builderType);
     methodDto.addParameter(formatParam);
     methodDto.addParameter(argsParam);
@@ -1219,13 +1251,14 @@ public class BuilderDefinitionCreator {
       String fieldNameInBuilder,
       TypeName listType,
       TypeName elementType,
-      TypeName builderType) {
+      TypeName builderType,
+      ProcessingContext context) {
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName(fieldName);
     parameter.setParameterTypeName(listType);
 
     MethodDto methodDto = new MethodDto();
-    methodDto.setMethodName(fieldName);
+    methodDto.setMethodName(applySetterSuffix(fieldName, context));
     methodDto.setReturnType(builderType);
     methodDto.addParameter(parameter);
     // Modifier is controlled by configuration, not set here
@@ -1259,7 +1292,8 @@ public class BuilderDefinitionCreator {
       String fieldNameInBuilder,
       TypeName collectionBuilderType,
       TypeName elementType,
-      TypeName returnBuilderType) {
+      TypeName returnBuilderType,
+      ProcessingContext context) {
     TypeNameGeneric builderTypeGeneric = new TypeNameGeneric(collectionBuilderType, elementType);
     TypeNameGeneric consumerType =
         new TypeNameGeneric(map2TypeName(Consumer.class), builderTypeGeneric);
@@ -1269,7 +1303,7 @@ public class BuilderDefinitionCreator {
     parameter.setParameterTypeName(consumerType);
 
     MethodDto methodDto = new MethodDto();
-    methodDto.setMethodName(fieldName);
+    methodDto.setMethodName(applySetterSuffix(fieldName, context));
     methodDto.setReturnType(returnBuilderType);
     methodDto.addParameter(parameter);
     // Modifier is controlled by configuration, not set here
@@ -1386,10 +1420,11 @@ public class BuilderDefinitionCreator {
 
     String packageName = context.getPackageName(typeElement);
     String simpleClassName = typeElement.getSimpleName().toString();
+    String builderSuffix = context.getBuilderConfigurationForElement().getBuilderSuffix();
     context.debug(
-        "  -> Found @SimpleBuilder on type %s.%s, will use %sBuilder",
-        packageName, simpleClassName, simpleClassName);
-    return Optional.of(new TypeName(packageName, simpleClassName + BUILDER_SUFFIX));
+        "  -> Found @SimpleBuilder on type %s.%s, will use %s%s",
+        packageName, simpleClassName, simpleClassName, builderSuffix);
+    return Optional.of(new TypeName(packageName, simpleClassName + builderSuffix));
   }
 
   /**
@@ -1526,6 +1561,32 @@ public class BuilderDefinitionCreator {
       """);
 
     return method;
+  }
+
+  /**
+   * Applies the setter suffix to a field name to create the method name.
+   *
+   * <p>If the suffix is empty, returns the fieldName as-is. If the suffix is set, capitalizes the
+   * first letter of fieldName and prepends the suffix.
+   *
+   * <p>Examples:
+   *
+   * <ul>
+   *   <li>fieldName="name", suffix="" → "name"
+   *   <li>fieldName="name", suffix="with" → "withName"
+   *   <li>fieldName="age", suffix="set" → "setAge"
+   * </ul>
+   *
+   * @param fieldName the field name
+   * @param context the processing context containing the configuration with the suffix
+   * @return the method name with suffix applied
+   */
+  private static String applySetterSuffix(String fieldName, ProcessingContext context) {
+    String suffix = context.getBuilderConfigurationForElement().getSetterSuffix();
+    if (suffix == null || suffix.isEmpty()) {
+      return fieldName;
+    }
+    return suffix + StringUtils.capitalize(fieldName);
   }
 
   /**

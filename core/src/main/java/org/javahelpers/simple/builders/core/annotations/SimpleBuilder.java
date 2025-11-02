@@ -329,6 +329,23 @@ public @interface SimpleBuilder {
      * Default: ENABLED Compiler option: -Asimplebuilder.generateWithInterface
      */
     OptionState generateWithInterface() default OptionState.UNSET;
+
+    // === Naming ===
+    /**
+     * Suffix to append to the DTO name to generate the builder class name. <br>
+     * For example, with suffix "Builder", a DTO named "PersonDto" will generate "PersonDtoBuilder".
+     * <br>
+     * Default: "Builder" Compiler option: -Asimplebuilder.builderSuffix
+     */
+    String builderSuffix() default "Builder";
+
+    /**
+     * Suffix to append to setter method names in the generated builder. <br>
+     * For example, with suffix "with", a field named "name" will generate "withName()". <br>
+     * When a suffix is set, the field name is capitalized after the suffix. <br>
+     * Default: "" (empty - no suffix) Compiler option: -Asimplebuilder.setterSuffix
+     */
+    String setterSuffix() default "";
   }
 
   /**

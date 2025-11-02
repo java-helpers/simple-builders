@@ -101,6 +101,10 @@ public enum CompilerArgumentsEnum {
   /** Option for With interface generation. */
   GENERATE_WITH_INTERFACE("generateWithInterface"),
 
+  // === Naming ===
+  /** Option for builder class name suffix. */
+  BUILDER_SUFFIX("builderSuffix"),
+
   // === Logging ===
   /** Option for verbose logging output. */
   VERBOSE("verbose");

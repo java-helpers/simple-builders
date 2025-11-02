@@ -168,6 +168,7 @@ public class CompilerArgumentsReader {
             readOptionState(CompilerArgumentsEnum.USING_BUILDER_IMPLEMENTATION_ANNOTATION))
         .implementsBuilderBase(readOptionState(CompilerArgumentsEnum.IMPLEMENTS_BUILDER_BASE))
         .generateWithInterface(readOptionState(CompilerArgumentsEnum.GENERATE_WITH_INTERFACE))
+        .builderSuffix(readValue(CompilerArgumentsEnum.BUILDER_SUFFIX))
         .build();
   }
 }

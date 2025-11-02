@@ -58,6 +58,7 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
  * @param usingBuilderImplementationAnnotation Use BuilderImplementation annotation
  * @param implementsBuilderBase Implement IBuilderBase interface
  * @param generateWithInterface Generate With interface
+ * @param builderSuffix Suffix for builder class name
  */
 public record BuilderConfiguration(
     OptionState generateFieldSupplier,
@@ -78,7 +79,8 @@ public record BuilderConfiguration(
     OptionState usingGeneratedAnnotation,
     OptionState usingBuilderImplementationAnnotation,
     OptionState implementsBuilderBase,
-    OptionState generateWithInterface) {
+    OptionState generateWithInterface,
+    String builderSuffix,
 
   public static final BuilderConfiguration DEFAULT =
       builder()
@@ -101,6 +103,7 @@ public record BuilderConfiguration(
           .usingBuilderImplementationAnnotation(ENABLED)
           .implementsBuilderBase(ENABLED)
           .generateWithInterface(ENABLED)
+          .builderSuffix("Builder")
           .build();
 
   // === Convenience accessors with 'is' prefix for boolean properties ===
@@ -179,6 +182,10 @@ public record BuilderConfiguration(
 
   public AccessModifier getMethodAccess() {
     return methodAccess;
+  }
+
+  public String getBuilderSuffix() {
+    return builderSuffix;
   }
 
   /**
@@ -271,6 +278,10 @@ public record BuilderConfiguration(
             other.generateWithInterface != UNSET
                 ? other.generateWithInterface
                 : this.generateWithInterface)
+        .builderSuffix(
+            other.builderSuffix != null && !other.builderSuffix.isEmpty()
+                ? other.builderSuffix
+                : this.builderSuffix)
         .build();
   }
 
@@ -319,6 +330,9 @@ public record BuilderConfiguration(
     if (generateWithInterface != UNSET) {
       builder.append("generateWithInterface", generateWithInterface);
     }
+    if (builderSuffix != null && !builderSuffix.equals("Builder")) {
+      builder.append("builderSuffix", builderSuffix);
+    }
 
     return builder.toString();
   }
@@ -356,6 +370,9 @@ public record BuilderConfiguration(
     // === Integration ===
     private OptionState implementsBuilderBase = OptionState.UNSET;
     private OptionState generateWithInterface = OptionState.UNSET;
+
+    // === Naming ===
+    private String builderSuffix = "Builder";
 
     // === Setters ===
     public Builder generateSupplier(OptionState value) {
@@ -548,6 +565,11 @@ public record BuilderConfiguration(
       return this;
     }
 
+    public Builder builderSuffix(String value) {
+      this.builderSuffix = value;
+      return this;
+    }
+
     public BuilderConfiguration build() {
       return new BuilderConfiguration(
           generateFieldSupplier,
@@ -568,7 +590,8 @@ public record BuilderConfiguration(
           usingGeneratedAnnotation,
           usingBuilderImplementationAnnotation,
           implementsBuilderBase,
-          generateWithInterface);
+          generateWithInterface,
+          builderSuffix,
     }
   }
 
