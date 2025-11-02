@@ -397,7 +397,7 @@ class ConfigurationProcessingTest {
             .generateSupplier(OptionState.DISABLED)
             .generateConsumer(OptionState.ENABLED)
             .builderAccess(AccessModifier.PRIVATE)
-            .methodAccess(AccessModifier.PROTECTED)
+            .methodAccess(AccessModifier.PACKAGE_PRIVATE)
             .setterSuffix("with")
             .build();
 
@@ -410,7 +410,8 @@ class ConfigurationProcessingTest {
     assertTrue(configString.contains("DISABLED"), "toString should show enum values");
     assertTrue(configString.contains("ENABLED"), "toString should show enum values");
     assertTrue(configString.contains("PRIVATE"), "toString should show AccessModifier values");
-    assertTrue(configString.contains("PROTECTED"), "toString should show AccessModifier values");
+    assertTrue(
+        configString.contains("PACKAGE_PRIVATE"), "toString should show AccessModifier values");
     assertTrue(
         configString.contains("setterSuffix"),
         "toString should mention setterSuffix when non-default");
@@ -445,7 +446,7 @@ class ConfigurationProcessingTest {
     BuilderConfiguration compilerArgs =
         BuilderConfiguration.builder()
             .generateSupplier(OptionState.DISABLED)
-            .builderAccess(AccessModifier.PROTECTED)
+            .builderAccess(AccessModifier.PACKAGE_PRIVATE)
             .build();
 
     // Layer 3: Template (override some compiler args)
@@ -469,7 +470,7 @@ class ConfigurationProcessingTest {
         finalConfig.generateFieldConsumer(),
         "Options should override all others");
     assertEquals(
-        AccessModifier.PROTECTED,
+        AccessModifier.PACKAGE_PRIVATE,
         finalConfig.getBuilderAccess(),
         "Compiler args should override defaults");
     assertEquals(

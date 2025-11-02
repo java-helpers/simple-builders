@@ -29,6 +29,9 @@ package org.javahelpers.simple.builders.core.enums;
  *
  * <p>This enum is used to control the visibility of generated builders and their methods through
  * the {@link org.javahelpers.simple.builders.core.annotations.SimpleBuilder.Options} annotation.
+ *
+ * <p>Note: PROTECTED is intentionally not included as builders follow the Builder pattern, not
+ * inheritance, and should not be extended.
  */
 public enum AccessModifier {
 
@@ -37,9 +40,6 @@ public enum AccessModifier {
 
   /** Public access - accessible from anywhere */
   PUBLIC("public"),
-
-  /** Protected access - accessible within the same package and subclasses */
-  PROTECTED("protected"),
 
   /** Package-private access (default) - accessible only within the same package */
   PACKAGE_PRIVATE(""),

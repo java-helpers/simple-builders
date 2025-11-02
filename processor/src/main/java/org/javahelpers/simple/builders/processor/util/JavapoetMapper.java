@@ -217,7 +217,6 @@ public final class JavapoetMapper {
   public static javax.lang.model.element.Modifier map2Modifier(AccessModifier accessModifier) {
     return switch (accessModifier) {
       case PUBLIC, DEFAULT -> javax.lang.model.element.Modifier.PUBLIC;
-      case PROTECTED -> javax.lang.model.element.Modifier.PROTECTED;
       case PRIVATE -> javax.lang.model.element.Modifier.PRIVATE;
       case PACKAGE_PRIVATE -> null; // Package-private has no explicit modifier
     };
