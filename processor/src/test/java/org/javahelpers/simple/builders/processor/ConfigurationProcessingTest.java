@@ -56,7 +56,7 @@ class ConfigurationProcessingTest {
             // Field setter generation options
             .generateSupplier(OptionState.ENABLED)
             .generateConsumer(OptionState.ENABLED)
-            .generateBuilderProvider(OptionState.ENABLED)
+            .generateBuilderConsumer(OptionState.ENABLED)
             // Conditional logic
             .generateConditionalLogic(OptionState.ENABLED)
             // Access control
@@ -88,7 +88,7 @@ class ConfigurationProcessingTest {
     assertNotNull(config);
     assertEquals(OptionState.ENABLED, config.generateFieldSupplier());
     assertEquals(OptionState.ENABLED, config.generateFieldConsumer());
-    assertEquals(OptionState.ENABLED, config.generateBuilderProvider());
+    assertEquals(OptionState.ENABLED, config.generateBuilderConsumer());
     assertEquals(OptionState.ENABLED, config.generateConditionalHelper());
     assertEquals(AccessModifier.PACKAGE_PRIVATE, config.getBuilderAccess());
     assertEquals(AccessModifier.PRIVATE, config.getBuilderConstructorAccess());
@@ -192,7 +192,7 @@ class ConfigurationProcessingTest {
             .withOptions(
                 "-Asimplebuilder.generateFieldSupplier=false",
                 "-Asimplebuilder.generateFieldConsumer=false",
-                "-Asimplebuilder.generateBuilderProvider=false",
+                "-Asimplebuilder.generateBuilderConsumer=false",
                 "-Asimplebuilder.generateConditionalHelper=false",
                 "-Asimplebuilder.builderAccess=PACKAGE_PRIVATE",
                 "-Asimplebuilder.builderConstructorAccess=PRIVATE",
@@ -241,7 +241,7 @@ class ConfigurationProcessingTest {
         "public MinimalDtoCustomBuilder withTags(Consumer<Set<String>> tagsConsumer)",
         "public MinimalDtoCustomBuilder withProperties(Consumer<Map<String, Integer>> propertiesConsumer)");
 
-    // With generateBuilderProvider=false, NO builder consumer methods should be generated
+    // With generateBuilderConsumer=false, NO builder consumer methods should be generated
     // Builder consumers include: StringBuilder, collection builders, nested DTO builders
     ProcessorAsserts.assertNotContaining(
         generatedCode,
@@ -304,19 +304,19 @@ class ConfigurationProcessingTest {
         "MinimalDto build()",
         "static MinimalDtoCustomBuilder create()");
 
-    // With usingArrayListBuilder=false AND generateBuilderProvider=false, NO ArrayListBuilder
+    // With usingArrayListBuilder=false AND generateBuilderConsumer=false, NO ArrayListBuilder
     // should be used
     ProcessorAsserts.assertNotContaining(
         generatedCode,
         "MinimalDtoCustomBuilder withItems(Consumer<ArrayListBuilder<String>> itemsBuilderConsumer)");
 
-    // With usingHashSetBuilder=false AND generateBuilderProvider=false, NO HashSetBuilder should be
+    // With usingHashSetBuilder=false AND generateBuilderConsumer=false, NO HashSetBuilder should be
     // used
     ProcessorAsserts.assertNotContaining(
         generatedCode,
         "MinimalDtoCustomBuilder withTags(Consumer<HashSetBuilder<String>> tagsBuilderConsumer)");
 
-    // With usingHashMapBuilder=false AND generateBuilderProvider=false, NO HashMapBuilder should be
+    // With usingHashMapBuilder=false AND generateBuilderConsumer=false, NO HashMapBuilder should be
     // used
     ProcessorAsserts.assertNotContaining(
         generatedCode,
@@ -360,7 +360,7 @@ class ConfigurationProcessingTest {
     BuilderConfiguration override =
         BuilderConfiguration.builder()
             .generateSupplier(OptionState.DISABLED) // Override
-            .generateBuilderProvider(OptionState.DISABLED) // New value
+            .generateBuilderConsumer(OptionState.DISABLED) // New value
             .setterSuffix("with") // Override setterSuffix
             // generateConsumer not set, should keep base value
             .build();
@@ -377,7 +377,7 @@ class ConfigurationProcessingTest {
         merged.generateFieldConsumer(),
         "Base value should be kept when override is UNSET");
     assertEquals(
-        OptionState.DISABLED, merged.generateBuilderProvider(), "Override should set new value");
+        OptionState.DISABLED, merged.generateBuilderConsumer(), "Override should set new value");
     assertEquals(
         AccessModifier.PUBLIC,
         merged.getBuilderAccess(),

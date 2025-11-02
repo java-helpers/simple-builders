@@ -451,8 +451,8 @@ public class BuilderDefinitionCreator {
       VariableElement fieldParameter,
       TypeName builderType,
       ProcessingContext context) {
-    // Builder consumers are controlled by generateBuilderProvider
-    if (!context.getBuilderConfigurationForElement().shouldGenerateBuilderProvider()) {
+    // Builder consumers are controlled by generateBuilderConsumer
+    if (!context.getBuilderConfigurationForElement().shouldGenerateBuilderConsumer()) {
       return false;
     }
     Optional<TypeName> fieldBuilderOpt = resolveBuilderType(fieldParameter, context);
@@ -507,8 +507,8 @@ public class BuilderDefinitionCreator {
   /** Tries to add StringBuilder-based consumer for String and Optional<String>. */
   private static boolean tryAddStringBuilderConsumer(
       FieldDto field, TypeName builderType, ProcessingContext context) {
-    // StringBuilder is a builder pattern, controlled by generateBuilderProvider
-    if (!context.getBuilderConfigurationForElement().shouldGenerateBuilderProvider()) {
+    // StringBuilder is a builder pattern, controlled by generateBuilderConsumer
+    if (!context.getBuilderConfigurationForElement().shouldGenerateBuilderConsumer()) {
       return false;
     }
     if (shouldGenerateStringBuilderConsumer(field.getFieldType())) {

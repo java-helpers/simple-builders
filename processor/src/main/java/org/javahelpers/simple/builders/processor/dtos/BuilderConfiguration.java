@@ -41,7 +41,7 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
  *
  * @param generateFieldSupplier Generate field supplier methods
  * @param generateFieldConsumer Generate field consumer methods
- * @param generateBuilderProvider Generate builder provider methods
+ * @param generateBuilderConsumer Generate builder consumer methods
  * @param generateConditionalHelper Generate conditional logic methods
  * @param builderAccess Access level for builder class
  * @param builderConstructorAccess Access level for builder constructors
@@ -64,7 +64,7 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
 public record BuilderConfiguration(
     OptionState generateFieldSupplier,
     OptionState generateFieldConsumer,
-    OptionState generateBuilderProvider,
+    OptionState generateBuilderConsumer,
     OptionState generateConditionalHelper,
     AccessModifier builderAccess,
     AccessModifier builderConstructorAccess,
@@ -88,7 +88,7 @@ public record BuilderConfiguration(
       builder()
           .generateSupplier(ENABLED)
           .generateConsumer(ENABLED)
-          .generateBuilderProvider(ENABLED)
+          .generateBuilderConsumer(ENABLED)
           .generateConditionalLogic(ENABLED)
           .builderAccess(PUBLIC)
           .builderConstructorAccess(PUBLIC)
@@ -118,8 +118,8 @@ public record BuilderConfiguration(
     return generateFieldConsumer == ENABLED;
   }
 
-  public boolean shouldGenerateBuilderProvider() {
-    return generateBuilderProvider == ENABLED;
+  public boolean shouldGenerateBuilderConsumer() {
+    return generateBuilderConsumer == ENABLED;
   }
 
   public boolean shouldGenerateConditionalLogic() {
@@ -219,10 +219,10 @@ public record BuilderConfiguration(
             other.generateFieldConsumer != UNSET
                 ? other.generateFieldConsumer
                 : this.generateFieldConsumer)
-        .generateBuilderProvider(
-            other.generateBuilderProvider != UNSET
-                ? other.generateBuilderProvider
-                : this.generateBuilderProvider)
+        .generateBuilderConsumer(
+            other.generateBuilderConsumer != UNSET
+                ? other.generateBuilderConsumer
+                : this.generateBuilderConsumer)
         .generateConditionalLogic(
             other.generateConditionalHelper != UNSET
                 ? other.generateConditionalHelper
@@ -306,8 +306,8 @@ public record BuilderConfiguration(
     if (generateFieldConsumer != UNSET) {
       builder.append("generateFieldConsumer", generateFieldConsumer);
     }
-    if (generateBuilderProvider != UNSET) {
-      builder.append("generateBuilderProvider", generateBuilderProvider);
+    if (generateBuilderConsumer != UNSET) {
+      builder.append("generateBuilderConsumer", generateBuilderConsumer);
     }
     if (generateConditionalHelper != UNSET) {
       builder.append("generateConditionalHelper", generateConditionalHelper);
@@ -357,7 +357,7 @@ public record BuilderConfiguration(
     // === Field Setter Generation ===
     private OptionState generateFieldSupplier = OptionState.UNSET;
     private OptionState generateFieldConsumer = OptionState.UNSET;
-    private OptionState generateBuilderProvider = OptionState.UNSET;
+    private OptionState generateBuilderConsumer = OptionState.UNSET;
 
     // === Conditional Logic ===
     private OptionState generateConditionalHelper = OptionState.UNSET;
@@ -410,13 +410,13 @@ public record BuilderConfiguration(
       return this;
     }
 
-    public Builder generateBuilderProvider(OptionState value) {
-      this.generateBuilderProvider = value;
+    public Builder generateBuilderConsumer(OptionState value) {
+      this.generateBuilderConsumer = value;
       return this;
     }
 
-    public Builder generateBuilderProvider(boolean value) {
-      this.generateBuilderProvider = value ? ENABLED : DISABLED;
+    public Builder generateBuilderConsumer(boolean value) {
+      this.generateBuilderConsumer = value ? ENABLED : DISABLED;
       return this;
     }
 
@@ -594,7 +594,7 @@ public record BuilderConfiguration(
       return new BuilderConfiguration(
           generateFieldSupplier,
           generateFieldConsumer,
-          generateBuilderProvider,
+          generateBuilderConsumer,
           generateConditionalHelper,
           builderAccess,
           builderConstructorAccess,

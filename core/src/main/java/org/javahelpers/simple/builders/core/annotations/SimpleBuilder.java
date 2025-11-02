@@ -41,7 +41,7 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
  * <p>Available configuration options:
  *
  * <ul>
- *   <li><b>Field Setters:</b> generateFieldSupplier, generateFieldProvider, generateBuilderProvider
+ *   <li><b>Field Setters:</b> generateFieldSupplier, generateFieldConsumer, generateBuilderConsumer
  *       (all default: true)
  *   <li><b>Conditional Logic:</b> generateConditionalHelper (default: true)
  *   <li><b>Access Control:</b> builderAccess, methodAccess (default: PUBLIC)
@@ -116,7 +116,7 @@ public @interface SimpleBuilder {
     OptionState generateFieldConsumer() default OptionState.UNSET;
 
     /**
-     * Generate a builder provider method with parameter-type {@code Provider<Builder<T>>} with T
+     * Generate a builder consumer method with parameter-type {@code Consumer<Builder<T>>} with T
      * being the type of the field <br>
      * This is only done for complex field types, which have a recognized builder so that users
      * could use the chained builder methods to set the value of this complex field.
@@ -133,9 +133,9 @@ public @interface SimpleBuilder {
      * }</pre>
      *
      * Default: ENABLED <br>
-     * Compiler option: -Asimplebuilder.generateBuilderProvider
+     * Compiler option: -Asimplebuilder.generateBuilderConsumer
      */
-    OptionState generateBuilderProvider() default OptionState.UNSET;
+    OptionState generateBuilderConsumer() default OptionState.UNSET;
 
     /**
      * Generate conditional logic method (conditional) <br>

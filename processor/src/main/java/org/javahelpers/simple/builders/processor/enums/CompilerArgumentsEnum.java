@@ -45,8 +45,8 @@ public enum CompilerArgumentsEnum {
   /** Option for field consumer generation. */
   GENERATE_FIELD_CONSUMER("generateFieldConsumer"),
 
-  /** Option for builder provider generation. */
-  GENERATE_BUILDER_PROVIDER("generateBuilderProvider"),
+  /** Option for builder consumer generation. */
+  GENERATE_BUILDER_CONSUMER("generateBuilderConsumer"),
 
   // === Conditional Logic ===
   /** Option for conditional helper generation. */
