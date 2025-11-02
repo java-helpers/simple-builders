@@ -91,6 +91,7 @@ public class BuilderConfigurationReader {
         .usingHashMapBuilder(options.usingHashMapBuilder())
         .usingGeneratedAnnotation(options.usingGeneratedAnnotation())
         .usingBuilderImplementationAnnotation(options.usingBuilderImplementationAnnotation())
+        .implementsBuilderBase(options.implementsBuilderBase())
         .generateWithInterface(options.generateWithInterface())
         .build();
   }
@@ -144,6 +145,7 @@ public class BuilderConfigurationReader {
               .usingHashMapBuilder(options.usingHashMapBuilder())
               .usingGeneratedAnnotation(options.usingGeneratedAnnotation())
               .usingBuilderImplementationAnnotation(options.usingBuilderImplementationAnnotation())
+              .implementsBuilderBase(options.implementsBuilderBase())
               .generateWithInterface(options.generateWithInterface())
               .build();
         }

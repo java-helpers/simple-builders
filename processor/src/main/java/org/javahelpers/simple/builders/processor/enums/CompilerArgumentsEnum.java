@@ -92,6 +92,9 @@ public enum CompilerArgumentsEnum {
   USING_BUILDER_IMPLEMENTATION_ANNOTATION("usingBuilderImplementationAnnotation"),
 
   // === Integration ===
+  /** Option for implementing IBuilderBase interface. */
+  IMPLEMENTS_BUILDER_BASE("implementsBuilderBase"),
+
   /** Option for With interface generation. */
   GENERATE_WITH_INTERFACE("generateWithInterface"),
 

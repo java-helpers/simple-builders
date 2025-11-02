@@ -104,8 +104,12 @@ public class JavaCodeGenerator {
     TypeSpec.Builder classBuilder =
         TypeSpec.classBuilder(builderBaseClass)
             .addTypeVariables(map2TypeVariables(builderDef.getGenerics()))
-            .addJavadoc(createJavadocForClass(dtoBaseClass))
-            .addSuperinterface(createInterfaceBuilderBase(dtoTypeName));
+            .addJavadoc(createJavadocForClass(dtoBaseClass));
+
+    // Conditionally add IBuilderBase interface
+    if (builderDef.getConfiguration().shouldImplementBuilderBase()) {
+      classBuilder.addSuperinterface(createInterfaceBuilderBase(dtoTypeName));
+    }
 
     // Adding Constructors for builder
     classBuilder.addMethod(
@@ -160,7 +164,8 @@ public class JavaCodeGenerator {
             dtoTypeName,
             builderDef.getConstructorFieldsForBuilder(),
             builderDef.getSetterFieldsForBuilder(),
-            builderDef.getGenerics()));
+            builderDef.getGenerics(),
+            builderDef.getConfiguration().shouldImplementBuilderBase()));
     classBuilder.addMethod(
         createMethodStaticCreate(
             builderBaseClass, builderTypeName, dtoBaseClass, builderDef.getGenerics()));
@@ -368,12 +373,15 @@ public class JavaCodeGenerator {
       com.palantir.javapoet.TypeName returnType,
       List<FieldDto> constructorFields,
       List<FieldDto> setterFields,
-      List<GenericParameterDto> generics) {
+      List<GenericParameterDto> generics,
+      boolean implementsBuilderBase) {
     MethodSpec.Builder mb =
-        MethodSpec.methodBuilder("build")
-            .addModifiers(PUBLIC)
-            .returns(returnType)
-            .addAnnotation(Override.class);
+        MethodSpec.methodBuilder("build").addModifiers(PUBLIC).returns(returnType);
+
+    // Only add @Override annotation if implementing IBuilderBase interface
+    if (implementsBuilderBase) {
+      mb.addAnnotation(Override.class);
+    }
 
     // Validate non-nullable constructor fields: must be set AND can't be null
     // If not annotated with @NotNull/@NonNull, constructor fields can be left unset (→ null passed)

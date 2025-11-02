@@ -185,6 +185,7 @@ class ConfigurationProcessingTest {
                 "-Asimplebuilder.usingHashMapBuilder=false",
                 "-Asimplebuilder.usingGeneratedAnnotation=false",
                 "-Asimplebuilder.usingBuilderImplementationAnnotation=false",
+                "-Asimplebuilder.implementsBuilderBase=false",
                 "-Asimplebuilder.generateWithInterface=false")
             .compile(nestedDto, addressDto, source);
 
@@ -255,6 +256,10 @@ class ConfigurationProcessingTest {
     // be used
     ProcessorAsserts.assertNotContaining(generatedCode, "@BuilderImplementation");
 
+    // With implementsBuilderBase=false, NO IBuilderBase interface should be implemented
+    ProcessorAsserts.assertNotContaining(
+        generatedCode, "implements IBuilderBase", "@Override public MinimalDto build()");
+
     // With usingArrayListBuilder=false AND generateBuilderProvider=false, NO ArrayListBuilder
     // should be used
     ProcessorAsserts.assertNotContaining(
@@ -273,10 +278,11 @@ class ConfigurationProcessingTest {
         generatedCode,
         "public MinimalDtoBuilder properties(Consumer<HashMapBuilder<String, Integer>> propertiesBuilderConsumer)");
 
-    // Still generates: basic setters
+    // Still generates: basic setters and build method (without @Override when interface not
+    // implemented)
     ProcessorAsserts.assertContaining(
         generatedCode,
-        "class MinimalDtoBuilder implements IBuilderBase<MinimalDto>",
+        "class MinimalDtoBuilder",
         "public MinimalDtoBuilder(MinimalDto instance)",
         "public MinimalDtoBuilder name(String name)",
         "public MinimalDtoBuilder items(List<String> items)",

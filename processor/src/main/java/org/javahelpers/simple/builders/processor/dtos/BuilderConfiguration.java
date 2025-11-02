@@ -55,6 +55,7 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
  * @param usingHashMapBuilder Use HashMapBuilder for maps
  * @param usingGeneratedAnnotation Use Generated annotation
  * @param usingBuilderImplementationAnnotation Use BuilderImplementation annotation
+ * @param implementsBuilderBase Implement IBuilderBase interface
  * @param generateWithInterface Generate With interface
  */
 public record BuilderConfiguration(
@@ -74,6 +75,7 @@ public record BuilderConfiguration(
     OptionState usingHashMapBuilder,
     OptionState usingGeneratedAnnotation,
     OptionState usingBuilderImplementationAnnotation,
+    OptionState implementsBuilderBase,
     OptionState generateWithInterface) {
 
   public static final BuilderConfiguration DEFAULT =
@@ -94,6 +96,7 @@ public record BuilderConfiguration(
           .usingHashMapBuilder(ENABLED)
           .usingGeneratedAnnotation(ENABLED)
           .usingBuilderImplementationAnnotation(ENABLED)
+          .implementsBuilderBase(ENABLED)
           .generateWithInterface(ENABLED)
           .build();
 
@@ -156,6 +159,10 @@ public record BuilderConfiguration(
 
   public boolean shouldUseBuilderImplementationAnnotation() {
     return usingBuilderImplementationAnnotation == ENABLED;
+  }
+
+  public boolean shouldImplementBuilderBase() {
+    return implementsBuilderBase == ENABLED;
   }
 
   // === String accessors ===
@@ -245,6 +252,10 @@ public record BuilderConfiguration(
             other.usingBuilderImplementationAnnotation != UNSET
                 ? other.usingBuilderImplementationAnnotation
                 : this.usingBuilderImplementationAnnotation)
+        .implementsBuilderBase(
+            other.implementsBuilderBase != UNSET
+                ? other.implementsBuilderBase
+                : this.implementsBuilderBase)
         .generateWithInterface(
             other.generateWithInterface != UNSET
                 ? other.generateWithInterface
@@ -331,6 +342,7 @@ public record BuilderConfiguration(
     private OptionState usingBuilderImplementationAnnotation = OptionState.UNSET;
 
     // === Integration ===
+    private OptionState implementsBuilderBase = OptionState.UNSET;
     private OptionState generateWithInterface = OptionState.UNSET;
 
     // === Setters ===
@@ -484,6 +496,16 @@ public record BuilderConfiguration(
       return this;
     }
 
+    public Builder implementsBuilderBase(OptionState value) {
+      this.implementsBuilderBase = value;
+      return this;
+    }
+
+    public Builder implementsBuilderBase(boolean value) {
+      this.implementsBuilderBase = value ? ENABLED : DISABLED;
+      return this;
+    }
+
     public Builder builderAccess(AccessModifier value) {
       this.builderAccess = value;
       return this;
@@ -522,6 +544,7 @@ public record BuilderConfiguration(
           usingHashMapBuilder,
           usingGeneratedAnnotation,
           usingBuilderImplementationAnnotation,
+          implementsBuilderBase,
           generateWithInterface);
     }
   }

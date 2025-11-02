@@ -309,6 +309,12 @@ public @interface SimpleBuilder {
 
     // === Integration ===
     /**
+     * Implement {@code IBuilderBase} interface in the generated builder class. <br>
+     * Default: ENABLED Compiler option: -Asimplebuilder.implementsBuilderBase
+     */
+    OptionState implementsBuilderBase() default OptionState.UNSET;
+
+    /**
      * Generate With interface for integrating builder into DTOs. <br>
      * Default: ENABLED Compiler option: -Asimplebuilder.generateWithInterface
      */
