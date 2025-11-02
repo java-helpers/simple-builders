@@ -44,6 +44,7 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
  * @param generateBuilderProvider Generate builder provider methods
  * @param generateConditionalHelper Generate conditional logic methods
  * @param builderAccess Access level for builder class
+ * @param builderConstructorAccess Access level for builder constructors
  * @param methodAccess Access level for builder methods
  * @param generateVarArgsHelpers Generate varargs helper methods
  * @param generateStringFormatHelpers Generate string format helper methods
@@ -64,6 +65,7 @@ public record BuilderConfiguration(
     OptionState generateBuilderProvider,
     OptionState generateConditionalHelper,
     AccessModifier builderAccess,
+    AccessModifier builderConstructorAccess,
     AccessModifier methodAccess,
     OptionState generateVarArgsHelpers,
     OptionState generateStringFormatHelpers,
@@ -85,6 +87,7 @@ public record BuilderConfiguration(
           .generateBuilderProvider(ENABLED)
           .generateConditionalLogic(ENABLED)
           .builderAccess(PUBLIC)
+          .builderConstructorAccess(PUBLIC)
           .methodAccess(PUBLIC)
           .generateVarArgsHelpers(ENABLED)
           .generateStringFormatHelpers(ENABLED)
@@ -170,6 +173,10 @@ public record BuilderConfiguration(
     return builderAccess;
   }
 
+  public AccessModifier getBuilderConstructorAccess() {
+    return builderConstructorAccess;
+  }
+
   public AccessModifier getMethodAccess() {
     return methodAccess;
   }
@@ -210,6 +217,10 @@ public record BuilderConfiguration(
             other.builderAccess != AccessModifier.DEFAULT
                 ? other.builderAccess
                 : this.builderAccess)
+        .builderConstructorAccess(
+            other.builderConstructorAccess != AccessModifier.DEFAULT
+                ? other.builderConstructorAccess
+                : this.builderConstructorAccess)
         .methodAccess(
             other.methodAccess != AccessModifier.DEFAULT ? other.methodAccess : this.methodAccess)
         .generateVarArgsHelpers(
@@ -325,6 +336,7 @@ public record BuilderConfiguration(
 
     // === Access Control ===
     private AccessModifier builderAccess = AccessModifier.DEFAULT;
+    private AccessModifier builderConstructorAccess = AccessModifier.DEFAULT;
     private AccessModifier methodAccess = AccessModifier.DEFAULT;
 
     // === Collection Options ===
@@ -516,6 +528,16 @@ public record BuilderConfiguration(
       return this;
     }
 
+    public Builder builderConstructorAccess(AccessModifier value) {
+      this.builderConstructorAccess = value;
+      return this;
+    }
+
+    public Builder builderConstructorAccess(String value) {
+      this.builderConstructorAccess = AccessModifier.valueOf(value.toUpperCase());
+      return this;
+    }
+
     public Builder methodAccess(AccessModifier value) {
       this.methodAccess = value;
       return this;
@@ -533,6 +555,7 @@ public record BuilderConfiguration(
           generateBuilderProvider,
           generateConditionalHelper,
           builderAccess,
+          builderConstructorAccess,
           methodAccess,
           generateVarArgsHelpers,
           generateStringFormatHelpers,

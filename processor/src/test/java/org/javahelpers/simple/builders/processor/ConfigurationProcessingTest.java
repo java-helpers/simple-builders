@@ -175,6 +175,7 @@ class ConfigurationProcessingTest {
                 "-Asimplebuilder.generateFieldConsumer=false",
                 "-Asimplebuilder.generateBuilderProvider=false",
                 "-Asimplebuilder.generateConditionalHelper=false",
+                "-Asimplebuilder.builderConstructorAccess=PRIVATE",
                 "-Asimplebuilder.generateVarArgsHelpers=false",
                 "-Asimplebuilder.generateStringFormatHelpers=false",
                 "-Asimplebuilder.generateUnboxedOptional=false",
@@ -283,7 +284,8 @@ class ConfigurationProcessingTest {
     ProcessorAsserts.assertContaining(
         generatedCode,
         "class MinimalDtoBuilder",
-        "public MinimalDtoBuilder(MinimalDto instance)",
+        "private MinimalDtoBuilder()",
+        "private MinimalDtoBuilder(MinimalDto instance)",
         "public MinimalDtoBuilder name(String name)",
         "public MinimalDtoBuilder items(List<String> items)",
         "public MinimalDtoBuilder properties(Map<String, Integer> properties)",

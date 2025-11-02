@@ -149,6 +149,8 @@ public class CompilerArgumentsReader {
         .generateConditionalLogic(
             readOptionState(CompilerArgumentsEnum.GENERATE_CONDITIONAL_HELPER))
         .builderAccess(readAccessModifier(CompilerArgumentsEnum.BUILDER_ACCESS))
+        .builderConstructorAccess(
+            readAccessModifier(CompilerArgumentsEnum.BUILDER_CONSTRUCTOR_ACCESS))
         .methodAccess(readAccessModifier(CompilerArgumentsEnum.METHOD_ACCESS))
         .generateVarArgsHelpers(readOptionState(CompilerArgumentsEnum.GENERATE_VAR_ARGS_HELPERS))
         .generateStringFormatHelpers(

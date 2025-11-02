@@ -56,6 +56,9 @@ public enum CompilerArgumentsEnum {
   /** Option for builder access level. */
   BUILDER_ACCESS("builderAccess"),
 
+  /** Option for builder constructor access level. */
+  BUILDER_CONSTRUCTOR_ACCESS("builderConstructorAccess"),
+
   /** Option for method access level. */
   METHOD_ACCESS("methodAccess"),
 

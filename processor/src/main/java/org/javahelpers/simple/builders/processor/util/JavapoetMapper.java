@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
+import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.processor.dtos.*;
 
 /** Helper functions to create JavaPoet types from DTOs of simple builder. */
@@ -205,5 +206,20 @@ public final class JavapoetMapper {
    */
   public static List<AnnotationSpec> map2AnnotationSpecs(List<AnnotationDto> annotations) {
     return annotations.stream().map(JavapoetMapper::map2AnnotationSpec).toList();
+  }
+
+  /**
+   * Maps an AccessModifier enum value to a javax.lang.model.element.Modifier.
+   *
+   * @param accessModifier the access modifier to map
+   * @return the corresponding Modifier
+   */
+  public static javax.lang.model.element.Modifier map2Modifier(AccessModifier accessModifier) {
+    return switch (accessModifier) {
+      case PUBLIC, DEFAULT -> javax.lang.model.element.Modifier.PUBLIC;
+      case PROTECTED -> javax.lang.model.element.Modifier.PROTECTED;
+      case PRIVATE -> javax.lang.model.element.Modifier.PRIVATE;
+      case PACKAGE_PRIVATE -> null; // Package-private has no explicit modifier
+    };
   }
 }

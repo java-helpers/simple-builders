@@ -117,6 +117,16 @@ public @interface SimpleBuilder {
     AccessModifier builderAccess() default AccessModifier.PUBLIC;
 
     /**
+     * Access level for generated builder constructors.
+     *
+     * <p>Default: {@link AccessModifier#PUBLIC PUBLIC}
+     *
+     * <p>Compiler option: -Asimplebuilder.builderConstructorAccess (values: PUBLIC, PROTECTED,
+     * PACKAGE_PRIVATE, PRIVATE)
+     */
+    AccessModifier builderConstructorAccess() default AccessModifier.PUBLIC;
+
+    /**
      * Access level for generated builder methods.
      *
      * <p>Default: {@link AccessModifier#PUBLIC PUBLIC}

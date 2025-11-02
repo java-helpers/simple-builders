@@ -112,10 +112,15 @@ public class JavaCodeGenerator {
     }
 
     // Adding Constructors for builder
+    Modifier constructorAccessModifier =
+        map2Modifier(builderDef.getConfiguration().getBuilderConstructorAccess());
     classBuilder.addMethod(
         createConstructorWithInstance(
-            dtoBaseClass, dtoTypeName, builderDef.getAllFieldsForBuilder()));
-    classBuilder.addMethod(createEmptyConstructor(dtoBaseClass));
+            dtoBaseClass,
+            dtoTypeName,
+            builderDef.getAllFieldsForBuilder(),
+            constructorAccessModifier));
+    classBuilder.addMethod(createEmptyConstructor(dtoBaseClass, constructorAccessModifier));
 
     logger.debug(
         "Generating %d constructor fields and %d setter fields",
@@ -293,10 +298,10 @@ public class JavaCodeGenerator {
         .build();
   }
 
-  private MethodSpec createEmptyConstructor(ClassName dtoClass) {
+  private MethodSpec createEmptyConstructor(ClassName dtoClass, Modifier accessModifier) {
     MethodSpec.Builder constructorBuilder =
         MethodSpec.constructorBuilder()
-            .addModifiers(Modifier.PUBLIC)
+            .addModifiers(accessModifier)
             .addJavadoc(
                 """
             Empty constructor of builder for {@code $1N.$2T}.
@@ -307,10 +312,13 @@ public class JavaCodeGenerator {
   }
 
   private MethodSpec createConstructorWithInstance(
-      ClassName dtoBaseClass, com.palantir.javapoet.TypeName dtoType, List<FieldDto> fields) {
+      ClassName dtoBaseClass,
+      com.palantir.javapoet.TypeName dtoType,
+      List<FieldDto> fields,
+      Modifier accessModifier) {
     MethodSpec.Builder cb =
         MethodSpec.constructorBuilder()
-            .addModifiers(Modifier.PUBLIC)
+            .addModifiers(accessModifier)
             .addParameter(dtoType, "instance")
             .addJavadoc(
                 """
