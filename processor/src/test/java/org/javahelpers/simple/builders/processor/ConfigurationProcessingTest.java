@@ -175,7 +175,9 @@ class ConfigurationProcessingTest {
                 "-Asimplebuilder.generateFieldConsumer=false",
                 "-Asimplebuilder.generateBuilderProvider=false",
                 "-Asimplebuilder.generateConditionalHelper=false",
+                "-Asimplebuilder.builderAccess=PACKAGE_PRIVATE",
                 "-Asimplebuilder.builderConstructorAccess=PRIVATE",
+                "-Asimplebuilder.methodAccess=PACKAGE_PRIVATE",
                 "-Asimplebuilder.generateVarArgsHelpers=false",
                 "-Asimplebuilder.generateStringFormatHelpers=false",
                 "-Asimplebuilder.generateUnboxedOptional=false",
@@ -261,40 +263,60 @@ class ConfigurationProcessingTest {
     ProcessorAsserts.assertNotContaining(
         generatedCode, "implements IBuilderBase", "@Override public MinimalDto build()");
 
+    // With builderAccess=PACKAGE_PRIVATE, builder class should NOT have public modifier
+    ProcessorAsserts.assertNotContaining(generatedCode, "public class MinimalDtoBuilder");
+
+    // But package-private class should exist
+    ProcessorAsserts.assertContaining(generatedCode, "class MinimalDtoBuilder");
+
+    // With methodAccess=PACKAGE_PRIVATE, methods should NOT have public modifier
+    ProcessorAsserts.assertNotContaining(
+        generatedCode,
+        "public MinimalDtoBuilder name(String name)",
+        "public MinimalDto build()",
+        "public static MinimalDtoBuilder create()");
+
+    // But package-private methods should exist
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        "MinimalDtoBuilder name(String name)",
+        "MinimalDto build()",
+        "static MinimalDtoBuilder create()");
+
     // With usingArrayListBuilder=false AND generateBuilderProvider=false, NO ArrayListBuilder
     // should be used
     ProcessorAsserts.assertNotContaining(
         generatedCode,
-        "public MinimalDtoBuilder items(Consumer<ArrayListBuilder<String>> itemsBuilderConsumer)");
+        "MinimalDtoBuilder items(Consumer<ArrayListBuilder<String>> itemsBuilderConsumer)");
 
     // With usingHashSetBuilder=false AND generateBuilderProvider=false, NO HashSetBuilder should be
     // used
     ProcessorAsserts.assertNotContaining(
         generatedCode,
-        "public MinimalDtoBuilder tags(Consumer<HashSetBuilder<String>> tagsBuilderConsumer)");
+        "MinimalDtoBuilder tags(Consumer<HashSetBuilder<String>> tagsBuilderConsumer)");
 
     // With usingHashMapBuilder=false AND generateBuilderProvider=false, NO HashMapBuilder should be
     // used
     ProcessorAsserts.assertNotContaining(
         generatedCode,
-        "public MinimalDtoBuilder properties(Consumer<HashMapBuilder<String, Integer>> propertiesBuilderConsumer)");
+        "MinimalDtoBuilder properties(Consumer<HashMapBuilder<String, Integer>> propertiesBuilderConsumer)");
 
-    // Still generates: basic setters and build method (without @Override when interface not
-    // implemented)
+    // Still generates: basic setters and build method (package-private methods, private
+    // constructors)
     ProcessorAsserts.assertContaining(
         generatedCode,
         "class MinimalDtoBuilder",
         "private MinimalDtoBuilder()",
         "private MinimalDtoBuilder(MinimalDto instance)",
-        "public MinimalDtoBuilder name(String name)",
-        "public MinimalDtoBuilder items(List<String> items)",
-        "public MinimalDtoBuilder properties(Map<String, Integer> properties)",
-        "public MinimalDtoBuilder description(Optional<String> description)",
-        "public MinimalDtoBuilder tags(Set<String> tags)",
-        "public MinimalDtoBuilder nested(NestedDto nested)",
-        "public MinimalDtoBuilder address(Address address)",
-        "public MinimalDto build()",
-        "public static MinimalDtoBuilder create()");
+        "MinimalDtoBuilder name(String name)",
+        "MinimalDtoBuilder items(List<String> items)",
+        "MinimalDtoBuilder properties(Map<String, Integer> properties)",
+        "MinimalDtoBuilder description(Optional<String> description)",
+        "MinimalDtoBuilder tags(Set<String> tags)",
+        "MinimalDtoBuilder nested(NestedDto nested)",
+        "MinimalDtoBuilder address(Address address)",
+        "MinimalDto build()",
+        "static MinimalDtoBuilder create()");
   }
 
   /**
