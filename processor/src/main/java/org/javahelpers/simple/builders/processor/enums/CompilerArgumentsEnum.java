@@ -105,6 +105,9 @@ public enum CompilerArgumentsEnum {
   /** Option for builder class name suffix. */
   BUILDER_SUFFIX("builderSuffix"),
 
+  /** Option for setter method name suffix. */
+  SETTER_SUFFIX("setterSuffix"),
+
   // === Logging ===
   /** Option for verbose logging output. */
   VERBOSE("verbose");

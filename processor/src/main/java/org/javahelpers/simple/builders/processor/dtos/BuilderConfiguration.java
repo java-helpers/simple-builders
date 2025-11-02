@@ -59,6 +59,7 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
  * @param implementsBuilderBase Implement IBuilderBase interface
  * @param generateWithInterface Generate With interface
  * @param builderSuffix Suffix for builder class name
+ * @param setterSuffix Suffix for setter method names
  */
 public record BuilderConfiguration(
     OptionState generateFieldSupplier,
@@ -81,6 +82,7 @@ public record BuilderConfiguration(
     OptionState implementsBuilderBase,
     OptionState generateWithInterface,
     String builderSuffix,
+    String setterSuffix) {
 
   public static final BuilderConfiguration DEFAULT =
       builder()
@@ -104,6 +106,7 @@ public record BuilderConfiguration(
           .implementsBuilderBase(ENABLED)
           .generateWithInterface(ENABLED)
           .builderSuffix("Builder")
+          .setterSuffix("")
           .build();
 
   // === Convenience accessors with 'is' prefix for boolean properties ===
@@ -186,6 +189,10 @@ public record BuilderConfiguration(
 
   public String getBuilderSuffix() {
     return builderSuffix;
+  }
+
+  public String getSetterSuffix() {
+    return setterSuffix;
   }
 
   /**
@@ -282,6 +289,10 @@ public record BuilderConfiguration(
             other.builderSuffix != null && !other.builderSuffix.isEmpty()
                 ? other.builderSuffix
                 : this.builderSuffix)
+        .setterSuffix(
+            other.setterSuffix != null && !other.setterSuffix.isEmpty()
+                ? other.setterSuffix
+                : this.setterSuffix)
         .build();
   }
 
@@ -333,6 +344,9 @@ public record BuilderConfiguration(
     if (builderSuffix != null && !builderSuffix.equals("Builder")) {
       builder.append("builderSuffix", builderSuffix);
     }
+    if (setterSuffix != null && !setterSuffix.isEmpty()) {
+      builder.append("setterSuffix", setterSuffix);
+    }
 
     return builder.toString();
   }
@@ -373,6 +387,7 @@ public record BuilderConfiguration(
 
     // === Naming ===
     private String builderSuffix = "Builder";
+    private String setterSuffix = "";
 
     // === Setters ===
     public Builder generateSupplier(OptionState value) {
@@ -570,6 +585,11 @@ public record BuilderConfiguration(
       return this;
     }
 
+    public Builder setterSuffix(String value) {
+      this.setterSuffix = value;
+      return this;
+    }
+
     public BuilderConfiguration build() {
       return new BuilderConfiguration(
           generateFieldSupplier,
@@ -592,6 +612,7 @@ public record BuilderConfiguration(
           implementsBuilderBase,
           generateWithInterface,
           builderSuffix,
+          setterSuffix);
     }
   }
 

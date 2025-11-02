@@ -95,6 +95,7 @@ public class BuilderConfigurationReader {
         .implementsBuilderBase(options.implementsBuilderBase())
         .generateWithInterface(options.generateWithInterface())
         .builderSuffix(options.builderSuffix())
+        .setterSuffix(options.setterSuffix())
         .build();
   }
 
@@ -151,6 +152,7 @@ public class BuilderConfigurationReader {
               .implementsBuilderBase(options.implementsBuilderBase())
               .generateWithInterface(options.generateWithInterface())
               .builderSuffix(options.builderSuffix())
+              .setterSuffix(options.setterSuffix())
               .build();
         }
       } catch (ClassNotFoundException e) {
