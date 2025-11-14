@@ -28,7 +28,6 @@ import static com.google.testing.compile.CompilationSubject.assertThat;
 
 import com.google.testing.compile.Compilation;
 import com.google.testing.compile.JavaFileObjects;
-
 import javax.tools.JavaFileObject;
 import org.javahelpers.simple.builders.processor.testing.ProcessorAsserts;
 import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
@@ -102,6 +101,9 @@ class BuilderConfigurationReaderTest {
     // Verify builderSuffix="Factory"
     ProcessorAsserts.assertContaining(generatedCode, "class PersonDtoFactory");
 
+    // Verify class access is PACKAGE_PRIVATE
+    ProcessorAsserts.assertNotContaining(generatedCode, "public class PersonDtoFactory");
+
     // Verify setterSuffix="with"
     ProcessorAsserts.assertContaining(generatedCode, "PersonDtoFactory withName(String name)");
     ProcessorAsserts.assertContaining(generatedCode, "PersonDtoFactory withTags(");
@@ -110,8 +112,14 @@ class BuilderConfigurationReaderTest {
     ProcessorAsserts.assertNotContaining(generatedCode, "public class PersonDtoFactory");
     ProcessorAsserts.assertContaining(generatedCode, "class PersonDtoFactory");
 
-    // Verify methodAccess=PACKAGE_PRIVATE (no "public" before methods)
+    // Verify methodAccess=PACKAGE_PRIVATE (no "public" before setter methods)
     ProcessorAsserts.assertNotContaining(generatedCode, "public PersonDtoFactory withName");
+    ProcessorAsserts.assertContaining(generatedCode, "PersonDtoFactory withName(String name)");
+
+    // Verify builder methods have public access even with builderAccess=PACKAGE_PRIVATE being
+    // package private
+    ProcessorAsserts.assertContaining(generatedCode, "public PersonDto build()");
+    ProcessorAsserts.assertContaining(generatedCode, "public static PersonDtoFactory create()");
 
     // Verify generateFieldSupplier=DISABLED (no Supplier methods)
     ProcessorAsserts.assertNotContaining(generatedCode, "Supplier<String>");
@@ -188,8 +196,7 @@ class BuilderConfigurationReaderTest {
 
     // Verify template values are applied
     ProcessorAsserts.assertContaining(generatedCode, "class PersonDtoMiniBuilder");
-    ProcessorAsserts.assertContaining(
-        generatedCode, "PersonDtoMiniBuilder setName(String name)");
+    ProcessorAsserts.assertContaining(generatedCode, "PersonDtoMiniBuilder setName(String name)");
     ProcessorAsserts.assertContaining(generatedCode, "PersonDtoMiniBuilder setAge(int age)");
 
     // Verify disabled features

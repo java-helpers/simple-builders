@@ -170,6 +170,8 @@ public class JavaCodeGenerator {
     }
 
     // Adding builder-specific methods
+    // Note: build() and create() are always PUBLIC for usability and to satisfy interface contracts
+    // (e.g., IBuilderBase). The methodAccess configuration only applies to setter/fluent methods.
     classBuilder.addMethod(
         createMethodBuild(
             dtoBaseClass,
@@ -178,14 +180,10 @@ public class JavaCodeGenerator {
             builderDef.getSetterFieldsForBuilder(),
             builderDef.getGenerics(),
             builderDef.getConfiguration().shouldImplementBuilderBase(),
-            methodAccessModifier));
+            PUBLIC));
     classBuilder.addMethod(
         createMethodStaticCreate(
-            builderBaseClass,
-            builderTypeName,
-            dtoBaseClass,
-            builderDef.getGenerics(),
-            methodAccessModifier));
+            builderBaseClass, builderTypeName, dtoBaseClass, builderDef.getGenerics(), PUBLIC));
 
     // Add conditional methods only if enabled in configuration
     if (builderDef.getConfiguration().shouldGenerateConditionalLogic()) {

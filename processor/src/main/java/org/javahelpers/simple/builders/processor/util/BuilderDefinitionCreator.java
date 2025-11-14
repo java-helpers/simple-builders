@@ -309,18 +309,20 @@ public class BuilderDefinitionCreator {
       setMethodAccessModifier(method1, methodAccessModifier);
       field.addMethod(method1);
 
-      // Add Consumer<ArrayListBuilder<ElementType>> method
-      TypeName collectionBuilderType = map2TypeName(ArrayListBuilder.class);
-      MethodDto method2 =
-          createFieldConsumerWithArrayBuilder(
-              fieldName,
-              fieldNameInBuilder,
-              collectionBuilderType,
-              elementType,
-              builderType,
-              context);
-      setMethodAccessModifier(method2, methodAccessModifier);
-      field.addMethod(method2);
+      // Add Consumer<ArrayListBuilder<ElementType>> method only if builder consumers are enabled
+      if (context.getBuilderConfigurationForElement().shouldGenerateBuilderConsumer()) {
+        TypeName collectionBuilderType = map2TypeName(ArrayListBuilder.class);
+        MethodDto method2 =
+            createFieldConsumerWithArrayBuilder(
+                fieldName,
+                fieldNameInBuilder,
+                collectionBuilderType,
+                elementType,
+                builderType,
+                context);
+        setMethodAccessModifier(method2, methodAccessModifier);
+        field.addMethod(method2);
+      }
       return;
     }
 
@@ -427,7 +429,7 @@ public class BuilderDefinitionCreator {
       TypeElement fieldTypeElement,
       TypeName builderType,
       ProcessingContext context) {
-    // Do not generate supplier methods for generic type variables (e.g., T)
+    // Do not generate consumer methods for generic type variables (e.g., T)
     if (field.getFieldType() instanceof TypeNameVariable) {
       return;
     }
@@ -552,6 +554,11 @@ public class BuilderDefinitionCreator {
     Optional<TypeName> elementBuilderType =
         resolveBuilderType(elementType, elementTypeMirror, context);
 
+    // Only generate builder consumer methods if enabled
+    if (!context.getBuilderConfigurationForElement().shouldGenerateBuilderConsumer()) {
+      return false;
+    }
+
     if (elementBuilderType.isPresent()
         && context
             .getBuilderConfigurationForElement()
@@ -596,6 +603,10 @@ public class BuilderDefinitionCreator {
   /** Tries to add Map-specific consumer methods. Returns true if handled. */
   private static boolean tryAddMapConsumer(
       FieldDto field, TypeName builderType, ProcessingContext context) {
+    // Check if builder consumers are enabled
+    if (!context.getBuilderConfigurationForElement().shouldGenerateBuilderConsumer()) {
+      return false;
+    }
     // Check if HashMapBuilder is enabled
     if (!context.getBuilderConfigurationForElement().shouldUseHashMapBuilder()) {
       return false;
@@ -644,6 +655,11 @@ public class BuilderDefinitionCreator {
 
     Optional<TypeName> elementBuilderType =
         resolveBuilderType(elementType, elementTypeMirror, context);
+
+    // Only generate builder consumer methods if enabled
+    if (!context.getBuilderConfigurationForElement().shouldGenerateBuilderConsumer()) {
+      return false;
+    }
 
     if (elementBuilderType.isPresent()
         && context

@@ -45,7 +45,8 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
  * @param generateConditionalHelper Generate conditional logic methods
  * @param builderAccess Access level for builder class
  * @param builderConstructorAccess Access level for builder constructors
- * @param methodAccess Access level for builder methods
+ * @param methodAccess Access level for setter/fluent methods (NOT build() or create() which are
+ *     always public)
  * @param generateVarArgsHelpers Generate varargs helper methods
  * @param generateStringFormatHelpers Generate string format helper methods
  * @param generateUnboxedOptional Generate unboxed optional methods

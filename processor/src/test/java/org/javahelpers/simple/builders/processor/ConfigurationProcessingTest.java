@@ -290,10 +290,7 @@ class ConfigurationProcessingTest {
 
     // With methodAccess=PACKAGE_PRIVATE, methods should NOT have public modifier
     ProcessorAsserts.assertNotContaining(
-        generatedCode,
-        "public MinimalDtoCustomBuilder withName(String name)",
-        "public MinimalDto build()",
-        "public static MinimalDtoCustomBuilder create()");
+        generatedCode, "public MinimalDtoCustomBuilder withName(String name)");
 
     // But package-private methods should exist - with setterSuffix="with", methods are prefixed
     ProcessorAsserts.assertContaining(
