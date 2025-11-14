@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.testing.compile.Compilation;
-import com.google.testing.compile.Compiler;
 import javax.tools.JavaFileObject;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.core.enums.OptionState;
@@ -187,8 +186,7 @@ class ConfigurationProcessingTest {
 
     // When: Compile with ALL compiler arguments disabled and custom builder suffix
     Compilation compilation =
-        Compiler.javac()
-            .withProcessors(new BuilderProcessor())
+        ProcessorTestUtils.createCompiler()
             .withOptions(
                 "-Asimplebuilder.generateFieldSupplier=false",
                 "-Asimplebuilder.generateFieldConsumer=false",
@@ -524,8 +522,7 @@ class ConfigurationProcessingTest {
 
     // When: Compile with custom builderSuffix
     Compilation compilation =
-        Compiler.javac()
-            .withProcessors(new BuilderProcessor())
+        ProcessorTestUtils.createCompiler()
             .withOptions("-Asimplebuilder.builderSuffix=Factory")
             .compile(nestedDto, parentDto);
 

@@ -6,9 +6,9 @@ import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUti
 import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils.printDiagnosticsOnVerbose;
 
 import com.google.testing.compile.Compilation;
-import com.google.testing.compile.JavaFileObjects;
 import javax.tools.JavaFileObject;
 import org.javahelpers.simple.builders.processor.testing.ProcessorAsserts;
+import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
 import org.junit.jupiter.api.Test;
 
 /** Tests for With interface generation in builders. */
@@ -22,11 +22,8 @@ class WithInterfaceTest {
 
   @Test
   void withInterface_generatedInBuilder() {
-    String packageName = "test.withinterface";
-
     JavaFileObject project =
-        JavaFileObjects.forSourceString(
-            packageName + ".Project",
+        ProcessorTestUtils.forSource(
             """
             package test.withinterface;
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
@@ -91,11 +88,8 @@ class WithInterfaceTest {
 
   @Test
   void withInterface_worksWithConstructorFields() {
-    String packageName = "test.withinterface.constructor";
-
     JavaFileObject user =
-        JavaFileObjects.forSourceString(
-            packageName + ".User",
+        ProcessorTestUtils.forSource(
             """
             package test.withinterface.constructor;
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
@@ -163,11 +157,8 @@ class WithInterfaceTest {
 
   @Test
   void withInterface_correctTypeNames() {
-    String packageName = "test.withinterface.types";
-
     JavaFileObject config =
-        JavaFileObjects.forSourceString(
-            packageName + ".Config",
+        ProcessorTestUtils.forSource(
             """
             package test.withinterface.types;
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;

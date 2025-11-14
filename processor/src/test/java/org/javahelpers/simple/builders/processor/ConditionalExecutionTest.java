@@ -6,9 +6,9 @@ import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUti
 import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils.printDiagnosticsOnVerbose;
 
 import com.google.testing.compile.Compilation;
-import com.google.testing.compile.JavaFileObjects;
 import javax.tools.JavaFileObject;
 import org.javahelpers.simple.builders.processor.testing.ProcessorAsserts;
+import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
 import org.junit.jupiter.api.Test;
 
 /** Tests for conditional execution feature in generated builders. */
@@ -22,11 +22,8 @@ class ConditionalExecutionTest {
 
   @Test
   void conditionalMethod_generatedInBuilder() {
-    String packageName = "test.conditional";
-
     JavaFileObject person =
-        JavaFileObjects.forSourceString(
-            packageName + ".Person",
+        ProcessorTestUtils.forSource(
             """
             package test.conditional;
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
@@ -83,11 +80,8 @@ class ConditionalExecutionTest {
 
   @Test
   void conditionalMethod_worksWithConstructorFields() {
-    String packageName = "test.conditional.constructor";
-
     JavaFileObject user =
-        JavaFileObjects.forSourceString(
-            packageName + ".User",
+        ProcessorTestUtils.forSource(
             """
             package test.conditional.constructor;
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
@@ -140,11 +134,8 @@ class ConditionalExecutionTest {
 
   @Test
   void conditionalMethod_returnsCorrectBuilderType() {
-    String packageName = "test.conditional.returntype";
-
     JavaFileObject config =
-        JavaFileObjects.forSourceString(
-            packageName + ".Config",
+        ProcessorTestUtils.forSource(
             """
             package test.conditional.returntype;
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
@@ -192,11 +183,8 @@ class ConditionalExecutionTest {
 
   @Test
   void conditionalMethod_positiveOnlyOverload_generated() {
-    String packageName = "test.conditional.positiveonly";
-
     JavaFileObject settings =
-        JavaFileObjects.forSourceString(
-            packageName + ".Settings",
+        ProcessorTestUtils.forSource(
             """
             package test.conditional.positiveonly;
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
