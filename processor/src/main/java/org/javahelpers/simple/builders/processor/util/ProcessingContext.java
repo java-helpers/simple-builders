@@ -80,15 +80,6 @@ public final class ProcessingContext {
   }
 
   /**
-   * Set the builder configuration for the current element being processed.
-   *
-   * @param configuration the builder configuration
-   */
-  public void setBuilderConfigurationForElement(BuilderConfiguration configuration) {
-    this.builderConfigurationForElement = configuration;
-  }
-
-  /**
    * Get a type element by its fully qualified class name.
    *
    * @param qualifiedName the canonical class name (e.g., "java.lang.String")
