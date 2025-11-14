@@ -63,14 +63,30 @@ public @interface SimpleBuilder {
   /**
    * Configuration options for builder generation.
    *
-   * <p>Allows fine-grained control over what gets generated in the builder class. Can be used with
-   * {@link SimpleBuilder} or as part of {@link Template}.
+   * <p>Allows inline configuration of builder generation options:
+   *
+   * <pre>{@code
+   * @SimpleBuilder(options = @SimpleBuilder.Options(
+   *     builderAccess = AccessModifier.PACKAGE_PRIVATE,
+   *     generateFieldSupplier = OptionState.DISABLED
+   * ))
+   * public class PersonDto { ... }
+   * }</pre>
+   *
+   * @return the configuration options, or default (all UNSET) if not specified
+   */
+  Options options() default @Options();
+
+  /**
+   * Configuration options for builder generation.
+   *
+   * <p>Allows fine-grained control over what gets generated in the builder class. Used inline
+   * within {@link SimpleBuilder} or as part of {@link Template}.
    *
    * <p>All options have sensible defaults and can be overridden via compiler options using {@code
    * -A} flag.
    */
   @Retention(RetentionPolicy.CLASS)
-  @Target(ElementType.TYPE)
   @interface Options {
     // === Generation Options ===
     /**

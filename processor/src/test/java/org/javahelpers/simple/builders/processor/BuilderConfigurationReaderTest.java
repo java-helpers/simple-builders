@@ -59,7 +59,7 @@ class BuilderConfigurationReaderTest {
    */
   @Test
   void readFromOptions_WithOptionsAnnotation_AppliesAllOptions() {
-    // Given: A DTO with comprehensive @SimpleBuilder.Options
+    // Given: A DTO with comprehensive inline @SimpleBuilder options
     JavaFileObject source =
         ProcessorTestUtils.forSource(
             """
@@ -68,8 +68,7 @@ class BuilderConfigurationReaderTest {
             import org.javahelpers.simple.builders.core.enums.OptionState;
             import org.javahelpers.simple.builders.core.enums.AccessModifier;
 
-            @SimpleBuilder
-            @SimpleBuilder.Options(
+            @SimpleBuilder(options = @SimpleBuilder.Options(
                 generateFieldSupplier = OptionState.DISABLED,
                 generateFieldConsumer = OptionState.DISABLED,
                 generateBuilderConsumer = OptionState.DISABLED,
@@ -78,7 +77,7 @@ class BuilderConfigurationReaderTest {
                 methodAccess = AccessModifier.PACKAGE_PRIVATE,
                 builderSuffix = "Factory",
                 setterSuffix = "with"
-            )
+            ))
             public class PersonDto {
                 private String name;
                 private java.util.List<String> tags;
@@ -237,10 +236,10 @@ class BuilderConfigurationReaderTest {
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 
             @CustomBuilder
-            @SimpleBuilder.Options(
+            @SimpleBuilder(options = @SimpleBuilder.Options(
                 builderSuffix = "OptionsBuilder",
                 setterSuffix = "set"
-            )
+            ))
             public class PersonDto {
                 private String name;
 
@@ -329,10 +328,9 @@ class BuilderConfigurationReaderTest {
             package test;
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 
-            @SimpleBuilder
-            @SimpleBuilder.Options(
+            @SimpleBuilder(options = @SimpleBuilder.Options(
                 builderSuffix = "OptionsBuilder"
-            )
+            ))
             public class PersonDto {
                 private String name;
 
@@ -359,9 +357,11 @@ class BuilderConfigurationReaderTest {
   }
 
   /**
-   * Test: All layers work together in complete priority chain.
+   * Test: @SimpleBuilder presence overrides template, then compiler args apply.
    *
-   * <p>Verifies the complete configuration resolution: Options > Template > CompilerArgs > Defaults
+   * <p>Verifies the complete configuration resolution: When @SimpleBuilder is present (even with
+   * partial options), custom templates are completely ignored. Priority: @SimpleBuilder inline
+   * options > CompilerArgs > Defaults
    */
   @Test
   void resolveConfiguration_AllLayersTogether_CompleteChain() {
@@ -375,8 +375,7 @@ class BuilderConfigurationReaderTest {
             import org.javahelpers.simple.builders.core.enums.OptionState;
 
             @SimpleBuilder.Template(options = @SimpleBuilder.Options(
-                generateFieldSupplier = OptionState.DISABLED,
-                setterSuffix = "with"
+                generateVarArgsHelpers = OptionState.DISABLED
             ))
             @Retention(RetentionPolicy.CLASS)
             @Target(ElementType.TYPE)
@@ -392,10 +391,10 @@ class BuilderConfigurationReaderTest {
             import org.javahelpers.simple.builders.core.enums.OptionState;
 
             @TemplatedBuilder
-            @SimpleBuilder
-            @SimpleBuilder.Options(
-                generateVarArgsHelpers = OptionState.DISABLED
-            )
+            @SimpleBuilder(options = @SimpleBuilder.Options(
+                generateFieldSupplier = OptionState.DISABLED,
+                setterSuffix = "with"
+            ))
             public class PersonDto {
                 private String name;
                 private java.util.List<String> tags;
@@ -413,23 +412,23 @@ class BuilderConfigurationReaderTest {
             .withOptions("-Asimplebuilder.builderSuffix=CompilerBuilder")
             .compile(templateAnnotation, dtoSource);
 
-    // Then: Layered configuration is applied correctly
+    // Then: Configuration is applied correctly
     assertThat(compilation).succeeded();
 
     String generatedCode =
         ProcessorTestUtils.loadGeneratedSource(compilation, "PersonDtoCompilerBuilder");
 
-    // Options wins for generateVarArgsHelpers
+    // Inline options wins for generateVarArgsHelpers
     ProcessorAsserts.assertNotContaining(generatedCode, "withTags(String... tags)");
 
-    // Template wins for setterSuffix (not overridden by options)
+    // Inline options wins for setterSuffix (not overridden by template options)
     ProcessorAsserts.assertContaining(generatedCode, "withName(String name)");
     ProcessorAsserts.assertContaining(generatedCode, "withTags(");
 
-    // Template wins for generateFieldSupplier
+    // Inline options wins for generateFieldSupplier
     ProcessorAsserts.assertNotContaining(generatedCode, "Supplier<String>");
 
-    // Compiler arg wins for builderSuffix (not overridden by template or options)
+    // Compiler args wins for builderSuffix (not overridden by inline options or template options)
     ProcessorAsserts.assertContaining(generatedCode, "class PersonDtoCompilerBuilder");
   }
 }
