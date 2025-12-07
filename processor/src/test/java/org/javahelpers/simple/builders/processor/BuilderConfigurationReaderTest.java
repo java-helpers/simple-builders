@@ -179,6 +179,71 @@ class BuilderConfigurationReaderTest {
   }
 
   /**
+   * Test: Template annotation defined in same compilation round (inline).
+   *
+   * <p>This tests the AnnotationMirror fallback path when the template annotation is not yet
+   * compiled (same-round compilation). The annotation processor must use AnnotationMirror to read
+   * the template configuration instead of reflection.
+   */
+  @Test
+  void readFromTemplate_InlineTemplateDefinition_AppliesTemplateConfiguration() {
+    // Given: Source with inline template annotation definition AND usage
+    JavaFileObject dtoSource =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+            import org.javahelpers.simple.builders.core.enums.OptionState;
+            import java.lang.annotation.*;
+
+            @SimpleBuilder.Template(
+                options = @SimpleBuilder.Options(
+                    generateFieldSupplier = OptionState.DISABLED,
+                    generateFieldConsumer = OptionState.DISABLED,
+                    generateBuilderConsumer = OptionState.DISABLED,
+                    generateVarArgsHelpers = OptionState.DISABLED,
+                    generateConditionalHelper = OptionState.DISABLED,
+                    generateWithInterface = OptionState.DISABLED,
+                    builderSuffix = "InlineBuilder",
+                    setterSuffix = "update"
+                ))
+            @Retention(RetentionPolicy.CLASS)
+            @Target(ElementType.TYPE)
+            @interface InlineTemplate {}
+
+            @InlineTemplate
+            class PersonDto {
+                private String name;
+                private int age;
+
+                public String getName() { return name; }
+                public void setName(String name) { this.name = name; }
+                public int getAge() { return age; }
+                public void setAge(int age) { this.age = age; }
+            }
+            """);
+
+    // When: Compile
+    Compilation compilation = ProcessorTestUtils.createCompiler().compile(dtoSource);
+
+    // Then: Generated code reflects inline template configuration
+    assertThat(compilation).succeeded();
+
+    String generatedCode =
+        ProcessorTestUtils.loadGeneratedSource(compilation, "PersonDtoInlineBuilder");
+
+    // Verify inline template values are applied
+    ProcessorAsserts.assertContaining(generatedCode, "class PersonDtoInlineBuilder");
+    ProcessorAsserts.assertContaining(
+        generatedCode, "PersonDtoInlineBuilder updateName(String name)");
+    ProcessorAsserts.assertContaining(generatedCode, "PersonDtoInlineBuilder updateAge(int age)");
+
+    // Verify disabled features (tests AnnotationMirror path extracts values correctly)
+    ProcessorAsserts.assertNotContaining(generatedCode, "Supplier<");
+    ProcessorAsserts.assertNotContaining(generatedCode, "Consumer<");
+  }
+
+  /**
    * Test: Options annotation overrides template annotation (proper priority).
    *
    * <p>Verifies BuilderConfigurationReader.resolveConfiguration() applies correct priority: Options
