@@ -39,7 +39,6 @@ import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
-import org.apache.commons.lang3.tuple.Pair;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder.Template;
 import org.javahelpers.simple.builders.processor.dtos.BuilderConfiguration;
@@ -97,30 +96,23 @@ public class BuilderProcessor extends AbstractProcessor {
 
     BuilderConfigurationReader reader = context.getConfigurationReader();
 
-    // Find all elements to process and their configuration:
+    // Find all elements to process:
     // 1. Elements annotated with @SimpleBuilder
     // 2. Elements annotated with custom annotations that have @SimpleBuilder.Template
-    Set<Pair<Element, BuilderConfiguration>> elementsToProcess = new HashSet<>();
+    // Configuration is resolved per-element to handle priority correctly when both exist
+    Set<Element> elementsToProcess = new HashSet<>();
 
     // Find all @SimpleBuilder annotations
     TypeElement simpleBuilderAnnotation =
         context.getTypeElement(SimpleBuilder.class.getCanonicalName());
     if (simpleBuilderAnnotation != null) {
-      roundEnv.getElementsAnnotatedWith(simpleBuilderAnnotation).stream()
-          .forEach(
-              element ->
-                  elementsToProcess.add(Pair.of(element, reader.readFromInlineOptions(element))));
+      elementsToProcess.addAll(roundEnv.getElementsAnnotatedWith(simpleBuilderAnnotation));
     }
 
     // Find all Annotations with @SimpleBuilder.Template
-    List<Pair<TypeElement, BuilderConfiguration>> annotationsWithTemplate =
-        extractingAnnotationsWithTemplate(annotations);
-    for (Pair<TypeElement, BuilderConfiguration> annotationWithConfigPair :
-        annotationsWithTemplate) {
-      TypeElement annotation = annotationWithConfigPair.getLeft();
-      BuilderConfiguration config = annotationWithConfigPair.getRight();
-      roundEnv.getElementsAnnotatedWith(annotation).stream()
-          .forEach(element -> elementsToProcess.add(Pair.of(element, config)));
+    List<TypeElement> annotationsWithTemplate = extractingAnnotationsWithTemplate(annotations);
+    for (TypeElement annotation : annotationsWithTemplate) {
+      elementsToProcess.addAll(roundEnv.getElementsAnnotatedWith(annotation));
     }
 
     context.debug("===============================");
@@ -130,13 +122,15 @@ public class BuilderProcessor extends AbstractProcessor {
         "simple-builders: Processing round started. Found %d annotated elements.",
         elementsToProcess.size());
 
-    for (Pair<Element, BuilderConfiguration> annotatedElementWithConfig : elementsToProcess) {
-      Element annotatedElement = annotatedElementWithConfig.getLeft();
-      BuilderConfiguration config = annotatedElementWithConfig.getRight();
+    for (Element annotatedElement : elementsToProcess) {
       try {
         context.debug("------------------------------------");
         context.debug("simple-builders: Processing element: %s", annotatedElement.getSimpleName());
         context.debug("------------------------------------");
+        // Resolve configuration per-element to handle all layers (defaults, global, template,
+        // inline)
+        BuilderConfiguration config =
+            reader.resolveConfiguration(annotatedElement, processingEnv.getElementUtils());
         process(annotatedElement, config);
         context.info(
             "simple-builders: Successfully generated builder for: %s",
@@ -185,9 +179,9 @@ public class BuilderProcessor extends AbstractProcessor {
     }
   }
 
-  private static List<Pair<TypeElement, BuilderConfiguration>> extractingAnnotationsWithTemplate(
+  private static List<TypeElement> extractingAnnotationsWithTemplate(
       Set<? extends TypeElement> annotationsFound) {
-    List<Pair<TypeElement, BuilderConfiguration>> result = new ArrayList<>();
+    List<TypeElement> result = new ArrayList<>();
     for (TypeElement annotation : annotationsFound) {
       // Only process real annotation specifications
       if (annotation.getKind() != javax.lang.model.element.ElementKind.ANNOTATION_TYPE) {
@@ -205,13 +199,9 @@ public class BuilderProcessor extends AbstractProcessor {
           annotation.getAnnotation(
               org.javahelpers.simple.builders.core.annotations.SimpleBuilder.Template.class);
       if (templateAnnotation != null) {
-        result.add(Pair.of(annotation, new BuilderConfiguration()));
+        result.add(annotation);
       }
     }
     return result;
-  }
-
-  private static BuilderConfiguration extractSimpleBuilderConfiguration(Element element) {
-    return new BuilderConfiguration();
   }
 }

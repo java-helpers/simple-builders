@@ -221,28 +221,23 @@ public class BuilderConfigurationReader {
    * @return configuration from the template annotation, or null if not present
    */
   public BuilderConfiguration readFromTemplate(Element element, Elements elementUtils) {
+    // If @SimpleBuilder is present, ignore template annotations (inline options take full
+    // precedence)
+    for (AnnotationMirror mirror : element.getAnnotationMirrors()) {
+      if (mirror
+          .getAnnotationType()
+          .toString()
+          .equals("org.javahelpers.simple.builders.core.annotations.SimpleBuilder")) {
+        return null;
+      }
+    }
+
     // Check all annotations on the element to find one annotated with @SimpleBuilder.Template
     for (AnnotationMirror mirror : element.getAnnotationMirrors()) {
       Element annotationElement = mirror.getAnnotationType().asElement();
 
-      // Skip @SimpleBuilder itself (it will be handled by readFromInlineOptions)
-      if (annotationElement
-          .toString()
-          .equals("org.javahelpers.simple.builders.core.annotations.SimpleBuilder")) {
-        continue;
-      }
-
-      // Use reflection on the annotation TypeElement to check for @SimpleBuilder.Template
-      // This works when the template annotation is already compiled
-      SimpleBuilder.Template template =
-          annotationElement.getAnnotation(SimpleBuilder.Template.class);
-
-      if (template != null) {
-        // Found a template! Use reflection to read options directly
-        return buildConfigurationFromOptions(template.options());
-      }
-
-      // Fallback: Check using AnnotationMirror for same-round compiled templates
+      // Check using AnnotationMirror for template annotations
+      // (this gives us only explicitly set values)
       for (AnnotationMirror metaMirror : annotationElement.getAnnotationMirrors()) {
         String metaAnnotationName = metaMirror.getAnnotationType().toString();
         if (metaAnnotationName.equals(
@@ -250,6 +245,7 @@ public class BuilderConfigurationReader {
             || metaAnnotationName.equals(
                 "org.javahelpers.simple.builders.core.annotations.SimpleBuilder$Template")) {
           // Found template via mirror - extract options using AnnotationMirror parsing
+          // This approach only gives us explicitly set values, not annotation defaults
           return extractOptionsFromTemplateMirror(metaMirror, elementUtils);
         }
       }
@@ -333,7 +329,6 @@ public class BuilderConfigurationReader {
     // Start with DEFAULT as the base
     // Layer 2: Merge global configuration from compiler arguments
     // Layer 3: Merge template configuration (only if @SimpleBuilder not present)
-    // Layer 4: Merge inline options from @SimpleBuilder(options = ...) (highest priority)
     return BuilderConfiguration.DEFAULT
         .merge(globalConfiguration)
         .merge(readFromTemplate(element, elementUtils))
