@@ -277,7 +277,6 @@ public class BuilderDefinitionCreator {
       ProcessingContext context) {
     String fieldNameInBuilder = field.getFieldName();
     String fieldJavaDoc = field.getJavaDoc();
-    Modifier methodAccessModifier = getMethodAccessModifier(context);
 
     // Check for String type (not array) and add format method
     if (isString(field.getFieldType())
@@ -293,7 +292,6 @@ public class BuilderDefinitionCreator {
               annotations,
               builderType,
               context);
-      setMethodAccessModifier(method, methodAccessModifier);
       field.addMethod(method);
     }
 
@@ -306,7 +304,6 @@ public class BuilderDefinitionCreator {
       MethodDto method1 =
           createFieldSetterForArrayFromList(
               fieldName, fieldNameInBuilder, listType, elementType, builderType, context);
-      setMethodAccessModifier(method1, methodAccessModifier);
       field.addMethod(method1);
 
       // Add Consumer<ArrayListBuilder<ElementType>> method only if builder consumers are enabled
@@ -320,7 +317,6 @@ public class BuilderDefinitionCreator {
                 elementType,
                 builderType,
                 context);
-        setMethodAccessModifier(method2, methodAccessModifier);
         field.addMethod(method2);
       }
       return;
@@ -346,7 +342,6 @@ public class BuilderDefinitionCreator {
                 new TypeNameArray(innerTypes.get(0), false),
                 builderType,
                 context);
-        setMethodAccessModifier(method, methodAccessModifier);
         field.addMethod(method);
       }
     } else if (isSet(field.getFieldType()) && innerTypesCnt == 1) {
@@ -362,7 +357,6 @@ public class BuilderDefinitionCreator {
                 new TypeNameArray(innerTypes.get(0), true),
                 builderType,
                 context);
-        setMethodAccessModifier(method, methodAccessModifier);
         field.addMethod(method);
       }
     } else if (isMap(field.getFieldType()) && innerTypesCnt == 2) {
@@ -382,7 +376,6 @@ public class BuilderDefinitionCreator {
                 mapEntryType,
                 builderType,
                 context);
-        setMethodAccessModifier(method, methodAccessModifier);
         field.addMethod(method);
       }
     } else if (isOptional(field.getFieldType()) && innerTypesCnt == 1) {
@@ -400,7 +393,6 @@ public class BuilderDefinitionCreator {
                 innerTypes.get(0),
                 builderType,
                 context);
-        setMethodAccessModifier(method, methodAccessModifier);
         field.addMethod(method);
       }
 
@@ -416,7 +408,6 @@ public class BuilderDefinitionCreator {
                 List.of(),
                 builderType,
                 context);
-        setMethodAccessModifier(method, methodAccessModifier);
         field.addMethod(method);
       }
     }
@@ -467,7 +458,6 @@ public class BuilderDefinitionCreator {
               fieldBuilderType,
               builderType,
               context);
-      setMethodAccessModifier(method, getMethodAccessModifier(context));
       field.addMethod(method);
       return true;
     }
@@ -498,7 +488,6 @@ public class BuilderDefinitionCreator {
               field.getFieldType(),
               builderType,
               context);
-      setMethodAccessModifier(method, getMethodAccessModifier(context));
       field.addMethod(method);
       return true;
     }
@@ -525,7 +514,6 @@ public class BuilderDefinitionCreator {
               transform,
               builderType,
               context);
-      setMethodAccessModifier(method, getMethodAccessModifier(context));
       field.addMethod(method);
       return true;
     }
@@ -575,7 +563,6 @@ public class BuilderDefinitionCreator {
               elementBuilderType.get(),
               builderType,
               context);
-      setMethodAccessModifier(method, getMethodAccessModifier(context));
       field.addMethod(method);
     } else if (context.getConfiguration().shouldUseArrayListBuilder()) {
       // Regular ArrayListBuilder if enabled
@@ -589,7 +576,6 @@ public class BuilderDefinitionCreator {
               elementType,
               builderType,
               context);
-      setMethodAccessModifier(method, getMethodAccessModifier(context));
       field.addMethod(method);
     } else {
       return false;
@@ -627,7 +613,6 @@ public class BuilderDefinitionCreator {
             builderTargetTypeName,
             builderType,
             context);
-    setMethodAccessModifier(mapConsumerWithBuilder, getMethodAccessModifier(context));
     field.addMethod(mapConsumerWithBuilder);
     return true;
   }
@@ -675,7 +660,6 @@ public class BuilderDefinitionCreator {
               elementBuilderType.get(),
               builderType,
               context);
-      setMethodAccessModifier(method, getMethodAccessModifier(context));
       field.addMethod(method);
     } else if (context.getConfiguration().shouldUseHashSetBuilder()) {
       // Regular HashSetBuilder if enabled
@@ -689,7 +673,6 @@ public class BuilderDefinitionCreator {
               elementType,
               builderType,
               context);
-      setMethodAccessModifier(method, getMethodAccessModifier(context));
       field.addMethod(method);
     } else {
       return false;
@@ -721,7 +704,6 @@ public class BuilderDefinitionCreator {
             field.getFieldType(),
             builderType,
             context);
-    setMethodAccessModifier(method, getMethodAccessModifier(context));
     field.addMethod(method);
   }
 
@@ -923,7 +905,6 @@ public class BuilderDefinitionCreator {
             annotations,
             builderType,
             context);
-    setMethodAccessModifier(method, getMethodAccessModifier(context));
     field.addMethod(method);
 
     // Add consumer/supplier/helper methods - use ORIGINAL field name for method names
@@ -991,7 +972,7 @@ public class BuilderDefinitionCreator {
     methodDto.setMethodName(generateSetterName(fieldName, context));
     methodDto.setReturnType(builderType);
     methodDto.addParameter(parameter);
-    // Modifier is controlled by configuration, not set here
+    setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
     String params;
     if (StringUtils.isBlank(transform)) {
       params = parameter.getParameterName();
@@ -1035,7 +1016,7 @@ public class BuilderDefinitionCreator {
     methodDto.setMethodName(generateSetterName(fieldName, context));
     methodDto.setReturnType(builderType);
     methodDto.addParameter(parameter);
-    // Modifier is controlled by configuration, not set here
+    setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
     methodDto.setCode(
         """
         $helperType:T consumer = this.$fieldName:N.isSet() ? this.$fieldName:N.value() : new $helperType:T();
@@ -1075,7 +1056,7 @@ public class BuilderDefinitionCreator {
     MethodDto methodDto = new MethodDto();
     methodDto.setMethodName(generateSetterName(fieldName, context));
     methodDto.addParameter(parameter);
-    // Modifier is controlled by configuration, not set here
+    setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
     methodDto.setCode(
         """
         StringBuilder builder = new StringBuilder();
@@ -1193,7 +1174,7 @@ public class BuilderDefinitionCreator {
     methodDto.setMethodName(generateSetterName(fieldName, context));
     methodDto.setReturnType(returnBuilderType);
     methodDto.addParameter(parameter);
-    // Modifier is controlled by configuration, not set here
+    setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
     methodDto.setCode(
         """
         $helperType:T builder = this.$fieldName:N.isSet() ? new $helperType:T(%s) : new $helperType:T(%s);
@@ -1234,7 +1215,7 @@ public class BuilderDefinitionCreator {
     methodDto.setMethodName(generateSetterName(fieldName, context));
     methodDto.setReturnType(builderType);
     methodDto.addParameter(parameter);
-    // Modifier is controlled by configuration, not set here
+    setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
     methodDto.setCode(
         """
         this.$fieldName:N = $builderFieldWrapper:T.changedValue($dtoMethodParam:N.get());
@@ -1280,7 +1261,7 @@ public class BuilderDefinitionCreator {
     methodDto.setReturnType(builderType);
     methodDto.addParameter(formatParam);
     methodDto.addParameter(argsParam);
-    // Modifier is controlled by configuration, not set here
+    setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
     methodDto.setCode(
         """
         this.$fieldName:N = $builderFieldWrapper:T.changedValue($transform:N);
@@ -1331,7 +1312,7 @@ public class BuilderDefinitionCreator {
     methodDto.setMethodName(generateSetterName(fieldName, context));
     methodDto.setReturnType(builderType);
     methodDto.addParameter(parameter);
-    // Modifier is controlled by configuration, not set here
+    setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
     methodDto.setCode(
         """
         this.$fieldName:N = $builderFieldWrapper:T.changedValue($dtoMethodParams:N.toArray(new $elementType:T[0]));
@@ -1376,8 +1357,7 @@ public class BuilderDefinitionCreator {
     methodDto.setMethodName(generateSetterName(fieldName, context));
     methodDto.setReturnType(returnBuilderType);
     methodDto.addParameter(parameter);
-    // Modifier is controlled by configuration, not set here
-
+    setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
     methodDto.setCode(
         """
         $helperType:T builder = this.$fieldName:N.isSet() ? new $helperType:T(java.util.List.of(this.$fieldName:N.value())) : new $helperType:T();

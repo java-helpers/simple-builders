@@ -297,13 +297,8 @@ public class BuilderConfigurationReader {
   private boolean isTemplateAnnotation(AnnotationMirror metaMirror) {
     String metaAnnotationName = metaMirror.getAnnotationType().toString();
     // Check both possible representations of nested annotation
-    if (metaAnnotationName.equals(SIMPLE_BUILDER_TEMPLATE_ANNOTATION)) {
-      return true;
-    }
-    if (metaAnnotationName.equals(SIMPLE_BUILDER_TEMPLATE_ANNOTATION_ALT)) {
-      return true;
-    }
-    return false;
+    return metaAnnotationName.equals(SIMPLE_BUILDER_TEMPLATE_ANNOTATION)
+        || metaAnnotationName.equals(SIMPLE_BUILDER_TEMPLATE_ANNOTATION_ALT);
   }
 
   /**
@@ -373,7 +368,7 @@ public class BuilderConfigurationReader {
    * @param config the resolved configuration
    * @throws BuilderException if access modifiers are invalid
    */
-  private void validateAccessModifiers(Element element, BuilderConfiguration config)
+  private static void validateAccessModifiers(Element element, BuilderConfiguration config)
       throws BuilderException {
     String elementName = element.getSimpleName().toString();
 
