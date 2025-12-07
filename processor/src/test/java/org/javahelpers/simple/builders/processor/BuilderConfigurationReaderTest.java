@@ -27,7 +27,6 @@ package org.javahelpers.simple.builders.processor;
 import static com.google.testing.compile.CompilationSubject.assertThat;
 
 import com.google.testing.compile.Compilation;
-import com.google.testing.compile.JavaFileObjects;
 import javax.tools.JavaFileObject;
 import org.javahelpers.simple.builders.processor.testing.ProcessorAsserts;
 import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
@@ -142,36 +141,13 @@ class BuilderConfigurationReaderTest {
    */
   @Test
   void readFromTemplate_WithTemplateAnnotation_AppliesTemplateConfiguration() {
-    // Given: A custom template annotation
-    JavaFileObject templateAnnotation =
-        JavaFileObjects.forSourceString(
-            "test.MinimalBuilder",
-            """
-            package test;
-            import java.lang.annotation.*;
-            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
-            import org.javahelpers.simple.builders.core.enums.OptionState;
-
-            @SimpleBuilder.Template(options = @SimpleBuilder.Options(
-                generateFieldSupplier = OptionState.DISABLED,
-                generateFieldConsumer = OptionState.DISABLED,
-                generateBuilderConsumer = OptionState.DISABLED,
-                generateVarArgsHelpers = OptionState.DISABLED,
-                builderSuffix = "MiniBuilder",
-                setterSuffix = "set"
-            ))
-            @Retention(RetentionPolicy.CLASS)
-            @Target(ElementType.TYPE)
-            public @interface MinimalBuilder {
-            }
-            """);
-
     JavaFileObject dtoSource =
         ProcessorTestUtils.forSource(
             """
             package test;
+            import org.javahelpers.simple.builders.processor.testing.MyBuliderForTestAnnotation;
 
-            @MinimalBuilder
+            @MyBuliderForTestAnnotation
             public class PersonDto {
                 private String name;
                 private int age;
@@ -184,8 +160,7 @@ class BuilderConfigurationReaderTest {
             """);
 
     // When: Compile
-    Compilation compilation =
-        ProcessorTestUtils.createCompiler().compile(templateAnnotation, dtoSource);
+    Compilation compilation = ProcessorTestUtils.createCompiler().compile(dtoSource);
 
     // Then: Generated code reflects template configuration
     assertThat(compilation).succeeded();
@@ -211,31 +186,14 @@ class BuilderConfigurationReaderTest {
    */
   @Test
   void resolveConfiguration_OptionsOverridesTemplate_AppliesPriorityCorrectly() {
-    // Given: Both template and options specified
-    JavaFileObject templateAnnotation =
-        ProcessorTestUtils.forSource(
-            """
-            package test;
-            import java.lang.annotation.*;
-            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
-
-            @SimpleBuilder.Template(options = @SimpleBuilder.Options(
-                builderSuffix = "TemplateBuilder",
-                setterSuffix = "with"
-            ))
-            @Retention(RetentionPolicy.CLASS)
-            @Target(ElementType.TYPE)
-            public @interface CustomBuilder {
-            }
-            """);
-
     JavaFileObject dtoSource =
         ProcessorTestUtils.forSource(
             """
             package test;
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+            import org.javahelpers.simple.builders.processor.testing.MyBuliderForTestAnnotation;
 
-            @CustomBuilder
+            @MyBuliderForTestAnnotation
             @SimpleBuilder(options = @SimpleBuilder.Options(
                 builderSuffix = "OptionsBuilder",
                 setterSuffix = "set"
@@ -249,8 +207,7 @@ class BuilderConfigurationReaderTest {
             """);
 
     // When: Compile
-    Compilation compilation =
-        ProcessorTestUtils.createCompiler().compile(templateAnnotation, dtoSource);
+    Compilation compilation = ProcessorTestUtils.createCompiler().compile(dtoSource);
 
     // Then: Options wins over template
     assertThat(compilation).succeeded();
@@ -365,32 +322,15 @@ class BuilderConfigurationReaderTest {
    */
   @Test
   void resolveConfiguration_AllLayersTogether_CompleteChain() {
-    // Given: All configuration sources present
-    JavaFileObject templateAnnotation =
-        ProcessorTestUtils.forSource(
-            """
-            package test;
-            import java.lang.annotation.*;
-            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
-            import org.javahelpers.simple.builders.core.enums.OptionState;
-
-            @SimpleBuilder.Template(options = @SimpleBuilder.Options(
-                generateVarArgsHelpers = OptionState.DISABLED
-            ))
-            @Retention(RetentionPolicy.CLASS)
-            @Target(ElementType.TYPE)
-            public @interface TemplatedBuilder {
-            }
-            """);
-
     JavaFileObject dtoSource =
         ProcessorTestUtils.forSource(
             """
             package test;
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
             import org.javahelpers.simple.builders.core.enums.OptionState;
+            import org.javahelpers.simple.builders.processor.testing.MyBuliderForTestAnnotation;
 
-            @TemplatedBuilder
+            @MyBuliderForTestAnnotation
             @SimpleBuilder(options = @SimpleBuilder.Options(
                 generateFieldSupplier = OptionState.DISABLED,
                 setterSuffix = "with"
@@ -410,7 +350,7 @@ class BuilderConfigurationReaderTest {
     Compilation compilation =
         ProcessorTestUtils.createCompiler()
             .withOptions("-Asimplebuilder.builderSuffix=CompilerBuilder")
-            .compile(templateAnnotation, dtoSource);
+            .compile(dtoSource);
 
     // Then: Configuration is applied correctly
     assertThat(compilation).succeeded();
