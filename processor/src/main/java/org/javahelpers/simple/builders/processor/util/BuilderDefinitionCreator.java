@@ -1633,10 +1633,10 @@ public class BuilderDefinitionCreator {
    */
   private static String generateSetterName(String fieldName, ProcessingContext context) {
     String suffix = context.getConfiguration().getSetterSuffix();
-    if (StringUtils.isBlank(suffix)) {
+    if (suffix == null || suffix.isEmpty()) {
       return fieldName;
     }
-    return StringUtils.trim(suffix) + StringUtils.capitalize(fieldName);
+    return suffix + StringUtils.capitalize(fieldName);
   }
 
   /**

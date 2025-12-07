@@ -29,6 +29,7 @@ import static org.javahelpers.simple.builders.core.enums.OptionState.*;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
+import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.core.enums.OptionState;
 
@@ -279,7 +280,10 @@ public record BuilderConfiguration(
   }
 
   /**
-   * Merges two String values, preferring the other value if it's not null or empty.
+   * Merges two String values, preferring the other value if it's not null.
+   *
+   * <p>Note: String values are normalized with trimToNull in the builder, so null means
+   * unset/blank.
    *
    * @param other the other value (higher priority)
    * @param thisValue the current value (lower priority)
@@ -574,12 +578,12 @@ public record BuilderConfiguration(
     }
 
     public Builder builderSuffix(String value) {
-      this.builderSuffix = value;
+      this.builderSuffix = value == null ? null : value.trim();
       return this;
     }
 
     public Builder setterSuffix(String value) {
-      this.setterSuffix = value;
+      this.setterSuffix = value == null ? null : value.trim();
       return this;
     }
 
