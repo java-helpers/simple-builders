@@ -287,7 +287,7 @@ Controls the visibility of the generated builder class.
 - `PUBLIC` - Builder accessible from anywhere (default, recommended for public APIs)
 - `PACKAGE_PRIVATE` - Builder only accessible within the same package (good for internal APIs)
 
-⚠️ **Warning**: `PRIVATE` is technically supported but **not recommended** as it makes the builder class completely inaccessible and therefore useless. Even static factory methods won't help since the class itself is private.
+⚠️ **Error**: `PRIVATE` is **not allowed** for `builderAccess`. If you try to use it, builder generation will fail with an error message explaining that Java does not allow private top-level classes. The builder will not be generated, but other DTOs in your project will continue processing normally.
 
 **Example with PACKAGE_PRIVATE**:
 ```java
@@ -337,7 +337,7 @@ Controls the visibility of all generated setter methods.
 - `PUBLIC` - Methods accessible from anywhere (default, recommended)
 - `PACKAGE_PRIVATE` - Methods only accessible within the same package
 
-⚠️ **Warning**: `PRIVATE` is technically supported but **not recommended** as it makes all builder setter methods private and therefore the builder completely unusable.
+⚠️ **Error**: `PRIVATE` is **not allowed** for `methodAccess`. If you try to use it, builder generation will fail with an error message explaining that all setter methods would be inaccessible. The builder will not be generated, but other DTOs in your project will continue processing normally.
 
 **Example with PACKAGE_PRIVATE**:
 ```java
@@ -901,6 +901,26 @@ Or in compiler options:
 3. **Retention and Target**: Add `@Retention(RetentionPolicy.CLASS)` and `@Target(ElementType.TYPE)`
 4. **Don't combine**: Don't use `@SimpleBuilder` when using a template annotation
 
+### Builder Not Generated - Access Modifier Errors
+
+If you see warnings like "Failed to generate builder" with access modifier messages:
+
+**Problem**: Used `PRIVATE` for `builderAccess` or `methodAccess`
+```java
+@SimpleBuilder.Options(builderAccess = AccessModifier.PRIVATE)  // ❌ ERROR
+```
+
+**Solution**: Use `PUBLIC` or `PACKAGE_PRIVATE` instead
+```java
+@SimpleBuilder.Options(builderAccess = AccessModifier.PACKAGE_PRIVATE)  // ✅ OK
+```
+
+**Note**: Only `builderConstructorAccess = PRIVATE` is valid - this enforces using the `create()` factory method.
+
+**Error Messages**:
+- `builderAccess=PRIVATE` → "Java does not allow private top-level classes"
+- `methodAccess=PRIVATE` → "Makes all setter methods inaccessible"
+
 ## Best Practices
 
 1. **Use templates for common patterns**: Define reusable templates for your project
@@ -933,24 +953,36 @@ Or in compiler options:
 )
 ```
 
-❌ **Avoid These Combinations**:
+❌ **Invalid Combinations (Will Cause Builder Generation to Fail)**:
 
 ```java
-// ❌ WRONG: Private builder class is completely unusable
-builderAccess = AccessModifier.PRIVATE  // Nobody can access the class at all!
+// ❌ ERROR: Private builder class causes generation failure
+builderAccess = AccessModifier.PRIVATE  
+// Error: "Java does not allow private top-level classes"
+// Result: Builder NOT generated, other DTOs continue processing
 
-// ❌ WRONG: Private methods make the builder unusable
-methodAccess = AccessModifier.PRIVATE   // Nobody can call the setter methods!
+// ❌ ERROR: Private methods cause generation failure
+methodAccess = AccessModifier.PRIVATE   
+// Error: "Makes all setter methods inaccessible"
+// Result: Builder NOT generated, other DTOs continue processing
 
-// ⚠️ RARELY USEFUL: Public builder with private methods
-builderAccess = AccessModifier.PUBLIC,
-methodAccess = AccessModifier.PRIVATE    // Builder exists but is unusable!
+// ❌ ERROR: Both invalid configurations
+builderAccess = AccessModifier.PRIVATE,
+methodAccess = AccessModifier.PRIVATE
+// Result: Builder NOT generated, other DTOs continue processing
 ```
 
 **Why `PRIVATE` constructors are different**:
-- ✅ `builderConstructorAccess = PRIVATE` **IS USEFUL** - Enforces using `create()` factory method
-- ❌ `builderAccess = PRIVATE` **IS NOT USEFUL** - Makes the entire class inaccessible
-- ❌ `methodAccess = PRIVATE` **IS NOT USEFUL** - Makes all methods inaccessible
+- ✅ `builderConstructorAccess = PRIVATE` **IS ALLOWED** - Enforces using `create()` factory method (recommended pattern)
+- ❌ `builderAccess = PRIVATE` **CAUSES ERROR** - Java doesn't allow private top-level classes
+- ❌ `methodAccess = PRIVATE` **CAUSES ERROR** - Makes all methods inaccessible and builder unusable
+
+**What happens when validation fails**:
+1. Builder generation for that DTO is skipped
+2. A clear warning message is logged explaining the problem
+3. Compilation continues and succeeds
+4. Other DTOs in your project still get their builders generated
+5. No invalid Java code is produced
 
 ## Reference
 
