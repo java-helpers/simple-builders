@@ -546,4 +546,109 @@ class BuilderConfigurationReaderTest {
             + "options are correctly applied. If this fails, a configuration option may have been "
             + "added without proper processing support.");
   }
+
+  /**
+   * Test: PRIVATE builderAccess fails builder generation.
+   *
+   * <p>Verifies that using PRIVATE for builderAccess causes builder generation to fail with a clear
+   * error message, while allowing other builders to be processed successfully.
+   */
+  @Test
+  void resolveConfiguration_PrivateBuilderAccess_FailsGeneration() {
+    JavaFileObject dtoSource =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+            import org.javahelpers.simple.builders.core.enums.AccessModifier;
+
+            @SimpleBuilder(options = @SimpleBuilder.Options(
+                builderAccess = AccessModifier.PRIVATE
+            ))
+            public class PersonDto {
+                private String name;
+
+                public String getName() { return name; }
+                public void setName(String name) { this.name = name; }
+            }
+            """);
+
+    // When: Compile
+    Compilation compilation = ProcessorTestUtils.createCompiler().compile(dtoSource);
+
+    // Then: Builder generation fails but compilation succeeds (no invalid Java code generated)
+    assertThat(compilation).succeeded();
+    assertThat(compilation).hadWarningContaining("Failed to generate builder");
+    assertThat(compilation).hadWarningContaining("builderAccess=PRIVATE");
+    assertThat(compilation).hadWarningContaining("Java does not allow private top-level classes");
+  }
+
+  /**
+   * Test: PRIVATE methodAccess fails builder generation.
+   *
+   * <p>Verifies that using PRIVATE for methodAccess causes builder generation to fail with a clear
+   * error message, while allowing other builders to be processed successfully.
+   */
+  @Test
+  void resolveConfiguration_PrivateMethodAccess_FailsGeneration() {
+    JavaFileObject dtoSource =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+            import org.javahelpers.simple.builders.core.enums.AccessModifier;
+
+            @SimpleBuilder(options = @SimpleBuilder.Options(
+                methodAccess = AccessModifier.PRIVATE
+            ))
+            public class PersonDto {
+                private String name;
+
+                public String getName() { return name; }
+                public void setName(String name) { this.name = name; }
+            }
+            """);
+
+    // When: Compile
+    Compilation compilation = ProcessorTestUtils.createCompiler().compile(dtoSource);
+
+    // Then: Builder generation fails but compilation succeeds (no invalid Java code generated)
+    assertThat(compilation).succeeded();
+    assertThat(compilation).hadWarningContaining("Failed to generate builder");
+    assertThat(compilation).hadWarningContaining("methodAccess=PRIVATE");
+    assertThat(compilation).hadWarningContaining("makes all setter methods inaccessible");
+  }
+
+  /**
+   * Test: PRIVATE builderConstructorAccess does NOT fail generation.
+   *
+   * <p>Verifies that using PRIVATE for builderConstructorAccess is acceptable and does not cause
+   * builder generation to fail (it's a valid pattern to enforce using factory methods).
+   */
+  @Test
+  void resolveConfiguration_PrivateBuilderConstructorAccess_NoFailure() {
+    JavaFileObject dtoSource =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+            import org.javahelpers.simple.builders.core.enums.AccessModifier;
+
+            @SimpleBuilder(options = @SimpleBuilder.Options(
+                builderConstructorAccess = AccessModifier.PRIVATE
+            ))
+            public class PersonDto {
+                private String name;
+
+                public String getName() { return name; }
+                public void setName(String name) { this.name = name; }
+            }
+            """);
+
+    // When: Compile
+    Compilation compilation = ProcessorTestUtils.createCompiler().compile(dtoSource);
+
+    // Then: Compilation succeeds without warnings about access modifiers
+    assertThat(compilation).succeededWithoutWarnings();
+  }
 }

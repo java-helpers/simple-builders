@@ -34,6 +34,7 @@ import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.core.enums.OptionState;
 import org.javahelpers.simple.builders.processor.dtos.BuilderConfiguration;
+import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 
 /**
  * Reads builder configuration from annotated elements.
@@ -290,7 +291,7 @@ public class BuilderConfigurationReader {
    * @param element the annotated element to resolve configuration for
    * @return the fully resolved configuration with all sources merged
    */
-  public BuilderConfiguration resolveConfiguration(Element element) {
+  public BuilderConfiguration resolveConfiguration(Element element) throws BuilderException {
     logger.debug("Resolving configuration for element: %s", element.getSimpleName());
 
     BuilderConfiguration templateConfig = readFromTemplate(element);
@@ -302,8 +303,45 @@ public class BuilderConfigurationReader {
             .merge(templateConfig)
             .merge(inlineConfig);
 
+    // Validate access modifiers and warn about problematic configurations
+    validateAccessModifiers(element, result);
+
     logger.debug("Configuration resolved for '%s': %s", element.getSimpleName(), result.toString());
 
     return result;
+  }
+
+  /**
+   * Validates access modifier configurations and throws exception for invalid settings.
+   *
+   * @param element the element being processed
+   * @param config the resolved configuration
+   * @throws BuilderException if access modifiers are invalid
+   */
+  private void validateAccessModifiers(Element element, BuilderConfiguration config)
+      throws BuilderException {
+    String elementName = element.getSimpleName().toString();
+
+    // Fail on PRIVATE builder access (makes builder completely unusable and causes Java compilation
+    // error)
+    if (config.builderAccess() == AccessModifier.PRIVATE) {
+      throw new BuilderException(
+          element,
+          "Builder for '%s' has builderAccess=PRIVATE which makes the builder class "
+              + "completely inaccessible and unusable (Java does not allow private top-level classes). "
+              + "Use PUBLIC or PACKAGE_PRIVATE instead. "
+              + "Note: Only builderConstructorAccess=PRIVATE is useful (for enforcing factory methods).",
+          elementName);
+    }
+
+    // Fail on PRIVATE method access (makes all builder methods unusable)
+    if (config.methodAccess() == AccessModifier.PRIVATE) {
+      throw new BuilderException(
+          element,
+          "Builder for '%s' has methodAccess=PRIVATE which makes all setter methods "
+              + "inaccessible and the builder unusable. "
+              + "Use PUBLIC or PACKAGE_PRIVATE instead.",
+          elementName);
+    }
   }
 }
