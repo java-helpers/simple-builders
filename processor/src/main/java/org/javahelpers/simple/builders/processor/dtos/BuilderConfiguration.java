@@ -387,8 +387,8 @@ public record BuilderConfiguration(
     private OptionState generateWithInterface = OptionState.UNSET;
 
     // === Naming ===
-    private String builderSuffix = "Builder";
-    private String setterSuffix = "";
+    private String builderSuffix = null;
+    private String setterSuffix = null;
 
     // === Setters ===
     public Builder generateSupplier(OptionState value) {

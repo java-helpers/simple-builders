@@ -11,6 +11,8 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
             generateFieldConsumer = OptionState.DISABLED,
             generateBuilderConsumer = OptionState.DISABLED,
             generateVarArgsHelpers = OptionState.DISABLED,
+            generateConditionalHelper = OptionState.DISABLED,
+            generateWithInterface = OptionState.DISABLED,
             builderSuffix = "MiniBuilder",
             setterSuffix = "set"))
 @Retention(RetentionPolicy.CLASS)

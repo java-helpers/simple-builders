@@ -333,6 +333,7 @@ class BuilderConfigurationReaderTest {
             @MyBuliderForTestAnnotation
             @SimpleBuilder(options = @SimpleBuilder.Options(
                 generateFieldSupplier = OptionState.DISABLED,
+                generateVarArgsHelpers = OptionState.DISABLED,
                 setterSuffix = "with"
             ))
             public class PersonDto {
