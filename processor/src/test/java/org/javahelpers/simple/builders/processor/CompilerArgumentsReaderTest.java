@@ -114,25 +114,11 @@ class CompilerArgumentsReaderTest {
         "Should return false for empty string");
   }
 
-  /** Test: readBooleanValue handles case-insensitive "true". */
+  /** Test: readBooleanValue handles case-insensitive "true" and "enabled". */
   @ParameterizedTest
-  @ValueSource(strings = {"true", "TRUE", "True", "TrUe"})
-  void readBooleanValue_CaseInsensitiveTrue_ReturnsTrue(String value) {
-    Map<String, String> options = new HashMap<>();
-    options.put("simplebuilder.generateFieldSupplier", value);
-
-    ProcessingEnvironment env = ProcessingEnvironmentStub.create(options);
-    CompilerArgumentsReader reader = new CompilerArgumentsReader(env);
-
-    assertTrue(
-        reader.readBooleanValue(CompilerArgumentsEnum.GENERATE_FIELD_SUPPLIER),
-        "Should return true for: " + value);
-  }
-
-  /** Test: readBooleanValue handles case-insensitive "enabled". */
-  @ParameterizedTest
-  @ValueSource(strings = {"enabled", "ENABLED", "Enabled", "EnAbLeD"})
-  void readBooleanValue_CaseInsensitiveEnabled_ReturnsTrue(String value) {
+  @ValueSource(
+      strings = {"true", "TRUE", "True", "TrUe", "enabled", "ENABLED", "Enabled", "EnAbLeD"})
+  void readBooleanValue_CaseInsensitiveTrueOrEnabled_ReturnsTrue(String value) {
     Map<String, String> options = new HashMap<>();
     options.put("simplebuilder.generateFieldSupplier", value);
 

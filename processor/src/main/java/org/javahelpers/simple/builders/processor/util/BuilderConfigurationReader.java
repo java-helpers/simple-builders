@@ -54,6 +54,13 @@ import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
  * <p>Note: If {@code @SimpleBuilder} is present, custom template annotations are ignored.
  */
 public class BuilderConfigurationReader {
+  private static final String SIMPLE_BUILDER_ANNOTATION =
+      "org.javahelpers.simple.builders.core.annotations.SimpleBuilder";
+  private static final String SIMPLE_BUILDER_TEMPLATE_ANNOTATION =
+      "org.javahelpers.simple.builders.core.annotations.SimpleBuilder.Template";
+  private static final String SIMPLE_BUILDER_TEMPLATE_ANNOTATION_ALT =
+      "org.javahelpers.simple.builders.core.annotations.SimpleBuilder$Template";
+
   private final BuilderConfiguration globalConfiguration;
   private final ProcessingLogger logger;
   private final Elements elementUtils;
@@ -82,8 +89,7 @@ public class BuilderConfigurationReader {
    */
   public BuilderConfiguration readFromInlineOptions(Element element) {
     AnnotationMirror simpleBuilderMirror =
-        extractAnnotationMirror(
-            element, "org.javahelpers.simple.builders.core.annotations.SimpleBuilder");
+        extractAnnotationMirror(element, SIMPLE_BUILDER_ANNOTATION);
     return extractOptionsFromAnnotationMirror(simpleBuilderMirror);
   }
 
@@ -185,6 +191,9 @@ public class BuilderConfigurationReader {
             builder.generateWithInterface(OptionState.valueOf(enumValue));
         case "builderSuffix" -> builder.builderSuffix(value.toString());
         case "setterSuffix" -> builder.setterSuffix(value.toString());
+        default ->
+            logger.warning(
+                "Unknown configuration option '%s' with value '%s' - ignoring", name, value);
       }
     }
 
@@ -211,43 +220,90 @@ public class BuilderConfigurationReader {
    * @return configuration from the template annotation, or null if not present
    */
   public BuilderConfiguration readFromTemplate(Element element) {
-    // If @SimpleBuilder is present, ignore template annotations (inline options take full
-    // precedence)
-    for (AnnotationMirror mirror : element.getAnnotationMirrors()) {
-      if (mirror
-          .getAnnotationType()
-          .toString()
-          .equals("org.javahelpers.simple.builders.core.annotations.SimpleBuilder")) {
-        logger.debug(
-            "Template annotations ignored for '%s' (direct @SimpleBuilder present)",
-            element.getSimpleName());
-        return null;
-      }
+    // If @SimpleBuilder is present, ignore template annotations
+    if (hasSimpleBuilderAnnotation(element)) {
+      logger.debug(
+          "Template annotations ignored for '%s' (direct @SimpleBuilder present)",
+          element.getSimpleName());
+      return null;
     }
 
     // Check all annotations on the element to find one annotated with @SimpleBuilder.Template
     for (AnnotationMirror mirror : element.getAnnotationMirrors()) {
-      Element annotationElement = mirror.getAnnotationType().asElement();
-
-      // Check using AnnotationMirror for template annotations
-      // (this gives us only explicitly set values)
-      for (AnnotationMirror metaMirror : annotationElement.getAnnotationMirrors()) {
-        String metaAnnotationName = metaMirror.getAnnotationType().toString();
-        if (metaAnnotationName.equals(
-                "org.javahelpers.simple.builders.core.annotations.SimpleBuilder.Template")
-            || metaAnnotationName.equals(
-                "org.javahelpers.simple.builders.core.annotations.SimpleBuilder$Template")) {
-          // Found template via mirror - extract options using AnnotationMirror parsing
-          // This approach only gives us explicitly set values, not annotation defaults
-          logger.debug(
-              "Found template annotation '%s' on '%s'",
-              annotationElement.getSimpleName(), element.getSimpleName());
-          return extractOptionsFromTemplateMirror(metaMirror);
-        }
+      BuilderConfiguration templateConfig = checkForTemplateAnnotation(mirror, element);
+      if (templateConfig != null) {
+        return templateConfig;
       }
     }
 
     return null;
+  }
+
+  /**
+   * Checks if the element has a direct @SimpleBuilder annotation.
+   *
+   * @param element the element to check
+   * @return true if @SimpleBuilder is present
+   */
+  private boolean hasSimpleBuilderAnnotation(Element element) {
+    for (AnnotationMirror mirror : element.getAnnotationMirrors()) {
+      if (isSimpleBuilderAnnotation(mirror)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Checks if an annotation mirror represents @SimpleBuilder.
+   *
+   * @param mirror the annotation mirror to check
+   * @return true if this is @SimpleBuilder
+   */
+  private boolean isSimpleBuilderAnnotation(AnnotationMirror mirror) {
+    String typeName = mirror.getAnnotationType().toString();
+    return typeName.equals(SIMPLE_BUILDER_ANNOTATION);
+  }
+
+  /**
+   * Checks if an annotation is a template annotation and extracts its configuration.
+   *
+   * @param mirror the annotation mirror to check
+   * @param element the element being processed (for logging)
+   * @return the configuration if this is a template annotation, null otherwise
+   */
+  private BuilderConfiguration checkForTemplateAnnotation(
+      AnnotationMirror mirror, Element element) {
+    Element annotationElement = mirror.getAnnotationType().asElement();
+
+    // Check using AnnotationMirror for template annotations
+    for (AnnotationMirror metaMirror : annotationElement.getAnnotationMirrors()) {
+      if (isTemplateAnnotation(metaMirror)) {
+        logger.debug(
+            "Found template annotation '%s' on '%s'",
+            annotationElement.getSimpleName(), element.getSimpleName());
+        return extractOptionsFromTemplateMirror(metaMirror);
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Checks if an annotation mirror represents @SimpleBuilder.Template.
+   *
+   * @param metaMirror the meta-annotation mirror to check
+   * @return true if this is @SimpleBuilder.Template
+   */
+  private boolean isTemplateAnnotation(AnnotationMirror metaMirror) {
+    String metaAnnotationName = metaMirror.getAnnotationType().toString();
+    // Check both possible representations of nested annotation
+    if (metaAnnotationName.equals(SIMPLE_BUILDER_TEMPLATE_ANNOTATION)) {
+      return true;
+    }
+    if (metaAnnotationName.equals(SIMPLE_BUILDER_TEMPLATE_ANNOTATION_ALT)) {
+      return true;
+    }
+    return false;
   }
 
   /**
@@ -262,8 +318,7 @@ public class BuilderConfigurationReader {
         templateValues.entrySet()) {
       if (entry.getKey().getSimpleName().toString().equals("options")) {
         Object value = entry.getValue().getValue();
-        if (value instanceof AnnotationMirror) {
-          AnnotationMirror optionsMirror = (AnnotationMirror) value;
+        if (value instanceof AnnotationMirror optionsMirror) {
           return parseOptionsFromMirror(optionsMirror);
         }
       }

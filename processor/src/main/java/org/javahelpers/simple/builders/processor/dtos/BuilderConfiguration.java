@@ -212,89 +212,81 @@ public record BuilderConfiguration(
     }
 
     return BuilderConfiguration.builder()
-        .generateSupplier(
-            other.generateFieldSupplier != UNSET
-                ? other.generateFieldSupplier
-                : this.generateFieldSupplier)
-        .generateConsumer(
-            other.generateFieldConsumer != UNSET
-                ? other.generateFieldConsumer
-                : this.generateFieldConsumer)
+        .generateSupplier(mergeOptionState(other.generateFieldSupplier, this.generateFieldSupplier))
+        .generateConsumer(mergeOptionState(other.generateFieldConsumer, this.generateFieldConsumer))
         .generateBuilderConsumer(
-            other.generateBuilderConsumer != UNSET
-                ? other.generateBuilderConsumer
-                : this.generateBuilderConsumer)
+            mergeOptionState(other.generateBuilderConsumer, this.generateBuilderConsumer))
         .generateConditionalLogic(
-            other.generateConditionalHelper != UNSET
-                ? other.generateConditionalHelper
-                : this.generateConditionalHelper)
-        .builderAccess(
-            other.builderAccess != AccessModifier.DEFAULT
-                ? other.builderAccess
-                : this.builderAccess)
+            mergeOptionState(other.generateConditionalHelper, this.generateConditionalHelper))
+        .builderAccess(mergeAccessModifier(other.builderAccess, this.builderAccess))
         .builderConstructorAccess(
-            other.builderConstructorAccess != AccessModifier.DEFAULT
-                ? other.builderConstructorAccess
-                : this.builderConstructorAccess)
-        .methodAccess(
-            other.methodAccess != AccessModifier.DEFAULT ? other.methodAccess : this.methodAccess)
+            mergeAccessModifier(other.builderConstructorAccess, this.builderConstructorAccess))
+        .methodAccess(mergeAccessModifier(other.methodAccess, this.methodAccess))
         .generateVarArgsHelpers(
-            other.generateVarArgsHelpers != UNSET
-                ? other.generateVarArgsHelpers
-                : this.generateVarArgsHelpers)
+            mergeOptionState(other.generateVarArgsHelpers, this.generateVarArgsHelpers))
         .generateStringFormatHelpers(
-            other.generateStringFormatHelpers != UNSET
-                ? other.generateStringFormatHelpers
-                : this.generateStringFormatHelpers)
+            mergeOptionState(other.generateStringFormatHelpers, this.generateStringFormatHelpers))
         .generateUnboxedOptional(
-            other.generateUnboxedOptional != UNSET
-                ? other.generateUnboxedOptional
-                : this.generateUnboxedOptional)
+            mergeOptionState(other.generateUnboxedOptional, this.generateUnboxedOptional))
         .usingArrayListBuilder(
-            other.usingArrayListBuilder != UNSET
-                ? other.usingArrayListBuilder
-                : this.usingArrayListBuilder)
+            mergeOptionState(other.usingArrayListBuilder, this.usingArrayListBuilder))
         .usingArrayListBuilderWithElementBuilders(
-            other.usingArrayListBuilderWithElementBuilders != UNSET
-                ? other.usingArrayListBuilderWithElementBuilders
-                : this.usingArrayListBuilderWithElementBuilders)
-        .usingHashSetBuilder(
-            other.usingHashSetBuilder != UNSET
-                ? other.usingHashSetBuilder
-                : this.usingHashSetBuilder)
+            mergeOptionState(
+                other.usingArrayListBuilderWithElementBuilders,
+                this.usingArrayListBuilderWithElementBuilders))
+        .usingHashSetBuilder(mergeOptionState(other.usingHashSetBuilder, this.usingHashSetBuilder))
         .usingHashSetBuilderWithElementBuilders(
-            other.usingHashSetBuilderWithElementBuilders != UNSET
-                ? other.usingHashSetBuilderWithElementBuilders
-                : this.usingHashSetBuilderWithElementBuilders)
-        .usingHashMapBuilder(
-            other.usingHashMapBuilder != UNSET
-                ? other.usingHashMapBuilder
-                : this.usingHashMapBuilder)
+            mergeOptionState(
+                other.usingHashSetBuilderWithElementBuilders,
+                this.usingHashSetBuilderWithElementBuilders))
+        .usingHashMapBuilder(mergeOptionState(other.usingHashMapBuilder, this.usingHashMapBuilder))
         .usingGeneratedAnnotation(
-            other.usingGeneratedAnnotation != UNSET
-                ? other.usingGeneratedAnnotation
-                : this.usingGeneratedAnnotation)
+            mergeOptionState(other.usingGeneratedAnnotation, this.usingGeneratedAnnotation))
         .usingBuilderImplementationAnnotation(
-            other.usingBuilderImplementationAnnotation != UNSET
-                ? other.usingBuilderImplementationAnnotation
-                : this.usingBuilderImplementationAnnotation)
+            mergeOptionState(
+                other.usingBuilderImplementationAnnotation,
+                this.usingBuilderImplementationAnnotation))
         .implementsBuilderBase(
-            other.implementsBuilderBase != UNSET
-                ? other.implementsBuilderBase
-                : this.implementsBuilderBase)
+            mergeOptionState(other.implementsBuilderBase, this.implementsBuilderBase))
         .generateWithInterface(
-            other.generateWithInterface != UNSET
-                ? other.generateWithInterface
-                : this.generateWithInterface)
-        .builderSuffix(
-            other.builderSuffix != null && !other.builderSuffix.isEmpty()
-                ? other.builderSuffix
-                : this.builderSuffix)
-        .setterSuffix(
-            other.setterSuffix != null && !other.setterSuffix.isEmpty()
-                ? other.setterSuffix
-                : this.setterSuffix)
+            mergeOptionState(other.generateWithInterface, this.generateWithInterface))
+        .builderSuffix(mergeString(other.builderSuffix, this.builderSuffix))
+        .setterSuffix(mergeString(other.setterSuffix, this.setterSuffix))
         .build();
+  }
+
+  /**
+   * Merges two OptionState values, preferring the other value if it's not UNSET.
+   *
+   * @param other the other value (higher priority)
+   * @param thisValue the current value (lower priority)
+   * @return the merged value
+   */
+  private static OptionState mergeOptionState(OptionState other, OptionState thisValue) {
+    return other != UNSET ? other : thisValue;
+  }
+
+  /**
+   * Merges two AccessModifier values, preferring the other value if it's not DEFAULT.
+   *
+   * @param other the other value (higher priority)
+   * @param thisValue the current value (lower priority)
+   * @return the merged value
+   */
+  private static AccessModifier mergeAccessModifier(
+      AccessModifier other, AccessModifier thisValue) {
+    return other != AccessModifier.DEFAULT ? other : thisValue;
+  }
+
+  /**
+   * Merges two String values, preferring the other value if it's not null or empty.
+   *
+   * @param other the other value (higher priority)
+   * @param thisValue the current value (lower priority)
+   * @return the merged value
+   */
+  private static String mergeString(String other, String thisValue) {
+    return other != null && !other.isEmpty() ? other : thisValue;
   }
 
   @Override
