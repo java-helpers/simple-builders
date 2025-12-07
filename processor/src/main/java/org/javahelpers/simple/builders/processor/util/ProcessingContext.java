@@ -62,7 +62,8 @@ public final class ProcessingContext {
     this.elementUtils = elementUtils;
     this.typeUtils = typeUtils;
     this.logger = logger;
-    this.configurationReader = new BuilderConfigurationReader(globalConfiguration);
+    this.configurationReader =
+        new BuilderConfigurationReader(globalConfiguration, logger, elementUtils);
   }
 
   public void initConfigurationForProcessingTarget(BuilderConfiguration config) {

@@ -127,10 +127,9 @@ public class BuilderProcessor extends AbstractProcessor {
         context.debug("------------------------------------");
         context.debug("simple-builders: Processing element: %s", annotatedElement.getSimpleName());
         context.debug("------------------------------------");
-        // Resolve configuration per-element to handle all layers (defaults, global, template,
-        // inline)
-        BuilderConfiguration config =
-            reader.resolveConfiguration(annotatedElement, processingEnv.getElementUtils());
+        // Resolve configuration per-element to handle all layers
+        // (defaults, global, template, inline)
+        BuilderConfiguration config = reader.resolveConfiguration(annotatedElement);
         process(annotatedElement, config);
         context.info(
             "simple-builders: Successfully generated builder for: %s",

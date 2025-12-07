@@ -54,31 +54,21 @@ import org.javahelpers.simple.builders.processor.dtos.BuilderConfiguration;
  */
 public class BuilderConfigurationReader {
   private final BuilderConfiguration globalConfiguration;
+  private final ProcessingLogger logger;
+  private final Elements elementUtils;
 
   /**
    * Creates a new BuilderConfigurationReader.
    *
    * @param globalConfiguration the global configuration from compiler arguments
+   * @param logger the logger for debug output
+   * @param elementUtils the Elements utility for annotation processing
    */
-  public BuilderConfigurationReader(BuilderConfiguration globalConfiguration) {
+  public BuilderConfigurationReader(
+      BuilderConfiguration globalConfiguration, ProcessingLogger logger, Elements elementUtils) {
     this.globalConfiguration = globalConfiguration;
-  }
-
-  public BuilderConfiguration resolveWithDirectAnnotation(Element element) {
-    return BuilderConfiguration.DEFAULT
-        .merge(this.globalConfiguration)
-        .merge(this.readFromInlineOptions(element));
-  }
-
-  public BuilderConfiguration resolveWithTemplateAnnotation(
-      SimpleBuilder.Template templateAnnotation) {
-    if (templateAnnotation == null || templateAnnotation.options() == null) {
-      // TODO add a debug logging
-      return BuilderConfiguration.DEFAULT.merge(this.globalConfiguration);
-    }
-    return BuilderConfiguration.DEFAULT
-        .merge(this.globalConfiguration)
-        .merge(this.buildConfigurationFromOptions(templateAnnotation.options()));
+    this.logger = logger;
+    this.elementUtils = elementUtils;
   }
 
   /**
@@ -217,10 +207,9 @@ public class BuilderConfigurationReader {
    * <p>Returns null if no template annotation is found or if {@code @SimpleBuilder} is present.
    *
    * @param element the annotated element to analyze
-   * @param elementUtils the Elements utility for annotation processing
    * @return configuration from the template annotation, or null if not present
    */
-  public BuilderConfiguration readFromTemplate(Element element, Elements elementUtils) {
+  public BuilderConfiguration readFromTemplate(Element element) {
     // If @SimpleBuilder is present, ignore template annotations (inline options take full
     // precedence)
     for (AnnotationMirror mirror : element.getAnnotationMirrors()) {
@@ -228,6 +217,9 @@ public class BuilderConfigurationReader {
           .getAnnotationType()
           .toString()
           .equals("org.javahelpers.simple.builders.core.annotations.SimpleBuilder")) {
+        logger.debug(
+            "Template annotations ignored for '%s' (direct @SimpleBuilder present)",
+            element.getSimpleName());
         return null;
       }
     }
@@ -246,7 +238,10 @@ public class BuilderConfigurationReader {
                 "org.javahelpers.simple.builders.core.annotations.SimpleBuilder$Template")) {
           // Found template via mirror - extract options using AnnotationMirror parsing
           // This approach only gives us explicitly set values, not annotation defaults
-          return extractOptionsFromTemplateMirror(metaMirror, elementUtils);
+          logger.debug(
+              "Found template annotation '%s' on '%s'",
+              annotationElement.getSimpleName(), element.getSimpleName());
+          return extractOptionsFromTemplateMirror(metaMirror);
         }
       }
     }
@@ -258,8 +253,7 @@ public class BuilderConfigurationReader {
    * Extracts configuration from @SimpleBuilder.Template(options = ...) using AnnotationMirror.
    * Fallback for same-round compiled templates where reflection doesn't work.
    */
-  private BuilderConfiguration extractOptionsFromTemplateMirror(
-      AnnotationMirror templateMirror, Elements elementUtils) {
+  private BuilderConfiguration extractOptionsFromTemplateMirror(AnnotationMirror templateMirror) {
     Map<? extends ExecutableElement, ? extends AnnotationValue> templateValues =
         elementUtils.getElementValuesWithDefaults(templateMirror);
 
@@ -274,34 +268,6 @@ public class BuilderConfigurationReader {
       }
     }
     return null;
-  }
-
-  /** Builds configuration directly from SimpleBuilder.Options using reflection. */
-  private BuilderConfiguration buildConfigurationFromOptions(SimpleBuilder.Options options) {
-    return BuilderConfiguration.builder()
-        .generateSupplier(options.generateFieldSupplier())
-        .generateConsumer(options.generateFieldConsumer())
-        .generateBuilderConsumer(options.generateBuilderConsumer())
-        .generateConditionalLogic(options.generateConditionalHelper())
-        .builderAccess(options.builderAccess())
-        .builderConstructorAccess(options.builderConstructorAccess())
-        .methodAccess(options.methodAccess())
-        .generateVarArgsHelpers(options.generateVarArgsHelpers())
-        .generateStringFormatHelpers(options.generateStringFormatHelpers())
-        .generateUnboxedOptional(options.generateUnboxedOptional())
-        .usingArrayListBuilder(options.usingArrayListBuilder())
-        .usingArrayListBuilderWithElementBuilders(
-            options.usingArrayListBuilderWithElementBuilders())
-        .usingHashSetBuilder(options.usingHashSetBuilder())
-        .usingHashSetBuilderWithElementBuilders(options.usingHashSetBuilderWithElementBuilders())
-        .usingHashMapBuilder(options.usingHashMapBuilder())
-        .usingGeneratedAnnotation(options.usingGeneratedAnnotation())
-        .usingBuilderImplementationAnnotation(options.usingBuilderImplementationAnnotation())
-        .implementsBuilderBase(options.implementsBuilderBase())
-        .generateWithInterface(options.generateWithInterface())
-        .builderSuffix(options.builderSuffix())
-        .setterSuffix(options.setterSuffix())
-        .build();
   }
 
   /**
@@ -322,16 +288,22 @@ public class BuilderConfigurationReader {
    * which override defaults.
    *
    * @param element the annotated element to resolve configuration for
-   * @param elementUtils the Elements utility for annotation processing
    * @return the fully resolved configuration with all sources merged
    */
-  public BuilderConfiguration resolveConfiguration(Element element, Elements elementUtils) {
-    // Start with DEFAULT as the base
-    // Layer 2: Merge global configuration from compiler arguments
-    // Layer 3: Merge template configuration (only if @SimpleBuilder not present)
-    return BuilderConfiguration.DEFAULT
-        .merge(globalConfiguration)
-        .merge(readFromTemplate(element, elementUtils))
-        .merge(readFromInlineOptions(element));
+  public BuilderConfiguration resolveConfiguration(Element element) {
+    logger.debug("Resolving configuration for element: %s", element.getSimpleName());
+
+    BuilderConfiguration templateConfig = readFromTemplate(element);
+    BuilderConfiguration inlineConfig = readFromInlineOptions(element);
+
+    BuilderConfiguration result =
+        BuilderConfiguration.DEFAULT
+            .merge(globalConfiguration)
+            .merge(templateConfig)
+            .merge(inlineConfig);
+
+    logger.debug("Configuration resolved for '%s': %s", element.getSimpleName(), result.toString());
+
+    return result;
   }
 }
