@@ -44,7 +44,8 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
  *   <li><b>Field Setters:</b> generateFieldSupplier, generateFieldConsumer, generateBuilderConsumer
  *       (all default: true)
  *   <li><b>Conditional Logic:</b> generateConditionalHelper (default: true)
- *   <li><b>Access Control:</b> builderAccess, methodAccess (default: PUBLIC)
+ *   <li><b>Access Control:</b> builderAccess, builderConstructorAccess, methodAccess (default:
+ *       PUBLIC)
  *   <li><b>Collection Helpers:</b> generateVarArgsHelpers, usingArrayListBuilder,
  *       usingArrayListBuilderWithElementBuilders, usingHashSetBuilder,
  *       usingHashSetBuilderWithElementBuilders, usingHashMapBuilder (all default: true)
@@ -174,15 +175,16 @@ public @interface SimpleBuilder {
 
     // === Access Control ===
     /**
-     * Access level for generated builder class.
-     *
-     * <p>Available values:
+     * Access level for the generated builder class.
      *
      * <ul>
      *   <li><b>PUBLIC</b> - For public APIs (default)
      *   <li><b>PACKAGE_PRIVATE</b> - For internal use within a package
-     *   <li><b>PRIVATE</b> - When using only static factory methods
      * </ul>
+     *
+     * <p><b>Note:</b> {@code PRIVATE} is <b>not allowed</b> for builder classes. Java does not
+     * allow private top-level classes, so using {@code PRIVATE} will cause builder generation to
+     * fail with a clear error message. Use {@code PACKAGE_PRIVATE} for internal builders instead.
      *
      * <p>Example:
      *
@@ -197,7 +199,9 @@ public @interface SimpleBuilder {
      *
      * <p>Default: {@link AccessModifier#PUBLIC PUBLIC}
      *
-     * <p>Compiler option: -Asimplebuilder.builderAccess (values: PUBLIC, PACKAGE_PRIVATE, PRIVATE)
+     * <p>Compiler option: -Asimplebuilder.builderAccess (values: PUBLIC, PACKAGE_PRIVATE)
+     *
+     * @see #builderConstructorAccess() for controlling constructor visibility
      */
     AccessModifier builderAccess() default AccessModifier.PUBLIC;
 
@@ -230,6 +234,10 @@ public @interface SimpleBuilder {
      *
      * <p>Typically matches builder class access. Use PACKAGE_PRIVATE for internal APIs.
      *
+     * <p><b>Note:</b> {@code PRIVATE} is <b>not allowed</b> for builder methods. Private methods
+     * would make all setter methods inaccessible, rendering the builder unusable. Using {@code
+     * PRIVATE} will cause builder generation to fail with a clear error message.
+     *
      * <p>Example:
      *
      * <pre>{@code
@@ -243,7 +251,7 @@ public @interface SimpleBuilder {
      *
      * <p>Default: {@link AccessModifier#PUBLIC PUBLIC}
      *
-     * <p>Compiler option: -Asimplebuilder.methodAccess (values: PUBLIC, PACKAGE_PRIVATE, PRIVATE)
+     * <p>Compiler option: -Asimplebuilder.methodAccess (values: PUBLIC, PACKAGE_PRIVATE)
      */
     AccessModifier methodAccess() default AccessModifier.PUBLIC;
 
