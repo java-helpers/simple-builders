@@ -52,16 +52,16 @@ Configure individual builders using `@SimpleBuilder` with `@SimpleBuilder.Option
 ```java
 @SimpleBuilder
 @SimpleBuilder.Options(
-    generateFieldSupplier = true,
-    generateFieldProvider = true,
-    generateBuilderProvider = true,
-    generateConditionalHelper = true,
+    generateFieldSupplier = OptionState.ENABLED,
+    generateFieldConsumer = OptionState.ENABLED,
+    generateBuilderConsumer = OptionState.ENABLED,
+    generateConditionalHelper = OptionState.ENABLED,
     builderAccess = AccessModifier.PUBLIC,
     methodAccess = AccessModifier.PUBLIC,
-    generateVarArgsHelpers = true,
-    usingArrayListBuilder = true,
-    usingHashMapBuilder = true,
-    generateWithInterface = true
+    generateVarArgsHelpers = OptionState.ENABLED,
+    usingArrayListBuilder = OptionState.ENABLED,
+    usingHashMapBuilder = OptionState.ENABLED,
+    generateWithInterface = OptionState.ENABLED
 )
 public class PersonDto {
     private String name;
@@ -129,10 +129,10 @@ Set project-wide defaults via compiler options. These apply to all builders unle
             </path>
         </annotationProcessorPaths>
         <compilerArgs>
-            <arg>-Asimplebuilder.generateFieldSupplier=true</arg>
-            <arg>-Asimplebuilder.generateFieldProvider=true</arg>
+            <arg>-Asimplebuilder.generateFieldSupplier=ENABLED</arg>
+            <arg>-Asimplebuilder.generateFieldConsumer=ENABLED</arg>
             <arg>-Asimplebuilder.builderAccess=PUBLIC</arg>
-            <arg>-Asimplebuilder.usingArrayListBuilder=true</arg>
+            <arg>-Asimplebuilder.usingArrayListBuilder=ENABLED</arg>
         </compilerArgs>
     </configuration>
 </plugin>
@@ -147,8 +147,8 @@ dependencies {
 
 compileJava {
     options.compilerArgs += [
-        "-Asimplebuilder.generateFieldSupplier=true",
-        "-Asimplebuilder.generateFieldProvider=true",
+        "-Asimplebuilder.generateFieldSupplier=ENABLED",
+        "-Asimplebuilder.generateFieldConsumer=ENABLED",
         "-Asimplebuilder.builderAccess=PUBLIC"
     ]
 }
@@ -164,43 +164,502 @@ compileJava {
 
 ## Configuration Options
 
+All options use `OptionState` enum with values: `ENABLED`, `DISABLED`, or `UNSET` (uses default/compiler arg).
+
 ### Field Setter Generation
 
-| Option | Type | Default | Compiler Option | Description |
-|--------|------|---------|------------------|-------------|
-| `generateFieldSupplier` | boolean | `true` | `-Asimplebuilder.generateFieldSupplier` | Generate setter methods accepting `Supplier<T>` for field values |
-| `generateFieldProvider` | boolean | `true` | `-Asimplebuilder.generateFieldProvider` | Generate setter methods accepting `Provider<T>` for complex field types |
-| `generateBuilderProvider` | boolean | `true` | `-Asimplebuilder.generateBuilderProvider` | Generate setter methods accepting `Provider<Builder<T>>` for buildable types |
+#### `generateFieldSupplier`
+
+**Default**: `ENABLED` | **Compiler Option**: `-Asimplebuilder.generateFieldSupplier=ENABLED|DISABLED`
+
+Generates setter methods that accept `Supplier<T>` for lazy field value initialization.
+
+**When ENABLED**:
+```java
+// Generated method
+public PersonDtoBuilder name(Supplier<String> nameSupplier) {
+    this.name = changedValue(nameSupplier.get());
+    return this;
+}
+
+// Usage
+PersonDto person = PersonDtoBuilder.create()
+    .name(() -> expensiveNameComputation())
+    .build();
+```
+
+**When DISABLED**: No `Supplier<>` setter methods are generated.
+
+---
+
+#### `generateFieldConsumer`
+
+**Default**: `ENABLED` | **Compiler Option**: `-Asimplebuilder.generateFieldConsumer=ENABLED|DISABLED`
+
+Generates setter methods that accept `Consumer<StringBuilder>` for String fields, allowing fluent string building.
+
+**When ENABLED**:
+```java
+// Generated method for String fields
+public PersonDtoBuilder name(Consumer<StringBuilder> nameConsumer) {
+    StringBuilder builder = new StringBuilder();
+    nameConsumer.accept(builder);
+    this.name = changedValue(builder.toString());
+    return this;
+}
+
+// Usage
+PersonDto person = PersonDtoBuilder.create()
+    .name(sb -> sb.append("Dr. ").append(firstName).append(" ").append(lastName))
+    .build();
+```
+
+**When DISABLED**: No `Consumer<StringBuilder>` methods are generated.
+
+---
+
+#### `generateBuilderConsumer`
+
+**Default**: `ENABLED` | **Compiler Option**: `-Asimplebuilder.generateBuilderConsumer=ENABLED|DISABLED`
+
+Generates setter methods that accept `Consumer<Builder>` for complex nested objects and collections.
+
+**When ENABLED**:
+```java
+// Generated method for collection fields
+public PersonDtoBuilder tags(Consumer<ArrayListBuilder<String>> tagsConsumer) {
+    ArrayListBuilder<String> builder = new ArrayListBuilder<>();
+    tagsConsumer.accept(builder);
+    this.tags = changedValue(builder.build());
+    return this;
+}
+
+// Usage
+PersonDto person = PersonDtoBuilder.create()
+    .tags(list -> list.add("java").add("kotlin").add("scala"))
+    .build();
+```
+
+**When DISABLED**: No builder consumer methods are generated.
+
+---
 
 ### Conditional Logic
 
-| Option | Type | Default | Compiler Option | Description |
-|--------|------|---------|------------------|-------------|
-| `generateConditionalHelper` | boolean | `true` | `-Asimplebuilder.generateConditionalHelper` | Generate conditional/when methods for fluent conditional logic |
+#### `generateConditionalHelper`
+
+**Default**: `ENABLED` | **Compiler Option**: `-Asimplebuilder.generateConditionalHelper=ENABLED|DISABLED`
+
+Generates conditional helper methods for fluent conditional logic in builder chains.
+
+**When ENABLED**:
+```java
+// Generated methods
+public PersonDtoBuilder conditional(BooleanSupplier condition,
+    Consumer<PersonDtoBuilder> trueCase, 
+    Consumer<PersonDtoBuilder> falseCase) { ... }
+
+public PersonDtoBuilder conditional(BooleanSupplier condition,
+    Consumer<PersonDtoBuilder> yesCondition) { ... }
+
+// Usage
+PersonDto person = PersonDtoBuilder.create()
+    .name("John")
+    .conditional(() -> isPremiumUser, 
+        builder -> builder.premiumFeatures(true),
+        builder -> builder.premiumFeatures(false))
+    .build();
+```
+
+**When DISABLED**: No conditional helper methods are generated.
+
+---
 
 ### Access Control
 
-| Option | Type | Default | Values | Compiler Option | Description |
-|--------|------|---------|--------|------------------|-------------|
-| `builderAccess` | AccessModifier | `PUBLIC` | `PUBLIC`, `PROTECTED`, `PACKAGE_PRIVATE`, `PRIVATE` | `-Asimplebuilder.builderAccess` | Visibility level for generated builder class |
-| `methodAccess` | AccessModifier | `PUBLIC` | `PUBLIC`, `PROTECTED`, `PACKAGE_PRIVATE`, `PRIVATE` | `-Asimplebuilder.methodAccess` | Visibility level for generated builder methods |
+#### `builderAccess`
+
+**Default**: `PUBLIC` | **Compiler Option**: `-Asimplebuilder.builderAccess=PUBLIC|PACKAGE_PRIVATE`
+
+Controls the visibility of the generated builder class.
+
+**Supported Values**: 
+- `PUBLIC` - Builder accessible from anywhere (default, recommended for public APIs)
+- `PACKAGE_PRIVATE` - Builder only accessible within the same package (good for internal APIs)
+
+⚠️ **Warning**: `PRIVATE` is technically supported but **not recommended** as it makes the builder class completely inaccessible and therefore useless. Even static factory methods won't help since the class itself is private.
+
+**Example with PACKAGE_PRIVATE**:
+```java
+// Generated builder
+class PersonDtoBuilder implements IBuilderBase<PersonDto> {  // No 'public' keyword
+    // ... only accessible within the same package
+}
+```
+
+**Use case**: Use `PACKAGE_PRIVATE` for DTOs that are internal to your package and shouldn't have their builders exposed publicly.
+
+---
+
+#### `builderConstructorAccess`
+
+**Default**: `PUBLIC` | **Compiler Option**: `-Asimplebuilder.builderConstructorAccess=PUBLIC|PACKAGE_PRIVATE|PRIVATE`
+
+Controls the visibility of the builder's constructors.
+
+**Supported Values**: 
+- `PUBLIC` - Constructors accessible from anywhere (default)
+- `PACKAGE_PRIVATE` - Constructors only accessible within the same package
+- `PRIVATE` - Constructors only accessible via static factory methods ✅ **Recommended pattern**
+
+**Example with PRIVATE** (recommended for API design):
+```java
+// Generated constructors
+private PersonDtoBuilder() { }
+private PersonDtoBuilder(PersonDto instance) { ... }
+
+// Usage - forced to use static factory methods
+PersonDtoBuilder builder = PersonDtoBuilder.create();  // ✅ OK
+new PersonDtoBuilder()  // ❌ Compilation error - constructor is private
+```
+
+**Use case**: Use `PRIVATE` constructors to enforce using the static `create()` factory method, preventing direct instantiation and ensuring consistent builder creation patterns.
+
+---
+
+#### `methodAccess`
+
+**Default**: `PUBLIC` | **Compiler Option**: `-Asimplebuilder.methodAccess=PUBLIC|PACKAGE_PRIVATE`
+
+Controls the visibility of all generated setter methods.
+
+**Supported Values**: 
+- `PUBLIC` - Methods accessible from anywhere (default, recommended)
+- `PACKAGE_PRIVATE` - Methods only accessible within the same package
+
+⚠️ **Warning**: `PRIVATE` is technically supported but **not recommended** as it makes all builder setter methods private and therefore the builder completely unusable.
+
+**Example with PACKAGE_PRIVATE**:
+```java
+// Generated methods without 'public' modifier
+PersonDtoBuilder name(String name) {  // Package-private
+    this.name = changedValue(name);
+    return this;
+}
+```
+
+**Use case**: Rarely needed. Consider using `PACKAGE_PRIVATE` only when the entire builder API should be internal to the package.
+
+---
+
+### Helper Methods
+
+#### `generateVarArgsHelpers`
+
+**Default**: `ENABLED` | **Compiler Option**: `-Asimplebuilder.generateVarArgsHelpers=ENABLED|DISABLED`
+
+Generates varargs methods for List and Set fields for convenient multi-value initialization.
+
+**When ENABLED**:
+```java
+// Generated method
+public PersonDtoBuilder tags(String... tags) {
+    this.tags = changedValue(Arrays.asList(tags));
+    return this;
+}
+
+// Usage
+PersonDto person = PersonDtoBuilder.create()
+    .tags("java", "kotlin", "scala")  // Varargs syntax
+    .build();
+```
+
+**When DISABLED**: No varargs methods are generated; must use collection directly.
+
+---
+
+#### `generateStringFormatHelpers`
+
+**Default**: `ENABLED` | **Compiler Option**: `-Asimplebuilder.generateStringFormatHelpers=ENABLED|DISABLED`
+
+Generates `String.format()` helper methods for String fields.
+
+**When ENABLED**:
+```java
+// Generated method
+public PersonDtoBuilder name(String format, Object... args) {
+    this.name = changedValue(String.format(format, args));
+    return this;
+}
+
+// Usage
+PersonDto person = PersonDtoBuilder.create()
+    .name("Hello, %s %s!", firstName, lastName)
+    .build();
+```
+
+**When DISABLED**: No format helper methods are generated.
+
+---
+
+#### `generateUnboxedOptional`
+
+**Default**: `ENABLED` | **Compiler Option**: `-Asimplebuilder.generateUnboxedOptional=ENABLED|DISABLED`
+
+Generates methods that accept `Optional<T>` and automatically unwrap them.
+
+**When ENABLED**:
+```java
+// Generated method
+public PersonDtoBuilder name(Optional<String> nameOptional) {
+    nameOptional.ifPresent(value -> this.name = changedValue(value));
+    return this;
+}
+
+// Usage
+Optional<String> maybeName = findName();
+PersonDto person = PersonDtoBuilder.create()
+    .name(maybeName)  // Automatically unwrapped
+    .build();
+```
+
+**When DISABLED**: Must unwrap Optional manually before passing to builder.
+
+---
 
 ### Collection Helpers
 
-| Option | Type | Default | Compiler Option | Description |
-|--------|------|---------|------------------|-------------|
-| `generateVarArgsHelpers` | boolean | `true` | `-Asimplebuilder.generateVarArgsHelpers` | Generate varargs methods for Lists and Sets |
-| `usingArrayListBuilder` | boolean | `true` | `-Asimplebuilder.usingArrayListBuilder` | Use chaining ArrayListBuilder for Lists |
-| `usingArrayListBuilderWithElementBuilders` | boolean | `true` | `-Asimplebuilder.usingArrayListBuilderWithElementBuilders` | Use ArrayListBuilderWithElementBuilders for Lists of complex objects |
-| `usingHashSetBuilder` | boolean | `true` | `-Asimplebuilder.usingHashSetBuilder` | Use chaining HashSetBuilder for Sets |
-| `usingHashSetBuilderWithElementBuilders` | boolean | `true` | `-Asimplebuilder.usingHashSetBuilderWithElementBuilders` | Use HashSetBuilderWithElementBuilders for Sets of complex objects |
-| `usingHashMapBuilder` | boolean | `true` | `-Asimplebuilder.usingHashMapBuilder` | Use chaining HashMapBuilder for Maps |
+#### `usingArrayListBuilder`
 
-### Integration
+**Default**: `ENABLED` | **Compiler Option**: `-Asimplebuilder.usingArrayListBuilder=ENABLED|DISABLED`
 
-| Option | Type | Default | Compiler Option | Description |
-|--------|------|---------|------------------|-------------|
-| `generateWithInterface` | boolean | `true` | `-Asimplebuilder.generateWithInterface` | Generate With interface for DTO integration |
+Generates methods using `ArrayListBuilder` for fluent List construction.
+
+**When ENABLED**:
+```java
+// Generated method
+public PersonDtoBuilder tags(Consumer<ArrayListBuilder<String>> consumer) {
+    ArrayListBuilder<String> builder = new ArrayListBuilder<>();
+    consumer.accept(builder);
+    this.tags = changedValue(builder.build());
+    return this;
+}
+
+// Usage
+.tags(list -> list.add("tag1").add("tag2").addAll(otherTags))
+```
+
+**When DISABLED**: Basic List setter only; no fluent list building.
+
+---
+
+#### `usingArrayListBuilderWithElementBuilders`
+
+**Default**: `ENABLED` | **Compiler Option**: `-Asimplebuilder.usingArrayListBuilderWithElementBuilders=ENABLED|DISABLED`
+
+Generates methods using `ArrayListBuilderWithElementBuilders` for fluent construction of Lists containing complex objects that have their own builders.
+
+**When ENABLED**:
+```java
+// For List<PersonDto> where PersonDto has a builder
+public TeamDtoBuilder members(Consumer<ArrayListBuilderWithElementBuilders<PersonDto, PersonDtoBuilder>> consumer) {
+    ArrayListBuilderWithElementBuilders<PersonDto, PersonDtoBuilder> builder = ...;
+    consumer.accept(builder);
+    this.members = changedValue(builder.build());
+    return this;
+}
+
+// Usage - build complex nested objects inline
+.members(list -> list
+    .add(person -> person.name("Alice").age(30))
+    .add(person -> person.name("Bob").age(25)))
+```
+
+**When DISABLED**: No builder consumer methods for complex list elements; must construct objects separately.
+
+---
+
+#### `usingHashSetBuilder`
+
+**Default**: `ENABLED` | **Compiler Option**: `-Asimplebuilder.usingHashSetBuilder=ENABLED|DISABLED`
+
+Generates methods using `HashSetBuilder` for fluent Set construction.
+
+**When ENABLED**:
+```java
+// Generated method
+public PersonDtoBuilder tags(Consumer<HashSetBuilder<String>> consumer) {
+    HashSetBuilder<String> builder = new HashSetBuilder<>();
+    consumer.accept(builder);
+    this.tags = changedValue(builder.build());
+    return this;
+}
+
+// Usage
+.tags(set -> set.add("tag1").add("tag2").addAll(otherTags))
+```
+
+**When DISABLED**: Basic Set setter only; no fluent set building.
+
+---
+
+#### `usingHashSetBuilderWithElementBuilders`
+
+**Default**: `ENABLED` | **Compiler Option**: `-Asimplebuilder.usingHashSetBuilderWithElementBuilders=ENABLED|DISABLED`
+
+Generates methods using `HashSetBuilderWithElementBuilders` for fluent construction of Sets containing complex objects that have their own builders.
+
+**When ENABLED**:
+```java
+// For Set<PersonDto> where PersonDto has a builder
+public TeamDtoBuilder uniqueMembers(Consumer<HashSetBuilderWithElementBuilders<PersonDto, PersonDtoBuilder>> consumer) {
+    HashSetBuilderWithElementBuilders<PersonDto, PersonDtoBuilder> builder = ...;
+    consumer.accept(builder);
+    this.uniqueMembers = changedValue(builder.build());
+    return this;
+}
+
+// Usage - build complex nested objects inline
+.uniqueMembers(set -> set
+    .add(person -> person.name("Alice").email("alice@example.com"))
+    .add(person -> person.name("Bob").email("bob@example.com")))
+```
+
+**When DISABLED**: No builder consumer methods for complex set elements; must construct objects separately.
+
+---
+
+#### `usingHashMapBuilder`
+
+**Default**: `ENABLED` | **Compiler Option**: `-Asimplebuilder.usingHashMapBuilder=ENABLED|DISABLED`
+
+Generates methods using `HashMapBuilder` for fluent Map construction.
+
+---
+
+### Integration & Annotations
+
+#### `generateWithInterface`
+
+**Default**: `ENABLED` | **Compiler Option**: `-Asimplebuilder.generateWithInterface=ENABLED|DISABLED`
+
+Generates a `With` interface that can be implemented by your DTO to enable fluent modification methods.
+
+**When ENABLED**:
+```java
+// Generated interface inside the builder
+public interface With {
+    default PersonDto with(Consumer<PersonDtoBuilder> modifications) {
+        PersonDtoBuilder builder = new PersonDtoBuilder((PersonDto) this);
+        modifications.accept(builder);
+        return builder.build();
+    }
+    
+    default PersonDtoBuilder with() {
+        return new PersonDtoBuilder((PersonDto) this);
+    }
+}
+
+// Your DTO can implement it
+public class PersonDto implements PersonDtoBuilder.With {
+    // ...
+}
+
+// Usage - create modified copies
+PersonDto original = new PersonDto();
+PersonDto modified = original.with(p -> p.name("New Name").age(30));
+```
+
+**When DISABLED**: No `With` interface is generated. DTOs cannot use the fluent modification pattern.
+
+---
+
+#### `implementsBuilderBase`
+
+**Default**: `ENABLED` | **Compiler Option**: `-Asimplebuilder.implementsBuilderBase=ENABLED|DISABLED`
+
+Makes the generated builder implement `IBuilderBase<T>` interface for framework integration.
+
+**When ENABLED**:
+```java
+public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
+    // Can be used with generic builder frameworks
+}
+```
+
+**When DISABLED**: Builder is a standalone class without interface.
+
+---
+
+#### `usingGeneratedAnnotation`
+
+**Default**: `ENABLED` | **Compiler Option**: `-Asimplebuilder.usingGeneratedAnnotation=ENABLED|DISABLED`
+
+Adds `@Generated` annotation to the builder class for tooling and code coverage exclusion.
+
+**When ENABLED**:
+```java
+@Generated("Generated by org.javahelpers.simple.builders.processor.BuilderProcessor")
+public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
+    // ...
+}
+```
+
+**When DISABLED**: No `@Generated` annotation. Useful if you want the builder counted in code coverage.
+
+---
+
+#### `usingBuilderImplementationAnnotation`
+
+**Default**: `ENABLED` | **Compiler Option**: `-Asimplebuilder.usingBuilderImplementationAnnotation=ENABLED|DISABLED`
+
+Adds `@BuilderImplementation` annotation linking the builder to its target class.
+
+**When ENABLED**:
+```java
+@BuilderImplementation(forClass = PersonDto.class)
+public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
+    // ...
+}
+```
+
+**When DISABLED**: No `@BuilderImplementation` annotation.
+
+---
+
+### Naming
+
+#### `builderSuffix`
+
+**Default**: `"Builder"` | **Compiler Option**: `-Asimplebuilder.builderSuffix=CustomSuffix`
+
+Customizes the suffix appended to the DTO class name to create the builder class name.
+
+**Example**:
+```java
+@SimpleBuilder.Options(builderSuffix = "Factory")
+public class PersonDto { }
+
+// Generated class name: PersonDtoFactory (instead of PersonDtoBuilder)
+```
+
+---
+
+#### `setterSuffix`
+
+**Default**: `""` (empty) | **Compiler Option**: `-Asimplebuilder.setterSuffix=customPrefix`
+
+Adds a prefix to all setter method names.
+
+**Example**:
+```java
+@SimpleBuilder.Options(setterSuffix = "with")
+public class PersonDto {
+    private String name;
+}
+
+// Generated method: withName(String name) instead of name(String name)
+```
 
 ## Examples
 
@@ -211,14 +670,14 @@ Generate only essential builder methods:
 ```java
 @SimpleBuilder
 @SimpleBuilder.Options(
-    generateFieldSupplier = false,
-    generateFieldProvider = false,
-    generateBuilderProvider = false,
-    generateConditionalHelper = false,
-    generateVarArgsHelpers = false,
-    usingArrayListBuilder = false,
-    usingHashMapBuilder = false,
-    generateWithInterface = false
+    generateFieldSupplier = OptionState.DISABLED,
+    generateFieldConsumer = OptionState.DISABLED,
+    generateBuilderConsumer = OptionState.DISABLED,
+    generateConditionalHelper = OptionState.DISABLED,
+    generateVarArgsHelpers = OptionState.DISABLED,
+    usingArrayListBuilder = OptionState.DISABLED,
+    usingHashMapBuilder = OptionState.DISABLED,
+    generateWithInterface = OptionState.DISABLED
 )
 public class MinimalDto {
     private String name;
@@ -323,16 +782,16 @@ Set sensible defaults for your entire project:
 <!-- Maven compiler plugin configuration -->
 <compilerArgs>
     <!-- Enable all field setter variants -->
-    <arg>-Asimplebuilder.generateFieldSupplier=true</arg>
-    <arg>-Asimplebuilder.generateFieldProvider=true</arg>
-    <arg>-Asimplebuilder.generateBuilderProvider=true</arg>
+    <arg>-Asimplebuilder.generateFieldSupplier=ENABLED</arg>
+    <arg>-Asimplebuilder.generateFieldConsumer=ENABLED</arg>
+    <arg>-Asimplebuilder.generateBuilderConsumer=ENABLED</arg>
     
     <!-- Make builders package-private for internal APIs -->
     <arg>-Asimplebuilder.builderAccess=PACKAGE_PRIVATE</arg>
     
     <!-- Enable collection helpers -->
-    <arg>-Asimplebuilder.usingArrayListBuilder=true</arg>
-    <arg>-Asimplebuilder.usingHashMapBuilder=true</arg>
+    <arg>-Asimplebuilder.usingArrayListBuilder=ENABLED</arg>
+    <arg>-Asimplebuilder.usingHashMapBuilder=ENABLED</arg>
 </compilerArgs>
 ```
 
@@ -452,33 +911,86 @@ Or in compiler options:
 6. **Test configurations**: Verify generated code meets expectations
 7. **Consider team preferences**: Choose configurations that work for everyone
 
+### Access Modifier Best Practices
+
+**Recommended Combinations**:
+
+✅ **Public API Builder** (most common):
+```java
+@SimpleBuilder.Options(
+    builderAccess = AccessModifier.PUBLIC,            // ✅ Accessible everywhere
+    builderConstructorAccess = AccessModifier.PRIVATE, // ✅ Forces use of create()
+    methodAccess = AccessModifier.PUBLIC               // ✅ Accessible everywhere
+)
+```
+
+✅ **Internal/Package-Private Builder**:
+```java
+@SimpleBuilder.Options(
+    builderAccess = AccessModifier.PACKAGE_PRIVATE,    // ✅ Internal to package
+    builderConstructorAccess = AccessModifier.PRIVATE, // ✅ Forces use of create()
+    methodAccess = AccessModifier.PACKAGE_PRIVATE      // ✅ Internal to package
+)
+```
+
+❌ **Avoid These Combinations**:
+
+```java
+// ❌ WRONG: Private builder class is completely unusable
+builderAccess = AccessModifier.PRIVATE  // Nobody can access the class at all!
+
+// ❌ WRONG: Private methods make the builder unusable
+methodAccess = AccessModifier.PRIVATE   // Nobody can call the setter methods!
+
+// ⚠️ RARELY USEFUL: Public builder with private methods
+builderAccess = AccessModifier.PUBLIC,
+methodAccess = AccessModifier.PRIVATE    // Builder exists but is unusable!
+```
+
+**Why `PRIVATE` constructors are different**:
+- ✅ `builderConstructorAccess = PRIVATE` **IS USEFUL** - Enforces using `create()` factory method
+- ❌ `builderAccess = PRIVATE` **IS NOT USEFUL** - Makes the entire class inaccessible
+- ❌ `methodAccess = PRIVATE` **IS NOT USEFUL** - Makes all methods inaccessible
+
 ## Reference
 
 ### All Compiler Options
 
 ```
 # Field Setter Generation
--Asimplebuilder.generateFieldSupplier=true|false
--Asimplebuilder.generateFieldProvider=true|false
--Asimplebuilder.generateBuilderProvider=true|false
+-Asimplebuilder.generateFieldSupplier=ENABLED|DISABLED
+-Asimplebuilder.generateFieldConsumer=ENABLED|DISABLED
+-Asimplebuilder.generateBuilderConsumer=ENABLED|DISABLED
 
 # Conditional Logic
--Asimplebuilder.generateConditionalHelper=true|false
+-Asimplebuilder.generateConditionalHelper=ENABLED|DISABLED
 
 # Access Control
--Asimplebuilder.builderAccess=PUBLIC|PROTECTED|PACKAGE_PRIVATE|PRIVATE
--Asimplebuilder.methodAccess=PUBLIC|PROTECTED|PACKAGE_PRIVATE|PRIVATE
+-Asimplebuilder.builderAccess=PUBLIC|PACKAGE_PRIVATE  # PRIVATE not recommended (unusable builder)
+-Asimplebuilder.builderConstructorAccess=PUBLIC|PACKAGE_PRIVATE|PRIVATE  # PRIVATE recommended for factory pattern
+-Asimplebuilder.methodAccess=PUBLIC|PACKAGE_PRIVATE  # PRIVATE not recommended (unusable methods)
+
+# Helper Methods
+-Asimplebuilder.generateVarArgsHelpers=ENABLED|DISABLED
+-Asimplebuilder.generateStringFormatHelpers=ENABLED|DISABLED
+-Asimplebuilder.generateUnboxedOptional=ENABLED|DISABLED
 
 # Collection Helpers
--Asimplebuilder.generateVarArgsHelpers=true|false
--Asimplebuilder.usingArrayListBuilder=true|false
--Asimplebuilder.usingArrayListBuilderWithElementBuilders=true|false
--Asimplebuilder.usingHashSetBuilder=true|false
--Asimplebuilder.usingHashSetBuilderWithElementBuilders=true|false
--Asimplebuilder.usingHashMapBuilder=true|false
+-Asimplebuilder.usingArrayListBuilder=ENABLED|DISABLED
+-Asimplebuilder.usingArrayListBuilderWithElementBuilders=ENABLED|DISABLED
+-Asimplebuilder.usingHashSetBuilder=ENABLED|DISABLED
+-Asimplebuilder.usingHashSetBuilderWithElementBuilders=ENABLED|DISABLED
+-Asimplebuilder.usingHashMapBuilder=ENABLED|DISABLED
 
-# Integration
--Asimplebuilder.generateWithInterface=true|false
+# Integration & Annotations
+-Asimplebuilder.generateWithInterface=ENABLED|DISABLED
+-Asimplebuilder.implementsBuilderBase=ENABLED|DISABLED
+-Asimplebuilder.usingGeneratedAnnotation=ENABLED|DISABLED
+-Asimplebuilder.usingBuilderImplementationAnnotation=ENABLED|DISABLED
+
+# Naming
+-Asimplebuilder.builderSuffix=CustomSuffix
+-Asimplebuilder.setterSuffix=customPrefix
 ```
 
 ### Complete Options Example
@@ -487,27 +999,39 @@ Or in compiler options:
 @SimpleBuilder
 @SimpleBuilder.Options(
     // Field Setter Generation
-    generateFieldSupplier = true,
-    generateFieldProvider = true,
-    generateBuilderProvider = true,
+    generateFieldSupplier = OptionState.ENABLED,
+    generateFieldConsumer = OptionState.ENABLED,
+    generateBuilderConsumer = OptionState.ENABLED,
     
     // Conditional Logic
-    generateConditionalHelper = true,
+    generateConditionalHelper = OptionState.ENABLED,
     
     // Access Control
     builderAccess = AccessModifier.PUBLIC,
+    builderConstructorAccess = AccessModifier.PUBLIC,
     methodAccess = AccessModifier.PUBLIC,
     
-    // Collection Helpers
-    generateVarArgsHelpers = true,
-    usingArrayListBuilder = true,
-    usingArrayListBuilderWithElementBuilders = true,
-    usingHashSetBuilder = true,
-    usingHashSetBuilderWithElementBuilders = true,
-    usingHashMapBuilder = true,
+    // Helper Methods
+    generateVarArgsHelpers = OptionState.ENABLED,
+    generateStringFormatHelpers = OptionState.ENABLED,
+    generateUnboxedOptional = OptionState.ENABLED,
     
-    // Integration
-    generateWithInterface = true
+    // Collection Helpers
+    usingArrayListBuilder = OptionState.ENABLED,
+    usingArrayListBuilderWithElementBuilders = OptionState.ENABLED,
+    usingHashSetBuilder = OptionState.ENABLED,
+    usingHashSetBuilderWithElementBuilders = OptionState.ENABLED,
+    usingHashMapBuilder = OptionState.ENABLED,
+    
+    // Integration & Annotations
+    generateWithInterface = OptionState.ENABLED,
+    implementsBuilderBase = OptionState.ENABLED,
+    usingGeneratedAnnotation = OptionState.ENABLED,
+    usingBuilderImplementationAnnotation = OptionState.ENABLED,
+    
+    // Naming
+    builderSuffix = "Builder",
+    setterSuffix = ""
 )
 public class ExampleDto {
     private String name;
@@ -516,6 +1040,4 @@ public class ExampleDto {
 
 ---
 
-**Last Updated**: 2025-11-01  
-**Version**: 0.2.0  
 **Related**: [README.md](../README.md)
