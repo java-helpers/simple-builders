@@ -44,7 +44,7 @@ public final class ProcessingContext {
   private final Types typeUtils;
   private final ProcessingLogger logger;
   private final BuilderConfigurationReader configurationReader;
-  private BuilderConfiguration builderConfigurationForElement;
+  private BuilderConfiguration configurationForProcessingTarget;
 
   /**
    * Creates a new processing context.
@@ -65,18 +65,16 @@ public final class ProcessingContext {
     this.configurationReader = new BuilderConfigurationReader(globalConfiguration);
   }
 
-  public void initConfiguration(Element element) {
-    this.builderConfigurationForElement = configurationReader.resolveConfiguration(element);
-    logger.debug("Resolved builder configuration for element: {}", builderConfigurationForElement);
+  public void initConfigurationForProcessingTarget(BuilderConfiguration config) {
+    this.configurationForProcessingTarget = config;
   }
 
-  /**
-   * Get the builder configuration for the current element being processed.
-   *
-   * @return the builder configuration
-   */
-  public BuilderConfiguration getBuilderConfigurationForElement() {
-    return builderConfigurationForElement;
+  public BuilderConfiguration getConfiguration() {
+    return this.configurationForProcessingTarget;
+  }
+
+  public BuilderConfigurationReader getConfigurationReader() {
+    return configurationReader;
   }
 
   /**
