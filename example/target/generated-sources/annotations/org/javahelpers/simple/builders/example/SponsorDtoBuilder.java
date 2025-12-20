@@ -41,13 +41,13 @@ public class SponsorDtoBuilder implements IBuilderBase<SponsorDto> {
   }
 
   /**
-   * Sets the value for <code>name</code> by invoking the provided supplier.
+   * Sets the value for <code>name</code>.
    *
-   * @param nameSupplier supplier for name
+   * @param name name
    * @return current instance of builder
    */
-  public SponsorDtoBuilder name(Supplier<String> nameSupplier) {
-    this.name = changedValue(nameSupplier.get());
+  public SponsorDtoBuilder name(String name) {
+    this.name = changedValue(name);
     return this;
   }
 
@@ -77,13 +77,13 @@ public class SponsorDtoBuilder implements IBuilderBase<SponsorDto> {
   }
 
   /**
-   * Sets the value for <code>name</code>.
+   * Sets the value for <code>name</code> by invoking the provided supplier.
    *
-   * @param name name
+   * @param nameSupplier supplier for name
    * @return current instance of builder
    */
-  public SponsorDtoBuilder name(String name) {
-    this.name = changedValue(name);
+  public SponsorDtoBuilder name(Supplier<String> nameSupplier) {
+    this.name = changedValue(nameSupplier.get());
     return this;
   }
 

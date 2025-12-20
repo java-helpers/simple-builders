@@ -495,17 +495,6 @@ class BuilderConfigurationReaderTest {
           }
 
           /**
-           * Sets the value for <code>tags</code>.
-           *
-           * @param tags tags
-           * @return current instance of builder
-           */
-          public PersonDtoMinimalBuilder withTags(List<String> tags) {
-            this.tags = changedValue(tags);
-            return this;
-          }
-
-          /**
            * Sets the value for <code>name</code>.
            *
            * @param name name
@@ -513,6 +502,17 @@ class BuilderConfigurationReaderTest {
            */
           public PersonDtoMinimalBuilder withName(String name) {
             this.name = changedValue(name);
+            return this;
+          }
+
+          /**
+           * Sets the value for <code>tags</code>.
+           *
+           * @param tags tags
+           * @return current instance of builder
+           */
+          public PersonDtoMinimalBuilder withTags(List<String> tags) {
+            this.tags = changedValue(tags);
             return this;
           }
 

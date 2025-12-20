@@ -49,24 +49,13 @@ public class MannschaftDtoBuilder implements IBuilderBase<MannschaftDto> {
   }
 
   /**
-   * Sets the value for <code>sponsoren</code>.
+   * Sets the value for <code>name</code>.
    *
-   * @param sponsoren sponsoren
+   * @param name name
    * @return current instance of builder
    */
-  public MannschaftDtoBuilder sponsoren(SponsorDto... sponsoren) {
-    this.sponsoren = changedValue(Set.of(sponsoren));
-    return this;
-  }
-
-  /**
-   * Sets the value for <code>name</code> by invoking the provided supplier.
-   *
-   * @param nameSupplier supplier for name
-   * @return current instance of builder
-   */
-  public MannschaftDtoBuilder name(Supplier<String> nameSupplier) {
-    this.name = changedValue(nameSupplier.get());
+  public MannschaftDtoBuilder name(String name) {
+    this.name = changedValue(name);
     return this;
   }
 
@@ -79,17 +68,6 @@ public class MannschaftDtoBuilder implements IBuilderBase<MannschaftDto> {
    */
   public MannschaftDtoBuilder name(String format, Object... args) {
     this.name = changedValue(String.format(format, args));
-    return this;
-  }
-
-  /**
-   * Sets the value for <code>sponsoren</code> by invoking the provided supplier.
-   *
-   * @param sponsorenSupplier supplier for sponsoren
-   * @return current instance of builder
-   */
-  public MannschaftDtoBuilder sponsoren(Supplier<Set<SponsorDto>> sponsorenSupplier) {
-    this.sponsoren = changedValue(sponsorenSupplier.get());
     return this;
   }
 
@@ -107,13 +85,24 @@ public class MannschaftDtoBuilder implements IBuilderBase<MannschaftDto> {
   }
 
   /**
-   * Sets the value for <code>name</code>.
+   * Sets the value for <code>name</code> by invoking the provided supplier.
    *
-   * @param name name
+   * @param nameSupplier supplier for name
    * @return current instance of builder
    */
-  public MannschaftDtoBuilder name(String name) {
-    this.name = changedValue(name);
+  public MannschaftDtoBuilder name(Supplier<String> nameSupplier) {
+    this.name = changedValue(nameSupplier.get());
+    return this;
+  }
+
+  /**
+   * Sets the value for <code>sponsoren</code>.
+   *
+   * @param sponsoren sponsoren
+   * @return current instance of builder
+   */
+  public MannschaftDtoBuilder sponsoren(Set<SponsorDto> sponsoren) {
+    this.sponsoren = changedValue(sponsoren);
     return this;
   }
 
@@ -132,13 +121,24 @@ public class MannschaftDtoBuilder implements IBuilderBase<MannschaftDto> {
   }
 
   /**
+   * Sets the value for <code>sponsoren</code> by invoking the provided supplier.
+   *
+   * @param sponsorenSupplier supplier for sponsoren
+   * @return current instance of builder
+   */
+  public MannschaftDtoBuilder sponsoren(Supplier<Set<SponsorDto>> sponsorenSupplier) {
+    this.sponsoren = changedValue(sponsorenSupplier.get());
+    return this;
+  }
+
+  /**
    * Sets the value for <code>sponsoren</code>.
    *
    * @param sponsoren sponsoren
    * @return current instance of builder
    */
-  public MannschaftDtoBuilder sponsoren(Set<SponsorDto> sponsoren) {
-    this.sponsoren = changedValue(sponsoren);
+  public MannschaftDtoBuilder sponsoren(SponsorDto... sponsoren) {
+    this.sponsoren = changedValue(Set.of(sponsoren));
     return this;
   }
 

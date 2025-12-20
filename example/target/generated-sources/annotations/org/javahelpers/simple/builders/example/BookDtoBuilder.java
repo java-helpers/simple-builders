@@ -175,46 +175,13 @@ public class BookDtoBuilder implements IBuilderBase<BookDto> {
   }
 
   /**
-   * Sets the value for <code>lastUpdated</code>.
+   * Sets the value for <code>author</code>.
    *
-   * @param lastUpdated the last update timestamp to set
+   * @param author the book author to set
    * @return current instance of builder
    */
-  public BookDtoBuilder lastUpdated(LocalDateTime lastUpdated) {
-    this.lastUpdated = changedValue(lastUpdated);
-    return this;
-  }
-
-  /**
-   * Sets the value for <code>title</code>.
-   *
-   * @param title the book title to set
-   * @return current instance of builder
-   */
-  public BookDtoBuilder title(String title) {
-    this.title = changedValue(title);
-    return this;
-  }
-
-  /**
-   * Sets the value for <code>subtitle</code>.
-   *
-   * @param subtitle an Optional containing the subtitle to set
-   * @return current instance of builder
-   */
-  public BookDtoBuilder subtitle(Optional<String> subtitle) {
-    this.subtitle = changedValue(subtitle);
-    return this;
-  }
-
-  /**
-   * Sets the value for <code>publisher</code>.
-   *
-   * @param publisher the publisher to set
-   * @return current instance of builder
-   */
-  public BookDtoBuilder publisher(PersonDto publisher) {
-    this.publisher = changedValue(publisher);
+  public BookDtoBuilder author(String author) {
+    this.author = changedValue(author);
     return this;
   }
 
@@ -230,6 +197,17 @@ public class BookDtoBuilder implements IBuilderBase<BookDto> {
   }
 
   /**
+   * Sets the value for <code>category</code>.
+   *
+   * @param category the category code to set
+   * @return current instance of builder
+   */
+  public BookDtoBuilder category(char category) {
+    this.category = changedValue(category);
+    return this;
+  }
+
+  /**
    * Sets the value for <code>discount</code>.
    *
    * @param discount the discount percentage to set
@@ -237,28 +215,6 @@ public class BookDtoBuilder implements IBuilderBase<BookDto> {
    */
   public BookDtoBuilder discount(float discount) {
     this.discount = changedValue(discount);
-    return this;
-  }
-
-  /**
-   * Sets the value for <code>salesCount</code>.
-   *
-   * @param salesCount the sales count to set
-   * @return current instance of builder
-   */
-  public BookDtoBuilder salesCount(long salesCount) {
-    this.salesCount = changedValue(salesCount);
-    return this;
-  }
-
-  /**
-   * Sets the value for <code>rating</code>.
-   *
-   * @param rating the book rating to set
-   * @return current instance of builder
-   */
-  public BookDtoBuilder rating(byte rating) {
-    this.rating = changedValue(rating);
     return this;
   }
 
@@ -274,6 +230,17 @@ public class BookDtoBuilder implements IBuilderBase<BookDto> {
   }
 
   /**
+   * Sets the value for <code>exactPrice</code>.
+   *
+   * @param exactPrice the exact book price to set
+   * @return current instance of builder
+   */
+  public BookDtoBuilder exactPrice(BigDecimal exactPrice) {
+    this.exactPrice = changedValue(exactPrice);
+    return this;
+  }
+
+  /**
    * Sets the value for <code>genres</code>.
    *
    * @param genres the set of genres to set
@@ -281,6 +248,28 @@ public class BookDtoBuilder implements IBuilderBase<BookDto> {
    */
   public BookDtoBuilder genres(Set<String> genres) {
     this.genres = changedValue(genres);
+    return this;
+  }
+
+  /**
+   * Sets the value for <code>isbn</code>.
+   *
+   * @param isbn the ISBN to set
+   * @return current instance of builder
+   */
+  public BookDtoBuilder isbn(String isbn) {
+    this.isbn = changedValue(isbn);
+    return this;
+  }
+
+  /**
+   * Sets the value for <code>lastUpdated</code>.
+   *
+   * @param lastUpdated the last update timestamp to set
+   * @return current instance of builder
+   */
+  public BookDtoBuilder lastUpdated(LocalDateTime lastUpdated) {
+    this.lastUpdated = changedValue(lastUpdated);
     return this;
   }
 
@@ -296,6 +285,17 @@ public class BookDtoBuilder implements IBuilderBase<BookDto> {
   }
 
   /**
+   * Sets the value for <code>pages</code>.
+   *
+   * @param pages the page count to set
+   * @return current instance of builder
+   */
+  public BookDtoBuilder pages(int pages) {
+    this.pages = changedValue(pages);
+    return this;
+  }
+
+  /**
    * Sets the value for <code>price</code>.
    *
    * @param price the book price to set
@@ -303,39 +303,6 @@ public class BookDtoBuilder implements IBuilderBase<BookDto> {
    */
   public BookDtoBuilder price(double price) {
     this.price = changedValue(price);
-    return this;
-  }
-
-  /**
-   * Sets the value for <code>tags</code>.
-   *
-   * @param tags the list of tags to set
-   * @return current instance of builder
-   */
-  public BookDtoBuilder tags(List<String> tags) {
-    this.tags = changedValue(tags);
-    return this;
-  }
-
-  /**
-   * Sets the value for <code>category</code>.
-   *
-   * @param category the category code to set
-   * @return current instance of builder
-   */
-  public BookDtoBuilder category(char category) {
-    this.category = changedValue(category);
-    return this;
-  }
-
-  /**
-   * Sets the value for <code>author</code>.
-   *
-   * @param author the book author to set
-   * @return current instance of builder
-   */
-  public BookDtoBuilder author(String author) {
-    this.author = changedValue(author);
     return this;
   }
 
@@ -351,35 +318,68 @@ public class BookDtoBuilder implements IBuilderBase<BookDto> {
   }
 
   /**
-   * Sets the value for <code>exactPrice</code>.
+   * Sets the value for <code>publisher</code>.
    *
-   * @param exactPrice the exact book price to set
+   * @param publisher the publisher to set
    * @return current instance of builder
    */
-  public BookDtoBuilder exactPrice(BigDecimal exactPrice) {
-    this.exactPrice = changedValue(exactPrice);
+  public BookDtoBuilder publisher(PersonDto publisher) {
+    this.publisher = changedValue(publisher);
     return this;
   }
 
   /**
-   * Sets the value for <code>pages</code>.
+   * Sets the value for <code>rating</code>.
    *
-   * @param pages the page count to set
+   * @param rating the book rating to set
    * @return current instance of builder
    */
-  public BookDtoBuilder pages(int pages) {
-    this.pages = changedValue(pages);
+  public BookDtoBuilder rating(byte rating) {
+    this.rating = changedValue(rating);
     return this;
   }
 
   /**
-   * Sets the value for <code>isbn</code>.
+   * Sets the value for <code>salesCount</code>.
    *
-   * @param isbn the ISBN to set
+   * @param salesCount the sales count to set
    * @return current instance of builder
    */
-  public BookDtoBuilder isbn(String isbn) {
-    this.isbn = changedValue(isbn);
+  public BookDtoBuilder salesCount(long salesCount) {
+    this.salesCount = changedValue(salesCount);
+    return this;
+  }
+
+  /**
+   * Sets the value for <code>subtitle</code>.
+   *
+   * @param subtitle an Optional containing the subtitle to set
+   * @return current instance of builder
+   */
+  public BookDtoBuilder subtitle(Optional<String> subtitle) {
+    this.subtitle = changedValue(subtitle);
+    return this;
+  }
+
+  /**
+   * Sets the value for <code>tags</code>.
+   *
+   * @param tags the list of tags to set
+   * @return current instance of builder
+   */
+  public BookDtoBuilder tags(List<String> tags) {
+    this.tags = changedValue(tags);
+    return this;
+  }
+
+  /**
+   * Sets the value for <code>title</code>.
+   *
+   * @param title the book title to set
+   * @return current instance of builder
+   */
+  public BookDtoBuilder title(String title) {
+    this.title = changedValue(title);
     return this;
   }
 

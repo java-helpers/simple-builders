@@ -38,7 +38,6 @@ import com.palantir.javapoet.ParameterSpec;
 import com.palantir.javapoet.ParameterizedTypeName;
 import com.palantir.javapoet.TypeSpec;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -233,10 +232,10 @@ public class JavaCodeGenerator {
   /**
    * Resolves method conflicts by keeping only the highest priority method for each unique
    * signature. This prevents compilation errors when methods from different fields have the same
-   * signature.
+   * signature. Returns methods sorted by signature for stable generation order.
    *
    * @param methodToField mapping from method to its source field
-   * @return list of methods with conflicts resolved
+   * @return list of methods with conflicts resolved, sorted by signature for stability
    */
   private List<MethodDto> resolveMethodConflicts(Map<MethodDto, FieldDto> methodToField) {
     Map<String, MethodDto> signatureToMethod = new HashMap<>();
@@ -283,7 +282,11 @@ public class JavaCodeGenerator {
       }
     }
 
-    return new ArrayList<>(signatureToMethod.values());
+    // Sort methods by signature key for stable generation order across compilations
+    return signatureToMethod.entrySet().stream()
+        .sorted(Map.Entry.comparingByKey())
+        .map(Map.Entry::getValue)
+        .collect(java.util.stream.Collectors.toList());
   }
 
   private CodeBlock createJavadocForClass(ClassName dtoClass) {

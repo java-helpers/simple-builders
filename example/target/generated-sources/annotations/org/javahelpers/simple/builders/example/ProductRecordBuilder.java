@@ -58,12 +58,94 @@ public class ProductRecordBuilder implements IBuilderBase<ProductRecord> {
   /**
    * Sets the value for <code>category</code>.
    *
+   * @param category category
+   * @return current instance of builder
+   */
+  public ProductRecordBuilder category(String category) {
+    this.category = changedValue(category);
+    return this;
+  }
+
+  /**
+   * Sets the value for <code>category</code>.
+   *
    * @param format category
    * @param args category
    * @return current instance of builder
    */
   public ProductRecordBuilder category(String format, Object... args) {
     this.category = changedValue(String.format(format, args));
+    return this;
+  }
+
+  /**
+   * Sets the value for <code>category</code> by executing the provided consumer.
+   *
+   * @param categoryStringBuilderConsumer consumer providing an instance of category
+   * @return current instance of builder
+   */
+  public ProductRecordBuilder category(Consumer<StringBuilder> categoryStringBuilderConsumer) {
+    StringBuilder builder = new StringBuilder();
+    categoryStringBuilderConsumer.accept(builder);
+    this.category = changedValue(builder.toString());
+    return this;
+  }
+
+  /**
+   * Sets the value for <code>category</code> by invoking the provided supplier.
+   *
+   * @param categorySupplier supplier for category
+   * @return current instance of builder
+   */
+  public ProductRecordBuilder category(Supplier<String> categorySupplier) {
+    this.category = changedValue(categorySupplier.get());
+    return this;
+  }
+
+  /**
+   * Sets the value for <code>name</code>.
+   *
+   * @param name name
+   * @return current instance of builder
+   */
+  public ProductRecordBuilder name(String name) {
+    this.name = changedValue(name);
+    return this;
+  }
+
+  /**
+   * Sets the value for <code>name</code>.
+   *
+   * @param format name
+   * @param args name
+   * @return current instance of builder
+   */
+  public ProductRecordBuilder name(String format, Object... args) {
+    this.name = changedValue(String.format(format, args));
+    return this;
+  }
+
+  /**
+   * Sets the value for <code>name</code> by executing the provided consumer.
+   *
+   * @param nameStringBuilderConsumer consumer providing an instance of name
+   * @return current instance of builder
+   */
+  public ProductRecordBuilder name(Consumer<StringBuilder> nameStringBuilderConsumer) {
+    StringBuilder builder = new StringBuilder();
+    nameStringBuilderConsumer.accept(builder);
+    this.name = changedValue(builder.toString());
+    return this;
+  }
+
+  /**
+   * Sets the value for <code>name</code> by invoking the provided supplier.
+   *
+   * @param nameSupplier supplier for name
+   * @return current instance of builder
+   */
+  public ProductRecordBuilder name(Supplier<String> nameSupplier) {
+    this.name = changedValue(nameSupplier.get());
     return this;
   }
 
@@ -86,88 +168,6 @@ public class ProductRecordBuilder implements IBuilderBase<ProductRecord> {
    */
   public ProductRecordBuilder price(Supplier<Double> priceSupplier) {
     this.price = changedValue(priceSupplier.get());
-    return this;
-  }
-
-  /**
-   * Sets the value for <code>name</code> by invoking the provided supplier.
-   *
-   * @param nameSupplier supplier for name
-   * @return current instance of builder
-   */
-  public ProductRecordBuilder name(Supplier<String> nameSupplier) {
-    this.name = changedValue(nameSupplier.get());
-    return this;
-  }
-
-  /**
-   * Sets the value for <code>name</code>.
-   *
-   * @param format name
-   * @param args name
-   * @return current instance of builder
-   */
-  public ProductRecordBuilder name(String format, Object... args) {
-    this.name = changedValue(String.format(format, args));
-    return this;
-  }
-
-  /**
-   * Sets the value for <code>category</code>.
-   *
-   * @param category category
-   * @return current instance of builder
-   */
-  public ProductRecordBuilder category(String category) {
-    this.category = changedValue(category);
-    return this;
-  }
-
-  /**
-   * Sets the value for <code>name</code> by executing the provided consumer.
-   *
-   * @param nameStringBuilderConsumer consumer providing an instance of name
-   * @return current instance of builder
-   */
-  public ProductRecordBuilder name(Consumer<StringBuilder> nameStringBuilderConsumer) {
-    StringBuilder builder = new StringBuilder();
-    nameStringBuilderConsumer.accept(builder);
-    this.name = changedValue(builder.toString());
-    return this;
-  }
-
-  /**
-   * Sets the value for <code>name</code>.
-   *
-   * @param name name
-   * @return current instance of builder
-   */
-  public ProductRecordBuilder name(String name) {
-    this.name = changedValue(name);
-    return this;
-  }
-
-  /**
-   * Sets the value for <code>category</code> by invoking the provided supplier.
-   *
-   * @param categorySupplier supplier for category
-   * @return current instance of builder
-   */
-  public ProductRecordBuilder category(Supplier<String> categorySupplier) {
-    this.category = changedValue(categorySupplier.get());
-    return this;
-  }
-
-  /**
-   * Sets the value for <code>category</code> by executing the provided consumer.
-   *
-   * @param categoryStringBuilderConsumer consumer providing an instance of category
-   * @return current instance of builder
-   */
-  public ProductRecordBuilder category(Consumer<StringBuilder> categoryStringBuilderConsumer) {
-    StringBuilder builder = new StringBuilder();
-    categoryStringBuilderConsumer.accept(builder);
-    this.category = changedValue(builder.toString());
     return this;
   }
 

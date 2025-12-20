@@ -67,24 +67,13 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
   }
 
   /**
-   * Sets the value for <code>nickNames2</code>.
+   * Sets the value for <code>birthdate</code>.
    *
-   * @param nickNames2 nickNames2
+   * @param birthdate birthdate
    * @return current instance of builder
    */
-  public PersonDtoBuilder nickNames2(String... nickNames2) {
-    this.nickNames2 = changedValue(nickNames2);
-    return this;
-  }
-
-  /**
-   * Sets the value for <code>nickNames2</code> by invoking the provided supplier.
-   *
-   * @param nickNames2Supplier supplier for nickNames2
-   * @return current instance of builder
-   */
-  public PersonDtoBuilder nickNames2(Supplier<String[]> nickNames2Supplier) {
-    this.nickNames2 = changedValue(nickNames2Supplier.get());
+  public PersonDtoBuilder birthdate(LocalDate birthdate) {
+    this.birthdate = changedValue(birthdate);
     return this;
   }
 
@@ -100,15 +89,48 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
   }
 
   /**
-   * Sets the value for <code>nickNames</code> using a builder consumer that produces the value.
+   * Sets the value for <code>mannschaft</code> using a builder consumer that produces the value.
    *
-   * @param nickNamesBuilderConsumer consumer providing an instance of a builder for nickNames
+   * @param mannschaftBuilderConsumer consumer providing an instance of a builder for mannschaft
    * @return current instance of builder
    */
-  public PersonDtoBuilder nickNames(Consumer<ArrayListBuilder<String>> nickNamesBuilderConsumer) {
-    ArrayListBuilder<String> builder = this.nickNames.isSet() ? new ArrayListBuilder<String>(this.nickNames.value()) : new ArrayListBuilder<String>();
-    nickNamesBuilderConsumer.accept(builder);
-    this.nickNames = changedValue(builder.build());
+  public PersonDtoBuilder mannschaft(Consumer<MannschaftDtoBuilder> mannschaftBuilderConsumer) {
+    MannschaftDtoBuilder builder = this.mannschaft.isSet() ? new MannschaftDtoBuilder(this.mannschaft.value()) : new MannschaftDtoBuilder();
+    mannschaftBuilderConsumer.accept(builder);
+    this.mannschaft = changedValue(builder.build());
+    return this;
+  }
+
+  /**
+   * Sets the value for <code>mannschaft</code> by invoking the provided supplier.
+   *
+   * @param mannschaftSupplier supplier for mannschaft
+   * @return current instance of builder
+   */
+  public PersonDtoBuilder mannschaft(Supplier<MannschaftDto> mannschaftSupplier) {
+    this.mannschaft = changedValue(mannschaftSupplier.get());
+    return this;
+  }
+
+  /**
+   * Sets the value for <code>mannschaft</code>.
+   *
+   * @param mannschaft mannschaft
+   * @return current instance of builder
+   */
+  public PersonDtoBuilder mannschaft(MannschaftDto mannschaft) {
+    this.mannschaft = changedValue(mannschaft);
+    return this;
+  }
+
+  /**
+   * Sets the value for <code>name</code>.
+   *
+   * @param name name
+   * @return current instance of builder
+   */
+  public PersonDtoBuilder name(String name) {
+    this.name = changedValue(name);
     return this;
   }
 
@@ -138,48 +160,13 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
   }
 
   /**
-   * Sets the value for <code>mannschaft</code>.
+   * Sets the value for <code>name</code> by invoking the provided supplier.
    *
-   * @param mannschaft mannschaft
+   * @param nameSupplier supplier for name
    * @return current instance of builder
    */
-  public PersonDtoBuilder mannschaft(MannschaftDto mannschaft) {
-    this.mannschaft = changedValue(mannschaft);
-    return this;
-  }
-
-  /**
-   * Sets the value for <code>mannschaft</code> using a builder consumer that produces the value.
-   *
-   * @param mannschaftBuilderConsumer consumer providing an instance of a builder for mannschaft
-   * @return current instance of builder
-   */
-  public PersonDtoBuilder mannschaft(Consumer<MannschaftDtoBuilder> mannschaftBuilderConsumer) {
-    MannschaftDtoBuilder builder = this.mannschaft.isSet() ? new MannschaftDtoBuilder(this.mannschaft.value()) : new MannschaftDtoBuilder();
-    mannschaftBuilderConsumer.accept(builder);
-    this.mannschaft = changedValue(builder.build());
-    return this;
-  }
-
-  /**
-   * Sets the value for <code>nickNames2</code>.
-   *
-   * @param nickNames2 nickNames2
-   * @return current instance of builder
-   */
-  public PersonDtoBuilder nickNames2(List<String> nickNames2) {
-    this.nickNames2 = changedValue(nickNames2.toArray(new String[0]));
-    return this;
-  }
-
-  /**
-   * Sets the value for <code>mannschaft</code> by invoking the provided supplier.
-   *
-   * @param mannschaftSupplier supplier for mannschaft
-   * @return current instance of builder
-   */
-  public PersonDtoBuilder mannschaft(Supplier<MannschaftDto> mannschaftSupplier) {
-    this.mannschaft = changedValue(mannschaftSupplier.get());
+  public PersonDtoBuilder name(Supplier<String> nameSupplier) {
+    this.name = changedValue(nameSupplier.get());
     return this;
   }
 
@@ -195,24 +182,26 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
   }
 
   /**
-   * Sets the value for <code>birthdate</code>.
+   * Sets the value for <code>nickNames</code>.
    *
-   * @param birthdate birthdate
+   * @param nickNames nickNames
    * @return current instance of builder
    */
-  public PersonDtoBuilder birthdate(LocalDate birthdate) {
-    this.birthdate = changedValue(birthdate);
+  public PersonDtoBuilder nickNames(List<String> nickNames) {
+    this.nickNames = changedValue(nickNames);
     return this;
   }
 
   /**
-   * Sets the value for <code>name</code> by invoking the provided supplier.
+   * Sets the value for <code>nickNames</code> using a builder consumer that produces the value.
    *
-   * @param nameSupplier supplier for name
+   * @param nickNamesBuilderConsumer consumer providing an instance of a builder for nickNames
    * @return current instance of builder
    */
-  public PersonDtoBuilder name(Supplier<String> nameSupplier) {
-    this.name = changedValue(nameSupplier.get());
+  public PersonDtoBuilder nickNames(Consumer<ArrayListBuilder<String>> nickNamesBuilderConsumer) {
+    ArrayListBuilder<String> builder = this.nickNames.isSet() ? new ArrayListBuilder<String>(this.nickNames.value()) : new ArrayListBuilder<String>();
+    nickNamesBuilderConsumer.accept(builder);
+    this.nickNames = changedValue(builder.build());
     return this;
   }
 
@@ -228,24 +217,24 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
   }
 
   /**
-   * Sets the value for <code>name</code>.
+   * Sets the value for <code>nickNames2</code>.
    *
-   * @param name name
+   * @param nickNames2 nickNames2
    * @return current instance of builder
    */
-  public PersonDtoBuilder name(String name) {
-    this.name = changedValue(name);
+  public PersonDtoBuilder nickNames2(String... nickNames2) {
+    this.nickNames2 = changedValue(nickNames2);
     return this;
   }
 
   /**
-   * Sets the value for <code>nickNames</code>.
+   * Sets the value for <code>nickNames2</code>.
    *
-   * @param nickNames nickNames
+   * @param nickNames2 nickNames2
    * @return current instance of builder
    */
-  public PersonDtoBuilder nickNames(List<String> nickNames) {
-    this.nickNames = changedValue(nickNames);
+  public PersonDtoBuilder nickNames2(List<String> nickNames2) {
+    this.nickNames2 = changedValue(nickNames2.toArray(new String[0]));
     return this;
   }
 
@@ -259,6 +248,17 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
     ArrayListBuilder<String> builder = this.nickNames2.isSet() ? new ArrayListBuilder<String>(java.util.List.of(this.nickNames2.value())) : new ArrayListBuilder<String>();
     nickNames2BuilderConsumer.accept(builder);
     this.nickNames2 = changedValue(builder.build().toArray(new String[0]));
+    return this;
+  }
+
+  /**
+   * Sets the value for <code>nickNames2</code> by invoking the provided supplier.
+   *
+   * @param nickNames2Supplier supplier for nickNames2
+   * @return current instance of builder
+   */
+  public PersonDtoBuilder nickNames2(Supplier<String[]> nickNames2Supplier) {
+    this.nickNames2 = changedValue(nickNames2Supplier.get());
     return this;
   }
 
