@@ -38,7 +38,6 @@ import com.palantir.javapoet.ParameterSpec;
 import com.palantir.javapoet.ParameterizedTypeName;
 import com.palantir.javapoet.TypeSpec;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -104,14 +103,30 @@ public class JavaCodeGenerator {
     TypeSpec.Builder classBuilder =
         TypeSpec.classBuilder(builderBaseClass)
             .addTypeVariables(map2TypeVariables(builderDef.getGenerics()))
-            .addJavadoc(createJavadocForClass(dtoBaseClass))
-            .addSuperinterface(createInterfaceBuilderBase(dtoTypeName));
+            .addJavadoc(createJavadocForClass(dtoBaseClass));
 
-    // Adding Constructors for builder
+    // Set builder class access level
+    Modifier builderAccessModifier = map2Modifier(builderDef.getConfiguration().getBuilderAccess());
+    if (builderAccessModifier != null) {
+      classBuilder.addModifiers(builderAccessModifier);
+    }
+
+    // Conditionally add IBuilderBase interface
+    if (builderDef.getConfiguration().shouldImplementBuilderBase()) {
+      classBuilder.addSuperinterface(createInterfaceBuilderBase(dtoTypeName));
+    }
+
+    // Get access modifiers from configuration
+    Modifier constructorAccessModifier =
+        map2Modifier(builderDef.getConfiguration().getBuilderConstructorAccess());
+    Modifier methodAccessModifier = map2Modifier(builderDef.getConfiguration().getMethodAccess());
     classBuilder.addMethod(
         createConstructorWithInstance(
-            dtoBaseClass, dtoTypeName, builderDef.getAllFieldsForBuilder()));
-    classBuilder.addMethod(createEmptyConstructor(dtoBaseClass));
+            dtoBaseClass,
+            dtoTypeName,
+            builderDef.getAllFieldsForBuilder(),
+            constructorAccessModifier));
+    classBuilder.addMethod(createEmptyConstructor(dtoBaseClass, constructorAccessModifier));
 
     logger.debug(
         "Generating %d constructor fields and %d setter fields",
@@ -154,18 +169,27 @@ public class JavaCodeGenerator {
     }
 
     // Adding builder-specific methods
+    // Note: build() and create() are always PUBLIC for usability and to satisfy interface contracts
+    // (e.g., IBuilderBase). The methodAccess configuration only applies to setter/fluent methods.
     classBuilder.addMethod(
         createMethodBuild(
             dtoBaseClass,
             dtoTypeName,
             builderDef.getConstructorFieldsForBuilder(),
             builderDef.getSetterFieldsForBuilder(),
-            builderDef.getGenerics()));
+            builderDef.getGenerics(),
+            builderDef.getConfiguration().shouldImplementBuilderBase(),
+            PUBLIC));
     classBuilder.addMethod(
         createMethodStaticCreate(
-            builderBaseClass, builderTypeName, dtoBaseClass, builderDef.getGenerics()));
-    classBuilder.addMethod(createMethodConditional(builderTypeName));
-    classBuilder.addMethod(createMethodConditionalPositiveOnly(builderTypeName));
+            builderBaseClass, builderTypeName, dtoBaseClass, builderDef.getGenerics(), PUBLIC));
+
+    // Add conditional methods only if enabled in configuration
+    if (builderDef.getConfiguration().shouldGenerateConditionalLogic()) {
+      classBuilder.addMethod(createMethodConditional(builderTypeName, methodAccessModifier));
+      classBuilder.addMethod(
+          createMethodConditionalPositiveOnly(builderTypeName, methodAccessModifier));
+    }
 
     // Adding nested types (e.g., With interface)
     for (NestedTypeDto nestedType : builderDef.getNestedTypes()) {
@@ -175,8 +199,12 @@ public class JavaCodeGenerator {
     }
 
     // Adding annotations
-    classBuilder.addAnnotation(createAnnotationGenerated());
-    classBuilder.addAnnotation(createAnnotationBuilderImplementation(dtoBaseClass));
+    if (builderDef.getConfiguration().shouldUseGeneratedAnnotation()) {
+      classBuilder.addAnnotation(createAnnotationGenerated());
+    }
+    if (builderDef.getConfiguration().shouldUseBuilderImplementationAnnotation()) {
+      classBuilder.addAnnotation(createAnnotationBuilderImplementation(dtoBaseClass));
+    }
 
     logger.debug(
         "Writing builder class to file: %s.%s",
@@ -204,10 +232,10 @@ public class JavaCodeGenerator {
   /**
    * Resolves method conflicts by keeping only the highest priority method for each unique
    * signature. This prevents compilation errors when methods from different fields have the same
-   * signature.
+   * signature. Returns methods sorted by signature for stable generation order.
    *
    * @param methodToField mapping from method to its source field
-   * @return list of methods with conflicts resolved
+   * @return list of methods with conflicts resolved, sorted by signature for stability
    */
   private List<MethodDto> resolveMethodConflicts(Map<MethodDto, FieldDto> methodToField) {
     Map<String, MethodDto> signatureToMethod = new HashMap<>();
@@ -254,7 +282,11 @@ public class JavaCodeGenerator {
       }
     }
 
-    return new ArrayList<>(signatureToMethod.values());
+    // Sort methods by signature key for stable generation order across compilations
+    return signatureToMethod.entrySet().stream()
+        .sorted(Map.Entry.comparingByKey())
+        .map(Map.Entry::getValue)
+        .toList();
   }
 
   private CodeBlock createJavadocForClass(ClassName dtoClass) {
@@ -280,10 +312,10 @@ public class JavaCodeGenerator {
         .build();
   }
 
-  private MethodSpec createEmptyConstructor(ClassName dtoClass) {
+  private MethodSpec createEmptyConstructor(ClassName dtoClass, Modifier accessModifier) {
     MethodSpec.Builder constructorBuilder =
         MethodSpec.constructorBuilder()
-            .addModifiers(Modifier.PUBLIC)
+            .addModifiers(accessModifier)
             .addJavadoc(
                 """
             Empty constructor of builder for {@code $1N.$2T}.
@@ -294,10 +326,13 @@ public class JavaCodeGenerator {
   }
 
   private MethodSpec createConstructorWithInstance(
-      ClassName dtoBaseClass, com.palantir.javapoet.TypeName dtoType, List<FieldDto> fields) {
+      ClassName dtoBaseClass,
+      com.palantir.javapoet.TypeName dtoType,
+      List<FieldDto> fields,
+      Modifier accessModifier) {
     MethodSpec.Builder cb =
         MethodSpec.constructorBuilder()
-            .addModifiers(Modifier.PUBLIC)
+            .addModifiers(accessModifier)
             .addParameter(dtoType, "instance")
             .addJavadoc(
                 """
@@ -360,12 +395,18 @@ public class JavaCodeGenerator {
       com.palantir.javapoet.TypeName returnType,
       List<FieldDto> constructorFields,
       List<FieldDto> setterFields,
-      List<GenericParameterDto> generics) {
-    MethodSpec.Builder mb =
-        MethodSpec.methodBuilder("build")
-            .addModifiers(PUBLIC)
-            .returns(returnType)
-            .addAnnotation(Override.class);
+      List<GenericParameterDto> generics,
+      boolean implementsBuilderBase,
+      Modifier methodAccessModifier) {
+    MethodSpec.Builder mb = MethodSpec.methodBuilder("build").returns(returnType);
+    if (methodAccessModifier != null) {
+      mb.addModifiers(methodAccessModifier);
+    }
+
+    // Only add @Override annotation if implementing IBuilderBase interface
+    if (implementsBuilderBase) {
+      mb.addAnnotation(Override.class);
+    }
 
     // Validate non-nullable constructor fields: must be set AND can't be null
     // If not annotated with @NotNull/@NonNull, constructor fields can be left unset (→ null passed)
@@ -429,21 +470,25 @@ public class JavaCodeGenerator {
   }
 
   private MethodSpec createMethodStaticCreate(
-      com.palantir.javapoet.ClassName builderBaseClass,
+      ClassName builderBaseClass,
       com.palantir.javapoet.TypeName builderType,
-      com.palantir.javapoet.ClassName dtoBaseClass,
-      List<GenericParameterDto> generics) {
+      ClassName dtoBaseClass,
+      List<GenericParameterDto> generics,
+      Modifier methodAccessModifier) {
     MethodSpec.Builder methodBuilder =
-        MethodSpec.methodBuilder(METHOD_NAME_CREATE)
-            .addModifiers(STATIC, PUBLIC)
-            .addJavadoc(
-                """
+        MethodSpec.methodBuilder(METHOD_NAME_CREATE).addModifiers(STATIC);
+    if (methodAccessModifier != null) {
+      methodBuilder.addModifiers(methodAccessModifier);
+    }
+
+    methodBuilder.addJavadoc(
+        """
             Creating a new builder for {@code $1N.$2T}.
 
             @return builder for {@code $1N.$2T}
             """,
-                dtoBaseClass.packageName(),
-                dtoBaseClass);
+        dtoBaseClass.packageName(),
+        dtoBaseClass);
     if (generics.isEmpty()) {
       methodBuilder.returns(builderBaseClass).addCode("return new $1T();\n", builderBaseClass);
     } else {
@@ -455,10 +500,14 @@ public class JavaCodeGenerator {
     return methodBuilder.build();
   }
 
-  private MethodSpec createMethodConditional(com.palantir.javapoet.TypeName builderType) {
-    return MethodSpec.methodBuilder("conditional")
-        .addModifiers(PUBLIC)
-        .returns(builderType)
+  private MethodSpec createMethodConditional(
+      com.palantir.javapoet.TypeName builderType, Modifier methodAccessModifier) {
+    MethodSpec.Builder mb = MethodSpec.methodBuilder("conditional");
+    if (methodAccessModifier != null) {
+      mb.addModifiers(methodAccessModifier);
+    }
+
+    mb.returns(builderType)
         .addParameter(ClassName.get(java.util.function.BooleanSupplier.class), "condition")
         .addParameter(
             ParameterizedTypeName.get(
@@ -470,7 +519,7 @@ public class JavaCodeGenerator {
             "falseCase")
         .addJavadoc(
             """
-            Conditionally applies builder modifications based on a condition.
+            Conditionally applies builder modifications based on a condition evaluation.
 
             @param condition the condition to evaluate
             @param trueCase the consumer to apply if condition is true
@@ -485,15 +534,18 @@ public class JavaCodeGenerator {
                 falseCase.accept(this);
             }
             return this;
-            """)
-        .build();
+            """);
+    return mb.build();
   }
 
   private MethodSpec createMethodConditionalPositiveOnly(
-      com.palantir.javapoet.TypeName builderType) {
-    return MethodSpec.methodBuilder("conditional")
-        .addModifiers(PUBLIC)
-        .returns(builderType)
+      com.palantir.javapoet.TypeName builderType, Modifier methodAccessModifier) {
+    MethodSpec.Builder mb = MethodSpec.methodBuilder("conditional");
+    if (methodAccessModifier != null) {
+      mb.addModifiers(methodAccessModifier);
+    }
+
+    mb.returns(builderType)
         .addParameter(ClassName.get(java.util.function.BooleanSupplier.class), "condition")
         .addParameter(
             ParameterizedTypeName.get(
@@ -507,19 +559,12 @@ public class JavaCodeGenerator {
             @param yesCondition the consumer to apply if condition is true
             @return this builder instance
             """)
-        .addCode("return conditional(condition, yesCondition, null);\n")
-        .build();
+        .addCode("return conditional(condition, yesCondition, null);\n");
+    return mb.build();
   }
 
-  /**
-   * Creates a TypeSpec for a nested type (e.g., With interface).
-   *
-   * @param nestedType the nested type definition
-   * @return the TypeSpec for the nested type
-   */
   private TypeSpec createNestedType(NestedTypeDto nestedType) {
     TypeSpec.Builder typeBuilder;
-
     boolean isInterface = nestedType.getKind() == NestedTypeDto.NestedTypeKind.INTERFACE;
     if (isInterface) {
       typeBuilder = TypeSpec.interfaceBuilder(nestedType.getTypeName());
@@ -535,9 +580,8 @@ public class JavaCodeGenerator {
       typeBuilder.addJavadoc(nestedType.getJavadoc());
     }
 
-    // Add methods to the nested type
-    for (MethodDto method : nestedType.getMethods()) {
-      MethodSpec methodSpec = createNestedTypeMethod(method, isInterface);
+    for (MethodDto methodDto : nestedType.getMethods()) {
+      MethodSpec methodSpec = createNestedTypeMethod(methodDto, isInterface);
       typeBuilder.addMethod(methodSpec);
     }
 
@@ -545,11 +589,12 @@ public class JavaCodeGenerator {
   }
 
   /**
-   * Creates a MethodSpec for a method of a nested type (e.g., With interface).
+   * Creates a method specification from a MethodDto for nested types (e.g., With interface
+   * methods).
    *
-   * @param methodDto the method to create
-   * @param isInterface whether the nested type is an interface
-   * @return the MethodSpec
+   * @param methodDto the method definition
+   * @param isInterface whether the containing type is an interface
+   * @return the generated MethodSpec
    */
   private MethodSpec createNestedTypeMethod(MethodDto methodDto, boolean isInterface) {
     MethodSpec.Builder methodBuilder =
@@ -563,23 +608,17 @@ public class JavaCodeGenerator {
       methodBuilder.addParameter(createParameter(paramDto));
     }
 
-    // Add modifiers if defined
-    methodDto.getModifier().ifPresent(methodBuilder::addModifiers);
-
-    // Add Javadoc
     if (methodDto.getJavadoc() != null) {
       methodBuilder.addJavadoc(methodDto.getJavadoc());
     }
 
-    // Add method body if present
-    MethodCodeDto codeDto = methodDto.getMethodCodeDto();
-    if (codeDto != null) {
-      // Add default modifier for interface methods with implementation
+    // Add code only if method has implementation (even for interfaces with default methods)
+    if (methodDto.getMethodCodeDto() != null) {
       if (isInterface) {
         methodBuilder.addModifiers(javax.lang.model.element.Modifier.DEFAULT);
       }
 
-      methodBuilder.addCode(map2CodeBlock(codeDto));
+      methodBuilder.addCode(map2CodeBlock(methodDto.getMethodCodeDto()));
     }
 
     return methodBuilder.build();
@@ -588,6 +627,8 @@ public class JavaCodeGenerator {
   private MethodSpec createMethod(MethodDto methodDto, com.palantir.javapoet.TypeName returnType) {
     MethodSpec.Builder methodBuilder =
         MethodSpec.methodBuilder(methodDto.getMethodName()).returns(returnType);
+
+    // Use modifier from MethodDto if present
     methodDto.getModifier().ifPresent(methodBuilder::addModifiers);
 
     // Use javadoc from MethodDto if available

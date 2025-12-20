@@ -1,7 +1,6 @@
 package org.javahelpers.simple.builders.processor;
 
 import static com.google.testing.compile.CompilationSubject.assertThat;
-import static com.google.testing.compile.Compiler.javac;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.assertGenerationSucceeded;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils.loadGeneratedSource;
 
@@ -48,7 +47,7 @@ import org.junit.jupiter.api.Test;
 class MethodConflictResolutionTest {
 
   private Compilation compile(JavaFileObject... files) {
-    return javac().withProcessors(new BuilderProcessor()).compile(files);
+    return ProcessorTestUtils.createCompiler().compile(files);
   }
 
   @Test

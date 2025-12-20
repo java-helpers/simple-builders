@@ -19,6 +19,12 @@
     - [Conditional Builder Logic](#conditional-builder-logic)
   - [Collections and Nested Objects](#collections-and-nested-objects)
   - [With Interface Pattern](#with-interface-pattern)
+  - [Builder Configuration](#builder-configuration)
+    - [Compiler Arguments](#compiler-arguments)
+- [Examples](#examples)
+  - [Elementary Builder Example](#elementary-builder-example)
+  - [Full-Featured Examples](#full-featured-examples)
+  - [Advanced Features](#advanced-features)
 - [Contributing](#contributing)
 - [License](#license)
 - [Acknowledgements](#acknowledgements)
@@ -49,7 +55,7 @@ For Maven-based projects, add the following to your POM file in order to use Sim
 ```xml
 ...
 <properties>
-    <simple-builders.version>0.1.0</simple-builders.version>
+    <simple-builders.version>0.2.0</simple-builders.version>
 </properties>
 ...
 <dependencies>
@@ -92,7 +98,7 @@ If you don't work with a dependency management tool, you can obtain a distributi
 Annotate your class with `@SimpleBuilder` to generate a builder:
 
 ```java
-import org.javahelpers.simple.builders.core.annotation.SimpleBuilder;
+import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 
 @SimpleBuilder
 public class Person {
@@ -257,9 +263,81 @@ Person youngerPerson = person.with(p -> p.age(29));
 
 The `With` interface provides type-safe setter methods that mirror the builder's API, making it easy to create object variations without manually copying all fields.
 
+### Builder Configuration
+
+Simple Builders provides extensive configuration options to customize the generated builder code. You can control:
+
+- Field setter generation (Supplier, Provider, Builder patterns)
+- Conditional logic helpers
+- Access modifiers for builders and methods
+- Collection helper methods
+- Integration features
+
+Configuration can be applied per-class using `@SimpleBuilder.Options` annotation or project-wide using compiler options.
+
+#### Compiler Arguments
+
+All configuration options are available as compiler arguments using the `-A` flag. For example:
+
+```bash
+javac -Asimplebuilder.verbose=true \
+      -Asimplebuilder.generateFieldSupplier=false \
+      YourClass.java
+```
+
+Or in Maven:
+
+```xml
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <configuration>
+        <compilerArgs>
+            <arg>-Asimplebuilder.verbose=true</arg>
+            <arg>-Asimplebuilder.generateFieldSupplier=false</arg>
+        </compilerArgs>
+    </configuration>
+</plugin>
+```
+
+📋 **For a complete list of all available compiler arguments, see [`CompilerArgumentsEnum`](processor/src/main/java/org/javahelpers/simple/builders/processor/enums/CompilerArgumentsEnum.java).**
+
+📖 **For complete documentation, examples, and all available options, see the [Configuration Guide](docs/CONFIGURATION.md).**
+
+## Examples
+
+The `example` module contains real-world examples demonstrating various builder configurations and features. You can explore the source DTOs and their generated builders:
+
+### Elementary Builder Example
+
+A comprehensive example showcasing all fundamental Java property types with a minimal, setter-only builder configuration:
+
+- **Source DTO**: [`BookDto.java`](example/src/main/java/org/javahelpers/simple/builders/example/BookDto.java) - Demonstrates all primitive types, collections, Optional, BigDecimal, date/time types, and nested objects
+- **Custom Annotation**: [`@ElementaryBuilder`](example/src/main/java/org/javahelpers/simple/builders/example/ElementaryBuilder.java) - A template annotation that disables all advanced features (suppliers, consumers, collection builders, With interface, @Generated annotation)
+- **Generated Builder**: [`BookDtoBuilder.java`](example/target/generated-sources/annotations/org/javahelpers/simple/builders/example/BookDtoBuilder.java) - Clean, minimal builder with only setter methods
+- **Tests**: [`BookDtoBuilderTest.java`](example/src/test/java/org/javahelpers/simple/builders/example/BookDtoBuilderTest.java) - Usage examples
+
+### Full-Featured Examples
+
+Examples with all builder features enabled:
+
+- **Person DTO**: [`PersonDto.java`](example/src/main/java/org/javahelpers/simple/builders/example/PersonDto.java) and [`PersonDtoBuilder.java`](example/target/generated-sources/annotations/org/javahelpers/simple/builders/example/PersonDtoBuilder.java) - Demonstrates nested objects, collections, suppliers, conditional logic, and various setter patterns
+  - **Usage Examples**: [`PersonDtoBuilderTest.java`](example/src/test/java/org/javahelpers/simple/builders/example/PersonDtoBuilderTest.java) - Shows supplier methods, collection builders, nested builder consumers, and conditional logic
+- **Product Record**: [`ProductRecord.java`](example/src/main/java/org/javahelpers/simple/builders/example/ProductRecord.java) and [`ProductRecordBuilder.java`](example/target/generated-sources/annotations/org/javahelpers/simple/builders/example/ProductRecordBuilder.java) - Java Record support with full builder features and With interface pattern
+  - **Usage Examples**: [`ProductRecordTest.java`](example/src/test/java/org/javahelpers/simple/builders/example/ProductRecordTest.java) - Comprehensive tests demonstrating With interface for immutable Records, fluent modifications, and custom with methods
+
+### Advanced Features
+
+Examples demonstrating special annotations and nested object relationships:
+
+- **Sponsor DTO**: [`SponsorDto.java`](example/src/main/java/org/javahelpers/simple/builders/example/SponsorDto.java) and [`SponsorDtoBuilder.java`](example/target/generated-sources/annotations/org/javahelpers/simple/builders/example/SponsorDtoBuilder.java) - Simple DTO used as nested object in other examples
+- **Mannschaft DTO**: [`MannschaftDto.java`](example/src/main/java/org/javahelpers/simple/builders/example/MannschaftDto.java) and [`MannschaftDtoBuilder.java`](example/target/generated-sources/annotations/org/javahelpers/simple/builders/example/MannschaftDtoBuilder.java) - Demonstrates `@IgnoreInBuilder` annotation to exclude specific setter methods from the generated builder, plus Set collections with nested objects
+
+These examples serve as both documentation and integration tests for the annotation processor.
+
 ## Contributing
 
-Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for:
+Contributions are welcome! Please see [CONTRIBUTING.md](docs/CONTRIBUTING.md) for:
 
 - Development setup and project structure
 - Building and testing strategies (important for annotation processor modules)

@@ -193,7 +193,7 @@ public final class ProcessorTestUtils {
   private static String extractTopLevelTypeName(String source) {
     Matcher m =
         Pattern.compile(
-                "(?m)^\\s*(?:public|protected|private)?(?:\\s+(?:abstract|final|static|sealed|non-sealed|strictfp))*\\s*(?:class|interface|enum|record)\\s+([A-Za-z_]\\w*)\\b")
+                "(?m)^\\s*(?:public|protected|private)?(?:\\s+(?:abstract|final|static|sealed|non-sealed|strictfp))*\\s*(?:@?interface|class|enum|record)\\s+([A-Za-z_]\\w*)\\b")
             .matcher(source);
     return m.find() ? m.group(1) : null;
   }

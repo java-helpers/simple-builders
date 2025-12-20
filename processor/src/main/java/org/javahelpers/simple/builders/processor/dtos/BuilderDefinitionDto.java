@@ -57,6 +57,9 @@ public class BuilderDefinitionDto {
    */
   private final List<NestedTypeDto> nestedTypes = new LinkedList<>();
 
+  /** Configuration for builder generation. */
+  private BuilderConfiguration configuration;
+
   /**
    * Getting type of builder.
    *
@@ -196,5 +199,23 @@ public class BuilderDefinitionDto {
    */
   public void addNestedType(NestedTypeDto nestedType) {
     this.nestedTypes.add(nestedType);
+  }
+
+  /**
+   * Returns the builder configuration.
+   *
+   * @return the builder configuration
+   */
+  public BuilderConfiguration getConfiguration() {
+    return configuration;
+  }
+
+  /**
+   * Sets the builder configuration.
+   *
+   * @param configuration the builder configuration
+   */
+  public void setConfiguration(BuilderConfiguration configuration) {
+    this.configuration = configuration;
   }
 }

@@ -1,7 +1,6 @@
 package org.javahelpers.simple.builders.processor;
 
 import static com.google.testing.compile.CompilationSubject.assertThat;
-import static com.google.testing.compile.Compiler.javac;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.assertGenerationSucceeded;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.contains;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.notContains;
@@ -59,10 +58,7 @@ class BuilderProcessorTest {
 
     // When: Compile with verbose=true to enable debug logging
     Compilation compilation =
-        javac()
-            .withProcessors(new BuilderProcessor())
-            .withOptions("-Averbose=true")
-            .compile(sourceFile);
+        ProcessorTestUtils.createCompiler().withOptions("-Averbose=true").compile(sourceFile);
 
     // Then: Compilation succeeds and debug messages are present
     assertThat(compilation).succeeded();
@@ -1293,7 +1289,7 @@ class BuilderProcessorTest {
   }
 
   protected Compilation compile(JavaFileObject... sourceFiles) {
-    return javac().withProcessors(new BuilderProcessor()).compile(sourceFiles);
+    return ProcessorTestUtils.createCompiler().compile(sourceFiles);
   }
 
   @Test
@@ -1310,10 +1306,7 @@ class BuilderProcessorTest {
 
     // When: compile with a lower language level to simulate older Java (no production code change)
     Compilation compilation =
-        javac()
-            .withProcessors(new BuilderProcessor())
-            .withOptions("--release", "11")
-            .compile(source);
+        ProcessorTestUtils.createCompiler().withOptions("--release", "11").compile(source);
 
     // Then: compilation must fail with the expected error
     assertThat(compilation).failed();

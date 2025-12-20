@@ -27,18 +27,26 @@ package org.javahelpers.simple.builders.processor;
 import static org.javahelpers.simple.builders.processor.util.BuilderDefinitionCreator.extractFromElement;
 
 import com.google.auto.service.AutoService;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
-import javax.annotation.processing.SupportedOptions;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
+import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+import org.javahelpers.simple.builders.core.annotations.SimpleBuilder.Template;
+import org.javahelpers.simple.builders.processor.dtos.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.dtos.BuilderDefinitionDto;
+import org.javahelpers.simple.builders.processor.enums.CompilerArgumentsEnum;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
+import org.javahelpers.simple.builders.processor.util.BuilderConfigurationReader;
+import org.javahelpers.simple.builders.processor.util.CompilerArgumentsReader;
 import org.javahelpers.simple.builders.processor.util.JavaCodeGenerator;
 import org.javahelpers.simple.builders.processor.util.ProcessingContext;
 import org.javahelpers.simple.builders.processor.util.ProcessingLogger;
@@ -49,8 +57,7 @@ import org.javahelpers.simple.builders.processor.util.ProcessingLogger;
  * javax.annotation.processing.AbstractProcessor}.
  */
 @AutoService(Processor.class)
-@SupportedAnnotationTypes("org.javahelpers.simple.builders.core.annotations.SimpleBuilder")
-@SupportedOptions("verbose")
+@SupportedAnnotationTypes("*")
 public class BuilderProcessor extends AbstractProcessor {
   private ProcessingContext context;
   private JavaCodeGenerator codeGenerator;
@@ -60,10 +67,17 @@ public class BuilderProcessor extends AbstractProcessor {
   public synchronized void init(ProcessingEnvironment processingEnv) {
     super.init(processingEnv);
     ProcessingLogger logger = new ProcessingLogger(processingEnv);
+
+    // Read global configuration from compiler arguments
+    CompilerArgumentsReader reader = new CompilerArgumentsReader(processingEnv);
+    BuilderConfiguration globalConfig = reader.readBuilderConfiguration();
+
     this.context =
         new ProcessingContext(
-            processingEnv.getElementUtils(), processingEnv.getTypeUtils(), logger);
+            processingEnv.getElementUtils(), processingEnv.getTypeUtils(), logger, globalConfig);
+    context.debug("Loaded global configuration from compiler arguments: %s", globalConfig);
     this.codeGenerator = new JavaCodeGenerator(processingEnv.getFiler(), logger);
+
     SourceVersion current = processingEnv.getSourceVersion();
     this.supportedJdk = isAtLeastJava17(current);
     if (!this.supportedJdk) {
@@ -79,32 +93,44 @@ public class BuilderProcessor extends AbstractProcessor {
       // Fail fast: we already emitted an error in init(); do not attempt any processing.
       return false;
     }
-    // Resolve annotation as TypeElement to support environments where the Class<?> overload
-    // of getElementsAnnotatedWith is unavailable.
+
+    BuilderConfigurationReader reader = context.getConfigurationReader();
+
+    // Find all elements to process:
+    // 1. Elements annotated with @SimpleBuilder
+    // 2. Elements annotated with custom annotations that have @SimpleBuilder.Template
+    // Configuration is resolved per-element to handle priority correctly when both exist
+    Set<Element> elementsToProcess = new HashSet<>();
+
+    // Find all @SimpleBuilder annotations
     TypeElement simpleBuilderAnnotation =
-        context.getTypeElement(
-            org.javahelpers.simple.builders.core.annotations.SimpleBuilder.class
-                .getCanonicalName());
-    if (simpleBuilderAnnotation == null) {
-      context.error(
-          "Annotation org.javahelpers.simple.builders.core.annotations.SimpleBuilder is not on classpath. So nothing to do here.");
+        context.getTypeElement(SimpleBuilder.class.getCanonicalName());
+    if (simpleBuilderAnnotation != null) {
+      elementsToProcess.addAll(roundEnv.getElementsAnnotatedWith(simpleBuilderAnnotation));
     }
 
-    Set<? extends Element> annotatedElements =
-        roundEnv.getElementsAnnotatedWith(simpleBuilderAnnotation);
+    // Find all Annotations with @SimpleBuilder.Template
+    List<TypeElement> annotationsWithTemplate = extractingAnnotationsWithTemplate(annotations);
+    for (TypeElement annotation : annotationsWithTemplate) {
+      elementsToProcess.addAll(roundEnv.getElementsAnnotatedWith(annotation));
+    }
+
     context.debug("===============================");
     context.info("simple-builders: PROCESSING ROUND START");
     context.debug("===============================");
     context.debug(
         "simple-builders: Processing round started. Found %d annotated elements.",
-        annotatedElements.size());
+        elementsToProcess.size());
 
-    for (Element annotatedElement : annotatedElements) {
+    for (Element annotatedElement : elementsToProcess) {
       try {
         context.debug("------------------------------------");
         context.debug("simple-builders: Processing element: %s", annotatedElement.getSimpleName());
         context.debug("------------------------------------");
-        process(annotatedElement);
+        // Resolve configuration per-element to handle all layers
+        // (defaults, global, template, inline)
+        BuilderConfiguration config = reader.resolveConfiguration(annotatedElement);
+        process(annotatedElement, config);
         context.info(
             "simple-builders: Successfully generated builder for: %s",
             annotatedElement.getSimpleName());
@@ -118,11 +144,23 @@ public class BuilderProcessor extends AbstractProcessor {
   }
 
   @Override
+  public Set<String> getSupportedOptions() {
+    Set<String> options = new HashSet<>();
+    for (CompilerArgumentsEnum arg : CompilerArgumentsEnum.values()) {
+      options.add(arg.getOptionName()); // e.g., "verbose"
+      options.add(arg.getCompilerArgument()); // e.g., "simplebuilder.verbose"
+    }
+    return options;
+  }
+
+  @Override
   public SourceVersion getSupportedSourceVersion() {
     return SourceVersion.latestSupported();
   }
 
-  private void process(Element annotatedElement) throws BuilderException {
+  private void process(Element annotatedElement, BuilderConfiguration config)
+      throws BuilderException {
+    context.initConfigurationForProcessingTarget(config);
     BuilderDefinitionDto builderDef = extractFromElement(annotatedElement, context);
     codeGenerator.generateBuilder(builderDef);
   }
@@ -138,5 +176,31 @@ public class BuilderProcessor extends AbstractProcessor {
       // Running on a JDK where RELEASE_17 does not exist (e.g., JDK 8)
       return false;
     }
+  }
+
+  private static List<TypeElement> extractingAnnotationsWithTemplate(
+      Set<? extends TypeElement> annotationsFound) {
+    List<TypeElement> result = new ArrayList<>();
+    for (TypeElement annotation : annotationsFound) {
+      // Only process real annotation specifications
+      if (annotation.getKind() != javax.lang.model.element.ElementKind.ANNOTATION_TYPE) {
+        continue;
+      }
+      // Skip @SimpleBuilder annotation because we only want to find annotations with
+      // @SimpleBuilder.Template
+      if (annotation
+          .getQualifiedName()
+          .toString()
+          .equals(org.javahelpers.simple.builders.core.annotations.SimpleBuilder.class.getName())) {
+        continue;
+      }
+      Template templateAnnotation =
+          annotation.getAnnotation(
+              org.javahelpers.simple.builders.core.annotations.SimpleBuilder.Template.class);
+      if (templateAnnotation != null) {
+        result.add(annotation);
+      }
+    }
+    return result;
   }
 }
