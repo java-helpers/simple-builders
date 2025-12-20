@@ -26,14 +26,16 @@ package org.javahelpers.simple.builders.example;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class PersonDtoBuilderTest {
 
   @Test
-  void testBuilder() {
+  void testBasicBuilder() {
     PersonDto personDto =
         PersonDtoBuilder.create()
             .birthdate(LocalDate.now())
@@ -58,5 +60,133 @@ class PersonDtoBuilderTest {
 
   private String nameSupplier() {
     return "Testname";
+  }
+
+  @Test
+  void testSupplierMethods() {
+    PersonDto person =
+        PersonDtoBuilder.create()
+            .name(() -> "John Doe")
+            .birthdate(() -> LocalDate.of(1990, 5, 15))
+            .build();
+
+    assertNotNull(person);
+    assertEquals("John Doe", person.getName());
+    assertEquals(LocalDate.of(1990, 5, 15), person.getBirthdate());
+  }
+
+  @Test
+  void testConditionalLogic() {
+    boolean isPremiumUser = true;
+    boolean hasNickname = false;
+
+    PersonDto person =
+        PersonDtoBuilder.create()
+            .name("Jane Smith")
+            .conditional(
+                () -> isPremiumUser,
+                builder -> builder.birthdate(LocalDate.of(1990, 1, 1)),
+                builder -> builder.birthdate(LocalDate.of(2000, 1, 1)))
+            .conditional(
+                () -> hasNickname,
+                builder -> builder.nickNames(List.of("JJ")))
+            .build();
+
+    assertNotNull(person);
+    assertEquals("Jane Smith", person.getName());
+    assertEquals(LocalDate.of(1990, 1, 1), person.getBirthdate());
+  }
+
+  @Test
+  void testVarArgsHelpers() {
+    PersonDto person =
+        PersonDtoBuilder.create()
+            .name("Alice")
+            .nickNames("Ally", "Al", "Liz")
+            .build();
+
+    assertNotNull(person);
+    assertEquals("Alice", person.getName());
+    assertNotNull(person.getNickNames());
+    assertEquals(3, person.getNickNames().size());
+    assertTrue(person.getNickNames().contains("Ally"));
+  }
+
+  @Test
+  void testCollectionBuilders() {
+    PersonDto person =
+        PersonDtoBuilder.create()
+            .name("Bob")
+            .nickNames(list -> list.add("Bobby").add("Rob").add("Robert"))
+            .mannschaft(
+                teamBuilder ->
+                    teamBuilder
+                        .name("Dream Team")
+                        .sponsoren(
+                            sponsors ->
+                                sponsors
+                                    .add(SponsorDtoBuilder.create().name("TechCorp").build())
+                                    .add(SponsorDtoBuilder.create().name("SportsCo").build())))
+            .build();
+
+    assertNotNull(person);
+    assertEquals("Bob", person.getName());
+    assertEquals(3, person.getNickNames().size());
+    assertNotNull(person.getMannschaft());
+    assertEquals("Dream Team", person.getMannschaft().getName());
+    assertEquals(2, person.getMannschaft().getSponsoren().size());
+  }
+
+  @Test
+  void testNestedBuilderConsumers() {
+    PersonDto person =
+        PersonDtoBuilder.create()
+            .name("Charlie")
+            .mannschaft(
+                team ->
+                    team.name("Champions")
+                        .sponsoren(
+                            sponsors ->
+                                sponsors.add(
+                                    sponsor -> sponsor.name("MegaCorp"))))
+            .build();
+
+    assertNotNull(person);
+    assertEquals("Charlie", person.getName());
+    assertNotNull(person.getMannschaft());
+    assertEquals("Champions", person.getMannschaft().getName());
+    assertEquals(1, person.getMannschaft().getSponsoren().size());
+    assertEquals("MegaCorp", person.getMannschaft().getSponsoren().iterator().next().getName());
+  }
+
+  @Test
+  void testCombinedFeatures() {
+    boolean addExtraInfo = true;
+
+    PersonDto person =
+        PersonDtoBuilder.create()
+            .name(() -> "David")
+            .birthdate(LocalDate.of(1985, 3, 20))
+            .nickNames("Dave", "Davey")
+            .conditional(
+                () -> addExtraInfo,
+                builder ->
+                    builder
+                        .mannschaft(
+                            team ->
+                                team.name("Elite Squad")
+                                    .sponsoren(
+                                        sponsors ->
+                                            sponsors.add(
+                                                sponsor -> sponsor.name("GlobalTech")))))
+            .build();
+
+    assertNotNull(person);
+    assertEquals("David", person.getName());
+    assertEquals(LocalDate.of(1985, 3, 20), person.getBirthdate());
+    assertEquals(2, person.getNickNames().size());
+    assertNotNull(person.getMannschaft());
+    assertEquals("Elite Squad", person.getMannschaft().getName());
+    assertEquals(1, person.getMannschaft().getSponsoren().size());
   }
 }

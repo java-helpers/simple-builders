@@ -321,8 +321,10 @@ A comprehensive example showcasing all fundamental Java property types with a mi
 
 Examples with all builder features enabled:
 
-- **Person DTO**: [`PersonDto.java`](example/src/main/java/org/javahelpers/simple/builders/example/PersonDto.java) and [`PersonDtoBuilder.java`](example/target/generated-sources/annotations/org/javahelpers/simple/builders/example/PersonDtoBuilder.java) - Demonstrates nested objects, collections, and various setter patterns
-- **Product Record**: [`ProductRecord.java`](example/src/main/java/org/javahelpers/simple/builders/example/ProductRecord.java) and [`ProductRecordBuilder.java`](example/target/generated-sources/annotations/org/javahelpers/simple/builders/example/ProductRecordBuilder.java) - Java Record support with full builder features
+- **Person DTO**: [`PersonDto.java`](example/src/main/java/org/javahelpers/simple/builders/example/PersonDto.java) and [`PersonDtoBuilder.java`](example/target/generated-sources/annotations/org/javahelpers/simple/builders/example/PersonDtoBuilder.java) - Demonstrates nested objects, collections, suppliers, conditional logic, and various setter patterns
+  - **Usage Examples**: [`PersonDtoBuilderTest.java`](example/src/test/java/org/javahelpers/simple/builders/example/PersonDtoBuilderTest.java) - Shows supplier methods, collection builders, nested builder consumers, and conditional logic
+- **Product Record**: [`ProductRecord.java`](example/src/main/java/org/javahelpers/simple/builders/example/ProductRecord.java) and [`ProductRecordBuilder.java`](example/target/generated-sources/annotations/org/javahelpers/simple/builders/example/ProductRecordBuilder.java) - Java Record support with full builder features and With interface pattern
+  - **Usage Examples**: [`ProductRecordTest.java`](example/src/test/java/org/javahelpers/simple/builders/example/ProductRecordTest.java) - Comprehensive tests demonstrating With interface for immutable Records, fluent modifications, and custom with methods
 
 ### Advanced Features
 
