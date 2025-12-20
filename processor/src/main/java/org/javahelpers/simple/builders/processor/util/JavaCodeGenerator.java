@@ -286,7 +286,7 @@ public class JavaCodeGenerator {
     return signatureToMethod.entrySet().stream()
         .sorted(Map.Entry.comparingByKey())
         .map(Map.Entry::getValue)
-        .collect(java.util.stream.Collectors.toList());
+        .toList();
   }
 
   private CodeBlock createJavadocForClass(ClassName dtoClass) {
