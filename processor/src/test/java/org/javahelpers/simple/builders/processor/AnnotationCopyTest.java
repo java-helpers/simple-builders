@@ -559,4 +559,285 @@ class AnnotationCopyTest {
             public MeasurementBuilder sensor(
                 @Range(values = {0, 100, 255}, decimals = {0.5, 1.5, 2.5}) String format,"""));
   }
+
+  @Test
+  void annotations_validAnnotation_jakartaValidation_filteredFromBuilderParameters() {
+    String packageName = "test.jakarta";
+
+    JavaFileObject address =
+        JavaFileObjects.forSourceString(
+            packageName + ".Address",
+            """
+            package test.jakarta;
+
+            public class Address {
+              private String street;
+              private String city;
+
+              public String getStreet() { return street; }
+              public void setStreet(String street) { this.street = street; }
+
+              public String getCity() { return city; }
+              public void setCity(String city) { this.city = city; }
+            }
+            """);
+
+    JavaFileObject person =
+        JavaFileObjects.forSourceString(
+            packageName + ".Person",
+            """
+            package test.jakarta;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+            import jakarta.validation.Valid;
+            import jakarta.validation.constraints.NotNull;
+
+            @SimpleBuilder
+            public class Person {
+              private String name;
+              private Address address;
+
+              public String getName() { return name; }
+              public void setName(@NotNull String name) { this.name = name; }
+
+              public Address getAddress() { return address; }
+              public void setAddress(@Valid @NotNull Address address) { this.address = address; }
+            }
+            """);
+
+    Compilation compilation =
+        compileSources(
+            createJakartaValidAnnotation(), createJakartaNotNullAnnotation(), address, person);
+    String generatedCode = loadGeneratedSource(compilation, "PersonBuilder");
+    ProcessorAsserts.assertGenerationSucceeded(compilation, "PersonBuilder", generatedCode);
+
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains("name(@NotNull String name)"),
+        contains("address(@NotNull Address address)"));
+
+    ProcessorAsserts.assertNotContaining(generatedCode, "@Valid");
+  }
+
+  @Test
+  void annotations_validAnnotation_javaxValidation_filteredFromBuilderParameters() {
+    String packageName = "test.javax";
+
+    JavaFileObject contact =
+        JavaFileObjects.forSourceString(
+            packageName + ".Contact",
+            """
+            package test.javax;
+
+            public class Contact {
+              private String email;
+              private String phone;
+
+              public String getEmail() { return email; }
+              public void setEmail(String email) { this.email = email; }
+
+              public String getPhone() { return phone; }
+              public void setPhone(String phone) { this.phone = phone; }
+            }
+            """);
+
+    JavaFileObject customer =
+        JavaFileObjects.forSourceString(
+            packageName + ".Customer",
+            """
+            package test.javax;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+            import javax.validation.Valid;
+            import javax.validation.constraints.Size;
+
+            @SimpleBuilder
+            public class Customer {
+              private String id;
+              private Contact contact;
+
+              public String getId() { return id; }
+              public void setId(@Size(min = 5, max = 20) String id) { this.id = id; }
+
+              public Contact getContact() { return contact; }
+              public void setContact(@Valid Contact contact) { this.contact = contact; }
+            }
+            """);
+
+    Compilation compilation =
+        compileSources(
+            createMockAnnotation(
+                "javax.validation",
+                "Valid",
+                "ElementType.FIELD, ElementType.PARAMETER, ElementType.METHOD"),
+            createMockAnnotation(
+                "javax.validation.constraints",
+                "Size",
+                "ElementType.FIELD, ElementType.PARAMETER",
+                "int min() default 0;\n  int max() default Integer.MAX_VALUE;"),
+            contact,
+            customer);
+    String generatedCode = loadGeneratedSource(compilation, "CustomerBuilder");
+    ProcessorAsserts.assertGenerationSucceeded(compilation, "CustomerBuilder", generatedCode);
+
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains("id(@Size(min = 5, max = 20) String id)"),
+        contains("contact(Contact contact)"));
+
+    ProcessorAsserts.assertNotContaining(generatedCode, "@Valid");
+  }
+
+  @Test
+  void annotations_validAnnotation_constructorParameters_filteredFromBuilderParameters() {
+    String packageName = "test.constructor";
+
+    JavaFileObject department =
+        JavaFileObjects.forSourceString(
+            packageName + ".Department",
+            """
+            package test.constructor;
+
+            public class Department {
+              private String name;
+
+              public String getName() { return name; }
+              public void setName(String name) { this.name = name; }
+            }
+            """);
+
+    JavaFileObject employee =
+        JavaFileObjects.forSourceString(
+            packageName + ".Employee",
+            """
+            package test.constructor;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+            import jakarta.validation.Valid;
+            import jakarta.validation.constraints.NotNull;
+
+            @SimpleBuilder
+            public class Employee {
+              private final String name;
+              private final Department department;
+
+              public Employee(
+                  @NotNull String name,
+                  @Valid @NotNull Department department) {
+                this.name = name;
+                this.department = department;
+              }
+
+              public String getName() { return name; }
+              public Department getDepartment() { return department; }
+            }
+            """);
+
+    Compilation compilation =
+        compileSources(
+            createJakartaValidAnnotation(), createJakartaNotNullAnnotation(), department, employee);
+    String generatedCode = loadGeneratedSource(compilation, "EmployeeBuilder");
+    ProcessorAsserts.assertGenerationSucceeded(compilation, "EmployeeBuilder", generatedCode);
+
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains("name(@NotNull String name)"),
+        contains("department(@NotNull Department department)"));
+
+    ProcessorAsserts.assertNotContaining(generatedCode, "@Valid");
+  }
+
+  @Test
+  void annotations_validAnnotation_mixedWithConstraints_onlyValidFiltered() {
+    String packageName = "test.mixed";
+
+    JavaFileObject metadata =
+        JavaFileObjects.forSourceString(
+            packageName + ".Metadata",
+            """
+            package test.mixed;
+
+            public class Metadata {
+              private String key;
+              private String value;
+
+              public String getKey() { return key; }
+              public void setKey(String key) { this.key = key; }
+
+              public String getValue() { return value; }
+              public void setValue(String value) { this.value = value; }
+            }
+            """);
+
+    JavaFileObject document =
+        JavaFileObjects.forSourceString(
+            packageName + ".Document",
+            """
+            package test.mixed;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+            import jakarta.validation.Valid;
+            import jakarta.validation.constraints.NotNull;
+            import jakarta.validation.constraints.Size;
+
+            @SimpleBuilder
+            public class Document {
+              private String title;
+              private Metadata metadata;
+
+              public String getTitle() { return title; }
+              public void setTitle(@NotNull @Size(min = 1, max = 100) String title) {
+                this.title = title;
+              }
+
+              public Metadata getMetadata() { return metadata; }
+              public void setMetadata(@Valid @NotNull Metadata metadata) {
+                this.metadata = metadata;
+              }
+            }
+            """);
+
+    Compilation compilation =
+        compileSources(
+            createJakartaValidAnnotation(),
+            createJakartaNotNullAnnotation(),
+            createMockAnnotation(
+                "jakarta.validation.constraints",
+                "Size",
+                "ElementType.FIELD, ElementType.PARAMETER",
+                "int min() default 0;\n  int max() default Integer.MAX_VALUE;"),
+            metadata,
+            document);
+    String generatedCode = loadGeneratedSource(compilation, "DocumentBuilder");
+    ProcessorAsserts.assertGenerationSucceeded(compilation, "DocumentBuilder", generatedCode);
+
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains("title(@NotNull @Size(min = 1, max = 100) String title)"),
+        contains("metadata(@NotNull Metadata metadata)"));
+
+    ProcessorAsserts.assertNotContaining(generatedCode, "@Valid");
+  }
+
+  /**
+   * Creates a mock jakarta.validation.Valid annotation for testing.
+   *
+   * <p>This helper is used multiple times across different test methods.
+   *
+   * @return a JavaFileObject representing the mocked Valid annotation
+   */
+  private JavaFileObject createJakartaValidAnnotation() {
+    return createMockAnnotation(
+        "jakarta.validation",
+        "Valid",
+        "ElementType.FIELD, ElementType.PARAMETER, ElementType.METHOD");
+  }
+
+  /**
+   * Creates a mock jakarta.validation.constraints.NotNull annotation for testing.
+   *
+   * <p>This helper is used multiple times across different test methods.
+   *
+   * @return a JavaFileObject representing the mocked NotNull annotation
+   */
+  private JavaFileObject createJakartaNotNullAnnotation() {
+    return createMockAnnotation(
+        "jakarta.validation.constraints", "NotNull", "ElementType.FIELD, ElementType.PARAMETER");
+  }
 }
