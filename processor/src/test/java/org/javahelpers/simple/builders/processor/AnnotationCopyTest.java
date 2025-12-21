@@ -2,6 +2,7 @@ package org.javahelpers.simple.builders.processor;
 
 import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.contains;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils.createCompiler;
+import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils.createMockAnnotation;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils.loadGeneratedSource;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils.printDiagnosticsOnVerbose;
 
@@ -25,37 +26,15 @@ class AnnotationCopyTest {
     String packageName = "test";
 
     JavaFileObject notNullAnnotation =
-        JavaFileObjects.forSourceString(
-            packageName + ".annotations.NotNull",
-            """
-            package test.annotations;
-            import java.lang.annotation.ElementType;
-            import java.lang.annotation.Retention;
-            import java.lang.annotation.RetentionPolicy;
-            import java.lang.annotation.Target;
-
-            @Retention(RetentionPolicy.RUNTIME)
-            @Target({ElementType.FIELD, ElementType.PARAMETER})
-            public @interface NotNull {
-            }
-            """);
+        createMockAnnotation(
+            packageName + ".annotations", "NotNull", "ElementType.FIELD, ElementType.PARAMETER");
 
     JavaFileObject customAnnotation =
-        JavaFileObjects.forSourceString(
-            packageName + ".annotations.CustomAnnotation",
-            """
-            package test.annotations;
-            import java.lang.annotation.ElementType;
-            import java.lang.annotation.Retention;
-            import java.lang.annotation.RetentionPolicy;
-            import java.lang.annotation.Target;
-
-            @Retention(RetentionPolicy.RUNTIME)
-            @Target({ElementType.FIELD, ElementType.PARAMETER})
-            public @interface CustomAnnotation {
-              String value() default "";
-            }
-            """);
+        createMockAnnotation(
+            packageName + ".annotations",
+            "CustomAnnotation",
+            "ElementType.FIELD, ElementType.PARAMETER",
+            "String value() default \"\";");
 
     JavaFileObject person =
         JavaFileObjects.forSourceString(
@@ -101,36 +80,10 @@ class AnnotationCopyTest {
     String packageName = "test.annotations.constructor";
 
     JavaFileObject notNullAnnotation =
-        JavaFileObjects.forSourceString(
-            packageName + ".NotNull",
-            """
-            package test.annotations.constructor;
-            import java.lang.annotation.ElementType;
-            import java.lang.annotation.Retention;
-            import java.lang.annotation.RetentionPolicy;
-            import java.lang.annotation.Target;
-
-            @Retention(RetentionPolicy.RUNTIME)
-            @Target({ElementType.FIELD, ElementType.PARAMETER})
-            public @interface NotNull {
-            }
-            """);
+        createMockAnnotation(packageName, "NotNull", "ElementType.FIELD, ElementType.PARAMETER");
 
     JavaFileObject positiveAnnotation =
-        JavaFileObjects.forSourceString(
-            packageName + ".Positive",
-            """
-            package test.annotations.constructor;
-            import java.lang.annotation.ElementType;
-            import java.lang.annotation.Retention;
-            import java.lang.annotation.RetentionPolicy;
-            import java.lang.annotation.Target;
-
-            @Retention(RetentionPolicy.RUNTIME)
-            @Target({ElementType.FIELD, ElementType.PARAMETER})
-            public @interface Positive {
-            }
-            """);
+        createMockAnnotation(packageName, "Positive", "ElementType.FIELD, ElementType.PARAMETER");
 
     JavaFileObject product =
         JavaFileObjects.forSourceString(
@@ -174,20 +127,7 @@ class AnnotationCopyTest {
     String packageName = "test.annotations.filtered";
 
     JavaFileObject notNullAnnotation =
-        JavaFileObjects.forSourceString(
-            packageName + ".NotNull",
-            """
-            package test.annotations.filtered;
-            import java.lang.annotation.ElementType;
-            import java.lang.annotation.Retention;
-            import java.lang.annotation.RetentionPolicy;
-            import java.lang.annotation.Target;
-
-            @Retention(RetentionPolicy.RUNTIME)
-            @Target({ElementType.FIELD, ElementType.PARAMETER})
-            public @interface NotNull {
-            }
-            """);
+        createMockAnnotation(packageName, "NotNull", "ElementType.FIELD, ElementType.PARAMETER");
 
     JavaFileObject person =
         JavaFileObjects.forSourceString(
@@ -255,41 +195,32 @@ class AnnotationCopyTest {
 
     // Create a complex annotation with various value types
     JavaFileObject complexAnnotation =
-        JavaFileObjects.forSourceString(
-            packageName + ".ComplexAnnotation",
+        createMockAnnotation(
+            packageName,
+            "ComplexAnnotation",
+            "ElementType.FIELD, ElementType.PARAMETER",
             """
-            package test.complex;
-            import java.lang.annotation.ElementType;
-            import java.lang.annotation.Retention;
-            import java.lang.annotation.RetentionPolicy;
-            import java.lang.annotation.Target;
+            // Primitives
+            int intValue() default 42;
+            long longValue() default 100L;
+            boolean boolValue() default true;
+            double doubleValue() default 3.14;
 
-            @Retention(RetentionPolicy.RUNTIME)
-            @Target({ElementType.FIELD, ElementType.PARAMETER})
-            public @interface ComplexAnnotation {
-              // Primitives
-              int intValue() default 42;
-              long longValue() default 100L;
-              boolean boolValue() default true;
-              double doubleValue() default 3.14;
+            // String
+            String stringValue() default "default";
 
-              // String
-              String stringValue() default "default";
+            // Enum
+            Priority priority() default Priority.MEDIUM;
 
-              // Enum
-              Priority priority() default Priority.MEDIUM;
+            // Class literal
+            Class<?> type() default String.class;
 
-              // Class literal
-              Class<?> type() default String.class;
+            // Array
+            String[] tags() default {};
+            int[] numbers() default {};
 
-              // Array
-              String[] tags() default {};
-              int[] numbers() default {};
-
-              // Nested annotation
-              Metadata metadata() default @Metadata(author = "unknown", version = 1);
-            }
-            """);
+            // Nested annotation
+            Metadata metadata() default @Metadata(author = "unknown", version = 1);""");
 
     JavaFileObject task =
         JavaFileObjects.forSourceString(
@@ -410,21 +341,11 @@ class AnnotationCopyTest {
 
     // Create an annotation in the SimpleBuilder framework package
     JavaFileObject frameworkAnnotation =
-        JavaFileObjects.forSourceString(
-            "org.javahelpers.simple.builders.custom.FrameworkAnnotation",
-            """
-            package org.javahelpers.simple.builders.custom;
-            import java.lang.annotation.ElementType;
-            import java.lang.annotation.Retention;
-            import java.lang.annotation.RetentionPolicy;
-            import java.lang.annotation.Target;
-
-            @Retention(RetentionPolicy.RUNTIME)
-            @Target({ElementType.FIELD, ElementType.PARAMETER})
-            public @interface FrameworkAnnotation {
-              String value() default "";
-            }
-            """);
+        createMockAnnotation(
+            "org.javahelpers.simple.builders.custom",
+            "FrameworkAnnotation",
+            "ElementType.FIELD, ElementType.PARAMETER",
+            "String value() default \"\";");
 
     JavaFileObject entity =
         JavaFileObjects.forSourceString(
@@ -467,21 +388,11 @@ class AnnotationCopyTest {
 
     // Create a custom annotation that should NOT be filtered
     JavaFileObject validAnnotation =
-        JavaFileObjects.forSourceString(
-            packageName + ".ValidAnnotation",
-            """
-            package test.custom;
-            import java.lang.annotation.ElementType;
-            import java.lang.annotation.Retention;
-            import java.lang.annotation.RetentionPolicy;
-            import java.lang.annotation.Target;
-
-            @Retention(RetentionPolicy.RUNTIME)
-            @Target({ElementType.FIELD, ElementType.PARAMETER})
-            public @interface ValidAnnotation {
-              String value() default "";
-            }
-            """);
+        createMockAnnotation(
+            packageName,
+            "ValidAnnotation",
+            "ElementType.FIELD, ElementType.PARAMETER",
+            "String value() default \"\";");
 
     JavaFileObject model =
         JavaFileObjects.forSourceString(
@@ -520,21 +431,11 @@ class AnnotationCopyTest {
 
     // Create Generated annotation (commonly used by code generators)
     JavaFileObject generatedAnnotation =
-        JavaFileObjects.forSourceString(
-            "javax.annotation.Generated",
-            """
-            package javax.annotation;
-            import java.lang.annotation.ElementType;
-            import java.lang.annotation.Retention;
-            import java.lang.annotation.RetentionPolicy;
-            import java.lang.annotation.Target;
-
-            @Retention(RetentionPolicy.SOURCE)
-            @Target({ElementType.PACKAGE, ElementType.TYPE, ElementType.METHOD, ElementType.PARAMETER})
-            public @interface Generated {
-              String[] value();
-            }
-            """);
+        createMockAnnotation(
+            "javax.annotation",
+            "Generated",
+            "ElementType.PACKAGE, ElementType.TYPE, ElementType.METHOD, ElementType.PARAMETER",
+            "String[] value();");
 
     JavaFileObject model =
         JavaFileObjects.forSourceString(
@@ -575,22 +476,11 @@ class AnnotationCopyTest {
     String packageName = "test.emptyarray";
 
     JavaFileObject arrayAnnotation =
-        JavaFileObjects.forSourceString(
-            packageName + ".ArrayAnnotation",
-            """
-            package test.emptyarray;
-            import java.lang.annotation.ElementType;
-            import java.lang.annotation.Retention;
-            import java.lang.annotation.RetentionPolicy;
-            import java.lang.annotation.Target;
-
-            @Retention(RetentionPolicy.RUNTIME)
-            @Target({ElementType.FIELD, ElementType.PARAMETER})
-            public @interface ArrayAnnotation {
-              String[] tags() default {};
-              int[] numbers() default {};
-            }
-            """);
+        createMockAnnotation(
+            packageName,
+            "ArrayAnnotation",
+            "ElementType.FIELD, ElementType.PARAMETER",
+            "String[] tags() default {};\n  int[] numbers() default {};");
 
     JavaFileObject data =
         JavaFileObjects.forSourceString(
@@ -627,22 +517,11 @@ class AnnotationCopyTest {
     String packageName = "test.mixedarray";
 
     JavaFileObject rangeAnnotation =
-        JavaFileObjects.forSourceString(
-            packageName + ".Range",
-            """
-            package test.mixedarray;
-            import java.lang.annotation.ElementType;
-            import java.lang.annotation.Retention;
-            import java.lang.annotation.RetentionPolicy;
-            import java.lang.annotation.Target;
-
-            @Retention(RetentionPolicy.RUNTIME)
-            @Target({ElementType.FIELD, ElementType.PARAMETER})
-            public @interface Range {
-              int[] values();
-              double[] decimals() default {1.0, 2.0};
-            }
-            """);
+        createMockAnnotation(
+            packageName,
+            "Range",
+            "ElementType.FIELD, ElementType.PARAMETER",
+            "int[] values();\n  double[] decimals() default {1.0, 2.0};");
 
     JavaFileObject measurement =
         JavaFileObjects.forSourceString(

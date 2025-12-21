@@ -242,4 +242,71 @@ public final class ProcessorTestUtils {
     System.arraycopy(footer, 0, lines, header.length + body.length, footer.length);
     return lines;
   }
+
+  /**
+   * Creates a mock annotation for testing without any members.
+   *
+   * <p>Mock annotations are used instead of real dependencies because:
+   *
+   * <ul>
+   *   <li>Annotation processors work at compile-time and only see annotation metadata, not
+   *       implementations
+   *   <li>Avoids adding unnecessary runtime dependencies to the test classpath
+   *   <li>Ensures test isolation from external library versions
+   *   <li>Follows standard practice for annotation processor testing with Google Compile Testing
+   * </ul>
+   *
+   * <p>The processor only cares about the qualified name, not the actual implementation.
+   *
+   * @param packageName the package name of the annotation (e.g., "jakarta.validation")
+   * @param annotationName the simple name of the annotation (e.g., "Valid")
+   * @param targets the annotation targets (e.g., "ElementType.FIELD, ElementType.PARAMETER")
+   * @return a JavaFileObject representing the mocked annotation
+   */
+  public static JavaFileObject createMockAnnotation(
+      String packageName, String annotationName, String targets) {
+    return createMockAnnotation(packageName, annotationName, targets, "");
+  }
+
+  /**
+   * Creates a mock annotation for testing with optional members.
+   *
+   * <p>Mock annotations are used instead of real dependencies because:
+   *
+   * <ul>
+   *   <li>Annotation processors work at compile-time and only see annotation metadata, not
+   *       implementations
+   *   <li>Avoids adding unnecessary runtime dependencies to the test classpath
+   *   <li>Ensures test isolation from external library versions
+   *   <li>Follows standard practice for annotation processor testing with Google Compile Testing
+   * </ul>
+   *
+   * <p>The processor only cares about the qualified name, not the actual implementation.
+   *
+   * @param packageName the package name of the annotation (e.g., "jakarta.validation")
+   * @param annotationName the simple name of the annotation (e.g., "Valid")
+   * @param targets the annotation targets (e.g., "ElementType.FIELD, ElementType.PARAMETER")
+   * @param members the annotation members/attributes (e.g., "int min() default 0;")
+   * @return a JavaFileObject representing the mocked annotation
+   */
+  public static JavaFileObject createMockAnnotation(
+      String packageName, String annotationName, String targets, String members) {
+    String qualifiedName = packageName + "." + annotationName;
+    String membersSection = members.isEmpty() ? "" : "\n  " + members + "\n";
+
+    return JavaFileObjects.forSourceString(
+        qualifiedName,
+        """
+        package %s;
+        import java.lang.annotation.ElementType;
+        import java.lang.annotation.Retention;
+        import java.lang.annotation.RetentionPolicy;
+        import java.lang.annotation.Target;
+
+        @Retention(RetentionPolicy.RUNTIME)
+        @Target({%s})
+        public @interface %s {%s}
+        """
+            .formatted(packageName, targets, annotationName, membersSection));
+  }
 }
