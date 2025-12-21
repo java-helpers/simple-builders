@@ -191,6 +191,11 @@ public class JavaCodeGenerator {
           createMethodConditionalPositiveOnly(builderTypeName, methodAccessModifier));
     }
 
+    // Add toString method
+    classBuilder.addMethod(
+        createMethodToString(
+            builderDef.getConstructorFieldsForBuilder(), builderDef.getSetterFieldsForBuilder()));
+
     // Adding nested types (e.g., With interface)
     for (NestedTypeDto nestedType : builderDef.getNestedTypes()) {
       TypeSpec nestedTypeSpec = createNestedType(nestedType);
@@ -535,6 +540,42 @@ public class JavaCodeGenerator {
             }
             return this;
             """);
+    return mb.build();
+  }
+
+  private MethodSpec createMethodToString(
+      List<FieldDto> constructorFields, List<FieldDto> setterFields) {
+    MethodSpec.Builder mb =
+        MethodSpec.methodBuilder("toString")
+            .addModifiers(PUBLIC)
+            .addAnnotation(Override.class)
+            .returns(String.class)
+            .addJavadoc(
+                """
+                Returns a string representation of this builder, including only fields that have been set.
+
+                @return string representation of the builder
+                """);
+
+    // Combine all fields
+    List<FieldDto> allFields = new java.util.ArrayList<>();
+    allFields.addAll(constructorFields);
+    allFields.addAll(setterFields);
+
+    // Build fluent chain of append calls using CodeBlock.Builder
+    CodeBlock.Builder codeBuilder = CodeBlock.builder();
+    codeBuilder.add(
+        "return new $T(this, $T.INSTANCE)",
+        ClassName.get("org.apache.commons.lang3.builder", "ToStringBuilder"),
+        ClassName.get("org.javahelpers.simple.builders.core.util", "BuilderToStringStyle"));
+
+    for (FieldDto field : allFields) {
+      codeBuilder.add("\n    .append($S, this.$N)", field.getFieldName(), field.getFieldName());
+    }
+
+    codeBuilder.add("\n    .toString()");
+    mb.addStatement(codeBuilder.build());
+
     return mb.build();
   }
 

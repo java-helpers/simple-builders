@@ -10,9 +10,11 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javax.annotation.processing.Generated;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.javahelpers.simple.builders.core.annotations.BuilderImplementation;
 import org.javahelpers.simple.builders.core.builders.ArrayListBuilder;
 import org.javahelpers.simple.builders.core.interfaces.IBuilderBase;
+import org.javahelpers.simple.builders.core.util.BuilderToStringStyle;
 import org.javahelpers.simple.builders.core.util.TrackedValue;
 
 /**
@@ -309,6 +311,22 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
   public PersonDtoBuilder conditional(BooleanSupplier condition,
       Consumer<PersonDtoBuilder> yesCondition) {
     return conditional(condition, yesCondition, null);
+  }
+
+  /**
+   * Returns a string representation of this builder, including only fields that have been set.
+   *
+   * @return string representation of the builder
+   */
+  @Override
+  public String toString() {
+    return new ToStringBuilder(this, BuilderToStringStyle.INSTANCE)
+            .append("name", this.name)
+            .append("nickNames", this.nickNames)
+            .append("nickNames2", this.nickNames2)
+            .append("birthdate", this.birthdate)
+            .append("mannschaft", this.mannschaft)
+            .toString();
   }
 
   /**

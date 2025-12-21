@@ -461,7 +461,9 @@ class BuilderConfigurationReaderTest {
         import static org.javahelpers.simple.builders.core.util.TrackedValue.unsetValue;
 
         import java.util.List;
+        import org.apache.commons.lang3.builder.ToStringBuilder;
         import org.javahelpers.simple.builders.core.interfaces.IBuilderBase;
+        import org.javahelpers.simple.builders.core.util.BuilderToStringStyle;
         import org.javahelpers.simple.builders.core.util.TrackedValue;
 
         /**
@@ -531,6 +533,19 @@ class BuilderConfigurationReaderTest {
            */
           public static PersonDtoMinimalBuilder create() {
             return new PersonDtoMinimalBuilder();
+          }
+
+          /**
+           * Returns a string representation of this builder, including only fields that have been set.
+           *
+           * @return string representation of the builder
+           */
+          @Override
+          public String toString() {
+            return new ToStringBuilder(this, BuilderToStringStyle.INSTANCE)
+                .append("name", this.name)
+                .append("tags", this.tags)
+                .toString();
           }
         }
         """;
