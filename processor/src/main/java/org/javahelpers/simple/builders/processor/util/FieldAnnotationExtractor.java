@@ -41,6 +41,28 @@ import org.javahelpers.simple.builders.processor.dtos.TypeName;
 /** Extractor for field annotations, converting them from Java model elements to DTOs. */
 public final class FieldAnnotationExtractor {
 
+  /**
+   * List of predicates that determine which annotations should be skipped (not copied to the
+   * builder). Each predicate receives the fully qualified annotation name and returns true if the
+   * annotation should be filtered out.
+   *
+   * <p>To add a new filter, simply add a new predicate to this list with a descriptive comment.
+   */
+  private static final java.util.List<java.util.function.Predicate<String>> ANNOTATION_FILTERS =
+      java.util.List.of(
+          // Skip SimpleBuilder framework annotations
+          name -> name.startsWith("org.javahelpers.simple.builders."),
+          // Skip code generation metadata annotations
+          name -> name.equals("javax.annotation.Generated"),
+          name -> name.equals("javax.annotation.processing.Generated"),
+          // Skip compiler-only annotations not relevant for builder parameters
+          name -> name.equals("java.lang.SuppressWarnings"),
+          // Skip @Valid annotation for cascading validation (jakarta.validation.Valid /
+          // javax.validation.Valid) - only meaningful on fields or method return types, not on
+          // builder method parameters where individual values are set
+          name -> name.equals("jakarta.validation.Valid"),
+          name -> name.equals("javax.validation.Valid"));
+
   private FieldAnnotationExtractor() {
     // Private constructor to prevent instantiation
   }
@@ -192,55 +214,7 @@ public final class FieldAnnotationExtractor {
    * @return true if the annotation should be skipped, false otherwise
    */
   private static boolean shouldSkipAnnotation(String qualifiedName) {
-    return isFrameworkAnnotation(qualifiedName)
-        || isGeneratedAnnotation(qualifiedName)
-        || isCompilerOnlyAnnotation(qualifiedName)
-        || isValidAnnotation(qualifiedName);
-  }
-
-  /**
-   * Checks if the annotation is a SimpleBuilder framework annotation.
-   *
-   * @param qualifiedName the fully qualified name of the annotation
-   * @return true if it's a framework annotation
-   */
-  private static boolean isFrameworkAnnotation(String qualifiedName) {
-    return qualifiedName.startsWith("org.javahelpers.simple.builders.");
-  }
-
-  /**
-   * Checks if the annotation is a code generation metadata annotation.
-   *
-   * @param qualifiedName the fully qualified name of the annotation
-   * @return true if it's a generated annotation
-   */
-  private static boolean isGeneratedAnnotation(String qualifiedName) {
-    return qualifiedName.equals("javax.annotation.Generated")
-        || qualifiedName.equals("javax.annotation.processing.Generated");
-  }
-
-  /**
-   * Checks if the annotation is a compiler-only annotation not relevant for builder parameters.
-   *
-   * @param qualifiedName the fully qualified name of the annotation
-   * @return true if it's a compiler-only annotation
-   */
-  private static boolean isCompilerOnlyAnnotation(String qualifiedName) {
-    return qualifiedName.equals("java.lang.SuppressWarnings");
-  }
-
-  /**
-   * Checks if the annotation is a @Valid annotation for cascading validation. The @Valid annotation
-   * (jakarta.validation.Valid / javax.validation.Valid) triggers cascading validation of nested
-   * object structures and is only meaningful on fields or method return types, not on builder
-   * method parameters where individual values are set.
-   *
-   * @param qualifiedName the fully qualified name of the annotation
-   * @return true if it's a @Valid annotation
-   */
-  private static boolean isValidAnnotation(String qualifiedName) {
-    return qualifiedName.equals("jakarta.validation.Valid")
-        || qualifiedName.equals("javax.validation.Valid");
+    return ANNOTATION_FILTERS.stream().anyMatch(filter -> filter.test(qualifiedName));
   }
 
   /**
