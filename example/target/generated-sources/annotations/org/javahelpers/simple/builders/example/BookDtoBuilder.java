@@ -11,8 +11,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.javahelpers.simple.builders.core.annotations.BuilderImplementation;
 import org.javahelpers.simple.builders.core.interfaces.IBuilderBase;
+import org.javahelpers.simple.builders.core.util.BuilderToStringStyle;
 import org.javahelpers.simple.builders.core.util.TrackedValue;
 
 /**
@@ -439,5 +441,35 @@ public class BookDtoBuilder implements IBuilderBase<BookDto> {
    */
   public static BookDtoBuilder create() {
     return new BookDtoBuilder();
+  }
+
+  /**
+   * Returns a string representation of this builder, including only fields that have been set.
+   *
+   * @return string representation of the builder
+   */
+  @Override
+  public String toString() {
+    return new ToStringBuilder(this, BuilderToStringStyle.INSTANCE)
+            .append("title", this.title)
+            .append("author", this.author)
+            .append("isbn", this.isbn)
+            .append("pages", this.pages)
+            .append("price", this.price)
+            .append("exactPrice", this.exactPrice)
+            .append("available", this.available)
+            .append("rating", this.rating)
+            .append("edition", this.edition)
+            .append("salesCount", this.salesCount)
+            .append("discount", this.discount)
+            .append("category", this.category)
+            .append("publishDate", this.publishDate)
+            .append("lastUpdated", this.lastUpdated)
+            .append("subtitle", this.subtitle)
+            .append("tags", this.tags)
+            .append("genres", this.genres)
+            .append("metadata", this.metadata)
+            .append("publisher", this.publisher)
+            .toString();
   }
 }
