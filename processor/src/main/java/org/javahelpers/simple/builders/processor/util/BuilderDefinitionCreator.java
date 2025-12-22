@@ -452,12 +452,7 @@ public class BuilderDefinitionCreator {
       TypeName fieldBuilderType = fieldBuilderOpt.get();
       MethodDto method =
           BuilderDefinitionCreator.createFieldConsumerWithBuilder(
-              field.getFieldName(),
-              field.getFieldName(),
-              field.getJavaDoc(),
-              fieldBuilderType,
-              builderType,
-              context);
+              field, fieldBuilderType, builderType, context);
       field.addMethod(method);
       return true;
     }
@@ -556,26 +551,14 @@ public class BuilderDefinitionCreator {
               elementBuilderType.get());
       MethodDto method =
           createFieldConsumerWithElementBuilders(
-              field.getFieldName(),
-              field.getFieldName(),
-              field.getJavaDoc(),
-              collectionBuilderType,
-              elementBuilderType.get(),
-              builderType,
-              context);
+              field, collectionBuilderType, elementBuilderType.get(), builderType, context);
       field.addMethod(method);
     } else if (context.getConfiguration().shouldUseArrayListBuilder()) {
       // Regular ArrayListBuilder if enabled
       TypeName collectionBuilderType = map2TypeName(ArrayListBuilder.class);
       MethodDto method =
           createFieldConsumerWithBuilder(
-              field.getFieldName(),
-              field.getFieldName(),
-              field.getJavaDoc(),
-              collectionBuilderType,
-              elementType,
-              builderType,
-              context);
+              field, collectionBuilderType, elementType, builderType, context);
       field.addMethod(method);
     } else {
       return false;
@@ -606,13 +589,7 @@ public class BuilderDefinitionCreator {
             fieldTypeGeneric.getInnerTypeArguments().get(0),
             fieldTypeGeneric.getInnerTypeArguments().get(1));
     MethodDto mapConsumerWithBuilder =
-        BuilderDefinitionCreator.createFieldConsumerWithBuilder(
-            field.getFieldName(),
-            field.getFieldName(),
-            field.getJavaDoc(),
-            builderTargetTypeName,
-            builderType,
-            context);
+        createFieldConsumerWithBuilderForMap(field, builderTargetTypeName, builderType, context);
     field.addMethod(mapConsumerWithBuilder);
     return true;
   }
@@ -653,26 +630,14 @@ public class BuilderDefinitionCreator {
               elementBuilderType.get());
       MethodDto method =
           createFieldConsumerWithElementBuilders(
-              field.getFieldName(),
-              field.getFieldName(),
-              field.getJavaDoc(),
-              collectionBuilderType,
-              elementBuilderType.get(),
-              builderType,
-              context);
+              field, collectionBuilderType, elementBuilderType.get(), builderType, context);
       field.addMethod(method);
     } else if (context.getConfiguration().shouldUseHashSetBuilder()) {
       // Regular HashSetBuilder if enabled
       TypeName collectionBuilderType = map2TypeName(HashSetBuilder.class);
       MethodDto method =
           createFieldConsumerWithBuilder(
-              field.getFieldName(),
-              field.getFieldName(),
-              field.getJavaDoc(),
-              collectionBuilderType,
-              elementType,
-              builderType,
-              context);
+              field, collectionBuilderType, elementType, builderType, context);
       field.addMethod(method);
     } else {
       return false;
@@ -1082,9 +1047,7 @@ public class BuilderDefinitionCreator {
   }
 
   private static MethodDto createFieldConsumerWithBuilder(
-      String fieldName,
-      String fieldNameInBuilder,
-      String fieldJavadoc,
+      FieldDto field,
       TypeName consumerBuilderType,
       TypeName builderTargetType,
       TypeName returnBuilderType,
@@ -1092,25 +1055,19 @@ public class BuilderDefinitionCreator {
     TypeNameGeneric builderTypeGeneric =
         new TypeNameGeneric(consumerBuilderType, builderTargetType);
     return BuilderDefinitionCreator.createFieldConsumerWithBuilder(
-        fieldName,
-        fieldNameInBuilder,
-        fieldJavadoc,
+        field,
         builderTypeGeneric,
         returnBuilderType,
         context);
   }
 
   private static MethodDto createFieldConsumerWithBuilder(
-      String fieldName,
-      String fieldNameInBuilder,
-      String fieldJavaDoc,
+      FieldDto field,
       TypeName consumerBuilderType,
       TypeName returnBuilderType,
       ProcessingContext context) {
     return createFieldConsumerWithBuilder(
-        fieldName,
-        fieldNameInBuilder,
-        fieldJavaDoc,
+        field,
         consumerBuilderType,
         "this.$fieldName:N.value()",
         "",
@@ -1124,17 +1081,13 @@ public class BuilderDefinitionCreator {
    * ArrayListBuilderWithElementBuilders and HashSetBuilderWithElementBuilders.
    */
   private static MethodDto createFieldConsumerWithElementBuilders(
-      String fieldName,
-      String fieldNameInBuilder,
-      String fieldJavaDoc,
+      FieldDto field,
       TypeName collectionBuilderType,
       TypeName elementBuilderType,
       TypeName returnBuilderType,
       ProcessingContext context) {
     return createFieldConsumerWithBuilder(
-        fieldName,
-        fieldNameInBuilder,
-        fieldJavaDoc,
+        field,
         collectionBuilderType,
         "this.$fieldName:N.value(), $elementBuilderType:T::create",
         "$elementBuilderType:T::create",
@@ -1156,9 +1109,7 @@ public class BuilderDefinitionCreator {
    * @param context processing context
    */
   private static MethodDto createFieldConsumerWithBuilder(
-      String fieldName,
-      String fieldNameInBuilder,
-      String fieldJavaDoc,
+      FieldDto field,
       TypeName consumerBuilderType,
       String constructorArgsWithValue,
       String additionalConstructorArgs,
@@ -1168,10 +1119,10 @@ public class BuilderDefinitionCreator {
     TypeNameGeneric consumerType =
         new TypeNameGeneric(map2TypeName(Consumer.class), consumerBuilderType);
     MethodParameterDto parameter = new MethodParameterDto();
-    parameter.setParameterName(fieldName + BUILDER_SUFFIX + SUFFIX_CONSUMER);
+    parameter.setParameterName(field.getFieldName() + BUILDER_SUFFIX + SUFFIX_CONSUMER);
     parameter.setParameterTypeName(consumerType);
     MethodDto methodDto = new MethodDto();
-    methodDto.setMethodName(generateSetterName(fieldName, context));
+    methodDto.setMethodName(generateSetterName(field.getFieldName(), context));
     methodDto.setReturnType(returnBuilderType);
     methodDto.addParameter(parameter);
     setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
@@ -1183,7 +1134,7 @@ public class BuilderDefinitionCreator {
         return this;
         """
             .formatted(constructorArgsWithValue, additionalConstructorArgs));
-    methodDto.addArgument(ARG_FIELD_NAME, fieldNameInBuilder);
+    methodDto.addArgument(ARG_FIELD_NAME, field.getFieldName());
     methodDto.addArgument(ARG_DTO_METHOD_PARAM, parameter.getParameterName());
     methodDto.addArgument(ARG_HELPER_TYPE, consumerBuilderType);
     additionalArguments.forEach(methodDto::addArgument);
@@ -1196,7 +1147,7 @@ public class BuilderDefinitionCreator {
         @param %s consumer providing an instance of a builder for %s
         @return current instance of builder
         """
-            .formatted(fieldName, parameter.getParameterName(), fieldJavaDoc));
+            .formatted(field.getFieldName(), parameter.getParameterName(), field.getJavaDoc()));
     return methodDto;
   }
 
