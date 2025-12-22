@@ -567,12 +567,12 @@ class BuilderProcessorTest {
         "public WithCollectionsBuilder names(List<String> names)",
         "public WithCollectionsBuilder names(Supplier<List<String>> namesSupplier)",
         "public WithCollectionsBuilder names(String... names)",
-        "this.names = changedValue(List.of(names));",
+        "this.names = changedValue(java.util.List.of(names));",
         "private TrackedValue<List<String>> names = unsetValue();",
         "public WithCollectionsBuilder tags(Set<String> tags)",
         "public WithCollectionsBuilder tags(Supplier<Set<String>> tagsSupplier)",
         "public WithCollectionsBuilder tags(String... tags)",
-        "this.tags = changedValue(Set.of(tags));",
+        "this.tags = changedValue(java.util.Set.of(tags));",
         "private TrackedValue<Set<String>> tags = unsetValue();",
         "public WithCollectionsBuilder map(Map<String, Integer> map)",
         "public WithCollectionsBuilder map(Supplier<Map<String, Integer>> mapSupplier)",
@@ -1506,7 +1506,7 @@ class BuilderProcessorTest {
         "public HasSetStringBuilder tags(Consumer<HashSetBuilder<String>> tagsBuilderConsumer)",
         "this.tags = changedValue(builder.build());",
         "public HasSetStringBuilder tags(String... tags)",
-        "this.tags = changedValue(Set.of(tags));",
+        "this.tags = changedValue(java.util.Set.of(tags));",
         "public HasSetStringBuilder tags(Supplier<Set<String>> tagsSupplier)",
         "this.tags = changedValue(tagsSupplier.get());");
   }
@@ -1551,7 +1551,7 @@ class BuilderProcessorTest {
         "public HasSetCustomBuilder helpers(Consumer<HashSetBuilder<Helper>> helpersBuilderConsumer)",
         "this.helpers = changedValue(builder.build());",
         "public HasSetCustomBuilder helpers(Helper... helpers)",
-        "this.helpers = changedValue(Set.of(helpers));",
+        "this.helpers = changedValue(java.util.Set.of(helpers));",
         "public HasSetCustomBuilder helpers(Supplier<Set<Helper>> helpersSupplier)",
         "this.helpers = changedValue(helpersSupplier.get());");
   }
@@ -1810,8 +1810,8 @@ class BuilderProcessorTest {
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
     ProcessorAsserts.assertContaining(
         generatedCode,
-        "public HasCollectionsConvenienceBuilder names(String... names) { this.names = changedValue(List.of(names));",
-        "public HasCollectionsConvenienceBuilder tags(String... tags) { this.tags = changedValue(Set.of(tags));");
+        "public HasCollectionsConvenienceBuilder names(String... names) { this.names = changedValue(java.util.List.of(names));",
+        "public HasCollectionsConvenienceBuilder tags(String... tags) { this.tags = changedValue(java.util.Set.of(tags));");
   }
 
   @Test
