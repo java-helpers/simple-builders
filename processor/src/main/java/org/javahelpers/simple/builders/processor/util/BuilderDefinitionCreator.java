@@ -329,7 +329,7 @@ public class BuilderDefinitionCreator {
 
     List<TypeName> innerTypes = fieldTypeGeneric.getInnerTypeArguments();
     int innerTypesCnt = innerTypes.size();
-    if (isList(field.getFieldType()) && innerTypesCnt == 1) {
+    if (isListLike(field.getFieldType()) && innerTypesCnt == 1) {
       // Only add varargs helper if enabled in configuration
       if (context.getConfiguration().shouldGenerateVarArgsHelpers()) {
         String fieldName = field.getFieldNameEstimated();
@@ -344,7 +344,7 @@ public class BuilderDefinitionCreator {
                 context);
         field.addMethod(method);
       }
-    } else if (isSet(field.getFieldType()) && innerTypesCnt == 1) {
+    } else if (isSetLike(field.getFieldType()) && innerTypesCnt == 1) {
       // Only add varargs helper if enabled in configuration
       if (context.getConfiguration().shouldGenerateVarArgsHelpers()) {
         String fieldName = field.getFieldNameEstimated();
@@ -359,7 +359,7 @@ public class BuilderDefinitionCreator {
                 context);
         field.addMethod(method);
       }
-    } else if (isMap(field.getFieldType()) && innerTypesCnt == 2) {
+    } else if (isMapLike(field.getFieldType()) && innerTypesCnt == 2) {
       // Only add varargs helper if enabled in configuration
       if (context.getConfiguration().shouldGenerateVarArgsHelpers()) {
         TypeName mapEntryType =
@@ -521,7 +521,7 @@ public class BuilderDefinitionCreator {
       VariableElement fieldParameter,
       TypeName builderType,
       ProcessingContext context) {
-    if (!(isList(field.getFieldType())
+    if (!(isListLike(field.getFieldType())
         && field.getFieldType() instanceof TypeNameGeneric fieldTypeGeneric
         && fieldTypeGeneric.getInnerTypeArguments().size() == 1)) {
       return false;
@@ -577,7 +577,7 @@ public class BuilderDefinitionCreator {
     if (!context.getConfiguration().shouldUseHashMapBuilder()) {
       return false;
     }
-    if (!(isMap(field.getFieldType())
+    if (!(isMapLike(field.getFieldType())
         && field.getFieldType() instanceof TypeNameGeneric fieldTypeGeneric
         && fieldTypeGeneric.getInnerTypeArguments().size() == 2)) {
       return false;
@@ -600,7 +600,7 @@ public class BuilderDefinitionCreator {
       VariableElement fieldParameter,
       TypeName builderType,
       ProcessingContext context) {
-    if (!(isSet(field.getFieldType())
+    if (!(isSetLike(field.getFieldType())
         && field.getFieldType() instanceof TypeNameGeneric fieldTypeGeneric
         && fieldTypeGeneric.getInnerTypeArguments().size() == 1)) {
       return false;

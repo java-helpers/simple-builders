@@ -35,17 +35,6 @@ public class TypeNameAnalyser {
   private TypeNameAnalyser() {}
 
   /**
-   * Helper to check if the type is a {@code java.util.Map}.
-   *
-   * @param typeName Type to be validated
-   * @return {@code true}, if it is a {@code java.util.Map}
-   */
-  public static boolean isMap(TypeName typeName) {
-    return Strings.CI.equals(typeName.getPackageName(), JAVA_UTIL_PACKAGE)
-        && Strings.CI.equals(typeName.getClassName(), "Map");
-  }
-
-  /**
    * Helper to check if the type is a java-base class. Check is done by comparing the package name.
    *
    * @param typeName Type to be validated
@@ -54,28 +43,6 @@ public class TypeNameAnalyser {
   public static boolean isJavaClass(TypeName typeName) {
     return Strings.CI.equalsAny(
         typeName.getPackageName(), "java.lang", "java.time", JAVA_UTIL_PACKAGE);
-  }
-
-  /**
-   * Helper to check if the type is a {@code java.util.Set}.
-   *
-   * @param typeName Type to be validated
-   * @return {@code true}, if it is a {@code java.util.Set}
-   */
-  public static boolean isSet(TypeName typeName) {
-    return Strings.CI.equals(typeName.getPackageName(), JAVA_UTIL_PACKAGE)
-        && Strings.CI.equals(typeName.getClassName(), "Set");
-  }
-
-  /**
-   * Helper to check if the type is a {@code java.util.List}.
-   *
-   * @param typeName Type to be validated
-   * @return {@code true}, if it is a {@code java.util.List}
-   */
-  public static boolean isList(TypeName typeName) {
-    return Strings.CI.equals(typeName.getPackageName(), JAVA_UTIL_PACKAGE)
-        && Strings.CI.equals(typeName.getClassName(), "List");
   }
 
   /**
@@ -113,5 +80,56 @@ public class TypeNameAnalyser {
       return isString(fieldTypeGeneric.getInnerTypeArguments().get(0));
     }
     return false;
+  }
+
+  /**
+   * Helper to check if the type is a list-like collection (List or any List implementation).
+   *
+   * @param typeName Type to be validated
+   * @return {@code true}, if it is a List or List implementation
+   */
+  public static boolean isListLike(TypeName typeName) {
+    if (!Strings.CI.equals(typeName.getPackageName(), JAVA_UTIL_PACKAGE)) {
+      return false;
+    }
+    String className = typeName.getClassName();
+    return Strings.CI.equalsAny(className, "List", "ArrayList", "LinkedList", "Vector", "Stack");
+  }
+
+  /**
+   * Helper to check if the type is a set-like collection (Set or any Set implementation).
+   *
+   * @param typeName Type to be validated
+   * @return {@code true}, if it is a Set or Set implementation
+   */
+  public static boolean isSetLike(TypeName typeName) {
+    if (!Strings.CI.equals(typeName.getPackageName(), JAVA_UTIL_PACKAGE)) {
+      return false;
+    }
+    String className = typeName.getClassName();
+    return Strings.CI.equalsAny(
+        className, "Set", "HashSet", "LinkedHashSet", "TreeSet", "SortedSet", "NavigableSet");
+  }
+
+  /**
+   * Helper to check if the type is a map-like collection (Map or any Map implementation).
+   *
+   * @param typeName Type to be validated
+   * @return {@code true}, if it is a Map or Map implementation
+   */
+  public static boolean isMapLike(TypeName typeName) {
+    if (!Strings.CI.equals(typeName.getPackageName(), JAVA_UTIL_PACKAGE)) {
+      return false;
+    }
+    String className = typeName.getClassName();
+    return Strings.CI.equalsAny(
+        className,
+        "Map",
+        "HashMap",
+        "LinkedHashMap",
+        "TreeMap",
+        "SortedMap",
+        "NavigableMap",
+        "Hashtable");
   }
 }
