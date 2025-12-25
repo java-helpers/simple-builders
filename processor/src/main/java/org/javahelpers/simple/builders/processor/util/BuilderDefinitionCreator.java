@@ -334,7 +334,7 @@ public class BuilderDefinitionCreator {
       if (context.getConfiguration().shouldGenerateVarArgsHelpers()) {
         MethodDto method =
             createFieldSetterForCollectionType(
-                field, new TypeNameArray(innerTypes.get(0), false), builderType, context);
+                field, new TypeNameArray(innerTypes.get(0)), builderType, context);
         field.addMethod(method);
       }
     } else if (isSetLike(field.getFieldType()) && innerTypesCnt == 1) {
@@ -342,7 +342,7 @@ public class BuilderDefinitionCreator {
       if (context.getConfiguration().shouldGenerateVarArgsHelpers()) {
         MethodDto method =
             createFieldSetterForCollectionType(
-                field, new TypeNameArray(innerTypes.get(0), true), builderType, context);
+                field, new TypeNameArray(innerTypes.get(0)), builderType, context);
         field.addMethod(method);
       }
     } else if (isMapLike(field.getFieldType()) && innerTypesCnt == 2) {
@@ -351,8 +351,8 @@ public class BuilderDefinitionCreator {
         // Use fully qualified name for Map.Entry to ensure proper import
         TypeName mapEntryType =
             new TypeNameArray(
-                new TypeNameGeneric("java.util.Map", "Entry", innerTypes.get(0), innerTypes.get(1)),
-                false);
+                new TypeNameGeneric(
+                    "java.util.Map", "Entry", innerTypes.get(0), innerTypes.get(1)));
         MethodDto method =
             createFieldSetterForCollectionType(field, mapEntryType, builderType, context);
         field.addMethod(method);
@@ -1272,7 +1272,7 @@ public class BuilderDefinitionCreator {
 
     MethodParameterDto argsParam = new MethodParameterDto();
     argsParam.setParameterName("args");
-    argsParam.setParameterTypeName(new TypeNameArray(TypeName.of(Object.class), false));
+    argsParam.setParameterTypeName(new TypeNameArray(TypeName.of(Object.class)));
 
     MethodDto methodDto = new MethodDto();
     methodDto.setMethodName(generateSetterName(fieldName, context));
