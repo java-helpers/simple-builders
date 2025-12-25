@@ -190,7 +190,7 @@ public final class JavaLangMapper {
 
           @Override
           public TypeNameArray visitArray(ArrayType t, Void p) {
-            return new TypeNameArray(extractType(t.getComponentType(), context), false);
+            return new TypeNameArray(extractType(t.getComponentType(), context));
           }
 
           @Override
