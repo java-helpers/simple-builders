@@ -332,50 +332,29 @@ public class BuilderDefinitionCreator {
     if (isListLike(field.getFieldType()) && innerTypesCnt == 1) {
       // Only add varargs helper if enabled in configuration
       if (context.getConfiguration().shouldGenerateVarArgsHelpers()) {
-        String fieldName = field.getFieldNameEstimated();
         MethodDto method =
-            createFieldSetterWithTransform(
-                fieldName,
-                fieldNameInBuilder,
-                fieldJavaDoc,
-                "List.of(%s)",
-                new TypeNameArray(innerTypes.get(0), false),
-                builderType,
-                context);
+            createFieldSetterForCollectionType(
+                field, new TypeNameArray(innerTypes.get(0), false), builderType, context);
         field.addMethod(method);
       }
     } else if (isSetLike(field.getFieldType()) && innerTypesCnt == 1) {
       // Only add varargs helper if enabled in configuration
       if (context.getConfiguration().shouldGenerateVarArgsHelpers()) {
-        String fieldName = field.getFieldNameEstimated();
         MethodDto method =
-            createFieldSetterWithTransform(
-                fieldName,
-                fieldNameInBuilder,
-                fieldJavaDoc,
-                "Set.of(%s)",
-                new TypeNameArray(innerTypes.get(0), true),
-                builderType,
-                context);
+            createFieldSetterForCollectionType(
+                field, new TypeNameArray(innerTypes.get(0), true), builderType, context);
         field.addMethod(method);
       }
     } else if (isMapLike(field.getFieldType()) && innerTypesCnt == 2) {
       // Only add varargs helper if enabled in configuration
       if (context.getConfiguration().shouldGenerateVarArgsHelpers()) {
+        // Use fully qualified name for Map.Entry to ensure proper import
         TypeName mapEntryType =
             new TypeNameArray(
-                new TypeNameGeneric("java.util", "Map.Entry", innerTypes.get(0), innerTypes.get(1)),
+                new TypeNameGeneric("java.util.Map", "Entry", innerTypes.get(0), innerTypes.get(1)),
                 false);
-        String fieldName = field.getFieldNameEstimated();
         MethodDto method =
-            createFieldSetterWithTransform(
-                fieldName,
-                fieldNameInBuilder,
-                fieldJavaDoc,
-                "Map.ofEntries(%s)",
-                mapEntryType,
-                builderType,
-                context);
+            createFieldSetterForCollectionType(field, mapEntryType, builderType, context);
         field.addMethod(method);
       }
     } else if (isOptional(field.getFieldType()) && innerTypesCnt == 1) {
@@ -589,7 +568,7 @@ public class BuilderDefinitionCreator {
             fieldTypeGeneric.getInnerTypeArguments().get(0),
             fieldTypeGeneric.getInnerTypeArguments().get(1));
     MethodDto mapConsumerWithBuilder =
-        createFieldConsumerWithBuilderForMap(field, builderTargetTypeName, builderType, context);
+        createFieldConsumerWithBuilder(field, builderTargetTypeName, builderType, context);
     field.addMethod(mapConsumerWithBuilder);
     return true;
   }
@@ -910,6 +889,95 @@ public class BuilderDefinitionCreator {
   }
 
   /**
+   * Creates a field setter method for collection varargs with automatic transform calculation. The
+   * transform is calculated based on the original field type to preserve specific collection
+   * implementations (e.g., ArrayList, LinkedList, HashSet, TreeSet, HashMap, TreeMap).
+   *
+   * @param field the field definition containing name, type, and javadoc
+   * @param parameterType the type of the method parameter (varargs array type)
+   * @param builderType the builder type for the return type
+   * @param context processing context
+   * @return the method DTO for the setter
+   */
+  private static MethodDto createFieldSetterForCollectionType(
+      FieldDto field, TypeName parameterType, TypeName builderType, ProcessingContext context) {
+    String transform = calculateCollectionTransform(field.getFieldType());
+    return createFieldSetterWithTransform(
+        field.getFieldNameEstimated(),
+        field.getFieldName(),
+        field.getJavaDoc(),
+        transform,
+        parameterType,
+        List.of(),
+        builderType,
+        context);
+  }
+
+  /**
+   * Wraps an expression with a concrete collection constructor if needed to preserve the specific
+   * collection type. Only wraps concrete implementations (ArrayList, LinkedList, HashSet, TreeSet,
+   * HashMap, TreeMap, etc.). Returns the base expression unchanged for interface types (List, Set,
+   * Map), non-collection types.
+   *
+   * <p>Examples:
+   *
+   * <ul>
+   *   <li>ArrayList + "List.of(%s)" → "new ArrayList<>(List.of(%s))"
+   *   <li>List + "List.of(%s)" → "List.of(%s)"
+   *   <li>ArrayList + "builder.build()" → "new ArrayList<>(builder.build())"
+   *   <li>List + "builder.build()" → "builder.build()"
+   *   <li>String + "value" → "value"
+   * </ul>
+   *
+   * @param fieldType the field type to check
+   * @param baseExpression the base expression to potentially wrap
+   * @return the wrapped expression for concrete collections, or base expression otherwise
+   */
+  private static String wrapConcreteCollectionType(TypeName fieldType, String baseExpression) {
+    String className = fieldType.getClassName();
+
+    // Only wrap concrete collection implementations, Interfaces should not be wrapped
+    if ((isListLike(fieldType) || isSetLike(fieldType) || isMapLike(fieldType))
+        && !Strings.CI.equalsAny(className, "List", "Set", "Map")) {
+      return "new " + className + "<>(" + baseExpression + ")";
+    }
+
+    return baseExpression;
+  }
+
+  /**
+   * Calculates the transform expression for collection varargs helpers. Uses immutable collection
+   * factory methods and wraps with specific collection constructors when needed.
+   *
+   * @param fieldType the original field type
+   * @return the transform expression with %s placeholder for the value
+   */
+  private static String calculateCollectionTransform(TypeName fieldType) {
+    String baseExpression;
+    if (isListLike(fieldType)) {
+      baseExpression = "java.util.List.of(%s)";
+    } else if (isSetLike(fieldType)) {
+      baseExpression = "java.util.Set.of(%s)";
+    } else if (isMapLike(fieldType)) {
+      baseExpression = "java.util.Map.ofEntries(%s)";
+    } else {
+      return "%s";
+    }
+    return wrapConcreteCollectionType(fieldType, baseExpression);
+  }
+
+  /**
+   * Calculates the build expression wrapper for builder consumers.
+   *
+   * @param fieldType the original field type
+   * @param baseExpression the base expression to wrap (e.g., "builder.build()")
+   * @return the wrapped expression or the base expression if no wrapping needed
+   */
+  private static String calculateBuildExpression(TypeName fieldType, String baseExpression) {
+    return wrapConcreteCollectionType(fieldType, baseExpression);
+  }
+
+  /**
    * Creates a field setter method with optional transform and annotations.
    *
    * @param fieldName the name of the field
@@ -1055,10 +1123,7 @@ public class BuilderDefinitionCreator {
     TypeNameGeneric builderTypeGeneric =
         new TypeNameGeneric(consumerBuilderType, builderTargetType);
     return BuilderDefinitionCreator.createFieldConsumerWithBuilder(
-        field,
-        builderTypeGeneric,
-        returnBuilderType,
-        context);
+        field, builderTypeGeneric, returnBuilderType, context);
   }
 
   private static MethodDto createFieldConsumerWithBuilder(
@@ -1099,13 +1164,14 @@ public class BuilderDefinitionCreator {
   /**
    * Creates a consumer method for a field with a builder type.
    *
-   * @param fieldName the field name
-   * @param builderType the builder type (e.g., ArrayListBuilder or
+   * @param field the field definition containing name, type, and javadoc
+   * @param consumerBuilderType the builder type (e.g., ArrayListBuilder or
    *     ArrayListBuilderWithElementBuilders)
    * @param constructorArgsWithValue constructor arguments when field is already set
-   * @param constructorArgsEmpty constructor arguments when field is empty
+   * @param additionalConstructorArgs constructor arguments when field is empty
    * @param additionalArguments additional template arguments to add to the method (must be TypeName
    *     values)
+   * @param returnBuilderType the builder type for the return type
    * @param context processing context
    */
   private static MethodDto createFieldConsumerWithBuilder(
@@ -1126,14 +1192,18 @@ public class BuilderDefinitionCreator {
     methodDto.setReturnType(returnBuilderType);
     methodDto.addParameter(parameter);
     setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
+
+    // Wrap the builder result with a specific collection constructor if needed
+    String buildExpression = calculateBuildExpression(field.getFieldType(), "builder.build()");
+
     methodDto.setCode(
         """
         $helperType:T builder = this.$fieldName:N.isSet() ? new $helperType:T(%s) : new $helperType:T(%s);
         $dtoMethodParam:N.accept(builder);
-        this.$fieldName:N = $builderFieldWrapper:T.changedValue(builder.build());
+        this.$fieldName:N = $builderFieldWrapper:T.changedValue(%s);
         return this;
         """
-            .formatted(constructorArgsWithValue, additionalConstructorArgs));
+            .formatted(constructorArgsWithValue, additionalConstructorArgs, buildExpression));
     methodDto.addArgument(ARG_FIELD_NAME, field.getFieldName());
     methodDto.addArgument(ARG_DTO_METHOD_PARAM, parameter.getParameterName());
     methodDto.addArgument(ARG_HELPER_TYPE, consumerBuilderType);
