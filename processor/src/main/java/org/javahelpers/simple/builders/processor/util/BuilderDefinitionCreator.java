@@ -901,7 +901,24 @@ public class BuilderDefinitionCreator {
    */
   private static MethodDto createFieldSetterForCollectionType(
       FieldDto field, TypeName parameterType, TypeName builderType, ProcessingContext context) {
-    String transform = calculateCollectionTransform(field.getFieldType());
+    String baseExpression;
+    TypeName fieldType = field.getFieldType();
+    String className = fieldType.getClassName();
+
+    // Use simple names for interface types (already imported), fully qualified for concrete types
+    if (isListLike(fieldType)) {
+      baseExpression =
+          Strings.CI.equals(className, "List") ? "List.of(%s)" : "java.util.List.of(%s)";
+    } else if (isSetLike(fieldType)) {
+      baseExpression = Strings.CI.equals(className, "Set") ? "Set.of(%s)" : "java.util.Set.of(%s)";
+    } else if (isMapLike(fieldType)) {
+      baseExpression =
+          Strings.CI.equals(className, "Map") ? "Map.ofEntries(%s)" : "java.util.Map.ofEntries(%s)";
+    } else {
+      return null;
+    }
+    String transform = wrapConcreteCollectionType(fieldType, baseExpression);
+
     return createFieldSetterWithTransform(
         field.getFieldNameEstimated(),
         field.getFieldName(),
@@ -943,27 +960,6 @@ public class BuilderDefinitionCreator {
     }
 
     return baseExpression;
-  }
-
-  /**
-   * Calculates the transform expression for collection varargs helpers. Uses immutable collection
-   * factory methods and wraps with specific collection constructors when needed.
-   *
-   * @param fieldType the original field type
-   * @return the transform expression with %s placeholder for the value
-   */
-  private static String calculateCollectionTransform(TypeName fieldType) {
-    String baseExpression;
-    if (isListLike(fieldType)) {
-      baseExpression = "java.util.List.of(%s)";
-    } else if (isSetLike(fieldType)) {
-      baseExpression = "java.util.Set.of(%s)";
-    } else if (isMapLike(fieldType)) {
-      baseExpression = "java.util.Map.ofEntries(%s)";
-    } else {
-      return "%s";
-    }
-    return wrapConcreteCollectionType(fieldType, baseExpression);
   }
 
   /**
@@ -1200,13 +1196,14 @@ public class BuilderDefinitionCreator {
         """
         $helperType:T builder = this.$fieldName:N.isSet() ? new $helperType:T(%s) : new $helperType:T(%s);
         $dtoMethodParam:N.accept(builder);
-        this.$fieldName:N = $builderFieldWrapper:T.changedValue(%s);
+        this.$fieldName:N = $builderFieldWrapper:T.changedValue($buildExpression:N);
         return this;
         """
-            .formatted(constructorArgsWithValue, additionalConstructorArgs, buildExpression));
+            .formatted(constructorArgsWithValue, additionalConstructorArgs));
     methodDto.addArgument(ARG_FIELD_NAME, field.getFieldName());
     methodDto.addArgument(ARG_DTO_METHOD_PARAM, parameter.getParameterName());
     methodDto.addArgument(ARG_HELPER_TYPE, consumerBuilderType);
+    methodDto.addArgument("buildExpression", buildExpression);
     additionalArguments.forEach(methodDto::addArgument);
     methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
     methodDto.setPriority(MethodDto.PRIORITY_MEDIUM);
