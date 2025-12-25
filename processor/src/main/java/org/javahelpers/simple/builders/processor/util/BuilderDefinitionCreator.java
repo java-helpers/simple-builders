@@ -332,7 +332,7 @@ public class BuilderDefinitionCreator {
       // Only add varargs helper if enabled in configuration
       if (context.getConfiguration().shouldGenerateVarArgsHelpers()) {
         MethodDto method =
-            createFieldSetterForCollectionType(
+            createFieldSetterByVarArgs(
                 field, new TypeNameArray(listType.getElementType()), builderType, context);
         field.addMethod(method);
       }
@@ -340,7 +340,7 @@ public class BuilderDefinitionCreator {
       // Only add varargs helper if enabled in configuration
       if (context.getConfiguration().shouldGenerateVarArgsHelpers()) {
         MethodDto method =
-            createFieldSetterForCollectionType(
+            createFieldSetterByVarArgs(
                 field, new TypeNameArray(setType.getElementType()), builderType, context);
         field.addMethod(method);
       }
@@ -352,8 +352,7 @@ public class BuilderDefinitionCreator {
             new TypeNameArray(
                 new TypeNameGeneric(
                     "java.util.Map", "Entry", mapType.getKeyType(), mapType.getValueType()));
-        MethodDto method =
-            createFieldSetterForCollectionType(field, mapEntryType, builderType, context);
+        MethodDto method = createFieldSetterByVarArgs(field, mapEntryType, builderType, context);
         field.addMethod(method);
       }
     } else if (isParameterizedOptional(field.getFieldType())) {
@@ -895,7 +894,7 @@ public class BuilderDefinitionCreator {
    * @param context processing context
    * @return the method DTO for the setter
    */
-  private static MethodDto createFieldSetterForCollectionType(
+  private static MethodDto createFieldSetterByVarArgs(
       FieldDto field, TypeName parameterType, TypeName builderType, ProcessingContext context) {
     String baseExpression;
     TypeName fieldType = field.getFieldType();
@@ -963,11 +962,10 @@ public class BuilderDefinitionCreator {
    * Calculates the build expression wrapper for builder consumers.
    *
    * @param fieldType the original field type
-   * @param baseExpression the base expression to wrap (e.g., "builder.build()")
    * @return the wrapped expression or the base expression if no wrapping needed
    */
-  private static String calculateBuildExpression(TypeName fieldType, String baseExpression) {
-    return wrapConcreteCollectionType(fieldType, baseExpression);
+  private static String calculateBuildExpression(TypeName fieldType) {
+    return wrapConcreteCollectionType(fieldType, "builder.build()");
   }
 
   /**
@@ -1187,7 +1185,7 @@ public class BuilderDefinitionCreator {
     setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
 
     // Wrap the builder result with a specific collection constructor if needed
-    String buildExpression = calculateBuildExpression(field.getFieldType(), "builder.build()");
+    String buildExpression = calculateBuildExpression(field.getFieldType());
 
     methodDto.setCode(
         """
