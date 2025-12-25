@@ -249,4 +249,101 @@ class CustomCollectionTypeTest {
     ProcessorAsserts.assertContaining(
         generatedCode, "public SymmetricMapDtoBuilder data(SymmetricMap<String> data)");
   }
+
+  @Test
+  void rawListType_shouldNotGenerateVarargsHelper() {
+    // Raw List (no type parameters) should not generate varargs methods
+    JavaFileObject dto =
+        ProcessorTestUtils.simpleBuilderClass(
+            "test",
+            "RawListDto",
+            """
+                @SuppressWarnings("rawtypes")
+                private final java.util.List items;
+
+                public RawListDto(java.util.List items) {
+                  this.items = items;
+                }
+
+                @SuppressWarnings("rawtypes")
+                public java.util.List getItems() {
+                  return items;
+                }
+            """);
+
+    Compilation compilation = compile(dto);
+    String generatedCode = loadGeneratedSource(compilation, "RawListDtoBuilder");
+    assertGenerationSucceeded(compilation, "RawListDtoBuilder", generatedCode);
+
+    // Should NOT generate varargs method for raw types
+    ProcessorAsserts.assertNotContaining(generatedCode, "items(Object... items)");
+
+    // Should still have the basic setter
+    ProcessorAsserts.assertContaining(generatedCode, "public RawListDtoBuilder items(List items)");
+  }
+
+  @Test
+  void rawSetType_shouldNotGenerateVarargsHelper() {
+    // Raw Set (no type parameters) should not generate varargs methods
+    JavaFileObject dto =
+        ProcessorTestUtils.simpleBuilderClass(
+            "test",
+            "RawSetDto",
+            """
+                @SuppressWarnings("rawtypes")
+                private final java.util.Set tags;
+
+                public RawSetDto(java.util.Set tags) {
+                  this.tags = tags;
+                }
+
+                @SuppressWarnings("rawtypes")
+                public java.util.Set getTags() {
+                  return tags;
+                }
+            """);
+
+    Compilation compilation = compile(dto);
+    String generatedCode = loadGeneratedSource(compilation, "RawSetDtoBuilder");
+    assertGenerationSucceeded(compilation, "RawSetDtoBuilder", generatedCode);
+
+    // Should NOT generate varargs method for raw types
+    ProcessorAsserts.assertNotContaining(generatedCode, "tags(Object... tags)");
+
+    // Should still have the basic setter
+    ProcessorAsserts.assertContaining(generatedCode, "public RawSetDtoBuilder tags(Set tags)");
+  }
+
+  @Test
+  void rawMapType_shouldNotGenerateVarargsHelper() {
+    // Raw Map (no type parameters) should not generate varargs methods
+    JavaFileObject dto =
+        ProcessorTestUtils.simpleBuilderClass(
+            "test",
+            "RawMapDto",
+            """
+                @SuppressWarnings("rawtypes")
+                private final java.util.Map config;
+
+                public RawMapDto(java.util.Map config) {
+                  this.config = config;
+                }
+
+                @SuppressWarnings("rawtypes")
+                public java.util.Map getConfig() {
+                  return config;
+                }
+            """);
+
+    Compilation compilation = compile(dto);
+    String generatedCode = loadGeneratedSource(compilation, "RawMapDtoBuilder");
+    assertGenerationSucceeded(compilation, "RawMapDtoBuilder", generatedCode);
+
+    // Should NOT generate varargs method for raw types
+    ProcessorAsserts.assertNotContaining(generatedCode, "config(Entry... config)");
+    ProcessorAsserts.assertNotContaining(generatedCode, "config(Map.Entry... config)");
+
+    // Should still have the basic setter
+    ProcessorAsserts.assertContaining(generatedCode, "public RawMapDtoBuilder config(Map config)");
+  }
 }
