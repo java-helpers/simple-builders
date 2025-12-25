@@ -160,81 +160,139 @@ public final class JavaLangMapper {
    */
   private static TypeName wrapInCollectionTypeIfApplicable(
       TypeName rawType, List<TypeName> argTypes, TypeMirror typeMirror, ProcessingContext context) {
-    TypeElement listElement = context.getTypeElement("java.util.List");
-    TypeElement setElement = context.getTypeElement("java.util.Set");
-    TypeElement mapElement = context.getTypeElement("java.util.Map");
-
-    if (listElement != null) {
-      TypeMirror listType = context.erasure(listElement.asType());
-      if (context.isAssignable(context.erasure(typeMirror), listType)) {
-        // Check if this is the List interface itself
-        TypeElement typeElement = (TypeElement) context.asElement(typeMirror);
-        boolean isInterface = typeElement.equals(listElement);
-
-        // Check if type has a constructor accepting Collection (like ArrayList(Collection))
-        boolean hasConstructor = !isInterface && hasCollectionConstructor(typeElement, context);
-
-        if (isInterface || hasConstructor) {
-          // Extract the actual List element type from the interface
-          List<TypeName> interfaceTypeArgs =
-              extractInterfaceTypeArguments(typeMirror, listElement, context);
-          TypeName elementType = interfaceTypeArgs.isEmpty() ? null : interfaceTypeArgs.get(0);
-          // Store all class type parameters AND the extracted element type
-          return new TypeNameList(rawType, argTypes, elementType);
-        }
-        // Custom List implementation without Collection constructor - treat as generic type
-        return argTypes.isEmpty() ? rawType : new TypeNameGeneric(rawType, argTypes);
-      }
+    TypeName listWrapper = tryWrapAsList(rawType, argTypes, typeMirror, context);
+    if (listWrapper != null) {
+      return listWrapper;
     }
 
-    if (setElement != null) {
-      TypeMirror setType = context.erasure(setElement.asType());
-      if (context.isAssignable(context.erasure(typeMirror), setType)) {
-        // Check if this is the Set interface itself
-        TypeElement typeElement = (TypeElement) context.asElement(typeMirror);
-        boolean isInterface = typeElement.equals(setElement);
-
-        // Check if type has a constructor accepting Collection (like HashSet(Collection))
-        boolean hasConstructor = !isInterface && hasCollectionConstructor(typeElement, context);
-
-        if (isInterface || hasConstructor) {
-          // Extract the actual Set element type from the interface
-          List<TypeName> interfaceTypeArgs =
-              extractInterfaceTypeArguments(typeMirror, setElement, context);
-          TypeName elementType = interfaceTypeArgs.isEmpty() ? null : interfaceTypeArgs.get(0);
-          // Store all class type parameters AND the extracted element type
-          return new TypeNameSet(rawType, argTypes, elementType);
-        }
-        // Custom Set implementation without Collection constructor - treat as generic type
-        return argTypes.isEmpty() ? rawType : new TypeNameGeneric(rawType, argTypes);
-      }
+    TypeName setWrapper = tryWrapAsSet(rawType, argTypes, typeMirror, context);
+    if (setWrapper != null) {
+      return setWrapper;
     }
 
-    if (mapElement != null) {
-      TypeMirror mapType = context.erasure(mapElement.asType());
-      if (context.isAssignable(context.erasure(typeMirror), mapType)) {
-        // Check if this is the Map interface itself
-        TypeElement typeElement = (TypeElement) context.asElement(typeMirror);
-        boolean isInterface = typeElement.equals(mapElement);
-
-        // Check if type has a constructor accepting Map (like HashMap(Map))
-        boolean hasConstructor = !isInterface && hasMapConstructor(typeElement, context);
-
-        if (isInterface || hasConstructor) {
-          // Extract the actual Map key and value types from the interface
-          List<TypeName> interfaceTypeArgs =
-              extractInterfaceTypeArguments(typeMirror, mapElement, context);
-          TypeName keyType = interfaceTypeArgs.isEmpty() ? null : interfaceTypeArgs.get(0);
-          TypeName valueType = interfaceTypeArgs.size() < 2 ? null : interfaceTypeArgs.get(1);
-          // Store all class type parameters AND the extracted key/value types
-          return new TypeNameMap(rawType, argTypes, keyType, valueType);
-        }
-        // Custom Map implementation without Map constructor - treat as generic type
-        return argTypes.isEmpty() ? rawType : new TypeNameGeneric(rawType, argTypes);
-      }
+    TypeName mapWrapper = tryWrapAsMap(rawType, argTypes, typeMirror, context);
+    if (mapWrapper != null) {
+      return mapWrapper;
     }
 
     // Not a collection type - return generic or raw type
+    return createFallbackTypeName(rawType, argTypes);
+  }
+
+  /**
+   * Attempts to wrap the type as a TypeNameList if it implements List and has appropriate
+   * constructor.
+   *
+   * @return TypeNameList if applicable, null otherwise
+   */
+  private static TypeName tryWrapAsList(
+      TypeName rawType, List<TypeName> argTypes, TypeMirror typeMirror, ProcessingContext context) {
+    TypeElement listElement = context.getTypeElement("java.util.List");
+    if (listElement == null) {
+      return null;
+    }
+
+    TypeMirror listType = context.erasure(listElement.asType());
+    if (!context.isAssignable(context.erasure(typeMirror), listType)) {
+      return null;
+    }
+
+    TypeElement typeElement = (TypeElement) context.asElement(typeMirror);
+    if (!shouldWrapAsCollectionType(typeElement, listElement, context)) {
+      return createFallbackTypeName(rawType, argTypes);
+    }
+
+    List<TypeName> interfaceTypeArgs =
+        extractInterfaceTypeArguments(typeMirror, listElement, context);
+    TypeName elementType = interfaceTypeArgs.isEmpty() ? null : interfaceTypeArgs.get(0);
+    return new TypeNameList(rawType, argTypes, elementType);
+  }
+
+  /**
+   * Attempts to wrap the type as a TypeNameSet if it implements Set and has appropriate
+   * constructor.
+   *
+   * @return TypeNameSet if applicable, null otherwise
+   */
+  private static TypeName tryWrapAsSet(
+      TypeName rawType, List<TypeName> argTypes, TypeMirror typeMirror, ProcessingContext context) {
+    TypeElement setElement = context.getTypeElement("java.util.Set");
+    if (setElement == null) {
+      return null;
+    }
+
+    TypeMirror setType = context.erasure(setElement.asType());
+    if (!context.isAssignable(context.erasure(typeMirror), setType)) {
+      return null;
+    }
+
+    TypeElement typeElement = (TypeElement) context.asElement(typeMirror);
+    if (!shouldWrapAsCollectionType(typeElement, setElement, context)) {
+      return createFallbackTypeName(rawType, argTypes);
+    }
+
+    List<TypeName> interfaceTypeArgs =
+        extractInterfaceTypeArguments(typeMirror, setElement, context);
+    TypeName elementType = interfaceTypeArgs.isEmpty() ? null : interfaceTypeArgs.get(0);
+    return new TypeNameSet(rawType, argTypes, elementType);
+  }
+
+  /**
+   * Attempts to wrap the type as a TypeNameMap if it implements Map and has appropriate
+   * constructor.
+   *
+   * @return TypeNameMap if applicable, null otherwise
+   */
+  private static TypeName tryWrapAsMap(
+      TypeName rawType, List<TypeName> argTypes, TypeMirror typeMirror, ProcessingContext context) {
+    TypeElement mapElement = context.getTypeElement("java.util.Map");
+    if (mapElement == null) {
+      return null;
+    }
+
+    TypeMirror mapType = context.erasure(mapElement.asType());
+    if (!context.isAssignable(context.erasure(typeMirror), mapType)) {
+      return null;
+    }
+
+    TypeElement typeElement = (TypeElement) context.asElement(typeMirror);
+    boolean isInterface = typeElement.equals(mapElement);
+    boolean hasConstructor = !isInterface && hasMapConstructor(typeElement, context);
+
+    if (!isInterface && !hasConstructor) {
+      return createFallbackTypeName(rawType, argTypes);
+    }
+
+    List<TypeName> interfaceTypeArgs =
+        extractInterfaceTypeArguments(typeMirror, mapElement, context);
+    TypeName keyType = interfaceTypeArgs.isEmpty() ? null : interfaceTypeArgs.get(0);
+    TypeName valueType = interfaceTypeArgs.size() < 2 ? null : interfaceTypeArgs.get(1);
+    return new TypeNameMap(rawType, argTypes, keyType, valueType);
+  }
+
+  /**
+   * Checks if a type should be wrapped as a specialized collection type (List or Set).
+   *
+   * @param typeElement the type to check
+   * @param interfaceElement the collection interface (List or Set)
+   * @param context the processing context
+   * @return true if the type is the interface itself or has a Collection constructor
+   */
+  private static boolean shouldWrapAsCollectionType(
+      TypeElement typeElement, TypeElement interfaceElement, ProcessingContext context) {
+    boolean isInterface = typeElement.equals(interfaceElement);
+    boolean hasConstructor = !isInterface && hasCollectionConstructor(typeElement, context);
+    return isInterface || hasConstructor;
+  }
+
+  /**
+   * Creates a fallback TypeName when a type cannot be wrapped as a specialized collection type.
+   *
+   * @param rawType the raw type
+   * @param argTypes the type arguments
+   * @return TypeNameGeneric if argTypes is not empty, otherwise rawType
+   */
+  private static TypeName createFallbackTypeName(TypeName rawType, List<TypeName> argTypes) {
     return argTypes.isEmpty() ? rawType : new TypeNameGeneric(rawType, argTypes);
   }
 

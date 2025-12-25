@@ -89,7 +89,7 @@ public class TypeNameMap extends TypeNameGeneric {
   public TypeNameMap(TypeName outerType, List<TypeName> innerTypeArguments) {
     super(outerType, innerTypeArguments);
     this.isConcreteImplementation = !isMapInterface(getPackageName(), getClassName());
-    this.keyType = innerTypeArguments.size() >= 1 ? innerTypeArguments.get(0) : null;
+    this.keyType = !innerTypeArguments.isEmpty() ? innerTypeArguments.get(0) : null;
     this.valueType = innerTypeArguments.size() >= 2 ? innerTypeArguments.get(1) : null;
   }
 
@@ -103,7 +103,7 @@ public class TypeNameMap extends TypeNameGeneric {
   public TypeNameMap(String packageName, String className, List<TypeName> innerTypeArguments) {
     super(packageName, className, innerTypeArguments);
     this.isConcreteImplementation = !isMapInterface(packageName, className);
-    this.keyType = innerTypeArguments.size() >= 1 ? innerTypeArguments.get(0) : null;
+    this.keyType = !innerTypeArguments.isEmpty() ? innerTypeArguments.get(0) : null;
     this.valueType = innerTypeArguments.size() >= 2 ? innerTypeArguments.get(1) : null;
   }
 
