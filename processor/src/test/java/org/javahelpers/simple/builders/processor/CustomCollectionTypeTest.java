@@ -203,4 +203,50 @@ class CustomCollectionTypeTest {
     ProcessorAsserts.assertContaining(
         generatedCode, "public CustomMapDtoBuilder data(CustomMap<Integer, String, Double> data)");
   }
+
+  @Test
+  void customMapWithSingleTypeParameter_shouldGenerateVarargsHelperWithSameKeyValue() {
+    // CustomMap<T> implements Map<T, T> with a Map constructor
+    // This should be detected as a valid Map type and generate helpers
+    JavaFileObject customMap =
+        JavaFileObjects.forSourceLines(
+            "test.SymmetricMap",
+            "package test;",
+            "import java.util.HashMap;",
+            "import java.util.Map;",
+            "public class SymmetricMap<T> extends HashMap<T, T> {",
+            "  public SymmetricMap() { }",
+            "  public SymmetricMap(Map<? extends T, ? extends T> m) { super(m); }",
+            "}");
+
+    JavaFileObject dto =
+        ProcessorTestUtils.simpleBuilderClass(
+            "test",
+            "SymmetricMapDto",
+            """
+                private final SymmetricMap<String> data;
+
+                public SymmetricMapDto(SymmetricMap<String> data) {
+                  this.data = data;
+                }
+
+                public SymmetricMap<String> getData() {
+                  return data;
+                }
+            """);
+
+    Compilation compilation = compile(customMap, dto);
+    String generatedCode = loadGeneratedSource(compilation, "SymmetricMapDtoBuilder");
+    assertGenerationSucceeded(compilation, "SymmetricMapDtoBuilder", generatedCode);
+
+    // Should generate varargs method with String for both key and value
+    // (extracted from Map<T, T> where T=String)
+    // Note: uses imported Entry, not Map.Entry
+    ProcessorAsserts.assertContaining(
+        generatedCode, "public SymmetricMapDtoBuilder data(Entry<String, String>... data)");
+
+    // Should still have the basic setter with the single type parameter
+    ProcessorAsserts.assertContaining(
+        generatedCode, "public SymmetricMapDtoBuilder data(SymmetricMap<String> data)");
+  }
 }
