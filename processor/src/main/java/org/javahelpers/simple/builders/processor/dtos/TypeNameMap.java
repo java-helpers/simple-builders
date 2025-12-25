@@ -46,8 +46,6 @@ import org.apache.commons.lang3.Strings;
 public class TypeNameMap extends TypeNameGeneric {
 
   private final boolean isConcreteImplementation;
-  private final TypeName keyType;
-  private final TypeName valueType;
 
   /**
    * Checks if the given package and class name represent the {@code java.util.Map} interface.
@@ -66,16 +64,49 @@ public class TypeNameMap extends TypeNameGeneric {
    *
    * @param outerType the outer type to use for package and class name (the concrete Map
    *     implementation)
-   * @param innerTypeArguments the list of generic type arguments (all class type parameters)
-   * @param keyType the actual Map key type (extracted from Map interface)
-   * @param valueType the actual Map value type (extracted from Map interface)
+   * @param innerTypeArguments the list of generic type arguments (should be 0 or 2 for Map)
    */
-  public TypeNameMap(
-      TypeName outerType, List<TypeName> innerTypeArguments, TypeName keyType, TypeName valueType) {
+  public TypeNameMap(TypeName outerType, List<TypeName> innerTypeArguments) {
     super(outerType, innerTypeArguments);
     this.isConcreteImplementation = !isMapInterface(getPackageName(), getClassName());
-    this.keyType = keyType;
-    this.valueType = valueType;
+  }
+
+  /**
+   * Creates a {@code TypeNameMap} for the given package/class and a list of inner type arguments.
+   *
+   * @param packageName the package name
+   * @param className the class name (the concrete Map implementation)
+   * @param innerTypeArguments the list of generic type arguments (should be 0 or 2 for Map)
+   */
+  public TypeNameMap(String packageName, String className, List<TypeName> innerTypeArguments) {
+    super(packageName, className, innerTypeArguments);
+    this.isConcreteImplementation = !isMapInterface(packageName, className);
+  }
+
+  /**
+   * Varargs convenience constructor with an outer {@code TypeName} and any number of inner type
+   * arguments.
+   *
+   * @param outerType the outer type to use for package and class name (the concrete Map
+   *     implementation)
+   * @param innerTypeArguments variable number of generic type arguments (should be 0 or 2 for Map)
+   */
+  public TypeNameMap(TypeName outerType, TypeName... innerTypeArguments) {
+    super(outerType, innerTypeArguments);
+    this.isConcreteImplementation = !isMapInterface(getPackageName(), getClassName());
+  }
+
+  /**
+   * Varargs convenience constructor with package/class names and any number of inner type
+   * arguments.
+   *
+   * @param packageName the package name
+   * @param className the class name (the concrete Map implementation)
+   * @param innerTypeArguments variable number of generic type arguments (should be 0 or 2 for Map)
+   */
+  public TypeNameMap(String packageName, String className, TypeName... innerTypeArguments) {
+    super(packageName, className, innerTypeArguments);
+    this.isConcreteImplementation = !isMapInterface(packageName, className);
   }
 
   /**
@@ -97,7 +128,7 @@ public class TypeNameMap extends TypeNameGeneric {
    * @return {@code true} if this Map has exactly 2 type arguments
    */
   public boolean isParameterized() {
-    return keyType != null && valueType != null;
+    return getInnerTypeArguments().size() == 2;
   }
 
   /**
@@ -109,10 +140,10 @@ public class TypeNameMap extends TypeNameGeneric {
    * @throws IllegalStateException if this is a raw Map with no type arguments
    */
   public TypeName getKeyType() {
-    if (keyType == null) {
+    if (!isParameterized()) {
       throw new IllegalStateException("Cannot get key type from raw Map type: " + getClassName());
     }
-    return keyType;
+    return getInnerTypeArguments().get(0);
   }
 
   /**
@@ -124,9 +155,9 @@ public class TypeNameMap extends TypeNameGeneric {
    * @throws IllegalStateException if this is a raw Map with no type arguments
    */
   public TypeName getValueType() {
-    if (valueType == null) {
+    if (!isParameterized()) {
       throw new IllegalStateException("Cannot get value type from raw Map type: " + getClassName());
     }
-    return valueType;
+    return getInnerTypeArguments().get(1);
   }
 }
