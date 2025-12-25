@@ -946,7 +946,8 @@ public class BuilderDefinitionCreator {
    * @return the wrapped expression for concrete collections, or base expression otherwise
    */
   private static String wrapConcreteCollectionType(TypeName fieldType, String baseExpression) {
-    // Only wrap concrete collection implementations, Interfaces should not be wrapped
+    // TypeNameList/Set/Map are only created for types we can work with, so no additional checks
+    // needed
     if (fieldType instanceof TypeNameList listType && listType.isConcreteImplementation()) {
       return "new " + listType.getClassName() + "<>(" + baseExpression + ")";
     } else if (fieldType instanceof TypeNameSet setType && setType.isConcreteImplementation()) {
