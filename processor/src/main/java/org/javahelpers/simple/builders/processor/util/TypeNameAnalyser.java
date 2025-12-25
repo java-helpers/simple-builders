@@ -83,53 +83,17 @@ public class TypeNameAnalyser {
   }
 
   /**
-   * Helper to check if the type is a list-like collection (List or any List implementation).
+   * Checks if an Optional type is properly parameterized (not a raw type).
+   *
+   * <p>A parameterized Optional has exactly 1 type argument (the wrapped type). A raw Optional has
+   * 0 type arguments.
    *
    * @param typeName Type to be validated
-   * @return {@code true}, if it is a List or List implementation
+   * @return {@code true} if it's an Optional with exactly 1 type argument
    */
-  public static boolean isListLike(TypeName typeName) {
-    if (!Strings.CI.equals(typeName.getPackageName(), JAVA_UTIL_PACKAGE)) {
-      return false;
-    }
-    String className = typeName.getClassName();
-    return Strings.CI.equalsAny(className, "List", "ArrayList", "LinkedList", "Vector", "Stack");
-  }
-
-  /**
-   * Helper to check if the type is a set-like collection (Set or any Set implementation).
-   *
-   * @param typeName Type to be validated
-   * @return {@code true}, if it is a Set or Set implementation
-   */
-  public static boolean isSetLike(TypeName typeName) {
-    if (!Strings.CI.equals(typeName.getPackageName(), JAVA_UTIL_PACKAGE)) {
-      return false;
-    }
-    String className = typeName.getClassName();
-    return Strings.CI.equalsAny(
-        className, "Set", "HashSet", "LinkedHashSet", "TreeSet", "SortedSet", "NavigableSet");
-  }
-
-  /**
-   * Helper to check if the type is a map-like collection (Map or any Map implementation).
-   *
-   * @param typeName Type to be validated
-   * @return {@code true}, if it is a Map or Map implementation
-   */
-  public static boolean isMapLike(TypeName typeName) {
-    if (!Strings.CI.equals(typeName.getPackageName(), JAVA_UTIL_PACKAGE)) {
-      return false;
-    }
-    String className = typeName.getClassName();
-    return Strings.CI.equalsAny(
-        className,
-        "Map",
-        "HashMap",
-        "LinkedHashMap",
-        "TreeMap",
-        "SortedMap",
-        "NavigableMap",
-        "Hashtable");
+  public static boolean isParameterizedOptional(TypeName typeName) {
+    return typeName instanceof TypeNameGeneric genericType
+        && isOptional(typeName)
+        && genericType.getInnerTypeArguments().size() == 1;
   }
 }

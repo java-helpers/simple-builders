@@ -143,6 +143,54 @@ public final class JavaLangMapper {
     return result;
   }
 
+  /**
+   * Checks if the given type implements List, Set, or Map interfaces and wraps it in the
+   * appropriate specialized TypeName class.
+   *
+   * @param rawType the base TypeName (preserves concrete class information)
+   * @param argTypes the generic type arguments
+   * @param typeMirror the TypeMirror to check for interface implementation
+   * @param context the processing context
+   * @return a specialized TypeName (TypeNameList, TypeNameSet, TypeNameMap) if applicable, or a
+   *     TypeNameGeneric/rawType otherwise
+   */
+  private static TypeName wrapInCollectionTypeIfApplicable(
+      TypeName rawType, List<TypeName> argTypes, TypeMirror typeMirror, ProcessingContext context) {
+    TypeElement listElement = context.getTypeElement("java.util.List");
+    TypeElement setElement = context.getTypeElement("java.util.Set");
+    TypeElement mapElement = context.getTypeElement("java.util.Map");
+
+    if (listElement != null) {
+      TypeMirror listType = context.erasure(listElement.asType());
+      if (context.isAssignable(context.erasure(typeMirror), listType)) {
+        return argTypes.isEmpty()
+            ? new TypeNameList(rawType, argTypes)
+            : new TypeNameList(rawType, argTypes);
+      }
+    }
+
+    if (setElement != null) {
+      TypeMirror setType = context.erasure(setElement.asType());
+      if (context.isAssignable(context.erasure(typeMirror), setType)) {
+        return argTypes.isEmpty()
+            ? new TypeNameSet(rawType, argTypes)
+            : new TypeNameSet(rawType, argTypes);
+      }
+    }
+
+    if (mapElement != null) {
+      TypeMirror mapType = context.erasure(mapElement.asType());
+      if (context.isAssignable(context.erasure(typeMirror), mapType)) {
+        return argTypes.isEmpty()
+            ? new TypeNameMap(rawType, argTypes)
+            : new TypeNameMap(rawType, argTypes);
+      }
+    }
+
+    // Not a collection type - return generic or raw type
+    return argTypes.isEmpty() ? rawType : new TypeNameGeneric(rawType, argTypes);
+  }
+
   private static TypeName extractType(TypeMirror typeOfParameter, ProcessingContext context) {
     return typeOfParameter.accept(
         new SimpleTypeVisitor14<TypeName, Void>() {
@@ -175,16 +223,15 @@ public final class JavaLangMapper {
                     ? enclosingType.accept(this, null)
                     : null;
             if (t.getTypeArguments().isEmpty() && !(enclosing instanceof TypeNameGeneric)) {
-              return rawType;
+              return wrapInCollectionTypeIfApplicable(rawType, List.of(), typeOfParameter, context);
             }
 
             List<TypeMirror> typesExtracted = new ArrayList<>(t.getTypeArguments());
             if (typesExtracted.isEmpty()) {
-              return rawType;
+              return wrapInCollectionTypeIfApplicable(rawType, List.of(), typeOfParameter, context);
             } else {
               List<TypeName> argTypes = extractTypeForList(typesExtracted, context);
-              // Represent all generics uniformly
-              return new TypeNameGeneric(rawType, argTypes);
+              return wrapInCollectionTypeIfApplicable(rawType, argTypes, typeOfParameter, context);
             }
           }
 

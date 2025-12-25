@@ -94,6 +94,10 @@ public final class JavapoetMapper {
         default -> null;
       };
     } else if (parameterType instanceof TypeNameGeneric param) {
+      // Handle raw types (e.g., List without <T>) - return just the class name
+      if (param.getInnerTypeArguments().isEmpty()) {
+        return classNameParameter;
+      }
       TypeName[] typeArgs = map2TypeArgumentsArray(param.getInnerTypeArguments());
       return ParameterizedTypeName.get(classNameParameter, typeArgs);
     }

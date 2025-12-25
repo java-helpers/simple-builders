@@ -28,6 +28,7 @@ import java.util.List;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
@@ -148,6 +149,52 @@ public final class ProcessingContext {
    */
   public boolean isSameType(TypeMirror type1, TypeMirror type2) {
     return typeUtils.isSameType(type1, type2);
+  }
+
+  /**
+   * Get the erasure of a type (removes generic type information).
+   *
+   * @param typeMirror the type to erase
+   * @return the erasure of the type
+   */
+  public TypeMirror erasure(TypeMirror typeMirror) {
+    return typeUtils.erasure(typeMirror);
+  }
+
+  /**
+   * Check if one type is assignable to another.
+   *
+   * @param type1 the type to check
+   * @param type2 the target type
+   * @return true if type1 is assignable to type2
+   */
+  public boolean isAssignable(TypeMirror type1, TypeMirror type2) {
+    return typeUtils.isAssignable(type1, type2);
+  }
+
+  /**
+   * Returns the type of a member when viewed as a member of a given type.
+   *
+   * <p>This is useful for resolving type parameters. For example, if you have {@code
+   * ArrayList<String>} and want to know what type {@code List.get(int)} returns, this method
+   * resolves it to {@code String}.
+   *
+   * @param containing the containing type
+   * @param element the member element
+   * @return the type of the member as viewed from the containing type
+   */
+  public TypeMirror asMemberOf(DeclaredType containing, javax.lang.model.element.Element element) {
+    return typeUtils.asMemberOf(containing, element);
+  }
+
+  /**
+   * Returns the direct supertypes of a type.
+   *
+   * @param typeMirror the type
+   * @return list of direct supertypes
+   */
+  public java.util.List<? extends TypeMirror> directSupertypes(TypeMirror typeMirror) {
+    return typeUtils.directSupertypes(typeMirror);
   }
 
   /**

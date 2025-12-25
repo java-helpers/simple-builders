@@ -328,36 +328,35 @@ public class BuilderDefinitionCreator {
     }
 
     List<TypeName> innerTypes = fieldTypeGeneric.getInnerTypeArguments();
-    int innerTypesCnt = innerTypes.size();
-    if (isListLike(field.getFieldType()) && innerTypesCnt == 1) {
+    if (field.getFieldType() instanceof TypeNameList listType && listType.isParameterized()) {
       // Only add varargs helper if enabled in configuration
       if (context.getConfiguration().shouldGenerateVarArgsHelpers()) {
         MethodDto method =
             createFieldSetterForCollectionType(
-                field, new TypeNameArray(innerTypes.get(0)), builderType, context);
+                field, new TypeNameArray(listType.getElementType()), builderType, context);
         field.addMethod(method);
       }
-    } else if (isSetLike(field.getFieldType()) && innerTypesCnt == 1) {
+    } else if (field.getFieldType() instanceof TypeNameSet setType && setType.isParameterized()) {
       // Only add varargs helper if enabled in configuration
       if (context.getConfiguration().shouldGenerateVarArgsHelpers()) {
         MethodDto method =
             createFieldSetterForCollectionType(
-                field, new TypeNameArray(innerTypes.get(0)), builderType, context);
+                field, new TypeNameArray(setType.getElementType()), builderType, context);
         field.addMethod(method);
       }
-    } else if (isMapLike(field.getFieldType()) && innerTypesCnt == 2) {
+    } else if (field.getFieldType() instanceof TypeNameMap mapType && mapType.isParameterized()) {
       // Only add varargs helper if enabled in configuration
       if (context.getConfiguration().shouldGenerateVarArgsHelpers()) {
         // Use fully qualified name for Map.Entry to ensure proper import
         TypeName mapEntryType =
             new TypeNameArray(
                 new TypeNameGeneric(
-                    "java.util.Map", "Entry", innerTypes.get(0), innerTypes.get(1)));
+                    "java.util.Map", "Entry", mapType.getKeyType(), mapType.getValueType()));
         MethodDto method =
             createFieldSetterForCollectionType(field, mapEntryType, builderType, context);
         field.addMethod(method);
       }
-    } else if (isOptional(field.getFieldType()) && innerTypesCnt == 1) {
+    } else if (isParameterizedOptional(field.getFieldType())) {
       String fieldName = field.getFieldNameEstimated();
 
       // Only generate unboxed optional method if enabled in configuration
@@ -500,13 +499,12 @@ public class BuilderDefinitionCreator {
       VariableElement fieldParameter,
       TypeName builderType,
       ProcessingContext context) {
-    if (!(isListLike(field.getFieldType())
-        && field.getFieldType() instanceof TypeNameGeneric fieldTypeGeneric
-        && fieldTypeGeneric.getInnerTypeArguments().size() == 1)) {
+    if (!(field.getFieldType() instanceof TypeNameList fieldTypeGeneric
+        && fieldTypeGeneric.isParameterized())) {
       return false;
     }
 
-    TypeName elementType = fieldTypeGeneric.getInnerTypeArguments().get(0);
+    TypeName elementType = fieldTypeGeneric.getElementType();
 
     // Get the TypeMirror of the element type from the parameter's type
     TypeMirror fieldTypeMirror = fieldParameter.asType();
@@ -556,17 +554,16 @@ public class BuilderDefinitionCreator {
     if (!context.getConfiguration().shouldUseHashMapBuilder()) {
       return false;
     }
-    if (!(isMapLike(field.getFieldType())
-        && field.getFieldType() instanceof TypeNameGeneric fieldTypeGeneric
-        && fieldTypeGeneric.getInnerTypeArguments().size() == 2)) {
+    if (!(field.getFieldType() instanceof TypeNameMap fieldTypeGeneric
+        && fieldTypeGeneric.isParameterized())) {
       return false;
     }
 
     TypeNameGeneric builderTargetTypeName =
         new TypeNameGeneric(
             map2TypeName(HashMapBuilder.class),
-            fieldTypeGeneric.getInnerTypeArguments().get(0),
-            fieldTypeGeneric.getInnerTypeArguments().get(1));
+            fieldTypeGeneric.getKeyType(),
+            fieldTypeGeneric.getValueType());
     MethodDto mapConsumerWithBuilder =
         createFieldConsumerWithBuilder(field, builderTargetTypeName, builderType, context);
     field.addMethod(mapConsumerWithBuilder);
@@ -579,13 +576,12 @@ public class BuilderDefinitionCreator {
       VariableElement fieldParameter,
       TypeName builderType,
       ProcessingContext context) {
-    if (!(isSetLike(field.getFieldType())
-        && field.getFieldType() instanceof TypeNameGeneric fieldTypeGeneric
-        && fieldTypeGeneric.getInnerTypeArguments().size() == 1)) {
+    if (!(field.getFieldType() instanceof TypeNameSet fieldTypeGeneric
+        && fieldTypeGeneric.isParameterized())) {
       return false;
     }
 
-    TypeName elementType = fieldTypeGeneric.getInnerTypeArguments().get(0);
+    TypeName elementType = fieldTypeGeneric.getElementType();
 
     // Get the TypeMirror of the element type from the parameter's type
     TypeMirror fieldTypeMirror = fieldParameter.asType();
@@ -903,17 +899,16 @@ public class BuilderDefinitionCreator {
       FieldDto field, TypeName parameterType, TypeName builderType, ProcessingContext context) {
     String baseExpression;
     TypeName fieldType = field.getFieldType();
-    String className = fieldType.getClassName();
 
     // Use simple names for interface types (already imported), fully qualified for concrete types
-    if (isListLike(fieldType)) {
+    if (fieldType instanceof TypeNameList listType) {
       baseExpression =
-          Strings.CI.equals(className, "List") ? "List.of(%s)" : "java.util.List.of(%s)";
-    } else if (isSetLike(fieldType)) {
-      baseExpression = Strings.CI.equals(className, "Set") ? "Set.of(%s)" : "java.util.Set.of(%s)";
-    } else if (isMapLike(fieldType)) {
+          listType.isConcreteImplementation() ? "java.util.List.of(%s)" : "List.of(%s)";
+    } else if (fieldType instanceof TypeNameSet setType) {
+      baseExpression = setType.isConcreteImplementation() ? "java.util.Set.of(%s)" : "Set.of(%s)";
+    } else if (fieldType instanceof TypeNameMap mapType) {
       baseExpression =
-          Strings.CI.equals(className, "Map") ? "Map.ofEntries(%s)" : "java.util.Map.ofEntries(%s)";
+          mapType.isConcreteImplementation() ? "java.util.Map.ofEntries(%s)" : "Map.ofEntries(%s)";
     } else {
       return null;
     }
@@ -951,12 +946,13 @@ public class BuilderDefinitionCreator {
    * @return the wrapped expression for concrete collections, or base expression otherwise
    */
   private static String wrapConcreteCollectionType(TypeName fieldType, String baseExpression) {
-    String className = fieldType.getClassName();
-
     // Only wrap concrete collection implementations, Interfaces should not be wrapped
-    if ((isListLike(fieldType) || isSetLike(fieldType) || isMapLike(fieldType))
-        && !Strings.CI.equalsAny(className, "List", "Set", "Map")) {
-      return "new " + className + "<>(" + baseExpression + ")";
+    if (fieldType instanceof TypeNameList listType && listType.isConcreteImplementation()) {
+      return "new " + listType.getClassName() + "<>(" + baseExpression + ")";
+    } else if (fieldType instanceof TypeNameSet setType && setType.isConcreteImplementation()) {
+      return "new " + setType.getClassName() + "<>(" + baseExpression + ")";
+    } else if (fieldType instanceof TypeNameMap mapType && mapType.isConcreteImplementation()) {
+      return "new " + mapType.getClassName() + "<>(" + baseExpression + ")";
     }
 
     return baseExpression;
