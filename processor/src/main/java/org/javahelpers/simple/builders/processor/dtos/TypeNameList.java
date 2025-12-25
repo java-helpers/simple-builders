@@ -46,6 +46,7 @@ import org.apache.commons.lang3.Strings;
 public class TypeNameList extends TypeNameGeneric {
 
   private final boolean isConcreteImplementation;
+  private final TypeName elementType;
 
   /**
    * Checks if the given package and class name represent the {@code java.util.List} interface.
@@ -64,11 +65,27 @@ public class TypeNameList extends TypeNameGeneric {
    *
    * @param outerType the outer type to use for package and class name (the concrete List
    *     implementation)
+   * @param innerTypeArguments the list of generic type arguments (all class type parameters)
+   * @param elementType the actual List element type (extracted from List interface)
+   */
+  public TypeNameList(TypeName outerType, List<TypeName> innerTypeArguments, TypeName elementType) {
+    super(outerType, innerTypeArguments);
+    this.isConcreteImplementation = !isListInterface(getPackageName(), getClassName());
+    this.elementType = elementType;
+  }
+
+  /**
+   * Creates a {@code TypeNameList} based on another {@code TypeName} as outer type and a list of
+   * inner type arguments.
+   *
+   * @param outerType the outer type to use for package and class name (the concrete List
+   *     implementation)
    * @param innerTypeArguments the list of generic type arguments (should be 0 or 1 for List)
    */
   public TypeNameList(TypeName outerType, List<TypeName> innerTypeArguments) {
     super(outerType, innerTypeArguments);
     this.isConcreteImplementation = !isListInterface(getPackageName(), getClassName());
+    this.elementType = innerTypeArguments.isEmpty() ? null : innerTypeArguments.get(0);
   }
 
   /**
@@ -81,6 +98,7 @@ public class TypeNameList extends TypeNameGeneric {
   public TypeNameList(String packageName, String className, List<TypeName> innerTypeArguments) {
     super(packageName, className, innerTypeArguments);
     this.isConcreteImplementation = !isListInterface(packageName, className);
+    this.elementType = innerTypeArguments.isEmpty() ? null : innerTypeArguments.get(0);
   }
 
   /**
@@ -94,6 +112,7 @@ public class TypeNameList extends TypeNameGeneric {
   public TypeNameList(TypeName outerType, TypeName... innerTypeArguments) {
     super(outerType, innerTypeArguments);
     this.isConcreteImplementation = !isListInterface(getPackageName(), getClassName());
+    this.elementType = innerTypeArguments.length == 0 ? null : innerTypeArguments[0];
   }
 
   /**
@@ -107,6 +126,7 @@ public class TypeNameList extends TypeNameGeneric {
   public TypeNameList(String packageName, String className, TypeName... innerTypeArguments) {
     super(packageName, className, innerTypeArguments);
     this.isConcreteImplementation = !isListInterface(packageName, className);
+    this.elementType = innerTypeArguments.length == 0 ? null : innerTypeArguments[0];
   }
 
   /**
@@ -122,13 +142,16 @@ public class TypeNameList extends TypeNameGeneric {
   /**
    * Checks if this List type is properly parameterized (not a raw type).
    *
-   * <p>A parameterized List has exactly 1 type argument (the element type). A raw List has 0 type
-   * arguments.
+   * <p>A parameterized List has an element type extracted from the List interface. A raw List has
+   * no element type.
    *
-   * @return {@code true} if this List has exactly 1 type argument
+   * <p>This works correctly for both standard Lists like {@code List<String>} and custom
+   * implementations like {@code CustomList<X,Y> extends ArrayList<Y>}.
+   *
+   * @return {@code true} if this List has an element type
    */
   public boolean isParameterized() {
-    return getInnerTypeArguments().size() == 1;
+    return elementType != null;
   }
 
   /**
@@ -136,14 +159,17 @@ public class TypeNameList extends TypeNameGeneric {
    *
    * <p>For a parameterized List like {@code List<String>}, this returns the String type.
    *
-   * @return the element type (the single type argument)
+   * <p>For custom implementations like {@code CustomList<X,Y> extends ArrayList<Y>}, this returns Y
+   * (the actual List element type), not X or both X and Y.
+   *
+   * @return the element type (extracted from the List interface)
    * @throws IllegalStateException if this is a raw List with no type arguments
    */
   public TypeName getElementType() {
-    if (!isParameterized()) {
+    if (elementType == null) {
       throw new IllegalStateException(
           "Cannot get element type from raw List type: " + getClassName());
     }
-    return getInnerTypeArguments().get(0);
+    return elementType;
   }
 }

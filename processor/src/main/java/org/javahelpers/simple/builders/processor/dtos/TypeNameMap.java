@@ -46,6 +46,8 @@ import org.apache.commons.lang3.Strings;
 public class TypeNameMap extends TypeNameGeneric {
 
   private final boolean isConcreteImplementation;
+  private final TypeName keyType;
+  private final TypeName valueType;
 
   /**
    * Checks if the given package and class name represent the {@code java.util.Map} interface.
@@ -64,11 +66,31 @@ public class TypeNameMap extends TypeNameGeneric {
    *
    * @param outerType the outer type to use for package and class name (the concrete Map
    *     implementation)
+   * @param innerTypeArguments the list of generic type arguments (all class type parameters)
+   * @param keyType the actual Map key type (extracted from Map interface)
+   * @param valueType the actual Map value type (extracted from Map interface)
+   */
+  public TypeNameMap(
+      TypeName outerType, List<TypeName> innerTypeArguments, TypeName keyType, TypeName valueType) {
+    super(outerType, innerTypeArguments);
+    this.isConcreteImplementation = !isMapInterface(getPackageName(), getClassName());
+    this.keyType = keyType;
+    this.valueType = valueType;
+  }
+
+  /**
+   * Creates a {@code TypeNameMap} based on another {@code TypeName} as outer type and a list of
+   * inner type arguments.
+   *
+   * @param outerType the outer type to use for package and class name (the concrete Map
+   *     implementation)
    * @param innerTypeArguments the list of generic type arguments (should be 0 or 2 for Map)
    */
   public TypeNameMap(TypeName outerType, List<TypeName> innerTypeArguments) {
     super(outerType, innerTypeArguments);
     this.isConcreteImplementation = !isMapInterface(getPackageName(), getClassName());
+    this.keyType = innerTypeArguments.size() >= 1 ? innerTypeArguments.get(0) : null;
+    this.valueType = innerTypeArguments.size() >= 2 ? innerTypeArguments.get(1) : null;
   }
 
   /**
@@ -81,6 +103,8 @@ public class TypeNameMap extends TypeNameGeneric {
   public TypeNameMap(String packageName, String className, List<TypeName> innerTypeArguments) {
     super(packageName, className, innerTypeArguments);
     this.isConcreteImplementation = !isMapInterface(packageName, className);
+    this.keyType = innerTypeArguments.size() >= 1 ? innerTypeArguments.get(0) : null;
+    this.valueType = innerTypeArguments.size() >= 2 ? innerTypeArguments.get(1) : null;
   }
 
   /**
@@ -94,6 +118,8 @@ public class TypeNameMap extends TypeNameGeneric {
   public TypeNameMap(TypeName outerType, TypeName... innerTypeArguments) {
     super(outerType, innerTypeArguments);
     this.isConcreteImplementation = !isMapInterface(getPackageName(), getClassName());
+    this.keyType = innerTypeArguments.length >= 1 ? innerTypeArguments[0] : null;
+    this.valueType = innerTypeArguments.length >= 2 ? innerTypeArguments[1] : null;
   }
 
   /**
@@ -107,6 +133,8 @@ public class TypeNameMap extends TypeNameGeneric {
   public TypeNameMap(String packageName, String className, TypeName... innerTypeArguments) {
     super(packageName, className, innerTypeArguments);
     this.isConcreteImplementation = !isMapInterface(packageName, className);
+    this.keyType = innerTypeArguments.length >= 1 ? innerTypeArguments[0] : null;
+    this.valueType = innerTypeArguments.length >= 2 ? innerTypeArguments[1] : null;
   }
 
   /**
@@ -128,7 +156,7 @@ public class TypeNameMap extends TypeNameGeneric {
    * @return {@code true} if this Map has exactly 2 type arguments
    */
   public boolean isParameterized() {
-    return getInnerTypeArguments().size() == 2;
+    return keyType != null && valueType != null;
   }
 
   /**
@@ -140,10 +168,10 @@ public class TypeNameMap extends TypeNameGeneric {
    * @throws IllegalStateException if this is a raw Map with no type arguments
    */
   public TypeName getKeyType() {
-    if (!isParameterized()) {
+    if (keyType == null) {
       throw new IllegalStateException("Cannot get key type from raw Map type: " + getClassName());
     }
-    return getInnerTypeArguments().get(0);
+    return keyType;
   }
 
   /**
@@ -155,9 +183,9 @@ public class TypeNameMap extends TypeNameGeneric {
    * @throws IllegalStateException if this is a raw Map with no type arguments
    */
   public TypeName getValueType() {
-    if (!isParameterized()) {
+    if (valueType == null) {
       throw new IllegalStateException("Cannot get value type from raw Map type: " + getClassName());
     }
-    return getInnerTypeArguments().get(1);
+    return valueType;
   }
 }

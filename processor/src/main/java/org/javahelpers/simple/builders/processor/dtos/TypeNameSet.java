@@ -46,6 +46,7 @@ import org.apache.commons.lang3.Strings;
 public class TypeNameSet extends TypeNameGeneric {
 
   private final boolean isConcreteImplementation;
+  private final TypeName elementType;
 
   /**
    * Checks if the given package and class name represent the {@code java.util.Set} interface.
@@ -64,11 +65,27 @@ public class TypeNameSet extends TypeNameGeneric {
    *
    * @param outerType the outer type to use for package and class name (the concrete Set
    *     implementation)
+   * @param innerTypeArguments the list of generic type arguments (all class type parameters)
+   * @param elementType the actual Set element type (extracted from Set interface)
+   */
+  public TypeNameSet(TypeName outerType, List<TypeName> innerTypeArguments, TypeName elementType) {
+    super(outerType, innerTypeArguments);
+    this.isConcreteImplementation = !isSetInterface(getPackageName(), getClassName());
+    this.elementType = elementType;
+  }
+
+  /**
+   * Creates a {@code TypeNameSet} based on another {@code TypeName} as outer type and a list of
+   * inner type arguments.
+   *
+   * @param outerType the outer type to use for package and class name (the concrete Set
+   *     implementation)
    * @param innerTypeArguments the list of generic type arguments (should be 0 or 1 for Set)
    */
   public TypeNameSet(TypeName outerType, List<TypeName> innerTypeArguments) {
     super(outerType, innerTypeArguments);
     this.isConcreteImplementation = !isSetInterface(getPackageName(), getClassName());
+    this.elementType = innerTypeArguments.isEmpty() ? null : innerTypeArguments.get(0);
   }
 
   /**
@@ -81,6 +98,7 @@ public class TypeNameSet extends TypeNameGeneric {
   public TypeNameSet(String packageName, String className, List<TypeName> innerTypeArguments) {
     super(packageName, className, innerTypeArguments);
     this.isConcreteImplementation = !isSetInterface(packageName, className);
+    this.elementType = innerTypeArguments.isEmpty() ? null : innerTypeArguments.get(0);
   }
 
   /**
@@ -94,6 +112,7 @@ public class TypeNameSet extends TypeNameGeneric {
   public TypeNameSet(TypeName outerType, TypeName... innerTypeArguments) {
     super(outerType, innerTypeArguments);
     this.isConcreteImplementation = !isSetInterface(getPackageName(), getClassName());
+    this.elementType = innerTypeArguments.length == 0 ? null : innerTypeArguments[0];
   }
 
   /**
@@ -107,6 +126,7 @@ public class TypeNameSet extends TypeNameGeneric {
   public TypeNameSet(String packageName, String className, TypeName... innerTypeArguments) {
     super(packageName, className, innerTypeArguments);
     this.isConcreteImplementation = !isSetInterface(packageName, className);
+    this.elementType = innerTypeArguments.length == 0 ? null : innerTypeArguments[0];
   }
 
   /**
@@ -128,7 +148,7 @@ public class TypeNameSet extends TypeNameGeneric {
    * @return {@code true} if this Set has exactly 1 type argument
    */
   public boolean isParameterized() {
-    return getInnerTypeArguments().size() == 1;
+    return elementType != null;
   }
 
   /**
@@ -140,10 +160,10 @@ public class TypeNameSet extends TypeNameGeneric {
    * @throws IllegalStateException if this is a raw Set with no type arguments
    */
   public TypeName getElementType() {
-    if (!isParameterized()) {
+    if (elementType == null) {
       throw new IllegalStateException(
           "Cannot get element type from raw Set type: " + getClassName());
     }
-    return getInnerTypeArguments().get(0);
+    return elementType;
   }
 }
