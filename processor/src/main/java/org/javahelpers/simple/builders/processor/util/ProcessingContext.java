@@ -173,21 +173,6 @@ public final class ProcessingContext {
   }
 
   /**
-   * Returns the type of a member when viewed as a member of a given type.
-   *
-   * <p>This is useful for resolving type parameters. For example, if you have {@code
-   * ArrayList<String>} and want to know what type {@code List.get(int)} returns, this method
-   * resolves it to {@code String}.
-   *
-   * @param containing the containing type
-   * @param element the member element
-   * @return the type of the member as viewed from the containing type
-   */
-  public TypeMirror asMemberOf(DeclaredType containing, javax.lang.model.element.Element element) {
-    return typeUtils.asMemberOf(containing, element);
-  }
-
-  /**
    * Returns the direct supertypes of a type.
    *
    * @param typeMirror the type
