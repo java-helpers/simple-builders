@@ -160,4 +160,52 @@ class AddToCollectionTest {
     ProcessorAsserts.assertContaining(
         generatedCode, "public ProjectDtoBuilder add2Tasks(TaskDto element)");
   }
+
+  @Test
+  void add2Method_ignoresSetterSuffix() {
+    JavaFileObject dto =
+        com.google.testing.compile.JavaFileObjects.forSourceLines(
+            "test.PersonDto",
+            "package test;",
+            "import java.util.List;",
+            "@org.javahelpers.simple.builders.core.annotations.SimpleBuilder(",
+            "  options = @org.javahelpers.simple.builders.core.annotations.SimpleBuilder.Options(",
+            "    setterSuffix = \"with\"",
+            "  )",
+            ")",
+            "public class PersonDto {",
+            "  private final String name;",
+            "  private final List<String> nicknames;",
+            "",
+            "  public PersonDto(String name, List<String> nicknames) {",
+            "    this.name = name;",
+            "    this.nicknames = nicknames;",
+            "  }",
+            "",
+            "  public String getName() {",
+            "    return name;",
+            "  }",
+            "",
+            "  public List<String> getNicknames() {",
+            "    return nicknames;",
+            "  }",
+            "}");
+
+    Compilation compilation = compile(dto);
+    String generatedCode = loadGeneratedSource(compilation, "PersonDtoBuilder");
+    assertGenerationSucceeded(compilation, "PersonDtoBuilder", generatedCode);
+
+    // Verify regular setter respects setterSuffix
+    ProcessorAsserts.assertContaining(
+        generatedCode, "public PersonDtoBuilder withName(String name)");
+    ProcessorAsserts.assertContaining(
+        generatedCode, "public PersonDtoBuilder withNicknames(List<String> nicknames)");
+
+    // Verify add2 method does NOT respect setterSuffix - always uses add2FieldName pattern
+    ProcessorAsserts.assertContaining(
+        generatedCode, "public PersonDtoBuilder add2Nicknames(String element)");
+
+    // Verify it's NOT named add2withNicknames
+    ProcessorAsserts.assertNotContaining(generatedCode, "add2withNicknames");
+  }
 }
