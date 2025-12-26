@@ -27,7 +27,6 @@ import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts
 import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils.loadGeneratedSource;
 
 import com.google.testing.compile.Compilation;
-import com.google.testing.compile.JavaFileObjects;
 import javax.tools.JavaFileObject;
 import org.javahelpers.simple.builders.processor.testing.ProcessorAsserts;
 import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
