@@ -337,7 +337,7 @@ public class BuilderDefinitionCreator {
         field.addMethod(method);
       }
       // Add add2 helper for List fields to add a single element
-      if (context.getConfiguration().shouldGenerateBuilderConsumer()) {
+      if (context.getConfiguration().shouldGenerateAddToCollectionHelpers()) {
         MethodDto addMethod =
             createAddToCollectionMethod(
                 field.getFieldName(), listType, listType.getElementType(), builderType, context);
@@ -352,7 +352,7 @@ public class BuilderDefinitionCreator {
         field.addMethod(method);
       }
       // Add add2 helper for Set fields to add a single element
-      if (context.getConfiguration().shouldGenerateBuilderConsumer()) {
+      if (context.getConfiguration().shouldGenerateAddToCollectionHelpers()) {
         MethodDto addMethod =
             createAddToCollectionMethod(
                 field.getFieldName(), setType, setType.getElementType(), builderType, context);

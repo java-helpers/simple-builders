@@ -402,6 +402,40 @@ PersonDto person = PersonDtoBuilder.create()
 
 ---
 
+#### `generateAddToCollectionHelpers`
+
+**Default**: `ENABLED` | **Compiler Option**: `-Asimplebuilder.generateAddToCollectionHelpers=ENABLED|DISABLED`
+
+Generates `add2FieldName()` helper methods for List and Set fields to add single elements.
+
+**When ENABLED**:
+```java
+// Generated methods
+public PersonDtoBuilder add2Nicknames(String element) {
+    List<String> newCollection;
+    if (this.nicknames.isSet()) {
+        newCollection = new ArrayList<>(this.nicknames.value());
+    } else {
+        newCollection = new ArrayList<>();
+    }
+    newCollection.add(element);
+    this.nicknames = changedValue(newCollection);
+    return this;
+}
+
+// Usage
+PersonDto person = PersonDtoBuilder.create()
+    .name("John")
+    .add2Nicknames("Johnny")
+    .add2Nicknames("JD")
+    .add2Tags("developer")
+    .build();
+```
+
+**When DISABLED**: No add2 helper methods are generated; must use collection setters or consumer methods.
+
+---
+
 #### `generateUnboxedOptional`
 
 **Default**: `ENABLED` | **Compiler Option**: `-Asimplebuilder.generateUnboxedOptional=ENABLED|DISABLED`
@@ -1005,6 +1039,7 @@ methodAccess = AccessModifier.PRIVATE
 # Helper Methods
 -Asimplebuilder.generateVarArgsHelpers=ENABLED|DISABLED
 -Asimplebuilder.generateStringFormatHelpers=ENABLED|DISABLED
+-Asimplebuilder.generateAddToCollectionHelpers=ENABLED|DISABLED
 -Asimplebuilder.generateUnboxedOptional=ENABLED|DISABLED
 
 # Collection Helpers

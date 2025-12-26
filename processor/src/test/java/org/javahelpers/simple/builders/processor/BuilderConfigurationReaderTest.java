@@ -413,6 +413,7 @@ class BuilderConfigurationReaderTest {
                 generateFieldConsumer = OptionState.DISABLED,
                 generateBuilderConsumer = OptionState.DISABLED,
                 generateVarArgsHelpers = OptionState.DISABLED,
+                generateAddToCollectionHelpers = OptionState.DISABLED,
                 generateUnboxedOptional = OptionState.DISABLED,
                 usingArrayListBuilder = OptionState.DISABLED,
                 usingHashSetBuilder = OptionState.DISABLED,

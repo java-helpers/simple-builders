@@ -50,6 +50,7 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
  *     always public)
  * @param generateVarArgsHelpers Generate varargs helper methods
  * @param generateStringFormatHelpers Generate string format helper methods
+ * @param generateAddToCollectionHelpers Generate add2FieldName helper methods for collections
  * @param generateUnboxedOptional Generate unboxed optional methods
  * @param usingArrayListBuilder Use ArrayListBuilder for lists
  * @param usingArrayListBuilderWithElementBuilders Use ArrayListBuilderWithElementBuilders
@@ -73,6 +74,7 @@ public record BuilderConfiguration(
     AccessModifier methodAccess,
     OptionState generateVarArgsHelpers,
     OptionState generateStringFormatHelpers,
+    OptionState generateAddToCollectionHelpers,
     OptionState generateUnboxedOptional,
     OptionState usingArrayListBuilder,
     OptionState usingArrayListBuilderWithElementBuilders,
@@ -97,6 +99,7 @@ public record BuilderConfiguration(
           .methodAccess(PUBLIC)
           .generateVarArgsHelpers(ENABLED)
           .generateStringFormatHelpers(ENABLED)
+          .generateAddToCollectionHelpers(ENABLED)
           .generateUnboxedOptional(ENABLED)
           .usingArrayListBuilder(ENABLED)
           .usingArrayListBuilderWithElementBuilders(ENABLED)
@@ -138,6 +141,10 @@ public record BuilderConfiguration(
 
   public boolean shouldGenerateStringFormatHelpers() {
     return generateStringFormatHelpers == ENABLED;
+  }
+
+  public boolean shouldGenerateAddToCollectionHelpers() {
+    return generateAddToCollectionHelpers == ENABLED;
   }
 
   public boolean shouldUseArrayListBuilder() {
@@ -227,6 +234,9 @@ public record BuilderConfiguration(
             mergeOptionState(other.generateVarArgsHelpers, this.generateVarArgsHelpers))
         .generateStringFormatHelpers(
             mergeOptionState(other.generateStringFormatHelpers, this.generateStringFormatHelpers))
+        .generateAddToCollectionHelpers(
+            mergeOptionState(
+                other.generateAddToCollectionHelpers, this.generateAddToCollectionHelpers))
         .generateUnboxedOptional(
             mergeOptionState(other.generateUnboxedOptional, this.generateUnboxedOptional))
         .usingArrayListBuilder(
@@ -367,6 +377,7 @@ public record BuilderConfiguration(
     // === Collection Options ===
     private OptionState generateVarArgsHelpers = OptionState.UNSET;
     private OptionState generateStringFormatHelpers = OptionState.UNSET;
+    private OptionState generateAddToCollectionHelpers = OptionState.UNSET;
     private OptionState generateUnboxedOptional = OptionState.UNSET;
     private OptionState usingArrayListBuilder = OptionState.UNSET;
     private OptionState usingArrayListBuilderWithElementBuilders = OptionState.UNSET;
@@ -454,6 +465,16 @@ public record BuilderConfiguration(
 
     public Builder generateStringFormatHelpers(boolean value) {
       this.generateStringFormatHelpers = value ? ENABLED : DISABLED;
+      return this;
+    }
+
+    public Builder generateAddToCollectionHelpers(OptionState value) {
+      this.generateAddToCollectionHelpers = value;
+      return this;
+    }
+
+    public Builder generateAddToCollectionHelpers(boolean value) {
+      this.generateAddToCollectionHelpers = value ? ENABLED : DISABLED;
       return this;
     }
 
@@ -598,6 +619,7 @@ public record BuilderConfiguration(
           methodAccess,
           generateVarArgsHelpers,
           generateStringFormatHelpers,
+          generateAddToCollectionHelpers,
           generateUnboxedOptional,
           usingArrayListBuilder,
           usingArrayListBuilderWithElementBuilders,
