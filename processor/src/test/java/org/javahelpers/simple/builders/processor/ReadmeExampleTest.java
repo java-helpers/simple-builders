@@ -57,6 +57,7 @@ class ReadmeExampleTest {
                            .name("John Doe")
                            .age(30)
                            .emailAddresses("john@example.com", "j.doe@example.com")
+                           .add2EmailAddresses("jane@example.com")
                            .build();
               }
             }
@@ -74,6 +75,7 @@ class ReadmeExampleTest {
         contains("public PersonBuilder name(String name)"),
         contains("public PersonBuilder age(int age)"),
         contains("public PersonBuilder emailAddresses(String... emailAddresses)"),
+        contains("public PersonBuilder add2EmailAddresses(String element)"),
         contains("public Person build()"));
 
     // Test 2: Usage compilation (with usage)
