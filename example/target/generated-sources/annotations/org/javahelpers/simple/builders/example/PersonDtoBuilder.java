@@ -5,6 +5,7 @@ import static org.javahelpers.simple.builders.core.util.TrackedValue.initialValu
 import static org.javahelpers.simple.builders.core.util.TrackedValue.unsetValue;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
@@ -66,6 +67,24 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
    * Empty constructor of builder for {@code org.javahelpers.simple.builders.example.PersonDto}.
    */
   public PersonDtoBuilder() {
+  }
+
+  /**
+   * Adds a single element to <code>nickNames</code>.
+   *
+   * @param element the element to add
+   * @return current instance of builder
+   */
+  public PersonDtoBuilder add2NickNames(String element) {
+    List<String> newCollection;
+    if (this.nickNames.isSet()) {
+      newCollection = new ArrayList<>(this.nickNames.value());
+    } else {
+      newCollection = new ArrayList<>();
+    }
+    newCollection.add(element);
+    this.nickNames = changedValue(newCollection);
+    return this;
   }
 
   /**
