@@ -1,6 +1,7 @@
 package org.javahelpers.simple.builders.processor.testing;
 
 import static com.google.testing.compile.CompilationSubject.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.google.testing.compile.Compilation;
 import java.util.ArrayList;
@@ -121,5 +122,15 @@ public final class ProcessorAsserts {
     for (String noteMessage : noteMessages) {
       assertThat(compilation).hadNoteContaining(noteMessage);
     }
+  }
+
+  /**
+   * Asserts that the expected and actual strings are equal after normalizing whitespace.
+   *
+   * @param expected the expected string
+   * @param actual the actual string
+   */
+  public static void assertNormalizedEquals(String expected, String actual, String message) {
+    assertEquals(normalizeWhitespace(expected), normalizeWhitespace(actual), message);
   }
 }
