@@ -336,6 +336,13 @@ public class BuilderDefinitionCreator {
                 field, new TypeNameArray(listType.getElementType()), builderType, context);
         field.addMethod(method);
       }
+      // Add add2 helper for List fields to add a single element
+      if (context.getConfiguration().shouldGenerateBuilderConsumer()) {
+        MethodDto addMethod =
+            createAddToCollectionMethod(
+                field.getFieldName(), listType, listType.getElementType(), builderType, context);
+        field.addMethod(addMethod);
+      }
     } else if (field.getFieldType() instanceof TypeNameSet setType && setType.isParameterized()) {
       // Only add varargs helper if enabled in configuration
       if (context.getConfiguration().shouldGenerateVarArgsHelpers()) {
@@ -343,6 +350,13 @@ public class BuilderDefinitionCreator {
             createFieldSetterByVarArgs(
                 field, new TypeNameArray(setType.getElementType()), builderType, context);
         field.addMethod(method);
+      }
+      // Add add2 helper for Set fields to add a single element
+      if (context.getConfiguration().shouldGenerateBuilderConsumer()) {
+        MethodDto addMethod =
+            createAddToCollectionMethod(
+                field.getFieldName(), setType, setType.getElementType(), builderType, context);
+        field.addMethod(addMethod);
       }
     } else if (field.getFieldType() instanceof TypeNameMap mapType && mapType.isParameterized()) {
       // Only add varargs helper if enabled in configuration
@@ -1344,6 +1358,84 @@ public class BuilderDefinitionCreator {
         @return current instance of builder
         """
             .formatted(fieldName, parameter.getParameterName(), fieldName));
+    return methodDto;
+  }
+
+  /**
+   * Creates an add2FieldName method that adds a single element to a List or Set field. This method
+   * directly manipulates the collection, creating a new one with the added element. It handles both
+   * initialized and uninitialized collections properly.
+   *
+   * @param fieldName the name of the collection field
+   * @param fieldType the type of the collection field (TypeNameList or TypeNameSet)
+   * @param elementType the type of elements in the collection
+   * @param builderType the builder type to return
+   * @param context processing context
+   * @return the method DTO for the add2 helper
+   */
+  private static MethodDto createAddToCollectionMethod(
+      String fieldName,
+      TypeName fieldType,
+      TypeName elementType,
+      TypeName builderType,
+      ProcessingContext context) {
+    MethodDto methodDto = new MethodDto();
+    String methodName = "add2" + StringUtils.capitalize(fieldName);
+    methodDto.setMethodName(methodName);
+    methodDto.setReturnType(builderType);
+
+    MethodParameterDto parameter = new MethodParameterDto();
+    parameter.setParameterName("element");
+    parameter.setParameterTypeName(elementType);
+    methodDto.addParameter(parameter);
+
+    setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
+
+    // Determine the collection implementation to use
+    String collectionImpl;
+    TypeName collectionVarType;
+    if (fieldType instanceof TypeNameList listType) {
+      collectionImpl = listType.isConcreteImplementation() ? listType.getClassName() : "ArrayList";
+      // Use the exact field type for the variable to ensure type compatibility with TrackedValue
+      collectionVarType = fieldType;
+    } else if (fieldType instanceof TypeNameSet setType) {
+      collectionImpl = setType.isConcreteImplementation() ? setType.getClassName() : "HashSet";
+      // Use the exact field type for the variable to ensure type compatibility with TrackedValue
+      collectionVarType = fieldType;
+    } else {
+      throw new IllegalArgumentException("Unsupported field type: " + fieldType);
+    }
+
+    // Generate code that handles both set and unset cases
+    // Use the exact field type for the variable to avoid type incompatibility with TrackedValue
+    methodDto.setCode(
+        """
+        $collectionVarType:T newCollection;
+        if (this.$fieldName:N.isSet()) {
+          newCollection = new $collectionImpl:T<>(this.$fieldName:N.value());
+        } else {
+          newCollection = new $collectionImpl:T<>();
+        }
+        newCollection.add(element);
+        this.$fieldName:N = $builderFieldWrapper:T.changedValue(newCollection);
+        return this;
+        """);
+    methodDto.addArgument("collectionVarType", collectionVarType);
+    methodDto.addArgument("collectionImpl", new TypeName("java.util", collectionImpl));
+    methodDto.addArgument(ARG_FIELD_NAME, fieldName);
+    methodDto.addArgument("elementType", elementType);
+    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
+    methodDto.setPriority(MethodDto.PRIORITY_MEDIUM);
+
+    methodDto.setJavadoc(
+        """
+        Adds a single element to <code>%s</code>.
+
+        @param element the element to add
+        @return current instance of builder
+        """
+            .formatted(fieldName));
+
     return methodDto;
   }
 
