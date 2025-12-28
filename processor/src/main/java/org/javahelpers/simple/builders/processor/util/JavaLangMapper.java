@@ -257,7 +257,8 @@ public final class JavaLangMapper {
 
     TypeElement typeElement = (TypeElement) context.asElement(typeMirror);
     boolean isInterface = typeElement.equals(mapElement);
-    boolean hasConstructor = !isInterface && hasMapConstructor(typeElement, context);
+    boolean hasConstructor =
+        !isInterface && hasConstructorWithParameterOfType(typeElement, "java.util.Map", context);
 
     if (!isInterface && !hasConstructor) {
       return createFallbackTypeName(rawType, argTypes);
@@ -281,7 +282,9 @@ public final class JavaLangMapper {
   private static boolean shouldWrapAsCollectionType(
       TypeElement typeElement, TypeElement interfaceElement, ProcessingContext context) {
     boolean isInterface = typeElement.equals(interfaceElement);
-    boolean hasConstructor = !isInterface && hasCollectionConstructor(typeElement, context);
+    boolean hasConstructor =
+        !isInterface
+            && hasConstructorWithParameterOfType(typeElement, "java.util.Collection", context);
     return isInterface || hasConstructor;
   }
 
@@ -297,23 +300,26 @@ public final class JavaLangMapper {
   }
 
   /**
-   * Checks if a type has a constructor that accepts a Collection parameter.
+   * Checks if a type has a constructor that accepts a parameter of the specified type.
    *
-   * <p>This allows us to detect if we can generate helper methods for List/Set types by checking if
-   * it has a constructor like {@code ArrayList(Collection<? extends E>)}.
+   * <p>This allows us to detect if we can generate helper methods for collection/map types by
+   * checking if it has a constructor like {@code ArrayList(Collection<? extends E>)} or {@code
+   * HashMap(Map<? extends K, ? extends V>)}.
    *
    * @param typeElement the type to check
+   * @param parameterTypeName the fully qualified name of the parameter type (e.g.,
+   *     "java.util.Collection")
    * @param context the processing context
-   * @return true if the type has a constructor accepting Collection
+   * @return true if the type has a constructor accepting the specified parameter type
    */
-  private static boolean hasCollectionConstructor(
-      TypeElement typeElement, ProcessingContext context) {
-    TypeElement collectionElement = context.getTypeElement("java.util.Collection");
-    if (collectionElement == null) {
+  private static boolean hasConstructorWithParameterOfType(
+      TypeElement typeElement, String parameterTypeName, ProcessingContext context) {
+    TypeElement parameterElement = context.getTypeElement(parameterTypeName);
+    if (parameterElement == null) {
       return false;
     }
 
-    TypeMirror collectionType = context.erasure(collectionElement.asType());
+    TypeMirror parameterType = context.erasure(parameterElement.asType());
 
     return typeElement.getEnclosedElements().stream()
         .filter(element -> element.getKind() == javax.lang.model.element.ElementKind.CONSTRUCTOR)
@@ -323,45 +329,11 @@ public final class JavaLangMapper {
               if (constructor.getParameters().size() != 1) {
                 return false;
               }
-              TypeMirror paramType = constructor.getParameters().get(0).asType();
-              TypeMirror erasedParamType = context.erasure(paramType);
-              // Parameter should be Collection or a supertype (like Iterable)
-              return context.isSameType(erasedParamType, collectionType)
-                  || context.isAssignable(erasedParamType, collectionType);
-            });
-  }
-
-  /**
-   * Checks if a type has a constructor that accepts a Map parameter.
-   *
-   * <p>This allows us to detect if we can generate helper methods for Map types by checking if it
-   * has a constructor like {@code HashMap(Map<? extends K, ? extends V>)}.
-   *
-   * @param typeElement the type to check
-   * @param context the processing context
-   * @return true if the type has a constructor accepting Map
-   */
-  private static boolean hasMapConstructor(TypeElement typeElement, ProcessingContext context) {
-    TypeElement mapElement = context.getTypeElement("java.util.Map");
-    if (mapElement == null) {
-      return false;
-    }
-
-    TypeMirror mapType = context.erasure(mapElement.asType());
-
-    return typeElement.getEnclosedElements().stream()
-        .filter(element -> element.getKind() == javax.lang.model.element.ElementKind.CONSTRUCTOR)
-        .map(element -> (javax.lang.model.element.ExecutableElement) element)
-        .anyMatch(
-            constructor -> {
-              if (constructor.getParameters().size() != 1) {
-                return false;
-              }
-              TypeMirror paramType = constructor.getParameters().get(0).asType();
-              TypeMirror erasedParamType = context.erasure(paramType);
-              // Parameter should be Map
-              return context.isSameType(erasedParamType, mapType)
-                  || context.isAssignable(erasedParamType, mapType);
+              TypeMirror constructorParamType = constructor.getParameters().get(0).asType();
+              TypeMirror erasedConstructorParamType = context.erasure(constructorParamType);
+              // Parameter should match the specified type or be assignable to it
+              return context.isSameType(erasedConstructorParamType, parameterType)
+                  || context.isAssignable(erasedConstructorParamType, parameterType);
             });
   }
 
