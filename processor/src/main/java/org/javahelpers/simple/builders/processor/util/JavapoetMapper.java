@@ -77,11 +77,9 @@ public final class JavapoetMapper {
         instanceof org.javahelpers.simple.builders.processor.dtos.TypeNameVariable typeVariable) {
       return TypeVariableName.get(typeVariable.getClassName());
     }
-    ClassName classNameParameter =
-        ClassName.get(parameterType.getPackageName(), parameterType.getClassName());
-    if (parameterType instanceof TypeNameArray parameterTypeArray) {
-      return ArrayTypeName.of(map2ParameterType(parameterTypeArray.getTypeOfArray()));
-    } else if (parameterType instanceof TypeNamePrimitive parameterTypePrim) {
+    // Handle primitives BEFORE calling ClassName.get() to avoid IllegalArgumentException in
+    // JavaPoet 0.9.0+
+    if (parameterType instanceof TypeNamePrimitive parameterTypePrim) {
       return switch (parameterTypePrim.getType()) {
         case BOOLEAN -> TypeName.BOOLEAN;
         case BYTE -> TypeName.BYTE;
@@ -93,7 +91,14 @@ public final class JavapoetMapper {
         case SHORT -> TypeName.SHORT;
         default -> null;
       };
-    } else if (parameterType instanceof TypeNameGeneric param) {
+    }
+    if (parameterType instanceof TypeNameArray parameterTypeArray) {
+      return ArrayTypeName.of(map2ParameterType(parameterTypeArray.getTypeOfArray()));
+    }
+    // Now safe to call ClassName.get() for non-primitive types
+    ClassName classNameParameter =
+        ClassName.get(parameterType.getPackageName(), parameterType.getClassName());
+    if (parameterType instanceof TypeNameGeneric param) {
       // Handle raw types (e.g., List without <T>) - return just the class name
       if (param.getInnerTypeArguments().isEmpty()) {
         return classNameParameter;
