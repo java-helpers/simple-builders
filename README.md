@@ -126,6 +126,7 @@ Person person = PersonBuilder.create()
     .name("John Doe")
     .age(30)
     .emailAddresses("john@example.com", "j.doe@example.com")
+    .add2EmailAddresses("jane@example.com")
     .build();
 ```
 

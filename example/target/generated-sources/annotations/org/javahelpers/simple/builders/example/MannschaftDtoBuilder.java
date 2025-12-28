@@ -4,6 +4,7 @@ import static org.javahelpers.simple.builders.core.util.TrackedValue.changedValu
 import static org.javahelpers.simple.builders.core.util.TrackedValue.initialValue;
 import static org.javahelpers.simple.builders.core.util.TrackedValue.unsetValue;
 
+import java.util.HashSet;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
@@ -48,6 +49,24 @@ public class MannschaftDtoBuilder implements IBuilderBase<MannschaftDto> {
    * Empty constructor of builder for {@code org.javahelpers.simple.builders.example.MannschaftDto}.
    */
   public MannschaftDtoBuilder() {
+  }
+
+  /**
+   * Adds a single element to <code>sponsoren</code>.
+   *
+   * @param element the element to add
+   * @return current instance of builder
+   */
+  public MannschaftDtoBuilder add2Sponsoren(SponsorDto element) {
+    Set<SponsorDto> newCollection;
+    if (this.sponsoren.isSet()) {
+      newCollection = new HashSet<>(this.sponsoren.value());
+    } else {
+      newCollection = new HashSet<>();
+    }
+    newCollection.add(element);
+    this.sponsoren = changedValue(newCollection);
+    return this;
   }
 
   /**

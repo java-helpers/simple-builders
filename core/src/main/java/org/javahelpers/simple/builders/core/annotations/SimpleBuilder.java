@@ -292,6 +292,26 @@ public @interface SimpleBuilder {
     OptionState generateStringFormatHelpers() default OptionState.UNSET;
 
     /**
+     * Generate add2FieldName helper methods for List and Set fields. <br>
+     * Allows adding single elements to collections in a fluent way.
+     *
+     * <p>Example:
+     *
+     * <pre>{@code
+     * PersonDto person = PersonDtoBuilder.create()
+     *     .name("John")
+     *     .add2Nicknames("Johnny")
+     *     .add2Nicknames("JD")
+     *     .add2Tags("developer")
+     *     .build();
+     * }</pre>
+     *
+     * Default: ENABLED <br>
+     * Compiler option: -Asimplebuilder.generateAddToCollectionHelpers
+     */
+    OptionState generateAddToCollectionHelpers() default OptionState.UNSET;
+
+    /**
      * Generate unboxed optional methods that accept the inner type T directly instead of
      * Optional&lt;T&gt;. <br>
      * For Optional fields, this generates a setter that accepts T and wraps it with
