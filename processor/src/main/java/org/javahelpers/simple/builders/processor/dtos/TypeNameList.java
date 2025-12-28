@@ -75,61 +75,6 @@ public class TypeNameList extends TypeNameGeneric {
   }
 
   /**
-   * Creates a {@code TypeNameList} based on another {@code TypeName} as outer type and a list of
-   * inner type arguments.
-   *
-   * @param outerType the outer type to use for package and class name (the concrete List
-   *     implementation)
-   * @param innerTypeArguments the list of generic type arguments (should be 0 or 1 for List)
-   */
-  public TypeNameList(TypeName outerType, List<TypeName> innerTypeArguments) {
-    super(outerType, innerTypeArguments);
-    this.isConcreteImplementation = !isListInterface(getPackageName(), getClassName());
-    this.elementType = innerTypeArguments.isEmpty() ? null : innerTypeArguments.get(0);
-  }
-
-  /**
-   * Creates a {@code TypeNameList} for the given package/class and a list of inner type arguments.
-   *
-   * @param packageName the package name
-   * @param className the class name (the concrete List implementation)
-   * @param innerTypeArguments the list of generic type arguments (should be 0 or 1 for List)
-   */
-  public TypeNameList(String packageName, String className, List<TypeName> innerTypeArguments) {
-    super(packageName, className, innerTypeArguments);
-    this.isConcreteImplementation = !isListInterface(packageName, className);
-    this.elementType = innerTypeArguments.isEmpty() ? null : innerTypeArguments.get(0);
-  }
-
-  /**
-   * Varargs convenience constructor with an outer {@code TypeName} and any number of inner type
-   * arguments.
-   *
-   * @param outerType the outer type to use for package and class name (the concrete List
-   *     implementation)
-   * @param innerTypeArguments variable number of generic type arguments (should be 0 or 1 for List)
-   */
-  public TypeNameList(TypeName outerType, TypeName... innerTypeArguments) {
-    super(outerType, innerTypeArguments);
-    this.isConcreteImplementation = !isListInterface(getPackageName(), getClassName());
-    this.elementType = innerTypeArguments.length == 0 ? null : innerTypeArguments[0];
-  }
-
-  /**
-   * Varargs convenience constructor with package/class names and any number of inner type
-   * arguments.
-   *
-   * @param packageName the package name
-   * @param className the class name (the concrete List implementation)
-   * @param innerTypeArguments variable number of generic type arguments (should be 0 or 1 for List)
-   */
-  public TypeNameList(String packageName, String className, TypeName... innerTypeArguments) {
-    super(packageName, className, innerTypeArguments);
-    this.isConcreteImplementation = !isListInterface(packageName, className);
-    this.elementType = innerTypeArguments.length == 0 ? null : innerTypeArguments[0];
-  }
-
-  /**
    * Checks if this is a concrete List implementation (not the interface itself).
    *
    * @return {@code true} for concrete implementations like ArrayList, LinkedList, etc., {@code

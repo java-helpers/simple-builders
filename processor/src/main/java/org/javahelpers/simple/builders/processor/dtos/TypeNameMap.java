@@ -79,65 +79,6 @@ public class TypeNameMap extends TypeNameGeneric {
   }
 
   /**
-   * Creates a {@code TypeNameMap} based on another {@code TypeName} as outer type and a list of
-   * inner type arguments.
-   *
-   * @param outerType the outer type to use for package and class name (the concrete Map
-   *     implementation)
-   * @param innerTypeArguments the list of generic type arguments (should be 0 or 2 for Map)
-   */
-  public TypeNameMap(TypeName outerType, List<TypeName> innerTypeArguments) {
-    super(outerType, innerTypeArguments);
-    this.isConcreteImplementation = !isMapInterface(getPackageName(), getClassName());
-    this.keyType = !innerTypeArguments.isEmpty() ? innerTypeArguments.get(0) : null;
-    this.valueType = innerTypeArguments.size() >= 2 ? innerTypeArguments.get(1) : null;
-  }
-
-  /**
-   * Creates a {@code TypeNameMap} for the given package/class and a list of inner type arguments.
-   *
-   * @param packageName the package name
-   * @param className the class name (the concrete Map implementation)
-   * @param innerTypeArguments the list of generic type arguments (should be 0 or 2 for Map)
-   */
-  public TypeNameMap(String packageName, String className, List<TypeName> innerTypeArguments) {
-    super(packageName, className, innerTypeArguments);
-    this.isConcreteImplementation = !isMapInterface(packageName, className);
-    this.keyType = !innerTypeArguments.isEmpty() ? innerTypeArguments.get(0) : null;
-    this.valueType = innerTypeArguments.size() >= 2 ? innerTypeArguments.get(1) : null;
-  }
-
-  /**
-   * Varargs convenience constructor with an outer {@code TypeName} and any number of inner type
-   * arguments.
-   *
-   * @param outerType the outer type to use for package and class name (the concrete Map
-   *     implementation)
-   * @param innerTypeArguments variable number of generic type arguments (should be 0 or 2 for Map)
-   */
-  public TypeNameMap(TypeName outerType, TypeName... innerTypeArguments) {
-    super(outerType, innerTypeArguments);
-    this.isConcreteImplementation = !isMapInterface(getPackageName(), getClassName());
-    this.keyType = innerTypeArguments.length >= 1 ? innerTypeArguments[0] : null;
-    this.valueType = innerTypeArguments.length >= 2 ? innerTypeArguments[1] : null;
-  }
-
-  /**
-   * Varargs convenience constructor with package/class names and any number of inner type
-   * arguments.
-   *
-   * @param packageName the package name
-   * @param className the class name (the concrete Map implementation)
-   * @param innerTypeArguments variable number of generic type arguments (should be 0 or 2 for Map)
-   */
-  public TypeNameMap(String packageName, String className, TypeName... innerTypeArguments) {
-    super(packageName, className, innerTypeArguments);
-    this.isConcreteImplementation = !isMapInterface(packageName, className);
-    this.keyType = innerTypeArguments.length >= 1 ? innerTypeArguments[0] : null;
-    this.valueType = innerTypeArguments.length >= 2 ? innerTypeArguments[1] : null;
-  }
-
-  /**
    * Checks if this is a concrete Map implementation (not the interface itself).
    *
    * @return {@code true} for concrete implementations like HashMap, TreeMap, etc., {@code false} if

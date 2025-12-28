@@ -27,7 +27,6 @@ import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts
 import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils.loadGeneratedSource;
 
 import com.google.testing.compile.Compilation;
-import com.google.testing.compile.JavaFileObjects;
 import javax.tools.JavaFileObject;
 import org.javahelpers.simple.builders.processor.testing.ProcessorAsserts;
 import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
@@ -51,15 +50,16 @@ class CustomCollectionTypeTest {
     // Custom List with 2 type parameters - should be treated as generic type, not TypeNameList
     // This means NO varargs helper methods should be generated
     JavaFileObject customList =
-        JavaFileObjects.forSourceLines(
-            "test.CustomList",
-            "package test;",
-            "import java.util.ArrayList;",
-            "public class CustomList<X, Y> extends ArrayList<Y> {",
-            "  private X metadata;",
-            "  public CustomList(X metadata) { this.metadata = metadata; }",
-            "  public X getMetadata() { return metadata; }",
-            "}");
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+            import java.util.ArrayList;
+            public class CustomList<X, Y> extends ArrayList<Y> {
+              private X metadata;
+              public CustomList(X metadata) { this.metadata = metadata; }
+              public X getMetadata() { return metadata; }
+            }
+            """);
 
     JavaFileObject dto =
         ProcessorTestUtils.simpleBuilderClass(
@@ -122,15 +122,16 @@ class CustomCollectionTypeTest {
   void customSetWithMultipleTypeParameters_shouldNotGenerateVarargsHelper() {
     // Custom Set with 2 type parameters - should be treated as generic type, not TypeNameSet
     JavaFileObject customSet =
-        JavaFileObjects.forSourceLines(
-            "test.CustomSet",
-            "package test;",
-            "import java.util.HashSet;",
-            "public class CustomSet<X, Y> extends HashSet<Y> {",
-            "  private X metadata;",
-            "  public CustomSet(X metadata) { this.metadata = metadata; }",
-            "  public X getMetadata() { return metadata; }",
-            "}");
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+            import java.util.HashSet;
+            public class CustomSet<X, Y> extends HashSet<Y> {
+              private X metadata;
+              public CustomSet(X metadata) { this.metadata = metadata; }
+              public X getMetadata() { return metadata; }
+            }
+            """);
 
     JavaFileObject dto =
         ProcessorTestUtils.simpleBuilderClass(
@@ -165,15 +166,16 @@ class CustomCollectionTypeTest {
   void customMapWithMultipleTypeParameters_shouldNotGenerateVarargsHelper() {
     // Custom Map with 3 type parameters - should be treated as generic type, not TypeNameMap
     JavaFileObject customMap =
-        JavaFileObjects.forSourceLines(
-            "test.CustomMap",
-            "package test;",
-            "import java.util.HashMap;",
-            "public class CustomMap<X, Y, Z> extends HashMap<Y, Z> {",
-            "  private X metadata;",
-            "  public CustomMap(X metadata) { this.metadata = metadata; }",
-            "  public X getMetadata() { return metadata; }",
-            "}");
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+            import java.util.HashMap;
+            public class CustomMap<X, Y, Z> extends HashMap<Y, Z> {
+              private X metadata;
+              public CustomMap(X metadata) { this.metadata = metadata; }
+              public X getMetadata() { return metadata; }
+            }
+            """);
 
     JavaFileObject dto =
         ProcessorTestUtils.simpleBuilderClass(
@@ -209,15 +211,16 @@ class CustomCollectionTypeTest {
     // CustomMap<T> implements Map<T, T> with a Map constructor
     // This should be detected as a valid Map type and generate helpers
     JavaFileObject customMap =
-        JavaFileObjects.forSourceLines(
-            "test.SymmetricMap",
-            "package test;",
-            "import java.util.HashMap;",
-            "import java.util.Map;",
-            "public class SymmetricMap<T> extends HashMap<T, T> {",
-            "  public SymmetricMap() { }",
-            "  public SymmetricMap(Map<? extends T, ? extends T> m) { super(m); }",
-            "}");
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+            import java.util.HashMap;
+            import java.util.Map;
+            public class SymmetricMap<T> extends HashMap<T, T> {
+              public SymmetricMap() { }
+              public SymmetricMap(Map<? extends T, ? extends T> m) { super(m); }
+            }
+            """);
 
     JavaFileObject dto =
         ProcessorTestUtils.simpleBuilderClass(
@@ -345,5 +348,46 @@ class CustomCollectionTypeTest {
 
     // Should still have the basic setter
     ProcessorAsserts.assertContaining(generatedCode, "public RawMapDtoBuilder config(Map config)");
+  }
+
+  @Test
+  void unmodifiableListInConstructor_shouldHandleCorrectly() {
+    // DTO that creates unmodifiable list in constructor - builder should handle this safely
+    // The DTO internally uses List.copyOf() which creates an unmodifiable list
+    JavaFileObject dto =
+        ProcessorTestUtils.simpleBuilderClass(
+            "test",
+            "UnmodifiableListDto",
+            """
+                private final java.util.List<String> items;
+
+                public UnmodifiableListDto(java.util.List<String> items) {
+                  this.items = java.util.List.copyOf(items);
+                }
+
+                public java.util.List<String> getItems() {
+                  return items;
+                }
+            """);
+
+    Compilation compilation = compile(dto);
+    String generatedCode = loadGeneratedSource(compilation, "UnmodifiableListDtoBuilder");
+    assertGenerationSucceeded(compilation, "UnmodifiableListDtoBuilder", generatedCode);
+
+    // SAFE: Builder constructor only stores reference to the unmodifiable list
+    // It does NOT attempt to modify it - just wraps it in TrackedValue
+    ProcessorAsserts.assertContaining(
+        generatedCode, "this.items = initialValue(instance.getItems())");
+
+    // SAFE: Varargs helper creates a NEW list using List.of()
+    // It does NOT try to modify any existing unmodifiable list
+    ProcessorAsserts.assertContaining(
+        generatedCode, "public UnmodifiableListDtoBuilder items(String... items)");
+    ProcessorAsserts.assertContaining(generatedCode, "this.items = changedValue(List.of(items))");
+
+    // SAFE: Direct setter just stores the reference
+    ProcessorAsserts.assertContaining(
+        generatedCode, "public UnmodifiableListDtoBuilder items(List<String> items)");
+    ProcessorAsserts.assertContaining(generatedCode, "this.items = changedValue(items)");
   }
 }
