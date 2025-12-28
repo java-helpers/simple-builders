@@ -27,7 +27,6 @@ import static com.google.testing.compile.CompilationSubject.assertThat;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils.loadGeneratedSource;
 
 import com.google.testing.compile.Compilation;
-import com.google.testing.compile.JavaFileObjects;
 import javax.tools.JavaFileObject;
 import org.javahelpers.simple.builders.processor.testing.ProcessorAsserts;
 import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
@@ -67,74 +66,81 @@ class ComprehensiveFeatureIntegrationTest {
   void allFeatures_generatedCorrectly() {
     // Create nested DTO for testing builder consumers
     JavaFileObject addressDto =
-        JavaFileObjects.forSourceLines(
-            "test.AddressDto",
-            "package test;",
-            "@org.javahelpers.simple.builders.core.annotations.SimpleBuilder",
-            "public class AddressDto {",
-            "  private final String street;",
-            "  private final String city;",
-            "  public AddressDto(String street, String city) {",
-            "    this.street = street;",
-            "    this.city = city;",
-            "  }",
-            "  public String getStreet() { return street; }",
-            "  public String getCity() { return city; }",
-            "}");
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+            @org.javahelpers.simple.builders.core.annotations.SimpleBuilder
+            public class AddressDto {
+              private final String street;
+              private final String city;
+              public AddressDto(String street, String city) {
+                this.street = street;
+                this.city = city;
+              }
+              public String getStreet() { return street; }
+              public String getCity() { return city; }
+            }
+            """);
 
     // Create comprehensive DTO with all features
     JavaFileObject personDto =
-        JavaFileObjects.forSourceLines(
-            "test.PersonDto",
-            "package test;",
-            "import java.util.LinkedList;",
-            "import java.util.List;",
-            "import java.util.Set;",
-            "import java.util.Map;",
-            "import java.util.Optional;",
-            "@org.javahelpers.simple.builders.core.annotations.SimpleBuilder",
-            "public class PersonDto {",
-            "  private final String name;",
-            "  private final int age;",
-            "  private final Optional<String> email;",
-            "  private final List<String> nicknames;",
-            "  private final Set<String> tags;",
-            "  private final Map<String, String> metadata;",
-            "  private final AddressDto address;",
-            "  private final List<AddressDto> previousAddresses;",
-            "  private final LinkedList<String> phoneNumbers;",
-            "  ",
-            "  public PersonDto(String name, int age, Optional<String> email,",
-            "                   List<String> nicknames, Set<String> tags,",
-            "                   Map<String, String> metadata, AddressDto address,",
-            "                   List<AddressDto> previousAddresses,",
-            "                   LinkedList<String> phoneNumbers) {",
-            "    this.name = name;",
-            "    this.age = age;",
-            "    this.email = email;",
-            "    this.nicknames = nicknames;",
-            "    this.tags = tags;",
-            "    this.metadata = metadata;",
-            "    this.address = address;",
-            "    this.previousAddresses = previousAddresses;",
-            "    this.phoneNumbers = phoneNumbers;",
-            "  }",
-            "  ",
-            "  public String getName() { return name; }",
-            "  public int getAge() { return age; }",
-            "  public Optional<String> getEmail() { return email; }",
-            "  public List<String> getNicknames() { return nicknames; }",
-            "  public Set<String> getTags() { return tags; }",
-            "  public Map<String, String> getMetadata() { return metadata; }",
-            "  public AddressDto getAddress() { return address; }",
-            "  public List<AddressDto> getPreviousAddresses() { return previousAddresses; }",
-            "  public LinkedList<String> getPhoneNumbers() { return phoneNumbers; }",
-            "}");
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+            import java.util.LinkedList;
+            import java.util.List;
+            import java.util.Set;
+            import java.util.Map;
+            import java.util.Optional;
+            @org.javahelpers.simple.builders.core.annotations.SimpleBuilder
+            public class PersonDto {
+              private final String name;
+              private final int age;
+              private final Optional<String> email;
+              private final List<String> nicknames;
+              private final Set<String> tags;
+              private final Map<String, String> metadata;
+              private final AddressDto address;
+              private final List<AddressDto> previousAddresses;
+              private final LinkedList<String> phoneNumbers;
+
+              public PersonDto(String name, int age, Optional<String> email,
+                               List<String> nicknames, Set<String> tags,
+                               Map<String, String> metadata, AddressDto address,
+                               List<AddressDto> previousAddresses,
+                               LinkedList<String> phoneNumbers) {
+                this.name = name;
+                this.age = age;
+                this.email = email;
+                this.nicknames = nicknames;
+                this.tags = tags;
+                this.metadata = metadata;
+                this.address = address;
+                this.previousAddresses = previousAddresses;
+                this.phoneNumbers = phoneNumbers;
+              }
+
+              public String getName() { return name; }
+              public int getAge() { return age; }
+              public Optional<String> getEmail() { return email; }
+              public List<String> getNicknames() { return nicknames; }
+              public Set<String> getTags() { return tags; }
+              public Map<String, String> getMetadata() { return metadata; }
+              public AddressDto getAddress() { return address; }
+              public List<AddressDto> getPreviousAddresses() { return previousAddresses; }
+              public LinkedList<String> getPhoneNumbers() { return phoneNumbers; }
+            }
+            """);
 
     Compilation compilation = compile(addressDto, personDto);
     assertThat(compilation).succeeded();
 
     String generatedCode = loadGeneratedSource(compilation, "PersonDtoBuilder");
+
+    // Debug output: Print generated code for comparison when test fails
+    System.out.println("=== Generated PersonDtoBuilder ===");
+    System.out.println(generatedCode);
+    System.out.println("=== End of Generated Code ===");
 
     // This test uses full code comparison to ensure ALL features are generated.
     // When a new feature is added, this expected code MUST be updated or the test will fail.
