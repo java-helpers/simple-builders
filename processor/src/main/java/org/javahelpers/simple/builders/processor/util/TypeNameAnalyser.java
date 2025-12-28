@@ -35,17 +35,6 @@ public class TypeNameAnalyser {
   private TypeNameAnalyser() {}
 
   /**
-   * Helper to check if the type is a {@code java.util.Map}.
-   *
-   * @param typeName Type to be validated
-   * @return {@code true}, if it is a {@code java.util.Map}
-   */
-  public static boolean isMap(TypeName typeName) {
-    return Strings.CI.equals(typeName.getPackageName(), JAVA_UTIL_PACKAGE)
-        && Strings.CI.equals(typeName.getClassName(), "Map");
-  }
-
-  /**
    * Helper to check if the type is a java-base class. Check is done by comparing the package name.
    *
    * @param typeName Type to be validated
@@ -54,28 +43,6 @@ public class TypeNameAnalyser {
   public static boolean isJavaClass(TypeName typeName) {
     return Strings.CI.equalsAny(
         typeName.getPackageName(), "java.lang", "java.time", JAVA_UTIL_PACKAGE);
-  }
-
-  /**
-   * Helper to check if the type is a {@code java.util.Set}.
-   *
-   * @param typeName Type to be validated
-   * @return {@code true}, if it is a {@code java.util.Set}
-   */
-  public static boolean isSet(TypeName typeName) {
-    return Strings.CI.equals(typeName.getPackageName(), JAVA_UTIL_PACKAGE)
-        && Strings.CI.equals(typeName.getClassName(), "Set");
-  }
-
-  /**
-   * Helper to check if the type is a {@code java.util.List}.
-   *
-   * @param typeName Type to be validated
-   * @return {@code true}, if it is a {@code java.util.List}
-   */
-  public static boolean isList(TypeName typeName) {
-    return Strings.CI.equals(typeName.getPackageName(), JAVA_UTIL_PACKAGE)
-        && Strings.CI.equals(typeName.getClassName(), "List");
   }
 
   /**
@@ -113,5 +80,20 @@ public class TypeNameAnalyser {
       return isString(fieldTypeGeneric.getInnerTypeArguments().get(0));
     }
     return false;
+  }
+
+  /**
+   * Checks if an Optional type is properly parameterized (not a raw type).
+   *
+   * <p>A parameterized Optional has exactly 1 type argument (the wrapped type). A raw Optional has
+   * 0 type arguments.
+   *
+   * @param typeName Type to be validated
+   * @return {@code true} if it's an Optional with exactly 1 type argument
+   */
+  public static boolean isParameterizedOptional(TypeName typeName) {
+    return typeName instanceof TypeNameGeneric genericType
+        && isOptional(typeName)
+        && genericType.getInnerTypeArguments().size() == 1;
   }
 }

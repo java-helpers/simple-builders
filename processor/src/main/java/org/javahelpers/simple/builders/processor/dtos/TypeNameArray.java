@@ -29,31 +29,26 @@ import java.util.Optional;
 /** TypeName is a specific array type. Holding name of class and package of inner type. */
 public class TypeNameArray extends TypeName {
   private final TypeName typeOfArray;
-  private final boolean fillsSet;
 
   /**
    * Constructor for simple classes.
    *
    * @param packageName name of package
    * @param className name of class, could not be null
-   * @param isSet {@code true} if this array represents a set
    */
-  public TypeNameArray(String packageName, String className, boolean isSet) {
+  public TypeNameArray(String packageName, String className) {
     super(packageName, className);
     this.typeOfArray = new TypeName(packageName, className);
-    this.fillsSet = isSet;
   }
 
   /**
    * Constructor with innerType.
    *
    * @param innerType name of package
-   * @param isSet {@code true} if this array represents a set
    */
-  public TypeNameArray(TypeName innerType, boolean isSet) {
+  public TypeNameArray(TypeName innerType) {
     super(innerType.getPackageName(), innerType.getClassName());
     this.typeOfArray = innerType;
-    this.fillsSet = isSet;
   }
 
   /**
@@ -75,14 +70,5 @@ public class TypeNameArray extends TypeName {
    */
   public TypeName getTypeOfArray() {
     return typeOfArray;
-  }
-
-  /**
-   * Getter for fillsSet.
-   *
-   * @return {@code true}, if this is array that should fill a set
-   */
-  public boolean isFillingSet() {
-    return fillsSet;
   }
 }

@@ -7,6 +7,8 @@ import static org.javahelpers.simple.builders.core.util.TrackedValue.unsetValue;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -174,6 +176,42 @@ public class BookDtoBuilder implements IBuilderBase<BookDto> {
    * Empty constructor of builder for {@code org.javahelpers.simple.builders.example.BookDto}.
    */
   public BookDtoBuilder() {
+  }
+
+  /**
+   * Adds a single element to <code>genres</code>.
+   *
+   * @param element the element to add
+   * @return current instance of builder
+   */
+  public BookDtoBuilder add2Genres(String element) {
+    Set<String> newCollection;
+    if (this.genres.isSet()) {
+      newCollection = new HashSet<>(this.genres.value());
+    } else {
+      newCollection = new HashSet<>();
+    }
+    newCollection.add(element);
+    this.genres = changedValue(newCollection);
+    return this;
+  }
+
+  /**
+   * Adds a single element to <code>tags</code>.
+   *
+   * @param element the element to add
+   * @return current instance of builder
+   */
+  public BookDtoBuilder add2Tags(String element) {
+    List<String> newCollection;
+    if (this.tags.isSet()) {
+      newCollection = new ArrayList<>(this.tags.value());
+    } else {
+      newCollection = new ArrayList<>();
+    }
+    newCollection.add(element);
+    this.tags = changedValue(newCollection);
+    return this;
   }
 
   /**

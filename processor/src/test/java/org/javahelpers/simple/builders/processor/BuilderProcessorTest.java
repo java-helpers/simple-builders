@@ -2850,4 +2850,121 @@ class BuilderProcessorTest {
         notContains("ArrayListBuilderWithElementBuilders"),
         notContains("PlainClassBuilder"));
   }
+
+  @Test
+  void shouldPreserveSpecificCollectionTypesWithVarargsAndConsumerMethods() {
+    // Given: A DTO with specific collection implementations (LinkedList, ArrayList, HashSet, etc.)
+    String packageName = "test";
+    String className = "SpecificCollectionsDto";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject dto =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private java.util.LinkedList<String> linkedList;
+                private java.util.ArrayList<Integer> arrayList;
+                private java.util.HashSet<Double> hashSet;
+                private java.util.TreeSet<Long> treeSet;
+                private java.util.HashMap<String, String> hashMap;
+                private java.util.TreeMap<String, Integer> treeMap;
+
+                public java.util.LinkedList<String> getLinkedList() { return linkedList; }
+                public void setLinkedList(java.util.LinkedList<String> linkedList) { this.linkedList = linkedList; }
+                public java.util.ArrayList<Integer> getArrayList() { return arrayList; }
+                public void setArrayList(java.util.ArrayList<Integer> arrayList) { this.arrayList = arrayList; }
+                public java.util.HashSet<Double> getHashSet() { return hashSet; }
+                public void setHashSet(java.util.HashSet<Double> hashSet) { this.hashSet = hashSet; }
+                public java.util.TreeSet<Long> getTreeSet() { return treeSet; }
+                public void setTreeSet(java.util.TreeSet<Long> treeSet) { this.treeSet = treeSet; }
+                public java.util.HashMap<String, String> getHashMap() { return hashMap; }
+                public void setHashMap(java.util.HashMap<String, String> hashMap) { this.hashMap = hashMap; }
+                public java.util.TreeMap<String, Integer> getTreeMap() { return treeMap; }
+                public void setTreeMap(java.util.TreeMap<String, Integer> treeMap) { this.treeMap = treeMap; }
+            """);
+
+    // When
+    Compilation compilation = compile(dto);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    // Verify LinkedList methods: setter, supplier, varargs with LinkedList constructor
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        // Direct setter
+        contains("public SpecificCollectionsDtoBuilder linkedList(LinkedList<String> linkedList)"),
+        // Supplier
+        contains(
+            "public SpecificCollectionsDtoBuilder linkedList(Supplier<LinkedList<String>> linkedListSupplier)"),
+        // Varargs with LinkedList wrapper
+        contains("public SpecificCollectionsDtoBuilder linkedList(String... linkedList)"),
+        contains("new LinkedList<>(java.util.List.of(linkedList))"),
+        // Consumer with LinkedList wrapper
+        contains(
+            "public SpecificCollectionsDtoBuilder linkedList(Consumer<ArrayListBuilder<String>> linkedListBuilderConsumer)"),
+        contains("new LinkedList<>(builder.build())"));
+
+    // Verify ArrayList methods: setter, supplier, varargs with ArrayList constructor
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains("public SpecificCollectionsDtoBuilder arrayList(ArrayList<Integer> arrayList)"),
+        contains(
+            "public SpecificCollectionsDtoBuilder arrayList(Supplier<ArrayList<Integer>> arrayListSupplier)"),
+        contains("public SpecificCollectionsDtoBuilder arrayList(Integer... arrayList)"),
+        contains("new ArrayList<>(java.util.List.of(arrayList))"),
+        contains(
+            "public SpecificCollectionsDtoBuilder arrayList(Consumer<ArrayListBuilder<Integer>> arrayListBuilderConsumer)"),
+        contains("new ArrayList<>(builder.build())"));
+
+    // Verify HashSet methods: setter, supplier, varargs with HashSet constructor
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains("public SpecificCollectionsDtoBuilder hashSet(HashSet<Double> hashSet)"),
+        contains(
+            "public SpecificCollectionsDtoBuilder hashSet(Supplier<HashSet<Double>> hashSetSupplier)"),
+        contains("public SpecificCollectionsDtoBuilder hashSet(Double... hashSet)"),
+        contains("new HashSet<>(java.util.Set.of(hashSet))"),
+        contains(
+            "public SpecificCollectionsDtoBuilder hashSet(Consumer<HashSetBuilder<Double>> hashSetBuilderConsumer)"),
+        contains("new HashSet<>(builder.build())"));
+
+    // Verify TreeSet methods: setter, supplier, varargs with TreeSet constructor
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains("public SpecificCollectionsDtoBuilder treeSet(TreeSet<Long> treeSet)"),
+        contains(
+            "public SpecificCollectionsDtoBuilder treeSet(Supplier<TreeSet<Long>> treeSetSupplier)"),
+        contains("public SpecificCollectionsDtoBuilder treeSet(Long... treeSet)"),
+        contains("new TreeSet<>(java.util.Set.of(treeSet))"),
+        contains(
+            "public SpecificCollectionsDtoBuilder treeSet(Consumer<HashSetBuilder<Long>> treeSetBuilderConsumer)"),
+        contains("new TreeSet<>(builder.build())"));
+
+    // Verify HashMap methods: setter, supplier, varargs with HashMap constructor
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains("public SpecificCollectionsDtoBuilder hashMap(HashMap<String, String> hashMap)"),
+        contains(
+            "public SpecificCollectionsDtoBuilder hashMap(Supplier<HashMap<String, String>> hashMapSupplier)"),
+        contains("public SpecificCollectionsDtoBuilder hashMap(Entry<String, String>... hashMap)"),
+        contains("new HashMap<>(java.util.Map.ofEntries(hashMap))"),
+        contains(
+            "public SpecificCollectionsDtoBuilder hashMap(Consumer<HashMapBuilder<String, String>> hashMapBuilderConsumer)"),
+        contains("new HashMap<>(builder.build())"));
+
+    // Verify TreeMap methods: setter, supplier, varargs with TreeMap constructor
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains("public SpecificCollectionsDtoBuilder treeMap(TreeMap<String, Integer> treeMap)"),
+        contains(
+            "public SpecificCollectionsDtoBuilder treeMap(Supplier<TreeMap<String, Integer>> treeMapSupplier)"),
+        contains("public SpecificCollectionsDtoBuilder treeMap(Entry<String, Integer>... treeMap)"),
+        contains("new TreeMap<>(java.util.Map.ofEntries(treeMap))"),
+        contains(
+            "public SpecificCollectionsDtoBuilder treeMap(Consumer<HashMapBuilder<String, Integer>> treeMapBuilderConsumer)"),
+        contains("new TreeMap<>(builder.build())"));
+  }
 }
