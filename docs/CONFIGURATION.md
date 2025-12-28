@@ -749,9 +749,20 @@ Generate only essential builder methods:
     generateBuilderConsumer = OptionState.DISABLED,
     generateConditionalHelper = OptionState.DISABLED,
     generateVarArgsHelpers = OptionState.DISABLED,
+    generateStringFormatHelpers = OptionState.DISABLED,
+    generateAddToCollectionHelpers = OptionState.DISABLED,
+    generateUnboxedOptional = OptionState.DISABLED,
+    copyTypeAnnotations = OptionState.DISABLED,
     usingArrayListBuilder = OptionState.DISABLED,
+    usingArrayListBuilderWithElementBuilders = OptionState.DISABLED,
+    usingHashSetBuilder = OptionState.DISABLED,
+    usingHashSetBuilderWithElementBuilders = OptionState.DISABLED,
     usingHashMapBuilder = OptionState.DISABLED,
-    generateWithInterface = OptionState.DISABLED
+    generateWithInterface = OptionState.DISABLED,
+    usingGeneratedAnnotation = OptionState.DISABLED,
+    usingBuilderImplementationAnnotation = OptionState.DISABLED,
+    implementsBuilderBase = OptionState.DISABLED,
+    usingJacksonDeserializerAnnotation = OptionState.DISABLED
 )
 public class MinimalDto {
     private String name;
