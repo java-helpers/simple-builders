@@ -346,4 +346,45 @@ class CustomCollectionTypeTest {
     // Should still have the basic setter
     ProcessorAsserts.assertContaining(generatedCode, "public RawMapDtoBuilder config(Map config)");
   }
+
+  @Test
+  void unmodifiableListInConstructor_shouldHandleCorrectly() {
+    // DTO that creates unmodifiable list in constructor - builder should handle this safely
+    // The DTO internally uses List.copyOf() which creates an unmodifiable list
+    JavaFileObject dto =
+        ProcessorTestUtils.simpleBuilderClass(
+            "test",
+            "UnmodifiableListDto",
+            """
+                private final java.util.List<String> items;
+
+                public UnmodifiableListDto(java.util.List<String> items) {
+                  this.items = java.util.List.copyOf(items);
+                }
+
+                public java.util.List<String> getItems() {
+                  return items;
+                }
+            """);
+
+    Compilation compilation = compile(dto);
+    String generatedCode = loadGeneratedSource(compilation, "UnmodifiableListDtoBuilder");
+    assertGenerationSucceeded(compilation, "UnmodifiableListDtoBuilder", generatedCode);
+
+    // SAFE: Builder constructor only stores reference to the unmodifiable list
+    // It does NOT attempt to modify it - just wraps it in TrackedValue
+    ProcessorAsserts.assertContaining(
+        generatedCode, "this.items = initialValue(instance.getItems())");
+
+    // SAFE: Varargs helper creates a NEW list using List.of()
+    // It does NOT try to modify any existing unmodifiable list
+    ProcessorAsserts.assertContaining(
+        generatedCode, "public UnmodifiableListDtoBuilder items(String... items)");
+    ProcessorAsserts.assertContaining(generatedCode, "this.items = changedValue(List.of(items))");
+
+    // SAFE: Direct setter just stores the reference
+    ProcessorAsserts.assertContaining(
+        generatedCode, "public UnmodifiableListDtoBuilder items(List<String> items)");
+    ProcessorAsserts.assertContaining(generatedCode, "this.items = changedValue(items)");
+  }
 }
