@@ -23,7 +23,6 @@
  */
 package org.javahelpers.simple.builders.processor.dtos;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -99,7 +98,7 @@ public class TypeNameGeneric extends TypeName {
    * @return an unmodifiable list of inner type arguments
    */
   public List<TypeName> getInnerTypeArguments() {
-    return Collections.unmodifiableList(innerTypeArguments);
+    return innerTypeArguments;
   }
 
   /**

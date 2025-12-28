@@ -151,6 +151,37 @@ public final class ProcessingContext {
   }
 
   /**
+   * Get the erasure of a type (removes generic type information).
+   *
+   * @param typeMirror the type to erase
+   * @return the erasure of the type
+   */
+  public TypeMirror erasure(TypeMirror typeMirror) {
+    return typeUtils.erasure(typeMirror);
+  }
+
+  /**
+   * Check if one type is assignable to another.
+   *
+   * @param type1 the type to check
+   * @param type2 the target type
+   * @return true if type1 is assignable to type2
+   */
+  public boolean isAssignable(TypeMirror type1, TypeMirror type2) {
+    return typeUtils.isAssignable(type1, type2);
+  }
+
+  /**
+   * Returns the direct supertypes of a type.
+   *
+   * @param typeMirror the type
+   * @return list of direct supertypes
+   */
+  public java.util.List<? extends TypeMirror> directSupertypes(TypeMirror typeMirror) {
+    return typeUtils.directSupertypes(typeMirror);
+  }
+
+  /**
    * Logs an info-level message that appears in normal Maven output.
    *
    * @param message the info message to log
