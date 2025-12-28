@@ -72,10 +72,6 @@ class TypeUseAnnotationTest {
     String generatedCode = loadGeneratedSource(compilation, "PersonBuilder");
     ProcessorAsserts.assertGenerationSucceeded(compilation, "PersonBuilder", generatedCode);
 
-    System.out.println("=== Generated PersonBuilder with TYPE_USE annotations ===");
-    System.out.println(generatedCode);
-    System.out.println("=== End of Generated Code ===");
-
     // Verify that TYPE_USE annotations are preserved in builder field
     ProcessorAsserts.assertingResult(
         generatedCode,
@@ -120,10 +116,6 @@ class TypeUseAnnotationTest {
     Compilation compilation = compileSources(notNullAnnotation, product);
     String generatedCode = loadGeneratedSource(compilation, "ProductBuilder");
     ProcessorAsserts.assertGenerationSucceeded(compilation, "ProductBuilder", generatedCode);
-
-    System.out.println("=== Generated ProductBuilder with TYPE_USE annotations on Set ===");
-    System.out.println(generatedCode);
-    System.out.println("=== End of Generated Code ===");
 
     // Verify that TYPE_USE annotations are preserved
     ProcessorAsserts.assertingResult(
@@ -170,10 +162,6 @@ class TypeUseAnnotationTest {
     String generatedCode = loadGeneratedSource(compilation, "ConfigBuilder");
     ProcessorAsserts.assertGenerationSucceeded(compilation, "ConfigBuilder", generatedCode);
 
-    System.out.println("=== Generated ConfigBuilder with TYPE_USE annotations on Map ===");
-    System.out.println(generatedCode);
-    System.out.println("=== End of Generated Code ===");
-
     // Verify that TYPE_USE annotations are preserved
     ProcessorAsserts.assertingResult(
         generatedCode,
@@ -191,7 +179,7 @@ class TypeUseAnnotationTest {
         createMockAnnotation(packageName + ".annotations", "NotNull", "ElementType.TYPE_USE");
 
     JavaFileObject validAnnotation =
-        createMockAnnotation(packageName + ".annotations", "Valid", "ElementType.TYPE_USE");
+        createMockAnnotation(packageName + ".annotations", "Validated", "ElementType.TYPE_USE");
 
     JavaFileObject data =
         JavaFileObjects.forSourceString(
@@ -200,18 +188,18 @@ class TypeUseAnnotationTest {
             package test.typeuse.multiple;
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
             import test.typeuse.multiple.annotations.NotNull;
-            import test.typeuse.multiple.annotations.Valid;
+            import test.typeuse.multiple.annotations.Validated;
             import java.util.List;
 
             @SimpleBuilder
             public class Data {
-              private final List<@NotNull @Valid String> values;
+              private final List<@NotNull @Validated String> values;
 
-              public Data(List<@NotNull @Valid String> values) {
+              public Data(List<@NotNull @Validated String> values) {
                 this.values = values;
               }
 
-              public List<@NotNull @Valid String> getValues() { return values; }
+              public List<@NotNull @Validated String> getValues() { return values; }
             }
             """);
 
@@ -219,18 +207,14 @@ class TypeUseAnnotationTest {
     String generatedCode = loadGeneratedSource(compilation, "DataBuilder");
     ProcessorAsserts.assertGenerationSucceeded(compilation, "DataBuilder", generatedCode);
 
-    System.out.println("=== Generated DataBuilder with multiple TYPE_USE annotations ===");
-    System.out.println(generatedCode);
-    System.out.println("=== End of Generated Code ===");
-
     // Verify that both TYPE_USE annotations are preserved
     ProcessorAsserts.assertingResult(
         generatedCode,
         // Builder field should have both TYPE_USE annotations
-        contains("TrackedValue<List<@NotNull @Valid String>> values"),
+        contains("TrackedValue<List<@NotNull @Validated String>> values"),
         // Method parameters should have both annotations
-        contains("values(@NotNull @Valid String... values)"),
-        contains("add2Values(@NotNull @Valid String element)"));
+        contains("values(@NotNull @Validated String... values)"),
+        contains("add2Values(@NotNull @Validated String element)"));
   }
 
   @Test
@@ -265,10 +249,6 @@ class TypeUseAnnotationTest {
     Compilation compilation = compileSources(notNullAnnotation, container);
     String generatedCode = loadGeneratedSource(compilation, "ContainerBuilder");
     ProcessorAsserts.assertGenerationSucceeded(compilation, "ContainerBuilder", generatedCode);
-
-    System.out.println("=== Generated ContainerBuilder with nested TYPE_USE annotations ===");
-    System.out.println(generatedCode);
-    System.out.println("=== End of Generated Code ===");
 
     // Verify that TYPE_USE annotations are preserved in nested generics
     ProcessorAsserts.assertingResult(
