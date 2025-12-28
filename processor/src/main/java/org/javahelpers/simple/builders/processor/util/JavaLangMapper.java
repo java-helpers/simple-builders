@@ -460,7 +460,7 @@ public final class JavaLangMapper {
             },
             null);
 
-    if (typeName != null) {
+    if (typeName != null && context.getConfiguration().shouldCopyTypeAnnotations()) {
       List<AnnotationDto> annotations =
           FieldAnnotationExtractor.extractAnnotations(typeOfParameter, context);
       annotations.forEach(typeName::addAnnotation);
