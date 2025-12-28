@@ -1,6 +1,7 @@
 package org.javahelpers.simple.builders.processor;
 
 import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.contains;
+import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.notContains;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils.createCompiler;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils.createMockAnnotation;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils.loadGeneratedSource;
@@ -257,5 +258,72 @@ class TypeUseAnnotationTest {
         contains("TrackedValue<List<Map<String, @NotNull String>>> data"),
         // Setter method parameter should have TYPE_USE annotation
         contains("data(List<Map<String, @NotNull String>> data)"));
+  }
+
+  @Test
+  void nonTypeUseAnnotations_shouldNotBeCopiedToTypeUseLocations() {
+    String packageName = "test.target.param";
+
+    // Create an annotation that targets ONLY parameters, NOT types
+    JavaFileObject paramAnnotation =
+        createMockAnnotation(packageName + ".annotations", "ParamOnly", "ElementType.PARAMETER");
+
+    JavaFileObject typeUseAnnotation =
+        createMockAnnotation(packageName + ".annotations", "TypeUse", "ElementType.TYPE_USE");
+
+    JavaFileObject data =
+        JavaFileObjects.forSourceString(
+            packageName + ".Data",
+            """
+            package test.target.param;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+            import test.target.param.annotations.ParamOnly;
+            import test.target.param.annotations.TypeUse;
+            import java.util.List;
+
+            @SimpleBuilder
+            public class Data {
+              // @ParamOnly is invalid on the type itself in Java, but could appear
+              // on the parameter declaration of the constructor/setter we analyze.
+              // However, if we parse it from a parameter and then try to apply it to a type
+              // in the builder (e.g. List<@ParamOnly String>), that would be invalid code.
+
+              private final String value;
+              private final List<String> list;
+
+              // The annotation is on the parameter declaration, NOT on the type
+              public Data(@ParamOnly String value, @TypeUse List<String> list) {
+                this.value = value;
+                this.list = list;
+              }
+
+              public String getValue() { return value; }
+              public List<String> getList() { return list; }
+            }
+            """);
+
+    Compilation compilation = compileSources(paramAnnotation, typeUseAnnotation, data);
+    String generatedCode = loadGeneratedSource(compilation, "DataBuilder");
+    ProcessorAsserts.assertGenerationSucceeded(compilation, "DataBuilder", generatedCode);
+
+    // The @ParamOnly annotation comes from the constructor parameter.
+    // It should NOT appear on the field type in the builder.
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        // Should NOT see @ParamOnly on the field type
+        notContains("TrackedValue<@ParamOnly String> value"),
+        notContains("TrackedValue<List<@ParamOnly String>> list"),
+
+        // Should see @TypeUse (if it was on the type use)
+        // Note: In the source above, @TypeUse is on the parameter, but we want to check
+        // if the processor distinguishes based on the annotation's allowed targets.
+        // Actually, 'extractAnnotations' reads from the Element (Parameter),
+        // so it sees @ParamOnly.
+
+        // Ideally, we want the builder field to be clean of @ParamOnly
+        contains("TrackedValue<String> value"),
+
+        // Verify that the @TypeUse annotation IS present on the list field
+        contains("TrackedValue<@TypeUse List<String>> list"));
   }
 }
