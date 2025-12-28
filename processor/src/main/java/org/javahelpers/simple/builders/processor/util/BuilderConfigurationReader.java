@@ -192,6 +192,8 @@ public class BuilderConfigurationReader {
             builder.implementsBuilderBase(OptionState.valueOf(enumValue));
         case "generateWithInterface" ->
             builder.generateWithInterface(OptionState.valueOf(enumValue));
+        case "usingJacksonDeserializerAnnotation" ->
+            builder.usingJacksonDeserializerAnnotation(OptionState.valueOf(enumValue));
         case "builderSuffix" -> builder.builderSuffix(value.toString());
         case "setterSuffix" -> builder.setterSuffix(value.toString());
         default ->

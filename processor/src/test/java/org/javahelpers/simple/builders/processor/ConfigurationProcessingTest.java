@@ -79,6 +79,7 @@ class ConfigurationProcessingTest {
             // Integration
             .implementsBuilderBase(OptionState.ENABLED)
             .generateWithInterface(OptionState.ENABLED)
+            .usingJacksonDeserializerAnnotation(OptionState.ENABLED)
             // Naming
             .builderSuffix("Builder")
             .setterSuffix("")
@@ -106,6 +107,7 @@ class ConfigurationProcessingTest {
     assertEquals(OptionState.ENABLED, config.usingBuilderImplementationAnnotation());
     assertEquals(OptionState.ENABLED, config.implementsBuilderBase());
     assertEquals(OptionState.ENABLED, config.generateWithInterface());
+    assertEquals(OptionState.ENABLED, config.usingJacksonDeserializerAnnotation());
     assertEquals("Builder", config.getBuilderSuffix());
     assertEquals("", config.getSetterSuffix());
   }
@@ -210,6 +212,7 @@ class ConfigurationProcessingTest {
                 "-Asimplebuilder.usingBuilderImplementationAnnotation=false",
                 "-Asimplebuilder.implementsBuilderBase=false",
                 "-Asimplebuilder.generateWithInterface=false",
+                "-Asimplebuilder.usingJacksonDeserializerAnnotation=false",
                 "-Asimplebuilder.builderSuffix=CustomBuilder",
                 "-Asimplebuilder.setterSuffix=with")
             .compile(nestedDto, addressDto, source);
@@ -284,6 +287,9 @@ class ConfigurationProcessingTest {
     // With implementsBuilderBase=false, NO IBuilderBase interface should be implemented
     ProcessorAsserts.assertNotContaining(
         generatedCode, "implements IBuilderBase", "@Override public MinimalDto build()");
+
+    // With usingJacksonDeserializerAnnotation=false, NO @JsonPOJOBuilder annotation should be used
+    ProcessorAsserts.assertNotContaining(generatedCode, "@JsonPOJOBuilder");
 
     // With builderAccess=PACKAGE_PRIVATE, builder class should NOT have public modifier
     ProcessorAsserts.assertNotContaining(generatedCode, "public class MinimalDtoCustomBuilder");

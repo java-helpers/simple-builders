@@ -86,6 +86,7 @@ public record BuilderConfiguration(
     OptionState usingBuilderImplementationAnnotation,
     OptionState implementsBuilderBase,
     OptionState generateWithInterface,
+    OptionState usingJacksonDeserializerAnnotation,
     String builderSuffix,
     String setterSuffix) {
 
@@ -112,6 +113,7 @@ public record BuilderConfiguration(
           .usingBuilderImplementationAnnotation(ENABLED)
           .implementsBuilderBase(ENABLED)
           .generateWithInterface(ENABLED)
+          .usingJacksonDeserializerAnnotation(DISABLED)
           .builderSuffix("Builder")
           .setterSuffix("")
           .build();
@@ -135,6 +137,10 @@ public record BuilderConfiguration(
 
   public boolean shouldGenerateWithInterface() {
     return generateWithInterface == ENABLED;
+  }
+
+  public boolean shouldUseJacksonDeserializerAnnotation() {
+    return usingJacksonDeserializerAnnotation == ENABLED;
   }
 
   public boolean shouldGenerateVarArgsHelpers() {
@@ -268,6 +274,9 @@ public record BuilderConfiguration(
             mergeOptionState(other.implementsBuilderBase, this.implementsBuilderBase))
         .generateWithInterface(
             mergeOptionState(other.generateWithInterface, this.generateWithInterface))
+        .usingJacksonDeserializerAnnotation(
+            mergeOptionState(
+                other.usingJacksonDeserializerAnnotation, this.usingJacksonDeserializerAnnotation))
         .builderSuffix(mergeString(other.builderSuffix, this.builderSuffix))
         .setterSuffix(mergeString(other.setterSuffix, this.setterSuffix))
         .build();
@@ -361,6 +370,9 @@ public record BuilderConfiguration(
     if (generateWithInterface != UNSET) {
       builder.append("generateWithInterface", generateWithInterface);
     }
+    if (usingJacksonDeserializerAnnotation != UNSET) {
+      builder.append("usingJacksonDeserializerAnnotation", usingJacksonDeserializerAnnotation);
+    }
     if (builderSuffix != null && !builderSuffix.equals("Builder")) {
       builder.append("builderSuffix", builderSuffix);
     }
@@ -406,6 +418,7 @@ public record BuilderConfiguration(
     // === Integration ===
     private OptionState implementsBuilderBase = OptionState.UNSET;
     private OptionState generateWithInterface = OptionState.UNSET;
+    private OptionState usingJacksonDeserializerAnnotation = OptionState.UNSET;
 
     // === Naming ===
     private String builderSuffix = null;
@@ -459,6 +472,16 @@ public record BuilderConfiguration(
 
     public Builder generateWithInterface(boolean value) {
       this.generateWithInterface = value ? ENABLED : DISABLED;
+      return this;
+    }
+
+    public Builder usingJacksonDeserializerAnnotation(OptionState value) {
+      this.usingJacksonDeserializerAnnotation = value;
+      return this;
+    }
+
+    public Builder usingJacksonDeserializerAnnotation(boolean value) {
+      this.usingJacksonDeserializerAnnotation = value ? ENABLED : DISABLED;
       return this;
     }
 
@@ -655,6 +678,7 @@ public record BuilderConfiguration(
           usingBuilderImplementationAnnotation,
           implementsBuilderBase,
           generateWithInterface,
+          usingJacksonDeserializerAnnotation,
           builderSuffix,
           setterSuffix);
     }

@@ -568,6 +568,27 @@ public @interface SimpleBuilder {
      */
     OptionState generateWithInterface() default OptionState.UNSET;
 
+    /**
+     * Add Jackson annotations to the generated builder class. <br>
+     * Adds {@code @JsonPOJOBuilder(withPrefix = "...")} to the builder class.
+     * The prefix matches the configured {@link #setterSuffix()}.
+     *
+     * <p>Example:
+     *
+     * <pre>{@code
+     * @JsonDeserialize(builder = PersonDtoBuilder.class)
+     * public class PersonDto { ... }
+     *
+     * // Generated:
+     * @JsonPOJOBuilder(withPrefix = "")
+     * public class PersonDtoBuilder { ... }
+     * }</pre>
+     *
+     * Default: DISABLED <br>
+     * Compiler option: -Asimplebuilder.usingJacksonDeserializerAnnotation
+     */
+    OptionState usingJacksonDeserializerAnnotation() default OptionState.UNSET;
+
     // === Naming ===
     /**
      * Suffix to append to the DTO name to generate the builder class name. <br>
