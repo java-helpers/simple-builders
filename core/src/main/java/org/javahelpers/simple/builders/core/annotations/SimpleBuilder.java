@@ -332,6 +332,16 @@ public @interface SimpleBuilder {
     OptionState generateUnboxedOptional() default OptionState.UNSET;
 
     /**
+     * Copy type annotations from the DTO fields to the builder fields/methods. <br>
+     * Useful for validation annotations (e.g. @NotNull, @Size) or other metadata that should be
+     * preserved.
+     *
+     * <p>Default: ENABLED <br>
+     * Compiler option: -Asimplebuilder.copyTypeAnnotations
+     */
+    OptionState copyTypeAnnotations() default OptionState.UNSET;
+
+    /**
      * Generate helper methods with a ArrayListBuilder supplier for lists instead of simple
      * supplier, which would not allow to use in a chanined way: <br>
      * Example with ArrayListBuilder: <br>

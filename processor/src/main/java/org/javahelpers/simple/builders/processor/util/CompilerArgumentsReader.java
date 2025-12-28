@@ -156,6 +156,7 @@ public class CompilerArgumentsReader {
         .generateAddToCollectionHelpers(
             readOptionState(CompilerArgumentsEnum.GENERATE_ADD_TO_COLLECTION_HELPERS))
         .generateUnboxedOptional(readOptionState(CompilerArgumentsEnum.GENERATE_UNBOXED_OPTIONAL))
+        .copyTypeAnnotations(readOptionState(CompilerArgumentsEnum.COPY_TYPE_ANNOTATIONS))
         .usingArrayListBuilder(readOptionState(CompilerArgumentsEnum.USING_ARRAY_LIST_BUILDER))
         .usingArrayListBuilderWithElementBuilders(
             readOptionState(CompilerArgumentsEnum.USING_ARRAY_LIST_BUILDER_WITH_ELEMENT_BUILDERS))

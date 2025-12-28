@@ -175,6 +175,7 @@ public class BuilderConfigurationReader {
             builder.generateAddToCollectionHelpers(OptionState.valueOf(enumValue));
         case "generateUnboxedOptional" ->
             builder.generateUnboxedOptional(OptionState.valueOf(enumValue));
+        case "copyTypeAnnotations" -> builder.copyTypeAnnotations(OptionState.valueOf(enumValue));
         case "usingArrayListBuilder" ->
             builder.usingArrayListBuilder(OptionState.valueOf(enumValue));
         case "usingArrayListBuilderWithElementBuilders" ->

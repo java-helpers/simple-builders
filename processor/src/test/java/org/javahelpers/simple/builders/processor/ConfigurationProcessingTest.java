@@ -66,6 +66,7 @@ class ConfigurationProcessingTest {
             .generateVarArgsHelpers(OptionState.ENABLED)
             .generateStringFormatHelpers(OptionState.ENABLED)
             .generateUnboxedOptional(OptionState.ENABLED)
+            .copyTypeAnnotations(OptionState.ENABLED)
             // Collection builder options
             .usingArrayListBuilder(OptionState.ENABLED)
             .usingArrayListBuilderWithElementBuilders(OptionState.ENABLED)
@@ -95,6 +96,7 @@ class ConfigurationProcessingTest {
     assertEquals(OptionState.ENABLED, config.generateVarArgsHelpers());
     assertEquals(OptionState.ENABLED, config.generateStringFormatHelpers());
     assertEquals(OptionState.ENABLED, config.generateUnboxedOptional());
+    assertEquals(OptionState.ENABLED, config.copyTypeAnnotations());
     assertEquals(OptionState.ENABLED, config.usingArrayListBuilder());
     assertEquals(OptionState.ENABLED, config.usingArrayListBuilderWithElementBuilders());
     assertEquals(OptionState.ENABLED, config.usingHashSetBuilder());
@@ -198,6 +200,7 @@ class ConfigurationProcessingTest {
                 "-Asimplebuilder.generateVarArgsHelpers=false",
                 "-Asimplebuilder.generateStringFormatHelpers=false",
                 "-Asimplebuilder.generateUnboxedOptional=false",
+                "-Asimplebuilder.copyTypeAnnotations=false",
                 "-Asimplebuilder.usingArrayListBuilder=false",
                 "-Asimplebuilder.usingArrayListBuilderWithElementBuilders=false",
                 "-Asimplebuilder.usingHashSetBuilder=false",

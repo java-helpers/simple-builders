@@ -461,6 +461,26 @@ PersonDto person = PersonDtoBuilder.create()
 
 ---
 
+#### `copyTypeAnnotations`
+
+**Default**: `ENABLED` | **Compiler Option**: `-Asimplebuilder.copyTypeAnnotations=ENABLED|DISABLED`
+
+Copies type annotations (TYPE_USE) from the DTO fields to the builder fields and methods. This is useful for validation annotations (e.g. `@NotNull`, `@Size`) or other metadata that should be preserved.
+
+**When ENABLED**:
+```java
+// DTO
+private List<@NotNull String> items;
+
+// Generated Builder
+private TrackedValue<List<@NotNull String>> items;
+public Builder items(List<@NotNull String> items) { ... }
+```
+
+**When DISABLED**: Type annotations are stripped from the builder.
+
+---
+
 ### Collection Helpers
 
 #### `usingArrayListBuilder`
