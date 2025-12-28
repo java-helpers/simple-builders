@@ -394,65 +394,78 @@ public final class JavaLangMapper {
   }
 
   private static TypeName extractType(TypeMirror typeOfParameter, ProcessingContext context) {
-    return typeOfParameter.accept(
-        new SimpleTypeVisitor14<TypeName, Void>() {
+    TypeName typeName =
+        typeOfParameter.accept(
+            new SimpleTypeVisitor14<TypeName, Void>() {
 
-          @Override
-          public TypeName visitPrimitive(PrimitiveType t, Void p) {
-            return switch (t.getKind()) {
-              case BOOLEAN -> TypeNamePrimitive.BOOLEAN;
-              case BYTE -> TypeNamePrimitive.BYTE;
-              case SHORT -> TypeNamePrimitive.SHORT;
-              case INT -> TypeNamePrimitive.INT;
-              case LONG -> TypeNamePrimitive.LONG;
-              case CHAR -> TypeNamePrimitive.CHAR;
-              case FLOAT -> TypeNamePrimitive.FLOAT;
-              case DOUBLE -> TypeNamePrimitive.DOUBLE;
-              default -> throw new IllegalStateException("Unsupported Primitive type");
-            };
-          }
+              @Override
+              public TypeName visitPrimitive(PrimitiveType t, Void p) {
+                return switch (t.getKind()) {
+                  case BOOLEAN ->
+                      new TypeNamePrimitive(TypeNamePrimitive.PrimitiveTypeEnum.BOOLEAN);
+                  case BYTE -> new TypeNamePrimitive(TypeNamePrimitive.PrimitiveTypeEnum.BYTE);
+                  case SHORT -> new TypeNamePrimitive(TypeNamePrimitive.PrimitiveTypeEnum.SHORT);
+                  case INT -> new TypeNamePrimitive(TypeNamePrimitive.PrimitiveTypeEnum.INT);
+                  case LONG -> new TypeNamePrimitive(TypeNamePrimitive.PrimitiveTypeEnum.LONG);
+                  case CHAR -> new TypeNamePrimitive(TypeNamePrimitive.PrimitiveTypeEnum.CHAR);
+                  case FLOAT -> new TypeNamePrimitive(TypeNamePrimitive.PrimitiveTypeEnum.FLOAT);
+                  case DOUBLE -> new TypeNamePrimitive(TypeNamePrimitive.PrimitiveTypeEnum.DOUBLE);
+                  default -> throw new IllegalStateException("Unsupported Primitive type");
+                };
+              }
 
-          @Override
-          public TypeName visitDeclared(DeclaredType t, Void p) {
-            TypeElement elementOfParameter = (TypeElement) context.asElement(typeOfParameter);
-            String simpleClassName = elementOfParameter.getSimpleName().toString();
-            String packageName = context.getPackageName(elementOfParameter);
-            TypeName rawType = new TypeName(packageName, simpleClassName);
-            TypeMirror enclosingType = t.getEnclosingType();
-            TypeName enclosing =
-                (enclosingType.getKind() != NONE)
-                        && !t.asElement().getModifiers().contains(Modifier.STATIC)
-                    ? enclosingType.accept(this, null)
-                    : null;
-            if (t.getTypeArguments().isEmpty() && !(enclosing instanceof TypeNameGeneric)) {
-              return wrapInCollectionTypeIfApplicable(rawType, List.of(), typeOfParameter, context);
-            }
+              @Override
+              public TypeName visitDeclared(DeclaredType t, Void p) {
+                TypeElement elementOfParameter = (TypeElement) context.asElement(typeOfParameter);
+                String simpleClassName = elementOfParameter.getSimpleName().toString();
+                String packageName = context.getPackageName(elementOfParameter);
+                TypeName rawType = new TypeName(packageName, simpleClassName);
+                TypeMirror enclosingType = t.getEnclosingType();
+                TypeName enclosing =
+                    (enclosingType.getKind() != NONE)
+                            && !t.asElement().getModifiers().contains(Modifier.STATIC)
+                        ? enclosingType.accept(this, null)
+                        : null;
+                if (t.getTypeArguments().isEmpty() && !(enclosing instanceof TypeNameGeneric)) {
+                  return wrapInCollectionTypeIfApplicable(
+                      rawType, List.of(), typeOfParameter, context);
+                }
 
-            List<TypeMirror> typesExtracted = new ArrayList<>(t.getTypeArguments());
-            if (typesExtracted.isEmpty()) {
-              return wrapInCollectionTypeIfApplicable(rawType, List.of(), typeOfParameter, context);
-            } else {
-              List<TypeName> argTypes = extractTypeForList(typesExtracted, context);
-              return wrapInCollectionTypeIfApplicable(rawType, argTypes, typeOfParameter, context);
-            }
-          }
+                List<TypeMirror> typesExtracted = new ArrayList<>(t.getTypeArguments());
+                if (typesExtracted.isEmpty()) {
+                  return wrapInCollectionTypeIfApplicable(
+                      rawType, List.of(), typeOfParameter, context);
+                } else {
+                  List<TypeName> argTypes = extractTypeForList(typesExtracted, context);
+                  return wrapInCollectionTypeIfApplicable(
+                      rawType, argTypes, typeOfParameter, context);
+                }
+              }
 
-          @Override
-          public TypeNameArray visitArray(ArrayType t, Void p) {
-            return new TypeNameArray(extractType(t.getComponentType(), context));
-          }
+              @Override
+              public TypeNameArray visitArray(ArrayType t, Void p) {
+                return new TypeNameArray(extractType(t.getComponentType(), context));
+              }
 
-          @Override
-          public TypeName visitTypeVariable(TypeVariable t, Void p) {
-            String name = t.asElement().getSimpleName().toString();
-            return new TypeNameVariable(name);
-          }
+              @Override
+              public TypeName visitTypeVariable(TypeVariable t, Void p) {
+                String name = t.asElement().getSimpleName().toString();
+                return new TypeNameVariable(name);
+              }
 
-          @Override
-          protected TypeName defaultAction(TypeMirror e, Void p) {
-            throw new IllegalArgumentException("Unexpected type mirror: " + e);
-          }
-        },
-        null);
+              @Override
+              protected TypeName defaultAction(TypeMirror e, Void p) {
+                throw new IllegalArgumentException("Unexpected type mirror: " + e);
+              }
+            },
+            null);
+
+    if (typeName != null) {
+      List<AnnotationDto> annotations =
+          FieldAnnotationExtractor.extractAnnotations(typeOfParameter, context);
+      annotations.forEach(typeName::addAnnotation);
+    }
+
+    return typeName;
   }
 }

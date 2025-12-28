@@ -65,7 +65,7 @@ public class TypeNamePrimitive extends TypeName {
    *
    * @param primitiveType primitive enum type
    */
-  protected TypeNamePrimitive(PrimitiveTypeEnum primitiveType) {
+  public TypeNamePrimitive(PrimitiveTypeEnum primitiveType) {
     super("", primitiveType.name().toLowerCase());
     this.type = primitiveType;
   }

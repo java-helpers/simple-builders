@@ -92,6 +92,30 @@ public final class FieldAnnotationExtractor {
   }
 
   /**
+   * Extracts annotations from a type mirror. Filters out annotations that should not be copied to
+   * the builder.
+   *
+   * @param typeMirror the type mirror containing annotations
+   * @param context processing context
+   * @return list of annotations to be copied to the builder field
+   */
+  public static List<AnnotationDto> extractAnnotations(
+      javax.lang.model.type.TypeMirror typeMirror, ProcessingContext context) {
+    List<AnnotationDto> annotations = new ArrayList<>();
+    List<? extends AnnotationMirror> annotationMirrors = typeMirror.getAnnotationMirrors();
+
+    context.debug(
+        "  -> Extracting %d annotation(s) from type %s",
+        annotationMirrors.size(), typeMirror.toString());
+
+    for (AnnotationMirror mirror : annotationMirrors) {
+      extractAnnotation(mirror, context).ifPresent(annotations::add);
+    }
+
+    return annotations;
+  }
+
+  /**
    * Extracts a single annotation from an AnnotationMirror. Filters out annotations that should not
    * be copied to the builder.
    *

@@ -39,6 +39,9 @@ public class TypeName {
   /** Name of class. */
   private final String className;
 
+  /** Annotations on this type (TYPE_USE). */
+  private final java.util.List<AnnotationDto> annotations = new java.util.ArrayList<>();
+
   /**
    * Constructor for TypeName.
    *
@@ -67,6 +70,24 @@ public class TypeName {
    */
   public String getClassName() {
     return className;
+  }
+
+  /**
+   * Returns the list of annotations on this type.
+   *
+   * @return list of annotations
+   */
+  public java.util.List<AnnotationDto> getAnnotations() {
+    return annotations;
+  }
+
+  /**
+   * Adds an annotation to this type.
+   *
+   * @param annotation the annotation to add
+   */
+  public void addAnnotation(AnnotationDto annotation) {
+    this.annotations.add(annotation);
   }
 
   /**
