@@ -72,41 +72,47 @@ public final class JavapoetMapper {
    */
   public static TypeName map2ParameterType(
       org.javahelpers.simple.builders.processor.dtos.TypeName parameterType) {
-    // Handle generic type variables (e.g., T, K, V)
+    TypeName typeName;
     if (parameterType
         instanceof org.javahelpers.simple.builders.processor.dtos.TypeNameVariable typeVariable) {
-      return TypeVariableName.get(typeVariable.getClassName());
+      typeName = TypeVariableName.get(typeVariable.getClassName());
+    } else if (parameterType instanceof TypeNamePrimitive parameterTypePrim) {
+      typeName = mapPrimitive(parameterTypePrim);
+    } else if (parameterType instanceof TypeNameArray parameterTypeArray) {
+      typeName = ArrayTypeName.of(map2ParameterType(parameterTypeArray.getTypeOfArray()));
+    } else if (parameterType instanceof TypeNameGeneric parameterTypeGeneric) {
+      typeName = mapGeneric(parameterTypeGeneric);
+    } else {
+      typeName = ClassName.get(parameterType.getPackageName(), parameterType.getClassName());
     }
-    // Handle primitives BEFORE calling ClassName.get() to avoid IllegalArgumentException in
-    // JavaPoet 0.9.0+
-    if (parameterType instanceof TypeNamePrimitive parameterTypePrim) {
-      return switch (parameterTypePrim.getType()) {
-        case BOOLEAN -> TypeName.BOOLEAN;
-        case BYTE -> TypeName.BYTE;
-        case CHAR -> TypeName.CHAR;
-        case DOUBLE -> TypeName.DOUBLE;
-        case FLOAT -> TypeName.FLOAT;
-        case INT -> TypeName.INT;
-        case LONG -> TypeName.LONG;
-        case SHORT -> TypeName.SHORT;
-        default -> null;
-      };
+
+    if (typeName != null && !parameterType.getAnnotations().isEmpty()) {
+      typeName = typeName.annotated(map2AnnotationSpecs(parameterType.getAnnotations()));
     }
-    if (parameterType instanceof TypeNameArray parameterTypeArray) {
-      return ArrayTypeName.of(map2ParameterType(parameterTypeArray.getTypeOfArray()));
+    return typeName;
+  }
+
+  private static TypeName mapPrimitive(TypeNamePrimitive parameterTypePrim) {
+    return switch (parameterTypePrim.getType()) {
+      case BOOLEAN -> TypeName.BOOLEAN;
+      case BYTE -> TypeName.BYTE;
+      case CHAR -> TypeName.CHAR;
+      case DOUBLE -> TypeName.DOUBLE;
+      case FLOAT -> TypeName.FLOAT;
+      case INT -> TypeName.INT;
+      case LONG -> TypeName.LONG;
+      case SHORT -> TypeName.SHORT;
+      default -> null;
+    };
+  }
+
+  private static TypeName mapGeneric(TypeNameGeneric param) {
+    ClassName classNameParameter = ClassName.get(param.getPackageName(), param.getClassName());
+    if (param.getInnerTypeArguments().isEmpty()) {
+      return classNameParameter;
     }
-    // Now safe to call ClassName.get() for non-primitive types
-    ClassName classNameParameter =
-        ClassName.get(parameterType.getPackageName(), parameterType.getClassName());
-    if (parameterType instanceof TypeNameGeneric param) {
-      // Handle raw types (e.g., List without <T>) - return just the class name
-      if (param.getInnerTypeArguments().isEmpty()) {
-        return classNameParameter;
-      }
-      TypeName[] typeArgs = map2TypeArgumentsArray(param.getInnerTypeArguments());
-      return ParameterizedTypeName.get(classNameParameter, typeArgs);
-    }
-    return classNameParameter;
+    TypeName[] typeArgs = map2TypeArgumentsArray(param.getInnerTypeArguments());
+    return ParameterizedTypeName.get(classNameParameter, typeArgs);
   }
 
   /**

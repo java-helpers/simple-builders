@@ -27,6 +27,8 @@ package org.javahelpers.simple.builders.processor.dtos;
 import static java.util.Objects.requireNonNull;
 
 import java.util.Optional;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 /**
  * TypeName is the unambiguously definition of a type. Holding name of class and package. Could be
@@ -38,6 +40,9 @@ public class TypeName {
 
   /** Name of class. */
   private final String className;
+
+  /** Annotations on this type (TYPE_USE). */
+  private final java.util.List<AnnotationDto> annotations = new java.util.ArrayList<>();
 
   /**
    * Constructor for TypeName.
@@ -70,6 +75,24 @@ public class TypeName {
   }
 
   /**
+   * Returns the list of annotations on this type.
+   *
+   * @return list of annotations
+   */
+  public java.util.List<AnnotationDto> getAnnotations() {
+    return annotations;
+  }
+
+  /**
+   * Adds an annotation to this type.
+   *
+   * @param annotation the annotation to add
+   */
+  public void addAnnotation(AnnotationDto annotation) {
+    this.annotations.add(annotation);
+  }
+
+  /**
    * Helper function to hold a specific inner type.Is empty if this is a class without generic parts
    * or a class has multiple generics.
    *
@@ -88,5 +111,28 @@ public class TypeName {
    */
   public static TypeName of(Class<?> clazz) {
     return new TypeName(clazz.getPackage().getName(), clazz.getSimpleName());
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    TypeName typeName = (TypeName) o;
+
+    return new EqualsBuilder()
+        .append(packageName, typeName.packageName)
+        .append(className, typeName.className)
+        .isEquals();
+  }
+
+  @Override
+  public int hashCode() {
+    return new HashCodeBuilder(17, 37).append(packageName).append(className).toHashCode();
   }
 }

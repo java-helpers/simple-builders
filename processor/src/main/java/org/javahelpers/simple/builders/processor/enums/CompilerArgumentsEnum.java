@@ -75,6 +75,9 @@ public enum CompilerArgumentsEnum {
   /** Option for unboxed optional generation. */
   GENERATE_UNBOXED_OPTIONAL("generateUnboxedOptional"),
 
+  /** Option for copying type annotations. */
+  COPY_TYPE_ANNOTATIONS("copyTypeAnnotations"),
+
   /** Option for ArrayList builder usage. */
   USING_ARRAY_LIST_BUILDER("usingArrayListBuilder"),
 

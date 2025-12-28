@@ -76,6 +76,7 @@ public record BuilderConfiguration(
     OptionState generateStringFormatHelpers,
     OptionState generateAddToCollectionHelpers,
     OptionState generateUnboxedOptional,
+    OptionState copyTypeAnnotations,
     OptionState usingArrayListBuilder,
     OptionState usingArrayListBuilderWithElementBuilders,
     OptionState usingHashSetBuilder,
@@ -101,6 +102,7 @@ public record BuilderConfiguration(
           .generateStringFormatHelpers(ENABLED)
           .generateAddToCollectionHelpers(ENABLED)
           .generateUnboxedOptional(ENABLED)
+          .copyTypeAnnotations(ENABLED)
           .usingArrayListBuilder(ENABLED)
           .usingArrayListBuilderWithElementBuilders(ENABLED)
           .usingHashSetBuilder(ENABLED)
@@ -171,6 +173,10 @@ public record BuilderConfiguration(
     return generateUnboxedOptional == ENABLED;
   }
 
+  public boolean shouldCopyTypeAnnotations() {
+    return copyTypeAnnotations == ENABLED;
+  }
+
   public boolean shouldUseGeneratedAnnotation() {
     return usingGeneratedAnnotation == ENABLED;
   }
@@ -239,6 +245,7 @@ public record BuilderConfiguration(
                 other.generateAddToCollectionHelpers, this.generateAddToCollectionHelpers))
         .generateUnboxedOptional(
             mergeOptionState(other.generateUnboxedOptional, this.generateUnboxedOptional))
+        .copyTypeAnnotations(mergeOptionState(other.copyTypeAnnotations, this.copyTypeAnnotations))
         .usingArrayListBuilder(
             mergeOptionState(other.usingArrayListBuilder, this.usingArrayListBuilder))
         .usingArrayListBuilderWithElementBuilders(
@@ -328,6 +335,12 @@ public record BuilderConfiguration(
     if (generateVarArgsHelpers != UNSET) {
       builder.append("generateVarArgsHelpers", generateVarArgsHelpers);
     }
+    if (generateUnboxedOptional != UNSET) {
+      builder.append("generateUnboxedOptional", generateUnboxedOptional);
+    }
+    if (copyTypeAnnotations != UNSET) {
+      builder.append("copyTypeAnnotations", copyTypeAnnotations);
+    }
     if (usingArrayListBuilder != UNSET) {
       builder.append("usingArrayListBuilder", usingArrayListBuilder);
     }
@@ -379,6 +392,7 @@ public record BuilderConfiguration(
     private OptionState generateStringFormatHelpers = OptionState.UNSET;
     private OptionState generateAddToCollectionHelpers = OptionState.UNSET;
     private OptionState generateUnboxedOptional = OptionState.UNSET;
+    private OptionState copyTypeAnnotations = OptionState.UNSET;
     private OptionState usingArrayListBuilder = OptionState.UNSET;
     private OptionState usingArrayListBuilderWithElementBuilders = OptionState.UNSET;
     private OptionState usingHashSetBuilder = OptionState.UNSET;
@@ -485,6 +499,16 @@ public record BuilderConfiguration(
 
     public Builder generateUnboxedOptional(boolean value) {
       this.generateUnboxedOptional = value ? ENABLED : DISABLED;
+      return this;
+    }
+
+    public Builder copyTypeAnnotations(OptionState value) {
+      this.copyTypeAnnotations = value;
+      return this;
+    }
+
+    public Builder copyTypeAnnotations(boolean value) {
+      this.copyTypeAnnotations = value ? ENABLED : DISABLED;
       return this;
     }
 
@@ -621,6 +645,7 @@ public record BuilderConfiguration(
           generateStringFormatHelpers,
           generateAddToCollectionHelpers,
           generateUnboxedOptional,
+          copyTypeAnnotations,
           usingArrayListBuilder,
           usingArrayListBuilderWithElementBuilders,
           usingHashSetBuilder,

@@ -26,6 +26,8 @@ package org.javahelpers.simple.builders.processor.dtos;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 /**
  * DTO representing an annotation to be copied from the target class field to the builder class
@@ -78,5 +80,28 @@ public class AnnotationDto {
    */
   public void addMember(String name, String value) {
     this.members.put(name, value);
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    AnnotationDto that = (AnnotationDto) o;
+
+    return new EqualsBuilder()
+        .append(annotationType, that.annotationType)
+        .append(members, that.members)
+        .isEquals();
+  }
+
+  @Override
+  public int hashCode() {
+    return new HashCodeBuilder(17, 37).append(annotationType).append(members).toHashCode();
   }
 }
