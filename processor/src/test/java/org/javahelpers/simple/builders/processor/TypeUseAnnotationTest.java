@@ -326,4 +326,92 @@ class TypeUseAnnotationTest {
         // Verify that the @TypeUse annotation IS present on the list field
         contains("TrackedValue<@TypeUse List<String>> list"));
   }
+
+  @Test
+  void typeUseAnnotations_whenDisabled_areNotCopied() {
+    String packageName = "test.typeuse.disabled";
+
+    JavaFileObject notNullAnnotation =
+        createMockAnnotation(packageName + ".annotations", "NotNull", "ElementType.TYPE_USE");
+
+    JavaFileObject person =
+        JavaFileObjects.forSourceString(
+            packageName + ".Person",
+            """
+            package test.typeuse.disabled;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+            import org.javahelpers.simple.builders.core.enums.OptionState;
+            import test.typeuse.disabled.annotations.NotNull;
+            import java.util.List;
+
+            @SimpleBuilder(options = @SimpleBuilder.Options(copyTypeAnnotations = OptionState.DISABLED))
+            public class Person {
+              private final List<@NotNull String> nicknames;
+
+              public Person(List<@NotNull String> nicknames) {
+                this.nicknames = nicknames;
+              }
+
+              public List<@NotNull String> getNicknames() { return nicknames; }
+            }
+            """);
+
+    Compilation compilation = compileSources(notNullAnnotation, person);
+    String generatedCode = loadGeneratedSource(compilation, "PersonBuilder");
+    ProcessorAsserts.assertGenerationSucceeded(compilation, "PersonBuilder", generatedCode);
+
+    // Verify that TYPE_USE annotations are NOT preserved in builder field
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        // Builder field should NOT have TYPE_USE annotation
+        notContains("TrackedValue<List<@NotNull String>> nicknames"),
+        contains("TrackedValue<List<String>> nicknames"),
+        // Setter method parameter should NOT have TYPE_USE annotation
+        notContains("nicknames(List<@NotNull String> nicknames)"),
+        contains("nicknames(List<String> nicknames)"));
+  }
+
+  @Test
+  void hybridAnnotations_shouldBeDeduplicated() {
+    String packageName = "test.target.hybrid";
+
+    // Create an annotation that targets BOTH parameters AND types
+    JavaFileObject hybridAnnotation =
+        createMockAnnotation(
+            packageName + ".annotations", "Hybrid", "ElementType.PARAMETER, ElementType.TYPE_USE");
+
+    JavaFileObject data =
+        JavaFileObjects.forSourceString(
+            packageName + ".Data",
+            """
+            package test.target.hybrid;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+            import test.target.hybrid.annotations.Hybrid;
+            import java.util.List;
+
+            @SimpleBuilder
+            public class Data {
+              private final @Hybrid List<String> items;
+
+              public Data(@Hybrid List<String> items) {
+                this.items = items;
+              }
+
+              public List<String> getItems() { return items; }
+            }
+            """);
+
+    Compilation compilation = compileSources(hybridAnnotation, data);
+    String generatedCode = loadGeneratedSource(compilation, "DataBuilder");
+    ProcessorAsserts.assertGenerationSucceeded(compilation, "DataBuilder", generatedCode);
+
+    // Verify deduplication
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        // Should NOT contain duplicate annotations (e.g. "@Hybrid @Hybrid")
+        notContains("@Hybrid @Hybrid"),
+        // Should contain single annotation on the list
+        contains("TrackedValue<@Hybrid List<String>> items"),
+        contains("items(@Hybrid List<String> items)"));
+  }
 }
