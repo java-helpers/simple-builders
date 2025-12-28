@@ -42,6 +42,7 @@ Simple Builders is a Java [annotation processor](https://docs.oracle.com/en/java
 - **Collections Support**: Built-in support for collections and maps
 - **Annotation Preservation**: Validation annotations are automatically copied to builder methods
 - **With Interface Pattern**: Type-safe object modifications using generated With interfaces
+- **Jackson Support**: Supporting Jackson deserialization (needs to be enabled)
 
 ## Requirements
 

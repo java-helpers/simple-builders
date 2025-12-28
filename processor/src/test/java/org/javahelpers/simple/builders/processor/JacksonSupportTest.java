@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 class JacksonSupportTest {
 
   @Test
-  void jacksonSupport_WhenEnabled_ShouldGenerateAnnotation() {
+  void usingJacksonDeserializerAnnotation_WhenEnabled_ShouldGenerateAnnotation() {
     // Given
     JavaFileObject source =
         ProcessorTestUtils.simpleBuilderClass(
@@ -40,7 +40,8 @@ class JacksonSupportTest {
   }
 
   @Test
-  void jacksonSupport_WhenEnabledWithCustomPrefix_ShouldGenerateAnnotationWithPrefix() {
+  void
+      usingJacksonDeserializerAnnotation_WhenEnabledWithCustomPrefix_ShouldGenerateAnnotationWithPrefix() {
     // Given
     JavaFileObject source =
         ProcessorTestUtils.simpleBuilderClass(
@@ -69,7 +70,7 @@ class JacksonSupportTest {
   }
 
   @Test
-  void jacksonSupport_WhenDisabled_ShouldNotGenerateAnnotation() {
+  void usingJacksonDeserializerAnnotation_WhenDisabled_ShouldNotGenerateAnnotation() {
     // Given
     JavaFileObject source =
         ProcessorTestUtils.simpleBuilderClass(
@@ -99,7 +100,7 @@ class JacksonSupportTest {
   }
 
   @Test
-  void jacksonSupport_WhenNotConfigured_ShouldDefaultToDisabled() {
+  void usingJacksonDeserializerAnnotation_WhenNotConfigured_ShouldDefaultToDisabled() {
     // Given
     JavaFileObject source =
         ProcessorTestUtils.simpleBuilderClass(

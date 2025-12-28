@@ -681,6 +681,26 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
 
 ---
 
+#### `usingJacksonDeserializerAnnotation`
+
+**Default**: `DISABLED` | **Compiler Option**: `-Asimplebuilder.usingJacksonDeserializerAnnotation=ENABLED|DISABLED`
+
+Adds `@JsonPOJOBuilder` annotation to the builder class for Jackson deserialization support.
+
+**When ENABLED**:
+```java
+@JsonPOJOBuilder(withPrefix = "")
+public class PersonDtoBuilder {
+    // ...
+}
+```
+
+**When DISABLED**: No `@JsonPOJOBuilder` annotation.
+
+**Note**: This requires `com.fasterxml.jackson.core:jackson-databind` on the classpath during compilation. If missing, the annotation is skipped with a warning.
+
+---
+
 ### Naming
 
 #### `builderSuffix`
@@ -1115,6 +1135,7 @@ methodAccess = AccessModifier.PRIVATE
     implementsBuilderBase = OptionState.ENABLED,
     usingGeneratedAnnotation = OptionState.ENABLED,
     usingBuilderImplementationAnnotation = OptionState.ENABLED,
+    usingJacksonDeserializerAnnotation = OptionState.ENABLED,
     
     // Naming
     builderSuffix = "Builder",

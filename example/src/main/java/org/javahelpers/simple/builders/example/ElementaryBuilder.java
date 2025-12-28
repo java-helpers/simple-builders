@@ -47,7 +47,8 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
             usingHashSetBuilderWithElementBuilders = OptionState.DISABLED,
             usingHashMapBuilder = OptionState.DISABLED,
             generateWithInterface = OptionState.DISABLED,
-            usingGeneratedAnnotation = OptionState.DISABLED))
+            usingGeneratedAnnotation = OptionState.DISABLED,
+            usingJacksonDeserializerAnnotation = OptionState.DISABLED))
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.TYPE)
 public @interface ElementaryBuilder {}

@@ -570,8 +570,8 @@ public @interface SimpleBuilder {
 
     /**
      * Add Jackson annotations to the generated builder class. <br>
-     * Adds {@code @JsonPOJOBuilder(withPrefix = "...")} to the builder class.
-     * The prefix matches the configured {@link #setterSuffix()}.
+     * Adds {@code @JsonPOJOBuilder(withPrefix = "...")} to the builder class. The prefix matches
+     * the configured {@link #setterSuffix()}.
      *
      * <p>Example:
      *
