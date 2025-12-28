@@ -842,6 +842,10 @@ public class BuilderDefinitionCreator {
     // Extract annotations from the field parameter
     List<AnnotationDto> annotations = FieldAnnotationExtractor.extractAnnotations(param, context);
 
+    // Annotations could be assigned to Type or Parameter.
+    // To avoid duplication in generated code, we need to remove the duplications here.
+    annotations.removeAll(fieldType.getAnnotations());
+
     // Check if field has non-null constraint (annotation or primitive type)
     if (FieldAnnotationExtractor.hasNonNullConstraint(param)
         || fieldTypeMirror.getKind().isPrimitive()) {
