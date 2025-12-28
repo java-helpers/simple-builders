@@ -65,6 +65,7 @@ public class BuilderDefinitionCreator {
   private static final String ARG_DTO_METHOD_PARAMS = "dtoMethodParams";
   private static final String ARG_BUILDER_FIELD_WRAPPER = "builderFieldWrapper";
   private static final String ARG_HELPER_TYPE = "helperType";
+  private static final String ARG_ELEMENT_TYPE = "elementType";
 
   // Type constants
   private static final TypeName TRACKED_VALUE_TYPE = TypeName.of(TrackedValue.class);
@@ -1348,7 +1349,7 @@ public class BuilderDefinitionCreator {
     methodDto.addArgument(ARG_FIELD_NAME, fieldNameInBuilder);
     methodDto.addArgument(ARG_DTO_METHOD_PARAMS, fieldName);
     methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
-    methodDto.addArgument("elementType", elementType);
+    methodDto.addArgument(ARG_ELEMENT_TYPE, elementType);
     methodDto.setPriority(MethodDto.PRIORITY_HIGH);
     methodDto.setJavadoc(
         """
@@ -1423,7 +1424,7 @@ public class BuilderDefinitionCreator {
     methodDto.addArgument("collectionVarType", collectionVarType);
     methodDto.addArgument("collectionImpl", new TypeName("java.util", collectionImpl));
     methodDto.addArgument(ARG_FIELD_NAME, fieldName);
-    methodDto.addArgument("elementType", elementType);
+    methodDto.addArgument(ARG_ELEMENT_TYPE, elementType);
     methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
     methodDto.setPriority(MethodDto.PRIORITY_MEDIUM);
 
@@ -1474,7 +1475,7 @@ public class BuilderDefinitionCreator {
     methodDto.addArgument(ARG_DTO_METHOD_PARAM, parameter.getParameterName());
     methodDto.addArgument(ARG_HELPER_TYPE, builderTypeGeneric);
     methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
-    methodDto.addArgument("elementType", elementType);
+    methodDto.addArgument(ARG_ELEMENT_TYPE, elementType);
     methodDto.setPriority(MethodDto.PRIORITY_MEDIUM);
     methodDto.setJavadoc(
         """
