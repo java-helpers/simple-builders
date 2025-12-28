@@ -44,6 +44,7 @@ import java.util.Map;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Generated;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.util.Elements;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.annotations.BuilderImplementation;
 import org.javahelpers.simple.builders.core.interfaces.IBuilderBase;
@@ -58,6 +59,7 @@ public class JavaCodeGenerator {
 
   private static final String THROW_EXCEPTION_FORMAT = "throw new $T($S)";
   private final Filer filer;
+  private final Elements elementUtils;
 
   /** Logger for debug output during code generation. */
   private final ProcessingLogger logger;
@@ -67,10 +69,12 @@ public class JavaCodeGenerator {
    *
    * @param filer Util class for source code generation of type {@code
    *     javax.annotation.processing.Filer}
+   * @param elementUtils Util class for operating on program elements
    * @param logger Logger for debug output
    */
-  public JavaCodeGenerator(Filer filer, ProcessingLogger logger) {
+  public JavaCodeGenerator(Filer filer, Elements elementUtils, ProcessingLogger logger) {
     this.filer = filer;
+    this.elementUtils = elementUtils;
     this.logger = logger;
   }
 
@@ -210,6 +214,16 @@ public class JavaCodeGenerator {
     if (builderDef.getConfiguration().shouldUseBuilderImplementationAnnotation()) {
       classBuilder.addAnnotation(createAnnotationBuilderImplementation(dtoBaseClass));
     }
+    if (builderDef.getConfiguration().shouldUseJacksonDeserializerAnnotation()) {
+      if (elementUtils.getTypeElement("com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder")
+          != null) {
+        classBuilder.addAnnotation(
+            createAnnotationJsonPOJOBuilder(builderDef.getConfiguration().getSetterSuffix()));
+      } else {
+        logger.warning(
+            "Jackson support enabled but 'com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder' not found on classpath. Annotation skipped.");
+      }
+    }
 
     logger.debug(
         "Writing builder class to file: %s.%s",
@@ -314,6 +328,14 @@ public class JavaCodeGenerator {
   private AnnotationSpec createAnnotationBuilderImplementation(ClassName dtoClass) {
     return AnnotationSpec.builder(BuilderImplementation.class)
         .addMember("forClass", "$1T.class", dtoClass)
+        .build();
+  }
+
+  private AnnotationSpec createAnnotationJsonPOJOBuilder(String setterPrefix) {
+    ClassName jsonPojoBuilderClass =
+        ClassName.get("com.fasterxml.jackson.databind.annotation", "JsonPOJOBuilder");
+    return AnnotationSpec.builder(jsonPojoBuilderClass)
+        .addMember("withPrefix", "$S", setterPrefix == null ? "" : setterPrefix)
         .build();
   }
 
