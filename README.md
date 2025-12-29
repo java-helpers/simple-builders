@@ -269,7 +269,7 @@ The `With` interface provides type-safe setter methods that mirror the builder's
 
 Simple Builders provides extensive configuration options to customize the generated builder code. You can control:
 
-- Field setter generation (Supplier, Provider, Builder patterns)
+- Field setter generation (Supplier, Consumer, Builder patterns)
 - Conditional logic helpers
 - Access modifiers for builders and methods
 - Collection helper methods

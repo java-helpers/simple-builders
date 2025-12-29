@@ -81,17 +81,25 @@ Create reusable configuration presets with custom template annotations:
 
 ```java
 @SimpleBuilder.Template(options = @SimpleBuilder.Options(
-    generateFieldSupplier = false,
-    generateFieldProvider = false,
-    generateBuilderProvider = false,
-    generateConditionalHelper = false,
-    generateVarArgsHelpers = false,
-    usingArrayListBuilder = false,
-    usingArrayListBuilderWithElementBuilders = false,
-    usingHashSetBuilder = false,
-    usingHashSetBuilderWithElementBuilders = false,
-    usingHashMapBuilder = false,
-    generateWithInterface = false
+    generateFieldSupplier = OptionState.DISABLED,
+    generateFieldConsumer = OptionState.DISABLED,
+    generateBuilderConsumer = OptionState.DISABLED,
+    generateConditionalHelper = OptionState.DISABLED,
+    generateVarArgsHelpers = OptionState.DISABLED,
+    generateStringFormatHelpers = OptionState.DISABLED,
+    generateAddToCollectionHelpers = OptionState.DISABLED,
+    generateUnboxedOptional = OptionState.DISABLED,
+    copyTypeAnnotations = OptionState.DISABLED,
+    usingArrayListBuilder = OptionState.DISABLED,
+    usingArrayListBuilderWithElementBuilders = OptionState.DISABLED,
+    usingHashSetBuilder = OptionState.DISABLED,
+    usingHashSetBuilderWithElementBuilders = OptionState.DISABLED,
+    usingHashMapBuilder = OptionState.DISABLED,
+    generateWithInterface = OptionState.DISABLED,
+    usingGeneratedAnnotation = OptionState.DISABLED,
+    usingBuilderImplementationAnnotation = OptionState.DISABLED,
+    implementsBuilderBase = OptionState.DISABLED,
+    usingJacksonDeserializerAnnotation = OptionState.DISABLED
 ))
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.TYPE)
@@ -742,27 +750,27 @@ public class PersonDto {
 Generate only essential builder methods:
 
 ```java
-@SimpleBuilder
-@SimpleBuilder.Options(
-    generateFieldSupplier = OptionState.DISABLED,
-    generateFieldConsumer = OptionState.DISABLED,
-    generateBuilderConsumer = OptionState.DISABLED,
-    generateConditionalHelper = OptionState.DISABLED,
-    generateVarArgsHelpers = OptionState.DISABLED,
-    generateStringFormatHelpers = OptionState.DISABLED,
-    generateAddToCollectionHelpers = OptionState.DISABLED,
-    generateUnboxedOptional = OptionState.DISABLED,
-    copyTypeAnnotations = OptionState.DISABLED,
-    usingArrayListBuilder = OptionState.DISABLED,
-    usingArrayListBuilderWithElementBuilders = OptionState.DISABLED,
-    usingHashSetBuilder = OptionState.DISABLED,
-    usingHashSetBuilderWithElementBuilders = OptionState.DISABLED,
-    usingHashMapBuilder = OptionState.DISABLED,
-    generateWithInterface = OptionState.DISABLED,
-    usingGeneratedAnnotation = OptionState.DISABLED,
-    usingBuilderImplementationAnnotation = OptionState.DISABLED,
-    implementsBuilderBase = OptionState.DISABLED,
-    usingJacksonDeserializerAnnotation = OptionState.DISABLED
+@SimpleBuilder(
+    options = @SimpleBuilder.Options(
+        generateFieldSupplier = OptionState.DISABLED,
+        generateFieldConsumer = OptionState.DISABLED,
+        generateBuilderConsumer = OptionState.DISABLED,
+        generateConditionalHelper = OptionState.DISABLED,
+        generateVarArgsHelpers = OptionState.DISABLED,
+        generateStringFormatHelpers = OptionState.DISABLED,
+        generateAddToCollectionHelpers = OptionState.DISABLED,
+        generateUnboxedOptional = OptionState.DISABLED,
+        copyTypeAnnotations = OptionState.DISABLED,
+        usingArrayListBuilder = OptionState.DISABLED,
+        usingArrayListBuilderWithElementBuilders = OptionState.DISABLED,
+        usingHashSetBuilder = OptionState.DISABLED,
+        usingHashSetBuilderWithElementBuilders = OptionState.DISABLED,
+        usingHashMapBuilder = OptionState.DISABLED,
+        generateWithInterface = OptionState.DISABLED,
+        usingGeneratedAnnotation = OptionState.DISABLED,
+        usingBuilderImplementationAnnotation = OptionState.DISABLED,
+        implementsBuilderBase = OptionState.DISABLED,
+        usingJacksonDeserializerAnnotation = OptionState.DISABLED
 )
 public class MinimalDto {
     private String name;
@@ -801,11 +809,11 @@ Optimize for collection manipulation:
 ```java
 @SimpleBuilder
 @SimpleBuilder.Options(
-    generateVarArgsHelpers = true,
-    usingArrayListBuilder = true,
-    usingArrayListBuilderWithElementBuilders = true,
-    usingHashSetBuilder = true,
-    usingHashMapBuilder = true
+    generateVarArgsHelpers = OptionState.ENABLED,
+    usingArrayListBuilder = OptionState.ENABLED,
+    usingArrayListBuilderWithElementBuilders = OptionState.ENABLED,
+    usingHashSetBuilder = OptionState.ENABLED,
+    usingHashMapBuilder = OptionState.ENABLED
 )
 public class TeamDto {
     private List<String> memberNames;
@@ -833,17 +841,25 @@ Create a reusable template for lightweight builders:
 
 ```java
 @SimpleBuilder.Template(options = @SimpleBuilder.Options(
-    generateFieldSupplier = false,
-    generateFieldProvider = false,
-    generateBuilderProvider = false,
-    generateConditionalHelper = false,
-    generateVarArgsHelpers = false,
-    usingArrayListBuilder = false,
-    usingArrayListBuilderWithElementBuilders = false,
-    usingHashSetBuilder = false,
-    usingHashSetBuilderWithElementBuilders = false,
-    usingHashMapBuilder = false,
-    generateWithInterface = false
+    generateFieldSupplier = OptionState.DISABLED,
+    generateFieldConsumer = OptionState.DISABLED,
+    generateBuilderConsumer = OptionState.DISABLED,
+    generateConditionalHelper = OptionState.DISABLED,
+    generateVarArgsHelpers = OptionState.DISABLED,
+    generateStringFormatHelpers = OptionState.DISABLED,
+    generateAddToCollectionHelpers = OptionState.DISABLED,
+    generateUnboxedOptional = OptionState.DISABLED,
+    copyTypeAnnotations = OptionState.DISABLED,
+    usingArrayListBuilder = OptionState.DISABLED,
+    usingArrayListBuilderWithElementBuilders = OptionState.DISABLED,
+    usingHashSetBuilder = OptionState.DISABLED,
+    usingHashSetBuilderWithElementBuilders = OptionState.DISABLED,
+    usingHashMapBuilder = OptionState.DISABLED,
+    generateWithInterface = OptionState.DISABLED,
+    usingGeneratedAnnotation = OptionState.DISABLED,
+    usingBuilderImplementationAnnotation = OptionState.DISABLED,
+    implementsBuilderBase = OptionState.DISABLED,
+    usingJacksonDeserializerAnnotation = OptionState.DISABLED
 ))
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.TYPE)
@@ -913,7 +929,7 @@ Configuration resolution follows these priority rules:
 // Global default: true
 
 @SimpleBuilder
-@SimpleBuilder.Options(generateFieldSupplier = true)  // Annotation wins!
+@SimpleBuilder.Options(generateFieldSupplier = OptionState.ENABLED)  // Annotation wins!
 public class Person {
     private String name;
 }
