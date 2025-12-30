@@ -719,11 +719,20 @@ Generates a Jackson `SimpleModule` (named `SimpleBuildersJacksonModule`) that re
 
 **When ENABLED**:
 1. The builder is generated as usual.
-2. A `SimpleBuildersJacksonModule` class is generated in the package of the first processed DTO.
+2. A `SimpleBuildersJacksonModule` class is generated.
 3. The module registers a MixIn for the DTO that points to the Builder.
+
+**Package Name**:
+By default, a `SimpleBuildersJacksonModule` is generated in **each package** that contains DTOs configured for Jackson module generation. This ensures deterministic behavior.
+To specify a single fixed package name for all generated modules (grouping them into one), use the [`jacksonModulePackage`](#jacksonmodulepackage) option.
 
 **Generated Module Example**:
 ```java
+package com.example.project.dto; // Generated in the same package as DTOs (by default)
+
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
 public class SimpleBuildersJacksonModule extends SimpleModule {
     public SimpleBuildersJacksonModule() {
         setMixInAnnotation(PersonDto.class, PersonDtoMixin.class);
@@ -737,12 +746,33 @@ public class SimpleBuildersJacksonModule extends SimpleModule {
 **Usage**:
 ```java
 ObjectMapper mapper = new ObjectMapper();
-mapper.registerModule(new SimpleBuildersJacksonModule());
+
+// Register the module for your package
+// Note: If you have DTOs in multiple packages and use the default strategy,
+// you need to register the generated module for each package.
+mapper.registerModule(new com.example.project.dto.SimpleBuildersJacksonModule());
 
 PersonDto dto = mapper.readValue(json, PersonDto.class);
 ```
 
+**Tip**: Use the [`jacksonModulePackage`](#jacksonmodulepackage) option to generate a single module for your entire project, making registration easier:
+`mapper.registerModule(new com.example.project.config.SimpleBuildersJacksonModule());`
+
 **Note**: This requires `com.fasterxml.jackson.core:jackson-databind` on the classpath.
+
+---
+
+#### `jacksonModulePackage`
+
+**Default**: `null` (uses package of each processed DTO) | **Compiler Option**: `-Asimplebuilder.jacksonModulePackage=com.your.package`
+
+Specifies the package name where the `SimpleBuildersJacksonModule` class will be generated.
+This is highly recommended to ensure deterministic output location and avoid split-package issues.
+
+**Note**: If not specified, a separate `SimpleBuildersJacksonModule` will be generated in **each package** containing processed DTOs.
+
+**Example**:
+`-Asimplebuilder.jacksonModulePackage=com.example.project.config`
 
 ---
 

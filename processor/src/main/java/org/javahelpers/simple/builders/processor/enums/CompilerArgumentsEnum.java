@@ -113,6 +113,9 @@ public enum CompilerArgumentsEnum {
   /** Option for Jackson Module generation. */
   GENERATE_JACKSON_MODULE("generateJacksonModule"),
 
+  /** Option for Jackson Module package name. */
+  JACKSON_MODULE_PACKAGE("jacksonModulePackage"),
+
   // === Naming ===
   /** Option for builder class name suffix. */
   BUILDER_SUFFIX("builderSuffix"),

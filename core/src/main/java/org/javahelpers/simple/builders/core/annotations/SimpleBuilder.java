@@ -594,13 +594,28 @@ public @interface SimpleBuilder {
      * This module allows Jackson to use the generated builders for deserialization without needing
      * to annotate the DTO classes.
      *
-     * <p>The generated module class will be named {@code SimpleBuildersJacksonModule} (by default)
-     * and placed in the same package as the first processed DTO.
+     * <p>The generated module class will be named {@code SimpleBuildersJacksonModule} (by default).
+     * By default, a module is generated in <b>each package</b> containing processed DTOs. To group
+     * all registrations into a single module, use {@link #jacksonModulePackage()}.
      *
      * <p>Default: DISABLED <br>
      * Compiler option: -Asimplebuilder.generateJacksonModule
      */
     OptionState generateJacksonModule() default OptionState.UNSET;
+
+    /**
+     * Specifies the package name where the {@code SimpleBuildersJacksonModule} class will be
+     * generated. <br>
+     * This is useful to avoid split-package issues or to group all module registrations into a
+     * single module.
+     *
+     * <p>If not specified, a separate module will be generated in <b>each package</b> containing
+     * processed DTOs.
+     *
+     * <p>Default: "" (empty - generate one module per package) <br>
+     * Compiler option: -Asimplebuilder.jacksonModulePackage
+     */
+    String jacksonModulePackage() default "";
 
     // === Naming ===
     /**

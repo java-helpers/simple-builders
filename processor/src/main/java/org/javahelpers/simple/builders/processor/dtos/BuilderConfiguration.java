@@ -88,6 +88,7 @@ public record BuilderConfiguration(
     OptionState generateWithInterface,
     OptionState usingJacksonDeserializerAnnotation,
     OptionState generateJacksonModule,
+    String jacksonModulePackage,
     String builderSuffix,
     String setterSuffix) {
 
@@ -116,6 +117,7 @@ public record BuilderConfiguration(
           .generateWithInterface(ENABLED)
           .usingJacksonDeserializerAnnotation(DISABLED)
           .generateJacksonModule(DISABLED)
+          .jacksonModulePackage(null)
           .builderSuffix("Builder")
           .setterSuffix("")
           .build();
@@ -214,6 +216,10 @@ public record BuilderConfiguration(
     return methodAccess;
   }
 
+  public String getJacksonModulePackage() {
+    return jacksonModulePackage;
+  }
+
   public String getBuilderSuffix() {
     return builderSuffix;
   }
@@ -285,6 +291,7 @@ public record BuilderConfiguration(
                 other.usingJacksonDeserializerAnnotation, this.usingJacksonDeserializerAnnotation))
         .generateJacksonModule(
             mergeOptionState(other.generateJacksonModule, this.generateJacksonModule))
+        .jacksonModulePackage(mergeString(other.jacksonModulePackage, this.jacksonModulePackage))
         .builderSuffix(mergeString(other.builderSuffix, this.builderSuffix))
         .setterSuffix(mergeString(other.setterSuffix, this.setterSuffix))
         .build();
@@ -384,6 +391,9 @@ public record BuilderConfiguration(
     if (generateJacksonModule != UNSET) {
       builder.append("generateJacksonModule", generateJacksonModule);
     }
+    if (jacksonModulePackage != null) {
+      builder.append("jacksonModulePackage", jacksonModulePackage);
+    }
     if (builderSuffix != null && !builderSuffix.equals("Builder")) {
       builder.append("builderSuffix", builderSuffix);
     }
@@ -431,6 +441,7 @@ public record BuilderConfiguration(
     private OptionState generateWithInterface = OptionState.UNSET;
     private OptionState usingJacksonDeserializerAnnotation = OptionState.UNSET;
     private OptionState generateJacksonModule = OptionState.UNSET;
+    private String jacksonModulePackage = null;
 
     // === Naming ===
     private String builderSuffix = null;
@@ -504,6 +515,11 @@ public record BuilderConfiguration(
 
     public Builder generateJacksonModule(boolean value) {
       this.generateJacksonModule = value ? ENABLED : DISABLED;
+      return this;
+    }
+
+    public Builder jacksonModulePackage(String value) {
+      this.jacksonModulePackage = value == null ? null : value.trim();
       return this;
     }
 
@@ -702,6 +718,7 @@ public record BuilderConfiguration(
           generateWithInterface,
           usingJacksonDeserializerAnnotation,
           generateJacksonModule,
+          jacksonModulePackage,
           builderSuffix,
           setterSuffix);
     }
