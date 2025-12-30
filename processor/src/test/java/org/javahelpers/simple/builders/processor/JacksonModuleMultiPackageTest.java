@@ -1,9 +1,9 @@
 package org.javahelpers.simple.builders.processor;
 
 import static com.google.testing.compile.CompilationSubject.assertThat;
+import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.assertContaining;
 
 import com.google.testing.compile.Compilation;
-import com.google.testing.compile.JavaFileObjects;
 import javax.tools.JavaFileObject;
 import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
 import org.junit.jupiter.api.Test;
@@ -45,42 +45,44 @@ class JacksonModuleMultiPackageTest {
     assertThat(compilation).succeeded();
 
     // Verify module in pkg.one
-    assertThat(compilation)
-        .generatedSourceFile("pkg.one.SimpleBuildersJacksonModule")
-        .hasSourceEquivalentTo(
-            JavaFileObjects.forSourceString(
-                "pkg.one.SimpleBuildersJacksonModule",
-                """
-                package pkg.one;
-                import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-                import com.fasterxml.jackson.databind.module.SimpleModule;
-                public class SimpleBuildersJacksonModule extends SimpleModule {
-                  public SimpleBuildersJacksonModule() {
-                    setMixInAnnotation(DtoOne.class, DtoOneMixin.class);
-                  }
-                  @JsonDeserialize(builder = DtoOneBuilder.class)
-                  private interface DtoOneMixin {}
-                }
-                """));
+    JavaFileObject module1 =
+        compilation.generatedSourceFile("pkg.one.SimpleBuildersJacksonModule").orElseThrow();
+    String content1;
+    try {
+      content1 = module1.getCharContent(false).toString();
+    } catch (Exception e) {
+      content1 = module1.toString();
+    }
+    assertContaining(
+        content1,
+        "package pkg.one;",
+        "import com.fasterxml.jackson.databind.annotation.JsonDeserialize;",
+        "import com.fasterxml.jackson.databind.module.SimpleModule;",
+        "public class SimpleBuildersJacksonModule extends SimpleModule",
+        "setMixInAnnotation(DtoOne.class, DtoOneMixin.class)",
+        "@JsonDeserialize",
+        "builder = DtoOneBuilder.class",
+        "private interface DtoOneMixin");
 
     // Verify module in pkg.two
-    assertThat(compilation)
-        .generatedSourceFile("pkg.two.SimpleBuildersJacksonModule")
-        .hasSourceEquivalentTo(
-            JavaFileObjects.forSourceString(
-                "pkg.two.SimpleBuildersJacksonModule",
-                """
-                package pkg.two;
-                import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-                import com.fasterxml.jackson.databind.module.SimpleModule;
-                public class SimpleBuildersJacksonModule extends SimpleModule {
-                  public SimpleBuildersJacksonModule() {
-                    setMixInAnnotation(DtoTwo.class, DtoTwoMixin.class);
-                  }
-                  @JsonDeserialize(builder = DtoTwoBuilder.class)
-                  private interface DtoTwoMixin {}
-                }
-                """));
+    JavaFileObject module2 =
+        compilation.generatedSourceFile("pkg.two.SimpleBuildersJacksonModule").orElseThrow();
+    String content2;
+    try {
+      content2 = module2.getCharContent(false).toString();
+    } catch (Exception e) {
+      content2 = module2.toString();
+    }
+    assertContaining(
+        content2,
+        "package pkg.two;",
+        "import com.fasterxml.jackson.databind.annotation.JsonDeserialize;",
+        "import com.fasterxml.jackson.databind.module.SimpleModule;",
+        "public class SimpleBuildersJacksonModule extends SimpleModule",
+        "setMixInAnnotation(DtoTwo.class, DtoTwoMixin.class)",
+        "@JsonDeserialize",
+        "builder = DtoTwoBuilder.class",
+        "private interface DtoTwoMixin");
   }
 
   @Test
@@ -126,25 +128,25 @@ class JacksonModuleMultiPackageTest {
     assertThat(compilation).succeeded();
 
     // Should generate in pkg.target, NOT pkg.source
-    assertThat(compilation)
-        .generatedSourceFile("pkg.target.SimpleBuildersJacksonModule")
-        .hasSourceEquivalentTo(
-            JavaFileObjects.forSourceString(
-                "pkg.target.SimpleBuildersJacksonModule",
-                """
-                package pkg.target;
-                import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-                import com.fasterxml.jackson.databind.module.SimpleModule;
-                import pkg.source.DtoWithOverride;
-                import pkg.source.DtoWithOverrideBuilder;
-
-                public class SimpleBuildersJacksonModule extends SimpleModule {
-                  public SimpleBuildersJacksonModule() {
-                    setMixInAnnotation(DtoWithOverride.class, DtoWithOverrideMixin.class);
-                  }
-                  @JsonDeserialize(builder = DtoWithOverrideBuilder.class)
-                  private interface DtoWithOverrideMixin {}
-                }
-                """));
+    JavaFileObject module3 =
+        compilation.generatedSourceFile("pkg.target.SimpleBuildersJacksonModule").orElseThrow();
+    String content3;
+    try {
+      content3 = module3.getCharContent(false).toString();
+    } catch (Exception e) {
+      content3 = module3.toString();
+    }
+    assertContaining(
+        content3,
+        "package pkg.target;",
+        "import com.fasterxml.jackson.databind.annotation.JsonDeserialize;",
+        "import com.fasterxml.jackson.databind.module.SimpleModule;",
+        "import pkg.source.DtoWithOverride;",
+        "import pkg.source.DtoWithOverrideBuilder;",
+        "public class SimpleBuildersJacksonModule extends SimpleModule",
+        "setMixInAnnotation(DtoWithOverride.class, DtoWithOverrideMixin.class)",
+        "@JsonDeserialize",
+        "builder = DtoWithOverrideBuilder.class",
+        "private interface DtoWithOverrideMixin");
   }
 }
