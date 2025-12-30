@@ -30,14 +30,13 @@ import com.palantir.javapoet.JavaFile;
 import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.TypeSpec;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.util.Elements;
+import org.apache.commons.collections4.SetValuedMap;
+import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
 import org.javahelpers.simple.builders.processor.dtos.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.dtos.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.dtos.TypeName;
@@ -54,7 +53,8 @@ public class JacksonModuleGenerator {
   private final Filer filer;
   private final Elements elementUtils;
   private final ProcessingLogger logger;
-  private final Map<String, Set<JacksonModuleEntry>> entriesByPackage = new HashMap<>();
+  private final SetValuedMap<String, JacksonModuleEntry> entriesByPackage =
+      new HashSetValuedHashMap<>();
   private final boolean jacksonAvailable;
   private boolean enabled = false;
 
@@ -97,11 +97,10 @@ public class JacksonModuleGenerator {
     }
 
     this.enabled = true;
-    entriesByPackage
-        .computeIfAbsent(targetPackage, k -> new HashSet<>())
-        .add(
-            new JacksonModuleEntry(
-                builderDef.getBuildingTargetTypeName(), builderDef.getBuilderTypeName()));
+    entriesByPackage.put(
+        targetPackage,
+        new JacksonModuleEntry(
+            builderDef.getBuildingTargetTypeName(), builderDef.getBuilderTypeName()));
   }
 
   /**
@@ -112,12 +111,11 @@ public class JacksonModuleGenerator {
   public void generate() {
     logger.info(
         "simple-builders: Processing OVER. JacksonModuleEnabled: %s, Packages: %d",
-        enabled, entriesByPackage.size());
+        enabled, entriesByPackage.keySet().size());
 
     if (enabled && !entriesByPackage.isEmpty()) {
-      for (Map.Entry<String, Set<JacksonModuleEntry>> entry : entriesByPackage.entrySet()) {
-        String packageName = entry.getKey();
-        Set<JacksonModuleEntry> moduleEntries = entry.getValue();
+      for (String packageName : entriesByPackage.keySet()) {
+        Set<JacksonModuleEntry> moduleEntries = entriesByPackage.get(packageName);
 
         try {
           generateModuleFile(packageName, moduleEntries);
