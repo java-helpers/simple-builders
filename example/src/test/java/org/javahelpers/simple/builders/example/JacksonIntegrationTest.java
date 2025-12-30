@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class JacksonIntegrationTest {
 
     @Test
-    void shouldFailWithoutJacksonModule() throws Exception {
+    void shouldFailWithoutJacksonModule() {
         // Given
         ObjectMapper mapper = new ObjectMapper();
         // NOTE: NOT registering the generated module
