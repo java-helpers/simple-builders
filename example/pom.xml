@@ -17,6 +17,7 @@
     <code-format.version>2.25</code-format.version>
     <commons-lang.version>3.18.0</commons-lang.version>
     <junit-jupiter.version>5.11.4</junit-jupiter.version>
+    <jackson-databind.version>2.18.2</jackson-databind.version>
 
     <plugin.maven.compiler.version>3.13.0</plugin.maven.compiler.version>
     <plugin.maven.deploy.version>3.1.1</plugin.maven.deploy.version>
@@ -47,6 +48,13 @@
       <artifactId>junit-jupiter-api</artifactId>
       <version>${junit-jupiter.version}</version>
       <scope>test</scope>
+    </dependency>
+
+    <!-- Jackson dependency required for testing Jackson integration features -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>${jackson-databind.version}</version>
     </dependency>
 
   </dependencies>
