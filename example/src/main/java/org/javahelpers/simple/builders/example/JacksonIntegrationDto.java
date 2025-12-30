@@ -9,22 +9,20 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
             generateJacksonModule = OptionState.ENABLED,
             usingJacksonDeserializerAnnotation = OptionState.ENABLED))
 public class JacksonIntegrationDto {
-    private String name;
-    private int age;
+    private final String name;
+    private final int age;
 
-    public String getName() {
+    // Protected constructor - Jackson can't access this, but the builder can
+    protected JacksonIntegrationDto(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+
+    public String name() {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public int getAge() {
+    public int age() {
         return age;
-    }
-
-    public void setAge(int age) {
-        this.age = age;
     }
 }
