@@ -27,6 +27,7 @@ package org.javahelpers.simple.builders.processor.dtos;
 import static org.javahelpers.simple.builders.core.enums.AccessModifier.*;
 import static org.javahelpers.simple.builders.core.enums.OptionState.*;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
@@ -519,7 +520,7 @@ public record BuilderConfiguration(
     }
 
     public Builder jacksonModulePackage(String value) {
-      this.jacksonModulePackage = value == null ? null : value.trim();
+      this.jacksonModulePackage = StringUtils.trimToNull(value);
       return this;
     }
 

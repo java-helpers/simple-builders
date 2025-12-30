@@ -10,6 +10,14 @@ import org.junit.jupiter.api.Test;
 
 class JacksonModuleMultiPackageTest {
 
+  private static String extractContent(JavaFileObject fileObject) {
+    try {
+      return fileObject.getCharContent(false).toString();
+    } catch (Exception e) {
+      return fileObject.toString();
+    }
+  }
+
   @Test
   void generateJacksonModule_WithMultiplePackages_ShouldGenerateMultipleModules() {
     // Given: Two DTOs in different packages, default configuration
@@ -47,14 +55,9 @@ class JacksonModuleMultiPackageTest {
     // Verify module in pkg.one
     JavaFileObject module1 =
         compilation.generatedSourceFile("pkg.one.SimpleBuildersJacksonModule").orElseThrow();
-    String content1;
-    try {
-      content1 = module1.getCharContent(false).toString();
-    } catch (Exception e) {
-      content1 = module1.toString();
-    }
+    String pkgOneContent = extractContent(module1);
     assertContaining(
-        content1,
+        pkgOneContent,
         "package pkg.one;",
         "import com.fasterxml.jackson.databind.annotation.JsonDeserialize;",
         "import com.fasterxml.jackson.databind.module.SimpleModule;",
@@ -67,14 +70,9 @@ class JacksonModuleMultiPackageTest {
     // Verify module in pkg.two
     JavaFileObject module2 =
         compilation.generatedSourceFile("pkg.two.SimpleBuildersJacksonModule").orElseThrow();
-    String content2;
-    try {
-      content2 = module2.getCharContent(false).toString();
-    } catch (Exception e) {
-      content2 = module2.toString();
-    }
+    String pkgTwoContent = extractContent(module2);
     assertContaining(
-        content2,
+        pkgTwoContent,
         "package pkg.two;",
         "import com.fasterxml.jackson.databind.annotation.JsonDeserialize;",
         "import com.fasterxml.jackson.databind.module.SimpleModule;",
@@ -127,17 +125,12 @@ class JacksonModuleMultiPackageTest {
     // Then
     assertThat(compilation).succeeded();
 
-    // Should generate in pkg.target, NOT pkg.source
+    // Verify module in pkg.target (not pkg.source)
     JavaFileObject module3 =
         compilation.generatedSourceFile("pkg.target.SimpleBuildersJacksonModule").orElseThrow();
-    String content3;
-    try {
-      content3 = module3.getCharContent(false).toString();
-    } catch (Exception e) {
-      content3 = module3.toString();
-    }
+    String pkgTargetContent = extractContent(module3);
     assertContaining(
-        content3,
+        pkgTargetContent,
         "package pkg.target;",
         "import com.fasterxml.jackson.databind.annotation.JsonDeserialize;",
         "import com.fasterxml.jackson.databind.module.SimpleModule;",
