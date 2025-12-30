@@ -229,12 +229,13 @@ public class JavaCodeGenerator {
         "Writing builder class to file: %s.%s",
         builderDef.getBuilderTypeName().getPackageName(),
         builderDef.getBuilderTypeName().getClassName());
-    writeClassToFile(builderDef.getBuilderTypeName().getPackageName(), classBuilder.build());
+    writeBuilderClassToFile(builderDef.getBuilderTypeName().getPackageName(), classBuilder.build());
     logger.debug(
         "Successfully generated builder: %s", builderDef.getBuilderTypeName().getClassName());
   }
 
-  private void writeClassToFile(String packageName, TypeSpec typeSpec) throws BuilderException {
+  private void writeBuilderClassToFile(String packageName, TypeSpec typeSpec)
+      throws BuilderException {
     try {
       JavaFile.builder(packageName, typeSpec)
           .skipJavaLangImports(true)
@@ -243,6 +244,15 @@ public class JavaCodeGenerator {
           .addStaticImport(TrackedValue.class, "unsetValue")
           .build()
           .writeTo(filer);
+    } catch (IOException ex) {
+      throw new BuilderException(null, ex);
+    }
+  }
+
+  private void writeSimpleClassToFile(String packageName, TypeSpec typeSpec)
+      throws BuilderException {
+    try {
+      JavaFile.builder(packageName, typeSpec).skipJavaLangImports(true).build().writeTo(filer);
     } catch (IOException ex) {
       throw new BuilderException(null, ex);
     }
@@ -726,5 +736,69 @@ public class JavaCodeGenerator {
       paramBuilder.addAnnotations(map2AnnotationSpecs(paramDto.getAnnotations()));
     }
     return paramBuilder.build();
+  }
+
+  /**
+   * Generates a Jackson SimpleModule based on the provided definition.
+   *
+   * @param moduleDef the definition of the Jackson module to generate
+   */
+  public void generateJacksonModule(JacksonModuleDefinitionDto moduleDef) {
+    String packageName = moduleDef.getTargetPackage();
+    String moduleClassName = "SimpleBuildersJacksonModule";
+
+    logger.info("Generating Jackson Module '%s' in package '%s'", moduleClassName, packageName);
+
+    ClassName simpleModuleClass =
+        ClassName.get("com.fasterxml.jackson.databind.module", "SimpleModule");
+    ClassName jsonDeserializeClass =
+        ClassName.get("com.fasterxml.jackson.databind.annotation", "JsonDeserialize");
+
+    // Create the constructor
+    MethodSpec.Builder constructorBuilder =
+        MethodSpec.constructorBuilder().addModifiers(Modifier.PUBLIC);
+
+    // Create the class
+    TypeSpec.Builder classBuilder =
+        TypeSpec.classBuilder(moduleClassName)
+            .addModifiers(Modifier.PUBLIC)
+            .superclass(simpleModuleClass);
+
+    for (JacksonModuleEntryDto entry : moduleDef.getEntries()) {
+      ClassName dtoClass =
+          ClassName.get(entry.dtoType().getPackageName(), entry.dtoType().getClassName());
+      ClassName builderClass =
+          ClassName.get(entry.builderType().getPackageName(), entry.builderType().getClassName());
+
+      // Create MixIn interface name: DtoNameMixin
+      String mixinName = entry.dtoType().getClassName() + "Mixin";
+
+      // Create MixIn interface with @JsonDeserialize(builder = Builder.class)
+      TypeSpec mixinInterface =
+          TypeSpec.interfaceBuilder(mixinName)
+              .addModifiers(Modifier.PRIVATE)
+              .addAnnotation(
+                  AnnotationSpec.builder(jsonDeserializeClass)
+                      .addMember("builder", "$T.class", builderClass)
+                      .build())
+              .build();
+
+      classBuilder.addType(mixinInterface);
+
+      // Add registration to constructor: setMixInAnnotation(Dto.class, Mixin.class)
+      constructorBuilder.addStatement(
+          "setMixInAnnotation($T.class, $N.class)", dtoClass, mixinName);
+    }
+
+    classBuilder.addMethod(constructorBuilder.build());
+
+    // Write file
+    try {
+      writeSimpleClassToFile(packageName, classBuilder.build());
+    } catch (BuilderException e) {
+      logger.warning(
+          "simple-builders: Error generating Jackson module for package %s: %s\n%s",
+          packageName, e.getMessage(), java.util.Arrays.toString(e.getStackTrace()));
+    }
   }
 }

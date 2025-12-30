@@ -81,8 +81,7 @@ public class BuilderProcessor extends AbstractProcessor {
     this.codeGenerator =
         new JavaCodeGenerator(processingEnv.getFiler(), processingEnv.getElementUtils(), logger);
     this.jacksonModuleGenerator =
-        new JacksonModuleGenerator(
-            processingEnv.getFiler(), processingEnv.getElementUtils(), logger);
+        new JacksonModuleGenerator(processingEnv.getElementUtils(), logger);
 
     SourceVersion current = processingEnv.getSourceVersion();
     this.supportedJdk = isAtLeastJava17(current);
@@ -102,7 +101,10 @@ public class BuilderProcessor extends AbstractProcessor {
 
     // Generate Jackson Module if processing is over and feature is enabled
     if (roundEnv.processingOver()) {
-      jacksonModuleGenerator.generate();
+      var modules = jacksonModuleGenerator.getModuleDefinitions();
+      for (var module : modules) {
+        codeGenerator.generateJacksonModule(module);
+      }
       return false;
     }
 

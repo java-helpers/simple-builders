@@ -24,22 +24,17 @@
 
 package org.javahelpers.simple.builders.processor.util;
 
-import com.palantir.javapoet.AnnotationSpec;
-import com.palantir.javapoet.ClassName;
-import com.palantir.javapoet.JavaFile;
-import com.palantir.javapoet.MethodSpec;
-import com.palantir.javapoet.TypeSpec;
-import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
-import javax.annotation.processing.Filer;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.Modifier;
 import javax.lang.model.util.Elements;
 import org.apache.commons.collections4.SetValuedMap;
 import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
 import org.javahelpers.simple.builders.processor.dtos.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.dtos.BuilderDefinitionDto;
-import org.javahelpers.simple.builders.processor.dtos.TypeName;
+import org.javahelpers.simple.builders.processor.dtos.JacksonModuleDefinitionDto;
+import org.javahelpers.simple.builders.processor.dtos.JacksonModuleEntryDto;
 
 /**
  * Generates Jackson SimpleModules to register all generated builders.
@@ -49,17 +44,13 @@ import org.javahelpers.simple.builders.processor.dtos.TypeName;
  */
 public class JacksonModuleGenerator {
 
-  private static final String MODULE_CLASS_NAME = "SimpleBuildersJacksonModule";
-  private final Filer filer;
   private final Elements elementUtils;
   private final ProcessingLogger logger;
-  private final SetValuedMap<String, JacksonModuleEntry> entriesByPackage =
+  private final SetValuedMap<String, JacksonModuleEntryDto> entriesByPackage =
       new HashSetValuedHashMap<>();
   private final boolean jacksonAvailable;
-  private boolean enabled = false;
 
-  public JacksonModuleGenerator(Filer filer, Elements elementUtils, ProcessingLogger logger) {
-    this.filer = filer;
+  public JacksonModuleGenerator(Elements elementUtils, ProcessingLogger logger) {
     this.elementUtils = elementUtils;
     this.logger = logger;
     this.jacksonAvailable =
@@ -70,8 +61,29 @@ public class JacksonModuleGenerator {
   public void addEntry(BuilderDefinitionDto builderDef, Element sourceElement) {
     BuilderConfiguration config = builderDef.getConfiguration();
 
-    if (!config.shouldGenerateJacksonModule()) {
+    if (!validateForModuleGeneration(config, sourceElement)) {
       return;
+    }
+
+    String targetPackage = getTargetPackage(config, builderDef);
+
+    entriesByPackage.put(
+        targetPackage,
+        new JacksonModuleEntryDto(
+            builderDef.getBuildingTargetTypeName(), builderDef.getBuilderTypeName()));
+  }
+
+  private String getTargetPackage(BuilderConfiguration config, BuilderDefinitionDto builderDef) {
+    String targetPackage = config.getJacksonModulePackage();
+    if (targetPackage == null) {
+      targetPackage = builderDef.getBuildingTargetTypeName().getPackageName();
+    }
+    return targetPackage;
+  }
+
+  private boolean validateForModuleGeneration(BuilderConfiguration config, Element sourceElement) {
+    if (!config.shouldGenerateJacksonModule()) {
+      return false;
     }
 
     if (!jacksonAvailable) {
@@ -79,7 +91,7 @@ public class JacksonModuleGenerator {
           sourceElement,
           "simple-builders: generateJacksonModule is enabled for %s, but Jackson dependencies (com.fasterxml.jackson.databind.module.SimpleModule) are not found on the classpath. Module generation skipped.",
           sourceElement.getSimpleName());
-      return;
+      return false;
     }
 
     if (!config.shouldUseJacksonDeserializerAnnotation()) {
@@ -88,106 +100,37 @@ public class JacksonModuleGenerator {
           "simple-builders: generateJacksonModule is enabled but usingJacksonDeserializerAnnotation is disabled. "
               + "This is a misconfiguration. Jackson Module will NOT be generated for %s.",
           sourceElement.getSimpleName());
-      return;
+      return false;
     }
-
-    String targetPackage = config.getJacksonModulePackage();
-    if (targetPackage == null) {
-      targetPackage = builderDef.getBuildingTargetTypeName().getPackageName();
-    }
-
-    this.enabled = true;
-    entriesByPackage.put(
-        targetPackage,
-        new JacksonModuleEntry(
-            builderDef.getBuildingTargetTypeName(), builderDef.getBuilderTypeName()));
+    return true;
   }
 
   /**
-   * Generates the Jackson Modules containing registrations for the accumulated builders.
+   * Returns the definitions for the Jackson Modules to be generated.
    *
-   * <p>Logs status and clears state after generation.
+   * <p>Logs status and clears state after retrieval.
+   *
+   * @return list of JacksonModuleDefinitionDto
    */
-  public void generate() {
-    logger.info(
-        "simple-builders: Processing OVER. JacksonModuleEnabled: %s, Packages: %d",
-        enabled, entriesByPackage.keySet().size());
+  public List<JacksonModuleDefinitionDto> getModuleDefinitions() {
+    List<JacksonModuleDefinitionDto> definitions = new ArrayList<>();
+    if (!entriesByPackage.isEmpty()) {
+      logger.info(
+          "simple-builders: Processing OVER. JacksonModuleEnabled: true, Packages: %d",
+          entriesByPackage.keySet().size());
 
-    if (enabled && !entriesByPackage.isEmpty()) {
       for (String packageName : entriesByPackage.keySet()) {
-        Set<JacksonModuleEntry> moduleEntries = entriesByPackage.get(packageName);
-
-        try {
-          generateModuleFile(packageName, moduleEntries);
-        } catch (Exception e) {
-          logger.error(
-              "simple-builders: Error generating Jackson module for package %s: %s",
-              packageName, e.getMessage());
-          e.printStackTrace();
-        }
+        Set<JacksonModuleEntryDto> moduleEntries = entriesByPackage.get(packageName);
+        JacksonModuleDefinitionDto definition = new JacksonModuleDefinitionDto(packageName);
+        definition.addAllEntries(moduleEntries);
+        definitions.add(definition);
       }
     }
     clear();
+    return definitions;
   }
 
   private void clear() {
     entriesByPackage.clear();
-    enabled = false;
   }
-
-  private void generateModuleFile(String targetPackage, Set<JacksonModuleEntry> entries) {
-    logger.info("Generating Jackson Module '%s' in package '%s'", MODULE_CLASS_NAME, targetPackage);
-
-    ClassName simpleModuleClass =
-        ClassName.get("com.fasterxml.jackson.databind.module", "SimpleModule");
-    ClassName jsonDeserializeClass =
-        ClassName.get("com.fasterxml.jackson.databind.annotation", "JsonDeserialize");
-
-    // Create the constructor
-    MethodSpec.Builder constructorBuilder =
-        MethodSpec.constructorBuilder().addModifiers(Modifier.PUBLIC);
-
-    // Create the class
-    TypeSpec.Builder classBuilder =
-        TypeSpec.classBuilder(MODULE_CLASS_NAME)
-            .addModifiers(Modifier.PUBLIC)
-            .superclass(simpleModuleClass);
-
-    for (JacksonModuleEntry entry : entries) {
-      ClassName dtoClass =
-          ClassName.get(entry.dtoType().getPackageName(), entry.dtoType().getClassName());
-      ClassName builderClass =
-          ClassName.get(entry.builderType().getPackageName(), entry.builderType().getClassName());
-
-      // Create MixIn interface name: DtoNameMixin
-      String mixinName = entry.dtoType().getClassName() + "Mixin";
-
-      // Create MixIn interface with @JsonDeserialize(builder = Builder.class)
-      TypeSpec mixinInterface =
-          TypeSpec.interfaceBuilder(mixinName)
-              .addModifiers(Modifier.PRIVATE)
-              .addAnnotation(
-                  AnnotationSpec.builder(jsonDeserializeClass)
-                      .addMember("builder", "$T.class", builderClass)
-                      .build())
-              .build();
-
-      classBuilder.addType(mixinInterface);
-
-      // Add registration to constructor: setMixInAnnotation(Dto.class, Mixin.class)
-      constructorBuilder.addStatement(
-          "setMixInAnnotation($T.class, $N.class)", dtoClass, mixinName);
-    }
-
-    classBuilder.addMethod(constructorBuilder.build());
-
-    // Write file
-    try {
-      JavaFile.builder(targetPackage, classBuilder.build()).build().writeTo(filer);
-    } catch (IOException e) {
-      logger.error("Failed to write Jackson Module: %s", e.getMessage());
-    }
-  }
-
-  public record JacksonModuleEntry(TypeName dtoType, TypeName builderType) {}
 }
