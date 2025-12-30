@@ -589,6 +589,19 @@ public @interface SimpleBuilder {
      */
     OptionState usingJacksonDeserializerAnnotation() default OptionState.UNSET;
 
+    /**
+     * Generate a Jackson SimpleModule containing registrations for all generated builders. <br>
+     * This module allows Jackson to use the generated builders for deserialization without needing
+     * to annotate the DTO classes.
+     *
+     * <p>The generated module class will be named {@code SimpleBuildersJacksonModule} (by default)
+     * and placed in the same package as the first processed DTO.
+     *
+     * <p>Default: DISABLED <br>
+     * Compiler option: -Asimplebuilder.generateJacksonModule
+     */
+    OptionState generateJacksonModule() default OptionState.UNSET;
+
     // === Naming ===
     /**
      * Suffix to append to the DTO name to generate the builder class name. <br>

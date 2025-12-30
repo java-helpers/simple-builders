@@ -110,6 +110,9 @@ public enum CompilerArgumentsEnum {
   /** Option for Jackson support. */
   USING_JACKSON_DESERIALIZER_ANNOTATION("usingJacksonDeserializerAnnotation"),
 
+  /** Option for Jackson Module generation. */
+  GENERATE_JACKSON_MODULE("generateJacksonModule"),
+
   // === Naming ===
   /** Option for builder class name suffix. */
   BUILDER_SUFFIX("builderSuffix"),

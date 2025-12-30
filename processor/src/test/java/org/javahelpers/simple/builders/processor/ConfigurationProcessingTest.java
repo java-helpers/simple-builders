@@ -80,6 +80,7 @@ class ConfigurationProcessingTest {
             .implementsBuilderBase(OptionState.ENABLED)
             .generateWithInterface(OptionState.ENABLED)
             .usingJacksonDeserializerAnnotation(OptionState.ENABLED)
+            .generateJacksonModule(OptionState.ENABLED)
             // Naming
             .builderSuffix("Builder")
             .setterSuffix("")
@@ -108,6 +109,7 @@ class ConfigurationProcessingTest {
     assertEquals(OptionState.ENABLED, config.implementsBuilderBase());
     assertEquals(OptionState.ENABLED, config.generateWithInterface());
     assertEquals(OptionState.ENABLED, config.usingJacksonDeserializerAnnotation());
+    assertEquals(OptionState.ENABLED, config.generateJacksonModule());
     assertEquals("Builder", config.getBuilderSuffix());
     assertEquals("", config.getSetterSuffix());
   }

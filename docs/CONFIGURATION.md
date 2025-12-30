@@ -709,6 +709,43 @@ public class PersonDtoBuilder {
 
 ---
 
+#### `generateJacksonModule`
+
+**Default**: `DISABLED` | **Compiler Option**: `-Asimplebuilder.generateJacksonModule=ENABLED|DISABLED`
+
+Generates a Jackson `SimpleModule` (named `SimpleBuildersJacksonModule`) that registers all generated builders via MixIns. This allows deserialization without annotating your DTOs with `@JsonDeserialize`.
+
+**Requirement**: You MUST also enable [`usingJacksonDeserializerAnnotation`](#usingjacksondeserializerannotation). If `generateJacksonModule` is enabled but `usingJacksonDeserializerAnnotation` is disabled, the processor will issue a warning and skip module generation.
+
+**When ENABLED**:
+1. The builder is generated as usual.
+2. A `SimpleBuildersJacksonModule` class is generated in the package of the first processed DTO.
+3. The module registers a MixIn for the DTO that points to the Builder.
+
+**Generated Module Example**:
+```java
+public class SimpleBuildersJacksonModule extends SimpleModule {
+    public SimpleBuildersJacksonModule() {
+        setMixInAnnotation(PersonDto.class, PersonDtoMixin.class);
+    }
+    
+    @JsonDeserialize(builder = PersonDtoBuilder.class)
+    private interface PersonDtoMixin {}
+}
+```
+
+**Usage**:
+```java
+ObjectMapper mapper = new ObjectMapper();
+mapper.registerModule(new SimpleBuildersJacksonModule());
+
+PersonDto dto = mapper.readValue(json, PersonDto.class);
+```
+
+**Note**: This requires `com.fasterxml.jackson.core:jackson-databind` on the classpath.
+
+---
+
 ### Naming
 
 #### `builderSuffix`
