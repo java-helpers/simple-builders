@@ -81,17 +81,25 @@ Create reusable configuration presets with custom template annotations:
 
 ```java
 @SimpleBuilder.Template(options = @SimpleBuilder.Options(
-    generateFieldSupplier = false,
-    generateFieldProvider = false,
-    generateBuilderProvider = false,
-    generateConditionalHelper = false,
-    generateVarArgsHelpers = false,
-    usingArrayListBuilder = false,
-    usingArrayListBuilderWithElementBuilders = false,
-    usingHashSetBuilder = false,
-    usingHashSetBuilderWithElementBuilders = false,
-    usingHashMapBuilder = false,
-    generateWithInterface = false
+    generateFieldSupplier = OptionState.DISABLED,
+    generateFieldConsumer = OptionState.DISABLED,
+    generateBuilderConsumer = OptionState.DISABLED,
+    generateConditionalHelper = OptionState.DISABLED,
+    generateVarArgsHelpers = OptionState.DISABLED,
+    generateStringFormatHelpers = OptionState.DISABLED,
+    generateAddToCollectionHelpers = OptionState.DISABLED,
+    generateUnboxedOptional = OptionState.DISABLED,
+    copyTypeAnnotations = OptionState.DISABLED,
+    usingArrayListBuilder = OptionState.DISABLED,
+    usingArrayListBuilderWithElementBuilders = OptionState.DISABLED,
+    usingHashSetBuilder = OptionState.DISABLED,
+    usingHashSetBuilderWithElementBuilders = OptionState.DISABLED,
+    usingHashMapBuilder = OptionState.DISABLED,
+    generateWithInterface = OptionState.DISABLED,
+    usingGeneratedAnnotation = OptionState.DISABLED,
+    usingBuilderImplementationAnnotation = OptionState.DISABLED,
+    implementsBuilderBase = OptionState.DISABLED,
+    usingJacksonDeserializerAnnotation = OptionState.DISABLED
 ))
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.TYPE)
@@ -681,6 +689,93 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
 
 ---
 
+#### `usingJacksonDeserializerAnnotation`
+
+**Default**: `DISABLED` | **Compiler Option**: `-Asimplebuilder.usingJacksonDeserializerAnnotation=ENABLED|DISABLED`
+
+Adds `@JsonPOJOBuilder` annotation to the builder class for Jackson deserialization support.
+
+**When ENABLED**:
+```java
+@JsonPOJOBuilder(withPrefix = "")
+public class PersonDtoBuilder {
+    // ...
+}
+```
+
+**When DISABLED**: No `@JsonPOJOBuilder` annotation.
+
+**Note**: This requires `com.fasterxml.jackson.core:jackson-databind` on the classpath during compilation. If missing, the annotation is skipped with a warning.
+
+---
+
+#### `generateJacksonModule`
+
+**Default**: `DISABLED` | **Compiler Option**: `-Asimplebuilder.generateJacksonModule=ENABLED|DISABLED`
+
+Generates a Jackson `SimpleModule` (named `SimpleBuildersJacksonModule`) that registers all generated builders via MixIns. This allows deserialization without annotating your DTOs with `@JsonDeserialize`.
+
+**Requirement**: You MUST also enable [`usingJacksonDeserializerAnnotation`](#usingjacksondeserializerannotation). If `generateJacksonModule` is enabled but `usingJacksonDeserializerAnnotation` is disabled, the processor will issue a warning and skip module generation.
+
+**When ENABLED**:
+1. The builder is generated as usual.
+2. A `SimpleBuildersJacksonModule` class is generated.
+3. The module registers a MixIn for the DTO that points to the Builder.
+
+**Package Name**:
+By default, a `SimpleBuildersJacksonModule` is generated in **each package** that contains DTOs configured for Jackson module generation. This ensures deterministic behavior.
+To specify a single fixed package name for all generated modules (grouping them into one), use the [`jacksonModulePackage`](#jacksonmodulepackage) option.
+
+**Generated Module Example**:
+```java
+package com.example.project.dto; // Generated in the same package as DTOs (by default)
+
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
+public class SimpleBuildersJacksonModule extends SimpleModule {
+    public SimpleBuildersJacksonModule() {
+        setMixInAnnotation(PersonDto.class, PersonDtoMixin.class);
+    }
+    
+    @JsonDeserialize(builder = PersonDtoBuilder.class)
+    private interface PersonDtoMixin {}
+}
+```
+
+**Usage**:
+```java
+ObjectMapper mapper = new ObjectMapper();
+
+// Register the module for your package
+// Note: If you have DTOs in multiple packages and use the default strategy,
+// you need to register the generated module for each package.
+mapper.registerModule(new com.example.project.dto.SimpleBuildersJacksonModule());
+
+PersonDto dto = mapper.readValue(json, PersonDto.class);
+```
+
+**Tip**: Use the [`jacksonModulePackage`](#jacksonmodulepackage) option to generate a single module for your entire project, making registration easier:
+`mapper.registerModule(new com.example.project.config.SimpleBuildersJacksonModule());`
+
+**Note**: This requires `com.fasterxml.jackson.core:jackson-databind` on the classpath.
+
+---
+
+#### `jacksonModulePackage`
+
+**Default**: `null` (uses package of each processed DTO) | **Compiler Option**: `-Asimplebuilder.jacksonModulePackage=com.your.package`
+
+Specifies the package name where the `SimpleBuildersJacksonModule` class will be generated.
+This is highly recommended to ensure deterministic output location and avoid split-package issues.
+
+**Note**: If not specified, a separate `SimpleBuildersJacksonModule` will be generated in **each package** containing processed DTOs.
+
+**Example**:
+`-Asimplebuilder.jacksonModulePackage=com.example.project.config`
+
+---
+
 ### Naming
 
 #### `builderSuffix`
@@ -722,16 +817,27 @@ public class PersonDto {
 Generate only essential builder methods:
 
 ```java
-@SimpleBuilder
-@SimpleBuilder.Options(
-    generateFieldSupplier = OptionState.DISABLED,
-    generateFieldConsumer = OptionState.DISABLED,
-    generateBuilderConsumer = OptionState.DISABLED,
-    generateConditionalHelper = OptionState.DISABLED,
-    generateVarArgsHelpers = OptionState.DISABLED,
-    usingArrayListBuilder = OptionState.DISABLED,
-    usingHashMapBuilder = OptionState.DISABLED,
-    generateWithInterface = OptionState.DISABLED
+@SimpleBuilder(
+    options = @SimpleBuilder.Options(
+        generateFieldSupplier = OptionState.DISABLED,
+        generateFieldConsumer = OptionState.DISABLED,
+        generateBuilderConsumer = OptionState.DISABLED,
+        generateConditionalHelper = OptionState.DISABLED,
+        generateVarArgsHelpers = OptionState.DISABLED,
+        generateStringFormatHelpers = OptionState.DISABLED,
+        generateAddToCollectionHelpers = OptionState.DISABLED,
+        generateUnboxedOptional = OptionState.DISABLED,
+        copyTypeAnnotations = OptionState.DISABLED,
+        usingArrayListBuilder = OptionState.DISABLED,
+        usingArrayListBuilderWithElementBuilders = OptionState.DISABLED,
+        usingHashSetBuilder = OptionState.DISABLED,
+        usingHashSetBuilderWithElementBuilders = OptionState.DISABLED,
+        usingHashMapBuilder = OptionState.DISABLED,
+        generateWithInterface = OptionState.DISABLED,
+        usingGeneratedAnnotation = OptionState.DISABLED,
+        usingBuilderImplementationAnnotation = OptionState.DISABLED,
+        implementsBuilderBase = OptionState.DISABLED,
+        usingJacksonDeserializerAnnotation = OptionState.DISABLED
 )
 public class MinimalDto {
     private String name;
@@ -770,11 +876,11 @@ Optimize for collection manipulation:
 ```java
 @SimpleBuilder
 @SimpleBuilder.Options(
-    generateVarArgsHelpers = true,
-    usingArrayListBuilder = true,
-    usingArrayListBuilderWithElementBuilders = true,
-    usingHashSetBuilder = true,
-    usingHashMapBuilder = true
+    generateVarArgsHelpers = OptionState.ENABLED,
+    usingArrayListBuilder = OptionState.ENABLED,
+    usingArrayListBuilderWithElementBuilders = OptionState.ENABLED,
+    usingHashSetBuilder = OptionState.ENABLED,
+    usingHashMapBuilder = OptionState.ENABLED
 )
 public class TeamDto {
     private List<String> memberNames;
@@ -802,17 +908,25 @@ Create a reusable template for lightweight builders:
 
 ```java
 @SimpleBuilder.Template(options = @SimpleBuilder.Options(
-    generateFieldSupplier = false,
-    generateFieldProvider = false,
-    generateBuilderProvider = false,
-    generateConditionalHelper = false,
-    generateVarArgsHelpers = false,
-    usingArrayListBuilder = false,
-    usingArrayListBuilderWithElementBuilders = false,
-    usingHashSetBuilder = false,
-    usingHashSetBuilderWithElementBuilders = false,
-    usingHashMapBuilder = false,
-    generateWithInterface = false
+    generateFieldSupplier = OptionState.DISABLED,
+    generateFieldConsumer = OptionState.DISABLED,
+    generateBuilderConsumer = OptionState.DISABLED,
+    generateConditionalHelper = OptionState.DISABLED,
+    generateVarArgsHelpers = OptionState.DISABLED,
+    generateStringFormatHelpers = OptionState.DISABLED,
+    generateAddToCollectionHelpers = OptionState.DISABLED,
+    generateUnboxedOptional = OptionState.DISABLED,
+    copyTypeAnnotations = OptionState.DISABLED,
+    usingArrayListBuilder = OptionState.DISABLED,
+    usingArrayListBuilderWithElementBuilders = OptionState.DISABLED,
+    usingHashSetBuilder = OptionState.DISABLED,
+    usingHashSetBuilderWithElementBuilders = OptionState.DISABLED,
+    usingHashMapBuilder = OptionState.DISABLED,
+    generateWithInterface = OptionState.DISABLED,
+    usingGeneratedAnnotation = OptionState.DISABLED,
+    usingBuilderImplementationAnnotation = OptionState.DISABLED,
+    implementsBuilderBase = OptionState.DISABLED,
+    usingJacksonDeserializerAnnotation = OptionState.DISABLED
 ))
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.TYPE)
@@ -882,7 +996,7 @@ Configuration resolution follows these priority rules:
 // Global default: true
 
 @SimpleBuilder
-@SimpleBuilder.Options(generateFieldSupplier = true)  // Annotation wins!
+@SimpleBuilder.Options(generateFieldSupplier = OptionState.ENABLED)  // Annotation wins!
 public class Person {
     private String name;
 }
@@ -1115,6 +1229,7 @@ methodAccess = AccessModifier.PRIVATE
     implementsBuilderBase = OptionState.ENABLED,
     usingGeneratedAnnotation = OptionState.ENABLED,
     usingBuilderImplementationAnnotation = OptionState.ENABLED,
+    usingJacksonDeserializerAnnotation = OptionState.ENABLED,
     
     // Naming
     builderSuffix = "Builder",

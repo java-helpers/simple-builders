@@ -420,6 +420,7 @@ class BuilderConfigurationReaderTest {
                 usingHashMapBuilder = OptionState.DISABLED,
                 usingGeneratedAnnotation = OptionState.DISABLED,
                 usingBuilderImplementationAnnotation = OptionState.DISABLED,
+                usingJacksonDeserializerAnnotation = OptionState.DISABLED,
                 builderSuffix = "MinimalBuilder",
                 setterSuffix = "with"
             ))

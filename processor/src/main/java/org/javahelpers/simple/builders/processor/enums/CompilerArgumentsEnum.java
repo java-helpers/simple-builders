@@ -107,6 +107,15 @@ public enum CompilerArgumentsEnum {
   /** Option for With interface generation. */
   GENERATE_WITH_INTERFACE("generateWithInterface"),
 
+  /** Option for Jackson support. */
+  USING_JACKSON_DESERIALIZER_ANNOTATION("usingJacksonDeserializerAnnotation"),
+
+  /** Option for Jackson Module generation. */
+  GENERATE_JACKSON_MODULE("generateJacksonModule"),
+
+  /** Option for Jackson Module package name. */
+  JACKSON_MODULE_PACKAGE("jacksonModulePackage"),
+
   // === Naming ===
   /** Option for builder class name suffix. */
   BUILDER_SUFFIX("builderSuffix"),

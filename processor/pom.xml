@@ -59,6 +59,7 @@
     <commons-collections.version>4.5.0</commons-collections.version>
     <junit-jupiter.version>6.0.1</junit-jupiter.version>
     <google-compile-testing.version>0.23.0</google-compile-testing.version>
+    <jackson-databind.version>2.18.2</jackson-databind.version>
     
     <!-- Java and Compiler Properties -->
     <java.version>17</java.version>
@@ -140,6 +141,14 @@
       <groupId>com.google.testing.compile</groupId>
       <artifactId>compile-testing</artifactId>
       <version>${google-compile-testing.version}</version>
+      <scope>test</scope>
+    </dependency>
+    
+    <!-- Jackson Annotations for testing Jackson support -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>${jackson-databind.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

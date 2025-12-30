@@ -7,25 +7,18 @@ import static org.javahelpers.simple.builders.core.util.TrackedValue.unsetValue;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.javahelpers.simple.builders.core.annotations.BuilderImplementation;
-import org.javahelpers.simple.builders.core.interfaces.IBuilderBase;
 import org.javahelpers.simple.builders.core.util.BuilderToStringStyle;
 import org.javahelpers.simple.builders.core.util.TrackedValue;
 
 /**
  * Builder for {@code org.javahelpers.simple.builders.example.BookDto}.
  */
-@BuilderImplementation(
-    forClass = BookDto.class
-)
-public class BookDtoBuilder implements IBuilderBase<BookDto> {
+public class BookDtoBuilder {
   /**
    * Tracked value for <code>title</code>: the book title to set.
    */
@@ -176,42 +169,6 @@ public class BookDtoBuilder implements IBuilderBase<BookDto> {
    * Empty constructor of builder for {@code org.javahelpers.simple.builders.example.BookDto}.
    */
   public BookDtoBuilder() {
-  }
-
-  /**
-   * Adds a single element to <code>genres</code>.
-   *
-   * @param element the element to add
-   * @return current instance of builder
-   */
-  public BookDtoBuilder add2Genres(String element) {
-    Set<String> newCollection;
-    if (this.genres.isSet()) {
-      newCollection = new HashSet<>(this.genres.value());
-    } else {
-      newCollection = new HashSet<>();
-    }
-    newCollection.add(element);
-    this.genres = changedValue(newCollection);
-    return this;
-  }
-
-  /**
-   * Adds a single element to <code>tags</code>.
-   *
-   * @param element the element to add
-   * @return current instance of builder
-   */
-  public BookDtoBuilder add2Tags(String element) {
-    List<String> newCollection;
-    if (this.tags.isSet()) {
-      newCollection = new ArrayList<>(this.tags.value());
-    } else {
-      newCollection = new ArrayList<>();
-    }
-    newCollection.add(element);
-    this.tags = changedValue(newCollection);
-    return this;
   }
 
   /**
@@ -423,7 +380,6 @@ public class BookDtoBuilder implements IBuilderBase<BookDto> {
     return this;
   }
 
-  @Override
   public BookDto build() {
     if (this.pages.isSet() && this.pages.value() == null) {
       throw new IllegalStateException("Field 'pages' is marked as non-null but null value was provided");

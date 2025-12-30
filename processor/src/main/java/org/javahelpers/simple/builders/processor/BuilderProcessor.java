@@ -47,6 +47,7 @@ import org.javahelpers.simple.builders.processor.enums.CompilerArgumentsEnum;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 import org.javahelpers.simple.builders.processor.util.BuilderConfigurationReader;
 import org.javahelpers.simple.builders.processor.util.CompilerArgumentsReader;
+import org.javahelpers.simple.builders.processor.util.JacksonModuleGenerator;
 import org.javahelpers.simple.builders.processor.util.JavaCodeGenerator;
 import org.javahelpers.simple.builders.processor.util.ProcessingContext;
 import org.javahelpers.simple.builders.processor.util.ProcessingLogger;
@@ -61,6 +62,7 @@ import org.javahelpers.simple.builders.processor.util.ProcessingLogger;
 public class BuilderProcessor extends AbstractProcessor {
   private ProcessingContext context;
   private JavaCodeGenerator codeGenerator;
+  private JacksonModuleGenerator jacksonModuleGenerator;
   private boolean supportedJdk = true;
 
   @Override
@@ -76,7 +78,10 @@ public class BuilderProcessor extends AbstractProcessor {
         new ProcessingContext(
             processingEnv.getElementUtils(), processingEnv.getTypeUtils(), logger, globalConfig);
     context.debug("Loaded global configuration from compiler arguments: %s", globalConfig);
-    this.codeGenerator = new JavaCodeGenerator(processingEnv.getFiler(), logger);
+    this.codeGenerator =
+        new JavaCodeGenerator(processingEnv.getFiler(), processingEnv.getElementUtils(), logger);
+    this.jacksonModuleGenerator =
+        new JacksonModuleGenerator(processingEnv.getElementUtils(), logger);
 
     SourceVersion current = processingEnv.getSourceVersion();
     this.supportedJdk = isAtLeastJava17(current);
@@ -91,6 +96,15 @@ public class BuilderProcessor extends AbstractProcessor {
   public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
     if (!supportedJdk) {
       // Fail fast: we already emitted an error in init(); do not attempt any processing.
+      return false;
+    }
+
+    // Generate Jackson Module if processing is over and feature is enabled
+    if (roundEnv.processingOver()) {
+      var modules = jacksonModuleGenerator.getModuleDefinitions();
+      for (var module : modules) {
+        codeGenerator.generateJacksonModule(module);
+      }
       return false;
     }
 
@@ -163,6 +177,9 @@ public class BuilderProcessor extends AbstractProcessor {
     context.initConfigurationForProcessingTarget(config);
     BuilderDefinitionDto builderDef = extractFromElement(annotatedElement, context);
     codeGenerator.generateBuilder(builderDef);
+
+    // Collect info for Jackson Module if enabled
+    jacksonModuleGenerator.addEntry(builderDef, annotatedElement);
   }
 
   /**

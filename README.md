@@ -42,6 +42,7 @@ Simple Builders is a Java [annotation processor](https://docs.oracle.com/en/java
 - **Collections Support**: Built-in support for collections and maps
 - **Annotation Preservation**: Validation annotations are automatically copied to builder methods
 - **With Interface Pattern**: Type-safe object modifications using generated With interfaces
+- **Jackson Support**: Supporting Jackson deserialization via `@JsonPOJOBuilder` and optional generation of `SimpleModule`s (one per package) (both need to be enabled)
 
 ## Requirements
 
@@ -268,7 +269,7 @@ The `With` interface provides type-safe setter methods that mirror the builder's
 
 Simple Builders provides extensive configuration options to customize the generated builder code. You can control:
 
-- Field setter generation (Supplier, Provider, Builder patterns)
+- Field setter generation (Supplier, Consumer, Builder patterns)
 - Conditional logic helpers
 - Access modifiers for builders and methods
 - Collection helper methods

@@ -27,6 +27,7 @@ package org.javahelpers.simple.builders.processor.dtos;
 import static org.javahelpers.simple.builders.core.enums.AccessModifier.*;
 import static org.javahelpers.simple.builders.core.enums.OptionState.*;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
@@ -86,6 +87,9 @@ public record BuilderConfiguration(
     OptionState usingBuilderImplementationAnnotation,
     OptionState implementsBuilderBase,
     OptionState generateWithInterface,
+    OptionState usingJacksonDeserializerAnnotation,
+    OptionState generateJacksonModule,
+    String jacksonModulePackage,
     String builderSuffix,
     String setterSuffix) {
 
@@ -112,6 +116,9 @@ public record BuilderConfiguration(
           .usingBuilderImplementationAnnotation(ENABLED)
           .implementsBuilderBase(ENABLED)
           .generateWithInterface(ENABLED)
+          .usingJacksonDeserializerAnnotation(DISABLED)
+          .generateJacksonModule(DISABLED)
+          .jacksonModulePackage(null)
           .builderSuffix("Builder")
           .setterSuffix("")
           .build();
@@ -135,6 +142,14 @@ public record BuilderConfiguration(
 
   public boolean shouldGenerateWithInterface() {
     return generateWithInterface == ENABLED;
+  }
+
+  public boolean shouldUseJacksonDeserializerAnnotation() {
+    return usingJacksonDeserializerAnnotation == ENABLED;
+  }
+
+  public boolean shouldGenerateJacksonModule() {
+    return generateJacksonModule == ENABLED;
   }
 
   public boolean shouldGenerateVarArgsHelpers() {
@@ -200,6 +215,10 @@ public record BuilderConfiguration(
 
   public AccessModifier getMethodAccess() {
     return methodAccess;
+  }
+
+  public String getJacksonModulePackage() {
+    return jacksonModulePackage;
   }
 
   public String getBuilderSuffix() {
@@ -268,6 +287,12 @@ public record BuilderConfiguration(
             mergeOptionState(other.implementsBuilderBase, this.implementsBuilderBase))
         .generateWithInterface(
             mergeOptionState(other.generateWithInterface, this.generateWithInterface))
+        .usingJacksonDeserializerAnnotation(
+            mergeOptionState(
+                other.usingJacksonDeserializerAnnotation, this.usingJacksonDeserializerAnnotation))
+        .generateJacksonModule(
+            mergeOptionState(other.generateJacksonModule, this.generateJacksonModule))
+        .jacksonModulePackage(mergeString(other.jacksonModulePackage, this.jacksonModulePackage))
         .builderSuffix(mergeString(other.builderSuffix, this.builderSuffix))
         .setterSuffix(mergeString(other.setterSuffix, this.setterSuffix))
         .build();
@@ -361,6 +386,15 @@ public record BuilderConfiguration(
     if (generateWithInterface != UNSET) {
       builder.append("generateWithInterface", generateWithInterface);
     }
+    if (usingJacksonDeserializerAnnotation != UNSET) {
+      builder.append("usingJacksonDeserializerAnnotation", usingJacksonDeserializerAnnotation);
+    }
+    if (generateJacksonModule != UNSET) {
+      builder.append("generateJacksonModule", generateJacksonModule);
+    }
+    if (jacksonModulePackage != null) {
+      builder.append("jacksonModulePackage", jacksonModulePackage);
+    }
     if (builderSuffix != null && !builderSuffix.equals("Builder")) {
       builder.append("builderSuffix", builderSuffix);
     }
@@ -406,6 +440,9 @@ public record BuilderConfiguration(
     // === Integration ===
     private OptionState implementsBuilderBase = OptionState.UNSET;
     private OptionState generateWithInterface = OptionState.UNSET;
+    private OptionState usingJacksonDeserializerAnnotation = OptionState.UNSET;
+    private OptionState generateJacksonModule = OptionState.UNSET;
+    private String jacksonModulePackage = null;
 
     // === Naming ===
     private String builderSuffix = null;
@@ -459,6 +496,31 @@ public record BuilderConfiguration(
 
     public Builder generateWithInterface(boolean value) {
       this.generateWithInterface = value ? ENABLED : DISABLED;
+      return this;
+    }
+
+    public Builder usingJacksonDeserializerAnnotation(OptionState value) {
+      this.usingJacksonDeserializerAnnotation = value;
+      return this;
+    }
+
+    public Builder usingJacksonDeserializerAnnotation(boolean value) {
+      this.usingJacksonDeserializerAnnotation = value ? ENABLED : DISABLED;
+      return this;
+    }
+
+    public Builder generateJacksonModule(OptionState value) {
+      this.generateJacksonModule = value;
+      return this;
+    }
+
+    public Builder generateJacksonModule(boolean value) {
+      this.generateJacksonModule = value ? ENABLED : DISABLED;
+      return this;
+    }
+
+    public Builder jacksonModulePackage(String value) {
+      this.jacksonModulePackage = StringUtils.trimToNull(value);
       return this;
     }
 
@@ -655,6 +717,9 @@ public record BuilderConfiguration(
           usingBuilderImplementationAnnotation,
           implementsBuilderBase,
           generateWithInterface,
+          usingJacksonDeserializerAnnotation,
+          generateJacksonModule,
+          jacksonModulePackage,
           builderSuffix,
           setterSuffix);
     }

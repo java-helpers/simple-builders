@@ -40,14 +40,19 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
             generateConditionalHelper = OptionState.DISABLED,
             generateVarArgsHelpers = OptionState.DISABLED,
             generateStringFormatHelpers = OptionState.DISABLED,
+            generateAddToCollectionHelpers = OptionState.DISABLED,
             generateUnboxedOptional = OptionState.DISABLED,
+            copyTypeAnnotations = OptionState.DISABLED,
             usingArrayListBuilder = OptionState.DISABLED,
             usingArrayListBuilderWithElementBuilders = OptionState.DISABLED,
             usingHashSetBuilder = OptionState.DISABLED,
             usingHashSetBuilderWithElementBuilders = OptionState.DISABLED,
             usingHashMapBuilder = OptionState.DISABLED,
             generateWithInterface = OptionState.DISABLED,
-            usingGeneratedAnnotation = OptionState.DISABLED))
+            usingGeneratedAnnotation = OptionState.DISABLED,
+            usingBuilderImplementationAnnotation = OptionState.DISABLED,
+            implementsBuilderBase = OptionState.DISABLED,
+            usingJacksonDeserializerAnnotation = OptionState.DISABLED))
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.TYPE)
 public @interface ElementaryBuilder {}

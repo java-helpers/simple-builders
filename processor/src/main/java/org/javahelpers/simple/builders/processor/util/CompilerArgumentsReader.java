@@ -169,6 +169,10 @@ public class CompilerArgumentsReader {
             readOptionState(CompilerArgumentsEnum.USING_BUILDER_IMPLEMENTATION_ANNOTATION))
         .implementsBuilderBase(readOptionState(CompilerArgumentsEnum.IMPLEMENTS_BUILDER_BASE))
         .generateWithInterface(readOptionState(CompilerArgumentsEnum.GENERATE_WITH_INTERFACE))
+        .usingJacksonDeserializerAnnotation(
+            readOptionState(CompilerArgumentsEnum.USING_JACKSON_DESERIALIZER_ANNOTATION))
+        .generateJacksonModule(readOptionState(CompilerArgumentsEnum.GENERATE_JACKSON_MODULE))
+        .jacksonModulePackage(readValue(CompilerArgumentsEnum.JACKSON_MODULE_PACKAGE))
         .builderSuffix(readValue(CompilerArgumentsEnum.BUILDER_SUFFIX))
         .setterSuffix(readValue(CompilerArgumentsEnum.SETTER_SUFFIX))
         .build();
