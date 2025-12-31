@@ -123,7 +123,12 @@ public class MethodGeneratorRegistry {
     generators.add(new BasicSetterGenerator());
     generators.add(new StringFormatHelperGenerator());
     generators.add(new OptionalHelperGenerator());
-    generators.add(new ConsumerMethodGenerator());
+    generators.add(new BuilderConsumerGenerator());
+    generators.add(new FieldConsumerGenerator());
+    generators.add(new ListConsumerGenerator());
+    generators.add(new MapConsumerGenerator());
+    generators.add(new SetConsumerGenerator());
+    generators.add(new StringBuilderConsumerGenerator());
     generators.add(new SupplierMethodGenerator());
     generators.add(new VarArgsHelperGenerator());
     generators.add(new CollectionHelperGenerator());
