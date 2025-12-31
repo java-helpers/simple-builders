@@ -32,6 +32,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import org.javahelpers.simple.builders.processor.dtos.BuilderConfiguration;
+import org.javahelpers.simple.builders.processor.generators.MethodGeneratorRegistry;
 
 /**
  * Context object that wraps Elements, Types, and logging utilities from annotation processing,
@@ -44,6 +45,7 @@ public final class ProcessingContext {
   private final Types typeUtils;
   private final ProcessingLogger logger;
   private final BuilderConfigurationReader configurationReader;
+  private MethodGeneratorRegistry methodGeneratorRegistry;
   private BuilderConfiguration configurationForProcessingTarget;
 
   /**
@@ -64,6 +66,7 @@ public final class ProcessingContext {
     this.logger = logger;
     this.configurationReader =
         new BuilderConfigurationReader(globalConfiguration, logger, elementUtils);
+    // MethodGeneratorRegistry will be lazily initialized on first access
   }
 
   public void initConfigurationForProcessingTarget(BuilderConfiguration config) {
@@ -76,6 +79,20 @@ public final class ProcessingContext {
 
   public BuilderConfigurationReader getConfigurationReader() {
     return configurationReader;
+  }
+
+  /**
+   * Get the method generator registry for generating builder methods.
+   *
+   * <p>The registry is lazily initialized on first access to avoid circular dependency issues.
+   *
+   * @return the method generator registry
+   */
+  public MethodGeneratorRegistry getMethodGeneratorRegistry() {
+    if (methodGeneratorRegistry == null) {
+      methodGeneratorRegistry = new MethodGeneratorRegistry(this);
+    }
+    return methodGeneratorRegistry;
   }
 
   /**
