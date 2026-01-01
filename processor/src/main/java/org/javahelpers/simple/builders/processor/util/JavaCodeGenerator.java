@@ -44,7 +44,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Modifier;
-import javax.lang.model.util.Elements;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.util.TrackedValue;
 import org.javahelpers.simple.builders.processor.dtos.*;
@@ -54,8 +54,6 @@ import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 public class JavaCodeGenerator {
   /** Util class for source code generation of type {@code javax.annotation.processing.Filer}. */
   private final Filer filer;
-
-  private final Elements elementUtils;
 
   /** Logger for debug output during code generation. */
   private final ProcessingLogger logger;
@@ -68,12 +66,10 @@ public class JavaCodeGenerator {
    *
    * @param filer Util class for source code generation of type {@code
    *     javax.annotation.processing.Filer}
-   * @param elementUtils Util class for operating on program elements
    * @param logger Logger for debug output
    */
-  public JavaCodeGenerator(Filer filer, Elements elementUtils, ProcessingLogger logger) {
+  public JavaCodeGenerator(Filer filer, ProcessingLogger logger) {
     this.filer = filer;
-    this.elementUtils = elementUtils;
     this.logger = logger;
   }
 
@@ -88,18 +84,7 @@ public class JavaCodeGenerator {
         "Starting code generation for builder: %s", builderDef.getBuilderTypeName().getClassName());
 
     ClassName builderBaseClass = map2ClassName(builderDef.getBuilderTypeName());
-    ClassName dtoBaseClass = map2ClassName(builderDef.getBuildingTargetTypeName());
-    com.palantir.javapoet.TypeName builderTypeName;
-    com.palantir.javapoet.TypeName dtoTypeName;
-    if (builderDef.getGenerics().isEmpty()) {
-      builderTypeName = builderBaseClass;
-      dtoTypeName = dtoBaseClass;
-    } else {
-      builderTypeName =
-          map2ParameterizedTypeName(builderDef.getBuilderTypeName(), builderDef.getGenerics());
-      dtoTypeName =
-          map2ParameterizedTypeName(
-              builderDef.getBuildingTargetTypeName(), builderDef.getGenerics());
+    if (CollectionUtils.isNotEmpty(builderDef.getGenerics())) {
       logger.debug("Builder has %d generic type parameter(s)", builderDef.getGenerics().size());
     }
 
@@ -406,6 +391,15 @@ public class JavaCodeGenerator {
     // Add static modifier if method is static
     if (methodDto.isStatic()) {
       methodBuilder.addModifiers(javax.lang.model.element.Modifier.STATIC);
+    }
+
+    // Add generic type parameters if any
+    if (CollectionUtils.isNotEmpty(methodDto.getGenericParameters())) {
+      List<com.palantir.javapoet.TypeVariableName> typeVariables =
+          methodDto.getGenericParameters().stream()
+              .map(param -> com.palantir.javapoet.TypeVariableName.get(param.getName()))
+              .toList();
+      methodBuilder.addTypeVariables(typeVariables);
     }
 
     // Use javadoc from MethodDto if available

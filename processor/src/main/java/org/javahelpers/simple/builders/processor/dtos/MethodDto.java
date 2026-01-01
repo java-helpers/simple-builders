@@ -66,6 +66,9 @@ public class MethodDto {
   /** List of parameters of Method. */
   private final LinkedList<MethodParameterDto> parameters = new LinkedList<>();
 
+  /** List of generic type parameters for the method (e.g., <T, K, V>). */
+  private final List<GenericParameterDto> genericParameters = new ArrayList<>();
+
   /** Definition of inner implementation for method. */
   private final MethodCodeDto methodCodeDto = new MethodCodeDto();
 
@@ -206,6 +209,24 @@ public class MethodDto {
    */
   public List<MethodParameterDto> getParameters() {
     return parameters;
+  }
+
+  /**
+   * Adds a generic type parameter to this method.
+   *
+   * @param genericParameter the generic parameter to add
+   */
+  public void addGenericParameter(GenericParameterDto genericParameter) {
+    this.genericParameters.add(genericParameter);
+  }
+
+  /**
+   * Getting a list of generic type parameters of method.
+   *
+   * @return List of generic parameters of type {@code GenericParameterDto}
+   */
+  public List<GenericParameterDto> getGenericParameters() {
+    return genericParameters;
   }
 
   /**

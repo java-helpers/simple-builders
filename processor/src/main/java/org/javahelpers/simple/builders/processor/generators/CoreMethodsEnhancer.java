@@ -26,6 +26,7 @@ package org.javahelpers.simple.builders.processor.generators;
 import javax.lang.model.element.Modifier;
 import org.javahelpers.simple.builders.processor.dtos.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.dtos.FieldDto;
+import org.javahelpers.simple.builders.processor.dtos.GenericParameterDto;
 import org.javahelpers.simple.builders.processor.dtos.MethodDto;
 import org.javahelpers.simple.builders.processor.dtos.TypeName;
 import org.javahelpers.simple.builders.processor.util.ProcessingContext;
@@ -90,7 +91,10 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
   private MethodDto createBuildMethod(BuilderDefinitionDto builderDto, ProcessingContext context) {
     MethodDto method = new MethodDto();
     method.setMethodName("build");
-    method.setReturnType(builderDto.getBuildingTargetTypeName());
+    TypeName returnType =
+        MethodGeneratorUtil.createGenericTypeName(
+            builderDto.getBuildingTargetTypeName(), builderDto.getGenerics());
+    method.setReturnType(returnType);
     method.setOrdering(ORDERING_BUILD);
     method.setPriority(MethodDto.PRIORITY_HIGHEST);
     method.setModifier(Modifier.PUBLIC);
@@ -170,14 +174,27 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
       BuilderDefinitionDto builderDto, ProcessingContext context) {
     MethodDto method = new MethodDto();
     method.setMethodName("create");
-    method.setReturnType(builderDto.getBuilderTypeName());
     method.setOrdering(ORDERING_CREATE);
     method.setPriority(MethodDto.PRIORITY_HIGHEST);
     method.setModifier(Modifier.PUBLIC);
     method.setStatic(true);
+    TypeName returnType =
+        MethodGeneratorUtil.createGenericTypeName(
+            builderDto.getBuilderTypeName(), builderDto.getGenerics());
+    method.setReturnType(returnType);
 
-    // Create method implementation
-    method.setCode("return new $builderType:T();");
+    // Use appropriate code template based on whether we have generics
+    if (builderDto.getGenerics().isEmpty()) {
+      method.setCode("return new $builderType:T();");
+    } else {
+      method.setCode("return new $builderType:T<>();");
+    }
+
+    // Add generic type parameters to method if builder has generics
+    // (because this is a static function, the generic names from class are not available)
+    for (GenericParameterDto genericParam : builderDto.getGenerics()) {
+      method.addGenericParameter(genericParam);
+    }
     method.addArgument("builderType", builderDto.getBuilderTypeName());
 
     String targetFullName = builderDto.getBuildingTargetTypeName().getFullQualifiedName();

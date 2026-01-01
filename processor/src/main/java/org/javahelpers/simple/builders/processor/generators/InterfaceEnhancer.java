@@ -57,8 +57,7 @@ public class InterfaceEnhancer implements BuilderEnhancer {
   @Override
   public void enhanceBuilder(BuilderDefinitionDto builderDto, ProcessingContext context) {
     // Add the IBuilderBase interface to the builder
-    InterfaceName builderBaseInterface =
-        createBuilderBaseInterface(builderDto.getBuildingTargetTypeName());
+    InterfaceName builderBaseInterface = createBuilderBaseInterface(builderDto);
     builderDto.addInterface(builderBaseInterface);
 
     context.debug(
@@ -69,13 +68,19 @@ public class InterfaceEnhancer implements BuilderEnhancer {
   /**
    * Creates the IBuilderBase interface type parameterized with the DTO type.
    *
-   * @param dtoType the target DTO type
+   * @param builderDto the builder definition containing the DTO type and generics
    * @return the parameterized interface type
    */
-  private InterfaceName createBuilderBaseInterface(TypeName dtoType) {
+  private InterfaceName createBuilderBaseInterface(BuilderDefinitionDto builderDto) {
     InterfaceName interfaceType =
         new InterfaceName("org.javahelpers.simple.builders.core.interfaces", "IBuilderBase");
-    interfaceType.addTypeParameter(dtoType);
+
+    // Use generic DTO type if the builder has generics, otherwise use base type
+    TypeName parameterizedDtoType =
+        MethodGeneratorUtil.createGenericTypeName(
+            builderDto.getBuildingTargetTypeName(), builderDto.getGenerics());
+
+    interfaceType.addTypeParameter(parameterizedDtoType);
     return interfaceType;
   }
 }

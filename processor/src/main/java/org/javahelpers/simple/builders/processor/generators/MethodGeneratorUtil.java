@@ -24,10 +24,14 @@
 
 package org.javahelpers.simple.builders.processor.generators;
 
+import java.util.List;
 import javax.lang.model.element.Modifier;
 import org.apache.commons.lang3.StringUtils;
+import org.javahelpers.simple.builders.processor.dtos.GenericParameterDto;
 import org.javahelpers.simple.builders.processor.dtos.MethodDto;
 import org.javahelpers.simple.builders.processor.dtos.TypeName;
+import org.javahelpers.simple.builders.processor.dtos.TypeNameGeneric;
+import org.javahelpers.simple.builders.processor.dtos.TypeNameVariable;
 import org.javahelpers.simple.builders.processor.util.JavapoetMapper;
 import org.javahelpers.simple.builders.processor.util.ProcessingContext;
 
@@ -105,5 +109,31 @@ public final class MethodGeneratorUtil {
     if (modifier != null) {
       method.setModifier(modifier);
     }
+  }
+
+  /**
+   * Creates a generic TypeName from a base type and generic parameters.
+   *
+   * <p>If the generic parameters list is empty, returns the base type as-is. Otherwise creates a
+   * TypeNameGeneric with the base type and generic type variables.
+   *
+   * @param baseType the base type name
+   * @param genericParameters the list of generic parameter DTOs
+   * @return the generic type name, or the base type if no generics
+   */
+  public static TypeName createGenericTypeName(
+      TypeName baseType, List<GenericParameterDto> genericParameters) {
+    if (genericParameters.isEmpty()) {
+      return baseType;
+    }
+
+    List<TypeName> typeVariables =
+        genericParameters.stream()
+            .map(GenericParameterDto::getName)
+            .map(TypeNameVariable::new)
+            .map(TypeName.class::cast)
+            .toList();
+
+    return new TypeNameGeneric(baseType, typeVariables);
   }
 }
