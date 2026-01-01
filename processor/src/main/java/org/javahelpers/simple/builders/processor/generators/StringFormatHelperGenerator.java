@@ -31,8 +31,6 @@ import static org.javahelpers.simple.builders.processor.util.TypeNameAnalyser.is
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
 import org.javahelpers.simple.builders.processor.dtos.*;
 import org.javahelpers.simple.builders.processor.util.ProcessingContext;
 
@@ -61,11 +59,7 @@ public class StringFormatHelperGenerator implements MethodGenerator {
   }
 
   @Override
-  public boolean appliesTo(
-      FieldDto field,
-      VariableElement fieldParameter,
-      TypeElement fieldTypeElement,
-      ProcessingContext context) {
+  public boolean appliesTo(FieldDto field, TypeName dtoType, ProcessingContext context) {
     if (!context.getConfiguration().shouldGenerateStringFormatHelpers()) {
       return false;
     }
@@ -88,11 +82,7 @@ public class StringFormatHelperGenerator implements MethodGenerator {
 
   @Override
   public List<MethodDto> generateMethods(
-      FieldDto field,
-      VariableElement fieldParameter,
-      TypeElement fieldTypeElement,
-      TypeName builderType,
-      ProcessingContext context) {
+      FieldDto field, TypeName builderType, ProcessingContext context) {
 
     List<MethodDto> methods = new ArrayList<>();
     TypeName fieldType = field.getFieldType();
@@ -162,7 +152,7 @@ public class StringFormatHelperGenerator implements MethodGenerator {
     argsParam.setParameterTypeName(new TypeNameArray(TypeName.of(Object.class)));
 
     MethodDto methodDto = new MethodDto();
-    methodDto.setMethodName(generateSetterName(fieldName, context));
+    methodDto.setMethodName(generateBuilderMethodName(fieldName, context));
     methodDto.setReturnType(builderType);
     methodDto.addParameter(formatParam);
     methodDto.addParameter(argsParam);

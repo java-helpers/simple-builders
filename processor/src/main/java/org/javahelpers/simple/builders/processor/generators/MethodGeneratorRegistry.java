@@ -28,8 +28,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.ServiceLoader;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
 import org.javahelpers.simple.builders.processor.dtos.FieldDto;
 import org.javahelpers.simple.builders.processor.dtos.MethodDto;
 import org.javahelpers.simple.builders.processor.dtos.TypeName;
@@ -73,33 +71,24 @@ public class MethodGeneratorRegistry {
   }
 
   /**
-   * Generates all applicable methods for a field by invoking all registered generators.
+   * Generates all methods for a field using all registered generators.
    *
-   * <p>Generators are invoked in priority order (highest first). Each generator that applies to the
-   * field contributes its methods to the result list.
-   *
-   * @param field the field being processed
-   * @param fieldParameter the variable element representing the field parameter
-   * @param fieldTypeElement the type element of the field's type, or null if not available
-   * @param builderType the type of the builder being generated
+   * @param field the field to generate methods for, should not be null
+   * @param dtoType the TypeName of the DTO containing the field, should not be null
+   * @param builderType the type of the builder being generated, should not be null
    * @return list of all generated methods from all applicable generators
    */
   public List<MethodDto> generateAllMethods(
-      FieldDto field,
-      VariableElement fieldParameter,
-      TypeElement fieldTypeElement,
-      TypeName builderType) {
+      FieldDto field, TypeName dtoType, TypeName builderType) {
     List<MethodDto> allMethods = new ArrayList<>();
 
     for (MethodGenerator generator : generators) {
-      if (generator.appliesTo(field, fieldParameter, fieldTypeElement, context)) {
+      if (generator.appliesTo(field, dtoType, context)) {
         context.debug(
             "  -> Applying generator: %s (priority: %d)",
             generator.getClass().getSimpleName(), generator.getPriority());
 
-        List<MethodDto> generatedMethods =
-            generator.generateMethods(
-                field, fieldParameter, fieldTypeElement, builderType, context);
+        List<MethodDto> generatedMethods = generator.generateMethods(field, builderType, context);
 
         if (generatedMethods != null && !generatedMethods.isEmpty()) {
           allMethods.addAll(generatedMethods);

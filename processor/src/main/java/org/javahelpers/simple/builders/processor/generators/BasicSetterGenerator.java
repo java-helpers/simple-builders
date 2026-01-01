@@ -28,8 +28,6 @@ import static org.javahelpers.simple.builders.processor.generators.MethodGenerat
 
 import java.util.Collections;
 import java.util.List;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.processor.dtos.AnnotationDto;
 import org.javahelpers.simple.builders.processor.dtos.FieldDto;
@@ -65,21 +63,13 @@ public class BasicSetterGenerator implements MethodGenerator {
   }
 
   @Override
-  public boolean appliesTo(
-      FieldDto field,
-      VariableElement fieldParameter,
-      TypeElement fieldTypeElement,
-      ProcessingContext context) {
+  public boolean appliesTo(FieldDto field, TypeName dtoType, ProcessingContext context) {
     return true;
   }
 
   @Override
   public List<MethodDto> generateMethods(
-      FieldDto field,
-      VariableElement fieldParameter,
-      TypeElement fieldTypeElement,
-      TypeName builderType,
-      ProcessingContext context) {
+      FieldDto field, TypeName builderType, ProcessingContext context) {
 
     MethodDto setterMethod =
         createFieldSetterWithTransform(
@@ -127,7 +117,7 @@ public class BasicSetterGenerator implements MethodGenerator {
     }
 
     MethodDto methodDto = new MethodDto();
-    methodDto.setMethodName(generateSetterName(fieldName, context));
+    methodDto.setMethodName(generateBuilderMethodName(fieldName, context));
     methodDto.setReturnType(builderType);
     methodDto.addParameter(parameter);
     setMethodAccessModifier(methodDto, getMethodAccessModifier(context));

@@ -58,10 +58,14 @@ public class FieldConsumerGenerator implements MethodGenerator {
       return false;
     }
 
-    // Don't apply to List/Set/Map fields - they have their own specific consumer generators
-    if (field.getFieldType() instanceof TypeNameList
-        || field.getFieldType() instanceof TypeNameSet
-        || field.getFieldType() instanceof TypeNameMap) {
+    // Don't apply to standard collection types (List, Set, Map) when their specific consumer
+    // generators are enabled
+    if ((field.getFieldType() instanceof TypeNameList
+            && context.getConfiguration().shouldUseArrayListBuilder())
+        || (field.getFieldType() instanceof TypeNameSet
+            && context.getConfiguration().shouldUseHashSetBuilder())
+        || (field.getFieldType() instanceof TypeNameMap
+            && context.getConfiguration().shouldUseHashMapBuilder())) {
       return false;
     }
 
@@ -98,7 +102,7 @@ public class FieldConsumerGenerator implements MethodGenerator {
     parameter.setParameterName(fieldName + SUFFIX_CONSUMER);
     parameter.setParameterTypeName(consumerType);
     MethodDto methodDto = new MethodDto();
-    methodDto.setMethodName(generateSetterName(fieldName, context));
+    methodDto.setMethodName(generateBuilderMethodName(fieldName, context));
     methodDto.setReturnType(builderType);
     methodDto.addParameter(parameter);
     setMethodAccessModifier(methodDto, getMethodAccessModifier(context));

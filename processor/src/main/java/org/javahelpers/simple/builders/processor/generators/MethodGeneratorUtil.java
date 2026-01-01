@@ -77,7 +77,7 @@ public final class MethodGeneratorUtil {
    * @param context the processing context containing the configuration with the suffix
    * @return the method name with suffix applied
    */
-  public static String generateSetterName(String fieldName, ProcessingContext context) {
+  public static String generateBuilderMethodName(String fieldName, ProcessingContext context) {
     String suffix = context.getConfiguration().getSetterSuffix();
     if (suffix == null || suffix.isEmpty()) {
       return fieldName;

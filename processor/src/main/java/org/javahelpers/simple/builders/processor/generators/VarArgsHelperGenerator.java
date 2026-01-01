@@ -28,8 +28,6 @@ import static org.javahelpers.simple.builders.processor.generators.MethodGenerat
 
 import java.util.Collections;
 import java.util.List;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.processor.dtos.*;
 import org.javahelpers.simple.builders.processor.util.ProcessingContext;
@@ -61,34 +59,18 @@ public class VarArgsHelperGenerator implements MethodGenerator {
   }
 
   @Override
-  public boolean appliesTo(
-      FieldDto field,
-      VariableElement fieldParameter,
-      TypeElement fieldTypeElement,
-      ProcessingContext context) {
+  public boolean appliesTo(FieldDto field, TypeName dtoType, ProcessingContext context) {
     if (!context.getConfiguration().shouldGenerateVarArgsHelpers()) {
       return false;
     }
-    TypeName fieldType = field.getFieldType();
-    if (fieldType instanceof TypeNameList listType && listType.isParameterized()) {
-      return true;
-    }
-    if (fieldType instanceof TypeNameSet setType && setType.isParameterized()) {
-      return true;
-    }
-    if (fieldType instanceof TypeNameMap mapType && mapType.isParameterized()) {
-      return true;
-    }
-    return false;
+    return (field.getFieldType() instanceof TypeNameList listType && listType.isParameterized())
+        || (field.getFieldType() instanceof TypeNameSet setType && setType.isParameterized())
+        || (field.getFieldType() instanceof TypeNameMap mapType && mapType.isParameterized());
   }
 
   @Override
   public List<MethodDto> generateMethods(
-      FieldDto field,
-      VariableElement fieldParameter,
-      TypeElement fieldTypeElement,
-      TypeName builderType,
-      ProcessingContext context) {
+      FieldDto field, TypeName builderType, ProcessingContext context) {
 
     TypeName fieldType = field.getFieldType();
     TypeName parameterType = null;
@@ -185,7 +167,7 @@ public class VarArgsHelperGenerator implements MethodGenerator {
     }
 
     MethodDto methodDto = new MethodDto();
-    methodDto.setMethodName(generateSetterName(fieldName, context));
+    methodDto.setMethodName(generateBuilderMethodName(fieldName, context));
     methodDto.setReturnType(builderType);
     methodDto.addParameter(parameter);
     setMethodAccessModifier(methodDto, getMethodAccessModifier(context));

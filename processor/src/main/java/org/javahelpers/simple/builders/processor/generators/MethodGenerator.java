@@ -25,8 +25,6 @@
 package org.javahelpers.simple.builders.processor.generators;
 
 import java.util.List;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
 import org.javahelpers.simple.builders.processor.dtos.FieldDto;
 import org.javahelpers.simple.builders.processor.dtos.MethodDto;
 import org.javahelpers.simple.builders.processor.dtos.TypeName;
@@ -82,21 +80,15 @@ public interface MethodGenerator {
    * <ul>
    *   <li>Configuration flags (e.g., {@code shouldGenerateBuilderConsumer()})
    *   <li>Field type compatibility (e.g., only for collections, strings, etc.)
-   *   <li>Presence of required dependencies (e.g., builder types for consumer methods)
+   *   <li>DTO package or annotations (e.g., only for specific packages or annotated DTOs)
    * </ul>
    *
    * @param field the field being processed
-   * @param fieldParameter the variable element representing the field parameter (from constructor
-   *     or setter)
-   * @param fieldTypeElement the type element of the field's type, or null if not available
+   * @param dtoType the type of the DTO class containing this field
    * @param context the processing context containing configuration and utilities
    * @return true if this generator should generate methods for this field, false otherwise
    */
-  boolean appliesTo(
-      FieldDto field,
-      VariableElement fieldParameter,
-      TypeElement fieldTypeElement,
-      ProcessingContext context);
+  boolean appliesTo(FieldDto field, TypeName dtoType, ProcessingContext context);
 
   /**
    * Generates methods for the given field.
@@ -107,18 +99,11 @@ public interface MethodGenerator {
    * <p>The returned methods will be added to the field's method list and eventually rendered in the
    * generated builder class.
    *
-   * @param field the field being processed (contains field name, type, javadoc, etc.)
-   * @param fieldParameter the variable element representing the field parameter (from constructor
-   *     or setter)
-   * @param fieldTypeElement the type element of the field's type, or null if not available
+   * @param field the field being processed (contains field name, type, javadoc, builder types,
+   *     etc.)
    * @param builderType the type of the builder being generated (used for return types)
    * @param context the processing context containing configuration and utilities
    * @return list of generated methods (may be empty but should not be null)
    */
-  List<MethodDto> generateMethods(
-      FieldDto field,
-      VariableElement fieldParameter,
-      TypeElement fieldTypeElement,
-      TypeName builderType,
-      ProcessingContext context);
+  List<MethodDto> generateMethods(FieldDto field, TypeName builderType, ProcessingContext context);
 }

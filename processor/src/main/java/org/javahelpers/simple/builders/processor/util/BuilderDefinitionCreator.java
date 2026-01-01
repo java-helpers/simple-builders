@@ -25,12 +25,10 @@
 package org.javahelpers.simple.builders.processor.util;
 
 import static java.util.stream.Collectors.toSet;
-import static javax.lang.model.type.TypeKind.ARRAY;
 import static org.javahelpers.simple.builders.processor.util.AnnotationValidator.validateAnnotatedElement;
 import static org.javahelpers.simple.builders.processor.util.JavaLangAnalyser.*;
 import static org.javahelpers.simple.builders.processor.util.JavaLangMapper.map2MethodParameter;
 import static org.javahelpers.simple.builders.processor.util.JavaLangMapper.map2TypeName;
-import static org.javahelpers.simple.builders.processor.util.TypeNameAnalyser.*;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -39,35 +37,16 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 import javax.lang.model.element.*;
 import javax.lang.model.type.TypeMirror;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.javahelpers.simple.builders.core.annotations.IgnoreInBuilder;
-import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
-import org.javahelpers.simple.builders.core.util.TrackedValue;
 import org.javahelpers.simple.builders.processor.dtos.*;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 
 /** Class for creating a specific BuilderDefinitionDto for an annotated DTO class. */
 public class BuilderDefinitionCreator {
-  private static final String BUILDER_SUFFIX = "Builder";
-
-  // Template argument keys for code generation
-  private static final String ARG_FIELD_NAME = "fieldName";
-  private static final String ARG_DTO_METHOD_PARAM = "dtoMethodParam";
-  private static final String ARG_DTO_METHOD_PARAMS = "dtoMethodParams";
-  private static final String ARG_BUILDER_FIELD_WRAPPER = "builderFieldWrapper";
-  private static final String ARG_HELPER_TYPE = "helperType";
-  private static final String ARG_ELEMENT_TYPE = "elementType";
-
-  // Type constants
-  private static final TypeName TRACKED_VALUE_TYPE = TypeName.of(TrackedValue.class);
-
-  // Parameter name suffixes
-  private static final String SUFFIX_CONSUMER = "Consumer";
-  private static final String SUFFIX_SUPPLIER = "Supplier";
 
   private BuilderDefinitionCreator() {
     // Private constructor to prevent instantiation
@@ -294,7 +273,8 @@ public class BuilderDefinitionCreator {
     }
 
     VariableElement fieldParameter = parameters.get(0);
-    TypeElement dtoType = (TypeElement) mth.getEnclosingElement();
+    TypeElement dtoTypeElement = (TypeElement) mth.getEnclosingElement();
+    TypeName dtoType = JavaLangMapper.map2TypeName(dtoTypeElement, context);
 
     // Extract only the @param Javadoc for the single setter parameter (if present)
     String fullJavaDoc = context.getDocComment(mth);
@@ -337,13 +317,15 @@ public class BuilderDefinitionCreator {
       javaDoc = fieldName;
     }
 
+    // Convert TypeElement to TypeName once
+    TypeName dtoType = JavaLangMapper.map2TypeName(annotatedType, context);
+
     // Check for field name conflicts and rename if necessary
     String finalFieldName = resolveFieldNameConflict(fieldName, param, fieldNameRegistry, context);
 
     // Pass both original field name (for methods) and final field name (for builder field)
     Optional<FieldDto> result =
-        createFieldDto(
-            fieldName, finalFieldName, javaDoc, param, annotatedType, builderType, context);
+        createFieldDto(fieldName, finalFieldName, javaDoc, param, dtoType, builderType, context);
 
     if (result.isPresent()) {
       fieldNameRegistry.put(finalFieldName, result.get());
@@ -388,16 +370,12 @@ public class BuilderDefinitionCreator {
     String renamedFieldName = fieldName + newTypeName;
 
     context.warning(
-        null,
         """
           Builder field conflict: field '%s' (type %s) renamed to '%s' in builder to avoid conflict with existing field (type %s). \
         The reason could be having helperfunctions in the DTO or a mistake in the DTO (e.g., two setters with the same name but different field types). \
         Please check it and if the DTO is correct, you can get rid of this warning by setting the IgnoreInBuilder annotation on one of the setters for this field.\
         """,
-        fieldName,
-        newTypeName,
-        renamedFieldName,
-        existingTypeName);
+        fieldName, newTypeName, renamedFieldName, existingTypeName);
 
     return renamedFieldName;
   }
@@ -411,6 +389,7 @@ public class BuilderDefinitionCreator {
    * @param javaDoc the javadoc for the field
    * @param param the parameter element (from constructor or setter)
    * @param dtoType the DTO type containing this field
+   * @param builderType the builder type
    * @param context processing context
    * @return Optional containing the FieldDto, or empty if field cannot be created
    */
@@ -419,18 +398,16 @@ public class BuilderDefinitionCreator {
       String fieldNameInBuilder,
       String javaDoc,
       VariableElement param,
-      TypeElement dtoType,
+      TypeName dtoType,
       TypeName builderType,
       ProcessingContext context) {
     MethodParameterDto paramDto = map2MethodParameter(param, context);
-    if (paramDto == null) {
+    if (paramDto == null || dtoType == null) {
       return Optional.empty();
     }
 
     TypeName fieldType = paramDto.getParameterType();
     TypeMirror fieldTypeMirror = param.asType();
-    Element rawElement = context.asElement(fieldTypeMirror);
-    TypeElement fieldTypeElement = rawElement instanceof TypeElement te ? te : null;
 
     FieldDto field = new FieldDto();
     field.setFieldName(fieldNameInBuilder); // Use renamed field name for builder field storage
@@ -441,7 +418,9 @@ public class BuilderDefinitionCreator {
     // Note: setterName will be set explicitly by the caller before field renaming
 
     // Find matching getter on the DTO type using the builder field name
-    JavaLangAnalyser.findGetterForField(dtoType, fieldNameInBuilder, fieldTypeMirror, context)
+    TypeElement dtoTypeElement = context.getTypeElement(dtoType);
+    JavaLangAnalyser.findGetterForField(
+            dtoTypeElement, fieldNameInBuilder, fieldTypeMirror, context)
         .ifPresent(getter -> field.setGetterName(getter.getSimpleName().toString()));
 
     // Extract annotations from the field parameter
@@ -460,750 +439,18 @@ public class BuilderDefinitionCreator {
       field.setNonNullable(true);
     }
 
+    // Builder and constructor information is now set when TypeName is created in JavaLangMapper
+
     // Use MethodGeneratorRegistry to generate all methods for this field
     List<MethodDto> generatedMethods =
-        context
-            .getMethodGeneratorRegistry()
-            .generateAllMethods(field, param, fieldTypeElement, builderType);
+        context.getMethodGeneratorRegistry().generateAllMethods(field, dtoType, builderType);
     generatedMethods.forEach(field::addMethod);
 
     return Optional.of(field);
   }
 
   /**
-   * Creates a field setter method with optional transform, without annotations.
-   *
-   * @param fieldName the name of the method
-   * @param fieldNameInBuilder the name of the builder field
-   * @param transform optional transform expression (e.g., "Optional.of(%s)")
-   * @param fieldType the type of the field
-   * @param fieldJavadoc the javadoc for the field
-   * @return the method DTO for the setter
-   */
-  private static MethodDto createFieldSetterWithTransform(
-      String fieldName,
-      String fieldNameInBuilder,
-      String fieldJavadoc,
-      String transform,
-      TypeName fieldType,
-      TypeName builderType,
-      ProcessingContext context) {
-    return createFieldSetterWithTransform(
-        fieldName,
-        fieldNameInBuilder,
-        fieldJavadoc,
-        transform,
-        fieldType,
-        List.of(),
-        builderType,
-        context);
-  }
-
-  /**
-   * Creates a field setter method for collection varargs with automatic transform calculation. The
-   * transform is calculated based on the original field type to preserve specific collection
-   * implementations (e.g., ArrayList, LinkedList, HashSet, TreeSet, HashMap, TreeMap).
-   *
-   * @param field the field definition containing name, type, and javadoc
-   * @param parameterType the type of the method parameter (varargs array type)
-   * @param builderType the builder type for the return type
-   * @param context processing context
-   * @return the method DTO for the setter
-   */
-  private static MethodDto createFieldSetterByVarArgs(
-      FieldDto field, TypeName parameterType, TypeName builderType, ProcessingContext context) {
-    String baseExpression;
-    TypeName fieldType = field.getFieldType();
-
-    // Use simple names for interface types (already imported), fully qualified for concrete types
-    if (fieldType instanceof TypeNameList listType) {
-      baseExpression =
-          listType.isConcreteImplementation() ? "java.util.List.of(%s)" : "List.of(%s)";
-    } else if (fieldType instanceof TypeNameSet setType) {
-      baseExpression = setType.isConcreteImplementation() ? "java.util.Set.of(%s)" : "Set.of(%s)";
-    } else if (fieldType instanceof TypeNameMap mapType) {
-      baseExpression =
-          mapType.isConcreteImplementation() ? "java.util.Map.ofEntries(%s)" : "Map.ofEntries(%s)";
-    } else {
-      return null;
-    }
-    String transform = wrapConcreteCollectionType(fieldType, baseExpression);
-
-    return createFieldSetterWithTransform(
-        field.getFieldNameEstimated(),
-        field.getFieldName(),
-        field.getJavaDoc(),
-        transform,
-        parameterType,
-        List.of(),
-        builderType,
-        context);
-  }
-
-  /**
-   * Wraps an expression with a concrete collection constructor if needed to preserve the specific
-   * collection type. Only wraps concrete implementations (ArrayList, LinkedList, HashSet, TreeSet,
-   * HashMap, TreeMap, etc.). Returns the base expression unchanged for interface types (List, Set,
-   * Map), non-collection types.
-   *
-   * <p>Examples:
-   *
-   * <ul>
-   *   <li>ArrayList + "List.of(%s)" → "new ArrayList<>(List.of(%s))"
-   *   <li>List + "List.of(%s)" → "List.of(%s)"
-   *   <li>ArrayList + "builder.build()" → "new ArrayList<>(builder.build())"
-   *   <li>List + "builder.build()" → "builder.build()"
-   *   <li>String + "value" → "value"
-   * </ul>
-   *
-   * @param fieldType the field type to check
-   * @param baseExpression the base expression to potentially wrap
-   * @return the wrapped expression for concrete collections, or base expression otherwise
-   */
-  private static String wrapConcreteCollectionType(TypeName fieldType, String baseExpression) {
-    // TypeNameList/Set/Map are only created for types we can work with, so no additional checks
-    // needed
-    if (fieldType instanceof TypeNameList listType && listType.isConcreteImplementation()) {
-      return "new " + listType.getClassName() + "<>(" + baseExpression + ")";
-    } else if (fieldType instanceof TypeNameSet setType && setType.isConcreteImplementation()) {
-      return "new " + setType.getClassName() + "<>(" + baseExpression + ")";
-    } else if (fieldType instanceof TypeNameMap mapType && mapType.isConcreteImplementation()) {
-      return "new " + mapType.getClassName() + "<>(" + baseExpression + ")";
-    }
-
-    return baseExpression;
-  }
-
-  /**
-   * Calculates the build expression wrapper for builder consumers.
-   *
-   * @param fieldType the original field type
-   * @return the wrapped expression or the base expression if no wrapping needed
-   */
-  private static String calculateBuildExpression(TypeName fieldType) {
-    return wrapConcreteCollectionType(fieldType, "builder.build()");
-  }
-
-  /**
-   * Creates a field setter method with optional transform and annotations.
-   *
-   * @param fieldName the name of the field
-   * @param fieldJavadoc the javadoc for the field
-   * @param transform optional transform expression (e.g., "Optional.of(%s)")
-   * @param fieldType the type of the field
-   * @param annotations annotations to apply to the parameter
-   * @return the method DTO for the setter
-   */
-  private static MethodDto createFieldSetterWithTransform(
-      String fieldName,
-      String fieldNameInBuilder,
-      String fieldJavadoc,
-      String transform,
-      TypeName fieldType,
-      List<AnnotationDto> annotations,
-      TypeName builderType,
-      ProcessingContext context) {
-    MethodParameterDto parameter = new MethodParameterDto();
-    parameter.setParameterName(fieldName);
-    parameter.setParameterTypeName(fieldType);
-    // Add annotations to the parameter
-    annotations.forEach(parameter::addAnnotation);
-    MethodDto methodDto = new MethodDto();
-    methodDto.setMethodName(generateSetterName(fieldName, context));
-    methodDto.setReturnType(builderType);
-    methodDto.addParameter(parameter);
-    setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
-    String params;
-    if (StringUtils.isBlank(transform)) {
-      params = parameter.getParameterName();
-    } else {
-      params = String.format(transform, parameter.getParameterName());
-    }
-    methodDto.setCode(
-        """
-        this.$fieldName:N = $builderFieldWrapper:T.changedValue($dtoMethodParams:N);
-        return this;
-        """);
-    methodDto.addArgument(ARG_FIELD_NAME, fieldNameInBuilder);
-    methodDto.addArgument(ARG_DTO_METHOD_PARAMS, params);
-    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
-    // Direct setters have highest priority, transform methods have high priority
-    methodDto.setPriority(transform == null ? MethodDto.PRIORITY_HIGHEST : MethodDto.PRIORITY_HIGH);
-    // Set javadoc
-    methodDto.setJavadoc(
-        """
-        Sets the value for <code>%s</code>.
-
-        @param %s %s
-        @return current instance of builder
-        """
-            .formatted(fieldName, parameter.getParameterName(), fieldJavadoc));
-    return methodDto;
-  }
-
-  private static MethodDto createFieldConsumer(
-      String fieldName,
-      String fieldNameInBuilder,
-      String fieldJavadoc,
-      TypeName fieldType,
-      TypeName builderType,
-      ProcessingContext context) {
-    TypeNameGeneric consumerType = new TypeNameGeneric(map2TypeName(Consumer.class), fieldType);
-    MethodParameterDto parameter = new MethodParameterDto();
-    parameter.setParameterName(fieldName + SUFFIX_CONSUMER);
-    parameter.setParameterTypeName(consumerType);
-    MethodDto methodDto = new MethodDto();
-    methodDto.setMethodName(generateSetterName(fieldName, context));
-    methodDto.setReturnType(builderType);
-    methodDto.addParameter(parameter);
-    setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
-    methodDto.setCode(
-        """
-        $helperType:T consumer = this.$fieldName:N.isSet() ? this.$fieldName:N.value() : new $helperType:T();
-        $dtoMethodParam:N.accept(consumer);
-        this.$fieldName:N = $builderFieldWrapper:T.changedValue(consumer);
-        return this;
-        """);
-    methodDto.addArgument(ARG_FIELD_NAME, fieldNameInBuilder);
-    methodDto.addArgument(ARG_DTO_METHOD_PARAM, parameter.getParameterName());
-    methodDto.addArgument(ARG_HELPER_TYPE, fieldType);
-    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
-    methodDto.setPriority(MethodDto.PRIORITY_MEDIUM);
-    methodDto.setJavadoc(
-        """
-        Sets the value for <code>%s</code> by executing the provided consumer.
-
-        @param %s consumer providing an instance of %s
-        @return current instance of builder
-        """
-            .formatted(fieldName, parameter.getParameterName(), fieldJavadoc));
-    return methodDto;
-  }
-
-  private static MethodDto createStringBuilderConsumer(
-      String fieldName,
-      String fieldNameInBuilder,
-      String fieldJavadoc,
-      String transform,
-      TypeName builderType,
-      ProcessingContext context) {
-    TypeName stringBuilderType = map2TypeName(StringBuilder.class);
-    TypeNameGeneric consumerType =
-        new TypeNameGeneric(map2TypeName(Consumer.class), stringBuilderType);
-    MethodParameterDto parameter = new MethodParameterDto();
-    parameter.setParameterName(fieldName + "StringBuilderConsumer");
-    parameter.setParameterTypeName(consumerType);
-    MethodDto methodDto = new MethodDto();
-    methodDto.setMethodName(generateSetterName(fieldName, context));
-    methodDto.addParameter(parameter);
-    setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
-    methodDto.setCode(
-        """
-        StringBuilder builder = new StringBuilder();
-        $dtoMethodParam:N.accept(builder);
-        this.$fieldName:N = $builderFieldWrapper:T.changedValue($transform:N);
-        return this;
-        """);
-    methodDto.addArgument(ARG_FIELD_NAME, fieldNameInBuilder);
-    methodDto.addArgument(ARG_DTO_METHOD_PARAM, parameter.getParameterName());
-    methodDto.addArgument("transform", transform);
-    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
-    methodDto.setReturnType(builderType);
-    methodDto.setPriority(MethodDto.PRIORITY_LOW);
-    methodDto.setJavadoc(
-        """
-        Sets the value for <code>%s</code> by executing the provided consumer.
-
-        @param %s consumer providing an instance of %s
-        @return current instance of builder
-        """
-            .formatted(fieldName, parameter.getParameterName(), fieldJavadoc));
-    return methodDto;
-  }
-
-  private static MethodDto createFieldConsumerWithBuilder(
-      FieldDto field,
-      TypeName consumerBuilderType,
-      TypeName builderTargetType,
-      TypeName returnBuilderType,
-      ProcessingContext context) {
-    TypeNameGeneric builderTypeGeneric =
-        new TypeNameGeneric(consumerBuilderType, builderTargetType);
-    return BuilderDefinitionCreator.createFieldConsumerWithBuilder(
-        field, builderTypeGeneric, returnBuilderType, context);
-  }
-
-  private static MethodDto createFieldConsumerWithBuilder(
-      FieldDto field,
-      TypeName consumerBuilderType,
-      TypeName returnBuilderType,
-      ProcessingContext context) {
-    return createFieldConsumerWithBuilder(
-        field,
-        consumerBuilderType,
-        "this.$fieldName:N.value()",
-        "",
-        Map.of(),
-        returnBuilderType,
-        context);
-  }
-
-  /**
-   * Creates a consumer method for collection builders with element builders. Used for
-   * ArrayListBuilderWithElementBuilders and HashSetBuilderWithElementBuilders.
-   */
-  private static MethodDto createFieldConsumerWithElementBuilders(
-      FieldDto field,
-      TypeName collectionBuilderType,
-      TypeName elementBuilderType,
-      TypeName returnBuilderType,
-      ProcessingContext context) {
-    return createFieldConsumerWithBuilder(
-        field,
-        collectionBuilderType,
-        "this.$fieldName:N.value(), $elementBuilderType:T::create",
-        "$elementBuilderType:T::create",
-        Map.of("elementBuilderType", elementBuilderType),
-        returnBuilderType,
-        context);
-  }
-
-  /**
-   * Creates a consumer method for a field with a builder type.
-   *
-   * @param field the field definition containing name, type, and javadoc
-   * @param consumerBuilderType the builder type (e.g., ArrayListBuilder or
-   *     ArrayListBuilderWithElementBuilders)
-   * @param constructorArgsWithValue constructor arguments when field is already set
-   * @param additionalConstructorArgs constructor arguments when field is empty
-   * @param additionalArguments additional template arguments to add to the method (must be TypeName
-   *     values)
-   * @param returnBuilderType the builder type for the return type
-   * @param context processing context
-   */
-  private static MethodDto createFieldConsumerWithBuilder(
-      FieldDto field,
-      TypeName consumerBuilderType,
-      String constructorArgsWithValue,
-      String additionalConstructorArgs,
-      Map<String, TypeName> additionalArguments,
-      TypeName returnBuilderType,
-      ProcessingContext context) {
-    TypeNameGeneric consumerType =
-        new TypeNameGeneric(map2TypeName(Consumer.class), consumerBuilderType);
-    MethodParameterDto parameter = new MethodParameterDto();
-    parameter.setParameterName(field.getFieldName() + BUILDER_SUFFIX + SUFFIX_CONSUMER);
-    parameter.setParameterTypeName(consumerType);
-    MethodDto methodDto = new MethodDto();
-    methodDto.setMethodName(generateSetterName(field.getFieldName(), context));
-    methodDto.setReturnType(returnBuilderType);
-    methodDto.addParameter(parameter);
-    setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
-
-    // Wrap the builder result with a specific collection constructor if needed
-    String buildExpression = calculateBuildExpression(field.getFieldType());
-
-    methodDto.setCode(
-        """
-        $helperType:T builder = this.$fieldName:N.isSet() ? new $helperType:T(%s) : new $helperType:T(%s);
-        $dtoMethodParam:N.accept(builder);
-        this.$fieldName:N = $builderFieldWrapper:T.changedValue($buildExpression:N);
-        return this;
-        """
-            .formatted(constructorArgsWithValue, additionalConstructorArgs));
-    methodDto.addArgument(ARG_FIELD_NAME, field.getFieldName());
-    methodDto.addArgument(ARG_DTO_METHOD_PARAM, parameter.getParameterName());
-    methodDto.addArgument(ARG_HELPER_TYPE, consumerBuilderType);
-    methodDto.addArgument("buildExpression", buildExpression);
-    additionalArguments.forEach(methodDto::addArgument);
-    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
-    methodDto.setPriority(MethodDto.PRIORITY_MEDIUM);
-    methodDto.setJavadoc(
-        """
-        Sets the value for <code>%s</code> using a builder consumer that produces the value.
-
-        @param %s consumer providing an instance of a builder for %s
-        @return current instance of builder
-        """
-            .formatted(field.getFieldName(), parameter.getParameterName(), field.getJavaDoc()));
-    return methodDto;
-  }
-
-  private static MethodDto createFieldSupplier(
-      String fieldName,
-      String fieldNameInBuilder,
-      String fieldJavaDoc,
-      TypeName fieldType,
-      TypeName builderType,
-      ProcessingContext context) {
-    TypeNameGeneric supplierType = new TypeNameGeneric(map2TypeName(Supplier.class), fieldType);
-    MethodParameterDto parameter = new MethodParameterDto();
-    parameter.setParameterName(fieldName + SUFFIX_SUPPLIER);
-    parameter.setParameterTypeName(supplierType);
-    MethodDto methodDto = new MethodDto();
-    methodDto.setMethodName(generateSetterName(fieldName, context));
-    methodDto.setReturnType(builderType);
-    methodDto.addParameter(parameter);
-    setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
-    methodDto.setCode(
-        """
-        this.$fieldName:N = $builderFieldWrapper:T.changedValue($dtoMethodParam:N.get());
-        return this;
-        """);
-    methodDto.addArgument(ARG_FIELD_NAME, fieldNameInBuilder);
-    methodDto.addArgument(ARG_DTO_METHOD_PARAM, parameter.getParameterName());
-    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
-    methodDto.setPriority(MethodDto.PRIORITY_HIGH);
-    methodDto.setJavadoc(
-        """
-        Sets the value for <code>%s</code> by invoking the provided supplier.
-
-        @param %s supplier for %s
-        @return current instance of builder
-        """
-            .formatted(fieldName, parameter.getParameterName(), fieldJavaDoc));
-    return methodDto;
-  }
-
-  private static MethodDto createStringFormatMethodWithTransform(
-      String fieldName,
-      String fieldNameInBuilder,
-      String fieldJavadoc,
-      String transform,
-      List<AnnotationDto> annotations,
-      TypeName builderType,
-      ProcessingContext context) {
-    TypeName stringType = map2TypeName(String.class);
-
-    MethodParameterDto formatParam = new MethodParameterDto();
-    formatParam.setParameterName("format");
-    formatParam.setParameterTypeName(stringType);
-    // Apply annotations to the format parameter (it's a String value)
-    annotations.forEach(formatParam::addAnnotation);
-
-    MethodParameterDto argsParam = new MethodParameterDto();
-    argsParam.setParameterName("args");
-    argsParam.setParameterTypeName(new TypeNameArray(TypeName.of(Object.class)));
-
-    MethodDto methodDto = new MethodDto();
-    methodDto.setMethodName(generateSetterName(fieldName, context));
-    methodDto.setReturnType(builderType);
-    methodDto.addParameter(formatParam);
-    methodDto.addParameter(argsParam);
-    setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
-    methodDto.setCode(
-        """
-        this.$fieldName:N = $builderFieldWrapper:T.changedValue($transform:N);
-        return this;
-        """);
-    methodDto.addArgument(ARG_FIELD_NAME, fieldNameInBuilder);
-    methodDto.addArgument("transform", transform);
-    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
-    methodDto.setPriority(MethodDto.PRIORITY_HIGH);
-    methodDto.setJavadoc(
-        """
-        Sets the value for <code>%s</code>.
-
-        @param %s %s
-        @param %s %s
-        @return current instance of builder
-        """
-            .formatted(
-                fieldName,
-                formatParam.getParameterName(),
-                fieldJavadoc,
-                argsParam.getParameterName(),
-                fieldJavadoc));
-    return methodDto;
-  }
-
-  /**
-   * Creates a field setter method that accepts a List and converts it to an array.
-   *
-   * @param fieldName the field name
-   * @param listType the List<ElementType> parameter type
-   * @param elementType the element type of the array
-   * @param builderType the builder type to return
-   * @return the method DTO for the setter
-   */
-  private static MethodDto createFieldSetterForArrayFromList(
-      String fieldName,
-      String fieldNameInBuilder,
-      TypeName listType,
-      TypeName elementType,
-      TypeName builderType,
-      ProcessingContext context) {
-    MethodParameterDto parameter = new MethodParameterDto();
-    parameter.setParameterName(fieldName);
-    parameter.setParameterTypeName(listType);
-
-    MethodDto methodDto = new MethodDto();
-    methodDto.setMethodName(generateSetterName(fieldName, context));
-    methodDto.setReturnType(builderType);
-    methodDto.addParameter(parameter);
-    setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
-    methodDto.setCode(
-        """
-        this.$fieldName:N = $builderFieldWrapper:T.changedValue($dtoMethodParams:N.toArray(new $elementType:T[0]));
-        return this;
-        """);
-    methodDto.addArgument(ARG_FIELD_NAME, fieldNameInBuilder);
-    methodDto.addArgument(ARG_DTO_METHOD_PARAMS, fieldName);
-    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
-    methodDto.addArgument(ARG_ELEMENT_TYPE, elementType);
-    methodDto.setPriority(MethodDto.PRIORITY_HIGH);
-    methodDto.setJavadoc(
-        """
-        Sets the value for <code>%s</code>.
-
-        @param %s %s
-        @return current instance of builder
-        """
-            .formatted(fieldName, parameter.getParameterName(), fieldName));
-    return methodDto;
-  }
-
-  /**
-   * Creates an add2FieldName method that adds a single element to a List or Set field. This method
-   * directly manipulates the collection, creating a new one with the added element. It handles both
-   * initialized and uninitialized collections properly.
-   *
-   * @param fieldName the name of the collection field
-   * @param fieldType the type of the collection field (TypeNameList or TypeNameSet)
-   * @param elementType the type of elements in the collection
-   * @param builderType the builder type to return
-   * @param context processing context
-   * @return the method DTO for the add2 helper
-   */
-  private static MethodDto createAddToCollectionMethod(
-      String fieldName,
-      TypeName fieldType,
-      TypeName elementType,
-      TypeName builderType,
-      ProcessingContext context) {
-    MethodDto methodDto = new MethodDto();
-    String methodName = "add2" + StringUtils.capitalize(fieldName);
-    methodDto.setMethodName(methodName);
-    methodDto.setReturnType(builderType);
-
-    MethodParameterDto parameter = new MethodParameterDto();
-    parameter.setParameterName("element");
-    parameter.setParameterTypeName(elementType);
-    methodDto.addParameter(parameter);
-
-    setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
-
-    // Determine the collection implementation to use
-    String collectionImpl;
-    TypeName collectionVarType;
-    if (fieldType instanceof TypeNameList listType) {
-      collectionImpl = listType.isConcreteImplementation() ? listType.getClassName() : "ArrayList";
-      // Use the exact field type for the variable to ensure type compatibility with TrackedValue
-      collectionVarType = fieldType;
-    } else if (fieldType instanceof TypeNameSet setType) {
-      collectionImpl = setType.isConcreteImplementation() ? setType.getClassName() : "HashSet";
-      // Use the exact field type for the variable to ensure type compatibility with TrackedValue
-      collectionVarType = fieldType;
-    } else {
-      throw new IllegalArgumentException("Unsupported field type: " + fieldType);
-    }
-
-    // Generate code that handles both set and unset cases
-    // Use the exact field type for the variable to avoid type incompatibility with TrackedValue
-    methodDto.setCode(
-        """
-        $collectionVarType:T newCollection;
-        if (this.$fieldName:N.isSet()) {
-          newCollection = new $collectionImpl:T<>(this.$fieldName:N.value());
-        } else {
-          newCollection = new $collectionImpl:T<>();
-        }
-        newCollection.add(element);
-        this.$fieldName:N = $builderFieldWrapper:T.changedValue(newCollection);
-        return this;
-        """);
-    methodDto.addArgument("collectionVarType", collectionVarType);
-    methodDto.addArgument("collectionImpl", new TypeName("java.util", collectionImpl));
-    methodDto.addArgument(ARG_FIELD_NAME, fieldName);
-    methodDto.addArgument(ARG_ELEMENT_TYPE, elementType);
-    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
-    methodDto.setPriority(MethodDto.PRIORITY_MEDIUM);
-
-    methodDto.setJavadoc(
-        """
-        Adds a single element to <code>%s</code>.
-
-        @param element the element to add
-        @return current instance of builder
-        """
-            .formatted(fieldName));
-
-    return methodDto;
-  }
-
-  /**
-   * Creates a consumer method for array fields with ArrayListBuilder. This allows building arrays
-   * using the fluent ArrayListBuilder API.
-   */
-  private static MethodDto createFieldConsumerWithArrayBuilder(
-      String fieldName,
-      String fieldNameInBuilder,
-      TypeName collectionBuilderType,
-      TypeName elementType,
-      TypeName returnBuilderType,
-      ProcessingContext context) {
-    TypeNameGeneric builderTypeGeneric = new TypeNameGeneric(collectionBuilderType, elementType);
-    TypeNameGeneric consumerType =
-        new TypeNameGeneric(map2TypeName(Consumer.class), builderTypeGeneric);
-
-    MethodParameterDto parameter = new MethodParameterDto();
-    parameter.setParameterName(fieldName + BUILDER_SUFFIX + SUFFIX_CONSUMER);
-    parameter.setParameterTypeName(consumerType);
-
-    MethodDto methodDto = new MethodDto();
-    methodDto.setMethodName(generateSetterName(fieldName, context));
-    methodDto.setReturnType(returnBuilderType);
-    methodDto.addParameter(parameter);
-    setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
-    methodDto.setCode(
-        """
-        $helperType:T builder = this.$fieldName:N.isSet() ? new $helperType:T(java.util.List.of(this.$fieldName:N.value())) : new $helperType:T();
-        $dtoMethodParam:N.accept(builder);
-        this.$fieldName:N = $builderFieldWrapper:T.changedValue(builder.build().toArray(new $elementType:T[0]));
-        return this;
-        """);
-    methodDto.addArgument(ARG_FIELD_NAME, fieldNameInBuilder);
-    methodDto.addArgument(ARG_DTO_METHOD_PARAM, parameter.getParameterName());
-    methodDto.addArgument(ARG_HELPER_TYPE, builderTypeGeneric);
-    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
-    methodDto.addArgument(ARG_ELEMENT_TYPE, elementType);
-    methodDto.setPriority(MethodDto.PRIORITY_MEDIUM);
-    methodDto.setJavadoc(
-        """
-        Sets the value for <code>%s</code> using the fluent builder consumer.
-
-        @param %s consumer for %s
-        @return current instance of builder
-        """
-            .formatted(fieldName, parameter.getParameterName(), fieldName));
-    return methodDto;
-  }
-
-  /**
-   * Checks if a StringBuilder consumer should be generated for the given field type. This applies
-   * to plain String fields and Optional&lt;String&gt; fields.
-   *
-   * @param fieldType the type of the field
-   * @return true if StringBuilder consumer should be generated, false otherwise
-   */
-  private static boolean shouldGenerateStringBuilderConsumer(TypeName fieldType) {
-    // Check for plain String (not array)
-    if (isString(fieldType) && !(fieldType instanceof TypeNameArray)) {
-      return true;
-    }
-
-    // Check for Optional<String>
-    return isOptionalString(fieldType);
-  }
-
-  private static Optional<TypeName> resolveBuilderType(
-      VariableElement param, ProcessingContext context) {
-    TypeMirror typeOfParameter = param.asType();
-    if (typeOfParameter.getKind() == ARRAY || typeOfParameter.getKind().isPrimitive()) {
-      return Optional.empty();
-    }
-    Element elementOfParameter = context.asElement(typeOfParameter);
-    if (!(elementOfParameter instanceof TypeElement typeElement)) {
-      // Can happen for primitives or certain compiler-internal types; nothing to build
-      return Optional.empty();
-    }
-    // For direct field types disallow generics here in the caller
-    if (JavaLangAnalyser.hasGenericTypes(typeElement)) {
-      context.debug(
-          "  -> Skipping builder lookup for generic type %s", typeElement.getSimpleName());
-      return Optional.empty();
-    }
-    return resolveBuilderTypeFromTypeElement(typeElement, context);
-  }
-
-  /**
-   * Finds the builder type for a given element type (used for collection elements).
-   *
-   * @param elementType the type of the collection element
-   * @param elementTypeMirror the TypeMirror of the element type (from the parameter)
-   * @param context processing context
-   * @return Optional containing the builder TypeName if the element type has @SimpleBuilder
-   */
-  private static Optional<TypeName> resolveBuilderType(
-      TypeName elementType, TypeMirror elementTypeMirror, ProcessingContext context) {
-
-    // Skip cases without type mirror
-    if (elementTypeMirror == null) {
-      return Optional.empty();
-    }
-
-    // Skip type variables and primitives
-    if (elementType instanceof TypeNameVariable || elementType instanceof TypeNamePrimitive) {
-      context.debug("  -> Skipping type variable or primitive: %s", elementType);
-      return Optional.empty();
-    }
-
-    // Try to get the element from the TypeMirror
-    Element element = context.asElement(elementTypeMirror);
-    if (!(element instanceof TypeElement typeElement)) {
-      context.debug("  -> Element is not a TypeElement: %s", element);
-      return Optional.empty();
-    }
-    // For collection element types: delegate to shared helper
-    return resolveBuilderTypeFromTypeElement(typeElement, context);
-  }
-
-  /**
-   * Shared helper resolving a builder {@link TypeName} from a {@link TypeElement} if it is
-   * annotated with {@code @SimpleBuilder}. Generics policy is enforced by the callers.
-   *
-   * @param typeElement the type element to inspect
-   * @param context processing context
-   */
-  private static Optional<TypeName> resolveBuilderTypeFromTypeElement(
-      TypeElement typeElement, ProcessingContext context) {
-    // Check annotation presence first
-    Optional<AnnotationMirror> foundBuilderAnnotation =
-        findAnnotation(typeElement, SimpleBuilder.class);
-    if (foundBuilderAnnotation.isEmpty()) {
-      context.debug("  -> Type %s has no @SimpleBuilder", typeElement.getSimpleName());
-      return Optional.empty();
-    }
-
-    String packageName = context.getPackageName(typeElement);
-    String simpleClassName = typeElement.getSimpleName().toString();
-    String builderSuffix = context.getConfiguration().getBuilderSuffix();
-    context.debug(
-        "  -> Found @SimpleBuilder on type %s.%s, will use %s%s",
-        packageName, simpleClassName, simpleClassName, builderSuffix);
-    return Optional.of(new TypeName(packageName, simpleClassName + builderSuffix));
-  }
-
-  /**
-   * Extracts the first type argument from a parameterized type mirror. For example, from
-   * List&lt;Task&gt;, this extracts the Task TypeMirror.
-   *
-   * @param typeMirror the parameterized type mirror
-   * @return the first type argument, or null if not a parameterized type
-   */
-  private static TypeMirror extractFirstTypeArgument(TypeMirror typeMirror) {
-    if (typeMirror instanceof javax.lang.model.type.DeclaredType declaredType) {
-      List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
-      if (!typeArguments.isEmpty()) {
-        return typeArguments.get(0);
-      }
-    }
-    return null;
-  }
-
-  /**
-   * Creates the "With" interface definition that allows the DTO to implement fluent modification
-   * methods.
+   * Creates the With interface for the builder, which provides fluent modification methods.
    *
    * @param builderDef the builder definition containing type information
    * @param context the processing context
@@ -1318,53 +565,5 @@ public class BuilderDefinitionCreator {
       """);
 
     return method;
-  }
-
-  /**
-   * Generates the name of setters on the builder according to configuration and field name.
-   *
-   * <p>If the suffix is empty, returns the fieldName as-is. If the suffix is set, capitalizes the
-   * first letter of fieldName and prepends the suffix.
-   *
-   * <p>Examples:
-   *
-   * <ul>
-   *   <li>fieldName="name", suffix="" → "name"
-   *   <li>fieldName="name", suffix="with" → "withName"
-   *   <li>fieldName="age", suffix="set" → "setAge"
-   * </ul>
-   *
-   * @param fieldName the field name
-   * @param context the processing context containing the configuration with the suffix
-   * @return the method name with suffix applied
-   */
-  private static String generateSetterName(String fieldName, ProcessingContext context) {
-    String suffix = context.getConfiguration().getSetterSuffix();
-    if (suffix == null || suffix.isEmpty()) {
-      return fieldName;
-    }
-    return suffix + StringUtils.capitalize(fieldName);
-  }
-
-  /**
-   * Gets the method access modifier from the builder configuration.
-   *
-   * @param context the processing context
-   * @return the Modifier for method access, or null for package-private
-   */
-  private static Modifier getMethodAccessModifier(ProcessingContext context) {
-    return JavapoetMapper.map2Modifier(context.getConfiguration().getMethodAccess());
-  }
-
-  /**
-   * Sets the access modifier on a MethodDto if the modifier is not null.
-   *
-   * @param method the MethodDto to update
-   * @param modifier the access modifier to set, or null for package-private
-   */
-  private static void setMethodAccessModifier(MethodDto method, Modifier modifier) {
-    if (modifier != null) {
-      method.setModifier(modifier);
-    }
   }
 }

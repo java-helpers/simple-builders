@@ -25,14 +25,11 @@
 package org.javahelpers.simple.builders.processor.generators;
 
 import static org.javahelpers.simple.builders.processor.generators.MethodGeneratorUtil.*;
-import static org.javahelpers.simple.builders.processor.util.JavaLangAnalyser.isFunctionalInterface;
 import static org.javahelpers.simple.builders.processor.util.JavaLangMapper.map2TypeName;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
 import org.javahelpers.simple.builders.processor.dtos.FieldDto;
 import org.javahelpers.simple.builders.processor.dtos.MethodDto;
 import org.javahelpers.simple.builders.processor.dtos.MethodParameterDto;
@@ -68,27 +65,13 @@ public class SupplierMethodGenerator implements MethodGenerator {
   }
 
   @Override
-  public boolean appliesTo(
-      FieldDto field,
-      VariableElement fieldParameter,
-      TypeElement fieldTypeElement,
-      ProcessingContext context) {
-    if (!context.getConfiguration().shouldGenerateFieldSupplier()) {
-      return false;
-    }
-    if (isFunctionalInterface(fieldTypeElement)) {
-      return false;
-    }
-    return true;
+  public boolean appliesTo(FieldDto field, TypeName dtoType, ProcessingContext context) {
+    return context.getConfiguration().shouldGenerateFieldSupplier();
   }
 
   @Override
   public List<MethodDto> generateMethods(
-      FieldDto field,
-      VariableElement fieldParameter,
-      TypeElement fieldTypeElement,
-      TypeName builderType,
-      ProcessingContext context) {
+      FieldDto field, TypeName builderType, ProcessingContext context) {
 
     MethodDto supplierMethod =
         createFieldSupplier(
@@ -127,7 +110,7 @@ public class SupplierMethodGenerator implements MethodGenerator {
     parameter.setParameterTypeName(supplierType);
 
     MethodDto methodDto = new MethodDto();
-    methodDto.setMethodName(generateSetterName(fieldName, context));
+    methodDto.setMethodName(generateBuilderMethodName(fieldName, context));
     methodDto.setReturnType(builderType);
     methodDto.addParameter(parameter);
     setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
