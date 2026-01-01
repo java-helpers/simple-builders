@@ -1,0 +1,3 @@
+# Built-in builder enhancers for simple-builders
+# These are automatically discovered via ServiceLoader
+# Add built-in enhancers here as they are implemented

@@ -33,6 +33,7 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import org.javahelpers.simple.builders.processor.dtos.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.dtos.TypeName;
+import org.javahelpers.simple.builders.processor.generators.BuilderEnhancerRegistry;
 import org.javahelpers.simple.builders.processor.generators.MethodGeneratorRegistry;
 
 /**
@@ -47,6 +48,7 @@ public final class ProcessingContext {
   private final ProcessingLogger logger;
   private final BuilderConfigurationReader configurationReader;
   private MethodGeneratorRegistry methodGeneratorRegistry;
+  private BuilderEnhancerRegistry builderEnhancerRegistry;
   private BuilderConfiguration configurationForProcessingTarget;
 
   /**
@@ -94,6 +96,18 @@ public final class ProcessingContext {
       methodGeneratorRegistry = new MethodGeneratorRegistry(this);
     }
     return methodGeneratorRegistry;
+  }
+
+  /**
+   * Returns the builder enhancer registry.
+   *
+   * @return the builder enhancer registry
+   */
+  public BuilderEnhancerRegistry getBuilderEnhancerRegistry() {
+    if (builderEnhancerRegistry == null) {
+      builderEnhancerRegistry = new BuilderEnhancerRegistry(this);
+    }
+    return builderEnhancerRegistry;
   }
 
   /**
