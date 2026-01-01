@@ -63,8 +63,7 @@ public class MethodGeneratorRegistry {
     this.context = context;
     this.generators = new ArrayList<>();
 
-    registerBuiltInGenerators();
-    loadCustomGenerators();
+    loadAllGenerators();
     sortGeneratorsByPriority();
 
     context.debug("Initialized MethodGeneratorRegistry with %d generators", generators.size());
@@ -103,59 +102,37 @@ public class MethodGeneratorRegistry {
   }
 
   /**
-   * Registers all built-in method generators.
+   * Loads all method generators (built-in and custom) via ServiceLoader.
    *
-   * <p>Built-in generators are added in declaration order, but will be sorted by priority after all
-   * generators are registered.
-   */
-  private void registerBuiltInGenerators() {
-    generators.add(new BasicSetterGenerator());
-    generators.add(new StringFormatHelperGenerator());
-    generators.add(new OptionalHelperGenerator());
-    generators.add(new BuilderConsumerGenerator());
-    generators.add(new FieldConsumerGenerator());
-    generators.add(new ListConsumerGenerator());
-    generators.add(new MapConsumerGenerator());
-    generators.add(new SetConsumerGenerator());
-    generators.add(new StringBuilderConsumerGenerator());
-    generators.add(new SupplierMethodGenerator());
-    generators.add(new VarArgsHelperGenerator());
-    generators.add(new CollectionHelperGenerator());
-
-    context.debug("Registered %d built-in generators", generators.size());
-  }
-
-  /**
-   * Loads custom generators provided by library users via ServiceLoader.
-   *
-   * <p>Custom generators are discovered by looking for implementations of {@link MethodGenerator}
-   * declared in {@code
+   * <p>Generators are discovered by looking for implementations of {@link MethodGenerator} declared
+   * in {@code
    * META-INF/services/org.javahelpers.simple.builders.processor.generators.MethodGenerator} files.
+   *
+   * <p>Built-in generators are automatically included via the service file in this module, while
+   * custom generators can be provided by library users in their own modules.
    *
    * <p>If loading fails for any generator, a warning is logged but processing continues with the
    * remaining generators.
    */
-  private void loadCustomGenerators() {
-    int customCount = 0;
+  private void loadAllGenerators() {
+    int loadedCount = 0;
     try {
       ServiceLoader<MethodGenerator> serviceLoader =
           ServiceLoader.load(MethodGenerator.class, MethodGenerator.class.getClassLoader());
 
       for (MethodGenerator generator : serviceLoader) {
         generators.add(generator);
-        customCount++;
+        loadedCount++;
+
         context.debug(
-            "Loaded custom generator: %s (priority: %d)",
+            "Loaded generator: %s (priority: %d)",
             generator.getClass().getName(), generator.getPriority());
       }
     } catch (Exception e) {
-      context.warning(
-          null, "Failed to load custom method generators via ServiceLoader: %s", e.getMessage());
+      context.error("Failed to load generators: %s", e.getMessage());
     }
 
-    if (customCount > 0) {
-      context.debug("Loaded %d custom generator(s) via ServiceLoader", customCount);
-    }
+    context.debug("Loaded %d generators total", loadedCount);
   }
 
   /**
