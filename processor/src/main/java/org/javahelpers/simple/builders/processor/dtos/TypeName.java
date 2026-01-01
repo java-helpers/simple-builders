@@ -81,6 +81,15 @@ public class TypeName {
   }
 
   /**
+   * Returns the full qualified name (package + class name).
+   *
+   * @return full qualified name of type {@code java.lang.String}
+   */
+  public String getFullQualifiedName() {
+    return packageName.isEmpty() ? className : packageName + "." + className;
+  }
+
+  /**
    * Returns the list of annotations on this type.
    *
    * @return list of annotations

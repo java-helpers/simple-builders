@@ -71,4 +71,9 @@ public class TypeNameArray extends TypeName {
   public TypeName getTypeOfArray() {
     return typeOfArray;
   }
+
+  @Override
+  public String getFullQualifiedName() {
+    return typeOfArray.getFullQualifiedName() + "[]";
+  }
 }

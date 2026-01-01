@@ -34,4 +34,9 @@ public class TypeNameVariable extends TypeName {
   public TypeNameVariable(String variableName) {
     super("", variableName);
   }
+
+  @Override
+  public String getFullQualifiedName() {
+    return getClassName(); // Type variables don't have packages, just the name like "T", "K", "V"
+  }
 }

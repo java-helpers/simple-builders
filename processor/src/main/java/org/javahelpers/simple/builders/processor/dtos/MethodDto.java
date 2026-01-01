@@ -370,13 +370,10 @@ public class MethodDto {
      * Creates a qualified name string for a TypeName.
      *
      * @param typeName the type name
-     * @return qualified name in format package.ClassName
+     * @return qualified name using the type's own formatting logic
      */
     private String getQualifiedName(TypeName typeName) {
-      if (typeName.getPackageName() != null && !typeName.getPackageName().isEmpty()) {
-        return typeName.getPackageName() + "." + typeName.getClassName();
-      }
-      return typeName.getClassName();
+      return typeName.getFullQualifiedName();
     }
 
     /**

@@ -180,9 +180,15 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
     method.setCode("return new $builderType:T();");
     method.addArgument("builderType", builderDto.getBuilderTypeName());
 
+    String targetFullName = builderDto.getBuildingTargetTypeName().getFullQualifiedName();
+
     method.setJavadoc(
-        "Creating a new builder for {@code $dtoType:T}."
-            .replace("$dtoType:T", builderDto.getBuildingTargetTypeName().getClassName()));
+        """
+        Creating a new builder for {@code %s}.
+
+        @return builder for {@code %s}
+        """
+            .formatted(targetFullName, targetFullName));
 
     return method;
   }

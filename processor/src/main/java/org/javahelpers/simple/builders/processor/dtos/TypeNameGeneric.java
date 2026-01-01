@@ -138,4 +138,20 @@ public class TypeNameGeneric extends TypeName {
   public void setElementBuilderType(TypeName elementBuilderType) {
     this.elementBuilderType = elementBuilderType;
   }
+
+  @Override
+  public String getFullQualifiedName() {
+    String baseName = super.getFullQualifiedName();
+    if (innerTypeArguments.isEmpty()) {
+      return baseName;
+    }
+
+    String typeArgs =
+        innerTypeArguments.stream()
+            .map(TypeName::getFullQualifiedName)
+            .reduce((a, b) -> a + ", " + b)
+            .orElse("");
+
+    return baseName + "<" + typeArgs + ">";
+  }
 }

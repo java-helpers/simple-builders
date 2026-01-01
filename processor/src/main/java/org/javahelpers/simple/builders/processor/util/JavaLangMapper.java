@@ -197,8 +197,7 @@ public final class JavaLangMapper {
       List<TypeName> innerTypeArguments = genericType.getInnerTypeArguments();
       if (innerTypeArguments.size() == 1) {
         TypeName elementType = innerTypeArguments.get(0);
-        Element elementElement =
-            context.getTypeElement(elementType.getPackageName() + "." + elementType.getClassName());
+        Element elementElement = context.getTypeElement(elementType.getFullQualifiedName());
         if (elementElement instanceof TypeElement elementTypeElement) {
           Optional<javax.lang.model.element.AnnotationMirror> elementBuilderAnnotation =
               JavaLangAnalyser.findAnnotation(

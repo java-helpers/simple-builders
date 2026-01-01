@@ -130,8 +130,7 @@ public final class ProcessingContext {
     if (typeName == null) {
       return null;
     }
-    String qualifiedName = typeName.getPackageName() + "." + typeName.getClassName();
-    return getTypeElement(qualifiedName);
+    return getTypeElement(typeName.getFullQualifiedName());
   }
 
   /**
