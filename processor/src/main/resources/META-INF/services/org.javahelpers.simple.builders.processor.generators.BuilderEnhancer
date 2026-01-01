@@ -1,3 +1,10 @@
 # Built-in builder enhancers for simple-builders
 # These are automatically discovered via ServiceLoader
+org.javahelpers.simple.builders.processor.generators.GeneratedAnnotationEnhancer
+org.javahelpers.simple.builders.processor.generators.BuilderImplementationAnnotationEnhancer
+org.javahelpers.simple.builders.processor.generators.JacksonAnnotationEnhancer
+org.javahelpers.simple.builders.processor.generators.InterfaceEnhancer
+org.javahelpers.simple.builders.processor.generators.ClassJavaDocEnhancer
+org.javahelpers.simple.builders.processor.generators.CoreMethodsEnhancer
 org.javahelpers.simple.builders.processor.generators.WithInterfaceEnhancer
+org.javahelpers.simple.builders.processor.generators.ConditionalEnhancer

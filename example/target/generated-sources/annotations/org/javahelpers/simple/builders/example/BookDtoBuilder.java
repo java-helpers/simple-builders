@@ -17,6 +17,19 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
 
 /**
  * Builder for {@code org.javahelpers.simple.builders.example.BookDto}.
+ * <p>
+ * This builder provides a fluent API for creating instances of org.javahelpers.simple.builders.example.BookDto with
+ * method chaining and validation. Use the static {@code create()} method
+ * to obtain a new builder instance, configure the desired properties using
+ * the setter methods, and then call {@code build()} to create the final DTO.
+ * <p>
+ * Example usage:
+ * <pre>{@code
+ * org.javahelpers.simple.builders.example.BookDto dto = org.javahelpers.simple.builders.example.BookDto.create()
+ *     .propertyName("value")
+ *     .anotherProperty(42)
+ *     .build();
+ * }</pre>
  */
 public class BookDtoBuilder {
   /**
@@ -169,6 +182,13 @@ public class BookDtoBuilder {
    * Empty constructor of builder for {@code org.javahelpers.simple.builders.example.BookDto}.
    */
   public BookDtoBuilder() {
+  }
+
+  /**
+   * Creating a new builder for {@code BookDto}.
+   */
+  public static BookDtoBuilder create() {
+    return new BookDtoBuilder();
   }
 
   /**
@@ -380,6 +400,9 @@ public class BookDtoBuilder {
     return this;
   }
 
+  /**
+   * Builds the configured DTO instance.
+   */
   public BookDto build() {
     if (this.pages.isSet() && this.pages.value() == null) {
       throw new IllegalStateException("Field 'pages' is marked as non-null but null value was provided");
@@ -426,15 +449,6 @@ public class BookDtoBuilder {
     this.metadata.ifSet(result::setMetadata);
     this.publisher.ifSet(result::setPublisher);
     return result;
-  }
-
-  /**
-   * Creating a new builder for {@code org.javahelpers.simple.builders.example.BookDto}.
-   *
-   * @return builder for {@code org.javahelpers.simple.builders.example.BookDto}
-   */
-  public static BookDtoBuilder create() {
-    return new BookDtoBuilder();
   }
 
   /**
