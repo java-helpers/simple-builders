@@ -252,6 +252,16 @@ public final class ProcessingContext {
   }
 
   /**
+   * Logs a warning message without requiring a specific element context.
+   *
+   * @param format the format string
+   * @param args arguments referenced by the format specifiers in the format string
+   */
+  public void warning(String format, Object... args) {
+    logger.warning(null, format, args);
+  }
+
+  /**
    * Reports a warning at the location of the given element with a formatted message.
    *
    * @param element the element where the warning occurred, used for location information
