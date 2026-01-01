@@ -28,7 +28,6 @@ import static java.util.stream.Collectors.toSet;
 import static org.javahelpers.simple.builders.processor.util.AnnotationValidator.validateAnnotatedElement;
 import static org.javahelpers.simple.builders.processor.util.JavaLangAnalyser.*;
 import static org.javahelpers.simple.builders.processor.util.JavaLangMapper.map2MethodParameter;
-import static org.javahelpers.simple.builders.processor.util.JavaLangMapper.map2TypeName;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -36,7 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Consumer;
 import javax.lang.model.element.*;
 import javax.lang.model.type.TypeMirror;
 import org.apache.commons.lang3.StringUtils;
@@ -80,11 +78,8 @@ public class BuilderDefinitionCreator {
         extractSetterFields(annotatedType, result, context, fieldNameRegistry);
     result.addAllFields(setterFields);
 
-    // Create the With interface if enabled in configuration
-    if (context.getConfiguration().shouldGenerateWithInterface()) {
-      NestedTypeDto withInterface = createWithInterface(result, context);
-      result.addNestedType(withInterface);
-    }
+    // Apply builder enhancers (including With interface generation)
+    context.getBuilderEnhancerRegistry().enhanceBuilder(result, result.getBuildingTargetTypeName());
 
     return result;
   }
@@ -447,123 +442,5 @@ public class BuilderDefinitionCreator {
     generatedMethods.forEach(field::addMethod);
 
     return Optional.of(field);
-  }
-
-  /**
-   * Creates the With interface for the builder, which provides fluent modification methods.
-   *
-   * @param builderDef the builder definition containing type information
-   * @param context the processing context
-   * @return the nested type definition for the With interface
-   */
-  private static NestedTypeDto createWithInterface(
-      BuilderDefinitionDto builderDef, ProcessingContext context) {
-    context.debug(
-        "Creating With interface for: %s", builderDef.getBuilderTypeName().getClassName());
-
-    NestedTypeDto withInterface = new NestedTypeDto();
-    withInterface.setTypeName("With");
-    withInterface.setKind(NestedTypeDto.NestedTypeKind.INTERFACE);
-    withInterface.setPublic(true);
-    withInterface.setJavadoc(
-        "Interface that can be implemented by the DTO to provide fluent modification methods.");
-
-    // Create the first method: DtoType with(Consumer<BuilderType> b)
-    MethodDto withConsumerMethod = createWithConsumerMethod(builderDef);
-    withInterface.addMethod(withConsumerMethod);
-
-    // Create the second method: BuilderType with()
-    MethodDto withBuilderMethod = createWithBuilderMethod(builderDef);
-    withInterface.addMethod(withBuilderMethod);
-
-    return withInterface;
-  }
-
-  /**
-   * Creates the `DtoType with(Consumer<BuilderType> b)` method definition.
-   *
-   * @param builderDef the builder definition
-   * @return the method definition
-   */
-  private static MethodDto createWithConsumerMethod(BuilderDefinitionDto builderDef) {
-    MethodDto method = new MethodDto();
-    method.setMethodName("with");
-
-    // Return type is the DTO type
-    TypeName dtoType = builderDef.getBuildingTargetTypeName();
-    method.setReturnType(dtoType);
-
-    // Parameter: Consumer<BuilderType> b
-    MethodParameterDto parameter = new MethodParameterDto();
-    parameter.setParameterName("b");
-    // For interface methods, we store the full type as a string
-    TypeNameGeneric consumerType =
-        new TypeNameGeneric(map2TypeName(Consumer.class), builderDef.getBuilderTypeName());
-    parameter.setParameterTypeName(consumerType);
-    method.addParameter(parameter);
-
-    // Add implementation with validation to catch wrong implementations
-    method.setCode(
-        """
-        $builderType:T builder;
-        try {
-          builder = new $builderType:T($dtoType:T.class.cast(this));
-        } catch ($classcastexception:T ex) {
-          throw new $illegalargumentexception:T("The interface '$builderType:T.With' should only be implemented by classes, which could be casted to '$dtoType:T'", ex);
-        }
-        b.accept(builder);
-        return builder.build();
-        """);
-    method.addArgument("builderType", builderDef.getBuilderTypeName());
-    method.addArgument("dtoType", builderDef.getBuildingTargetTypeName());
-    method.addArgument("classcastexception", map2TypeName(ClassCastException.class));
-    method.addArgument("illegalargumentexception", map2TypeName(IllegalArgumentException.class));
-
-    method.setJavadoc(
-        """
-      Applies modifications to a builder initialized from this instance and returns the built object.
-
-      @param b the consumer to apply modifications
-      @return the modified instance
-      """);
-
-    return method;
-  }
-
-  /**
-   * Creates the `BuilderType with()` method definition.
-   *
-   * @param builderDef the builder definition
-   * @return the method definition
-   */
-  private static MethodDto createWithBuilderMethod(BuilderDefinitionDto builderDef) {
-    MethodDto method = new MethodDto();
-    method.setMethodName("with");
-
-    // Return type is the Builder type
-    method.setReturnType(builderDef.getBuilderTypeName());
-
-    // Add implementation with validation to catch wrong implementations
-    method.setCode(
-        """
-        try {
-          return new $builderType:T($dtoType:T.class.cast(this));
-        } catch ($classcastexception:T ex) {
-          throw new $illegalargumentexception:T("The interface '$builderType:T.With' should only be implemented by classes, which could be casted to '$dtoType:T'", ex);
-        }
-        """);
-    method.addArgument("builderType", builderDef.getBuilderTypeName());
-    method.addArgument("dtoType", builderDef.getBuildingTargetTypeName());
-    method.addArgument("classcastexception", map2TypeName(ClassCastException.class));
-    method.addArgument("illegalargumentexception", map2TypeName(IllegalArgumentException.class));
-
-    method.setJavadoc(
-        """
-      Creates a builder initialized from this instance.
-
-      @return a builder initialized with this instance's values
-      """);
-
-    return method;
   }
 }
