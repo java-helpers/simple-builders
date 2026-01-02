@@ -42,6 +42,7 @@ import org.apache.commons.lang3.Strings;
 import org.javahelpers.simple.builders.core.annotations.IgnoreInBuilder;
 import org.javahelpers.simple.builders.processor.dtos.*;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
+import org.javahelpers.simple.builders.processor.generators.MethodGeneratorUtil;
 
 /** Class for creating a specific BuilderDefinitionDto for an annotated DTO class. */
 public class BuilderDefinitionCreator {
@@ -125,10 +126,14 @@ public class BuilderDefinitionCreator {
       context.debug(
           "Analyzing constructor: %s with %d parameter(s)",
           ctor.getSimpleName(), ctor.getParameters().size());
+      TypeName builderType =
+          MethodGeneratorUtil.createGenericTypeName(
+              builderDef.getBuilderTypeName(), builderDef.getGenerics());
+
       for (VariableElement param : ctor.getParameters()) {
         Optional<FieldDto> fieldFromCtor =
             createFieldFromConstructor(
-                annotatedType, param, builderDef.getBuilderTypeName(), context, fieldNameRegistry);
+                annotatedType, param, builderType, context, fieldNameRegistry);
         if (fieldFromCtor.isPresent()) {
           FieldDto field = fieldFromCtor.get();
           logFieldAddition(field, context);
@@ -163,6 +168,10 @@ public class BuilderDefinitionCreator {
     int addedCount = 0;
     int skippedCount = 0;
 
+    TypeName builderType =
+        MethodGeneratorUtil.createGenericTypeName(
+            result.getBuilderTypeName(), result.getGenerics());
+
     for (ExecutableElement mth : methods) {
       context.debug(
           "Analyzing method: %s with %d parameter(s)",
@@ -183,7 +192,7 @@ public class BuilderDefinitionCreator {
         }
 
         Optional<FieldDto> maybeField =
-            createFieldFromSetter(mth, result.getBuilderTypeName(), context, fieldNameRegistry);
+            createFieldFromSetter(mth, builderType, context, fieldNameRegistry);
         if (maybeField.isPresent()) {
           processedCount++;
           FieldDto field = maybeField.get();
@@ -379,12 +388,21 @@ public class BuilderDefinitionCreator {
    * Common method to create a FieldDto with all builder methods (setter, supplier, consumer,
    * helpers).
    *
+   * <p>This method handles the complete creation of a FieldDto including:
+   *
+   * <ul>
+   *   <li>Parameter type mapping and validation
+   *   <li>Field name resolution and conflict handling
+   *   <li>Non-null constraint detection
+   *   <li>Method generation via MethodGeneratorRegistry
+   * </ul>
+   *
    * @param fieldName the estimated field name (used for method names)
    * @param fieldNameInBuilder the builder field name (used for storage, may be renamed)
    * @param javaDoc the javadoc for the field
    * @param param the parameter element (from constructor or setter)
    * @param dtoType the DTO type containing this field
-   * @param builderType the builder type
+   * @param builderType the builder type (may include generic type parameters)
    * @param context processing context
    * @return Optional containing the FieldDto, or empty if field cannot be created
    */

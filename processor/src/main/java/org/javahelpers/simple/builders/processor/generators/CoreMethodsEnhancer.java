@@ -145,9 +145,13 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
     // Create DTO instance
     String ctorArgs = createConstructorArgsString(builderDto);
     if (builderDto.getGenerics().isEmpty()) {
-      code.append("$dtoType:T result = new $dtoType:T(").append(ctorArgs).append(");\n");
+      code.append("$buildResultType:T result = new $dtoBaseType:T(")
+          .append(ctorArgs)
+          .append(");\n");
     } else {
-      code.append("$dtoType:T result = new $dtoType:T<>(").append(ctorArgs).append(");\n");
+      code.append("$buildResultType:T result = new $dtoBaseType:T<>(")
+          .append(ctorArgs)
+          .append(");\n");
     }
 
     // Apply setter-based fields
@@ -162,7 +166,8 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
     code.append("return result;");
 
     method.setCode(code.toString());
-    method.addArgument("dtoType", builderDto.getBuildingTargetTypeName());
+    method.addArgument("dtoBaseType", builderDto.getBuildingTargetTypeName());
+    method.addArgument("buildResultType", returnType);
 
     method.setJavadoc("Builds the configured DTO instance.");
 
