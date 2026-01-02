@@ -470,6 +470,19 @@ class BuilderConfigurationReaderTest {
 
         /**
          * Builder for {@code test.PersonDto}.
+         * <p>
+         * This builder provides a fluent API for creating instances of test.PersonDto with
+         * method chaining and validation. Use the static {@code create()} method
+         * to obtain a new builder instance, configure the desired properties using
+         * the setter methods, and then call {@code build()} to create the final DTO.
+         * <p>
+         * Example usage:
+         * <pre>{@code
+         * test.PersonDto dto = test.PersonDto.create()
+         *     .propertyName("value")
+         *     .anotherProperty(42)
+         *     .build();
+         * }</pre>
          */
         public class PersonDtoMinimalBuilder implements IBuilderBase<PersonDto> {
           /**
@@ -499,6 +512,15 @@ class BuilderConfigurationReaderTest {
           }
 
           /**
+           * Creating a new builder for {@code test.PersonDto}.
+           *
+           * @return builder for {@code test.PersonDto}
+           */
+          public static PersonDtoMinimalBuilder create() {
+            return new PersonDtoMinimalBuilder();
+          }
+
+          /**
            * Sets the value for <code>name</code>.
            *
            * @param name name
@@ -520,21 +542,15 @@ class BuilderConfigurationReaderTest {
             return this;
           }
 
+          /**
+           * Builds the configured DTO instance.
+           */
           @Override
           public PersonDto build() {
             PersonDto result = new PersonDto();
             this.name.ifSet(result::setName);
             this.tags.ifSet(result::setTags);
             return result;
-          }
-
-          /**
-           * Creating a new builder for {@code test.PersonDto}.
-           *
-           * @return builder for {@code test.PersonDto}
-           */
-          public static PersonDtoMinimalBuilder create() {
-            return new PersonDtoMinimalBuilder();
           }
 
           /**

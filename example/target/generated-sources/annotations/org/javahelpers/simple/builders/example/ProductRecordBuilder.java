@@ -71,7 +71,9 @@ public class ProductRecordBuilder implements IBuilderBase<ProductRecord> {
   }
 
   /**
-   * Creating a new builder for {@code ProductRecord}.
+   * Creating a new builder for {@code org.javahelpers.simple.builders.example.ProductRecord}.
+   *
+   * @return builder for {@code org.javahelpers.simple.builders.example.ProductRecord}
    */
   public static ProductRecordBuilder create() {
     return new ProductRecordBuilder();
@@ -226,6 +228,7 @@ public class ProductRecordBuilder implements IBuilderBase<ProductRecord> {
   /**
    * Builds the configured DTO instance.
    */
+  @Override
   public ProductRecord build() {
     if (!this.price.isSet()) {
       throw new IllegalStateException("Required field 'price' must be set before calling build()");

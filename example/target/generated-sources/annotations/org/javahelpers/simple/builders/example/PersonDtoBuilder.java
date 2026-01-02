@@ -83,7 +83,9 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
   }
 
   /**
-   * Creating a new builder for {@code PersonDto}.
+   * Creating a new builder for {@code org.javahelpers.simple.builders.example.PersonDto}.
+   *
+   * @return builder for {@code org.javahelpers.simple.builders.example.PersonDto}
    */
   public static PersonDtoBuilder create() {
     return new PersonDtoBuilder();
@@ -130,6 +132,17 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
   }
 
   /**
+   * Sets the value for <code>mannschaft</code>.
+   *
+   * @param mannschaft mannschaft
+   * @return current instance of builder
+   */
+  public PersonDtoBuilder mannschaft(MannschaftDto mannschaft) {
+    this.mannschaft = changedValue(mannschaft);
+    return this;
+  }
+
+  /**
    * Sets the value for <code>mannschaft</code> using a builder consumer that produces the value.
    *
    * @param mannschaftBuilderConsumer consumer providing an instance of a builder for mannschaft
@@ -150,17 +163,6 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
    */
   public PersonDtoBuilder mannschaft(Supplier<MannschaftDto> mannschaftSupplier) {
     this.mannschaft = changedValue(mannschaftSupplier.get());
-    return this;
-  }
-
-  /**
-   * Sets the value for <code>mannschaft</code>.
-   *
-   * @param mannschaft mannschaft
-   * @return current instance of builder
-   */
-  public PersonDtoBuilder mannschaft(MannschaftDto mannschaft) {
-    this.mannschaft = changedValue(mannschaft);
     return this;
   }
 
@@ -336,6 +338,7 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
   /**
    * Builds the configured DTO instance.
    */
+  @Override
   public PersonDto build() {
     PersonDto result = new PersonDto(this.name.value());
     this.nickNames.ifSet(result::setNickNames);

@@ -185,7 +185,9 @@ public class BookDtoBuilder {
   }
 
   /**
-   * Creating a new builder for {@code BookDto}.
+   * Creating a new builder for {@code org.javahelpers.simple.builders.example.BookDto}.
+   *
+   * @return builder for {@code org.javahelpers.simple.builders.example.BookDto}
    */
   public static BookDtoBuilder create() {
     return new BookDtoBuilder();

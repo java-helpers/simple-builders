@@ -65,7 +65,9 @@ public class MannschaftDtoBuilder implements IBuilderBase<MannschaftDto> {
   }
 
   /**
-   * Creating a new builder for {@code MannschaftDto}.
+   * Creating a new builder for {@code org.javahelpers.simple.builders.example.MannschaftDto}.
+   *
+   * @return builder for {@code org.javahelpers.simple.builders.example.MannschaftDto}
    */
   public static MannschaftDtoBuilder create() {
     return new MannschaftDtoBuilder();
@@ -142,6 +144,17 @@ public class MannschaftDtoBuilder implements IBuilderBase<MannschaftDto> {
    * @param sponsoren sponsoren
    * @return current instance of builder
    */
+  public MannschaftDtoBuilder sponsoren(SponsorDto... sponsoren) {
+    this.sponsoren = changedValue(Set.of(sponsoren));
+    return this;
+  }
+
+  /**
+   * Sets the value for <code>sponsoren</code>.
+   *
+   * @param sponsoren sponsoren
+   * @return current instance of builder
+   */
   public MannschaftDtoBuilder sponsoren(Set<SponsorDto> sponsoren) {
     this.sponsoren = changedValue(sponsoren);
     return this;
@@ -169,17 +182,6 @@ public class MannschaftDtoBuilder implements IBuilderBase<MannschaftDto> {
    */
   public MannschaftDtoBuilder sponsoren(Supplier<Set<SponsorDto>> sponsorenSupplier) {
     this.sponsoren = changedValue(sponsorenSupplier.get());
-    return this;
-  }
-
-  /**
-   * Sets the value for <code>sponsoren</code>.
-   *
-   * @param sponsoren sponsoren
-   * @return current instance of builder
-   */
-  public MannschaftDtoBuilder sponsoren(SponsorDto... sponsoren) {
-    this.sponsoren = changedValue(Set.of(sponsoren));
     return this;
   }
 
@@ -216,6 +218,7 @@ public class MannschaftDtoBuilder implements IBuilderBase<MannschaftDto> {
   /**
    * Builds the configured DTO instance.
    */
+  @Override
   public MannschaftDto build() {
     MannschaftDto result = new MannschaftDto();
     this.name.ifSet(result::setName);

@@ -56,7 +56,9 @@ public class SponsorDtoBuilder implements IBuilderBase<SponsorDto> {
   }
 
   /**
-   * Creating a new builder for {@code SponsorDto}.
+   * Creating a new builder for {@code org.javahelpers.simple.builders.example.SponsorDto}.
+   *
+   * @return builder for {@code org.javahelpers.simple.builders.example.SponsorDto}
    */
   public static SponsorDtoBuilder create() {
     return new SponsorDtoBuilder();
@@ -142,6 +144,7 @@ public class SponsorDtoBuilder implements IBuilderBase<SponsorDto> {
   /**
    * Builds the configured DTO instance.
    */
+  @Override
   public SponsorDto build() {
     SponsorDto result = new SponsorDto();
     this.name.ifSet(result::setName);
