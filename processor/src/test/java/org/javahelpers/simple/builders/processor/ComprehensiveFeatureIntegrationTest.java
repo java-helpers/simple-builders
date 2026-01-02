@@ -242,6 +242,12 @@ class ComprehensiveFeatureIntegrationTest {
           private TrackedValue<LinkedList<String>> phoneNumbers = unsetValue();
 
           /**
+           * Empty constructor of builder for {@code test.PersonDto}.
+           */
+          public PersonDtoBuilder() {
+          }
+
+          /**
            * Initialisation of builder for {@code test.PersonDto} by a instance.
            *
            * @param instance object instance for initialisiation
@@ -259,12 +265,6 @@ class ComprehensiveFeatureIntegrationTest {
             this.address = initialValue(instance.getAddress());
             this.previousAddresses = initialValue(instance.getPreviousAddresses());
             this.phoneNumbers = initialValue(instance.getPhoneNumbers());
-          }
-
-          /**
-           * Empty constructor of builder for {@code test.PersonDto}.
-           */
-          public PersonDtoBuilder() {
           }
 
           /**

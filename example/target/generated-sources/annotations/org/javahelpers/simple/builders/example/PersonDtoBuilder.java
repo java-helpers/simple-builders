@@ -65,6 +65,12 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
   private TrackedValue<MannschaftDto> mannschaft = unsetValue();
 
   /**
+   * Empty constructor of builder for {@code org.javahelpers.simple.builders.example.PersonDto}.
+   */
+  public PersonDtoBuilder() {
+  }
+
+  /**
    * Initialisation of builder for {@code org.javahelpers.simple.builders.example.PersonDto} by a instance.
    *
    * @param instance object instance for initialisiation
@@ -74,12 +80,6 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
     this.nickNames = initialValue(instance.getNickNames());
     this.birthdate = initialValue(instance.getBirthdate());
     this.mannschaft = initialValue(instance.getMannschaft());
-  }
-
-  /**
-   * Empty constructor of builder for {@code org.javahelpers.simple.builders.example.PersonDto}.
-   */
-  public PersonDtoBuilder() {
   }
 
   /**

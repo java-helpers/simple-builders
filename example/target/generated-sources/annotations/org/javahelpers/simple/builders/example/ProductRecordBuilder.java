@@ -51,6 +51,12 @@ public class ProductRecordBuilder implements IBuilderBase<ProductRecord> {
   private TrackedValue<String> category = unsetValue();
 
   /**
+   * Empty constructor of builder for {@code org.javahelpers.simple.builders.example.ProductRecord}.
+   */
+  public ProductRecordBuilder() {
+  }
+
+  /**
    * Initialisation of builder for {@code org.javahelpers.simple.builders.example.ProductRecord} by a instance.
    *
    * @param instance object instance for initialisiation
@@ -62,12 +68,6 @@ public class ProductRecordBuilder implements IBuilderBase<ProductRecord> {
       throw new IllegalArgumentException("Cannot initialize builder from instance: field 'price' is marked as non-null but source object has null value");
     }
     this.category = initialValue(instance.category());
-  }
-
-  /**
-   * Empty constructor of builder for {@code org.javahelpers.simple.builders.example.ProductRecord}.
-   */
-  public ProductRecordBuilder() {
   }
 
   /**

@@ -41,18 +41,18 @@ public class SponsorDtoBuilder implements IBuilderBase<SponsorDto> {
   private TrackedValue<String> name = unsetValue();
 
   /**
+   * Empty constructor of builder for {@code org.javahelpers.simple.builders.example.SponsorDto}.
+   */
+  public SponsorDtoBuilder() {
+  }
+
+  /**
    * Initialisation of builder for {@code org.javahelpers.simple.builders.example.SponsorDto} by a instance.
    *
    * @param instance object instance for initialisiation
    */
   public SponsorDtoBuilder(SponsorDto instance) {
     this.name = initialValue(instance.getName());
-  }
-
-  /**
-   * Empty constructor of builder for {@code org.javahelpers.simple.builders.example.SponsorDto}.
-   */
-  public SponsorDtoBuilder() {
   }
 
   /**

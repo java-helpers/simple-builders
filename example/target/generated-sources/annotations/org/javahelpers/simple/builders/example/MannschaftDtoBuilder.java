@@ -49,6 +49,12 @@ public class MannschaftDtoBuilder implements IBuilderBase<MannschaftDto> {
   private TrackedValue<Set<SponsorDto>> sponsoren = unsetValue();
 
   /**
+   * Empty constructor of builder for {@code org.javahelpers.simple.builders.example.MannschaftDto}.
+   */
+  public MannschaftDtoBuilder() {
+  }
+
+  /**
    * Initialisation of builder for {@code org.javahelpers.simple.builders.example.MannschaftDto} by a instance.
    *
    * @param instance object instance for initialisiation
@@ -56,12 +62,6 @@ public class MannschaftDtoBuilder implements IBuilderBase<MannschaftDto> {
   public MannschaftDtoBuilder(MannschaftDto instance) {
     this.name = initialValue(instance.getName());
     this.sponsoren = initialValue(instance.getSponsoren());
-  }
-
-  /**
-   * Empty constructor of builder for {@code org.javahelpers.simple.builders.example.MannschaftDto}.
-   */
-  public MannschaftDtoBuilder() {
   }
 
   /**

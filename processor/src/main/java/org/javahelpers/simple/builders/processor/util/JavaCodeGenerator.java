@@ -284,6 +284,10 @@ public class JavaCodeGenerator {
         map2Modifier(builderDef.getConfiguration().getBuilderConstructorAccess());
     ClassName dtoBaseClass = map2ClassName(builderDef.getBuildingTargetTypeName());
 
+    // Generate empty constructor
+    MethodSpec emptyConstructor = createEmptyConstructor(dtoBaseClass, constructorAccessModifier);
+    classBuilder.addMethod(emptyConstructor);
+
     // Generate constructor with instance
     com.palantir.javapoet.TypeName dtoTypeName =
         map2ParameterType(builderDef.getBuildingTargetTypeName());
@@ -294,10 +298,6 @@ public class JavaCodeGenerator {
             builderDef.getAllFieldsForBuilder(),
             constructorAccessModifier);
     classBuilder.addMethod(instanceConstructor);
-
-    // Generate empty constructor
-    MethodSpec emptyConstructor = createEmptyConstructor(dtoBaseClass, constructorAccessModifier);
-    classBuilder.addMethod(emptyConstructor);
 
     logger.debug("  Generated constructors for builder");
   }

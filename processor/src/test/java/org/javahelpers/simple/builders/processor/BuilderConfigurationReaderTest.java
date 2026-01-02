@@ -496,6 +496,12 @@ class BuilderConfigurationReaderTest {
           private TrackedValue<List<String>> tags = unsetValue();
 
           /**
+           * Empty constructor of builder for {@code test.PersonDto}.
+           */
+          public PersonDtoMinimalBuilder() {
+          }
+
+          /**
            * Initialisation of builder for {@code test.PersonDto} by a instance.
            *
            * @param instance object instance for initialisiation
@@ -503,12 +509,6 @@ class BuilderConfigurationReaderTest {
           public PersonDtoMinimalBuilder(PersonDto instance) {
             this.name = initialValue(instance.getName());
             this.tags = initialValue(instance.getTags());
-          }
-
-          /**
-           * Empty constructor of builder for {@code test.PersonDto}.
-           */
-          public PersonDtoMinimalBuilder() {
           }
 
           /**

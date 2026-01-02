@@ -128,6 +128,12 @@ public class BookDtoBuilder {
   private TrackedValue<PersonDto> publisher = unsetValue();
 
   /**
+   * Empty constructor of builder for {@code org.javahelpers.simple.builders.example.BookDto}.
+   */
+  public BookDtoBuilder() {
+  }
+
+  /**
    * Initialisation of builder for {@code org.javahelpers.simple.builders.example.BookDto} by a instance.
    *
    * @param instance object instance for initialisiation
@@ -176,12 +182,6 @@ public class BookDtoBuilder {
     this.genres = initialValue(instance.getGenres());
     this.metadata = initialValue(instance.getMetadata());
     this.publisher = initialValue(instance.getPublisher());
-  }
-
-  /**
-   * Empty constructor of builder for {@code org.javahelpers.simple.builders.example.BookDto}.
-   */
-  public BookDtoBuilder() {
   }
 
   /**
