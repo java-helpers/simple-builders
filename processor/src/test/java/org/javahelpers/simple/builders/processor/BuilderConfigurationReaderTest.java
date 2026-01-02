@@ -475,14 +475,6 @@ class BuilderConfigurationReaderTest {
          * method chaining and validation. Use the static {@code create()} method
          * to obtain a new builder instance, configure the desired properties using
          * the setter methods, and then call {@code build()} to create the final DTO.
-         * <p>
-         * Example usage:
-         * <pre>{@code
-         * test.PersonDto dto = test.PersonDto.create()
-         *     .propertyName("value")
-         *     .anotherProperty(42)
-         *     .build();
-         * }</pre>
          */
         public class PersonDtoMinimalBuilder implements IBuilderBase<PersonDto> {
           /**

@@ -92,14 +92,6 @@ public class ClassJavaDocEnhancer implements BuilderEnhancer {
         method chaining and validation. Use the static {@code create()} method
         to obtain a new builder instance, configure the desired properties using
         the setter methods, and then call {@code build()} to create the final DTO.
-        <p>
-        Example usage:
-        <pre>{@code
-        $1T dto = $1T.create()
-            .propertyName("value")
-            .anotherProperty(42)
-            .build();
-        }</pre>
         """,
         dtoClass);
   }
