@@ -24,7 +24,6 @@
 
 package org.javahelpers.simple.builders.processor.generators;
 
-import static org.javahelpers.simple.builders.processor.generators.MethodGeneratorUtil.*;
 import static org.javahelpers.simple.builders.processor.util.JavaLangMapper.map2TypeName;
 
 import java.util.Collections;

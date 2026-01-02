@@ -74,23 +74,21 @@ public class MapConsumerGenerator implements MethodGenerator {
 
   @Override
   public boolean appliesTo(FieldDto field, TypeName dtoType, ProcessingContext context) {
-    if (!context.getConfiguration().shouldGenerateBuilderConsumer()) {
-      return false;
-    }
-    if (!context.getConfiguration().shouldUseHashMapBuilder()) {
-      return false;
-    }
-    // Only apply to Map fields
-    if (!(field.getFieldType() instanceof TypeNameMap fieldTypeGeneric
-        && fieldTypeGeneric.isParameterized())) {
-      return false;
-    }
-    // Don't apply if field itself has a builder or empty constructor (higher priority)
-    if (field.getFieldType().getBuilderType().isPresent()
-        || field.getFieldType().hasEmptyConstructor()) {
-      return false;
-    }
-    return true;
+    BuilderConfiguration configuration = context.getConfiguration();
+    TypeName fieldType = field.getFieldType();
+    return
+    // Builder consumer generation must be enabled
+    configuration.shouldGenerateBuilderConsumer()
+        // HashMapBuilder usage must be enabled
+        && configuration.shouldUseHashMapBuilder()
+        // Field must be a Map type
+        && fieldType instanceof TypeNameMap fieldTypeGeneric
+        // Map must be parameterized (has key/value types)
+        && fieldTypeGeneric.isParameterized()
+        // Field shouldn't have its own builder (higher priority)
+        && !fieldTypeGeneric.getBuilderType().isPresent()
+        // Field shouldn't have empty constructor (higher priority)
+        && !fieldTypeGeneric.hasEmptyConstructor();
   }
 
   @Override
