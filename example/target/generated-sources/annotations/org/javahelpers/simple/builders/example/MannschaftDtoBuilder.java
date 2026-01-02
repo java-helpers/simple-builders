@@ -27,9 +27,9 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  * <p>
  * Example usage:
  * <pre>{@code
- * MannschaftDto dto = MannschaftDto.create()
- *     .name("Example")
- *     .name(() -> "Computed Value") // Supplier
+ * org.javahelpers.simple.builders.example.MannschaftDto dto = org.javahelpers.simple.builders.example.MannschaftDto.create()
+ *     .propertyName("value")
+ *     .anotherProperty(42)
  *     .build();
  * }</pre>
  */

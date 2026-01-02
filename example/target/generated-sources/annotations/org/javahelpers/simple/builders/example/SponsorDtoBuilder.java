@@ -24,9 +24,9 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  * <p>
  * Example usage:
  * <pre>{@code
- * SponsorDto dto = SponsorDto.create()
- *     .name("Example")
- *     .name(() -> "Computed Value") // Supplier
+ * org.javahelpers.simple.builders.example.SponsorDto dto = org.javahelpers.simple.builders.example.SponsorDto.create()
+ *     .propertyName("value")
+ *     .anotherProperty(42)
  *     .build();
  * }</pre>
  */
