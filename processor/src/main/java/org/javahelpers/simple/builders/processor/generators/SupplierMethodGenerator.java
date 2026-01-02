@@ -44,6 +44,20 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
  * initialization of field values. The supplier is invoked when the setter is called, and the result
  * is stored in the builder.
  *
+ * <h3>Generated Methods Example:</h3>
+ *
+ * <pre>
+ * public BookDtoBuilder title(Supplier<String> titleSupplier) {
+ *   this.title = changedValue(titleSupplier.get());
+ *   return this;
+ * }
+ *
+ * public BookDtoBuilder pages(Supplier<Integer> pagesSupplier) {
+ *   this.pages = changedValue(pagesSupplier.get());
+ *   return this;
+ * }
+ * </pre>
+ *
  * <p>Supplier methods are useful for:
  *
  * <ul>

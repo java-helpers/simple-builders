@@ -40,6 +40,30 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
  *
  * <p>This generator creates methods that accept a Consumer&lt;FieldBuilder&gt; to configure nested
  * builder instances.
+ *
+ * <h3>Generated Methods Example:</h3>
+ *
+ * <pre>
+ * // For PersonDto author field (where PersonDto has @SimpleBuilder):
+ * public BookDtoBuilder author(Consumer<PersonDtoBuilder> authorBuilderConsumer) {
+ *   PersonDtoBuilder builder = PersonDto.create();
+ *   authorBuilderConsumer.accept(builder);
+ *   this.author = changedValue(builder.build());
+ *   return this;
+ * }
+ *
+ * // For MannschaftDto mannschaft field (where MannschaftDto has @SimpleBuilder):
+ * public PersonDtoBuilder mannschaft(Consumer<MannschaftDtoBuilder> mannschaftBuilderConsumer) {
+ *   MannschaftDtoBuilder builder = MannschaftDto.create();
+ *   mannschaftBuilderConsumer.accept(builder);
+ *   this.mannschaft = changedValue(builder.build());
+ *   return this;
+ * }
+ * </pre>
+ *
+ * <p>Priority: 55 (medium-high - builder consumers are very useful for nested objects)
+ *
+ * <p>This generator respects the configuration flag {@code shouldGenerateBuilderConsumer()}.
  */
 public class BuilderConsumerGenerator implements MethodGenerator {
 

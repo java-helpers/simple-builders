@@ -40,7 +40,25 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
  * in Optional.ofNullable() automatically. This makes it easier to set Optional values without
  * explicitly wrapping them.
  *
+ * <h3>Generated Methods Example:</h3>
+ *
+ * <pre>
+ * // For Optional<String> subtitle field:
+ * public BookDtoBuilder subtitle(String subtitle) {
+ *   this.subtitle = changedValue(Optional.ofNullable(subtitle));
+ *   return this;
+ * }
+ *
+ * // For Optional<Integer> rating field:
+ * public BookDtoBuilder rating(Integer rating) {
+ *   this.rating = changedValue(Optional.ofNullable(rating));
+ *   return this;
+ * }
+ * </pre>
+ *
  * <p>Example: For {@code Optional<String> name}, generates: {@code name(String name)}
+ *
+ * <p>Priority: 70 (high - Optional unboxing is very useful for Optional fields)
  *
  * <p>This generator respects the configuration flag {@code shouldGenerateUnboxedOptional()}.
  */

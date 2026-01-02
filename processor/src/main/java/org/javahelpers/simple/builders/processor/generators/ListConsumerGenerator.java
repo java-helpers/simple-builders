@@ -43,6 +43,31 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
  * <p>This generator creates methods that accept Consumer&lt;ArrayListBuilder&gt; or
  * Consumer&lt;ArrayListBuilderWithElementBuilders&gt; depending on whether the element type has a
  * builder.
+ *
+ * <h3>Generated Methods Example:</h3>
+ *
+ * <pre>
+ * // For List<String> tags field (no builder for String):
+ * public BookDtoBuilder tags(Consumer<ArrayListBuilder<String>> tagsBuilderConsumer) {
+ *   ArrayListBuilder<String> builder = new ArrayListBuilder<>();
+ *   tagsBuilderConsumer.accept(builder);
+ *   this.tags = changedValue(builder.build());
+ *   return this;
+ * }
+ *
+ * // For List<PersonDto> authors field (PersonDto has @SimpleBuilder):
+ * public BookDtoBuilder authors(Consumer<ArrayListBuilderWithElementBuilders<PersonDto, PersonDtoBuilder>> authorsBuilderConsumer) {
+ *   ArrayListBuilderWithElementBuilders<PersonDto, PersonDtoBuilder> builder =
+ *       new ArrayListBuilderWithElementBuilders<>(PersonDtoBuilder::create);
+ *   authorsBuilderConsumer.accept(builder);
+ *   this.authors = changedValue(builder.build());
+ *   return this;
+ * }
+ * </pre>
+ *
+ * <p>Priority: 53 (medium - List consumers are useful but basic setters come first)
+ *
+ * <p>This generator respects the configuration flag {@code shouldUseArrayListBuilder()}.
  */
 public class ListConsumerGenerator implements MethodGenerator {
 

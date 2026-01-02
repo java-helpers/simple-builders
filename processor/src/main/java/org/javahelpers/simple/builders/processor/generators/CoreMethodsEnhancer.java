@@ -32,16 +32,49 @@ import org.javahelpers.simple.builders.processor.dtos.TypeName;
 import org.javahelpers.simple.builders.processor.util.ProcessingContext;
 
 /**
- * Enhancer that adds core builder methods (build, create, conditional, toString).
+ * Enhancer that adds core builder methods (build, create, toString).
  *
  * <p>This enhancer generates the essential methods that every builder needs:
  *
  * <ul>
  *   <li>{@code build()} - constructs the final DTO instance
  *   <li>{@code create()} - static factory method
- *   <li>{@code conditional()} - conditional method application
  *   <li>{@code toString()} - string representation
  * </ul>
+ *
+ * <h3>Generated Methods Example:</h3>
+ *
+ * <pre>
+ * // Static factory method:
+ * public static BookDtoBuilder create() {
+ *   return new BookDtoBuilder();
+ * }
+ *
+ * // Build method (with null checks and field-by-field construction):
+ * public BookDto build() {
+ *   if (this.pages.isSet() && this.pages.value() == null) {
+ *     throw new IllegalStateException("Field 'pages' is marked as non-null but null value was provided");
+ *   }
+ *   // ... more null checks for other non-null fields
+ *
+ *   BookDto result = new BookDto();
+ *   this.title.ifSet(result::setTitle);
+ *   this.author.ifSet(result::setAuthor);
+ *   this.pages.ifSet(result::setPages);
+ *   // ... more field assignments
+ *   return result;
+ * }
+ *
+ * // toString method (using ToStringBuilder):
+ * public String toString() {
+ *   return new ToStringBuilder(this, BuilderToStringStyle.INSTANCE)
+ *           .append("title", this.title)
+ *           .append("author", this.author)
+ *           .append("pages", this.pages)
+ *           // ... more fields
+ *           .toString();
+ * }
+ * </pre>
  *
  * <p>These methods are added with specific ordering to ensure they appear in the correct location
  * in the generated builder class.

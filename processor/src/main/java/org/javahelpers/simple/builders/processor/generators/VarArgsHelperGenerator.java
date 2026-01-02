@@ -39,6 +39,22 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
  * Map fields, making it easier to set collection values without explicitly creating collection
  * instances.
  *
+ * <h3>Generated Methods Example:</h3>
+ *
+ * <pre>
+ * // For List<String> tags field:
+ * public BookDtoBuilder tags(String... tags) {
+ *   this.tags = changedValue(List.of(tags));
+ *   return this;
+ * }
+ *
+ * // For Set<Integer> ratings field:
+ * public BookDtoBuilder ratings(Integer... ratings) {
+ *   this.ratings = changedValue(Set.of(ratings));
+ *   return this;
+ * }
+ * </pre>
+ *
  * <p>Examples:
  *
  * <ul>
@@ -46,6 +62,8 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
  *   <li>For {@code Set<Integer>}: {@code ids(Integer... ids)}
  *   <li>For {@code Map<K,V>}: {@code entries(Map.Entry<K,V>... entries)}
  * </ul>
+ *
+ * <p>Priority: 60 (medium-high - convenience methods are useful but basic setters come first)
  *
  * <p>This generator respects the configuration flag {@code shouldGenerateVarArgsHelpers()}.
  */

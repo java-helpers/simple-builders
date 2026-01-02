@@ -40,12 +40,30 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
  * <p>This generator creates convenience methods that accept a format string and varargs arguments,
  * internally using {@code String.format()} to produce the final value.
  *
+ * <h3>Generated Methods Example:</h3>
+ *
+ * <pre>
+ * // For String title field:
+ * public BookDtoBuilder title(String format, Object... args) {
+ *   this.title = changedValue(String.format(format, args));
+ *   return this;
+ * }
+ *
+ * // For Optional<String> subtitle field:
+ * public BookDtoBuilder subtitle(String format, Object... args) {
+ *   this.subtitle = changedValue(Optional.ofNullable(String.format(format, args)));
+ *   return this;
+ * }
+ * </pre>
+ *
  * <p>Examples:
  *
  * <ul>
  *   <li>For {@code String name}: {@code name(String format, Object... args)}
  *   <li>For {@code Optional<String> message}: {@code message(String format, Object... args)}
  * </ul>
+ *
+ * <p>Priority: 80 (high - String formatting is commonly used utility)
  *
  * <p>This generator respects the configuration flag {@code shouldGenerateStringFormatHelpers()}.
  */

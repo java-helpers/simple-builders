@@ -40,6 +40,30 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
  *
  * <p>This generator creates methods that accept a Consumer&lt;StringBuilder&gt; to build string
  * values.
+ *
+ * <h3>Generated Methods Example:</h3>
+ *
+ * <pre>
+ * // For String title field:
+ * public BookDtoBuilder title(Consumer<StringBuilder> titleBuilderConsumer) {
+ *   StringBuilder builder = new StringBuilder();
+ *   titleBuilderConsumer.accept(builder);
+ *   this.title = changedValue(builder.toString());
+ *   return this;
+ * }
+ *
+ * // For Optional<String> subtitle field:
+ * public BookDtoBuilder subtitle(Consumer<StringBuilder> subtitleBuilderConsumer) {
+ *   StringBuilder builder = new StringBuilder();
+ *   subtitleBuilderConsumer.accept(builder);
+ *   this.subtitle = changedValue(Optional.ofNullable(builder.toString()));
+ *   return this;
+ * }
+ * </pre>
+ *
+ * <p>Priority: 45 (medium - StringBuilder consumers are useful but less common than basic setters)
+ *
+ * <p>This generator respects the configuration flag {@code shouldGenerateStringBuilderConsumer()}.
  */
 public class StringBuilderConsumerGenerator implements MethodGenerator {
 

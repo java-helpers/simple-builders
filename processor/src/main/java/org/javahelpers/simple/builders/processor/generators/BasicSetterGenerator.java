@@ -50,6 +50,27 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
  *   <li>Includes javadoc documentation
  * </ul>
  *
+ * <h3>Generated Methods Example:</h3>
+ *
+ * <pre>
+ * public BookDtoBuilder title(String title) {
+ *   this.title = changedValue(title);
+ *   return this;
+ * }
+ *
+ * public BookDtoBuilder pages(int pages) {
+ *   this.pages = changedValue(pages);
+ *   return this;
+ * }
+ *
+ * public BookDtoBuilder tags(List<String> tags) {
+ *   this.tags = changedValue(tags);
+ *   return this;
+ * }
+ * </pre>
+ *
+ * <p>Priority: 100 (highest - basic setters are fundamental to builder functionality)
+ *
  * <p>This generator always applies to all fields and has the highest priority to ensure the basic
  * setter is always generated first.
  */

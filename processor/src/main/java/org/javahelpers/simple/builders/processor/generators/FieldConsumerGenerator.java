@@ -38,6 +38,23 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
  *
  * <p>This generator creates methods that accept a Consumer&lt;FieldType&gt; to configure field
  * instances created via their no-arg constructor.
+ *
+ * <h3>Generated Methods Example:</h3>
+ *
+ * <pre>
+ * // For PersonDto publisher field:
+ * public BookDtoBuilder publisher(Consumer<PersonDto> publisherConsumer) {
+ *   PersonDto publisher = new PersonDto();
+ *   publisherConsumer.accept(publisher);
+ *   this.publisher = changedValue(publisher);
+ *   return this;
+ * }
+ * </pre>
+ *
+ * <p>Priority: 54 (medium - Consumer methods are useful but basic setters come first)
+ *
+ * <p>This generator applies to fields with types that have empty constructors and respects the
+ * configuration flag {@code shouldGenerateFieldConsumer()}.
  */
 public class FieldConsumerGenerator implements MethodGenerator {
 

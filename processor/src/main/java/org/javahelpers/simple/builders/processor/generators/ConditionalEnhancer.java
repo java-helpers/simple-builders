@@ -43,6 +43,38 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
  *   <li>{@code conditional(BooleanSupplier, Consumer)} - applies logic only when condition is true
  * </ul>
  *
+ * <h3>Generated Methods Example:</h3>
+ *
+ * <pre>
+ * // Conditional method with true/false branches:
+ * public BookDtoBuilder conditional(BooleanSupplier condition,
+ *                                   Consumer<BookDtoBuilder> trueAction,
+ *                                   Consumer<BookDtoBuilder> falseAction) {
+ *   if (condition.getAsBoolean()) {
+ *     trueAction.accept(this);
+ *   } else {
+ *     falseAction.accept(this);
+ *   }
+ *   return this;
+ * }
+ *
+ * // Conditional method with only true branch:
+ * public BookDtoBuilder conditional(BooleanSupplier condition, Consumer<BookDtoBuilder> action) {
+ *   if (condition.getAsBoolean()) {
+ *     action.accept(this);
+ *   }
+ *   return this;
+ * }
+ *
+ * // Usage example:
+ * BookDto book = BookDto.create()
+ *     .title("Default Title")
+ *     .conditional(() -> pages > 100,
+ *         builder -> builder.subtitle("Extended Edition"),
+ *         builder -> builder.subtitle("Standard Edition"))
+ *     .build();
+ * </pre>
+ *
  * <p>These methods enable functional programming patterns where builder modifications can be
  * applied conditionally based on runtime evaluations.
  *

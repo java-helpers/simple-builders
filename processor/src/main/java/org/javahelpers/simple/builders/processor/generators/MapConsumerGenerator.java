@@ -40,6 +40,30 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
  *
  * <p>This generator creates methods that accept Consumer&lt;HashMapBuilder&gt; to build map
  * instances.
+ *
+ * <h3>Generated Methods Example:</h3>
+ *
+ * <pre>
+ * // For Map<String, String> metadata field:
+ * public BookDtoBuilder metadata(Consumer<HashMapBuilder<String, String>> metadataBuilderConsumer) {
+ *   HashMapBuilder<String, String> builder = new HashMapBuilder<>();
+ *   metadataBuilderConsumer.accept(builder);
+ *   this.metadata = changedValue(builder.build());
+ *   return this;
+ * }
+ *
+ * // For Map<String, Integer> ratings field:
+ * public BookDtoBuilder ratings(Consumer<HashMapBuilder<String, Integer>> ratingsBuilderConsumer) {
+ *   HashMapBuilder<String, Integer> builder = new HashMapBuilder<>();
+ *   ratingsBuilderConsumer.accept(builder);
+ *   this.ratings = changedValue(builder.build());
+ *   return this;
+ * }
+ * </pre>
+ *
+ * <p>Priority: 51 (medium - Map consumers are useful but basic setters come first)
+ *
+ * <p>This generator respects the configuration flag {@code shouldUseHashMapBuilder()}.
  */
 public class MapConsumerGenerator implements MethodGenerator {
 

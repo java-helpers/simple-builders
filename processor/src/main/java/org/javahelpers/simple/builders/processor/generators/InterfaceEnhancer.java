@@ -35,9 +35,23 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
  * configuration. This interface provides a contract for builder implementations and enables
  * polymorphic usage of builders.
  *
+ * <h3>Generated Interface Example:</h3>
+ *
+ * <pre>
+ * public class BookDtoBuilder implements IBuilderBase<BookDto> {
+ *   // ... builder implementation
+ * }
+ *
+ * public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
+ *   // ... builder implementation
+ * }
+ * </pre>
+ *
  * <p>The interface is parameterized with the target DTO type to ensure type safety.
  *
  * <p>Priority: 90 (high - interfaces should be added early in the generation process)
+ *
+ * <p>This enhancer respects the configuration flag {@code shouldImplementIBuilderBase()}.
  */
 public class InterfaceEnhancer implements BuilderEnhancer {
 

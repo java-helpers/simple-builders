@@ -38,6 +38,20 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
  * <p>The annotation includes the {@code withPrefix} parameter to specify the setter prefix used by
  * the builder (typically "set" or a custom prefix).
  *
+ * <h3>Generated Annotation Example:</h3>
+ *
+ * <pre>
+ * @JsonPOJOBuilder(withPrefix = "")
+ * public class BookDtoBuilder {
+ *   // ... builder implementation
+ * }
+ *
+ * @JsonPOJOBuilder(withPrefix = "set")
+ * public class PersonDtoBuilder {
+ *   // ... builder implementation
+ * }
+ * </pre>
+ *
  * <p>This enhancer only applies when:
  *
  * <ul>
@@ -47,6 +61,8 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
  * </ul>
  *
  * <p>Priority: 110 (very high - annotations should be added early)
+ *
+ * <p>This enhancer respects the configuration flag {@code usingJacksonDeserializerAnnotation()}.
  */
 public class JacksonAnnotationEnhancer implements BuilderEnhancer {
 

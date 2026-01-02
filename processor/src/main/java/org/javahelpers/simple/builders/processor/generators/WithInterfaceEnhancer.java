@@ -48,7 +48,31 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
  *   <li>{@code with()} - creates a new builder initialized from this DTO instance
  * </ul>
  *
+ * <h3>Generated Interface Example:</h3>
+ *
+ * <pre>
+ * public interface BookDtoWith {
+ *   default BookDto with(Consumer<BookDtoBuilder> modifier) {
+ *     BookDtoBuilder builder = BookDtoBuilder.createFrom(this);
+ *     modifier.accept(builder);
+ *     return builder.build();
+ *   }
+ *
+ *   default BookDtoBuilder with() {
+ *     return BookDtoBuilder.createFrom(this);
+ *   }
+ * }
+ *
+ * // Usage example:
+ * BookDto modifiedBook = originalBook.with(builder -> builder
+ *     .title("Updated Title")
+ *     .pages(500)
+ * );
+ * </pre>
+ *
  * <p>Priority: 95 (critical infrastructure - should be applied early)
+ *
+ * <p>This enhancer respects the configuration flag {@code shouldGenerateWithInterface()}.
  */
 public class WithInterfaceEnhancer implements BuilderEnhancer {
 

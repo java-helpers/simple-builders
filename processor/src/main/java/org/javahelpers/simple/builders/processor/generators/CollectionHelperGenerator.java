@@ -46,6 +46,29 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
  *   <li>ArrayListBuilder consumer methods for array fields
  * </ul>
  *
+ * <h3>Generated Methods Example:</h3>
+ *
+ * <pre>
+ * // For List<String> tags field:
+ * public BookDtoBuilder add2Tags(String element) {
+ *   if (this.tags == null || this.tags.isUnset()) {
+ *     this.tags = changedValue(new ArrayList<>());
+ *   }
+ *   this.tags.getValue().add(element);
+ *   return this;
+ * }
+ *
+ * // For String[] keywords field:
+ * public BookDtoBuilder keywords(Consumer<ArrayListBuilder<String>> keywordsBuilderConsumer) {
+ *   ArrayListBuilder<String> builder = new ArrayListBuilder<>();
+ *   keywordsBuilderConsumer.accept(builder);
+ *   this.keywords = changedValue(builder.toArray(String[]::new));
+ *   return this;
+ * }
+ * </pre>
+ *
+ * <p>Priority: 55 (medium - collection helpers are useful but basic setters come first)
+ *
  * <p>This generator respects configuration flags:
  *
  * <ul>

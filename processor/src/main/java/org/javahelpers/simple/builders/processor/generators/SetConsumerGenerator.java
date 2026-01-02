@@ -43,6 +43,31 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
  * <p>This generator creates methods that accept Consumer&lt;HashSetBuilder&gt; or
  * Consumer&lt;HashSetBuilderWithElementBuilders&gt; depending on whether the element type has a
  * builder.
+ *
+ * <h3>Generated Methods Example:</h3>
+ *
+ * <pre>
+ * // For Set<String> tags field (no builder for String):
+ * public BookDtoBuilder tags(Consumer<HashSetBuilder<String>> tagsBuilderConsumer) {
+ *   HashSetBuilder<String> builder = new HashSetBuilder<>();
+ *   tagsBuilderConsumer.accept(builder);
+ *   this.tags = changedValue(builder.build());
+ *   return this;
+ * }
+ *
+ * // For Set<PersonDto> authors field (PersonDto has @SimpleBuilder):
+ * public BookDtoBuilder authors(Consumer<HashSetBuilderWithElementBuilders<PersonDto, PersonDtoBuilder>> authorsBuilderConsumer) {
+ *   HashSetBuilderWithElementBuilders<PersonDto, PersonDtoBuilder> builder =
+ *       new HashSetBuilderWithElementBuilders<>(PersonDtoBuilder::create);
+ *   authorsBuilderConsumer.accept(builder);
+ *   this.authors = changedValue(builder.build());
+ *   return this;
+ * }
+ * </pre>
+ *
+ * <p>Priority: 52 (medium - Set consumers are useful but basic setters come first)
+ *
+ * <p>This generator respects the configuration flag {@code shouldUseHashSetBuilder()}.
  */
 public class SetConsumerGenerator implements MethodGenerator {
 

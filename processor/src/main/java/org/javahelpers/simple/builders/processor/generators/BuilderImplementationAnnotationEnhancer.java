@@ -39,6 +39,24 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
  *
  * <p>The annotation includes the target DTO class as the {@code forClass} parameter.
  *
+ * <h3>Generated Annotation Example:</h3>
+ *
+ * <pre>
+ * @BuilderImplementation(
+ *     forClass = BookDto.class
+ * )
+ * public class BookDtoBuilder {
+ *   // ... builder implementation
+ * }
+ *
+ * @BuilderImplementation(
+ *     forClass = PersonDto.class
+ * )
+ * public class PersonDtoBuilder {
+ *   // ... builder implementation
+ * }
+ * </pre>
+ *
  * <p>Priority: 115 (very high - annotations should be added early)
  */
 public class BuilderImplementationAnnotationEnhancer implements BuilderEnhancer {
