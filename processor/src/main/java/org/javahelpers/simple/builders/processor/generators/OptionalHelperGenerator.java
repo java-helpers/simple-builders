@@ -90,8 +90,16 @@ public class OptionalHelperGenerator implements MethodGenerator {
       return Collections.emptyList();
     }
 
+    TypeName innerType = innerTypes.get(0);
     MethodDto method =
-        createFieldSetterWithTransform(field, "Optional.ofNullable(%s)", builderType, context);
+        createFieldSetterWithTransform(
+            field.getFieldNameEstimated(),
+            field.getFieldName(),
+            field.getJavaDoc(),
+            "Optional.ofNullable(%s)",
+            innerType,
+            builderType,
+            context);
 
     return Collections.singletonList(method);
   }
@@ -99,21 +107,30 @@ public class OptionalHelperGenerator implements MethodGenerator {
   /**
    * Creates a field setter method with optional transform.
    *
-   * @param field the field DTO containing all field information
+   * @param fieldName the name of the method (estimated field name)
+   * @param fieldNameInBuilder the name of the builder field (may be renamed)
+   * @param fieldJavadoc the javadoc for the field
    * @param transform optional transform expression (e.g., "Optional.ofNullable(%s)")
+   * @param fieldType the type of the field
    * @param builderType the builder type for the return type
    * @param context processing context
    * @return the method DTO for the setter
    */
   private MethodDto createFieldSetterWithTransform(
-      FieldDto field, String transform, TypeName builderType, ProcessingContext context) {
+      String fieldName,
+      String fieldNameInBuilder,
+      String fieldJavadoc,
+      String transform,
+      TypeName fieldType,
+      TypeName builderType,
+      ProcessingContext context) {
 
     MethodParameterDto parameter = new MethodParameterDto();
-    parameter.setParameterName(field.getFieldName());
-    parameter.setParameterTypeName(field.getFieldType());
+    parameter.setParameterName(fieldName);
+    parameter.setParameterTypeName(fieldType);
 
     MethodDto methodDto = new MethodDto();
-    methodDto.setMethodName(generateBuilderMethodName(field.getFieldName(), context));
+    methodDto.setMethodName(generateBuilderMethodName(fieldName, context));
     methodDto.setReturnType(builderType);
     methodDto.addParameter(parameter);
     setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
@@ -130,7 +147,7 @@ public class OptionalHelperGenerator implements MethodGenerator {
         this.$fieldName:N = $builderFieldWrapper:T.changedValue($dtoMethodParams:N);
         return this;
         """);
-    methodDto.addArgument(ARG_FIELD_NAME, field.getFieldName());
+    methodDto.addArgument(ARG_FIELD_NAME, fieldNameInBuilder);
     methodDto.addArgument(ARG_DTO_METHOD_PARAMS, params);
     methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
 
@@ -143,10 +160,7 @@ public class OptionalHelperGenerator implements MethodGenerator {
         @param %s %s
         @return current instance of builder
         """
-            .formatted(
-                field.getFieldName(),
-                parameter.getParameterName(),
-                field.getJavaDoc() != null ? field.getJavaDoc() : ""));
+            .formatted(fieldName, parameter.getParameterName(), fieldJavadoc));
 
     return methodDto;
   }

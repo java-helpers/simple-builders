@@ -29,6 +29,7 @@ import static org.javahelpers.simple.builders.processor.generators.MethodGenerat
 import java.util.Collections;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
+import org.javahelpers.simple.builders.processor.dtos.AnnotationDto;
 import org.javahelpers.simple.builders.processor.dtos.FieldDto;
 import org.javahelpers.simple.builders.processor.dtos.MethodDto;
 import org.javahelpers.simple.builders.processor.dtos.MethodParameterDto;
@@ -91,33 +92,53 @@ public class BasicSetterGenerator implements MethodGenerator {
   public List<MethodDto> generateMethods(
       FieldDto field, TypeName builderType, ProcessingContext context) {
 
-    MethodDto setterMethod = createFieldSetterWithTransform(field, null, builderType, context);
+    MethodDto setterMethod =
+        createFieldSetterWithTransform(
+            field.getFieldNameEstimated(),
+            field.getFieldName(),
+            field.getJavaDoc(),
+            null,
+            field.getFieldType(),
+            field.getParameterAnnotations(),
+            builderType,
+            context);
 
     return Collections.singletonList(setterMethod);
   }
 
   /**
-   * Creates a setter method with custom transformation logic.
+   * Creates a field setter method with optional transform and annotations.
    *
-   * @param field the field DTO containing all field information
-   * @param transform the transformation expression to apply
-   * @param builderType the builder type
+   * @param fieldName the name of the method (estimated field name)
+   * @param fieldNameInBuilder the name of the builder field (may be renamed)
+   * @param fieldJavadoc the javadoc for the field
+   * @param transform optional transform expression (e.g., "Optional.of(%s)")
+   * @param fieldType the type of the field
+   * @param annotations annotations to apply to the parameter
+   * @param builderType the builder type for the return type
    * @param context processing context
    * @return the method DTO for the setter
    */
   protected MethodDto createFieldSetterWithTransform(
-      FieldDto field, String transform, TypeName builderType, ProcessingContext context) {
+      String fieldName,
+      String fieldNameInBuilder,
+      String fieldJavadoc,
+      String transform,
+      TypeName fieldType,
+      List<AnnotationDto> annotations,
+      TypeName builderType,
+      ProcessingContext context) {
 
     MethodParameterDto parameter = new MethodParameterDto();
-    parameter.setParameterName(field.getFieldName());
-    parameter.setParameterTypeName(field.getFieldType());
+    parameter.setParameterName(fieldName);
+    parameter.setParameterTypeName(fieldType);
 
-    if (field.getParameterAnnotations() != null) {
-      field.getParameterAnnotations().forEach(parameter::addAnnotation);
+    if (annotations != null) {
+      annotations.forEach(parameter::addAnnotation);
     }
 
     MethodDto methodDto = new MethodDto();
-    methodDto.setMethodName(generateBuilderMethodName(field.getFieldName(), context));
+    methodDto.setMethodName(generateBuilderMethodName(fieldName, context));
     methodDto.setReturnType(builderType);
     methodDto.addParameter(parameter);
     setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
@@ -134,7 +155,7 @@ public class BasicSetterGenerator implements MethodGenerator {
         this.$fieldName:N = $builderFieldWrapper:T.changedValue($dtoMethodParams:N);
         return this;
         """);
-    methodDto.addArgument(ARG_FIELD_NAME, field.getFieldName());
+    methodDto.addArgument(ARG_FIELD_NAME, fieldNameInBuilder);
     methodDto.addArgument(ARG_DTO_METHOD_PARAMS, params);
     methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
 
@@ -147,10 +168,7 @@ public class BasicSetterGenerator implements MethodGenerator {
         @param %s %s
         @return current instance of builder
         """
-            .formatted(
-                field.getFieldName(),
-                field.getFieldName(),
-                field.getJavaDoc() != null ? field.getJavaDoc() : ""));
+            .formatted(fieldName, parameter.getParameterName(), fieldJavadoc));
 
     return methodDto;
   }
