@@ -28,9 +28,11 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.ServiceLoader;
+import javax.annotation.processing.ProcessingEnvironment;
 import org.javahelpers.simple.builders.processor.dtos.FieldDto;
 import org.javahelpers.simple.builders.processor.dtos.MethodDto;
 import org.javahelpers.simple.builders.processor.dtos.TypeName;
+import org.javahelpers.simple.builders.processor.util.ComponentFilter;
 import org.javahelpers.simple.builders.processor.util.ProcessingContext;
 
 /**
@@ -53,15 +55,18 @@ public class MethodGeneratorRegistry {
 
   private final List<MethodGenerator> generators;
   private final ProcessingContext context;
+  private final ComponentFilter componentFilter;
 
   /**
    * Creates a new registry and initializes it with built-in and custom generators.
    *
    * @param context the processing context for configuration and utilities
+   * @param processingEnv the processing environment for reading compiler arguments
    */
-  public MethodGeneratorRegistry(ProcessingContext context) {
+  public MethodGeneratorRegistry(ProcessingContext context, ProcessingEnvironment processingEnv) {
     this.context = context;
     this.generators = new ArrayList<>();
+    this.componentFilter = new ComponentFilter(processingEnv);
 
     loadAllGenerators();
     sortGeneratorsByPriority();
@@ -121,12 +126,19 @@ public class MethodGeneratorRegistry {
           ServiceLoader.load(MethodGenerator.class, MethodGenerator.class.getClassLoader());
 
       for (MethodGenerator generator : serviceLoader) {
+        String generatorClassName = generator.getClass().getName();
+
+        // Check if this generator should be deactivated
+        if (componentFilter.shouldDeactivateComponent(generatorClassName)) {
+          context.debug("Skipping deactivated generator: %s", generatorClassName);
+          continue;
+        }
+
         generators.add(generator);
         loadedCount++;
 
         context.debug(
-            "Loaded generator: %s (priority: %d)",
-            generator.getClass().getName(), generator.getPriority());
+            "Loaded generator: %s (priority: %d)", generatorClassName, generator.getPriority());
       }
     } catch (Exception e) {
       context.error("Failed to load generators: %s", e.getMessage());

@@ -27,8 +27,10 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.ServiceLoader;
+import javax.annotation.processing.ProcessingEnvironment;
 import org.javahelpers.simple.builders.processor.dtos.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.dtos.TypeName;
+import org.javahelpers.simple.builders.processor.util.ComponentFilter;
 import org.javahelpers.simple.builders.processor.util.ProcessingContext;
 
 /**
@@ -44,15 +46,18 @@ public class BuilderEnhancerRegistry {
 
   private final List<BuilderEnhancer> enhancers;
   private final ProcessingContext context;
+  private final ComponentFilter componentFilter;
 
   /**
    * Creates a new registry and initializes it with built-in and custom enhancers.
    *
-   * @param context the processing context for configuration and utilities
+   * @param context the processing context for enhancer calls
+   * @param processingEnv the processing environment for reading compiler arguments
    */
-  public BuilderEnhancerRegistry(ProcessingContext context) {
+  public BuilderEnhancerRegistry(ProcessingContext context, ProcessingEnvironment processingEnv) {
     this.context = context;
     this.enhancers = new ArrayList<>();
+    this.componentFilter = new ComponentFilter(processingEnv);
 
     loadAllEnhancers();
     sortEnhancersByPriority();
@@ -105,12 +110,19 @@ public class BuilderEnhancerRegistry {
           ServiceLoader.load(BuilderEnhancer.class, BuilderEnhancer.class.getClassLoader());
 
       for (BuilderEnhancer enhancer : serviceLoader) {
+        String enhancerClassName = enhancer.getClass().getName();
+
+        // Check if this enhancer should be deactivated
+        if (componentFilter.shouldDeactivateComponent(enhancerClassName)) {
+          context.debug("Skipping deactivated enhancer: %s", enhancerClassName);
+          continue;
+        }
+
         enhancers.add(enhancer);
         loadedCount++;
 
         context.debug(
-            "Loaded enhancer: %s (priority: %d)",
-            enhancer.getClass().getName(), enhancer.getPriority());
+            "Loaded enhancer: %s (priority: %d)", enhancerClassName, enhancer.getPriority());
       }
     } catch (Exception e) {
       context.error("Failed to load enhancers: %s", e.getMessage());

@@ -25,6 +25,7 @@
 package org.javahelpers.simple.builders.processor.util;
 
 import java.util.List;
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
@@ -47,6 +48,7 @@ public final class ProcessingContext {
   private final Types typeUtils;
   private final ProcessingLogger logger;
   private final BuilderConfigurationReader configurationReader;
+  private final ProcessingEnvironment processingEnv;
   private MethodGeneratorRegistry methodGeneratorRegistry;
   private BuilderEnhancerRegistry builderEnhancerRegistry;
   private BuilderConfiguration configurationForProcessingTarget;
@@ -54,19 +56,18 @@ public final class ProcessingContext {
   /**
    * Creates a new processing context.
    *
-   * @param elementUtils utility for operating on program elements
-   * @param typeUtils utility for operating on types
    * @param logger the logging utility for the annotation processor
    * @param globalConfiguration the global builder configuration read from compiler arguments
+   * @param processingEnv
    */
   public ProcessingContext(
-      Elements elementUtils,
-      Types typeUtils,
       ProcessingLogger logger,
-      BuilderConfiguration globalConfiguration) {
-    this.elementUtils = elementUtils;
-    this.typeUtils = typeUtils;
+      BuilderConfiguration globalConfiguration,
+      ProcessingEnvironment processingEnv) {
+    this.elementUtils = processingEnv.getElementUtils();
+    this.typeUtils = processingEnv.getTypeUtils();
     this.logger = logger;
+    this.processingEnv = processingEnv;
     this.configurationReader =
         new BuilderConfigurationReader(globalConfiguration, logger, elementUtils);
     // MethodGeneratorRegistry will be lazily initialized on first access
@@ -93,7 +94,7 @@ public final class ProcessingContext {
    */
   public MethodGeneratorRegistry getMethodGeneratorRegistry() {
     if (methodGeneratorRegistry == null) {
-      methodGeneratorRegistry = new MethodGeneratorRegistry(this);
+      methodGeneratorRegistry = new MethodGeneratorRegistry(this, processingEnv);
     }
     return methodGeneratorRegistry;
   }
@@ -105,7 +106,7 @@ public final class ProcessingContext {
    */
   public BuilderEnhancerRegistry getBuilderEnhancerRegistry() {
     if (builderEnhancerRegistry == null) {
-      builderEnhancerRegistry = new BuilderEnhancerRegistry(this);
+      builderEnhancerRegistry = new BuilderEnhancerRegistry(this, processingEnv);
     }
     return builderEnhancerRegistry;
   }
