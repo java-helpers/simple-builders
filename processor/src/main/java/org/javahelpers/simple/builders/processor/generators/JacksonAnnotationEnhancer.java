@@ -100,8 +100,10 @@ public class JacksonAnnotationEnhancer implements BuilderEnhancer {
 
     // Add withPrefix member with the setter prefix from configuration
     String setterPrefix = builderDto.getConfiguration().getSetterSuffix();
-    if (setterPrefix != null && !setterPrefix.isEmpty()) {
+    if (setterPrefix != null) {
       annotation.addMember("withPrefix", "\"" + setterPrefix + "\"");
+    } else {
+      annotation.addMember("withPrefix", "\"\"");
     }
 
     return annotation;
