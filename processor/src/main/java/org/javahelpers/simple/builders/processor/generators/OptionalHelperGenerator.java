@@ -24,12 +24,10 @@
 
 package org.javahelpers.simple.builders.processor.generators;
 
-import static org.javahelpers.simple.builders.processor.generators.MethodGeneratorUtil.*;
 import static org.javahelpers.simple.builders.processor.util.TypeNameAnalyser.isParameterizedOptional;
 
 import java.util.Collections;
 import java.util.List;
-import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.processor.dtos.*;
 import org.javahelpers.simple.builders.processor.util.ProcessingContext;
 
@@ -92,76 +90,16 @@ public class OptionalHelperGenerator implements MethodGenerator {
 
     TypeName innerType = innerTypes.get(0);
     MethodDto method =
-        createFieldSetterWithTransform(
+        MethodGeneratorUtil.createFieldSetterWithTransform(
             field.getFieldNameEstimated(),
             field.getFieldName(),
             field.getJavaDoc(),
             "Optional.ofNullable(%s)",
             innerType,
+            field.getParameterAnnotations(),
             builderType,
             context);
 
     return Collections.singletonList(method);
-  }
-
-  /**
-   * Creates a field setter method with optional transform.
-   *
-   * @param fieldName the name of the method (estimated field name)
-   * @param fieldNameInBuilder the name of the builder field (may be renamed)
-   * @param fieldJavadoc the javadoc for the field
-   * @param transform optional transform expression (e.g., "Optional.ofNullable(%s)")
-   * @param fieldType the type of the field
-   * @param builderType the builder type for the return type
-   * @param context processing context
-   * @return the method DTO for the setter
-   */
-  private MethodDto createFieldSetterWithTransform(
-      String fieldName,
-      String fieldNameInBuilder,
-      String fieldJavadoc,
-      String transform,
-      TypeName fieldType,
-      TypeName builderType,
-      ProcessingContext context) {
-
-    MethodParameterDto parameter = new MethodParameterDto();
-    parameter.setParameterName(fieldName);
-    parameter.setParameterTypeName(fieldType);
-
-    MethodDto methodDto = new MethodDto();
-    methodDto.setMethodName(generateBuilderMethodName(fieldName, context));
-    methodDto.setReturnType(builderType);
-    methodDto.addParameter(parameter);
-    setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
-
-    String params;
-    if (StringUtils.isBlank(transform)) {
-      params = parameter.getParameterName();
-    } else {
-      params = String.format(transform, parameter.getParameterName());
-    }
-
-    methodDto.setCode(
-        """
-        this.$fieldName:N = $builderFieldWrapper:T.changedValue($dtoMethodParams:N);
-        return this;
-        """);
-    methodDto.addArgument(ARG_FIELD_NAME, fieldNameInBuilder);
-    methodDto.addArgument(ARG_DTO_METHOD_PARAMS, params);
-    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
-
-    methodDto.setPriority(MethodDto.PRIORITY_HIGH);
-
-    methodDto.setJavadoc(
-        """
-        Sets the value for <code>%s</code>.
-
-        @param %s %s
-        @return current instance of builder
-        """
-            .formatted(fieldName, parameter.getParameterName(), fieldJavadoc));
-
-    return methodDto;
   }
 }

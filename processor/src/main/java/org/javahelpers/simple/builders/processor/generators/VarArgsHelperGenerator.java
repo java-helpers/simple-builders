@@ -24,11 +24,8 @@
 
 package org.javahelpers.simple.builders.processor.generators;
 
-import static org.javahelpers.simple.builders.processor.generators.MethodGeneratorUtil.*;
-
 import java.util.Collections;
 import java.util.List;
-import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.processor.dtos.*;
 import org.javahelpers.simple.builders.processor.util.ProcessingContext;
 
@@ -140,9 +137,9 @@ public class VarArgsHelperGenerator implements MethodGenerator {
     } else {
       return null;
     }
-    String transform = wrapConcreteCollectionType(fieldType, baseExpression);
+    String transform = MethodGeneratorUtil.wrapConcreteCollectionType(fieldType, baseExpression);
 
-    return createFieldSetterWithTransform(
+    return MethodGeneratorUtil.createFieldSetterWithTransform(
         field.getFieldNameEstimated(),
         field.getFieldName(),
         field.getJavaDoc(),
@@ -151,92 +148,5 @@ public class VarArgsHelperGenerator implements MethodGenerator {
         List.of(),
         builderType,
         context);
-  }
-
-  /**
-   * Creates a field setter method with optional transform and annotations.
-   *
-   * @param fieldName the name of the method (estimated field name)
-   * @param fieldNameInBuilder the name of the builder field (may be renamed)
-   * @param fieldJavadoc the javadoc for the field
-   * @param transform optional transform expression (e.g., "Optional.of(%s)")
-   * @param fieldType the type of the field
-   * @param annotations annotations to apply to the parameter
-   * @param builderType the builder type for the return type
-   * @param context processing context
-   * @return the method DTO for the setter
-   */
-  private MethodDto createFieldSetterWithTransform(
-      String fieldName,
-      String fieldNameInBuilder,
-      String fieldJavadoc,
-      String transform,
-      TypeName fieldType,
-      List<AnnotationDto> annotations,
-      TypeName builderType,
-      ProcessingContext context) {
-
-    MethodParameterDto parameter = new MethodParameterDto();
-    parameter.setParameterName(fieldName);
-    parameter.setParameterTypeName(fieldType);
-
-    if (annotations != null) {
-      annotations.forEach(parameter::addAnnotation);
-    }
-
-    MethodDto methodDto = new MethodDto();
-    methodDto.setMethodName(generateBuilderMethodName(fieldName, context));
-    methodDto.setReturnType(builderType);
-    methodDto.addParameter(parameter);
-    setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
-
-    String params;
-    if (StringUtils.isBlank(transform)) {
-      params = parameter.getParameterName();
-    } else {
-      params = String.format(transform, parameter.getParameterName());
-    }
-
-    methodDto.setCode(
-        """
-        this.$fieldName:N = $builderFieldWrapper:T.changedValue($dtoMethodParams:N);
-        return this;
-        """);
-    methodDto.addArgument(ARG_FIELD_NAME, fieldNameInBuilder);
-    methodDto.addArgument(ARG_DTO_METHOD_PARAMS, params);
-    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
-
-    methodDto.setPriority(MethodDto.PRIORITY_HIGH);
-
-    methodDto.setJavadoc(
-        """
-        Sets the value for <code>%s</code>.
-
-        @param %s %s
-        @return current instance of builder
-        """
-            .formatted(fieldName, parameter.getParameterName(), fieldJavadoc));
-
-    return methodDto;
-  }
-
-  /**
-   * Wraps an expression with a concrete collection constructor if needed to preserve the specific
-   * collection type. Only wraps concrete implementations (ArrayList, LinkedList, HashSet, TreeSet,
-   * HashMap, TreeMap, etc.). Returns the base expression unchanged for interface types.
-   *
-   * @param fieldType the field type to check
-   * @param baseExpression the base expression to potentially wrap
-   * @return the wrapped expression for concrete collections, or base expression otherwise
-   */
-  private String wrapConcreteCollectionType(TypeName fieldType, String baseExpression) {
-    if (fieldType instanceof TypeNameList listType && listType.isConcreteImplementation()) {
-      return "new " + listType.getClassName() + "<>(" + baseExpression + ")";
-    } else if (fieldType instanceof TypeNameSet setType && setType.isConcreteImplementation()) {
-      return "new " + setType.getClassName() + "<>(" + baseExpression + ")";
-    } else if (fieldType instanceof TypeNameMap mapType && mapType.isConcreteImplementation()) {
-      return "new " + mapType.getClassName() + "<>(" + baseExpression + ")";
-    }
-    return baseExpression;
   }
 }

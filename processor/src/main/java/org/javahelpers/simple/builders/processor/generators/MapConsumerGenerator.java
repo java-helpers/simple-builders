@@ -24,13 +24,11 @@
 
 package org.javahelpers.simple.builders.processor.generators;
 
-import static org.javahelpers.simple.builders.processor.generators.MethodGeneratorUtil.*;
 import static org.javahelpers.simple.builders.processor.util.JavaLangMapper.map2TypeName;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 import org.javahelpers.simple.builders.core.builders.HashMapBuilder;
 import org.javahelpers.simple.builders.processor.dtos.*;
 import org.javahelpers.simple.builders.processor.util.ProcessingContext;
@@ -109,80 +107,14 @@ public class MapConsumerGenerator implements MethodGenerator {
             fieldTypeGeneric.getKeyType(),
             fieldTypeGeneric.getValueType());
     MethodDto mapConsumerWithBuilder =
-        createFieldConsumerWithBuilder(field, builderTargetTypeName, builderType, context);
+        MethodGeneratorUtil.createFieldConsumerWithBuilder(
+            field,
+            builderTargetTypeName,
+            "this.$fieldName:N.value()",
+            "",
+            Map.of(),
+            builderType,
+            context);
     return List.of(mapConsumerWithBuilder);
-  }
-
-  private MethodDto createFieldConsumerWithBuilder(
-      FieldDto field,
-      TypeName consumerBuilderType,
-      TypeName builderType,
-      ProcessingContext context) {
-    return createFieldConsumerWithBuilder(
-        field,
-        consumerBuilderType,
-        "this.$fieldName:N.value()",
-        "",
-        Map.of(),
-        builderType,
-        context);
-  }
-
-  private MethodDto createFieldConsumerWithBuilder(
-      FieldDto field,
-      TypeName consumerBuilderType,
-      String constructorArgsWithValue,
-      String additionalConstructorArgs,
-      Map<String, TypeName> additionalArguments,
-      TypeName returnBuilderType,
-      ProcessingContext context) {
-    TypeNameGeneric consumerType =
-        new TypeNameGeneric(map2TypeName(Consumer.class), consumerBuilderType);
-    MethodParameterDto parameter = new MethodParameterDto();
-    parameter.setParameterName(field.getFieldName() + BUILDER_SUFFIX + SUFFIX_CONSUMER);
-    parameter.setParameterTypeName(consumerType);
-    MethodDto methodDto = new MethodDto();
-    methodDto.setMethodName(generateBuilderMethodName(field.getFieldName(), context));
-    methodDto.setReturnType(returnBuilderType);
-    methodDto.addParameter(parameter);
-    setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
-
-    String buildExpression = calculateBuildExpression(field.getFieldType());
-
-    methodDto.setCode(
-        """
-        $helperType:T builder = this.$fieldName:N.isSet() ? new $helperType:T(%s) : new $helperType:T(%s);
-        $dtoMethodParam:N.accept(builder);
-        this.$fieldName:N = $builderFieldWrapper:T.changedValue($buildExpression:N);
-        return this;
-        """
-            .formatted(constructorArgsWithValue, additionalConstructorArgs));
-    methodDto.addArgument(ARG_FIELD_NAME, field.getFieldName());
-    methodDto.addArgument(ARG_DTO_METHOD_PARAM, parameter.getParameterName());
-    methodDto.addArgument(ARG_HELPER_TYPE, consumerBuilderType);
-    methodDto.addArgument("buildExpression", buildExpression);
-    additionalArguments.forEach(methodDto::addArgument);
-    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
-    methodDto.setPriority(MethodDto.PRIORITY_MEDIUM);
-    methodDto.setJavadoc(
-        """
-        Sets the value for <code>%s</code> using a builder consumer that produces the value.
-
-        @param %s consumer providing an instance of a builder for %s
-        @return current instance of builder
-        """
-            .formatted(field.getFieldName(), parameter.getParameterName(), field.getJavaDoc()));
-    return methodDto;
-  }
-
-  private String calculateBuildExpression(TypeName fieldType) {
-    return wrapConcreteCollectionType(fieldType, "builder.build()");
-  }
-
-  private String wrapConcreteCollectionType(TypeName fieldType, String baseExpression) {
-    if (fieldType instanceof TypeNameMap mapType && mapType.isConcreteImplementation()) {
-      return "new " + mapType.getClassName() + "<>(" + baseExpression + ")";
-    }
-    return baseExpression;
   }
 }

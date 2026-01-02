@@ -25,13 +25,12 @@
 package org.javahelpers.simple.builders.processor.generators;
 
 import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
 import javax.lang.model.element.Modifier;
 import org.apache.commons.lang3.StringUtils;
-import org.javahelpers.simple.builders.processor.dtos.GenericParameterDto;
-import org.javahelpers.simple.builders.processor.dtos.MethodDto;
-import org.javahelpers.simple.builders.processor.dtos.TypeName;
-import org.javahelpers.simple.builders.processor.dtos.TypeNameGeneric;
-import org.javahelpers.simple.builders.processor.dtos.TypeNameVariable;
+import org.javahelpers.simple.builders.processor.dtos.*;
+import org.javahelpers.simple.builders.processor.util.JavaLangMapper;
 import org.javahelpers.simple.builders.processor.util.JavapoetMapper;
 import org.javahelpers.simple.builders.processor.util.ProcessingContext;
 
@@ -135,5 +134,185 @@ public final class MethodGeneratorUtil {
             .toList();
 
     return new TypeNameGeneric(baseType, typeVariables);
+  }
+
+  /**
+   * Creates a field setter method with optional transform and annotations.
+   *
+   * @param fieldName the name of the method (estimated field name)
+   * @param fieldNameInBuilder the name of the builder field (may be renamed)
+   * @param fieldJavadoc the javadoc for the field
+   * @param transform optional transform expression (e.g., "Optional.of(%s)")
+   * @param fieldType the type of the field
+   * @param annotations annotations to apply to the parameter
+   * @param builderType the builder type for the return type
+   * @param context processing context
+   * @return the method DTO for the setter
+   */
+  public static MethodDto createFieldSetterWithTransform(
+      String fieldName,
+      String fieldNameInBuilder,
+      String fieldJavadoc,
+      String transform,
+      TypeName fieldType,
+      List<AnnotationDto> annotations,
+      TypeName builderType,
+      ProcessingContext context) {
+
+    MethodParameterDto parameter = new MethodParameterDto();
+    parameter.setParameterName(fieldName);
+    parameter.setParameterTypeName(fieldType);
+
+    if (annotations != null) {
+      annotations.forEach(parameter::addAnnotation);
+    }
+
+    MethodDto methodDto = new MethodDto();
+    methodDto.setMethodName(generateBuilderMethodName(fieldName, context));
+    methodDto.setReturnType(builderType);
+    methodDto.addParameter(parameter);
+    setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
+
+    String params;
+    if (StringUtils.isBlank(transform)) {
+      params = parameter.getParameterName();
+    } else {
+      params = String.format(transform, parameter.getParameterName());
+    }
+
+    methodDto.setCode(
+        """
+        this.$fieldName:N = $builderFieldWrapper:T.changedValue($dtoMethodParams:N);
+        return this;
+        """);
+    methodDto.addArgument(ARG_FIELD_NAME, fieldNameInBuilder);
+    methodDto.addArgument(ARG_DTO_METHOD_PARAMS, params);
+    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
+
+    methodDto.setPriority(transform == null ? MethodDto.PRIORITY_HIGHEST : MethodDto.PRIORITY_HIGH);
+
+    methodDto.setJavadoc(
+        """
+        Sets the value for <code>%s</code>.
+
+        @param %s %s
+        @return current instance of builder
+        """
+            .formatted(fieldName, parameter.getParameterName(), fieldJavadoc));
+
+    return methodDto;
+  }
+
+  /**
+   * Creates a field consumer method that accepts a builder for the field value.
+   *
+   * @param field the field DTO
+   * @param consumerBuilderType the builder type for the consumer
+   * @param constructorArgsWithValue constructor arguments with field value
+   * @param additionalConstructorArgs additional constructor arguments
+   * @param additionalArguments additional method arguments
+   * @param returnBuilderType the return builder type
+   * @param context the processing context
+   * @return the method DTO for the consumer
+   */
+  public static MethodDto createFieldConsumerWithBuilder(
+      FieldDto field,
+      TypeName consumerBuilderType,
+      String constructorArgsWithValue,
+      String additionalConstructorArgs,
+      Map<String, TypeName> additionalArguments,
+      TypeName returnBuilderType,
+      ProcessingContext context) {
+    TypeNameGeneric consumerType =
+        new TypeNameGeneric(JavaLangMapper.map2TypeName(Consumer.class), consumerBuilderType);
+    MethodParameterDto parameter = new MethodParameterDto();
+    parameter.setParameterName(field.getFieldName() + BUILDER_SUFFIX + SUFFIX_CONSUMER);
+    parameter.setParameterTypeName(consumerType);
+    MethodDto methodDto = new MethodDto();
+    methodDto.setMethodName(generateBuilderMethodName(field.getFieldName(), context));
+    methodDto.setReturnType(returnBuilderType);
+    methodDto.addParameter(parameter);
+    setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
+
+    String buildExpression = calculateBuildExpression(field.getFieldType());
+
+    methodDto.setCode(
+        """
+        $helperType:T builder = this.$fieldName:N.isSet() ? new $helperType:T(%s) : new $helperType:T(%s);
+        $dtoMethodParam:N.accept(builder);
+        this.$fieldName:N = $builderFieldWrapper:T.changedValue($buildExpression:N);
+        return this;
+        """
+            .formatted(constructorArgsWithValue, additionalConstructorArgs));
+    methodDto.addArgument(ARG_FIELD_NAME, field.getFieldName());
+    methodDto.addArgument(ARG_DTO_METHOD_PARAM, parameter.getParameterName());
+    methodDto.addArgument(ARG_HELPER_TYPE, consumerBuilderType);
+    methodDto.addArgument("buildExpression", buildExpression);
+    additionalArguments.forEach(methodDto::addArgument);
+    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
+    methodDto.setPriority(MethodDto.PRIORITY_MEDIUM);
+    methodDto.setJavadoc(
+        """
+        Sets the value for <code>%s</code> using a builder consumer that produces the value.
+
+        @param %s consumer providing an instance of a builder for %s
+        @return current instance of builder
+        """
+            .formatted(field.getFieldName(), parameter.getParameterName(), field.getJavaDoc()));
+    return methodDto;
+  }
+
+  /**
+   * Calculates the build expression for a field type, wrapping concrete collections if needed.
+   *
+   * @param fieldType the field type
+   * @return the build expression
+   */
+  private static String calculateBuildExpression(TypeName fieldType) {
+    return wrapConcreteCollectionType(fieldType, "builder.build()");
+  }
+
+  /**
+   * Wraps an expression with a concrete collection constructor if needed.
+   *
+   * @param fieldType the field type to check
+   * @param baseExpression the base expression to potentially wrap
+   * @return the wrapped expression for concrete collections, or base expression otherwise
+   */
+  public static String wrapConcreteCollectionType(TypeName fieldType, String baseExpression) {
+    if (fieldType instanceof TypeNameList listType && listType.isConcreteImplementation()) {
+      return "new " + listType.getClassName() + "<>(" + baseExpression + ")";
+    } else if (fieldType instanceof TypeNameSet setType && setType.isConcreteImplementation()) {
+      return "new " + setType.getClassName() + "<>(" + baseExpression + ")";
+    } else if (fieldType instanceof TypeNameMap mapType && mapType.isConcreteImplementation()) {
+      return "new " + mapType.getClassName() + "<>(" + baseExpression + ")";
+    }
+    return baseExpression;
+  }
+
+  /**
+   * Creates a field consumer method that accepts a builder for collections with element builders.
+   *
+   * @param field the field DTO
+   * @param collectionBuilderType the collection builder type
+   * @param elementBuilderType the element builder type
+   * @param returnBuilderType the return builder type
+   * @param context the processing context
+   * @return the method DTO for the consumer
+   */
+  public static MethodDto createFieldConsumerWithElementBuilders(
+      FieldDto field,
+      TypeName collectionBuilderType,
+      TypeName elementBuilderType,
+      TypeName returnBuilderType,
+      ProcessingContext context) {
+    return createFieldConsumerWithBuilder(
+        field,
+        collectionBuilderType,
+        "this.$fieldName:N.value(), $elementBuilderType:T::create",
+        "$elementBuilderType:T::create",
+        Map.of("elementBuilderType", elementBuilderType),
+        returnBuilderType,
+        context);
   }
 }
