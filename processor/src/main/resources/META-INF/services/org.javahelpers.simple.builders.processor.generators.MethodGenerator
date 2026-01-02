@@ -11,4 +11,7 @@ org.javahelpers.simple.builders.processor.generators.SetConsumerGenerator
 org.javahelpers.simple.builders.processor.generators.StringBuilderConsumerGenerator
 org.javahelpers.simple.builders.processor.generators.SupplierMethodGenerator
 org.javahelpers.simple.builders.processor.generators.VarArgsHelperGenerator
-org.javahelpers.simple.builders.processor.generators.CollectionHelperGenerator
+# Feature-based collection generators (replaces CollectionHelperGenerator)
+org.javahelpers.simple.builders.processor.generators.AddToCollectionGenerator
+org.javahelpers.simple.builders.processor.generators.ArrayConversionGenerator
+org.javahelpers.simple.builders.processor.generators.ArrayBuilderConsumerGenerator

@@ -246,6 +246,9 @@ compileJava {
 | `SetConsumerGenerator` | Set consumer methods | 80 |
 | `StringFormatHelperGenerator` | String.format helpers | 50 |
 | `VarArgsHelperGenerator` | Varargs helpers | 50 |
+| `AddToCollectionGenerator` | add2FieldName methods for List/Set | 30 |
+| `ArrayConversionGenerator` | Array-from-List conversion methods | 35 |
+| `ArrayBuilderConsumerGenerator` | ArrayListBuilder consumer methods for arrays | 25 |
 
 ### Builder Enhancers
 
