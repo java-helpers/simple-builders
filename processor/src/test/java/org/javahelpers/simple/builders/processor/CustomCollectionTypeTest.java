@@ -351,6 +351,45 @@ class CustomCollectionTypeTest {
   }
 
   @Test
+  void arrayMethods_shouldHaveCorrectJavadocAfterRefactoring() {
+    // Test that array methods have correct javadoc after splitting CollectionHelperGenerator
+    // into feature-based generators (ArrayConversionGenerator and ArrayBuilderConsumerGenerator)
+    JavaFileObject arrayDto =
+        ProcessorTestUtils.simpleBuilderClass(
+            "test",
+            "ArrayDto",
+            """
+                private final String[] tags;
+
+                public ArrayDto(String[] tags) {
+                  this.tags = tags;
+                }
+
+                public String[] getTags() { return tags; }
+            """);
+
+    Compilation compilation = compile(arrayDto);
+    String generatedCode = ProcessorTestUtils.loadGeneratedSource(compilation, "ArrayDtoBuilder");
+    assertGenerationSucceeded(compilation, "ArrayDtoBuilder", generatedCode);
+
+    // Verify array conversion method has correct javadoc (from ArrayConversionGenerator)
+    ProcessorAsserts.assertContaining(generatedCode, "Sets the value for <code>tags</code>.");
+    ProcessorAsserts.assertContaining(generatedCode, "@param tags tags");
+
+    // Verify array builder consumer method has correct javadoc (from ArrayBuilderConsumerGenerator)
+    ProcessorAsserts.assertContaining(
+        generatedCode, "Sets the value for <code>tags</code> using the fluent builder consumer.");
+    ProcessorAsserts.assertContaining(
+        generatedCode, "@param tagsBuilderConsumer consumer for tags");
+
+    // Verify both methods are generated with correct signatures
+    ProcessorAsserts.assertContaining(
+        generatedCode, "public ArrayDtoBuilder tags(List<String> tags)");
+    ProcessorAsserts.assertContaining(
+        generatedCode, "public ArrayDtoBuilder tags(Consumer<ArrayListBuilder<String>>");
+  }
+
+  @Test
   void unmodifiableListInConstructor_shouldHandleCorrectly() {
     // DTO that creates unmodifiable list in constructor - builder should handle this safely
     // The DTO internally uses List.copyOf() which creates an unmodifiable list

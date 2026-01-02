@@ -2427,6 +2427,8 @@ class BuilderProcessorTest {
         generatedCode,
         // builder preserves type parameter T
         contains("class GenericDtoBuilder<T>"),
+        // builderinterfaces using type parameter T too
+        contains("implements IBuilderBase<GenericDto<T>>"),
         // build returns GenericDto<T>
         contains("public GenericDto<T> build()"),
         // create() exposes generic as well

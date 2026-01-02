@@ -25,6 +25,7 @@
 package org.javahelpers.simple.builders.processor.util;
 
 import java.util.List;
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
@@ -32,6 +33,9 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import org.javahelpers.simple.builders.processor.dtos.BuilderConfiguration;
+import org.javahelpers.simple.builders.processor.dtos.TypeName;
+import org.javahelpers.simple.builders.processor.generators.BuilderEnhancerRegistry;
+import org.javahelpers.simple.builders.processor.generators.MethodGeneratorRegistry;
 
 /**
  * Context object that wraps Elements, Types, and logging utilities from annotation processing,
@@ -44,26 +48,29 @@ public final class ProcessingContext {
   private final Types typeUtils;
   private final ProcessingLogger logger;
   private final BuilderConfigurationReader configurationReader;
+  private final ProcessingEnvironment processingEnv;
+  private MethodGeneratorRegistry methodGeneratorRegistry;
+  private BuilderEnhancerRegistry builderEnhancerRegistry;
   private BuilderConfiguration configurationForProcessingTarget;
 
   /**
    * Creates a new processing context.
    *
-   * @param elementUtils utility for operating on program elements
-   * @param typeUtils utility for operating on types
    * @param logger the logging utility for the annotation processor
    * @param globalConfiguration the global builder configuration read from compiler arguments
+   * @param processingEnv
    */
   public ProcessingContext(
-      Elements elementUtils,
-      Types typeUtils,
       ProcessingLogger logger,
-      BuilderConfiguration globalConfiguration) {
-    this.elementUtils = elementUtils;
-    this.typeUtils = typeUtils;
+      BuilderConfiguration globalConfiguration,
+      ProcessingEnvironment processingEnv) {
+    this.elementUtils = processingEnv.getElementUtils();
+    this.typeUtils = processingEnv.getTypeUtils();
     this.logger = logger;
+    this.processingEnv = processingEnv;
     this.configurationReader =
         new BuilderConfigurationReader(globalConfiguration, logger, elementUtils);
+    // MethodGeneratorRegistry will be lazily initialized on first access
   }
 
   public void initConfigurationForProcessingTarget(BuilderConfiguration config) {
@@ -79,13 +86,52 @@ public final class ProcessingContext {
   }
 
   /**
-   * Get a type element by its fully qualified class name.
+   * Get the method generator registry for generating builder methods.
+   *
+   * <p>The registry is lazily initialized on first access to avoid circular dependency issues.
+   *
+   * @return the method generator registry
+   */
+  public MethodGeneratorRegistry getMethodGeneratorRegistry() {
+    if (methodGeneratorRegistry == null) {
+      methodGeneratorRegistry = new MethodGeneratorRegistry(this, processingEnv);
+    }
+    return methodGeneratorRegistry;
+  }
+
+  /**
+   * Returns the builder enhancer registry.
+   *
+   * @return the builder enhancer registry
+   */
+  public BuilderEnhancerRegistry getBuilderEnhancerRegistry() {
+    if (builderEnhancerRegistry == null) {
+      builderEnhancerRegistry = new BuilderEnhancerRegistry(this, processingEnv);
+    }
+    return builderEnhancerRegistry;
+  }
+
+  /**
+   * Get the TypeElement for a given qualified class name.
    *
    * @param qualifiedName the canonical class name (e.g., "java.lang.String")
    * @return the type element, or null if not found
    */
   public TypeElement getTypeElement(String qualifiedName) {
     return elementUtils.getTypeElement(qualifiedName);
+  }
+
+  /**
+   * Get the TypeElement for a given TypeName.
+   *
+   * @param typeName the TypeName containing package and class name
+   * @return the type element, or null if not found
+   */
+  public TypeElement getTypeElement(TypeName typeName) {
+    if (typeName == null) {
+      return null;
+    }
+    return getTypeElement(typeName.getFullQualifiedName());
   }
 
   /**
@@ -217,6 +263,16 @@ public final class ProcessingContext {
    */
   public void debug(String format, Object... args) {
     logger.debug(format, args);
+  }
+
+  /**
+   * Logs a warning message without requiring a specific element context.
+   *
+   * @param format the format string
+   * @param args arguments referenced by the format specifiers in the format string
+   */
+  public void warning(String format, Object... args) {
+    logger.warning(null, format, args);
   }
 
   /**

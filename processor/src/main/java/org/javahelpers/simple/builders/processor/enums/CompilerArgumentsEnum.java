@@ -123,6 +123,12 @@ public enum CompilerArgumentsEnum {
   /** Option for setter method name suffix. */
   SETTER_SUFFIX("setterSuffix"),
 
+  // === Component Filtering ===
+  /**
+   * Option for deactivating specific method generators and builder enhancers by class name pattern.
+   */
+  DEACTIVATE_GENERATION_COMPONENTS("deactivateGenerationComponents"),
+
   // === Logging ===
   /** Option for verbose logging output. */
   VERBOSE("verbose");

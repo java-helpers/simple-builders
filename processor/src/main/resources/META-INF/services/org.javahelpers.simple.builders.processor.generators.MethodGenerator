@@ -1,0 +1,17 @@
+# Built-in method generators for simple-builders
+# These are automatically discovered via ServiceLoader
+org.javahelpers.simple.builders.processor.generators.BasicSetterGenerator
+org.javahelpers.simple.builders.processor.generators.StringFormatHelperGenerator
+org.javahelpers.simple.builders.processor.generators.OptionalHelperGenerator
+org.javahelpers.simple.builders.processor.generators.BuilderConsumerGenerator
+org.javahelpers.simple.builders.processor.generators.FieldConsumerGenerator
+org.javahelpers.simple.builders.processor.generators.ListConsumerGenerator
+org.javahelpers.simple.builders.processor.generators.MapConsumerGenerator
+org.javahelpers.simple.builders.processor.generators.SetConsumerGenerator
+org.javahelpers.simple.builders.processor.generators.StringBuilderConsumerGenerator
+org.javahelpers.simple.builders.processor.generators.SupplierMethodGenerator
+org.javahelpers.simple.builders.processor.generators.VarArgsHelperGenerator
+# Feature-based collection generators (replaces CollectionHelperGenerator)
+org.javahelpers.simple.builders.processor.generators.AddToCollectionGenerator
+org.javahelpers.simple.builders.processor.generators.ArrayConversionGenerator
+org.javahelpers.simple.builders.processor.generators.ArrayBuilderConsumerGenerator

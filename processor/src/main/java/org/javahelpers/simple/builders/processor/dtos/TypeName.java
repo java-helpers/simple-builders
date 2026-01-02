@@ -44,6 +44,12 @@ public class TypeName {
   /** Annotations on this type (TYPE_USE). */
   private final java.util.List<AnnotationDto> annotations = new java.util.ArrayList<>();
 
+  /** Builder type for this type if it has @SimpleBuilder annotation. */
+  private TypeName builderType;
+
+  /** Whether this type has an empty constructor. */
+  private boolean hasEmptyConstructor = false;
+
   /**
    * Constructor for TypeName.
    *
@@ -75,6 +81,15 @@ public class TypeName {
   }
 
   /**
+   * Returns the full qualified name (package + class name).
+   *
+   * @return full qualified name of type {@code java.lang.String}
+   */
+  public String getFullQualifiedName() {
+    return packageName.isEmpty() ? className : packageName + "." + className;
+  }
+
+  /**
    * Returns the list of annotations on this type.
    *
    * @return list of annotations
@@ -90,6 +105,42 @@ public class TypeName {
    */
   public void addAnnotation(AnnotationDto annotation) {
     this.annotations.add(annotation);
+  }
+
+  /**
+   * Returns the builder type for this type if it has @SimpleBuilder annotation.
+   *
+   * @return optional builder type
+   */
+  public Optional<TypeName> getBuilderType() {
+    return Optional.ofNullable(builderType);
+  }
+
+  /**
+   * Sets the builder type for this type.
+   *
+   * @param builderType the builder type
+   */
+  public void setBuilderType(TypeName builderType) {
+    this.builderType = builderType;
+  }
+
+  /**
+   * Returns whether this type has an empty constructor.
+   *
+   * @return true if the type has an empty constructor
+   */
+  public boolean hasEmptyConstructor() {
+    return hasEmptyConstructor;
+  }
+
+  /**
+   * Sets whether this type has an empty constructor.
+   *
+   * @param hasEmptyConstructor true if the type has an empty constructor
+   */
+  public void setHasEmptyConstructor(boolean hasEmptyConstructor) {
+    this.hasEmptyConstructor = hasEmptyConstructor;
   }
 
   /**
