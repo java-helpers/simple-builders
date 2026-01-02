@@ -42,17 +42,19 @@ import org.junit.jupiter.params.provider.ValueSource;
 class ComponentDeactivationTest {
 
   private static final String TEST_DTO_SOURCE =
-      "package test;\n"
-          + "import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;\n"
-          + "@SimpleBuilder\n"
-          + "public class TestDto {\n"
-          + "  private String name;\n"
-          + "  private int age;\n"
-          + "  public String getName() { return name; }\n"
-          + "  public void setName(String name) { this.name = name; }\n"
-          + "  public int getAge() { return age; }\n"
-          + "  public void setAge(int age) { this.age = age; }\n"
-          + "}";
+      """
+      package test;
+      import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+      @SimpleBuilder
+      public class TestDto {
+        private String name;
+        private int age;
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+        public int getAge() { return age; }
+        public void setAge(int age) { this.age = age; }
+      }
+      """;
 
   @ParameterizedTest
   @ValueSource(

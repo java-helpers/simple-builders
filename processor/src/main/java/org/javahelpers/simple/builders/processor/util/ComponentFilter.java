@@ -65,9 +65,9 @@ public class ComponentFilter {
    */
   public ComponentFilter(ProcessingEnvironment processingEnv) {
     CompilerArgumentsReader argumentsReader = new CompilerArgumentsReader(processingEnv);
-    String deactivatedPatterns =
+    String compilerArgumentsString =
         argumentsReader.readValue(CompilerArgumentsEnum.DEACTIVATE_GENERATION_COMPONENTS);
-    this.deactivatedPatterns = parsePatterns(deactivatedPatterns);
+    this.deactivatedPatterns = parsePatterns(compilerArgumentsString);
   }
 
   /**
