@@ -25,9 +25,15 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  * <p>
  * Example usage:
  * <pre>{@code
- * org.javahelpers.simple.builders.example.BookDto dto = org.javahelpers.simple.builders.example.BookDto.create()
- *     .propertyName("value")
- *     .anotherProperty(42)
+ * BookDto dto = BookDto.create()
+ *     .title("Example")
+ *     .title(() -> "Computed Value") // Supplier
+ *     .author("Example")
+ *     .author(() -> "Computed Value") // Supplier
+ *     .pages(42)
+ *     .price(19.99)
+ *     .exactPrice(new BigDecimal("19.99"))
+ *     .available(true)
  *     .build();
  * }</pre>
  */

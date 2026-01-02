@@ -28,9 +28,11 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  * <p>
  * Example usage:
  * <pre>{@code
- * org.javahelpers.simple.builders.example.PersonDto dto = org.javahelpers.simple.builders.example.PersonDto.create()
- *     .propertyName("value")
- *     .anotherProperty(42)
+ * PersonDto dto = PersonDto.create()
+ *     .name("Example")
+ *     .name(() -> "Computed Value") // Supplier
+ *     .nickNames(List.of("item1", "item2"))
+ *     .nickNames("item1", "item2", "item3") // VarArgs
  *     .build();
  * }</pre>
  */

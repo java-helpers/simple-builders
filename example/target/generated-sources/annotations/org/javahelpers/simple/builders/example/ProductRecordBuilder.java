@@ -24,9 +24,10 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  * <p>
  * Example usage:
  * <pre>{@code
- * org.javahelpers.simple.builders.example.ProductRecord dto = org.javahelpers.simple.builders.example.ProductRecord.create()
- *     .propertyName("value")
- *     .anotherProperty(42)
+ * ProductRecord dto = ProductRecord.create()
+ *     .name("Example")
+ *     .name(() -> "Computed Value") // Supplier
+ *     .price(19.99)
  *     .build();
  * }</pre>
  */
