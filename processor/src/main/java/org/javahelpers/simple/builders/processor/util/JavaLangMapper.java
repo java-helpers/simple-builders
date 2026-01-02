@@ -170,10 +170,24 @@ public final class JavaLangMapper {
    */
   private static void setBuilderAndConstructorInfo(
       TypeName typeName, TypeElement typeElement, ProcessingContext context) {
-    // Set builder type if the type has @SimpleBuilder annotation
+    setBuilderTypeIfAnnotated(typeName, typeElement, context);
+    setEmptyConstructorInfoIfAvailable(typeName, typeElement, context);
+    setElementBuilderTypeForGenericCollections(typeName, context);
+  }
+
+  /**
+   * Sets the builder type if the type element has @SimpleBuilder annotation.
+   *
+   * @param typeName the TypeName to enhance
+   * @param typeElement the type element to check
+   * @param context the processing context
+   */
+  private static void setBuilderTypeIfAnnotated(
+      TypeName typeName, TypeElement typeElement, ProcessingContext context) {
     Optional<javax.lang.model.element.AnnotationMirror> foundBuilderAnnotation =
         JavaLangAnalyser.findAnnotation(
             typeElement, org.javahelpers.simple.builders.core.annotations.SimpleBuilder.class);
+
     if (foundBuilderAnnotation.isPresent()) {
       String builderClassName =
           typeElement.getSimpleName().toString() + context.getConfiguration().getBuilderSuffix();
@@ -182,15 +196,32 @@ public final class JavaLangMapper {
       builderPackageName = lastDot > 0 ? builderPackageName.substring(0, lastDot) : "";
       typeName.setBuilderType(new TypeName(builderPackageName, builderClassName));
     }
+  }
 
-    // Set empty constructor info for concrete classes
+  /**
+   * Sets empty constructor info for concrete classes with empty constructors.
+   *
+   * @param typeName the TypeName to enhance
+   * @param typeElement the type element to check
+   * @param context the processing context
+   */
+  private static void setEmptyConstructorInfoIfAvailable(
+      TypeName typeName, TypeElement typeElement, ProcessingContext context) {
     if (isConcreteClass(typeElement)
         && !TypeNameAnalyser.isJavaClass(typeName)
         && JavaLangAnalyser.hasEmptyConstructor(typeElement, context)) {
       typeName.setHasEmptyConstructor(true);
     }
+  }
 
-    // Set element builder type for generic collections
+  /**
+   * Sets element builder type for generic collections with @SimpleBuilder annotated elements.
+   *
+   * @param typeName the TypeName to enhance
+   * @param context the processing context
+   */
+  private static void setElementBuilderTypeForGenericCollections(
+      TypeName typeName, ProcessingContext context) {
     if (typeName instanceof TypeNameGeneric genericType) {
       List<TypeName> innerTypeArguments = genericType.getInnerTypeArguments();
       if (innerTypeArguments.size() == 1) {
@@ -201,6 +232,7 @@ public final class JavaLangMapper {
               JavaLangAnalyser.findAnnotation(
                   elementTypeElement,
                   org.javahelpers.simple.builders.core.annotations.SimpleBuilder.class);
+
           if (elementBuilderAnnotation.isPresent()) {
             String elementBuilderClassName =
                 elementTypeElement.getSimpleName().toString()
