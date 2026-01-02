@@ -184,12 +184,10 @@ public final class JavaLangMapper {
     }
 
     // Set empty constructor info for concrete classes
-    if (typeElement.getKind() == javax.lang.model.element.ElementKind.CLASS
-        && !typeElement.getModifiers().contains(javax.lang.model.element.Modifier.ABSTRACT)) {
-      if (!TypeNameAnalyser.isJavaClass(typeName)
-          && JavaLangAnalyser.hasEmptyConstructor(typeElement, context)) {
-        typeName.setHasEmptyConstructor(true);
-      }
+    if (isConcreteClass(typeElement)
+        && !TypeNameAnalyser.isJavaClass(typeName)
+        && JavaLangAnalyser.hasEmptyConstructor(typeElement, context)) {
+      typeName.setHasEmptyConstructor(true);
     }
 
     // Set element builder type for generic collections
@@ -571,5 +569,16 @@ public final class JavaLangMapper {
     }
 
     return typeName;
+  }
+
+  /**
+   * Checks if the type element represents a concrete class (not abstract).
+   *
+   * @param typeElement the type element to check
+   * @return true if it's a concrete class
+   */
+  private static boolean isConcreteClass(TypeElement typeElement) {
+    return typeElement.getKind() == javax.lang.model.element.ElementKind.CLASS
+        && !typeElement.getModifiers().contains(javax.lang.model.element.Modifier.ABSTRACT);
   }
 }

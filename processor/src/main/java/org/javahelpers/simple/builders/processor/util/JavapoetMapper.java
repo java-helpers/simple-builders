@@ -39,6 +39,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.processor.dtos.*;
+import org.javahelpers.simple.builders.processor.exceptions.JavapoetMapperException;
 
 /** Helper functions to create JavaPoet types from DTOs of simple builder. */
 public final class JavapoetMapper {
@@ -191,7 +192,8 @@ public final class JavapoetMapper {
     } else if (placeHolderValue instanceof MethodCodeTypePlaceholder typePlaceholder) {
       return map2ParameterType(typePlaceholder.getValue());
     } else {
-      throw new UnsupportedOperationException("");
+      throw new UnsupportedOperationException(
+          "Unsupported placeholder type: " + placeHolderValue.getClass());
     }
   }
 
@@ -206,19 +208,17 @@ public final class JavapoetMapper {
       ClassName annotationType = map2ClassName(annotationDto.getAnnotationType());
       AnnotationSpec.Builder builder = AnnotationSpec.builder(annotationType);
 
-      // Add annotation members (parameters)
       for (Map.Entry<String, String> member : annotationDto.getMembers().entrySet()) {
-        // Use $L (literal) format since the values are already formatted as code strings
         builder.addMember(member.getKey(), "$L", member.getValue());
       }
 
       return Optional.of(builder.build());
     } catch (Exception e) {
-      // Log the error but don't fail the entire generation process
-      System.err.printf(
-          "Warning: Failed to map annotation %s: %s%n",
-          annotationDto.getAnnotationType().getClassName(), e.getMessage());
-      return Optional.empty();
+      throw new JavapoetMapperException(
+          e,
+          "Failed to map annotation %s: %s",
+          annotationDto.getAnnotationType().getClassName(),
+          e.getMessage());
     }
   }
 
@@ -259,7 +259,7 @@ public final class JavapoetMapper {
   public static Optional<TypeName> mapInterfaceToTypeName(InterfaceName interfaceName) {
     try {
       TypeName interfaceType =
-          ClassName.get(interfaceName.getPackageName(), interfaceName.getInterfaceName());
+          ClassName.get(interfaceName.getPackageName(), interfaceName.getSimpleName());
 
       // Add type parameters if present
       if (interfaceName.hasTypeParameters()) {
@@ -272,11 +272,8 @@ public final class JavapoetMapper {
 
       return Optional.of(interfaceType);
     } catch (Exception e) {
-      // Log the error but don't fail the entire generation process
-      System.err.printf(
-          "Warning: Failed to map interface %s: %s%n",
-          interfaceName.getQualifiedName(), e.getMessage());
-      return Optional.empty();
+      throw new JavapoetMapperException(
+          e, "Failed to map interface %s: %s", interfaceName.getQualifiedName(), e.getMessage());
     }
   }
 }

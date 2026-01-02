@@ -77,7 +77,7 @@ public class BuilderImplementationAnnotationEnhancer implements BuilderEnhancer 
   @Override
   public void enhanceBuilder(BuilderDefinitionDto builderDto, ProcessingContext context) {
     AnnotationDto builderImplementationAnnotation =
-        createBuilderImplementationAnnotation(builderDto, context);
+        createBuilderImplementationAnnotation(builderDto);
     builderDto.addClassAnnotation(builderImplementationAnnotation);
 
     context.debug(
@@ -89,11 +89,9 @@ public class BuilderImplementationAnnotationEnhancer implements BuilderEnhancer 
    * Creates the @BuilderImplementation annotation.
    *
    * @param builderDto the builder definition
-   * @param context the processing context
    * @return the annotation DTO for @BuilderImplementation
    */
-  private AnnotationDto createBuilderImplementationAnnotation(
-      BuilderDefinitionDto builderDto, ProcessingContext context) {
+  private AnnotationDto createBuilderImplementationAnnotation(BuilderDefinitionDto builderDto) {
     AnnotationDto annotation = new AnnotationDto();
     annotation.setAnnotationType(JavaLangMapper.map2TypeName(BuilderImplementation.class));
 

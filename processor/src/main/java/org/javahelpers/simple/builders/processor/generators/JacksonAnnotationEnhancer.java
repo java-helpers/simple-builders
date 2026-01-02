@@ -82,7 +82,7 @@ public class JacksonAnnotationEnhancer implements BuilderEnhancer {
 
   @Override
   public void enhanceBuilder(BuilderDefinitionDto builderDto, ProcessingContext context) {
-    AnnotationDto jacksonAnnotation = createJsonPOJOBuilderAnnotation(builderDto, context);
+    AnnotationDto jacksonAnnotation = createJsonPOJOBuilderAnnotation(builderDto);
     builderDto.addClassAnnotation(jacksonAnnotation);
 
     context.debug(
@@ -105,11 +105,9 @@ public class JacksonAnnotationEnhancer implements BuilderEnhancer {
    * Creates the @JsonPOJOBuilder annotation.
    *
    * @param builderDto the builder definition
-   * @param context the processing context
    * @return the annotation DTO for @JsonPOJOBuilder
    */
-  private AnnotationDto createJsonPOJOBuilderAnnotation(
-      BuilderDefinitionDto builderDto, ProcessingContext context) {
+  private AnnotationDto createJsonPOJOBuilderAnnotation(BuilderDefinitionDto builderDto) {
     AnnotationDto annotation = new AnnotationDto();
     annotation.setAnnotationType(
         new TypeName("com.fasterxml.jackson.databind.annotation", "JsonPOJOBuilder"));

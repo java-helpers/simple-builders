@@ -104,11 +104,11 @@ public class ConditionalEnhancer implements BuilderEnhancer {
   @Override
   public void enhanceBuilder(BuilderDefinitionDto builderDto, ProcessingContext context) {
     // Add conditional(BooleanSupplier, Consumer, Consumer) method
-    MethodDto conditionalMethod = createConditionalMethod(builderDto, context);
+    MethodDto conditionalMethod = createConditionalMethod(builderDto);
     builderDto.addCoreMethod(conditionalMethod);
 
     // Add conditional(BooleanSupplier, Consumer) method
-    MethodDto conditionalPositiveMethod = createConditionalPositiveOnlyMethod(builderDto, context);
+    MethodDto conditionalPositiveMethod = createConditionalPositiveOnlyMethod(builderDto);
     builderDto.addCoreMethod(conditionalPositiveMethod);
 
     context.debug(
@@ -116,8 +116,7 @@ public class ConditionalEnhancer implements BuilderEnhancer {
   }
 
   /** Creates the conditional(BooleanSupplier, Consumer, Consumer) method. */
-  private MethodDto createConditionalMethod(
-      BuilderDefinitionDto builderDto, ProcessingContext context) {
+  private MethodDto createConditionalMethod(BuilderDefinitionDto builderDto) {
     MethodDto method = new MethodDto();
     method.setMethodName("conditional");
     method.setReturnType(builderDto.getBuilderTypeName());
@@ -153,8 +152,7 @@ public class ConditionalEnhancer implements BuilderEnhancer {
   }
 
   /** Creates the conditional(BooleanSupplier, Consumer) method. */
-  private MethodDto createConditionalPositiveOnlyMethod(
-      BuilderDefinitionDto builderDto, ProcessingContext context) {
+  private MethodDto createConditionalPositiveOnlyMethod(BuilderDefinitionDto builderDto) {
     MethodDto method = new MethodDto();
     method.setMethodName("conditional");
     method.setReturnType(builderDto.getBuilderTypeName());
@@ -209,9 +207,7 @@ public class ConditionalEnhancer implements BuilderEnhancer {
 
   /** Creates a Consumer<BuilderType> type. */
   private TypeName createConsumerType(TypeName builderType) {
-    org.javahelpers.simple.builders.processor.dtos.TypeNameGeneric consumerType =
-        new org.javahelpers.simple.builders.processor.dtos.TypeNameGeneric(
-            JavaLangMapper.map2TypeName(Consumer.class), builderType);
-    return consumerType;
+    return new org.javahelpers.simple.builders.processor.dtos.TypeNameGeneric(
+        JavaLangMapper.map2TypeName(Consumer.class), builderType);
   }
 }

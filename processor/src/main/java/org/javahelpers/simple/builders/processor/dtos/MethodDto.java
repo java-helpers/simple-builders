@@ -330,14 +330,12 @@ public class MethodDto {
   }
 
   /**
-   * Adds an annotation to this method using package and class name.
+   * Adds an annotation to this method.
    *
-   * @param packageName the annotation package name
-   * @param className the annotation class name
+   * @param annotation the annotation to add
    */
-  public void addAnnotation(String packageName, String className) {
-    AnnotationDto annotation = new AnnotationDto();
-    annotation.setAnnotationType(new TypeName(packageName, className));
+  public void addAnnotation(
+      org.javahelpers.simple.builders.processor.dtos.AnnotationDto annotation) {
     this.annotations.add(annotation);
   }
 
@@ -413,7 +411,7 @@ public class MethodDto {
       java.util.List<String> paramTypes =
           method.getParameters().stream()
               .map(param -> getQualifiedName(param.getParameterType()))
-              .collect(java.util.stream.Collectors.toList());
+              .toList();
 
       signature.append(String.join(",", paramTypes));
       signature.append(")");

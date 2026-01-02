@@ -41,7 +41,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Modifier;
 import org.apache.commons.collections4.CollectionUtils;
@@ -251,9 +250,7 @@ public class JavaCodeGenerator {
     }
 
     // Sort methods using enhanced sorting logic
-    return signatureToMethod.values().stream()
-        .sorted(new MethodDto.MethodComparator())
-        .collect(Collectors.toList());
+    return signatureToMethod.values().stream().sorted(new MethodDto.MethodComparator()).toList();
   }
 
   /**

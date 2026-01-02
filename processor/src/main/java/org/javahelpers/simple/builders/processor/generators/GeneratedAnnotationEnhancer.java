@@ -72,7 +72,7 @@ public class GeneratedAnnotationEnhancer implements BuilderEnhancer {
 
   @Override
   public void enhanceBuilder(BuilderDefinitionDto builderDto, ProcessingContext context) {
-    AnnotationDto generatedAnnotation = createGeneratedAnnotation(context);
+    AnnotationDto generatedAnnotation = createGeneratedAnnotation();
     builderDto.addClassAnnotation(generatedAnnotation);
 
     context.debug(
@@ -83,10 +83,9 @@ public class GeneratedAnnotationEnhancer implements BuilderEnhancer {
   /**
    * Creates the @Generated annotation.
    *
-   * @param context the processing context
    * @return the annotation DTO for @Generated
    */
-  private AnnotationDto createGeneratedAnnotation(ProcessingContext context) {
+  private AnnotationDto createGeneratedAnnotation() {
     AnnotationDto annotation = new AnnotationDto();
     annotation.setAnnotationType(JavaLangMapper.map2TypeName(Generated.class));
 

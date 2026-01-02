@@ -52,7 +52,7 @@ public class InterfaceName {
   private final String packageName;
 
   /** Name of interface. */
-  private final String interfaceName;
+  private final String simpleName;
 
   /** Annotations on this interface (TYPE_USE). */
   private final List<AnnotationDto> annotations = new java.util.ArrayList<>();
@@ -64,12 +64,12 @@ public class InterfaceName {
    * Constructor for InterfaceName.
    *
    * @param packageName name of package
-   * @param interfaceName name of interface, could not be null
+   * @param simpleName name of interface, could not be null
    */
-  public InterfaceName(String packageName, String interfaceName) {
-    requireNonNull(interfaceName);
+  public InterfaceName(String packageName, String simpleName) {
+    requireNonNull(simpleName);
     this.packageName = packageName;
-    this.interfaceName = interfaceName;
+    this.simpleName = simpleName;
   }
 
   /**
@@ -86,8 +86,8 @@ public class InterfaceName {
    *
    * @return interface name of type {@code java.lang.String}
    */
-  public String getInterfaceName() {
-    return interfaceName;
+  public String getSimpleName() {
+    return simpleName;
   }
 
   /**
@@ -141,7 +141,7 @@ public class InterfaceName {
    * @return fully qualified name
    */
   public String getQualifiedName() {
-    return packageName.isEmpty() ? interfaceName : packageName + "." + interfaceName;
+    return packageName.isEmpty() ? simpleName : packageName + "." + simpleName;
   }
 
   @Override
@@ -157,7 +157,7 @@ public class InterfaceName {
     InterfaceName that = (InterfaceName) o;
     return new EqualsBuilder()
         .append(packageName, that.packageName)
-        .append(interfaceName, that.interfaceName)
+        .append(simpleName, that.simpleName)
         .append(annotations, that.annotations)
         .append(typeParameters, that.typeParameters)
         .isEquals();
@@ -167,7 +167,7 @@ public class InterfaceName {
   public int hashCode() {
     return new HashCodeBuilder(17, 37)
         .append(packageName)
-        .append(interfaceName)
+        .append(simpleName)
         .append(annotations)
         .append(typeParameters)
         .toHashCode();
@@ -177,7 +177,7 @@ public class InterfaceName {
   public String toString() {
     return new ToStringBuilder(this)
         .append("packageName", packageName)
-        .append("interfaceName", interfaceName)
+        .append("simpleName", simpleName)
         .append("annotations", annotations)
         .append("typeParameters", typeParameters)
         .toString();

@@ -23,12 +23,16 @@
  */
 package org.javahelpers.simple.builders.processor.generators;
 
+import java.util.ArrayList;
+import java.util.List;
 import javax.lang.model.element.Modifier;
+import org.javahelpers.simple.builders.processor.dtos.AnnotationDto;
 import org.javahelpers.simple.builders.processor.dtos.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.dtos.FieldDto;
 import org.javahelpers.simple.builders.processor.dtos.GenericParameterDto;
 import org.javahelpers.simple.builders.processor.dtos.MethodDto;
 import org.javahelpers.simple.builders.processor.dtos.TypeName;
+import org.javahelpers.simple.builders.processor.util.JavaLangMapper;
 import org.javahelpers.simple.builders.processor.util.ProcessingContext;
 
 /**
@@ -105,15 +109,15 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
   @Override
   public void enhanceBuilder(BuilderDefinitionDto builderDto, ProcessingContext context) {
     // Add build() method
-    MethodDto buildMethod = createBuildMethod(builderDto, context);
+    MethodDto buildMethod = createBuildMethod(builderDto);
     builderDto.addCoreMethod(buildMethod);
 
     // Add static create() method
-    MethodDto createMethod = createStaticCreateMethod(builderDto, context);
+    MethodDto createMethod = createStaticCreateMethod(builderDto);
     builderDto.addCoreMethod(createMethod);
 
     // Add toString() method
-    MethodDto toStringMethod = createToStringMethod(builderDto, context);
+    MethodDto toStringMethod = createToStringMethod(builderDto);
     builderDto.addCoreMethod(toStringMethod);
 
     context.debug(
@@ -121,7 +125,7 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
   }
 
   /** Creates the build() method. */
-  private MethodDto createBuildMethod(BuilderDefinitionDto builderDto, ProcessingContext context) {
+  private MethodDto createBuildMethod(BuilderDefinitionDto builderDto) {
     MethodDto method = new MethodDto();
     method.setMethodName("build");
     TypeName returnType =
@@ -134,7 +138,10 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
 
     // Add @Override annotation only if implementing IBuilderBase interface
     if (builderDto.getConfiguration().shouldImplementBuilderBase()) {
-      method.addAnnotation("java.lang", "Override");
+      org.javahelpers.simple.builders.processor.dtos.AnnotationDto overrideAnnotation =
+          new org.javahelpers.simple.builders.processor.dtos.AnnotationDto();
+      overrideAnnotation.setAnnotationType(JavaLangMapper.map2TypeName(Override.class));
+      method.addAnnotation(overrideAnnotation);
     }
 
     // Create method implementation with validation and setter application
@@ -208,8 +215,7 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
   }
 
   /** Creates the static create() method. */
-  private MethodDto createStaticCreateMethod(
-      BuilderDefinitionDto builderDto, ProcessingContext context) {
+  private MethodDto createStaticCreateMethod(BuilderDefinitionDto builderDto) {
     MethodDto method = new MethodDto();
     method.setMethodName("create");
     method.setOrdering(ORDERING_CREATE);
@@ -249,8 +255,7 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
   }
 
   /** Creates the toString() method. */
-  private MethodDto createToStringMethod(
-      BuilderDefinitionDto builderDto, ProcessingContext context) {
+  private MethodDto createToStringMethod(BuilderDefinitionDto builderDto) {
     MethodDto method = new MethodDto();
     method.setMethodName("toString");
     method.setReturnType(
@@ -258,7 +263,9 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
     method.setOrdering(ORDERING_TO_STRING);
     method.setPriority(MethodDto.PRIORITY_HIGHEST);
     method.setModifier(Modifier.PUBLIC);
-    method.addAnnotation("java.lang", "Override");
+    AnnotationDto overrideAnnotation = new AnnotationDto();
+    overrideAnnotation.setAnnotationType(JavaLangMapper.map2TypeName(Override.class));
+    method.addAnnotation(overrideAnnotation);
 
     // Create method implementation
     method.setCode(
@@ -297,42 +304,19 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
   /** Creates the append calls for toString() method. */
   private String createToStringAppendCalls(BuilderDefinitionDto builderDto) {
     StringBuilder sb = new StringBuilder();
-    boolean firstField = true;
 
-    // Process constructor fields
-    for (FieldDto field : builderDto.getConstructorFieldsForBuilder()) {
-      if (firstField) {
-        sb.append("\n        .append(\"")
-            .append(field.getFieldName())
-            .append("\", this.")
-            .append(field.getFieldName())
-            .append(")");
-        firstField = false;
-      } else {
-        sb.append("\n        .append(\"")
-            .append(field.getFieldName())
-            .append("\", this.")
-            .append(field.getFieldName())
-            .append(")");
-      }
-    }
+    // Combine all fields and process them
+    List<FieldDto> allFields = new ArrayList<>();
+    allFields.addAll(builderDto.getConstructorFieldsForBuilder());
+    allFields.addAll(builderDto.getSetterFieldsForBuilder());
 
-    // Process setter fields
-    for (FieldDto field : builderDto.getSetterFieldsForBuilder()) {
-      if (firstField) {
-        sb.append("\n        .append(\"")
-            .append(field.getFieldName())
-            .append("\", this.")
-            .append(field.getFieldName())
-            .append(")");
-        firstField = false;
-      } else {
-        sb.append("\n        .append(\"")
-            .append(field.getFieldName())
-            .append("\", this.")
-            .append(field.getFieldName())
-            .append(")");
-      }
+    for (int i = 0; i < allFields.size(); i++) {
+      FieldDto field = allFields.get(i);
+      sb.append("\n        .append(\"")
+          .append(field.getFieldName())
+          .append("\", this.")
+          .append(field.getFieldName())
+          .append(")");
     }
 
     return sb.toString();
