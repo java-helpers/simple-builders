@@ -142,50 +142,31 @@ public class VarArgsHelperGenerator implements MethodGenerator {
     }
     String transform = wrapConcreteCollectionType(fieldType, baseExpression);
 
-    return createFieldSetterWithTransform(
-        field.getFieldNameEstimated(),
-        field.getFieldName(),
-        field.getJavaDoc(),
-        transform,
-        parameterType,
-        List.of(),
-        builderType,
-        context);
+    return createFieldSetterWithTransform(field, transform, builderType, context);
   }
 
   /**
    * Creates a field setter method with optional transform and annotations.
    *
-   * @param fieldName the name of the method (estimated field name)
-   * @param fieldNameInBuilder the name of the builder field (may be renamed)
-   * @param fieldJavadoc the javadoc for the field
+   * @param field the field DTO containing all field information
    * @param transform optional transform expression (e.g., "Optional.of(%s)")
-   * @param fieldType the type of the field
-   * @param annotations annotations to apply to the parameter
    * @param builderType the builder type for the return type
    * @param context processing context
    * @return the method DTO for the setter
    */
   private MethodDto createFieldSetterWithTransform(
-      String fieldName,
-      String fieldNameInBuilder,
-      String fieldJavadoc,
-      String transform,
-      TypeName fieldType,
-      List<AnnotationDto> annotations,
-      TypeName builderType,
-      ProcessingContext context) {
+      FieldDto field, String transform, TypeName builderType, ProcessingContext context) {
 
     MethodParameterDto parameter = new MethodParameterDto();
-    parameter.setParameterName(fieldName);
-    parameter.setParameterTypeName(fieldType);
+    parameter.setParameterName(field.getFieldName());
+    parameter.setParameterTypeName(field.getFieldType());
 
-    if (annotations != null) {
-      annotations.forEach(parameter::addAnnotation);
+    if (field.getParameterAnnotations() != null) {
+      field.getParameterAnnotations().forEach(parameter::addAnnotation);
     }
 
     MethodDto methodDto = new MethodDto();
-    methodDto.setMethodName(generateBuilderMethodName(fieldName, context));
+    methodDto.setMethodName(generateBuilderMethodName(field.getFieldName(), context));
     methodDto.setReturnType(builderType);
     methodDto.addParameter(parameter);
     setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
@@ -202,7 +183,7 @@ public class VarArgsHelperGenerator implements MethodGenerator {
         this.$fieldName:N = $builderFieldWrapper:T.changedValue($dtoMethodParams:N);
         return this;
         """);
-    methodDto.addArgument(ARG_FIELD_NAME, fieldNameInBuilder);
+    methodDto.addArgument(ARG_FIELD_NAME, field.getFieldName());
     methodDto.addArgument(ARG_DTO_METHOD_PARAMS, params);
     methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
 
@@ -215,7 +196,10 @@ public class VarArgsHelperGenerator implements MethodGenerator {
         @param %s %s
         @return current instance of builder
         """
-            .formatted(fieldName, parameter.getParameterName(), fieldJavadoc));
+            .formatted(
+                field.getFieldName(),
+                parameter.getParameterName(),
+                field.getJavaDoc() != null ? field.getJavaDoc() : ""));
 
     return methodDto;
   }
