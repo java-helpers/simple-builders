@@ -612,36 +612,19 @@ Deactivates specific method generators and builder enhancers by class name patte
 
 When you want to replace a built-in generator or enhancer with your own custom implementation, you first deactivate the default component, then register your custom one via ServiceLoader.
 
+For detailed instructions on creating custom generators and enhancers, see [**CUSTOMIZING.md**](CUSTOMIZING.md).
+
 **Pattern Matching**:
 - **Exact match**: `ConditionalEnhancer` - deactivates exactly this class
 - **Wildcard suffix**: `*HelperGenerator` - deactivates all classes ending with HelperGenerator
 - **Wildcard prefix**: `String*` - deactivates all classes starting with String
 - **Wildcard anywhere**: `*Consumer*` - deactivates all classes containing Consumer
-- **Package pattern**: `org.example.*` - deactivates all classes in org.example package
-- **Multiple patterns**: `Pattern1,Pattern2,Pattern3` - comma-separated list
 
-**Override Examples**:
+**Feature Toggling vs Component Override**:
+- **Feature toggling**: Use `@SimpleBuilder.Options(generateConditionalHelper = DISABLED)`
+- **Component override**: Use `deactivateGenerationComponents` + custom ServiceLoader implementation
 
-```bash
-# Override the default conditional enhancer with a custom implementation
--Asimplebuilder.deactivateGenerationComponents=ConditionalEnhancer
-
-# Override all string helper generators with custom implementations
--Asimplebuilder.deactivateGenerationComponents=StringFormatHelperGenerator,StringBuilderConsumerGenerator
-
-# Override default collection helpers with custom optimized versions
--Asimplebuilder.deactivateGenerationComponents=*HelperGenerator
-```
-
-**Available Default Components**:
-- **Generators**: `BasicSetterGenerator`, `SupplierMethodGenerator`, `FieldConsumerGenerator`, `BuilderConsumerGenerator`, `MapConsumerGenerator`, `ListConsumerGenerator`, `SetConsumerGenerator`, `StringFormatHelperGenerator`, `VarArgsHelperGenerator`
-- **Enhancers**: `ConditionalEnhancer`, `GeneratedAnnotationEnhancer`, `JacksonAnnotationEnhancer`, `ClassJavaDocEnhancer`
-
-**Important Notes**:
-- This affects all builders in the project
-- For feature toggling, use `@SimpleBuilder.Options` or compiler options like `generateConditionalHelper`
-- Custom components must be registered via ServiceLoader to be discovered
-- Use higher priority values in custom components to ensure they're preferred
+See [**CUSTOMIZING.md**](CUSTOMIZING.md) for complete implementation examples and best practices.
 
 ---
 
