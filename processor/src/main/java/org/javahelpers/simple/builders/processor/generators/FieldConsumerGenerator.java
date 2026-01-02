@@ -25,11 +25,9 @@
 package org.javahelpers.simple.builders.processor.generators;
 
 import static org.javahelpers.simple.builders.processor.generators.MethodGeneratorUtil.*;
-import static org.javahelpers.simple.builders.processor.util.JavaLangMapper.map2TypeName;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Consumer;
 import org.javahelpers.simple.builders.processor.dtos.*;
 import org.javahelpers.simple.builders.processor.util.ProcessingContext;
 
@@ -114,7 +112,7 @@ public class FieldConsumerGenerator implements MethodGenerator {
       TypeName fieldType,
       TypeName builderType,
       ProcessingContext context) {
-    TypeNameGeneric consumerType = new TypeNameGeneric(map2TypeName(Consumer.class), fieldType);
+    TypeNameGeneric consumerType = MethodGeneratorUtil.createConsumerType(fieldType);
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName(fieldName + SUFFIX_CONSUMER);
     parameter.setParameterTypeName(consumerType);

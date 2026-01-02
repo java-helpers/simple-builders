@@ -219,8 +219,7 @@ public final class MethodGeneratorUtil {
       Map<String, TypeName> additionalArguments,
       TypeName returnBuilderType,
       ProcessingContext context) {
-    TypeNameGeneric consumerType =
-        new TypeNameGeneric(JavaLangMapper.map2TypeName(Consumer.class), consumerBuilderType);
+    TypeNameGeneric consumerType = createConsumerType(consumerBuilderType);
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName(field.getFieldName() + BUILDER_SUFFIX + SUFFIX_CONSUMER);
     parameter.setParameterTypeName(consumerType);
@@ -256,6 +255,16 @@ public final class MethodGeneratorUtil {
         """
             .formatted(field.getFieldName(), parameter.getParameterName(), field.getJavaDoc()));
     return methodDto;
+  }
+
+  /**
+   * Creates a Consumer<BuilderType> type.
+   *
+   * @param builderType the builder type
+   * @return a Consumer<BuilderType> type
+   */
+  public static TypeNameGeneric createConsumerType(TypeName builderType) {
+    return new TypeNameGeneric(JavaLangMapper.map2TypeName(Consumer.class), builderType);
   }
 
   /**

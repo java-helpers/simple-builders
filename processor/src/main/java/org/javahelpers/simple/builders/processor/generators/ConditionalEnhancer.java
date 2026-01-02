@@ -24,7 +24,6 @@
 package org.javahelpers.simple.builders.processor.generators;
 
 import java.util.function.BooleanSupplier;
-import java.util.function.Consumer;
 import javax.lang.model.element.Modifier;
 import org.javahelpers.simple.builders.processor.dtos.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.dtos.MethodDto;
@@ -125,7 +124,7 @@ public class ConditionalEnhancer implements BuilderEnhancer {
     method.setModifier(Modifier.PUBLIC);
 
     // Add parameters
-    addConditionalParameters(method, builderDto.getBuilderTypeName());
+    addConditionalPositiveNegativeParameters(method, builderDto.getBuilderTypeName());
 
     // Create method implementation
     method.setCode(
@@ -179,13 +178,13 @@ public class ConditionalEnhancer implements BuilderEnhancer {
   }
 
   /** Adds parameters for the conditional(BooleanSupplier, Consumer, Consumer) method. */
-  private void addConditionalParameters(MethodDto method, TypeName builderType) {
+  private void addConditionalPositiveNegativeParameters(MethodDto method, TypeName builderType) {
     // BooleanSupplier condition parameter
     addParameter(method, "condition", JavaLangMapper.map2TypeName(BooleanSupplier.class));
     // Consumer<BuilderType> trueCase parameter
-    addParameter(method, "trueCase", createConsumerType(builderType));
+    addParameter(method, "trueCase", MethodGeneratorUtil.createConsumerType(builderType));
     // Consumer<BuilderType> falseCase parameter
-    addParameter(method, "falseCase", createConsumerType(builderType));
+    addParameter(method, "falseCase", MethodGeneratorUtil.createConsumerType(builderType));
   }
 
   /** Adds parameters for the conditional(BooleanSupplier, Consumer) method. */
@@ -193,7 +192,7 @@ public class ConditionalEnhancer implements BuilderEnhancer {
     // BooleanSupplier condition parameter
     addParameter(method, "condition", JavaLangMapper.map2TypeName(BooleanSupplier.class));
     // Consumer<BuilderType> yesCondition parameter
-    addParameter(method, "yesCondition", createConsumerType(builderType));
+    addParameter(method, "yesCondition", MethodGeneratorUtil.createConsumerType(builderType));
   }
 
   /** Adds a parameter to the method. */
@@ -203,11 +202,5 @@ public class ConditionalEnhancer implements BuilderEnhancer {
     parameter.setParameterName(name);
     parameter.setParameterTypeName(type);
     method.addParameter(parameter);
-  }
-
-  /** Creates a Consumer<BuilderType> type. */
-  private TypeName createConsumerType(TypeName builderType) {
-    return new org.javahelpers.simple.builders.processor.dtos.TypeNameGeneric(
-        JavaLangMapper.map2TypeName(Consumer.class), builderType);
   }
 }

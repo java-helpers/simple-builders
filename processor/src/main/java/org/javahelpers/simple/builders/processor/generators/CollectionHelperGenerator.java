@@ -29,7 +29,6 @@ import static org.javahelpers.simple.builders.processor.util.JavaLangMapper.map2
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.builders.ArrayListBuilder;
 import org.javahelpers.simple.builders.processor.dtos.*;
@@ -261,8 +260,7 @@ public class CollectionHelperGenerator implements MethodGenerator {
       TypeName returnBuilderType,
       ProcessingContext context) {
     TypeNameGeneric builderTypeGeneric = new TypeNameGeneric(collectionBuilderType, elementType);
-    TypeNameGeneric consumerType =
-        new TypeNameGeneric(map2TypeName(Consumer.class), builderTypeGeneric);
+    TypeNameGeneric consumerType = MethodGeneratorUtil.createConsumerType(builderTypeGeneric);
 
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName(fieldName + BUILDER_SUFFIX + SUFFIX_CONSUMER);

@@ -23,7 +23,6 @@
  */
 package org.javahelpers.simple.builders.processor.generators;
 
-import java.util.function.Consumer;
 import org.javahelpers.simple.builders.processor.dtos.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.dtos.MethodDto;
 import org.javahelpers.simple.builders.processor.dtos.MethodParameterDto;
@@ -147,8 +146,7 @@ public class WithInterfaceEnhancer implements BuilderEnhancer {
     parameter.setParameterName("b");
     // For interface methods, we store the full type as a string
     TypeNameGeneric consumerType =
-        new TypeNameGeneric(
-            JavaLangMapper.map2TypeName(Consumer.class), builderDef.getBuilderTypeName());
+        MethodGeneratorUtil.createConsumerType(builderDef.getBuilderTypeName());
     parameter.setParameterTypeName(consumerType);
     method.addParameter(parameter);
 

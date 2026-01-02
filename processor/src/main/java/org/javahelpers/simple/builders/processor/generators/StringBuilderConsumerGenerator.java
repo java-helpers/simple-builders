@@ -30,7 +30,6 @@ import static org.javahelpers.simple.builders.processor.util.TypeNameAnalyser.*;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Consumer;
 import org.javahelpers.simple.builders.processor.dtos.*;
 import org.javahelpers.simple.builders.processor.util.ProcessingContext;
 
@@ -117,8 +116,7 @@ public class StringBuilderConsumerGenerator implements MethodGenerator {
       TypeName builderType,
       ProcessingContext context) {
     TypeName stringBuilderType = map2TypeName(StringBuilder.class);
-    TypeNameGeneric consumerType =
-        new TypeNameGeneric(map2TypeName(Consumer.class), stringBuilderType);
+    TypeNameGeneric consumerType = createConsumerType(stringBuilderType);
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName(fieldName + "StringBuilderConsumer");
     parameter.setParameterTypeName(consumerType);
