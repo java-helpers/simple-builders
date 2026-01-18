@@ -31,6 +31,7 @@ import static org.javahelpers.simple.builders.processor.util.TypeNameAnalyser.is
 
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.commons.collections4.CollectionUtils;
 import org.javahelpers.simple.builders.processor.dtos.*;
 import org.javahelpers.simple.builders.processor.util.ProcessingContext;
 
