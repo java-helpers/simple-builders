@@ -35,9 +35,9 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
 /**
  * Generates ArrayListBuilder consumer methods for array fields.
  *
- * <p>This generator creates methods that accept a {@code Consumer<ArrayListBuilder<FieldType>>} to build
- * array fields using a fluent builder API. This provides a convenient way to construct arrays using
- * the ArrayListBuilder utility.
+ * <p>This generator creates methods that accept a {@code Consumer<ArrayListBuilder<FieldType>>} to
+ * build array fields using a fluent builder API. This provides a convenient way to construct arrays
+ * using the ArrayListBuilder utility.
  *
  * <h3>Generated Methods Example:</h3>
  *

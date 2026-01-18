@@ -39,7 +39,8 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
  * Generates Consumer-based methods for Set fields with collection builder support.
  *
  * <p>This generator creates methods that accept {@code Consumer<HashSetBuilder<Fieldtype>>} or
- * {@code Consumer<HashSetBuilderWithElementBuilders<Fieldtype, FieldBuilderType>>} depending on whether the element type has a builder.
+ * {@code Consumer<HashSetBuilderWithElementBuilders<Fieldtype, FieldBuilderType>>} depending on
+ * whether the element type has a builder.
  *
  * <h3>Generated Methods Example:</h3>
  *

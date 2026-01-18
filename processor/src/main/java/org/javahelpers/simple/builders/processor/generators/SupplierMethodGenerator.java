@@ -100,8 +100,8 @@ public class SupplierMethodGenerator implements MethodGenerator {
   }
 
   /**
-   * Creates a supplier method that accepts a {@code Supplier<T>}
-   * and invokes it to get the field value.
+   * Creates a supplier method that accepts a {@code Supplier<T>} and invokes it to get the field
+   * value.
    *
    * @param fieldName the estimated field name (used for method name)
    * @param fieldNameInBuilder the builder field name (may be renamed)

@@ -312,8 +312,8 @@ public @interface SimpleBuilder {
     OptionState generateAddToCollectionHelpers() default OptionState.UNSET;
 
     /**
-     * Generate unboxed optional methods that accept the inner type T directly instead of
-     * {@code Optional<T}>. <br>
+     * Generate unboxed optional methods that accept the inner type T directly instead of {@code
+     * Optional<T>}. <br>
      * For Optional fields, this generates a setter that accepts T and wraps it with
      * Optional.ofNullable().
      *

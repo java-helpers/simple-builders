@@ -36,8 +36,8 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
 /**
  * Generates Consumer-based methods for Map fields with HashMapBuilder support.
  *
- * <p>This generator creates methods that accept {@code Consumer<HashMapBuilder<Keytype, Valuetype>>} to build map
- * instances.
+ * <p>This generator creates methods that accept {@code Consumer<HashMapBuilder<Keytype,
+ * Valuetype>>} to build map instances.
  *
  * <h3>Generated Methods Example:</h3>
  *
