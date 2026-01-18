@@ -79,21 +79,24 @@ public class CustomValidationGenerator implements MethodGenerator {
         method.setReturnType(builderType);
         
         // Add parameter
+        String parameterName = fieldName;
         MethodParameterDto parameter = new MethodParameterDto();
-        parameter.setParameterName(fieldName);
+        parameter.setParameterName(parameterName);
         parameter.setParameterTypeName(new TypeName("java.lang", "String"));
         method.addParameter(parameter);
         
         method.setCode("""
-            if (!isValidEmail(%s)) {
+            if (!isValidEmail(%s != null && %s.contains("@"))) {
                 throw new IllegalArgumentException("Invalid email: " + %s);
             }
-            return this.%s(%s);
-            """.formatted(fieldName, fieldName, fieldName, fieldName));
-        method.addArgument("fieldName", fieldName);
-        method.addArgument("fieldName", fieldName);
-        method.addArgument("fieldName", fieldName);
-        method.addArgument("fieldName", fieldName);
+            this.%s = $builderFieldWrapper:T.changedValue(%s);
+            return this;
+            """.formatted(parameterName, 
+            parameterName, 
+            parameterName, 
+            fieldName, 
+            parameterName));
+        method.addArgument("builderFieldWrapper", TRACKED_VALUE_TYPE);
             
         return List.of(method);
     }
@@ -101,14 +104,6 @@ public class CustomValidationGenerator implements MethodGenerator {
     @Override
     public int getPriority() {
         return 1000; // Higher than default generators
-    }
-    
-    private boolean isValidEmail(String email) {
-        return email != null && email.contains("@");
-    }
-    
-    private String capitalize(String str) {
-        return str.substring(0, 1).toUpperCase() + str.substring(1);
     }
 }
 ```
