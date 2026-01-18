@@ -162,9 +162,9 @@ public final class MethodGeneratorUtil {
       field.getParameterAnnotations().forEach(parameter::addAnnotation);
     }
 
-    MethodDto methodDto = new MethodDto();
-    methodDto.setMethodName(generateBuilderMethodName(field.getFieldNameEstimated(), context));
-    methodDto.setReturnType(builderType);
+    MethodDto methodDto =
+        new MethodDto(
+            generateBuilderMethodName(field.getFieldNameEstimated(), context), builderType);
     methodDto.addParameter(parameter);
     setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
 
@@ -223,9 +223,8 @@ public final class MethodGeneratorUtil {
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName(field.getFieldName() + BUILDER_SUFFIX + SUFFIX_CONSUMER);
     parameter.setParameterTypeName(consumerType);
-    MethodDto methodDto = new MethodDto();
-    methodDto.setMethodName(generateBuilderMethodName(field.getFieldName(), context));
-    methodDto.setReturnType(returnBuilderType);
+    MethodDto methodDto =
+        new MethodDto(generateBuilderMethodName(field.getFieldName(), context), returnBuilderType);
     methodDto.addParameter(parameter);
     setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
 

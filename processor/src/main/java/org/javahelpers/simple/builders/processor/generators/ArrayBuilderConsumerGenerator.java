@@ -120,9 +120,8 @@ public class ArrayBuilderConsumerGenerator implements MethodGenerator {
     parameter.setParameterName(fieldName + BUILDER_SUFFIX + SUFFIX_CONSUMER);
     parameter.setParameterTypeName(consumerType);
 
-    MethodDto methodDto = new MethodDto();
-    methodDto.setMethodName(generateBuilderMethodName(fieldName, context));
-    methodDto.setReturnType(returnBuilderType);
+    MethodDto methodDto =
+        new MethodDto(generateBuilderMethodName(fieldName, context), returnBuilderType);
     methodDto.addParameter(parameter);
     setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
     methodDto.setCode(

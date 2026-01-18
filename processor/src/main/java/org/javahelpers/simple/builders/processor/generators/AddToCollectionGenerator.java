@@ -133,10 +133,8 @@ public class AddToCollectionGenerator implements MethodGenerator {
       TypeName elementType,
       TypeName builderType,
       ProcessingContext context) {
-    MethodDto methodDto = new MethodDto();
     String methodName = "add2" + StringUtils.capitalize(fieldNameEstimated);
-    methodDto.setMethodName(methodName);
-    methodDto.setReturnType(builderType);
+    MethodDto methodDto = new MethodDto(methodName, builderType);
 
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName("element");

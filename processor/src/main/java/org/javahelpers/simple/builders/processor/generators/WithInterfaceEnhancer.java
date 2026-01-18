@@ -134,12 +134,9 @@ public class WithInterfaceEnhancer implements BuilderEnhancer {
    * @return the method definition
    */
   private MethodDto createWithConsumerMethod(BuilderDefinitionDto builderDef) {
-    MethodDto method = new MethodDto();
-    method.setMethodName("with");
-
     // Return type is the DTO type
     TypeName dtoType = builderDef.getBuildingTargetTypeName();
-    method.setReturnType(dtoType);
+    MethodDto method = new MethodDto("with", dtoType);
 
     // Parameter: Consumer<BuilderType> b
     MethodParameterDto parameter = new MethodParameterDto();
@@ -186,11 +183,8 @@ public class WithInterfaceEnhancer implements BuilderEnhancer {
    * @return the method definition
    */
   private MethodDto createWithBuilderMethod(BuilderDefinitionDto builderDef) {
-    MethodDto method = new MethodDto();
-    method.setMethodName("with");
-
     // Return type is the Builder type
-    method.setReturnType(builderDef.getBuilderTypeName());
+    MethodDto method = new MethodDto("with", builderDef.getBuilderTypeName());
 
     // Add implementation with validation to catch wrong implementations
     method.setCode(

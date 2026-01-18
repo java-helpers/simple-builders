@@ -120,8 +120,7 @@ public class StringBuilderConsumerGenerator implements MethodGenerator {
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName(fieldName + "StringBuilderConsumer");
     parameter.setParameterTypeName(consumerType);
-    MethodDto methodDto = new MethodDto();
-    methodDto.setMethodName(generateBuilderMethodName(fieldName, context));
+    MethodDto methodDto = new MethodDto(generateBuilderMethodName(fieldName, context), builderType);
     methodDto.addParameter(parameter);
     setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
     methodDto.setCode(

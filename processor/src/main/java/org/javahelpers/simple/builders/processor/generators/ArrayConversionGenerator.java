@@ -103,9 +103,7 @@ public class ArrayConversionGenerator implements MethodGenerator {
     parameter.setParameterName(fieldName);
     parameter.setParameterTypeName(listType);
 
-    MethodDto methodDto = new MethodDto();
-    methodDto.setMethodName(generateBuilderMethodName(fieldName, context));
-    methodDto.setReturnType(builderType);
+    MethodDto methodDto = new MethodDto(generateBuilderMethodName(fieldName, context), builderType);
     methodDto.addParameter(parameter);
     setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
     methodDto.setCode(

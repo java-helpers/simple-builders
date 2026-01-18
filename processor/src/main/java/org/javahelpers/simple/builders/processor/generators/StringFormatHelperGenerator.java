@@ -170,9 +170,7 @@ public class StringFormatHelperGenerator implements MethodGenerator {
     argsParam.setParameterName("args");
     argsParam.setParameterTypeName(new TypeNameArray(TypeName.of(Object.class)));
 
-    MethodDto methodDto = new MethodDto();
-    methodDto.setMethodName(generateBuilderMethodName(fieldName, context));
-    methodDto.setReturnType(builderType);
+    MethodDto methodDto = new MethodDto(generateBuilderMethodName(fieldName, context), builderType);
     methodDto.addParameter(formatParam);
     methodDto.addParameter(argsParam);
     setMethodAccessModifier(methodDto, getMethodAccessModifier(context));

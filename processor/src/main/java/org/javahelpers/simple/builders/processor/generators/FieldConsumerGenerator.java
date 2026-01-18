@@ -116,9 +116,7 @@ public class FieldConsumerGenerator implements MethodGenerator {
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName(fieldName + SUFFIX_CONSUMER);
     parameter.setParameterTypeName(consumerType);
-    MethodDto methodDto = new MethodDto();
-    methodDto.setMethodName(generateBuilderMethodName(fieldName, context));
-    methodDto.setReturnType(builderType);
+    MethodDto methodDto = new MethodDto(generateBuilderMethodName(fieldName, context), builderType);
     methodDto.addParameter(parameter);
     setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
     methodDto.setCode(

@@ -116,9 +116,7 @@ public class ConditionalEnhancer implements BuilderEnhancer {
 
   /** Creates the conditional(BooleanSupplier, Consumer, Consumer) method. */
   private MethodDto createConditionalMethod(BuilderDefinitionDto builderDto) {
-    MethodDto method = new MethodDto();
-    method.setMethodName("conditional");
-    method.setReturnType(builderDto.getBuilderTypeName());
+    MethodDto method = new MethodDto("conditional", builderDto.getBuilderTypeName());
     method.setOrdering(ORDERING_CONDITIONAL);
     method.setPriority(MethodDto.PRIORITY_HIGHEST);
     method.setModifier(Modifier.PUBLIC);
@@ -152,9 +150,7 @@ public class ConditionalEnhancer implements BuilderEnhancer {
 
   /** Creates the conditional(BooleanSupplier, Consumer) method. */
   private MethodDto createConditionalPositiveOnlyMethod(BuilderDefinitionDto builderDto) {
-    MethodDto method = new MethodDto();
-    method.setMethodName("conditional");
-    method.setReturnType(builderDto.getBuilderTypeName());
+    MethodDto method = new MethodDto("conditional", builderDto.getBuilderTypeName());
     method.setOrdering(ORDERING_CONDITIONAL_POSITIVE_ONLY);
     method.setPriority(MethodDto.PRIORITY_HIGHEST);
     method.setModifier(Modifier.PUBLIC);

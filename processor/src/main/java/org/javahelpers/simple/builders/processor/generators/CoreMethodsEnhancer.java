@@ -126,12 +126,10 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
 
   /** Creates the build() method. */
   private MethodDto createBuildMethod(BuilderDefinitionDto builderDto) {
-    MethodDto method = new MethodDto();
-    method.setMethodName("build");
     TypeName returnType =
         MethodGeneratorUtil.createGenericTypeName(
             builderDto.getBuildingTargetTypeName(), builderDto.getGenerics());
-    method.setReturnType(returnType);
+    MethodDto method = new MethodDto("build", returnType);
     method.setOrdering(ORDERING_BUILD);
     method.setPriority(MethodDto.PRIORITY_HIGHEST);
     method.setModifier(Modifier.PUBLIC);
@@ -216,16 +214,14 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
 
   /** Creates the static create() method. */
   private MethodDto createStaticCreateMethod(BuilderDefinitionDto builderDto) {
-    MethodDto method = new MethodDto();
-    method.setMethodName("create");
+    TypeName returnType =
+        MethodGeneratorUtil.createGenericTypeName(
+            builderDto.getBuilderTypeName(), builderDto.getGenerics());
+    MethodDto method = new MethodDto("create", returnType);
     method.setOrdering(ORDERING_CREATE);
     method.setPriority(MethodDto.PRIORITY_HIGHEST);
     method.setModifier(Modifier.PUBLIC);
     method.setStatic(true);
-    TypeName returnType =
-        MethodGeneratorUtil.createGenericTypeName(
-            builderDto.getBuilderTypeName(), builderDto.getGenerics());
-    method.setReturnType(returnType);
 
     // Use appropriate code template based on whether we have generics
     if (builderDto.getGenerics().isEmpty()) {
@@ -256,10 +252,10 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
 
   /** Creates the toString() method. */
   private MethodDto createToStringMethod(BuilderDefinitionDto builderDto) {
-    MethodDto method = new MethodDto();
-    method.setMethodName("toString");
-    method.setReturnType(
-        new org.javahelpers.simple.builders.processor.dtos.TypeName("java.lang", "String"));
+    MethodDto method =
+        new MethodDto(
+            "toString",
+            new org.javahelpers.simple.builders.processor.dtos.TypeName("java.lang", "String"));
     method.setOrdering(ORDERING_TO_STRING);
     method.setPriority(MethodDto.PRIORITY_HIGHEST);
     method.setModifier(Modifier.PUBLIC);

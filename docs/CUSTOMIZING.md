@@ -74,9 +74,7 @@ public class CustomValidationGenerator implements MethodGenerator {
         String methodName = "validated" + capitalize(fieldName);
         
         // Generate validation setter method
-        MethodDto method = new MethodDto();
-        method.setMethodName(methodName);
-        method.setReturnType(builderType);
+        MethodDto method = new MethodDto(methodName, builderType);
         
         // Add parameter
         String parameterName = fieldName;
@@ -131,7 +129,7 @@ public class CustomValidationEnhancer implements BuilderEnhancer {
     public void enhanceBuilder(BuilderDefinitionDto builderDto, ProcessingContext context) {
         // Add validation method to builder
         MethodDto validateMethod = createValidateMethod(builderDto);
-        builderDto.addCoreMethod(validateMethodMethod);
+        builderDto.addCoreMethod(validateMethod);
         
         // Add @Valid annotation if available
         if (isValidationAvailable(context)) {
@@ -401,9 +399,7 @@ public class DateParserGenerator implements MethodGenerator {
         String fieldName = field.getFieldName();
         String methodName = fieldName + "FromString";
         
-        MethodDto method = new MethodDto();
-        method.setMethodName(methodName);
-        method.setReturnType(builderType);
+        MethodDto method = new MethodDto(methodName, builderType);
         
         // Add parameter
         String parameterName = fieldName + "String";
@@ -448,9 +444,7 @@ public class BuilderFactoryEnhancer implements BuilderEnhancer {
         TypeName dtoType = builderDto.getTargetTypeName();
         
         // Add static factory method
-        MethodDto factoryMethod = new MethodDto();
-        factoryMethod.setMethodName("from");
-        factoryMethod.setReturnType(builderType);
+        MethodDto factoryMethod = new MethodDto("from", builderType);
         factoryMethod.setStatic(true);
         
         // Add parameter

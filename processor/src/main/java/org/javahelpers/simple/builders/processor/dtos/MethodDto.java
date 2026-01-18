@@ -72,6 +72,22 @@ public class MethodDto {
   /** Definition of inner implementation for method. */
   private final MethodCodeDto methodCodeDto = new MethodCodeDto();
 
+  /** Default constructor. */
+  public MethodDto() {
+    // Default constructor
+  }
+
+  /**
+   * Constructor with method name and return type.
+   *
+   * @param methodName the name of the method
+   * @param returnType the return type of the method
+   */
+  public MethodDto(String methodName, TypeName returnType) {
+    this.methodName = methodName;
+    this.returnType = returnType;
+  }
+
   /**
    * Sets the priority for this method. Higher values win when signatures clash. Priority levels:
    *
