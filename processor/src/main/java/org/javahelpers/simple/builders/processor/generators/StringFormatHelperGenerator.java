@@ -90,7 +90,7 @@ public class StringFormatHelperGenerator implements MethodGenerator {
     if (isParameterizedOptional(fieldType)) {
       TypeNameGeneric genericType = (TypeNameGeneric) fieldType;
       List<TypeName> innerTypes = genericType.getInnerTypeArguments();
-      if (!innerTypes.isEmpty() && isString(innerTypes.get(0))) {
+      if (CollectionUtils.isNotEmpty(innerTypes) && isString(innerTypes.get(0))) {
         return true;
       }
     }

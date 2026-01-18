@@ -28,6 +28,7 @@ import static org.javahelpers.simple.builders.processor.util.TypeNameAnalyser.is
 
 import java.util.Collections;
 import java.util.List;
+import org.apache.commons.collections4.CollectionUtils;
 import org.javahelpers.simple.builders.processor.dtos.*;
 import org.javahelpers.simple.builders.processor.util.ProcessingContext;
 
@@ -84,7 +85,7 @@ public class OptionalHelperGenerator implements MethodGenerator {
     TypeNameGeneric genericType = (TypeNameGeneric) field.getFieldType();
     List<TypeName> innerTypes = genericType.getInnerTypeArguments();
 
-    if (innerTypes.isEmpty()) {
+    if (CollectionUtils.isEmpty(innerTypes)) {
       return Collections.emptyList();
     }
 
