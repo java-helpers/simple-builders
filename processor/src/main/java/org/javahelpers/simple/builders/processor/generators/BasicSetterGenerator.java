@@ -88,7 +88,7 @@ public class BasicSetterGenerator implements MethodGenerator {
       FieldDto field, TypeName builderType, ProcessingContext context) {
 
     MethodDto setterMethod =
-        MethodGeneratorUtil.createFieldSetterWithTransform(
+        MethodGeneratorUtil.createBuilderMethodForFieldWithTransform(
             field, null, field.getFieldType(), builderType, context);
 
     return Collections.singletonList(setterMethod);

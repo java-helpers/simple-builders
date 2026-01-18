@@ -147,7 +147,7 @@ public final class MethodGeneratorUtil {
    * @param context processing context
    * @return the method DTO for the setter
    */
-  public static MethodDto createFieldSetterWithTransform(
+  public static MethodDto createBuilderMethodForFieldWithTransform(
       FieldDto field,
       String transform,
       TypeName parameterType,

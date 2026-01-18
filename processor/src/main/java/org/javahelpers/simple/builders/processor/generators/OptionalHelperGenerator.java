@@ -90,7 +90,7 @@ public class OptionalHelperGenerator implements MethodGenerator {
 
     TypeName innerType = innerTypes.get(0);
     MethodDto method =
-        MethodGeneratorUtil.createFieldSetterWithTransform(
+        MethodGeneratorUtil.createBuilderMethodForFieldWithTransform(
             field, "Optional.ofNullable(%s)", innerType, builderType, context);
 
     return Collections.singletonList(method);

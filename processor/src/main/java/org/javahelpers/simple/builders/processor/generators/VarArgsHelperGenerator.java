@@ -139,7 +139,7 @@ public class VarArgsHelperGenerator implements MethodGenerator {
     }
     String transform = MethodGeneratorUtil.wrapConcreteCollectionType(fieldType, baseExpression);
 
-    return MethodGeneratorUtil.createFieldSetterWithTransform(
+    return MethodGeneratorUtil.createBuilderMethodForFieldWithTransform(
         field, transform, parameterType, builderType, context);
   }
 }
