@@ -92,10 +92,11 @@ public class SponsorDtoBuilder implements IBuilderBase<SponsorDto> {
   }
 
   /**
-   * Sets the value for <code>name</code>.
+   * Sets the String value for <code>name</code> by using String.format(format, args).
+   * See {@link String#format(String, Object...)} for details.
    *
-   * @param format name
-   * @param args name
+   * @param format A format string
+   * @param args Arguments referenced by the format specifiers in the format string.
    * @return current instance of builder
    */
   public SponsorDtoBuilder name(String format, Object... args) {

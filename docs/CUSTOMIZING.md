@@ -244,7 +244,7 @@ compileJava {
 | `MapConsumerGenerator` | Map consumer methods | 80 |
 | `ListConsumerGenerator` | List consumer methods | 80 |
 | `SetConsumerGenerator` | Set consumer methods | 80 |
-| `StringFormatHelperGenerator` | String.format helpers | 50 |
+| `StringFormatHelperGenerator` | String.format helpers | 80 |
 | `VarArgsHelperGenerator` | Varargs helpers | 50 |
 | `AddToCollectionGenerator` | add2FieldName methods for List/Set | 30 |
 | `ArrayConversionGenerator` | Array-from-List conversion methods | 35 |

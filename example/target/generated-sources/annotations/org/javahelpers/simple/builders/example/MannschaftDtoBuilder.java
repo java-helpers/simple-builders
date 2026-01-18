@@ -119,10 +119,11 @@ public class MannschaftDtoBuilder implements IBuilderBase<MannschaftDto> {
   }
 
   /**
-   * Sets the value for <code>name</code>.
+   * Sets the String value for <code>name</code> by using String.format(format, args).
+   * See {@link String#format(String, Object...)} for details.
    *
-   * @param format name
-   * @param args name
+   * @param format A format string
+   * @param args Arguments referenced by the format specifiers in the format string.
    * @return current instance of builder
    */
   public MannschaftDtoBuilder name(String format, Object... args) {

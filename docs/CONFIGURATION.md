@@ -391,19 +391,26 @@ PersonDto person = PersonDtoBuilder.create()
 
 **Default**: `ENABLED` | **Compiler Option**: `-Asimplebuilder.generateStringFormatHelpers=ENABLED|DISABLED`
 
-Generates `String.format()` helper methods for String fields.
+Generates `String.format()` helper methods for String and Optional<String> fields.
 
 **When ENABLED**:
 ```java
-// Generated method
-public PersonDtoBuilder name(String format, Object... args) {
-    this.name = changedValue(String.format(format, args));
-    return this;
+// For String title field:
+public BookDtoBuilder title(String format, Object... args) {
+  this.title = changedValue(String.format(format, args));
+  return this;
+}
+
+// For Optional<String> subtitle field:
+public BookDtoBuilder subtitle(String format, Object... args) {
+  this.subtitle = changedValue(Optional.of(String.format(format, args)));
+  return this;
 }
 
 // Usage
-PersonDto person = PersonDtoBuilder.create()
-    .name("Hello, %s %s!", firstName, lastName)
+BookDto book = BookDtoBuilder.create()
+    .title("The %s Guide", "Complete")
+    .subtitle("A comprehensive %s tutorial for %s", "Java", "beginners")
     .build();
 ```
 

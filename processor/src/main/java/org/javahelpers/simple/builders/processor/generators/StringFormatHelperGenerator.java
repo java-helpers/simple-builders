@@ -51,7 +51,7 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
  *
  * // For Optional<String> subtitle field:
  * public BookDtoBuilder subtitle(String format, Object... args) {
- *   this.subtitle = changedValue(Optional.ofNullable(String.format(format, args)));
+ *   this.subtitle = changedValue(Optional.of(String.format(format, args)));
  *   return this;
  * }
  * </pre>
@@ -186,18 +186,14 @@ public class StringFormatHelperGenerator implements MethodGenerator {
     methodDto.setPriority(MethodDto.PRIORITY_HIGH);
     methodDto.setJavadoc(
         """
-        Sets the value for <code>%s</code>.
+        Sets the String value for <code>%s</code> by using String.format(format, args).
+        See {@link String#format(String, Object...)} for details.
 
-        @param %s %s
-        @param %s %s
+        @param %s A format string
+        @param %s Arguments referenced by the format specifiers in the format string.
         @return current instance of builder
         """
-            .formatted(
-                fieldName,
-                formatParam.getParameterName(),
-                fieldJavadoc,
-                argsParam.getParameterName(),
-                fieldJavadoc));
+            .formatted(fieldName, formatParam.getParameterName(), argsParam.getParameterName()));
     return methodDto;
   }
 }
