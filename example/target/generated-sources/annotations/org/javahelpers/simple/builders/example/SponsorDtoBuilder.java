@@ -161,7 +161,7 @@ public class SponsorDtoBuilder implements IBuilderBase<SponsorDto> {
    */
   public interface With {
     /**
-     * Applies modifications to a builder initialized from this instance and returns the built object.
+     * Initializes a builder from an  instance of this class, using methods of this builder to change values and returns the new built object.
      *
      * @param b the consumer to apply modifications
      * @return the modified instance
