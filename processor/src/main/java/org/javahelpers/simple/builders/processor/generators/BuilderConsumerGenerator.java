@@ -34,8 +34,8 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
 /**
  * Generates Consumer-based methods for fields whose type has a @SimpleBuilder annotation.
  *
- * <p>This generator creates methods that accept a Consumer&lt;FieldBuilder&gt; to configure nested
- * builder instances.
+ * <p>This generator creates methods that accept a {@code Consumer<FieldBuilder>} to configure
+ * nested builder instances.
  *
  * <h3>Generated Methods Example:</h3>
  *

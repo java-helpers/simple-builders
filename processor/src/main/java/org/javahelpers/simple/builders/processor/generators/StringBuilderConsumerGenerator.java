@@ -34,10 +34,10 @@ import org.javahelpers.simple.builders.processor.dtos.*;
 import org.javahelpers.simple.builders.processor.util.ProcessingContext;
 
 /**
- * Generates Consumer-based methods for String and Optional&lt;String&gt; fields using
+ * Generates Consumer-based methods for String and {@code Optional<String>} fields using
  * StringBuilder.
  *
- * <p>This generator creates methods that accept a Consumer&lt;StringBuilder&gt; to build string
+ * <p>This generator creates methods that accept a {@code Consumer<StringBuilder>} to build string
  * values.
  *
  * <h3>Generated Methods Example:</h3>

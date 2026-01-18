@@ -313,7 +313,7 @@ public @interface SimpleBuilder {
 
     /**
      * Generate unboxed optional methods that accept the inner type T directly instead of
-     * Optional&lt;T&gt;. <br>
+     * {@code Optional<T}>. <br>
      * For Optional fields, this generates a setter that accepts T and wraps it with
      * Optional.ofNullable().
      *

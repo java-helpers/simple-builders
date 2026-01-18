@@ -40,7 +40,7 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
 /**
  * Generates Supplier-based methods for builder fields.
  *
- * <p>This generator creates methods that accept Supplier&lt;T&gt; functional interfaces for lazy
+ * <p>This generator creates methods that accept {@code Supplier<T>} functional interfaces for lazy
  * initialization of field values. The supplier is invoked when the setter is called, and the result
  * is stored in the builder.
  *
@@ -100,8 +100,8 @@ public class SupplierMethodGenerator implements MethodGenerator {
   }
 
   /**
-   * Creates a supplier method that accepts a Supplier&lt;T&gt; and invokes it to get the field
-   * value.
+   * Creates a supplier method that accepts a {@code Supplier<T>}
+   * and invokes it to get the field value.
    *
    * @param fieldName the estimated field name (used for method name)
    * @param fieldNameInBuilder the builder field name (may be renamed)

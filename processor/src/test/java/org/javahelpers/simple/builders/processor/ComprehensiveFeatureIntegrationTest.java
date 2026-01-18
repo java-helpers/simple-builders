@@ -43,9 +43,9 @@ import org.junit.jupiter.api.Test;
  *
  * <ul>
  *   <li>Basic field setters
- *   <li>Field suppliers (Supplier&lt;T&gt;)
- *   <li>Field consumers (Consumer&lt;T&gt;)
- *   <li>Builder consumers (Consumer&lt;Builder&lt;T&gt;&gt;)
+ *   <li>Field suppliers ({@code Supplier<T>})
+ *   <li>Field consumers ({@code Consumer<T>})
+ *   <li>Builder consumers ({@code Consumer<Builder<T>>})
  *   <li>VarArgs helpers for collections
  *   <li>String format helpers
  *   <li>Add to collection helpers (add2FieldName)

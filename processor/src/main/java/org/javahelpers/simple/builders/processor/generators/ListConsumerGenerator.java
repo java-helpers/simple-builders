@@ -38,8 +38,8 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
 /**
  * Generates Consumer-based methods for List fields with collection builder support.
  *
- * <p>This generator creates methods that accept Consumer&lt;ArrayListBuilder&gt; or
- * Consumer&lt;ArrayListBuilderWithElementBuilders&gt; depending on whether the element type has a
+ * <p>This generator creates methods that accept {@code Consumer<ArrayListBuilder>} or
+ * {@code Consumer<ArrayListBuilderWithElementBuilders<Fieldtype, FieldBuilderType>>} depending on whether the element type has a
  * builder.
  *
  * <h3>Generated Methods Example:</h3>

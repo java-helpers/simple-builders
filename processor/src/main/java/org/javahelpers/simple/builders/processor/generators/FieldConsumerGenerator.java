@@ -34,7 +34,7 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
 /**
  * Generates Consumer-based methods for fields with concrete classes that have empty constructors.
  *
- * <p>This generator creates methods that accept a Consumer&lt;FieldType&gt; to configure field
+ * <p>This generator creates methods that accept a {@code Consumer<FieldType>} to configure field
  * instances created via their no-arg constructor.
  *
  * <h3>Generated Methods Example:</h3>

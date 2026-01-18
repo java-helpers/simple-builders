@@ -69,10 +69,10 @@ public class TypeNameAnalyser {
   }
 
   /**
-   * Checks if the field type is Optional&lt;String&gt;.
+   * Checks if the field type is {@code Optional<String>}.
    *
    * @param fieldType the type of the field
-   * @return true if the type is Optional&lt;String&gt;, false otherwise
+   * @return true if the type is {@code Optional<String>}, false otherwise
    */
   public static boolean isOptionalString(TypeName fieldType) {
     if (fieldType instanceof TypeNameGeneric fieldTypeGeneric

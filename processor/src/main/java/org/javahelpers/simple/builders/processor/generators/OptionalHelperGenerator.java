@@ -32,7 +32,7 @@ import org.javahelpers.simple.builders.processor.dtos.*;
 import org.javahelpers.simple.builders.processor.util.ProcessingContext;
 
 /**
- * Generates unboxed Optional helper methods for Optional&lt;T&gt; fields.
+ * Generates unboxed Optional helper methods for {@code Optional<T>} fields.
  *
  * <p>This generator creates convenience methods that accept the inner type T directly and wrap it
  * in Optional.ofNullable() automatically. This makes it easier to set Optional values without
