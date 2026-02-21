@@ -188,14 +188,13 @@ public final class JavaLangMapper {
         JavaLangAnalyser.findAnnotation(
             typeElement, org.javahelpers.simple.builders.core.annotations.SimpleBuilder.class);
 
-    if (foundBuilderAnnotation.isPresent()) {
-      String builderClassName =
-          typeElement.getSimpleName().toString() + context.getConfiguration().getBuilderSuffix();
-      String builderPackageName = typeElement.getQualifiedName().toString();
-      int lastDot = builderPackageName.lastIndexOf('.');
-      builderPackageName = lastDot > 0 ? builderPackageName.substring(0, lastDot) : "";
-      typeName.setBuilderType(new TypeName(builderPackageName, builderClassName));
+    // Type element must have @SimpleBuilder annotation
+    if (foundBuilderAnnotation.isEmpty()) {
+      return;
     }
+
+    TypeName builderType = createBuilderTypeName(typeElement, context);
+    typeName.setBuilderType(builderType);
   }
 
   /**
@@ -288,10 +287,19 @@ public final class JavaLangMapper {
       TypeElement typeElement, ProcessingContext context) {
     String builderClassName =
         typeElement.getSimpleName().toString() + context.getConfiguration().getBuilderSuffix();
-    String qualifiedName = typeElement.getQualifiedName().toString();
-    int lastDot = qualifiedName.lastIndexOf('.');
-    String packageName = lastDot > 0 ? qualifiedName.substring(0, lastDot) : "";
+    String packageName = extractPackageName(typeElement.getQualifiedName().toString());
     return new TypeName(packageName, builderClassName);
+  }
+
+  /**
+   * Extracts the package name from a qualified class name.
+   *
+   * @param qualifiedName the fully qualified class name (e.g., "com.example.MyClass")
+   * @return the package name (e.g., "com.example"), or empty string if no package
+   */
+  private static String extractPackageName(String qualifiedName) {
+    int lastDot = qualifiedName.lastIndexOf('.');
+    return lastDot > 0 ? qualifiedName.substring(0, lastDot) : "";
   }
 
   /**
