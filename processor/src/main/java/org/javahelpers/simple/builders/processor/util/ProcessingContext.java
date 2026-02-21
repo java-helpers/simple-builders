@@ -56,7 +56,7 @@ public final class ProcessingContext {
    *
    * @param logger the logging utility for the annotation processor
    * @param globalConfiguration the global builder configuration read from compiler arguments
-   * @param processingEnv
+   * @param processingEnv the processing environment providing access to utilities and facilities
    */
   public ProcessingContext(
       ProcessingLogger logger,
@@ -71,14 +71,29 @@ public final class ProcessingContext {
     // GeneratorRegistry will be lazily initialized on first access
   }
 
+  /**
+   * Initializes the configuration for the current processing target.
+   *
+   * @param config the builder configuration for the target being processed
+   */
   public void initConfigurationForProcessingTarget(BuilderConfiguration config) {
     this.configurationForProcessingTarget = config;
   }
 
+  /**
+   * Gets the configuration for the current processing target.
+   *
+   * @return the builder configuration for the target being processed
+   */
   public BuilderConfiguration getConfiguration() {
     return this.configurationForProcessingTarget;
   }
 
+  /**
+   * Gets the configuration reader for reading builder configurations.
+   *
+   * @return the builder configuration reader
+   */
   public BuilderConfigurationReader getConfigurationReader() {
     return configurationReader;
   }
