@@ -254,9 +254,10 @@ public final class JavapoetMapper {
    * Maps an InterfaceName to a JavaPoet TypeName.
    *
    * @param interfaceName the interface name to map
-   * @return Optional containing JavaPoet TypeName, or empty if mapping fails
+   * @return the mapped JavaPoet TypeName, always not null
+   * @throws JavapoetMapperException if mapping fails
    */
-  public static Optional<TypeName> mapInterfaceToTypeName(InterfaceName interfaceName) {
+  public static TypeName mapInterfaceToTypeName(InterfaceName interfaceName) {
     try {
       TypeName interfaceType =
           ClassName.get(interfaceName.getPackageName(), interfaceName.getSimpleName());
@@ -270,7 +271,7 @@ public final class JavapoetMapper {
         interfaceType = ParameterizedTypeName.get((ClassName) interfaceType, typeArgs);
       }
 
-      return Optional.of(interfaceType);
+      return interfaceType;
     } catch (Exception e) {
       throw new JavapoetMapperException(
           e, "Failed to map interface %s: %s", interfaceName.toString(), e.getMessage());

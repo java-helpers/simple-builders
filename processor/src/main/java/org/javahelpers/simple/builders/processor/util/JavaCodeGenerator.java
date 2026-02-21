@@ -104,9 +104,9 @@ public class JavaCodeGenerator {
 
     // Adding interfaces from enhancers
     for (InterfaceName interfaceName : builderDef.getInterfaces()) {
-      Optional<com.palantir.javapoet.TypeName> interfaceType =
+      com.palantir.javapoet.TypeName interfaceType =
           JavapoetMapper.mapInterfaceToTypeName(interfaceName);
-      interfaceType.ifPresent(classBuilder::addSuperinterface);
+      classBuilder.addSuperinterface(interfaceType);
     }
 
     logger.debug(
