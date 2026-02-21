@@ -34,7 +34,6 @@ import com.palantir.javapoet.TypeVariableName;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
@@ -201,9 +200,10 @@ public final class JavapoetMapper {
    * Maps an AnnotationDto to a JavaPoet AnnotationSpec.
    *
    * @param annotationDto the annotation DTO to map
-   * @return Optional containing JavaPoet AnnotationSpec, or empty if mapping fails
+   * @return the mapped JavaPoet AnnotationSpec, always not null
+   * @throws JavapoetMapperException if mapping fails
    */
-  public static Optional<AnnotationSpec> map2AnnotationSpec(AnnotationDto annotationDto) {
+  public static AnnotationSpec map2AnnotationSpec(AnnotationDto annotationDto) {
     try {
       ClassName annotationType = map2ClassName(annotationDto.getAnnotationType());
       AnnotationSpec.Builder builder = AnnotationSpec.builder(annotationType);
@@ -212,7 +212,7 @@ public final class JavapoetMapper {
         builder.addMember(member.getKey(), "$L", member.getValue());
       }
 
-      return Optional.of(builder.build());
+      return builder.build();
     } catch (Exception e) {
       throw new JavapoetMapperException(
           e,
@@ -226,14 +226,11 @@ public final class JavapoetMapper {
    * Maps a list of AnnotationDto to JavaPoet AnnotationSpec instances.
    *
    * @param annotations the list of annotations to map
-   * @return list of AnnotationSpec (only successfully mapped ones)
+   * @return list of AnnotationSpec for all annotations
+   * @throws JavapoetMapperException if any annotation mapping fails
    */
   public static List<AnnotationSpec> map2AnnotationSpecs(List<AnnotationDto> annotations) {
-    return annotations.stream()
-        .map(JavapoetMapper::map2AnnotationSpec)
-        .filter(Optional::isPresent)
-        .map(Optional::get)
-        .toList();
+    return annotations.stream().map(JavapoetMapper::map2AnnotationSpec).toList();
   }
 
   /**

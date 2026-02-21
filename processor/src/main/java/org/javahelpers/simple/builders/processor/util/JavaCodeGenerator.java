@@ -40,7 +40,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Modifier;
 import org.apache.commons.collections4.CollectionUtils;
@@ -166,8 +165,8 @@ public class JavaCodeGenerator {
 
     // Adding annotations from enhancers
     for (AnnotationDto annotation : builderDef.getClassAnnotations()) {
-      Optional<AnnotationSpec> annotationSpec = map2AnnotationSpec(annotation);
-      annotationSpec.ifPresent(classBuilder::addAnnotation);
+      AnnotationSpec annotationSpec = map2AnnotationSpec(annotation);
+      classBuilder.addAnnotation(annotationSpec);
     }
 
     logger.debug(
