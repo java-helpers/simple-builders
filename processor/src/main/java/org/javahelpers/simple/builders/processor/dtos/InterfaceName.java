@@ -27,9 +27,9 @@ package org.javahelpers.simple.builders.processor.dtos;
 import static java.util.Objects.requireNonNull;
 
 import java.util.List;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
  * InterfaceName represents a Java interface type with package and class name information.
@@ -135,15 +135,6 @@ public class InterfaceName {
     return !typeParameters.isEmpty();
   }
 
-  /**
-   * Returns the fully qualified name of this interface.
-   *
-   * @return fully qualified name
-   */
-  public String getQualifiedName() {
-    return packageName.isEmpty() ? simpleName : packageName + "." + simpleName;
-  }
-
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -173,13 +164,41 @@ public class InterfaceName {
         .toHashCode();
   }
 
+  /**
+   * Returns a string representation of this interface in Java syntax format. Includes annotations,
+   * package, simple name, and type parameters.
+   *
+   * <p>Examples:
+   *
+   * <ul>
+   *   <li>{@code com.example.Builder} - simple interface
+   *   <li>{@code com.example.Builder<T>} - with type parameter
+   *   <li>{@code @Deprecated com.example.Builder<T, R>} - with annotation and type parameters
+   * </ul>
+   *
+   * @return fully qualified name with annotations and type parameters
+   */
   @Override
   public String toString() {
-    return new ToStringBuilder(this)
-        .append("packageName", packageName)
-        .append("simpleName", simpleName)
-        .append("annotations", annotations)
-        .append("typeParameters", typeParameters)
-        .toString();
+    String annotationsPart =
+        CollectionUtils.isNotEmpty(annotations)
+            ? annotations.stream()
+                    .map(AnnotationDto::toString)
+                    .collect(java.util.stream.Collectors.joining(" "))
+                + " "
+            : "";
+
+    String qualifiedName = packageName.isEmpty() ? simpleName : packageName + "." + simpleName;
+
+    String typeParamsPart =
+        CollectionUtils.isNotEmpty(typeParameters)
+            ? "<"
+                + typeParameters.stream()
+                    .map(TypeName::getClassName)
+                    .collect(java.util.stream.Collectors.joining(", "))
+                + ">"
+            : "";
+
+    return annotationsPart + qualifiedName + typeParamsPart;
   }
 }

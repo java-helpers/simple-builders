@@ -273,7 +273,7 @@ public final class JavapoetMapper {
       return Optional.of(interfaceType);
     } catch (Exception e) {
       throw new JavapoetMapperException(
-          e, "Failed to map interface %s: %s", interfaceName.getQualifiedName(), e.getMessage());
+          e, "Failed to map interface %s: %s", interfaceName.toString(), e.getMessage());
     }
   }
 }
