@@ -192,6 +192,8 @@
           <source>${java.version}</source>
           <target>${java.version}</target>
           <release>${java.version}</release>
+          <!-- Disable annotation processing during compilation of the processor itself -->
+          <proc>none</proc>
         </configuration>
       </plugin>
       

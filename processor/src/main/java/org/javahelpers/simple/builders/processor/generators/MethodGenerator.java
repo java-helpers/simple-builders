@@ -39,36 +39,15 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
  *
  * <p>Custom generators can be provided by library users through the Java ServiceLoader mechanism by
  * creating a file {@code
- * META-INF/services/org.javahelpers.simple.builders.processor.generators.MethodGenerator}
- * containing the fully qualified class names of custom generator implementations.
+ * META-INF/services/org.javahelpers.simple.builders.processor.generators.Generator} containing the
+ * fully qualified class names of custom generator implementations.
  *
  * <p>Generators are executed in priority order (highest first). Multiple generators can contribute
  * methods to the same field.
+ *
+ * <p>This interface is non-sealed to allow custom implementations by library users.
  */
-public interface MethodGenerator {
-
-  /**
-   * Returns the priority of this generator. Generators with higher priority values are executed
-   * first.
-   *
-   * <p>Built-in generator priorities:
-   *
-   * <ul>
-   *   <li>100 - Basic setters (highest priority)
-   *   <li>80 - String format helpers
-   *   <li>70 - Optional helpers
-   *   <li>60 - Supplier methods
-   *   <li>50 - Consumer methods
-   *   <li>40 - VarArgs helpers
-   *   <li>30 - Collection helpers
-   *   <li>20 - With interface
-   * </ul>
-   *
-   * <p>Custom generators should use values between 0-200 to integrate with built-in generators.
-   *
-   * @return the priority value (higher values execute first)
-   */
-  int getPriority();
+public non-sealed interface MethodGenerator extends Generator {
 
   /**
    * Determines whether this generator applies to the given field based on field type,

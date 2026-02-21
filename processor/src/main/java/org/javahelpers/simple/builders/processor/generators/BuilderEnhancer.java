@@ -46,28 +46,15 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
  *
  * <p>Unlike {@link MethodGenerator} which operates on individual fields, BuilderEnhancers operate
  * on the entire builder after all field methods have been generated.
+ *
+ * <p>Custom enhancers can be provided by library users through the Java ServiceLoader mechanism by
+ * creating a file {@code
+ * META-INF/services/org.javahelpers.simple.builders.processor.generators.Generator} containing the
+ * fully qualified class names of custom enhancer implementations.
+ *
+ * <p>This interface is non-sealed to allow custom implementations by library users.
  */
-public interface BuilderEnhancer {
-
-  /**
-   * Returns the priority of this enhancer.
-   *
-   * <p>Higher priority values are executed first. Use this to control the order of enhancements
-   * when multiple enhancers might interact with each other.
-   *
-   * <p>Recommended priority ranges:
-   *
-   * <ul>
-   *   <li>90-100: Critical infrastructure (interfaces, annotations)
-   *   <li>70-89: Core functionality (validation, transformation)
-   *   <li>50-69: Utility methods (convenience helpers)
-   *   <li>30-49: Optional features (debugging, logging)
-   *   <li>10-29: Experimental or user-specific enhancements
-   * </ul>
-   *
-   * @return the priority value (higher = executed first)
-   */
-  int getPriority();
+public non-sealed interface BuilderEnhancer extends Generator {
 
   /**
    * Determines whether this enhancer should be applied to the given builder.

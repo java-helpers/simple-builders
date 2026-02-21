@@ -34,8 +34,7 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import org.javahelpers.simple.builders.processor.dtos.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.dtos.TypeName;
-import org.javahelpers.simple.builders.processor.generators.BuilderEnhancerRegistry;
-import org.javahelpers.simple.builders.processor.generators.MethodGeneratorRegistry;
+import org.javahelpers.simple.builders.processor.generators.GeneratorRegistry;
 
 /**
  * Context object that wraps Elements, Types, and logging utilities from annotation processing,
@@ -49,8 +48,7 @@ public final class ProcessingContext {
   private final ProcessingLogger logger;
   private final BuilderConfigurationReader configurationReader;
   private final ProcessingEnvironment processingEnv;
-  private MethodGeneratorRegistry methodGeneratorRegistry;
-  private BuilderEnhancerRegistry builderEnhancerRegistry;
+  private GeneratorRegistry generatorRegistry;
   private BuilderConfiguration configurationForProcessingTarget;
 
   /**
@@ -70,7 +68,7 @@ public final class ProcessingContext {
     this.processingEnv = processingEnv;
     this.configurationReader =
         new BuilderConfigurationReader(globalConfiguration, logger, elementUtils);
-    // MethodGeneratorRegistry will be lazily initialized on first access
+    // GeneratorRegistry will be lazily initialized on first access
   }
 
   public void initConfigurationForProcessingTarget(BuilderConfiguration config) {
@@ -86,29 +84,18 @@ public final class ProcessingContext {
   }
 
   /**
-   * Get the method generator registry for generating builder methods.
+   * Get the unified generator registry for both field-level method generation and builder-level
+   * enhancement.
    *
    * <p>The registry is lazily initialized on first access to avoid circular dependency issues.
    *
-   * @return the method generator registry
+   * @return the generator registry
    */
-  public MethodGeneratorRegistry getMethodGeneratorRegistry() {
-    if (methodGeneratorRegistry == null) {
-      methodGeneratorRegistry = new MethodGeneratorRegistry(this, processingEnv);
+  public GeneratorRegistry getGeneratorRegistry() {
+    if (generatorRegistry == null) {
+      generatorRegistry = new GeneratorRegistry(this, processingEnv);
     }
-    return methodGeneratorRegistry;
-  }
-
-  /**
-   * Returns the builder enhancer registry.
-   *
-   * @return the builder enhancer registry
-   */
-  public BuilderEnhancerRegistry getBuilderEnhancerRegistry() {
-    if (builderEnhancerRegistry == null) {
-      builderEnhancerRegistry = new BuilderEnhancerRegistry(this, processingEnv);
-    }
-    return builderEnhancerRegistry;
+    return generatorRegistry;
   }
 
   /**

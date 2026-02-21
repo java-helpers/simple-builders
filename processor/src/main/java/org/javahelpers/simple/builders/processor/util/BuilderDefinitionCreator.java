@@ -80,7 +80,7 @@ public class BuilderDefinitionCreator {
     result.addAllFields(setterFields);
 
     // Apply builder enhancers (including With interface generation)
-    context.getBuilderEnhancerRegistry().enhanceBuilder(result, result.getBuildingTargetTypeName());
+    context.getGeneratorRegistry().enhanceBuilder(result, result.getBuildingTargetTypeName());
 
     return result;
   }
@@ -454,9 +454,9 @@ public class BuilderDefinitionCreator {
 
     // Builder and constructor information is now set when TypeName is created in JavaLangMapper
 
-    // Use MethodGeneratorRegistry to generate all methods for this field
+    // Use GeneratorRegistry to generate all methods for this field
     List<MethodDto> generatedMethods =
-        context.getMethodGeneratorRegistry().generateAllMethods(field, dtoType, builderType);
+        context.getGeneratorRegistry().generateAllMethods(field, dtoType, builderType);
     generatedMethods.forEach(field::addMethod);
 
     return Optional.of(field);
