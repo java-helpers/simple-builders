@@ -149,6 +149,7 @@ public class JavaCodeGenerator {
 
     // Generate all methods in order
     for (MethodDto methodDto : resolvedMethods) {
+      logger.debug("    Generating method: %s", methodDto);
       MethodSpec methodSpec = createMethod(methodDto);
       classBuilder.addMethod(methodSpec);
     }

@@ -446,4 +446,44 @@ public class MethodDto {
           .anyMatch(param -> getQualifiedName(param.getParameterType()).contains("<"));
     }
   }
+
+  /**
+   * Returns a string representation of this method in Java method signature format.
+   *
+   * <p>Examples:
+   *
+   * <ul>
+   *   <li>{@code public PersonBuilder name(String)}
+   *   <li>{@code public PersonBuilder age(int)}
+   *   <li>{@code public PersonBuilder tags(Consumer<ArrayListBuilder<String>>)}
+   * </ul>
+   *
+   * @return method signature as a string
+   */
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+
+    // Add modifier if present
+    modifier.ifPresent(m -> sb.append(m.toString().toLowerCase()).append(" "));
+
+    // Add static if applicable
+    if (isStatic) {
+      sb.append("static ");
+    }
+
+    // Add return type (void if not specified)
+    String returnTypeName = returnType != null ? returnType.getClassName() : "void";
+    sb.append(returnTypeName).append(" ");
+
+    // Add method name and parameters
+    String parameterList =
+        parameters.stream()
+            .map(param -> param.getParameterType().getClassName())
+            .collect(java.util.stream.Collectors.joining(", "));
+
+    sb.append(methodName).append("(").append(parameterList).append(")");
+
+    return sb.toString();
+  }
 }
