@@ -169,9 +169,9 @@ public class AddToCollectionGenerator implements MethodGenerator {
         """);
     methodDto.addArgument("collectionVarType", collectionVarType);
     methodDto.addArgument("collectionImpl", new TypeName("java.util", collectionImpl));
-    methodDto.addArgument(ARG_FIELD_NAME, fieldName);
-    methodDto.addArgument(ARG_ELEMENT_TYPE, elementType);
-    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
+    methodDto.addArgument("fieldName", fieldName);
+    methodDto.addArgument("elementType", elementType);
+    methodDto.addArgument("builderFieldWrapper", TRACKED_VALUE_TYPE);
     methodDto.setPriority(MethodDto.PRIORITY_MEDIUM);
 
     methodDto.setJavadoc(

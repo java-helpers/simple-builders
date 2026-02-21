@@ -134,9 +134,9 @@ public class SupplierMethodGenerator implements MethodGenerator {
         this.$fieldName:N = $builderFieldWrapper:T.changedValue($dtoMethodParam:N.get());
         return this;
         """);
-    methodDto.addArgument(ARG_FIELD_NAME, fieldNameInBuilder);
-    methodDto.addArgument(ARG_DTO_METHOD_PARAM, parameterName);
-    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
+    methodDto.addArgument("fieldName", fieldNameInBuilder);
+    methodDto.addArgument("dtoMethodParam", parameterName);
+    methodDto.addArgument("builderFieldWrapper", TRACKED_VALUE_TYPE);
     methodDto.setPriority(MethodDto.PRIORITY_HIGH);
 
     methodDto.setJavadoc(

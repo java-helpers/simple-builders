@@ -129,10 +129,10 @@ public class StringBuilderConsumerGenerator implements MethodGenerator {
         this.$fieldName:N = $builderFieldWrapper:T.changedValue($transform:N);
         return this;
         """);
-    methodDto.addArgument(ARG_FIELD_NAME, fieldNameInBuilder);
-    methodDto.addArgument(ARG_DTO_METHOD_PARAM, parameter.getParameterName());
+    methodDto.addArgument("fieldName", fieldNameInBuilder);
+    methodDto.addArgument("dtoMethodParam", parameter.getParameterName());
     methodDto.addArgument("transform", transform);
-    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
+    methodDto.addArgument("builderFieldWrapper", TRACKED_VALUE_TYPE);
     methodDto.setReturnType(builderType);
     methodDto.setPriority(MethodDto.PRIORITY_LOW);
     methodDto.setJavadoc(

@@ -131,11 +131,11 @@ public class ArrayBuilderConsumerGenerator implements MethodGenerator {
         this.$fieldName:N = $builderFieldWrapper:T.changedValue(builder.build().toArray(new $elementType:T[0]));
         return this;
         """);
-    methodDto.addArgument(ARG_FIELD_NAME, fieldNameInBuilder);
-    methodDto.addArgument(ARG_DTO_METHOD_PARAM, parameter.getParameterName());
-    methodDto.addArgument(ARG_HELPER_TYPE, builderTypeGeneric);
-    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
-    methodDto.addArgument(ARG_ELEMENT_TYPE, elementType);
+    methodDto.addArgument("fieldName", fieldNameInBuilder);
+    methodDto.addArgument("dtoMethodParam", parameter.getParameterName());
+    methodDto.addArgument("helperType", builderTypeGeneric);
+    methodDto.addArgument("builderFieldWrapper", TRACKED_VALUE_TYPE);
+    methodDto.addArgument("elementType", elementType);
     methodDto.setPriority(MethodDto.PRIORITY_MEDIUM);
     methodDto.setJavadoc(
         """

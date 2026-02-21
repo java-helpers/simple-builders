@@ -111,10 +111,10 @@ public class ArrayConversionGenerator implements MethodGenerator {
         this.$fieldName:N = $builderFieldWrapper:T.changedValue($dtoMethodParams:N.toArray(new $elementType:T[0]));
         return this;
         """);
-    methodDto.addArgument(ARG_FIELD_NAME, fieldNameInBuilder);
-    methodDto.addArgument(ARG_DTO_METHOD_PARAMS, fieldName);
-    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
-    methodDto.addArgument(ARG_ELEMENT_TYPE, elementType);
+    methodDto.addArgument("fieldName", fieldNameInBuilder);
+    methodDto.addArgument("dtoMethodParams", fieldName);
+    methodDto.addArgument("builderFieldWrapper", TRACKED_VALUE_TYPE);
+    methodDto.addArgument("elementType", elementType);
     methodDto.setPriority(MethodDto.PRIORITY_HIGH);
     methodDto.setJavadoc(
         """

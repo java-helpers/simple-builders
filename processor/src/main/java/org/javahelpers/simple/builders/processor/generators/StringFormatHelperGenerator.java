@@ -179,9 +179,9 @@ public class StringFormatHelperGenerator implements MethodGenerator {
         this.$fieldName:N = $builderFieldWrapper:T.changedValue($transform:N);
         return this;
         """);
-    methodDto.addArgument(ARG_FIELD_NAME, fieldNameInBuilder);
+    methodDto.addArgument("fieldName", fieldNameInBuilder);
     methodDto.addArgument("transform", transform);
-    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
+    methodDto.addArgument("builderFieldWrapper", TRACKED_VALUE_TYPE);
     methodDto.setPriority(MethodDto.PRIORITY_HIGH);
     methodDto.setJavadoc(
         """

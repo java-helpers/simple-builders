@@ -47,14 +47,6 @@ public final class MethodGeneratorUtil {
   public static final String SUFFIX_SUPPLIER = "Supplier";
   public static final String BUILDER_SUFFIX = "Builder";
 
-  // Constants for code template arguments
-  public static final String ARG_FIELD_NAME = "fieldName";
-  public static final String ARG_DTO_METHOD_PARAM = "dtoMethodParam";
-  public static final String ARG_DTO_METHOD_PARAMS = "dtoMethodParams";
-  public static final String ARG_BUILDER_FIELD_WRAPPER = "builderFieldWrapper";
-  public static final String ARG_HELPER_TYPE = "helperType";
-  public static final String ARG_ELEMENT_TYPE = "elementType";
-
   public static final TypeName TRACKED_VALUE_TYPE =
       TypeName.of(org.javahelpers.simple.builders.core.util.TrackedValue.class);
 
@@ -180,9 +172,9 @@ public final class MethodGeneratorUtil {
         this.$fieldName:N = $builderFieldWrapper:T.changedValue($dtoMethodParams:N);
         return this;
         """);
-    methodDto.addArgument(ARG_FIELD_NAME, field.getFieldName());
-    methodDto.addArgument(ARG_DTO_METHOD_PARAMS, params);
-    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
+    methodDto.addArgument("fieldName", field.getFieldName());
+    methodDto.addArgument("dtoMethodParams", params);
+    methodDto.addArgument("builderFieldWrapper", TRACKED_VALUE_TYPE);
 
     methodDto.setPriority(transform == null ? MethodDto.PRIORITY_HIGHEST : MethodDto.PRIORITY_HIGH);
 
@@ -238,12 +230,12 @@ public final class MethodGeneratorUtil {
         return this;
         """
             .formatted(existingValueConstructorArgs, emptyConstructorArgs));
-    methodDto.addArgument(ARG_FIELD_NAME, field.getFieldName());
-    methodDto.addArgument(ARG_DTO_METHOD_PARAM, parameter.getParameterName());
-    methodDto.addArgument(ARG_HELPER_TYPE, fieldBuilderType);
+    methodDto.addArgument("fieldName", field.getFieldName());
+    methodDto.addArgument("dtoMethodParam", parameter.getParameterName());
+    methodDto.addArgument("helperType", fieldBuilderType);
     methodDto.addArgument("buildExpression", buildExpression);
     additionalTemplateArguments.forEach(methodDto::addArgument);
-    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
+    methodDto.addArgument("builderFieldWrapper", TRACKED_VALUE_TYPE);
     methodDto.setPriority(MethodDto.PRIORITY_MEDIUM);
     methodDto.setJavadoc(
         """
@@ -352,10 +344,10 @@ public final class MethodGeneratorUtil {
         this.$fieldName:N = $builderFieldWrapper:T.changedValue(consumer);
         return this;
         """);
-    methodDto.addArgument(ARG_FIELD_NAME, field.getFieldName());
-    methodDto.addArgument(ARG_DTO_METHOD_PARAM, parameter.getParameterName());
-    methodDto.addArgument(ARG_HELPER_TYPE, fieldType);
-    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
+    methodDto.addArgument("fieldName", field.getFieldName());
+    methodDto.addArgument("dtoMethodParam", parameter.getParameterName());
+    methodDto.addArgument("helperType", fieldType);
+    methodDto.addArgument("builderFieldWrapper", TRACKED_VALUE_TYPE);
     methodDto.setPriority(MethodDto.PRIORITY_MEDIUM);
 
     methodDto.setJavadoc(
