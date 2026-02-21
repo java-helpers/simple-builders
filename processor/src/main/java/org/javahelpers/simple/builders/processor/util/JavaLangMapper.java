@@ -222,31 +222,76 @@ public final class JavaLangMapper {
    */
   private static void setElementBuilderTypeForGenericCollections(
       TypeName typeName, ProcessingContext context) {
-    if (typeName instanceof TypeNameGeneric genericType) {
-      List<TypeName> innerTypeArguments = genericType.getInnerTypeArguments();
-      if (innerTypeArguments.size() == 1) {
-        TypeName elementType = innerTypeArguments.get(0);
-        Element elementElement = context.getTypeElement(elementType.getFullQualifiedName());
-        if (elementElement instanceof TypeElement elementTypeElement) {
-          Optional<javax.lang.model.element.AnnotationMirror> elementBuilderAnnotation =
-              JavaLangAnalyser.findAnnotation(
-                  elementTypeElement,
-                  org.javahelpers.simple.builders.core.annotations.SimpleBuilder.class);
-
-          if (elementBuilderAnnotation.isPresent()) {
-            String elementBuilderClassName =
-                elementTypeElement.getSimpleName().toString()
-                    + context.getConfiguration().getBuilderSuffix();
-            String elementBuilderQualifiedName = elementTypeElement.getQualifiedName().toString();
-            int lastDot = elementBuilderQualifiedName.lastIndexOf('.');
-            String elementBuilderPackageName =
-                lastDot > 0 ? elementBuilderQualifiedName.substring(0, lastDot) : "";
-            genericType.setElementBuilderType(
-                new TypeName(elementBuilderPackageName, elementBuilderClassName));
-          }
-        }
-      }
+    // Only process generic types
+    if (!(typeName instanceof TypeNameGeneric genericType)) {
+      return;
     }
+
+    // Only process single-element generics (List<T>, Set<T>, etc.)
+    List<TypeName> innerTypeArguments = genericType.getInnerTypeArguments();
+    if (innerTypeArguments.size() != 1) {
+      return;
+    }
+
+    TypeName elementType = innerTypeArguments.get(0);
+    TypeElement elementTypeElement = retrieveTypeElementIfExists(elementType, context);
+
+    // Element type must be resolvable
+    if (elementTypeElement == null) {
+      return;
+    }
+
+    // Element type must have @SimpleBuilder annotation
+    if (!hasSimpleBuilderAnnotation(elementTypeElement)) {
+      return;
+    }
+
+    // Set the element builder type
+    TypeName elementBuilderType = createBuilderTypeName(elementTypeElement, context);
+    genericType.setElementBuilderType(elementBuilderType);
+  }
+
+  /**
+   * Gets the TypeElement for a given TypeName if it exists.
+   *
+   * @param typeName the type name to resolve
+   * @param context the processing context
+   * @return the TypeElement, or null if not found or not a TypeElement
+   */
+  private static TypeElement retrieveTypeElementIfExists(
+      TypeName typeName, ProcessingContext context) {
+    Element element = context.getTypeElement(typeName.getFullQualifiedName());
+    return element instanceof TypeElement typeElement ? typeElement : null;
+  }
+
+  /**
+   * Checks if a TypeElement has the @SimpleBuilder annotation.
+   *
+   * @param typeElement the type element to check
+   * @return true if the element has @SimpleBuilder annotation
+   */
+  private static boolean hasSimpleBuilderAnnotation(TypeElement typeElement) {
+    Optional<javax.lang.model.element.AnnotationMirror> annotation =
+        JavaLangAnalyser.findAnnotation(
+            typeElement, org.javahelpers.simple.builders.core.annotations.SimpleBuilder.class);
+    return annotation.isPresent();
+  }
+
+  /**
+   * Creates a TypeName for the builder of a given TypeElement.
+   *
+   * @param typeElement the type element to create builder name for
+   * @param context the processing context
+   * @return the TypeName for the builder
+   */
+  private static TypeName createBuilderTypeName(
+      TypeElement typeElement, ProcessingContext context) {
+    String builderClassName =
+        typeElement.getSimpleName().toString() + context.getConfiguration().getBuilderSuffix();
+    String qualifiedName = typeElement.getQualifiedName().toString();
+    int lastDot = qualifiedName.lastIndexOf('.');
+    String packageName = lastDot > 0 ? qualifiedName.substring(0, lastDot) : "";
+    return new TypeName(packageName, builderClassName);
   }
 
   /**
