@@ -319,4 +319,55 @@ public final class MethodGeneratorUtil {
         returnBuilderType,
         context);
   }
+
+  /**
+   * Creates a simple field consumer method that accepts a Consumer for the field value.
+   *
+   * <p>This method creates a consumer that initializes the field value if not set, accepts the
+   * consumer to modify it, and stores the result.
+   *
+   * @param field the field DTO containing field information
+   * @param fieldType the type of the field (used for instantiation)
+   * @param builderType the builder type for the return type
+   * @param context the processing context
+   * @return the method DTO for the simple field consumer
+   */
+  public static MethodDto createSimpleFieldConsumer(
+      FieldDto field, TypeName fieldType, TypeName builderType, ProcessingContext context) {
+    TypeNameGeneric consumerType = createConsumerType(fieldType);
+    MethodParameterDto parameter = new MethodParameterDto();
+    parameter.setParameterName(field.getFieldNameEstimated() + SUFFIX_CONSUMER);
+    parameter.setParameterTypeName(consumerType);
+
+    MethodDto methodDto =
+        new MethodDto(
+            generateBuilderMethodName(field.getFieldNameEstimated(), context), builderType);
+    methodDto.addParameter(parameter);
+    setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
+
+    methodDto.setCode(
+        """
+        $helperType:T consumer = this.$fieldName:N.isSet() ? this.$fieldName:N.value() : new $helperType:T();
+        $dtoMethodParam:N.accept(consumer);
+        this.$fieldName:N = $builderFieldWrapper:T.changedValue(consumer);
+        return this;
+        """);
+    methodDto.addArgument(ARG_FIELD_NAME, field.getFieldName());
+    methodDto.addArgument(ARG_DTO_METHOD_PARAM, parameter.getParameterName());
+    methodDto.addArgument(ARG_HELPER_TYPE, fieldType);
+    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
+    methodDto.setPriority(MethodDto.PRIORITY_MEDIUM);
+
+    methodDto.setJavadoc(
+        """
+        Sets the value for <code>%s</code> by executing the provided consumer.
+
+        @param %s consumer providing an instance of %s
+        @return current instance of builder
+        """
+            .formatted(
+                field.getFieldNameEstimated(), parameter.getParameterName(), field.getJavaDoc()));
+
+    return methodDto;
+  }
 }

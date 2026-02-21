@@ -68,23 +68,36 @@ public class FieldConsumerGenerator implements MethodGenerator {
     if (!context.getConfiguration().shouldGenerateFieldConsumer()) {
       return false;
     }
+
     // Only apply if no builder consumer applies (builder has higher priority)
     if (field.getFieldType().getBuilderType().isPresent()) {
       return false;
     }
 
-    // Don't apply to standard collection types (List, Set, Map) when their specific consumer
-    // generators are enabled
-    if ((field.getFieldType() instanceof TypeNameList
-            && context.getConfiguration().shouldUseArrayListBuilder())
-        || (field.getFieldType() instanceof TypeNameSet
-            && context.getConfiguration().shouldUseHashSetBuilder())
-        || (field.getFieldType() instanceof TypeNameMap
-            && context.getConfiguration().shouldUseHashMapBuilder())) {
+    // Don't apply to standard collection types when their specific consumer generators are enabled
+    if (hasSpecificCollectionConsumer(field, context)) {
       return false;
     }
 
     return field.getFieldType().hasEmptyConstructor();
+  }
+
+  /**
+   * Checks if a specific collection consumer generator is enabled for this field type.
+   *
+   * @param field the field to check
+   * @param context the processing context
+   * @return true if a specific consumer (List, Set, or Map) should be generated instead
+   */
+  private boolean hasSpecificCollectionConsumer(FieldDto field, ProcessingContext context) {
+    TypeName fieldType = field.getFieldType();
+
+    return (fieldType instanceof TypeNameList
+            && context.getConfiguration().shouldUseArrayListBuilder())
+        || (fieldType instanceof TypeNameSet
+            && context.getConfiguration().shouldUseHashSetBuilder())
+        || (fieldType instanceof TypeNameMap
+            && context.getConfiguration().shouldUseHashMapBuilder());
   }
 
   @Override
@@ -94,51 +107,7 @@ public class FieldConsumerGenerator implements MethodGenerator {
       return Collections.emptyList();
     }
 
-    MethodDto method =
-        createFieldConsumer(
-            field.getFieldName(),
-            field.getFieldName(),
-            field.getJavaDoc(),
-            field.getFieldType(),
-            builderType,
-            context);
-    return List.of(method);
-  }
-
-  private MethodDto createFieldConsumer(
-      String fieldName,
-      String fieldNameInBuilder,
-      String fieldJavadoc,
-      TypeName fieldType,
-      TypeName builderType,
-      ProcessingContext context) {
-    TypeNameGeneric consumerType = MethodGeneratorUtil.createConsumerType(fieldType);
-    MethodParameterDto parameter = new MethodParameterDto();
-    parameter.setParameterName(fieldName + SUFFIX_CONSUMER);
-    parameter.setParameterTypeName(consumerType);
-    MethodDto methodDto = new MethodDto(generateBuilderMethodName(fieldName, context), builderType);
-    methodDto.addParameter(parameter);
-    setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
-    methodDto.setCode(
-        """
-        $helperType:T consumer = this.$fieldName:N.isSet() ? this.$fieldName:N.value() : new $helperType:T();
-        $dtoMethodParam:N.accept(consumer);
-        this.$fieldName:N = $builderFieldWrapper:T.changedValue(consumer);
-        return this;
-        """);
-    methodDto.addArgument(ARG_FIELD_NAME, fieldNameInBuilder);
-    methodDto.addArgument(ARG_DTO_METHOD_PARAM, parameter.getParameterName());
-    methodDto.addArgument(ARG_HELPER_TYPE, fieldType);
-    methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
-    methodDto.setPriority(MethodDto.PRIORITY_MEDIUM);
-    methodDto.setJavadoc(
-        """
-        Sets the value for <code>%s</code> by executing the provided consumer.
-
-        @param %s consumer providing an instance of %s
-        @return current instance of builder
-        """
-            .formatted(fieldName, parameter.getParameterName(), fieldJavadoc));
-    return methodDto;
+    MethodDto method = createSimpleFieldConsumer(field, field.getFieldType(), builderType, context);
+    return Collections.singletonList(method);
   }
 }
