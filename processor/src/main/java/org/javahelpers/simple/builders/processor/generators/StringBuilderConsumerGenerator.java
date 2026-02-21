@@ -28,7 +28,6 @@ import static org.javahelpers.simple.builders.processor.generators.MethodGenerat
 import static org.javahelpers.simple.builders.processor.util.JavaLangMapper.map2TypeName;
 import static org.javahelpers.simple.builders.processor.util.TypeNameAnalyser.*;
 
-import java.util.Collections;
 import java.util.List;
 import org.javahelpers.simple.builders.processor.dtos.*;
 import org.javahelpers.simple.builders.processor.util.ProcessingContext;
@@ -83,16 +82,16 @@ public class StringBuilderConsumerGenerator implements MethodGenerator {
         || field.getFieldType().hasEmptyConstructor()) {
       return false;
     }
-    return shouldGenerateStringBuilderConsumer(field.getFieldType());
+
+    TypeName fieldType = field.getFieldType();
+    // Only apply to String or Optional<String> fields (but not String arrays)
+    return (isString(fieldType) && !(fieldType instanceof TypeNameArray))
+        || isOptionalString(fieldType);
   }
 
   @Override
   public List<MethodDto> generateMethods(
       FieldDto field, TypeName builderType, ProcessingContext context) {
-    if (!shouldGenerateStringBuilderConsumer(field.getFieldType())) {
-      return Collections.emptyList();
-    }
-
     String transform =
         isOptionalString(field.getFieldType())
             ? "Optional.of(builder.toString())"
@@ -145,12 +144,5 @@ public class StringBuilderConsumerGenerator implements MethodGenerator {
         """
             .formatted(fieldName, parameter.getParameterName(), fieldJavadoc));
     return methodDto;
-  }
-
-  private boolean shouldGenerateStringBuilderConsumer(TypeName fieldType) {
-    if (isString(fieldType) && !(fieldType instanceof TypeNameArray)) {
-      return true;
-    }
-    return isOptionalString(fieldType);
   }
 }

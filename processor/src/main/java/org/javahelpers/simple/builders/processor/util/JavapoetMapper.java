@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.processor.dtos.*;
@@ -87,7 +88,7 @@ public final class JavapoetMapper {
       typeName = ClassName.get(parameterType.getPackageName(), parameterType.getClassName());
     }
 
-    if (typeName != null && !parameterType.getAnnotations().isEmpty()) {
+    if (typeName != null && CollectionUtils.isNotEmpty(parameterType.getAnnotations())) {
       typeName = typeName.annotated(map2AnnotationSpecs(parameterType.getAnnotations()));
     }
     return typeName;

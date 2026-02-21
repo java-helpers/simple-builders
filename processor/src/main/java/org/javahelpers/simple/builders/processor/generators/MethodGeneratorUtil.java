@@ -203,28 +203,28 @@ public final class MethodGeneratorUtil {
    * Creates a field consumer method that accepts a builder for the field value.
    *
    * @param field the field DTO
-   * @param consumerBuilderType the builder type for the consumer
-   * @param constructorArgsWithValue constructor arguments with field value
-   * @param additionalConstructorArgs additional constructor arguments
-   * @param additionalArguments additional method arguments
-   * @param returnBuilderType the return builder type
+   * @param fieldBuilderType the builder type used to construct the field value
+   * @param existingValueConstructorArgs constructor arguments when field already has a value
+   * @param emptyConstructorArgs constructor arguments when field is not yet set
+   * @param additionalTemplateArguments additional code template arguments for method generation
+   * @param parentBuilderType the parent builder type that this method returns
    * @param context the processing context
    * @return the method DTO for the consumer
    */
   public static MethodDto createFieldConsumerWithBuilder(
       FieldDto field,
-      TypeName consumerBuilderType,
-      String constructorArgsWithValue,
-      String additionalConstructorArgs,
-      Map<String, TypeName> additionalArguments,
-      TypeName returnBuilderType,
+      TypeName fieldBuilderType,
+      String existingValueConstructorArgs,
+      String emptyConstructorArgs,
+      Map<String, TypeName> additionalTemplateArguments,
+      TypeName parentBuilderType,
       ProcessingContext context) {
-    TypeNameGeneric consumerType = createConsumerType(consumerBuilderType);
+    TypeNameGeneric consumerType = createConsumerType(fieldBuilderType);
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName(field.getFieldName() + BUILDER_SUFFIX + SUFFIX_CONSUMER);
     parameter.setParameterTypeName(consumerType);
     MethodDto methodDto =
-        new MethodDto(generateBuilderMethodName(field.getFieldName(), context), returnBuilderType);
+        new MethodDto(generateBuilderMethodName(field.getFieldName(), context), parentBuilderType);
     methodDto.addParameter(parameter);
     setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
 
@@ -237,12 +237,12 @@ public final class MethodGeneratorUtil {
         this.$fieldName:N = $builderFieldWrapper:T.changedValue($buildExpression:N);
         return this;
         """
-            .formatted(constructorArgsWithValue, additionalConstructorArgs));
+            .formatted(existingValueConstructorArgs, emptyConstructorArgs));
     methodDto.addArgument(ARG_FIELD_NAME, field.getFieldName());
     methodDto.addArgument(ARG_DTO_METHOD_PARAM, parameter.getParameterName());
-    methodDto.addArgument(ARG_HELPER_TYPE, consumerBuilderType);
+    methodDto.addArgument(ARG_HELPER_TYPE, fieldBuilderType);
     methodDto.addArgument("buildExpression", buildExpression);
-    additionalArguments.forEach(methodDto::addArgument);
+    additionalTemplateArguments.forEach(methodDto::addArgument);
     methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
     methodDto.setPriority(MethodDto.PRIORITY_MEDIUM);
     methodDto.setJavadoc(

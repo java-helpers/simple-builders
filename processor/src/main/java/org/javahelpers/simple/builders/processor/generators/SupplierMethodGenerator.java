@@ -119,8 +119,10 @@ public class SupplierMethodGenerator implements MethodGenerator {
       TypeName builderType,
       ProcessingContext context) {
     TypeNameGeneric supplierType = new TypeNameGeneric(map2TypeName(Supplier.class), fieldType);
+    String parameterName = fieldName + SUFFIX_SUPPLIER;
+
     MethodParameterDto parameter = new MethodParameterDto();
-    parameter.setParameterName(fieldName + SUFFIX_SUPPLIER);
+    parameter.setParameterName(parameterName);
     parameter.setParameterTypeName(supplierType);
 
     MethodDto methodDto = new MethodDto(generateBuilderMethodName(fieldName, context), builderType);
@@ -133,7 +135,7 @@ public class SupplierMethodGenerator implements MethodGenerator {
         return this;
         """);
     methodDto.addArgument(ARG_FIELD_NAME, fieldNameInBuilder);
-    methodDto.addArgument(ARG_DTO_METHOD_PARAM, parameter.getParameterName());
+    methodDto.addArgument(ARG_DTO_METHOD_PARAM, parameterName);
     methodDto.addArgument(ARG_BUILDER_FIELD_WRAPPER, TRACKED_VALUE_TYPE);
     methodDto.setPriority(MethodDto.PRIORITY_HIGH);
 
