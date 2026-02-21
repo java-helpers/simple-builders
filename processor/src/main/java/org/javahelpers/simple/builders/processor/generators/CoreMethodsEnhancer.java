@@ -125,7 +125,7 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
   }
 
   /** Creates the build() method. */
-  private MethodDto createBuildMethod(BuilderDefinitionDto builderDto) {
+  protected MethodDto createBuildMethod(BuilderDefinitionDto builderDto) {
     TypeName returnType =
         MethodGeneratorUtil.createGenericTypeName(
             builderDto.getBuildingTargetTypeName(), builderDto.getGenerics());
@@ -213,7 +213,7 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
   }
 
   /** Creates the static create() method. */
-  private MethodDto createStaticCreateMethod(BuilderDefinitionDto builderDto) {
+  protected MethodDto createStaticCreateMethod(BuilderDefinitionDto builderDto) {
     TypeName returnType =
         MethodGeneratorUtil.createGenericTypeName(
             builderDto.getBuilderTypeName(), builderDto.getGenerics());
@@ -251,7 +251,7 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
   }
 
   /** Creates the toString() method. */
-  private MethodDto createToStringMethod(BuilderDefinitionDto builderDto) {
+  protected MethodDto createToStringMethod(BuilderDefinitionDto builderDto) {
     MethodDto method =
         new MethodDto(
             "toString",
