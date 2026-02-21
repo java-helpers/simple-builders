@@ -260,14 +260,14 @@ compileJava {
 
 | Generator | Purpose | Priority |
 |----------|---------|----------|
-| `ConditionalEnhancer` | Conditional logic methods | 100 |
-| `JacksonAnnotationEnhancer` | Jackson annotations | 100 |
-| `CoreMethodsEnhancer` | Core builder methods (build, create, toString) | 100 |
-| `WithInterfaceEnhancer` | With interface implementation | 90 |
-| `InterfaceEnhancer` | Builder interface implementation | 90 |
-| `GeneratedAnnotationEnhancer` | @Generated annotation | 10 |
-| `BuilderImplementationAnnotationEnhancer` | @BuilderImplementation annotation | 10 |
-| `ClassJavaDocEnhancer` | Class-level JavaDoc | 10 |
+| [`ConditionalEnhancer`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/ConditionalEnhancer.java) | Conditional logic methods | 100 |
+| [`JacksonAnnotationEnhancer`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/JacksonAnnotationEnhancer.java) | Jackson annotations | 100 |
+| [`CoreMethodsEnhancer`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/CoreMethodsEnhancer.java) | Core builder methods (build, create, toString) | 100 |
+| [`WithInterfaceEnhancer`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/WithInterfaceEnhancer.java) | With interface implementation | 90 |
+| [`InterfaceEnhancer`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/InterfaceEnhancer.java) | Builder interface implementation | 90 |
+| [`GeneratedAnnotationEnhancer`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/GeneratedAnnotationEnhancer.java) | @Generated annotation | 10 |
+| [`BuilderImplementationAnnotationEnhancer`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/BuilderImplementationAnnotationEnhancer.java) | @BuilderImplementation annotation | 10 |
+| [`ClassJavaDocEnhancer`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/ClassJavaDocEnhancer.java) | Class-level JavaDoc | 10 |
 
 ## Best Practices
 
