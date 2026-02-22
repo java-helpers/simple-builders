@@ -186,4 +186,21 @@ public class TypeName {
   public int hashCode() {
     return new HashCodeBuilder(17, 37).append(packageName).append(className).toHashCode();
   }
+
+  /**
+   * Checks if this type has an annotation with the given fully qualified name.
+   *
+   * @param annotationFqn the fully qualified name of the annotation to check for
+   * @return true if the type has the specified annotation
+   */
+  public boolean hasAnnotation(String annotationFqn) {
+    if (annotationFqn == null || annotations.isEmpty()) {
+      return false;
+    }
+    return annotations.stream()
+        .anyMatch(
+            annotation ->
+                annotation.getAnnotationType() != null
+                    && annotationFqn.equals(annotation.getAnnotationType().getFullQualifiedName()));
+  }
 }
