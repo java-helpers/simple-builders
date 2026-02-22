@@ -37,31 +37,37 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
  * StringBuilder.
  *
  * <p>This generator creates methods that accept a {@code Consumer<StringBuilder>} to build string
- * values.
+ * values. The consumer configures the StringBuilder, which is then converted to a String and
+ * assigned to the field.
  *
- * <h3>Generated Methods Example:</h3>
+ * <p><b>Important behavior:</b> A new {@code StringBuilder} is created, passed to the consumer for
+ * configuration (appending text, formatting, etc.), then converted to a String. For {@code
+ * Optional<String>} fields, the result is wrapped in {@code Optional.of()}.
  *
- * <pre>
- * // For String title field:
- * public BookDtoBuilder title(Consumer<StringBuilder> titleBuilderConsumer) {
- *   StringBuilder builder = new StringBuilder();
- *   titleBuilderConsumer.accept(builder);
- *   this.title = changedValue(builder.toString());
- *   return this;
- * }
+ * <p><b>Requirements:</b> Only applies to {@code String} or {@code Optional<String>} fields. Does
+ * not apply to String arrays or if the field type has a builder or empty constructor.
  *
- * // For Optional<String> subtitle field:
- * public BookDtoBuilder subtitle(Consumer<StringBuilder> subtitleBuilderConsumer) {
- *   StringBuilder builder = new StringBuilder();
- *   subtitleBuilderConsumer.accept(builder);
- *   this.subtitle = changedValue(Optional.ofNullable(builder.toString()));
- *   return this;
- * }
- * </pre>
+ * <p>This generator is enabled by default and can be deactivated by setting the configuration flag
+ * {@code generateBuilderConsumer} to {@code DISABLED}. See the configuration documentation for
+ * details.
  *
- * <p>Priority: 45 (medium - StringBuilder consumers are useful but less common than basic setters)
+ * <h3>Example to demonstrate the generated methods</h3>
  *
- * <p>This generator respects the configuration flag {@code shouldGenerateStringBuilderConsumer()}.
+ * <pre>{@code
+ * // ExampleDto for demonstration
+ * import org.javahelpers.simple.builders.annotation.SimpleBuilder;
+ * import java.util.Optional;
+ * import java.util.function.Consumer;
+ *
+ * @SimpleBuilder
+ * public record BookDto(String title, Optional<String> subtitle) {}
+ *
+ * // Usage of generated Builder:
+ * var result = BookDtoBuilder.builder()
+ *     .title(sb -> sb.append("The ").append("Complete").append(" Guide"))
+ *     .subtitle(sb -> sb.append("Volume ").append(1))
+ *     .build();
+ * }</pre>
  */
 public class StringBuilderConsumerGenerator implements MethodGenerator {
 

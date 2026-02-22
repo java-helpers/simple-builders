@@ -34,50 +34,46 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
 /**
  * Enhancer that adds conditional methods to generated builders.
  *
- * <p>This enhancer generates methods for conditional builder modification:
+ * <p>This enhancer generates methods for conditional builder modification, allowing builder chains
+ * to apply different configurations based on runtime conditions. Two overloads are provided: one
+ * with true/false branches, and one with only a true branch.
  *
- * <ul>
- *   <li>{@code conditional(BooleanSupplier, Consumer, Consumer)} - applies different logic based on
- *       condition
- *   <li>{@code conditional(BooleanSupplier, Consumer)} - applies logic only when condition is true
- * </ul>
+ * <p><b>Important behavior:</b> The condition is evaluated immediately when the method is called.
+ * Based on the result, either the true action, false action, or no action is applied to the
+ * builder. This enables functional programming patterns in builder chains.
  *
- * <h3>Generated Methods Example:</h3>
+ * <p><b>Requirements:</b> Applies to all builders by default. These methods enable conditional
+ * logic in fluent builder chains.
  *
- * <pre>
- * // Conditional method with true/false branches:
- * public BookDtoBuilder conditional(BooleanSupplier condition,
- *                                   Consumer<BookDtoBuilder> trueAction,
- *                                   Consumer<BookDtoBuilder> falseAction) {
- *   if (condition.getAsBoolean()) {
- *     trueAction.accept(this);
- *   } else {
- *     falseAction.accept(this);
- *   }
- *   return this;
- * }
+ * <p>This enhancer is enabled by default and can be deactivated by setting the configuration flag
+ * {@code generateConditionalHelper} to {@code DISABLED}. See the configuration documentation for
+ * details.
  *
- * // Conditional method with only true branch:
- * public BookDtoBuilder conditional(BooleanSupplier condition, Consumer<BookDtoBuilder> action) {
- *   if (condition.getAsBoolean()) {
- *     action.accept(this);
- *   }
- *   return this;
- * }
+ * <h3>Example to demonstrate the generated methods</h3>
  *
- * // Usage example:
- * BookDto book = BookDto.create()
- *     .title("Default Title")
- *     .conditional(() -> pages > 100,
- *         builder -> builder.subtitle("Extended Edition"),
- *         builder -> builder.subtitle("Standard Edition"))
+ * <pre>{@code
+ * // ExampleDto for demonstration
+ * import org.javahelpers.simple.builders.annotation.SimpleBuilder;
+ * import java.util.function.BooleanSupplier;
+ *
+ * @SimpleBuilder
+ * public record BookDto(String title, String subtitle, int pages) {}
+ *
+ * // Usage of generated Builder:
+ * boolean isExtended = true;
+ * var result = BookDtoBuilder.create()
+ *     .title("My Book")
+ *     .conditional(() -> isExtended,
+ *         b -> b.subtitle("Extended Edition").pages(500),
+ *         b -> b.subtitle("Standard Edition").pages(250))
  *     .build();
- * </pre>
  *
- * <p>These methods enable functional programming patterns where builder modifications can be
- * applied conditionally based on runtime evaluations.
- *
- * <p>Priority: 80 (high - should be applied early but after core methods)
+ * // Or with single branch:
+ * var result2 = BookDtoBuilder.create()
+ *     .title("My Book")
+ *     .conditional(() -> isExtended, b -> b.subtitle("Extended Edition"))
+ *     .build();
+ * }</pre>
  */
 public class ConditionalEnhancer implements BuilderEnhancer {
 

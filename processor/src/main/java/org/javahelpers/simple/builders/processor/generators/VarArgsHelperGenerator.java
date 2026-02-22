@@ -30,39 +30,42 @@ import org.javahelpers.simple.builders.processor.dtos.*;
 import org.javahelpers.simple.builders.processor.util.ProcessingContext;
 
 /**
- * Generates varargs helper methods for collection fields.
+ * Generates varargs helper methods for List, Set, and Map fields.
  *
  * <p>This generator creates convenience methods that accept varargs parameters for List, Set, and
  * Map fields, making it easier to set collection values without explicitly creating collection
- * instances.
+ * instances. The varargs are converted to the appropriate collection type.
  *
- * <h3>Generated Methods Example:</h3>
+ * <p><b>Important behavior:</b> The varargs are converted using {@code List.of()}, {@code
+ * Set.of()}, or {@code Map.ofEntries()} depending on the field type. For concrete collection types
+ * (e.g., {@code ArrayList}, {@code HashSet}), the result is wrapped in the appropriate constructor.
  *
- * <pre>
- * // For List<String> tags field:
- * public BookDtoBuilder tags(String... tags) {
- *   this.tags = changedValue(List.of(tags));
- *   return this;
- * }
+ * <p><b>Requirements:</b> Only applies to parameterized {@code List<T>}, {@code Set<T>}, or {@code
+ * Map<K, V>} fields. For maps, accepts {@code Map.Entry<K, V>} varargs.
  *
- * // For Set<Integer> ratings field:
- * public BookDtoBuilder ratings(Integer... ratings) {
- *   this.ratings = changedValue(Set.of(ratings));
- *   return this;
- * }
- * </pre>
+ * <p>This generator is enabled by default and can be deactivated by setting the configuration flag
+ * {@code generateVarArgsHelpers} to {@code DISABLED}. See the configuration documentation for
+ * details.
  *
- * <p>Examples:
+ * <h3>Example to demonstrate the generated methods</h3>
  *
- * <ul>
- *   <li>For {@code List<String>}: {@code names(String... names)}
- *   <li>For {@code Set<Integer>}: {@code ids(Integer... ids)}
- *   <li>For {@code Map<K,V>}: {@code entries(Map.Entry<K,V>... entries)}
- * </ul>
+ * <pre>{@code
+ * // ExampleDto for demonstration
+ * import org.javahelpers.simple.builders.annotation.SimpleBuilder;
+ * import java.util.List;
+ * import java.util.Set;
+ * import java.util.Map;
  *
- * <p>Priority: 60 (medium-high - convenience methods are useful but basic setters come first)
+ * @SimpleBuilder
+ * public record BookDto(List<String> tags, Set<String> categories, Map<String, Integer> ratings) {}
  *
- * <p>This generator respects the configuration flag {@code shouldGenerateVarArgsHelpers()}.
+ * // Usage of generated Builder:
+ * var result = BookDtoBuilder.builder()
+ *     .tags("java", "builder", "pattern")
+ *     .categories("programming", "design")
+ *     .ratings(Map.entry("quality", 5), Map.entry("readability", 4))
+ *     .build();
+ * }</pre>
  */
 public class VarArgsHelperGenerator implements MethodGenerator {
 

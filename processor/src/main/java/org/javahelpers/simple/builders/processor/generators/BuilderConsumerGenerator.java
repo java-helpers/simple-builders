@@ -35,31 +35,42 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
  * Generates Consumer-based methods for fields whose type has a @SimpleBuilder annotation.
  *
  * <p>This generator creates methods that accept a {@code Consumer<FieldBuilder>} to configure
- * nested builder instances.
+ * nested builder instances. The field's builder is created, passed to the consumer for
+ * configuration, then built and assigned to the field.
  *
- * <h3>Generated Methods Example:</h3>
+ * <p><b>Important behavior:</b> A new builder instance is created for the field type, the consumer
+ * configures it, and then {@code build()} is called automatically. This enables fluent nested
+ * object construction without manually creating and building the nested builder.
  *
- * <pre>
- * // For PersonDto author field (where PersonDto has @SimpleBuilder):
- * public BookDtoBuilder author(Consumer<PersonDtoBuilder> authorBuilderConsumer) {
- *   PersonDtoBuilder builder = PersonDto.create();
- *   authorBuilderConsumer.accept(builder);
- *   this.author = changedValue(builder.build());
- *   return this;
- * }
+ * <p><b>Requirements:</b> Only applies to fields whose type is annotated with
+ * {@code @SimpleBuilder}. The field type must have a generated builder with a static factory
+ * method.
  *
- * // For MannschaftDto mannschaft field (where MannschaftDto has @SimpleBuilder):
- * public PersonDtoBuilder mannschaft(Consumer<MannschaftDtoBuilder> mannschaftBuilderConsumer) {
- *   MannschaftDtoBuilder builder = MannschaftDto.create();
- *   mannschaftBuilderConsumer.accept(builder);
- *   this.mannschaft = changedValue(builder.build());
- *   return this;
- * }
- * </pre>
+ * <p>This generator is enabled by default and can be deactivated by setting the configuration flag
+ * {@code generateBuilderConsumer} to {@code DISABLED}. See the configuration documentation for
+ * details.
  *
- * <p>Priority: 55 (medium-high - builder consumers are very useful for nested objects)
+ * <h3>Example to demonstrate the generated methods</h3>
  *
- * <p>This generator respects the configuration flag {@code shouldGenerateBuilderConsumer()}.
+ * <pre>{@code
+ * // ExampleDto for demonstration
+ * import org.javahelpers.simple.builders.annotation.SimpleBuilder;
+ * import java.util.function.Consumer;
+ *
+ * @SimpleBuilder
+ * public record BookDto(String title, AuthorDto author) {}
+ *
+ * @SimpleBuilder
+ * public record AuthorDto(String name, String email) {}
+ *
+ * // Usage of generated Builder:
+ * var result = BookDtoBuilder.builder()
+ *     .title("My Book")
+ *     .author(a -> a
+ *         .name("John Doe")
+ *         .email("john@example.com"))
+ *     .build();
+ * }</pre>
  */
 public class BuilderConsumerGenerator implements MethodGenerator {
 

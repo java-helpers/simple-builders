@@ -37,16 +37,37 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
  * including information about the target DTO class and the builder's purpose. The JavaDoc follows
  * standard conventions and provides useful information for developers using the builder.
  *
- * <p>The JavaDoc includes:
+ * <p><b>Important behavior:</b> Generates class-level JavaDoc that describes the builder's purpose,
+ * references the target DTO class, and provides basic usage information. This documentation appears
+ * in IDE tooltips and generated API documentation.
  *
- * <ul>
- *   <li>Purpose of the builder class
- *   <li>Reference to the target DTO class
- *   <li>Usage information
- * </ul>
+ * <p><b>Requirements:</b> Always applies to all builders. Class-level documentation is essential
+ * for API usability.
  *
- * <p>Priority: 200 (high - class documentation should be applied early but after core
- * infrastructure)
+ * <p>This enhancer cannot be deactivated as it provides essential documentation for generated
+ * builders.
+ *
+ * <h3>Example of generated class JavaDoc</h3>
+ *
+ * <p>For a DTO like:
+ *
+ * <pre>{@code
+ * @SimpleBuilder
+ * public record BookDto(String title, String author) {}
+ * }</pre>
+ *
+ * <p>The generated builder class will have this JavaDoc:
+ *
+ * <blockquote>
+ *
+ * Builder for {@code BookDto}.
+ *
+ * <p>This builder provides a fluent API for creating instances of BookDto with method chaining and
+ * validation. Use the static {@code create()} method to obtain a new builder instance, configure
+ * the desired properties using the setter methods, and then call {@code build()} to create the
+ * final DTO.
+ *
+ * </blockquote>
  */
 public class ClassJavaDocEnhancer implements BuilderEnhancer {
 

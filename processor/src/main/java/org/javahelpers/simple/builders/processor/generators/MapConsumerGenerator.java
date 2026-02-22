@@ -34,34 +34,39 @@ import org.javahelpers.simple.builders.processor.dtos.*;
 import org.javahelpers.simple.builders.processor.util.ProcessingContext;
 
 /**
- * Generates Consumer-based methods for Map fields with HashMapBuilder support.
+ * Generates Consumer-based methods for Map fields with map builder support.
  *
- * <p>This generator creates methods that accept {@code Consumer<HashMapBuilder<Keytype,
- * Valuetype>>} to build map instances.
+ * <p>This generator creates methods that accept {@code Consumer<HashMapBuilder<K, V>>} to build map
+ * instances. The consumer configures the map builder by adding key-value pairs, which is then built
+ * and assigned to the field.
  *
- * <h3>Generated Methods Example:</h3>
+ * <p><b>Important behavior:</b> A {@code HashMapBuilder} is created, passed to the consumer for
+ * configuration (adding entries via {@code put()} method), then automatically built. This provides
+ * a fluent API for constructing maps.
  *
- * <pre>
- * // For Map<String, String> metadata field:
- * public BookDtoBuilder metadata(Consumer<HashMapBuilder<String, String>> metadataBuilderConsumer) {
- *   HashMapBuilder<String, String> builder = new HashMapBuilder<>();
- *   metadataBuilderConsumer.accept(builder);
- *   this.metadata = changedValue(builder.build());
- *   return this;
- * }
+ * <p><b>Requirements:</b> Only applies to {@code Map<K, V>} fields. Uses {@code HashMapBuilder<K,
+ * V>} for all map types.
  *
- * // For Map<String, Integer> ratings field:
- * public BookDtoBuilder ratings(Consumer<HashMapBuilder<String, Integer>> ratingsBuilderConsumer) {
- *   HashMapBuilder<String, Integer> builder = new HashMapBuilder<>();
- *   ratingsBuilderConsumer.accept(builder);
- *   this.ratings = changedValue(builder.build());
- *   return this;
- * }
- * </pre>
+ * <p>This generator is enabled by default and can be deactivated by setting the configuration flag
+ * {@code usingHashMapBuilder} to {@code DISABLED}. See the configuration documentation for details.
  *
- * <p>Priority: 51 (medium - Map consumers are useful but basic setters come first)
+ * <h3>Example to demonstrate the generated methods</h3>
  *
- * <p>This generator respects the configuration flag {@code shouldUseHashMapBuilder()}.
+ * <pre>{@code
+ * // ExampleDto for demonstration
+ * import org.javahelpers.simple.builders.annotation.SimpleBuilder;
+ * import java.util.Map;
+ * import java.util.function.Consumer;
+ *
+ * @SimpleBuilder
+ * public record BookDto(Map<String, String> metadata, Map<String, Integer> ratings) {}
+ *
+ * // Usage of generated Builder:
+ * var result = BookDtoBuilder.builder()
+ *     .metadata(m -> m.put("author", "John Doe").put("isbn", "123-456"))
+ *     .ratings(r -> r.put("quality", 5).put("readability", 4))
+ *     .build();
+ * }</pre>
  */
 public class MapConsumerGenerator implements MethodGenerator {
 

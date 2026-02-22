@@ -38,34 +38,44 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
 /**
  * Generates Consumer-based methods for Set fields with collection builder support.
  *
- * <p>This generator creates methods that accept {@code Consumer<HashSetBuilder<Fieldtype>>} or
- * {@code Consumer<HashSetBuilderWithElementBuilders<Fieldtype, FieldBuilderType>>} depending on
- * whether the element type has a builder.
+ * <p>This generator creates methods that accept {@code Consumer<HashSetBuilder>} or {@code
+ * Consumer<HashSetBuilderWithElementBuilders>} depending on whether the element type has a builder.
+ * The consumer configures the collection builder, which is then built and assigned.
  *
- * <h3>Generated Methods Example:</h3>
+ * <p><b>Important behavior:</b> A collection builder is created, passed to the consumer for
+ * configuration (adding elements, configuring nested builders, etc.), then automatically built. For
+ * element types with builders, {@code HashSetBuilderWithElementBuilders} provides additional
+ * methods to add elements via their builders.
  *
- * <pre>
- * // For Set<String> tags field (no builder for String):
- * public BookDtoBuilder tags(Consumer<HashSetBuilder<String>> tagsBuilderConsumer) {
- *   HashSetBuilder<String> builder = new HashSetBuilder<>();
- *   tagsBuilderConsumer.accept(builder);
- *   this.tags = changedValue(builder.build());
- *   return this;
- * }
+ * <p><b>Requirements:</b> Only applies to {@code Set<T>} fields. Uses {@code HashSetBuilder<T>} for
+ * simple element types, or {@code HashSetBuilderWithElementBuilders<T, TBuilder>} when the element
+ * type has a {@code @SimpleBuilder} annotation.
  *
- * // For Set<PersonDto> authors field (PersonDto has @SimpleBuilder):
- * public BookDtoBuilder authors(Consumer<HashSetBuilderWithElementBuilders<PersonDto, PersonDtoBuilder>> authorsBuilderConsumer) {
- *   HashSetBuilderWithElementBuilders<PersonDto, PersonDtoBuilder> builder =
- *       new HashSetBuilderWithElementBuilders<>(PersonDtoBuilder::create);
- *   authorsBuilderConsumer.accept(builder);
- *   this.authors = changedValue(builder.build());
- *   return this;
- * }
- * </pre>
+ * <p>This generator is enabled by default and can be deactivated by setting the configuration flag
+ * {@code usingHashSetBuilder} to {@code DISABLED}. See the configuration documentation for details.
  *
- * <p>Priority: 52 (medium - Set consumers are useful but basic setters come first)
+ * <h3>Example to demonstrate the generated methods</h3>
  *
- * <p>This generator respects the configuration flag {@code shouldUseHashSetBuilder()}.
+ * <pre>{@code
+ * // ExampleDto for demonstration
+ * import org.javahelpers.simple.builders.annotation.SimpleBuilder;
+ * import java.util.Set;
+ * import java.util.function.Consumer;
+ *
+ * @SimpleBuilder
+ * public record BookDto(Set<String> categories, Set<AuthorDto> authors) {}
+ *
+ * @SimpleBuilder
+ * public record AuthorDto(String name) {}
+ *
+ * // Usage of generated Builder:
+ * var result = BookDtoBuilder.builder()
+ *     .categories(c -> c.add("Fiction").add("Adventure"))
+ *     .authors(a -> a
+ *         .add(b -> b.name("John Doe"))
+ *         .add(b -> b.name("Jane Smith")))
+ *     .build();
+ * }</pre>
  */
 public class SetConsumerGenerator implements MethodGenerator {
 

@@ -41,33 +41,36 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
  * Generates Supplier-based methods for builder fields.
  *
  * <p>This generator creates methods that accept {@code Supplier<T>} functional interfaces for lazy
- * initialization of field values. The supplier is invoked when the setter is called, and the result
- * is stored in the builder.
+ * initialization of field values. The supplier is invoked immediately when the setter is called,
+ * and the result is stored in the builder.
  *
- * <h3>Generated Methods Example:</h3>
+ * <p><b>Important behavior:</b> The supplier is evaluated eagerly when the method is called, not
+ * lazily when {@code build()} is invoked. This is useful for deferred initialization, dynamic value
+ * generation, or passing method references.
  *
- * <pre>
- * public BookDtoBuilder title(Supplier<String> titleSupplier) {
- *   this.title = changedValue(titleSupplier.get());
- *   return this;
- * }
+ * <p><b>Requirements:</b> Applies to all fields except functional interface types (to avoid
+ * ambiguity with the field type itself being a functional interface).
  *
- * public BookDtoBuilder pages(Supplier<Integer> pagesSupplier) {
- *   this.pages = changedValue(pagesSupplier.get());
- *   return this;
- * }
- * </pre>
+ * <p>This generator is enabled by default and can be deactivated by setting the configuration flag
+ * {@code generateFieldSupplier} to {@code DISABLED}. See the configuration documentation for
+ * details.
  *
- * <p>Supplier methods are useful for:
+ * <h3>Example to demonstrate the generated methods</h3>
  *
- * <ul>
- *   <li>Lazy computation of values
- *   <li>Deferred initialization
- *   <li>Dynamic value generation
- * </ul>
+ * <pre>{@code
+ * // ExampleDto for demonstration
+ * import org.javahelpers.simple.builders.annotation.SimpleBuilder;
+ * import java.util.function.Supplier;
  *
- * <p>This generator applies to all fields except functional interfaces and respects the
- * configuration flag {@code shouldGenerateFieldSupplier()}.
+ * @SimpleBuilder
+ * public record ExampleDto(String title, int pages) {}
+ *
+ * // Usage of generated Builder:
+ * var result = ExampleDtoBuilder.builder()
+ *     .title(() -> "Generated Title")
+ *     .pages(() -> calculatePages())
+ *     .build();
+ * }</pre>
  */
 public class SupplierMethodGenerator implements MethodGenerator {
 

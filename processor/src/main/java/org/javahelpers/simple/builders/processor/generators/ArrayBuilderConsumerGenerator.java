@@ -35,37 +35,38 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
 /**
  * Generates ArrayListBuilder consumer methods for array fields.
  *
- * <p>This generator creates methods that accept a {@code Consumer<ArrayListBuilder<FieldType>>} to
- * build array fields using a fluent builder API. This provides a convenient way to construct arrays
- * using the ArrayListBuilder utility.
+ * <p>This generator creates methods that accept a {@code Consumer<ArrayListBuilder<T>>} to build
+ * array fields using a fluent builder API. The consumer configures the list builder, which is then
+ * converted to an array and assigned to the field.
  *
- * <h3>Generated Methods Example:</h3>
+ * <p><b>Important behavior:</b> An {@code ArrayListBuilder} is created (preserving existing array
+ * elements if the field is already set), passed to the consumer for configuration, then built and
+ * converted to an array. This allows fluent array construction with the convenience of list
+ * operations.
  *
- * <pre>
- * // For String[] keywords field:
- * public BookDtoBuilder keywords(Consumer<ArrayListBuilder<String>> keywordsBuilderConsumer) {
- *   ArrayListBuilder<String> builder = this.keywords.isSet()
- *     ? new ArrayListBuilder<>(java.util.List.of(this.keywords.value()))
- *     : new ArrayListBuilder<>();
- *   keywordsBuilderConsumer.accept(builder);
- *   this.keywords = changedValue(builder.build().toArray(new String[0]));
- *   return this;
- * }
+ * <p><b>Requirements:</b> Only applies to array fields (e.g., {@code String[]}, {@code Integer[]}).
+ * Does not apply to primitive arrays like {@code int[]} or {@code boolean[]}.
  *
- * // For int[] pages field:
- * public BookDtoBuilder pages(Consumer<ArrayListBuilder<Integer>> pagesBuilderConsumer) {
- *   ArrayListBuilder<Integer> builder = this.pages.isSet()
- *     ? new ArrayListBuilder<>(java.util.List.of(this.pages.value()))
- *     : new ArrayListBuilder<>();
- *   pagesBuilderConsumer.accept(builder);
- *   this.pages = changedValue(builder.build().toArray(new Integer[0]));
- *   return this;
- * }
- * </pre>
+ * <p>This generator can be deactivated by setting the configuration flag {@code
+ * shouldGenerateBuilderConsumer()} to {@code false}. See the configuration documentation for
+ * details.
  *
- * <p>Priority: 25 (medium - builder consumers are useful but basic setters come first)
+ * <h3>Example to demonstrate the generated methods</h3>
  *
- * <p>This generator respects the configuration flag {@code shouldGenerateBuilderConsumer()}.
+ * <pre>{@code
+ * // ExampleDto for demonstration
+ * import org.javahelpers.simple.builders.annotation.SimpleBuilder;
+ * import java.util.function.Consumer;
+ *
+ * @SimpleBuilder
+ * public record BookDto(String[] keywords, String[] tags) {}
+ *
+ * // Usage of generated Builder:
+ * var result = BookDtoBuilder.builder()
+ *     .keywords(k -> k.add("java").add("builder").add("pattern"))
+ *     .tags(t -> t.add("programming").add("design"))
+ *     .build();
+ * }</pre>
  */
 public class ArrayBuilderConsumerGenerator implements MethodGenerator {
 

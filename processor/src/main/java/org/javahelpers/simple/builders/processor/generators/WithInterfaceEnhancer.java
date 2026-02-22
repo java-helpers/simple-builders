@@ -36,42 +36,48 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
  * Enhancer that adds the "With" interface to generated builders.
  *
  * <p>The "With" interface provides fluent modification methods for DTO instances, allowing users to
- * apply builder modifications directly to existing DTO objects. This is particularly useful for
- * functional programming patterns and method chaining.
+ * create modified copies of existing DTOs using the builder pattern. This is particularly useful
+ * for immutable DTOs and functional programming patterns.
  *
- * <p>This enhancer creates an interface with two methods:
+ * <p><b>Important behavior:</b> The {@code with(Consumer)} method creates a builder initialized
+ * from the current DTO instance, applies the consumer's modifications, and returns a new built DTO.
+ * The {@code with()} method returns a builder initialized from the current instance for further
+ * chaining. Both methods preserve immutability by creating new instances.
  *
- * <ul>
- *   <li>{@code with(Consumer<BuilderType> modifier)} - applies modifications and returns the
- *       modified DTO
- *   <li>{@code with()} - creates a new builder initialized from this DTO instance
- * </ul>
+ * <p><b>Requirements:</b> Applies to all builders when enabled. The DTO class must implement the
+ * generated "With" interface.
  *
- * <h3>Generated Interface Example:</h3>
+ * <p>This enhancer is enabled by default and can be deactivated by setting the configuration flag
+ * {@code generateWithInterface} to {@code DISABLED}. See the configuration documentation for
+ * details.
  *
- * <pre>
- * public interface BookDtoWith {
- *   default BookDto with(Consumer<BookDtoBuilder> modifier) {
- *     BookDtoBuilder builder = BookDtoBuilder.createFrom(this);
- *     modifier.accept(builder);
- *     return builder.build();
- *   }
+ * <h3>Example to demonstrate the generated methods</h3>
  *
- *   default BookDtoBuilder with() {
- *     return BookDtoBuilder.createFrom(this);
- *   }
- * }
+ * <pre>{@code
+ * // ExampleDto for demonstration
+ * import org.javahelpers.simple.builders.annotation.SimpleBuilder;
+ * import java.util.function.Consumer;
  *
- * // Usage example:
- * BookDto modifiedBook = originalBook.with(builder -> builder
+ * @SimpleBuilder
+ * public record BookDto(String title, String author, int pages) implements BookDtoWith {}
+ *
+ * // Usage of generated With interface:
+ * BookDto original = BookDtoBuilder.create()
+ *     .title("Original Title")
+ *     .author("John Doe")
+ *     .pages(250)
+ *     .build();
+ *
+ * // Create modified copy:
+ * BookDto modified = original.with(b -> b
  *     .title("Updated Title")
- *     .pages(500)
- * );
- * </pre>
+ *     .pages(300));
  *
- * <p>Priority: 95 (critical infrastructure - should be applied early)
- *
- * <p>This enhancer respects the configuration flag {@code shouldGenerateWithInterface()}.
+ * // Or get builder for more changes:
+ * BookDto furtherModified = original.with()
+ *     .title("Another Title")
+ *     .build();
+ * }</pre>
  */
 public class WithInterfaceEnhancer implements BuilderEnhancer {
 

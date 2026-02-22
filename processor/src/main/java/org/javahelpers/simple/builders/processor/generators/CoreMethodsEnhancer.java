@@ -38,52 +38,40 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
 /**
  * Enhancer that adds core builder methods (build, create, toString).
  *
- * <p>This enhancer generates the essential methods that every builder needs:
+ * <p>This enhancer generates the essential methods that every builder needs: {@code build()} to
+ * construct the final DTO instance, {@code create()} as a static factory method, and {@code
+ * toString()} for debugging and logging.
  *
- * <ul>
- *   <li>{@code build()} - constructs the final DTO instance
- *   <li>{@code create()} - static factory method
- *   <li>{@code toString()} - string representation
- * </ul>
+ * <p><b>Important behavior:</b> The {@code build()} method performs null-safety validation for
+ * non-null fields, constructs the DTO instance, and assigns all set field values. The {@code
+ * create()} method provides a convenient static entry point. The {@code toString()} method shows
+ * which fields are set and their values.
  *
- * <h3>Generated Methods Example:</h3>
+ * <p><b>Requirements:</b> Always applies to all builders. These methods are fundamental to builder
+ * functionality and cannot be disabled.
  *
- * <pre>
- * // Static factory method:
- * public static BookDtoBuilder create() {
- *   return new BookDtoBuilder();
- * }
+ * <p>This enhancer cannot be deactivated as it provides the core builder functionality.
  *
- * // Build method (with null checks and field-by-field construction):
- * public BookDto build() {
- *   if (this.pages.isSet() && this.pages.value() == null) {
- *     throw new IllegalStateException("Field 'pages' is marked as non-null but null value was provided");
- *   }
- *   // ... more null checks for other non-null fields
+ * <h3>Example to demonstrate the generated methods</h3>
  *
- *   BookDto result = new BookDto();
- *   this.title.ifSet(result::setTitle);
- *   this.author.ifSet(result::setAuthor);
- *   this.pages.ifSet(result::setPages);
- *   // ... more field assignments
- *   return result;
- * }
+ * <pre>{@code
+ * // ExampleDto for demonstration
+ * import org.javahelpers.simple.builders.annotation.SimpleBuilder;
  *
- * // toString method (using ToStringBuilder):
- * public String toString() {
- *   return new ToStringBuilder(this, BuilderToStringStyle.INSTANCE)
- *           .append("title", this.title)
- *           .append("author", this.author)
- *           .append("pages", this.pages)
- *           // ... more fields
- *           .toString();
- * }
- * </pre>
+ * @SimpleBuilder
+ * public record BookDto(String title, String author, int pages) {}
  *
- * <p>These methods are added with specific ordering to ensure they appear in the correct location
- * in the generated builder class.
+ * // Usage of generated Builder:
+ * var result = BookDtoBuilder.create()  // Static factory method
+ *     .title("My Book")
+ *     .author("John Doe")
+ *     .pages(250)
+ *     .build();  // Constructs the final BookDto
  *
- * <p>Priority: 100 (highest - core infrastructure should be applied first)
+ * // toString() for debugging (only shows set fields with unwrapped values):
+ * System.out.println(BookDtoBuilder.create().title("Test"));
+ * // Output: BookDtoBuilder[title=Test]
+ * }</pre>
  */
 public class CoreMethodsEnhancer implements BuilderEnhancer {
 

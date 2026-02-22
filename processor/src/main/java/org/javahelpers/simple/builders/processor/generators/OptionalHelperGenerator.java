@@ -35,31 +35,37 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
 /**
  * Generates unboxed Optional helper methods for {@code Optional<T>} fields.
  *
- * <p>This generator creates convenience methods that accept the inner type T directly and wrap it
- * in Optional.ofNullable() automatically. This makes it easier to set Optional values without
- * explicitly wrapping them.
+ * <p>This generator creates convenience methods that accept the inner type {@code T} directly and
+ * wrap it in {@code Optional.ofNullable()} automatically. This makes it easier to set Optional
+ * values without explicitly wrapping them.
  *
- * <h3>Generated Methods Example:</h3>
+ * <p><b>Important behavior:</b> The method accepts the unwrapped type {@code T}, wraps it using
+ * {@code Optional.ofNullable()}, and assigns it to the field. This allows passing {@code null}
+ * values which will be converted to {@code Optional.empty()}.
  *
- * <pre>
- * // For Optional<String> subtitle field:
- * public BookDtoBuilder subtitle(String subtitle) {
- *   this.subtitle = changedValue(Optional.ofNullable(subtitle));
- *   return this;
- * }
+ * <p><b>Requirements:</b> Only applies to parameterized {@code Optional<T>} fields.
  *
- * // For Optional<Integer> rating field:
- * public BookDtoBuilder rating(Integer rating) {
- *   this.rating = changedValue(Optional.ofNullable(rating));
- *   return this;
- * }
- * </pre>
+ * <p>This generator is enabled by default and can be deactivated by setting the configuration flag
+ * {@code generateUnboxedOptional} to {@code DISABLED}. See the configuration documentation for
+ * details.
  *
- * <p>Example: For {@code Optional<String> name}, generates: {@code name(String name)}
+ * <h3>Example to demonstrate the generated methods</h3>
  *
- * <p>Priority: 70 (high - Optional unboxing is very useful for Optional fields)
+ * <pre>{@code
+ * // ExampleDto for demonstration
+ * import org.javahelpers.simple.builders.annotation.SimpleBuilder;
+ * import java.util.Optional;
  *
- * <p>This generator respects the configuration flag {@code shouldGenerateUnboxedOptional()}.
+ * @SimpleBuilder
+ * public record BookDto(String title, Optional<String> subtitle, Optional<Integer> rating) {}
+ *
+ * // Usage of generated Builder:
+ * var result = BookDtoBuilder.builder()
+ *     .title("My Book")
+ *     .subtitle("A Great Story")  // String -> Optional<String>
+ *     .rating(5)                   // Integer -> Optional<Integer>
+ *     .build();
+ * }</pre>
  */
 public class OptionalHelperGenerator implements MethodGenerator {
 

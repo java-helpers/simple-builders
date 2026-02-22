@@ -32,42 +32,39 @@ import org.javahelpers.simple.builders.processor.dtos.TypeName;
 import org.javahelpers.simple.builders.processor.util.ProcessingContext;
 
 /**
- * Generates basic setter methods for builder fields.
+ * Generates basic setter methods for all fields of the builder.
  *
  * <p>This generator creates the primary setter method for each field, which accepts the field type
- * directly and stores it in the builder. The setter method:
+ * directly and stores it in the builder. The method name follows the configured setter
+ * prefix/suffix pattern (default is field name without prefix).
  *
- * <ul>
- *   <li>Accepts a parameter of the field's type
- *   <li>Stores the value in a TrackedValue wrapper
- *   <li>Returns the builder instance for method chaining
- *   <li>Applies any field annotations to the parameter
- *   <li>Includes javadoc documentation
- * </ul>
+ * <p><b>Important behavior:</b> The generated setter wraps the value using {@code changedValue()}
+ * to track that the field has been explicitly set. This allows distinguishing between fields that
+ * were never set and fields that were set to {@code null}.
  *
- * <h3>Generated Methods Example:</h3>
+ * <p><b>Requirements:</b> Always applies to all fields. This is the fundamental setter that every
+ * builder field must have.
  *
- * <pre>
- * public BookDtoBuilder title(String title) {
- *   this.title = changedValue(title);
- *   return this;
- * }
+ * <p>This generator cannot be deactivated as it provides the core builder functionality. However,
+ * the method naming can be configured using the setter prefix/suffix configuration options.
  *
- * public BookDtoBuilder pages(int pages) {
- *   this.pages = changedValue(pages);
- *   return this;
- * }
+ * <h3>Example to demonstrate the generated methods</h3>
  *
- * public BookDtoBuilder tags(List<String> tags) {
- *   this.tags = changedValue(tags);
- *   return this;
- * }
- * </pre>
+ * <pre>{@code
+ * // ExampleDto for demonstration
+ * import org.javahelpers.simple.builders.annotation.SimpleBuilder;
+ * import java.util.List;
  *
- * <p>Priority: 100 (highest - basic setters are fundamental to builder functionality)
+ * @SimpleBuilder
+ * public record ExampleDto(String title, int pages, List<String> tags) {}
  *
- * <p>This generator always applies to all fields and has the highest priority to ensure the basic
- * setter is always generated first.
+ * // Usage of generated Builder:
+ * var result = ExampleDtoBuilder.builder()
+ *     .title("My Book")
+ *     .pages(250)
+ *     .tags(List.of("java", "builder"))
+ *     .build();
+ * }</pre>
  */
 public class BasicSetterGenerator implements MethodGenerator {
 

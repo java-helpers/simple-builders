@@ -35,24 +35,44 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
  * Generates Consumer-based methods for fields with concrete classes that have empty constructors.
  *
  * <p>This generator creates methods that accept a {@code Consumer<FieldType>} to configure field
- * instances created via their no-arg constructor.
+ * instances. The field type is instantiated using its no-arg constructor, then passed to the
+ * consumer for configuration.
  *
- * <h3>Generated Methods Example:</h3>
+ * <p><b>Important behavior:</b> A new instance of the field type is created using its empty
+ * constructor, then the consumer is invoked to configure it. This allows fluent configuration of
+ * complex objects without manually creating them first.
  *
- * <pre>
- * // For PersonDto publisher field:
- * public BookDtoBuilder publisher(Consumer<PersonDto> publisherConsumer) {
- *   PersonDto publisher = new PersonDto();
- *   publisherConsumer.accept(publisher);
- *   this.publisher = changedValue(publisher);
- *   return this;
+ * <p><b>Requirements:</b> Only applies to fields whose type has an accessible no-arg constructor.
+ * Does not apply if the field type has a builder (higher priority) or if it's a standard collection
+ * type with a specific consumer generator enabled.
+ *
+ * <p>This generator is enabled by default and can be deactivated by setting the configuration flag
+ * {@code generateFieldConsumer} to {@code DISABLED}. See the configuration documentation for
+ * details.
+ *
+ * <h3>Example to demonstrate the generated methods</h3>
+ *
+ * <pre>{@code
+ * // ExampleDto for demonstration
+ * import org.javahelpers.simple.builders.annotation.SimpleBuilder;
+ * import java.util.function.Consumer;
+ *
+ * @SimpleBuilder
+ * public record BookDto(String title, PublisherDto publisher) {}
+ *
+ * // Needs to be a class, otherwise it would not have a NoArg-Constructor
+ * public class PublisherDto {
+ *   private String name;
+ *   public PublisherDto() {}
+ *   public void changeName(String name) { this.name = name; }
  * }
- * </pre>
  *
- * <p>Priority: 54 (medium - Consumer methods are useful but basic setters come first)
- *
- * <p>This generator applies to fields with types that have empty constructors and respects the
- * configuration flag {@code shouldGenerateFieldConsumer()}.
+ * // Usage of generated Builder:
+ * var result = BookDtoBuilder.builder()
+ *     .title("My Book")
+ *     .publisher(p -> p.changeName("Publisher Inc."))
+ *     .build();
+ * }</pre>
  */
 public class FieldConsumerGenerator implements MethodGenerator {
 

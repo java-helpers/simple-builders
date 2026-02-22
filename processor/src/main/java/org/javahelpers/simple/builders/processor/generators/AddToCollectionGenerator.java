@@ -36,42 +36,39 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
  * Generates add2FieldName helper methods for List and Set fields.
  *
  * <p>This generator creates methods that add single elements to collection fields, supporting both
- * List and Set types. The generated methods follow the pattern "add2FieldName" and always use this
- * naming convention regardless of setter suffix configuration.
+ * List and Set types. The generated methods follow the pattern "add2{#FieldName}" and always use
+ * this naming convention regardless of setter suffix configuration.
  *
- * <h3>Generated Methods Example:</h3>
+ * <p><b>Important behavior:</b> The generated methods preserve immutability by creating a new
+ * collection instance. If the field already has a value, the method creates a copy of the existing
+ * collection, adds the new element, and assigns the new collection. If the field is not yet set, a
+ * new collection is created with the single element.
  *
- * <pre>
- * // For List<String> tags field:
- * public BookDtoBuilder add2Tags(String element) {
- *   if (this.tags.isSet()) {
- *     newCollection = new ArrayList<>(this.tags.value());
- *   } else {
- *     newCollection = new ArrayList<>();
- *   }
- *   newCollection.add(element);
- *   this.tags = changedValue(newCollection);
- *   return this;
- * }
+ * <p><b>Requirements:</b> Only applies to parameterized collection types ({@code List<T>} or {@code
+ * Set<T>}). Raw types like {@code List} or {@code Set} are not supported.
  *
- * // For Set<String> categories field:
- * public BookDtoBuilder add2Categories(String element) {
- *   if (this.categories.isSet()) {
- *     newCollection = new HashSet<>(this.categories.value());
- *   } else {
- *     newCollection = new HashSet<>();
- *   }
- *   newCollection.add(element);
- *   this.categories = changedValue(newCollection);
- *   return this;
- * }
- * </pre>
+ * <p>This generator is enabled by default and can be deactivated by setting the configuration flag
+ * {@code generateAddToCollectionHelpers} to {@code DISABLED}. See the configuration documentation
+ * for details.
  *
- * <p>Priority: 30 (medium - collection helpers are useful but basic setters come first)
+ * <h3>Example to demonstrate the generated methods</h3>
  *
- * <p>This generator respects the configuration flag {@code shouldGenerateAddToCollectionHelpers()}.
+ * <pre>{@code
+ * // ExampleDto for demonstration
+ * import org.javahelpers.simple.builders.annotation.SimpleBuilder;
+ * import java.util.List;
+ * import java.util.Set;
  *
- * <p>Feature #86: Supporting addToField for Sets/Lists
+ * @SimpleBuilder
+ * public record ExampleDto(List<String> tags, Set<String> categories) {}
+ *
+ * // Usage of generated Builder:
+ * var result = ExampleDtoBuilder.builder()
+ *     .add2Tags("tag1")
+ *     .add2Tags("tag2")
+ *     .add2Categories("cat1")
+ *     .build();
+ * }</pre>
  */
 public class AddToCollectionGenerator implements MethodGenerator {
 

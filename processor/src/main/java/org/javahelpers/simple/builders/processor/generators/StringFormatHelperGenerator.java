@@ -36,37 +36,39 @@ import org.javahelpers.simple.builders.processor.dtos.*;
 import org.javahelpers.simple.builders.processor.util.ProcessingContext;
 
 /**
- * Generates String.format helper methods for String and Optional&lt;String&gt; fields.
+ * Generates String.format helper methods for String and {@code Optional<String>} fields.
  *
  * <p>This generator creates convenience methods that accept a format string and varargs arguments,
- * internally using {@code String.format()} to produce the final value.
+ * internally using {@code String.format()} to produce the final value. This provides a concise way
+ * to build formatted strings directly in the builder chain.
  *
- * <h3>Generated Methods Example:</h3>
+ * <p><b>Important behavior:</b> The method accepts a format string and optional arguments, applies
+ * {@code String.format()}, and assigns the result to the field. For {@code Optional<String>}
+ * fields, the formatted result is wrapped in {@code Optional.of()}.
  *
- * <pre>
- * // For String title field:
- * public BookDtoBuilder title(String format, Object... args) {
- *   this.title = changedValue(String.format(format, args));
- *   return this;
- * }
+ * <p><b>Requirements:</b> Only applies to {@code String} or {@code Optional<String>} fields. Does
+ * not apply to String arrays.
  *
- * // For Optional<String> subtitle field:
- * public BookDtoBuilder subtitle(String format, Object... args) {
- *   this.subtitle = changedValue(Optional.of(String.format(format, args)));
- *   return this;
- * }
- * </pre>
+ * <p>This generator is enabled by default and can be deactivated by setting the configuration flag
+ * {@code generateStringFormatHelpers} to {@code DISABLED}. See the configuration documentation for
+ * details.
  *
- * <p>Examples:
+ * <h3>Example to demonstrate the generated methods</h3>
  *
- * <ul>
- *   <li>For {@code String name}: {@code name(String format, Object... args)}
- *   <li>For {@code Optional<String> message}: {@code message(String format, Object... args)}
- * </ul>
+ * <pre>{@code
+ * // ExampleDto for demonstration
+ * import org.javahelpers.simple.builders.annotation.SimpleBuilder;
+ * import java.util.Optional;
  *
- * <p>Priority: 80 (high - String formatting is commonly used utility)
+ * @SimpleBuilder
+ * public record BookDto(String title, Optional<String> description) {}
  *
- * <p>This generator respects the configuration flag {@code shouldGenerateStringFormatHelpers()}.
+ * // Usage of generated Builder:
+ * var result = BookDtoBuilder.builder()
+ *     .title("Book #%d: %s", 1, "Java Patterns")
+ *     .description("Published in %d by %s", 2024, "Tech Press")
+ *     .build();
+ * }</pre>
  */
 public class StringFormatHelperGenerator implements MethodGenerator {
 

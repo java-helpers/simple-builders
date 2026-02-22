@@ -34,29 +34,35 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
 /**
  * Generates array-from-List conversion methods for array fields.
  *
- * <p>This generator creates setter methods that accept a List parameter and convert it to an array
- * for array fields. This provides a more convenient way to set array values using List API.
+ * <p>This generator creates setter methods that accept a {@code List<T>} parameter and convert it
+ * to an array for array fields. This provides a more convenient way to set array values using the
+ * List API instead of manually creating arrays.
  *
- * <h3>Generated Methods Example:</h3>
+ * <p><b>Important behavior:</b> The List is converted to an array using {@code toArray()}, then
+ * assigned to the field. This allows using List operations and utilities before converting to the
+ * required array type.
  *
- * <pre>
- * // For String[] keywords field:
- * public BookDtoBuilder keywords(List<String> keywords) {
- *   this.keywords = changedValue(keywords.toArray(new String[0]));
- *   return this;
- * }
+ * <p><b>Requirements:</b> Only applies to array fields (e.g., {@code String[]}, {@code Integer[]}).
+ * Does not apply to primitive arrays like {@code int[]} or {@code boolean[]}.
  *
- * // For int[] pages field:
- * public BookDtoBuilder pages(List<Integer> pages) {
- *   this.pages = changedValue(pages.toArray(new Integer[0]));
- *   return this;
- * }
- * </pre>
+ * <p>This generator cannot be deactivated as it provides essential convenience for array fields.
  *
- * <p>Priority: 35 (medium-high - array conversions are useful but basic setters come first)
+ * <h3>Example to demonstrate the generated methods</h3>
  *
- * <p>This generator applies to all array fields and provides a convenient List-based API for
- * setting array values.
+ * <pre>{@code
+ * // ExampleDto for demonstration
+ * import org.javahelpers.simple.builders.annotation.SimpleBuilder;
+ * import java.util.List;
+ *
+ * @SimpleBuilder
+ * public record BookDto(String[] keywords, String[] tags) {}
+ *
+ * // Usage of generated Builder:
+ * var result = BookDtoBuilder.builder()
+ *     .keywords(List.of("java", "builder", "pattern"))
+ *     .tags(List.of("programming", "design"))
+ *     .build();
+ * }</pre>
  */
 public class ArrayConversionGenerator implements MethodGenerator {
 

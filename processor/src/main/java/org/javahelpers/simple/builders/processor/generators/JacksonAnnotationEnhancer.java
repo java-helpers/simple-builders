@@ -35,34 +35,42 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
  * deserialization support for the generated builders. This allows Jackson to properly deserialize
  * JSON into DTO instances using the builder pattern.
  *
- * <p>The annotation includes the {@code withPrefix} parameter to specify the setter prefix used by
- * the builder (typically "set" or a custom prefix).
+ * <p><b>Important behavior:</b> The {@code @JsonPOJOBuilder} annotation is added to the builder
+ * class with the {@code withPrefix} parameter matching the configured setter prefix (default is
+ * empty string). This tells Jackson how to map JSON properties to builder methods.
  *
- * <h3>Generated Annotation Example:</h3>
+ * <p><b>Requirements:</b> Only applies when Jackson deserializer annotation support is enabled and
+ * the {@code com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder} class is available on the
+ * classpath.
  *
- * <pre>
+ * <p>This enhancer is disabled by default and can be activated by setting the configuration flag
+ * {@code usingJacksonDeserializerAnnotation} to {@code ENABLED}. For detailed usage instructions,
+ * see the <a
+ * href="https://github.com/andreasigel/simple-builders/blob/main/CONFIGURATION.md#jackson-support">
+ * Jackson Support section in CONFIGURATION.md</a>.
+ *
+ * <h3>Example to demonstrate the generated annotation</h3>
+ *
+ * <pre>{@code
+ * // ExampleDto for demonstration
+ * import org.javahelpers.simple.builders.annotation.SimpleBuilder;
+ * import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+ *
+ * @SimpleBuilder
+ * @JsonDeserialize(builder = BookDtoBuilder.class)
+ * public record BookDto(String title, String author) {}
+ *
+ * // Generated builder with Jackson annotation:
  * @JsonPOJOBuilder(withPrefix = "")
  * public class BookDtoBuilder {
- *   // ... builder implementation
+ *   // ... builder methods
  * }
  *
- * @JsonPOJOBuilder(withPrefix = "set")
- * public class PersonDtoBuilder {
- *   // ... builder implementation
- * }
- * </pre>
- *
- * <p>This enhancer only applies when:
- *
- * <ul>
- *   <li>Jackson deserializer annotation support is enabled in configuration
- *   <li>The {@code com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder} class is available on
- *       the classpath
- * </ul>
- *
- * <p>Priority: 110 (very high - annotations should be added early)
- *
- * <p>This enhancer respects the configuration flag {@code usingJacksonDeserializerAnnotation()}.
+ * // Usage with Jackson:
+ * ObjectMapper mapper = new ObjectMapper();
+ * String json = "{\"title\":\"My Book\",\"author\":\"John Doe\"}";
+ * BookDto book = mapper.readValue(json, BookDto.class);
+ * }</pre>
  */
 public class JacksonAnnotationEnhancer implements BuilderEnhancer {
 

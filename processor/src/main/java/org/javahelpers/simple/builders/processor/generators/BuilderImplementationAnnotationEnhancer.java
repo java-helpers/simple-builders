@@ -37,27 +37,30 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
  * this builder is designed to build. This helps with documentation and tooling support by clearly
  * establishing the relationship between the builder and its target class.
  *
- * <p>The annotation includes the target DTO class as the {@code forClass} parameter.
+ * <p><b>Important behavior:</b> Adds the {@code @BuilderImplementation} annotation with the target
+ * DTO class as the {@code forClass} parameter. This metadata enables tools to discover which
+ * builder corresponds to which DTO class.
  *
- * <h3>Generated Annotation Example:</h3>
+ * <p><b>Requirements:</b> Applies to all builders by default. This annotation provides essential
+ * metadata about the builder-DTO relationship.
  *
- * <pre>
- * @BuilderImplementation(
- *     forClass = BookDto.class
- * )
- * public class BookDtoBuilder {
- *   // ... builder implementation
- * }
+ * <p>This enhancer is enabled by default and can be deactivated by setting the configuration flag
+ * {@code usingBuilderImplementationAnnotation} to {@code DISABLED}. See the configuration
+ * documentation for details.
  *
- * @BuilderImplementation(
- *     forClass = PersonDto.class
- * )
- * public class PersonDtoBuilder {
- *   // ... builder implementation
- * }
- * </pre>
+ * <h3>Example of generated annotation</h3>
  *
- * <p>Priority: 115 (very high - annotations should be added early)
+ * <pre>{@code
+ * // ExampleDto for demonstration
+ * import org.javahelpers.simple.builders.annotation.SimpleBuilder;
+ *
+ * @SimpleBuilder
+ * public record BookDto(String title, String author) {}
+ *
+ * // Generated builder with @BuilderImplementation annotation:
+ * // @BuilderImplementation(forClass = BookDto.class)
+ * // public class BookDtoBuilder { ... }
+ * }</pre>
  */
 public class BuilderImplementationAnnotationEnhancer implements BuilderEnhancer {
 

@@ -55,22 +55,22 @@ public final class MethodGeneratorUtil {
   }
 
   /**
-   * Generates the name of setters on the builder according to configuration and field name.
+   * Generates the name of builder methods according to configuration and field name.
    *
-   * <p>If the suffix is empty, returns the fieldName as-is. If the suffix is set, capitalizes the
-   * first letter of fieldName and prepends the suffix.
+   * <p>If the prefix is empty, returns the fieldName as-is. If the prefix is set, capitalizes the
+   * first letter of fieldName and prepends the prefix.
    *
    * <p>Examples:
    *
    * <ul>
-   *   <li>fieldName="name", suffix="" → "name"
-   *   <li>fieldName="name", suffix="with" → "withName"
-   *   <li>fieldName="age", suffix="set" → "setAge"
+   *   <li>fieldName="name", prefix="" → "name"
+   *   <li>fieldName="name", prefix="with" → "withName"
+   *   <li>fieldName="age", prefix="set" → "setAge"
    * </ul>
    *
    * @param fieldName the field name
-   * @param context the processing context containing the configuration with the suffix
-   * @return the method name with suffix applied
+   * @param context the processing context containing the configuration with the method name prefix
+   * @return the method name with prefix applied
    */
   public static String generateBuilderMethodName(String fieldName, ProcessingContext context) {
     String suffix = context.getConfiguration().getSetterSuffix();
@@ -270,6 +270,21 @@ public final class MethodGeneratorUtil {
 
   /**
    * Wraps an expression with a concrete collection constructor if needed.
+   *
+   * <p>This utility method checks if the field type is a concrete collection implementation (e.g.,
+   * {@code ArrayList}, {@code HashSet}, {@code HashMap}) and wraps the base expression with the
+   * appropriate constructor call. This is useful for custom generators that need to handle concrete
+   * collection types.
+   *
+   * <p>Examples:
+   *
+   * <ul>
+   *   <li>For {@code ArrayList<String>}: wraps {@code List.of(args)} → {@code new
+   *       ArrayList<>(List.of(args))}
+   *   <li>For {@code HashSet<Integer>}: wraps {@code Set.of(args)} → {@code new
+   *       HashSet<>(Set.of(args))}
+   *   <li>For {@code List<String>} (interface): returns {@code List.of(args)} unchanged
+   * </ul>
    *
    * @param fieldType the field type to check
    * @param baseExpression the base expression to potentially wrap

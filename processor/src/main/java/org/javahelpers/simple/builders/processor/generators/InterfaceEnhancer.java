@@ -35,23 +35,42 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
  * configuration. This interface provides a contract for builder implementations and enables
  * polymorphic usage of builders.
  *
- * <h3>Generated Interface Example:</h3>
+ * <p><b>Important behavior:</b> Makes the builder implement {@code IBuilderBase<T>} where {@code T}
+ * is the target DTO type. This enables polymorphic builder usage and provides a common interface
+ * for all builders.
  *
- * <pre>
- * public class BookDtoBuilder implements IBuilderBase<BookDto> {
- *   // ... builder implementation
+ * <p><b>Requirements:</b> Applies to all builders by default. The {@code IBuilderBase} interface
+ * must be available on the classpath.
+ *
+ * <p>This enhancer is enabled by default and can be deactivated by setting the configuration flag
+ * {@code implementsBuilderBase()} to {@code false}. See the configuration documentation for
+ * details.
+ *
+ * <h3>Example to demonstrate the generated interface</h3>
+ *
+ * <pre>{@code
+ * // ExampleDto for demonstration
+ * import org.javahelpers.simple.builders.annotation.SimpleBuilder;
+ * import org.javahelpers.simple.builders.core.IBuilderBase;
+ *
+ * @SimpleBuilder
+ * public record BookDto(String title, String author) {}
+ *
+ * // Generated builder implementing IBuilderBase:
+ * // public class BookDtoBuilder implements IBuilderBase<BookDto> { ... }
+ *
+ * // Usage - configure with concrete type, use polymorphically for build:
+ * BookDtoBuilder builder = BookDtoBuilder.create()
+ *     .title("My Book")
+ *     .author("John Doe");
+ *
+ * // Can be passed to methods expecting IBuilderBase:
+ * BookDto result = buildFromInterface(builder);
+ *
+ * static <T> T buildFromInterface(IBuilderBase<T> builder) {
+ *     return builder.build();
  * }
- *
- * public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
- *   // ... builder implementation
- * }
- * </pre>
- *
- * <p>The interface is parameterized with the target DTO type to ensure type safety.
- *
- * <p>Priority: 90 (high - interfaces should be added early in the generation process)
- *
- * <p>This enhancer respects the configuration flag {@code shouldImplementIBuilderBase()}.
+ * }</pre>
  */
 public class InterfaceEnhancer implements BuilderEnhancer {
 

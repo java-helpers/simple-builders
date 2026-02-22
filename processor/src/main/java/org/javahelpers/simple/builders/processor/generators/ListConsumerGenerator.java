@@ -39,33 +39,44 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
  * Generates Consumer-based methods for List fields with collection builder support.
  *
  * <p>This generator creates methods that accept {@code Consumer<ArrayListBuilder>} or {@code
- * Consumer<ArrayListBuilderWithElementBuilders<Fieldtype, FieldBuilderType>>} depending on whether
- * the element type has a builder.
+ * Consumer<ArrayListBuilderWithElementBuilders>} depending on whether the element type has a
+ * builder. The consumer configures the collection builder, which is then built and assigned.
  *
- * <h3>Generated Methods Example:</h3>
+ * <p><b>Important behavior:</b> A collection builder is created, passed to the consumer for
+ * configuration (adding elements, configuring nested builders, etc.), then automatically built. For
+ * element types with builders, {@code ArrayListBuilderWithElementBuilders} provides additional
+ * methods to add elements via their builders.
  *
- * <pre>
- * // For List<String> tags field (no builder for String):
- * public BookDtoBuilder tags(Consumer<ArrayListBuilder<String>> tagsBuilderConsumer) {
- *   ArrayListBuilder<String> builder = new ArrayListBuilder<>();
- *   tagsBuilderConsumer.accept(builder);
- *   this.tags = changedValue(builder.build());
- *   return this;
- * }
+ * <p><b>Requirements:</b> Only applies to {@code List<T>} fields. Uses {@code ArrayListBuilder<T>}
+ * for simple element types, or {@code ArrayListBuilderWithElementBuilders<T, TBuilder>} when the
+ * element type has a {@code @SimpleBuilder} annotation.
  *
- * // For List<PersonDto> authors field (PersonDto has @SimpleBuilder):
- * public BookDtoBuilder authors(Consumer<ArrayListBuilderWithElementBuilders<PersonDto, PersonDtoBuilder>> authorsBuilderConsumer) {
- *   ArrayListBuilderWithElementBuilders<PersonDto, PersonDtoBuilder> builder =
- *       new ArrayListBuilderWithElementBuilders<>(PersonDtoBuilder::create);
- *   authorsBuilderConsumer.accept(builder);
- *   this.authors = changedValue(builder.build());
- *   return this;
- * }
- * </pre>
+ * <p>This generator is enabled by default and can be deactivated by setting the configuration flag
+ * {@code usingArrayListBuilder} to {@code DISABLED}. See the configuration documentation for
+ * details.
  *
- * <p>Priority: 53 (medium - List consumers are useful but basic setters come first)
+ * <h3>Example to demonstrate the generated methods</h3>
  *
- * <p>This generator respects the configuration flag {@code shouldUseArrayListBuilder()}.
+ * <pre>{@code
+ * // ExampleDto for demonstration
+ * import org.javahelpers.simple.builders.annotation.SimpleBuilder;
+ * import java.util.List;
+ * import java.util.function.Consumer;
+ *
+ * @SimpleBuilder
+ * public record BookDto(List<String> tags, List<AuthorDto> authors) {}
+ *
+ * @SimpleBuilder
+ * public record AuthorDto(String name) {}
+ *
+ * // Usage of generated Builder:
+ * var result = BookDtoBuilder.builder()
+ *     .tags(t -> t.add("java").add("builder"))
+ *     .authors(a -> a
+ *         .add(b -> b.name("John Doe"))
+ *         .add(b -> b.name("Jane Smith")))
+ *     .build();
+ * }</pre>
  */
 public class ListConsumerGenerator implements MethodGenerator {
 
