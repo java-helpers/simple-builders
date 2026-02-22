@@ -113,7 +113,6 @@ public class StringFormatHelperGenerator implements MethodGenerator {
           createStringFormatMethodWithTransform(
               field.getFieldNameEstimated(),
               field.getFieldName(),
-              field.getJavaDoc(),
               "String.format(format, args)",
               field.getParameterAnnotations(),
               builderType,
@@ -127,7 +126,6 @@ public class StringFormatHelperGenerator implements MethodGenerator {
             createStringFormatMethodWithTransform(
                 field.getFieldNameEstimated(),
                 field.getFieldName(),
-                field.getJavaDoc(),
                 "Optional.of(String.format(format, args))",
                 field.getParameterAnnotations(),
                 builderType,
@@ -144,7 +142,6 @@ public class StringFormatHelperGenerator implements MethodGenerator {
    *
    * @param fieldName the name of the field (estimated)
    * @param fieldNameInBuilder the builder field name (may be renamed)
-   * @param fieldJavadoc the javadoc for the field
    * @param transform the transform expression (e.g., "String.format(format, args)")
    * @param annotations annotations to apply to the format parameter
    * @param builderType the builder type for the return type
@@ -154,7 +151,6 @@ public class StringFormatHelperGenerator implements MethodGenerator {
   private MethodDto createStringFormatMethodWithTransform(
       String fieldName,
       String fieldNameInBuilder,
-      String fieldJavadoc,
       String transform,
       List<AnnotationDto> annotations,
       TypeName builderType,
