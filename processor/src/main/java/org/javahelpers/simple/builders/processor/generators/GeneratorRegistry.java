@@ -93,14 +93,20 @@ public class GeneratorRegistry {
 
     for (MethodGenerator generator : methodGenerators) {
       if (generator.appliesTo(field, dtoType, context)) {
-        context.debug(
-            "  -> Applying method generator: %s (priority: %d)",
-            generator.getClass().getSimpleName(), generator.getPriority());
+        try {
+          context.debug(
+              "  -> Applying method generator: %s (priority: %d)",
+              generator.getClass().getSimpleName(), generator.getPriority());
 
-        List<MethodDto> generatedMethods = generator.generateMethods(field, builderType, context);
+          List<MethodDto> generatedMethods = generator.generateMethods(field, builderType, context);
 
-        if (CollectionUtils.isNotEmpty(generatedMethods)) {
-          allMethods.addAll(generatedMethods);
+          if (CollectionUtils.isNotEmpty(generatedMethods)) {
+            allMethods.addAll(generatedMethods);
+          }
+        } catch (Exception e) {
+          context.error(
+              "Failed to apply method generator %s to field %s: %s",
+              generator.getClass().getName(), field.getFieldName(), e.getMessage());
         }
       }
     }
