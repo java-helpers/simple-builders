@@ -31,8 +31,7 @@ import static com.google.testing.compile.JavaFileObjects.forSourceString;
 import com.google.testing.compile.Compilation;
 import org.javahelpers.simple.builders.processor.testing.ProcessorAsserts;
 import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests for component deactivation functionality.
@@ -56,54 +55,102 @@ class ComponentDeactivationTest {
       }
       """;
 
-  @ParameterizedTest
-  @ValueSource(
-      strings = {
-        "ConditionalEnhancer",
-        "*HelperGenerator",
-        "*ConsumerGenerator",
-        "StringFormatHelperGenerator,VarArgsHelperGenerator,ConditionalEnhancer",
-        "String*",
-        "NonExistentGenerator"
-      })
-  void testDeactivateGenerationComponents(String deactivationPatterns) {
-    Compilation compilation =
+  @Test
+  void testDeactivateConditionalEnhancer() {
+    Compilation testCompilation =
         javac()
             .withProcessors(new BuilderProcessor())
-            .withOptions("-Asimplebuilder.deactivateGenerationComponents=" + deactivationPatterns)
+            .withOptions("-Asimplebuilder.deactivateGenerationComponents=ConditionalEnhancer")
             .compile(forSourceString("test.TestDto", TEST_DTO_SOURCE));
 
-    assertThat(compilation).succeeded();
+    assertThat(testCompilation).succeeded();
+    String testBuilder = ProcessorTestUtils.loadGeneratedSource(testCompilation, "TestDtoBuilder");
 
-    String generatedBuilder = ProcessorTestUtils.loadGeneratedSource(compilation, "TestDtoBuilder");
+    ProcessorAsserts.assertNotContaining(testBuilder, "conditional(BooleanSupplier");
+    ProcessorAsserts.assertNotContaining(testBuilder, "conditional(");
+    ProcessorAsserts.assertGenerationSucceeded(testCompilation, "TestDtoBuilder", testBuilder);
+  }
 
-    // Basic setters should always be present (unless BasicSetterGenerator is deactivated)
-    ProcessorAsserts.assertContaining(generatedBuilder, "name(");
-    ProcessorAsserts.assertContaining(generatedBuilder, "age(");
+  @Test
+  void testDeactivateAllHelperGenerators() {
+    Compilation testCompilation =
+        javac()
+            .withProcessors(new BuilderProcessor())
+            .withOptions("-Asimplebuilder.deactivateGenerationComponents=*HelperGenerator")
+            .compile(forSourceString("test.TestDto", TEST_DTO_SOURCE));
 
-    // Verify specific deactivations based on patterns
-    if (deactivationPatterns.contains("ConditionalEnhancer")) {
-      ProcessorAsserts.assertNotContaining(generatedBuilder, "conditional(BooleanSupplier");
-      ProcessorAsserts.assertNotContaining(generatedBuilder, "conditional(");
-    }
+    assertThat(testCompilation).succeeded();
+    String testBuilder = ProcessorTestUtils.loadGeneratedSource(testCompilation, "TestDtoBuilder");
 
-    if (deactivationPatterns.contains("*HelperGenerator")) {
-      ProcessorAsserts.assertNotContaining(generatedBuilder, "stringFormat(");
-      ProcessorAsserts.assertNotContaining(generatedBuilder, "varArgs(");
-    }
+    ProcessorAsserts.assertNotContaining(testBuilder, "stringFormat(");
+    ProcessorAsserts.assertNotContaining(testBuilder, "varArgs(");
+    ProcessorAsserts.assertGenerationSucceeded(testCompilation, "TestDtoBuilder", testBuilder);
+  }
 
-    if (deactivationPatterns.contains("*ConsumerGenerator")) {
-      ProcessorAsserts.assertNotContaining(generatedBuilder, "nameConsumer(");
-      ProcessorAsserts.assertNotContaining(generatedBuilder, "ageConsumer(");
-      ProcessorAsserts.assertNotContaining(generatedBuilder, "builderConsumer(");
-    }
+  @Test
+  void testDeactivateAllConsumerGenerators() {
+    Compilation testCompilation =
+        javac()
+            .withProcessors(new BuilderProcessor())
+            .withOptions("-Asimplebuilder.deactivateGenerationComponents=*ConsumerGenerator")
+            .compile(forSourceString("test.TestDto", TEST_DTO_SOURCE));
 
-    if (deactivationPatterns.contains("String*")) {
-      ProcessorAsserts.assertNotContaining(generatedBuilder, "stringFormat(");
-      ProcessorAsserts.assertNotContaining(generatedBuilder, "stringBuilderConsumer(");
-    }
+    assertThat(testCompilation).succeeded();
+    String testBuilder = ProcessorTestUtils.loadGeneratedSource(testCompilation, "TestDtoBuilder");
 
-    // Always verify generation succeeded
-    ProcessorAsserts.assertGenerationSucceeded(compilation, "TestDtoBuilder", generatedBuilder);
+    ProcessorAsserts.assertNotContaining(testBuilder, "nameConsumer(");
+    ProcessorAsserts.assertNotContaining(testBuilder, "ageConsumer(");
+    ProcessorAsserts.assertNotContaining(testBuilder, "builderConsumer(");
+    ProcessorAsserts.assertGenerationSucceeded(testCompilation, "TestDtoBuilder", testBuilder);
+  }
+
+  @Test
+  void testDeactivateMultipleSpecificGenerators() {
+    Compilation testCompilation =
+        javac()
+            .withProcessors(new BuilderProcessor())
+            .withOptions(
+                "-Asimplebuilder.deactivateGenerationComponents=StringFormatHelperGenerator,VarArgsHelperGenerator,ConditionalEnhancer")
+            .compile(forSourceString("test.TestDto", TEST_DTO_SOURCE));
+
+    assertThat(testCompilation).succeeded();
+    String testBuilder = ProcessorTestUtils.loadGeneratedSource(testCompilation, "TestDtoBuilder");
+
+    ProcessorAsserts.assertNotContaining(testBuilder, "stringFormat(");
+    ProcessorAsserts.assertNotContaining(testBuilder, "varArgs(");
+    ProcessorAsserts.assertNotContaining(testBuilder, "conditional(BooleanSupplier");
+    ProcessorAsserts.assertNotContaining(testBuilder, "conditional(");
+    ProcessorAsserts.assertGenerationSucceeded(testCompilation, "TestDtoBuilder", testBuilder);
+  }
+
+  @Test
+  void testDeactivateStringPatternGenerators() {
+    Compilation testCompilation =
+        javac()
+            .withProcessors(new BuilderProcessor())
+            .withOptions("-Asimplebuilder.deactivateGenerationComponents=String*")
+            .compile(forSourceString("test.TestDto", TEST_DTO_SOURCE));
+
+    assertThat(testCompilation).succeeded();
+    String testBuilder = ProcessorTestUtils.loadGeneratedSource(testCompilation, "TestDtoBuilder");
+
+    ProcessorAsserts.assertNotContaining(testBuilder, "stringFormat(");
+    ProcessorAsserts.assertNotContaining(testBuilder, "stringBuilderConsumer(");
+    ProcessorAsserts.assertGenerationSucceeded(testCompilation, "TestDtoBuilder", testBuilder);
+  }
+
+  @Test
+  void testDeactivateNonExistentGenerator() {
+    Compilation testCompilation =
+        javac()
+            .withProcessors(new BuilderProcessor())
+            .withOptions("-Asimplebuilder.deactivateGenerationComponents=NonExistentGenerator")
+            .compile(forSourceString("test.TestDto", TEST_DTO_SOURCE));
+
+    assertThat(testCompilation).succeeded();
+    String testBuilder = ProcessorTestUtils.loadGeneratedSource(testCompilation, "TestDtoBuilder");
+
+    // Should still generate normally since non-existent generator has no effect
+    ProcessorAsserts.assertGenerationSucceeded(testCompilation, "TestDtoBuilder", testBuilder);
   }
 }

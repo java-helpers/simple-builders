@@ -345,38 +345,7 @@ mvn compile -Asimplebuilder.deactivateGenerationComponents=BasicSetterGenerator
 cat target/generated-sources/annotations/your/package/YourDtoBuilder.java
 ```
 
-#### Option 2: Unit Testing the Component Logic
-
-Test your component logic directly:
-
-```java
-@Test
-void customGeneratorAppliesToTest() {
-    CustomValidationGenerator generator = new CustomValidationGenerator();
-    
-    // Mock field with @Email annotation
-    FieldDto emailField = createMockField("email", String.class, List.of("javax.validation.constraints.Email"));
-    FieldDto nameField = createMockField("name", String.class, List.of());
-    
-    // Test appliesTo logic
-    assertTrue(generator.appliesTo(emailField, dtoType, context));
-    assertFalse(generator.appliesTo(nameField, dtoType, context));
-}
-
-@Test
-void customGeneratorMethodGenerationTest() {
-    CustomValidationGenerator generator = new CustomValidationGenerator();
-    
-    // Test method generation
-    List<MethodDto> methods = generator.generateMethods(emailField, builderType, context);
-    
-    assertEquals(1, methods.size());
-    assertEquals("validatedEmail", methods.get(0).getMethodName());
-    assertTrue(methods.get(0).getCode().contains("isValidEmail"));
-}
-```
-
-#### Option 3: Using google-compile-testing (Advanced)
+#### Option 2: Using google-compile-testing (Advanced)
 
 If you want to use the same testing framework as simple-builders:
 
