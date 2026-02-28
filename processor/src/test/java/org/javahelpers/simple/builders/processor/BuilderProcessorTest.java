@@ -3080,7 +3080,7 @@ class BuilderProcessorTest {
   }
 
   @Test
-  void shouldGenerateSetConsumerWithHashSetBuilderWhenElementHasNoBuilder() {
+  void shouldGenerateSetConsumerForSimpleElements() {
     // Given: A Set field where element type has no builder
     String packageName = "test";
     String className = "HasSetWithSimpleElement";
@@ -3113,7 +3113,7 @@ class BuilderProcessorTest {
   }
 
   @Test
-  void shouldGenerateSetConsumerWithHashSetBuilderWithElementBuildersWhenElementHasBuilder() {
+  void shouldGenerateSetConsumerForBuilderElements() {
     // Given: A Set field where element type has a builder
     String packageName = "test";
     String className = "HasSetWithBuilderElement";
@@ -3268,7 +3268,7 @@ class BuilderProcessorTest {
   }
 
   @Test
-  void shouldGenerateListConsumerWithArrayListBuilderWhenElementHasNoBuilder() {
+  void shouldGenerateListConsumerForSimpleElements() {
     // Given: A List field where element type has no builder
     String packageName = "test";
     String className = "HasListWithSimpleElement";
@@ -3301,7 +3301,7 @@ class BuilderProcessorTest {
   }
 
   @Test
-  void shouldGenerateListConsumerWithArrayListBuilderWithElementBuildersWhenElementHasBuilder() {
+  void shouldGenerateListConsumerForBuilderElements() {
     // Given: A List field where element type has a builder
     String packageName = "test";
     String className = "HasListWithBuilderElement";

@@ -149,19 +149,12 @@ public class InterfaceName {
     return new EqualsBuilder()
         .append(packageName, that.packageName)
         .append(simpleName, that.simpleName)
-        .append(annotations, that.annotations)
-        .append(typeParameters, that.typeParameters)
         .isEquals();
   }
 
   @Override
   public int hashCode() {
-    return new HashCodeBuilder(17, 37)
-        .append(packageName)
-        .append(simpleName)
-        .append(annotations)
-        .append(typeParameters)
-        .toHashCode();
+    return new HashCodeBuilder(17, 37).append(packageName).append(simpleName).toHashCode();
   }
 
   /**

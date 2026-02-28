@@ -5,11 +5,11 @@ import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts
 import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.assertingResult;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.contains;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils.createCompiler;
+import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils.forSource;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils.loadGeneratedSource;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils.printDiagnosticsOnVerbose;
 
 import com.google.testing.compile.Compilation;
-import com.google.testing.compile.JavaFileObjects;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -67,9 +67,7 @@ class CustomizingDocumentationTest {
             }
             """;
 
-    Compilation compilation =
-        createCompiler()
-            .compile(JavaFileObjects.forSourceString("com.example.test.EmailDto", emailDto));
+    Compilation compilation = createCompiler().compile(forSource(emailDto));
     printDiagnosticsOnVerbose(compilation);
 
     String builderClassName = "EmailDtoBuilder";
@@ -122,11 +120,7 @@ class CustomizingDocumentationTest {
             }
             """;
 
-    Compilation compilation =
-        createCompiler()
-            .compile(
-                JavaFileObjects.forSourceString(
-                    "com.example.test.TestMethodGenerator", customGenerator));
+    Compilation compilation = createCompiler().compile(forSource(customGenerator));
     printDiagnosticsOnVerbose(compilation);
 
     // Verify the custom generator class compiles successfully
@@ -167,11 +161,7 @@ class CustomizingDocumentationTest {
             }
             """;
 
-    Compilation compilation =
-        createCompiler()
-            .compile(
-                JavaFileObjects.forSourceString(
-                    "com.example.test.TestBuilderEnhancer", customEnhancer));
+    Compilation compilation = createCompiler().compile(forSource(customEnhancer));
     printDiagnosticsOnVerbose(compilation);
 
     // Verify the custom enhancer class compiles successfully
@@ -232,11 +222,7 @@ class CustomizingDocumentationTest {
             }
             """;
 
-    Compilation compilation =
-        createCompiler()
-            .compile(
-                JavaFileObjects.forSourceString(
-                    "com.example.test.CustomHelperGenerator", customGenerator));
+    Compilation compilation = createCompiler().compile(forSource(customGenerator));
     printDiagnosticsOnVerbose(compilation);
 
     // Verify the custom generator class compiles successfully
@@ -279,11 +265,7 @@ class CustomizingDocumentationTest {
             }
             """;
 
-    Compilation compilation =
-        createCompiler()
-            .compile(
-                JavaFileObjects.forSourceString(
-                    "com.example.test.HighPriorityGenerator", highPriorityGenerator));
+    Compilation compilation = createCompiler().compile(forSource(highPriorityGenerator));
     printDiagnosticsOnVerbose(compilation);
 
     // Verify the custom generator class compiles successfully
@@ -332,11 +314,7 @@ class CustomizingDocumentationTest {
             }
             """;
 
-    Compilation compilation =
-        createCompiler()
-            .compile(
-                JavaFileObjects.forSourceString(
-                    "com.example.test.SafeGenerator", generatorWithErrorHandling));
+    Compilation compilation = createCompiler().compile(forSource(generatorWithErrorHandling));
     printDiagnosticsOnVerbose(compilation);
 
     // Verify the custom generator class compiles successfully
@@ -389,11 +367,7 @@ class CustomizingDocumentationTest {
             }
             """;
 
-    Compilation compilation =
-        createCompiler()
-            .compile(
-                JavaFileObjects.forSourceString(
-                    "com.example.test.ConditionalGenerator", conditionalGenerator));
+    Compilation compilation = createCompiler().compile(forSource(conditionalGenerator));
     printDiagnosticsOnVerbose(compilation);
 
     // Verify the custom generator class compiles successfully
@@ -468,11 +442,7 @@ class CustomizingDocumentationTest {
             }
             """;
 
-    Compilation compilation =
-        createCompiler()
-            .compile(
-                JavaFileObjects.forSourceString(
-                    "com.example.test.CustomValidationGenerator", customValidationGenerator));
+    Compilation compilation = createCompiler().compile(forSource(customValidationGenerator));
     printDiagnosticsOnVerbose(compilation);
 
     // Verify the complete custom generator compiles successfully
@@ -547,11 +517,7 @@ class CustomizingDocumentationTest {
             }
             """;
 
-    Compilation compilation =
-        createCompiler()
-            .compile(
-                JavaFileObjects.forSourceString(
-                    "com.example.test.CustomValidationEnhancer", customValidationEnhancer));
+    Compilation compilation = createCompiler().compile(forSource(customValidationEnhancer));
     printDiagnosticsOnVerbose(compilation);
 
     // Verify the complete custom enhancer compiles successfully
@@ -576,9 +542,7 @@ class CustomizingDocumentationTest {
             public record TestDto(String name, int value) {}
             """;
 
-    Compilation compilation =
-        createCompiler()
-            .compile(JavaFileObjects.forSourceString("com.example.test.TestDto", testDto));
+    Compilation compilation = createCompiler().compile(forSource(testDto));
 
     // Verify compilation succeeded (as shown in docs)
     assertThat(compilation).succeeded();
@@ -652,11 +616,7 @@ class CustomizingDocumentationTest {
             }
             """;
 
-    Compilation compilation =
-        createCompiler()
-            .compile(
-                JavaFileObjects.forSourceString(
-                    "com.example.test.DateParserGenerator", dateParserGenerator));
+    Compilation compilation = createCompiler().compile(forSource(dateParserGenerator));
     printDiagnosticsOnVerbose(compilation);
 
     // Verify the date parser generator compiles successfully
@@ -717,11 +677,7 @@ class CustomizingDocumentationTest {
             }
             """;
 
-    Compilation compilation =
-        createCompiler()
-            .compile(
-                JavaFileObjects.forSourceString(
-                    "com.example.test.BuilderFactoryEnhancer", builderFactoryEnhancer));
+    Compilation compilation = createCompiler().compile(forSource(builderFactoryEnhancer));
     printDiagnosticsOnVerbose(compilation);
 
     // Verify the factory enhancer compiles successfully

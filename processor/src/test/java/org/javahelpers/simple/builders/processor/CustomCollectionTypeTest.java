@@ -24,6 +24,7 @@
 package org.javahelpers.simple.builders.processor;
 
 import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.assertGenerationSucceeded;
+import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.contains;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils.loadGeneratedSource;
 
 import com.google.testing.compile.Compilation;
@@ -416,21 +417,21 @@ class CustomCollectionTypeTest {
     String generatedCode = ProcessorTestUtils.loadGeneratedSource(compilation, "ArrayDtoBuilder");
     assertGenerationSucceeded(compilation, "ArrayDtoBuilder", generatedCode);
 
-    // Verify array conversion method has correct javadoc (from ArrayConversionGenerator)
-    ProcessorAsserts.assertContaining(generatedCode, "Sets the value for <code>tags</code>.");
-    ProcessorAsserts.assertContaining(generatedCode, "@param tags tags");
+    // Verify array conversion method has correct javadoc and signature (from
+    // ArrayConversionGenerator)
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains("public ArrayDtoBuilder tags(List<String> tags)"),
+        contains("Sets the value for <code>tags</code>."),
+        contains("@param tags tags"));
 
-    // Verify array builder consumer method has correct javadoc (from ArrayBuilderConsumerGenerator)
-    ProcessorAsserts.assertContaining(
-        generatedCode, "Sets the value for <code>tags</code> using the fluent builder consumer.");
-    ProcessorAsserts.assertContaining(
-        generatedCode, "@param tagsBuilderConsumer consumer for tags");
-
-    // Verify both methods are generated with correct signatures
-    ProcessorAsserts.assertContaining(
-        generatedCode, "public ArrayDtoBuilder tags(List<String> tags)");
-    ProcessorAsserts.assertContaining(
-        generatedCode, "public ArrayDtoBuilder tags(Consumer<ArrayListBuilder<String>>");
+    // Verify array builder consumer method has correct javadoc and signature (from
+    // ArrayBuilderConsumerGenerator)
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains("public ArrayDtoBuilder tags(Consumer<ArrayListBuilder<String>>"),
+        contains("Sets the value for <code>tags</code> using the fluent builder consumer."),
+        contains("@param tagsBuilderConsumer consumer for tags"));
   }
 
   @Test
