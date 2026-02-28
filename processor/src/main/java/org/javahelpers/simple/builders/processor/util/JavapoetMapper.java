@@ -35,9 +35,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.processor.dtos.*;
+import org.javahelpers.simple.builders.processor.exceptions.JavapoetMapperException;
 
 /** Helper functions to create JavaPoet types from DTOs of simple builder. */
 public final class JavapoetMapper {
@@ -86,7 +88,7 @@ public final class JavapoetMapper {
       typeName = ClassName.get(parameterType.getPackageName(), parameterType.getClassName());
     }
 
-    if (typeName != null && !parameterType.getAnnotations().isEmpty()) {
+    if (typeName != null && CollectionUtils.isNotEmpty(parameterType.getAnnotations())) {
       typeName = typeName.annotated(map2AnnotationSpecs(parameterType.getAnnotations()));
     }
     return typeName;
@@ -190,7 +192,8 @@ public final class JavapoetMapper {
     } else if (placeHolderValue instanceof MethodCodeTypePlaceholder typePlaceholder) {
       return map2ParameterType(typePlaceholder.getValue());
     } else {
-      throw new UnsupportedOperationException("");
+      throw new UnsupportedOperationException(
+          "Unsupported placeholder type: " + placeHolderValue.getClass());
     }
   }
 
@@ -198,26 +201,34 @@ public final class JavapoetMapper {
    * Maps an AnnotationDto to a JavaPoet AnnotationSpec.
    *
    * @param annotationDto the annotation DTO to map
-   * @return JavaPoet AnnotationSpec
+   * @return the mapped JavaPoet AnnotationSpec, always not null
+   * @throws JavapoetMapperException if mapping fails
    */
   public static AnnotationSpec map2AnnotationSpec(AnnotationDto annotationDto) {
-    ClassName annotationType = map2ClassName(annotationDto.getAnnotationType());
-    AnnotationSpec.Builder builder = AnnotationSpec.builder(annotationType);
+    try {
+      ClassName annotationType = map2ClassName(annotationDto.getAnnotationType());
+      AnnotationSpec.Builder builder = AnnotationSpec.builder(annotationType);
 
-    // Add annotation members (parameters)
-    for (Map.Entry<String, String> member : annotationDto.getMembers().entrySet()) {
-      // Use $L (literal) format since the values are already formatted as code strings
-      builder.addMember(member.getKey(), "$L", member.getValue());
+      for (Map.Entry<String, String> member : annotationDto.getMembers().entrySet()) {
+        builder.addMember(member.getKey(), "$L", member.getValue());
+      }
+
+      return builder.build();
+    } catch (Exception e) {
+      throw new JavapoetMapperException(
+          e,
+          "Failed to map annotation %s: %s",
+          annotationDto.getAnnotationType().getClassName(),
+          e.getMessage());
     }
-
-    return builder.build();
   }
 
   /**
    * Maps a list of AnnotationDto to JavaPoet AnnotationSpec instances.
    *
    * @param annotations the list of annotations to map
-   * @return list of AnnotationSpec
+   * @return list of AnnotationSpec for all annotations
+   * @throws JavapoetMapperException if any annotation mapping fails
    */
   public static List<AnnotationSpec> map2AnnotationSpecs(List<AnnotationDto> annotations) {
     return annotations.stream().map(JavapoetMapper::map2AnnotationSpec).toList();
@@ -235,5 +246,33 @@ public final class JavapoetMapper {
       case PRIVATE -> javax.lang.model.element.Modifier.PRIVATE;
       case PACKAGE_PRIVATE -> null; // Package-private has no explicit modifier
     };
+  }
+
+  /**
+   * Maps an InterfaceName to a JavaPoet TypeName.
+   *
+   * @param interfaceName the interface name to map
+   * @return the mapped JavaPoet TypeName, always not null
+   * @throws JavapoetMapperException if mapping fails
+   */
+  public static TypeName mapInterfaceToTypeName(InterfaceName interfaceName) {
+    try {
+      TypeName interfaceType =
+          ClassName.get(interfaceName.getPackageName(), interfaceName.getSimpleName());
+
+      // Add type parameters if present
+      if (interfaceName.hasTypeParameters()) {
+        TypeName[] typeArgs =
+            interfaceName.getTypeParameters().stream()
+                .map(JavapoetMapper::map2ParameterType)
+                .toArray(TypeName[]::new);
+        interfaceType = ParameterizedTypeName.get((ClassName) interfaceType, typeArgs);
+      }
+
+      return interfaceType;
+    } catch (Exception e) {
+      throw new JavapoetMapperException(
+          e, "Failed to map interface %s: %s", interfaceName.toString(), e.getMessage());
+    }
   }
 }

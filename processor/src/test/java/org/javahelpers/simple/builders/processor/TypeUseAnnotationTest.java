@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
  * <p>TYPE_USE annotations apply to type usage, not declarations:
  *
  * <pre>
- * List&lt;@NotNull String&gt; items;
+ * {@code List<String>} items;
  * </pre>
  *
  * <p>These annotations should be preserved on:

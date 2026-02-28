@@ -113,4 +113,9 @@ public class TypeNamePrimitive extends TypeName {
     /** The double primitive type. */
     DOUBLE;
   }
+
+  @Override
+  public String getFullQualifiedName() {
+    return type.name().toLowerCase();
+  }
 }

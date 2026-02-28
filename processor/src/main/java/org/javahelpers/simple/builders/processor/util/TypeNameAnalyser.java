@@ -31,6 +31,7 @@ import org.javahelpers.simple.builders.processor.dtos.TypeNameGeneric;
 public class TypeNameAnalyser {
 
   private static final String JAVA_UTIL_PACKAGE = "java.util";
+  private static final String JAVA_LANG_PACKAGE = "java.lang";
 
   private TypeNameAnalyser() {}
 
@@ -42,7 +43,7 @@ public class TypeNameAnalyser {
    */
   public static boolean isJavaClass(TypeName typeName) {
     return Strings.CI.equalsAny(
-        typeName.getPackageName(), "java.lang", "java.time", JAVA_UTIL_PACKAGE);
+        typeName.getPackageName(), JAVA_LANG_PACKAGE, "java.time", JAVA_UTIL_PACKAGE);
   }
 
   /**
@@ -63,15 +64,15 @@ public class TypeNameAnalyser {
    * @return {@code true}, if it is a {@code java.lang.String}
    */
   public static boolean isString(TypeName typeName) {
-    return Strings.CI.equals(typeName.getPackageName(), "java.lang")
+    return Strings.CI.equals(typeName.getPackageName(), JAVA_LANG_PACKAGE)
         && Strings.CI.equals(typeName.getClassName(), "String");
   }
 
   /**
-   * Checks if the field type is Optional&lt;String&gt;.
+   * Checks if the field type is {@code Optional<String>}.
    *
    * @param fieldType the type of the field
-   * @return true if the type is Optional&lt;String&gt;, false otherwise
+   * @return true if the type is {@code Optional<String>}, false otherwise
    */
   public static boolean isOptionalString(TypeName fieldType) {
     if (fieldType instanceof TypeNameGeneric fieldTypeGeneric

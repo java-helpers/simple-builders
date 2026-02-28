@@ -16,6 +16,7 @@ Simple-builders supports fine-grained configuration through the `@SimpleBuilder.
   - [Conditional Logic](#conditional-logic)
   - [Access Control](#access-control)
   - [Collection Helpers](#collection-helpers)
+  - [Component Filtering](#component-filtering)
   - [Integration](#integration)
 - [Examples](#examples)
   - [Minimal Builder](#minimal-builder)
@@ -390,19 +391,26 @@ PersonDto person = PersonDtoBuilder.create()
 
 **Default**: `ENABLED` | **Compiler Option**: `-Asimplebuilder.generateStringFormatHelpers=ENABLED|DISABLED`
 
-Generates `String.format()` helper methods for String fields.
+Generates `String.format()` helper methods for String and Optional<String> fields.
 
 **When ENABLED**:
 ```java
-// Generated method
-public PersonDtoBuilder name(String format, Object... args) {
-    this.name = changedValue(String.format(format, args));
-    return this;
+// For String title field:
+public BookDtoBuilder title(String format, Object... args) {
+  this.title = changedValue(String.format(format, args));
+  return this;
+}
+
+// For Optional<String> subtitle field:
+public BookDtoBuilder subtitle(String format, Object... args) {
+  this.subtitle = changedValue(Optional.of(String.format(format, args)));
+  return this;
 }
 
 // Usage
-PersonDto person = PersonDtoBuilder.create()
-    .name("Hello, %s %s!", firstName, lastName)
+BookDto book = BookDtoBuilder.create()
+    .title("The %s Guide", "Complete")
+    .subtitle("A comprehensive %s tutorial for %s", "Java", "beginners")
     .build();
 ```
 
@@ -596,6 +604,34 @@ public TeamDtoBuilder uniqueMembers(Consumer<HashSetBuilderWithElementBuilders<P
 **Default**: `ENABLED` | **Compiler Option**: `-Asimplebuilder.usingHashMapBuilder=ENABLED|DISABLED`
 
 Generates methods using `HashMapBuilder` for fluent Map construction.
+
+---
+
+### Component Filtering
+
+#### `deactivateGenerationComponents`
+
+**Default**: `""` (empty) | **Compiler Option**: `-Asimplebuilder.deactivateGenerationComponents=pattern1,pattern2,...`
+
+Deactivates specific method generators and builder enhancers by class name pattern. This allows you to override default generators/enhancers with your own custom implementations.
+
+**Primary Use Case**: Override Default Components
+
+When you want to replace a built-in generator or enhancer with your own custom implementation, you first deactivate the default component, then register your custom one via ServiceLoader.
+
+For detailed instructions on creating custom generators and enhancers, see [**CUSTOMIZING.md**](CUSTOMIZING.md).
+
+**Pattern Matching**:
+- **Exact match**: `ConditionalEnhancer` - deactivates exactly this class
+- **Wildcard suffix**: `*HelperGenerator` - deactivates all classes ending with HelperGenerator
+- **Wildcard prefix**: `String*` - deactivates all classes starting with String
+- **Wildcard anywhere**: `*Consumer*` - deactivates all classes containing Consumer
+
+**Feature Toggling vs Component Override**:
+- **Feature toggling**: Use `@SimpleBuilder.Options(generateConditionalHelper = DISABLED)`
+- **Component override**: Use `deactivateGenerationComponents` + custom ServiceLoader implementation
+
+See [**CUSTOMIZING.md**](CUSTOMIZING.md) for complete implementation examples and best practices.
 
 ---
 
@@ -1182,6 +1218,9 @@ methodAccess = AccessModifier.PRIVATE
 -Asimplebuilder.usingHashSetBuilder=ENABLED|DISABLED
 -Asimplebuilder.usingHashSetBuilderWithElementBuilders=ENABLED|DISABLED
 -Asimplebuilder.usingHashMapBuilder=ENABLED|DISABLED
+
+# Component Filtering
+-Asimplebuilder.deactivateGenerationComponents=pattern1,pattern2,...
 
 # Integration & Annotations
 -Asimplebuilder.generateWithInterface=ENABLED|DISABLED

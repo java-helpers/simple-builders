@@ -192,6 +192,10 @@
           <source>${java.version}</source>
           <target>${java.version}</target>
           <release>${java.version}</release>
+          <!-- Allow @AutoService to run but exclude our own processor to avoid circular dependency -->
+          <annotationProcessors>
+            <annotationProcessor>com.google.auto.service.processor.AutoServiceProcessor</annotationProcessor>
+          </annotationProcessors>
         </configuration>
       </plugin>
       

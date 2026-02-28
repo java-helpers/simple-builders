@@ -66,6 +66,12 @@ public class FieldDto {
   private boolean nonNullable = false;
 
   /**
+   * Parameter-level annotations extracted from the field parameter (constructor or setter param).
+   * These are separate from type-use annotations and should be applied to method parameters.
+   */
+  private final List<AnnotationDto> parameterAnnotations = new ArrayList<>();
+
+  /**
    * Getting name of field.
    *
    * @return the name of the field
@@ -221,5 +227,43 @@ public class FieldDto {
    */
   public void setNonNullable(boolean nonNullable) {
     this.nonNullable = nonNullable;
+  }
+
+  /**
+   * Returns parameter-level annotations that should be applied to method parameters.
+   *
+   * @return list of parameter annotations
+   */
+  public List<AnnotationDto> getParameterAnnotations() {
+    return parameterAnnotations;
+  }
+
+  /**
+   * Sets parameter-level annotations from the field parameter.
+   *
+   * @param annotations list of annotations to set
+   */
+  public void setParameterAnnotations(List<AnnotationDto> annotations) {
+    this.parameterAnnotations.clear();
+    if (annotations != null) {
+      this.parameterAnnotations.addAll(annotations);
+    }
+  }
+
+  /**
+   * Checks if this field has a parameter annotation with the given fully qualified name.
+   *
+   * @param annotationFqn the fully qualified name of the annotation to check for
+   * @return true if the field has the specified annotation
+   */
+  public boolean hasAnnotation(String annotationFqn) {
+    if (annotationFqn == null || parameterAnnotations.isEmpty()) {
+      return false;
+    }
+    return parameterAnnotations.stream()
+        .anyMatch(
+            annotation ->
+                annotation.getAnnotationType() != null
+                    && annotationFqn.equals(annotation.getAnnotationType().getFullQualifiedName()));
   }
 }

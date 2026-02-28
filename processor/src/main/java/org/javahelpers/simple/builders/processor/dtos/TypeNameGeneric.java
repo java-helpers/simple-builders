@@ -42,6 +42,9 @@ import java.util.Optional;
 public class TypeNameGeneric extends TypeName {
   private final List<TypeName> innerTypeArguments;
 
+  /** Builder type for the element type of this collection (if applicable). */
+  private TypeName elementBuilderType;
+
   /**
    * Creates a {@code TypeNameGeneric} based on another {@code TypeName} as outer type and a list of
    * inner type arguments.
@@ -116,5 +119,39 @@ public class TypeNameGeneric extends TypeName {
     return innerTypeArguments.size() == 1
         ? Optional.of(innerTypeArguments.get(0))
         : Optional.empty();
+  }
+
+  /**
+   * Returns the builder type for the element type of this collection.
+   *
+   * @return optional element builder type
+   */
+  public Optional<TypeName> getElementBuilderType() {
+    return Optional.ofNullable(elementBuilderType);
+  }
+
+  /**
+   * Sets the builder type for the element type of this collection.
+   *
+   * @param elementBuilderType the element builder type
+   */
+  public void setElementBuilderType(TypeName elementBuilderType) {
+    this.elementBuilderType = elementBuilderType;
+  }
+
+  @Override
+  public String getFullQualifiedName() {
+    String baseName = super.getFullQualifiedName();
+    if (innerTypeArguments.isEmpty()) {
+      return baseName;
+    }
+
+    String typeArgs =
+        innerTypeArguments.stream()
+            .map(TypeName::getFullQualifiedName)
+            .reduce((a, b) -> a + ", " + b)
+            .orElse("");
+
+    return baseName + "<" + typeArgs + ">";
   }
 }

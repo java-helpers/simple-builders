@@ -30,7 +30,9 @@ import static javax.lang.model.type.TypeKind.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
@@ -126,8 +128,193 @@ public final class JavaLangMapper {
     if (typeName == null) {
       return null;
     }
+
+    // Set builder and constructor information on the TypeName (only if not already set)
+    if (!typeName.getBuilderType().isPresent()) {
+      setBuilderAndConstructorInfo(typeName, param, context);
+    }
+
     result.setParameterTypeName(typeName);
     return result;
+  }
+
+  /**
+   * Maps a {@code TypeElement} to a simple-builder {@code TypeName}.
+   *
+   * @param typeElement the TypeElement to map
+   * @param context the processing context
+   * @return TypeName holding the information of the type element, or null if mapping fails
+   */
+  public static TypeName map2TypeName(TypeElement typeElement, ProcessingContext context) {
+    if (typeElement == null) {
+      return null;
+    }
+
+    TypeMirror typeMirror = typeElement.asType();
+    TypeName typeName = extractType(typeMirror, context);
+
+    // Set builder and constructor information on the TypeName (only if not already set)
+    if (typeName != null && !typeName.getBuilderType().isPresent()) {
+      setBuilderAndConstructorInfo(typeName, typeElement, context);
+    }
+
+    return typeName;
+  }
+
+  /**
+   * Sets builder and constructor information on the TypeName.
+   *
+   * @param typeName the TypeName to enhance with builder/constructor info
+   * @param typeElement the TypeElement representing the type
+   * @param context the processing context
+   */
+  private static void setBuilderAndConstructorInfo(
+      TypeName typeName, TypeElement typeElement, ProcessingContext context) {
+    setBuilderTypeIfAnnotated(typeName, typeElement, context);
+    setEmptyConstructorInfoIfAvailable(typeName, typeElement, context);
+    setElementBuilderTypeForGenericCollections(typeName, context);
+  }
+
+  /**
+   * Sets the builder type if the type element has @SimpleBuilder annotation.
+   *
+   * @param typeName the TypeName to enhance
+   * @param typeElement the type element to check
+   * @param context the processing context
+   */
+  private static void setBuilderTypeIfAnnotated(
+      TypeName typeName, TypeElement typeElement, ProcessingContext context) {
+    Optional<javax.lang.model.element.AnnotationMirror> foundBuilderAnnotation =
+        JavaLangAnalyser.findAnnotation(
+            typeElement, org.javahelpers.simple.builders.core.annotations.SimpleBuilder.class);
+
+    // Type element must have @SimpleBuilder annotation
+    if (foundBuilderAnnotation.isEmpty()) {
+      return;
+    }
+
+    TypeName builderType = createBuilderTypeName(typeElement, context);
+    typeName.setBuilderType(builderType);
+  }
+
+  /**
+   * Sets empty constructor info for concrete classes with empty constructors.
+   *
+   * @param typeName the TypeName to enhance
+   * @param typeElement the type element to check
+   * @param context the processing context
+   */
+  private static void setEmptyConstructorInfoIfAvailable(
+      TypeName typeName, TypeElement typeElement, ProcessingContext context) {
+    if (isConcreteClass(typeElement)
+        && !TypeNameAnalyser.isJavaClass(typeName)
+        && JavaLangAnalyser.hasEmptyConstructor(typeElement, context)) {
+      typeName.setHasEmptyConstructor(true);
+    }
+  }
+
+  /**
+   * Sets element builder type for generic collections with @SimpleBuilder annotated elements.
+   *
+   * @param typeName the TypeName to enhance
+   * @param context the processing context
+   */
+  private static void setElementBuilderTypeForGenericCollections(
+      TypeName typeName, ProcessingContext context) {
+    // Only process generic types
+    if (!(typeName instanceof TypeNameGeneric genericType)) {
+      return;
+    }
+
+    // Only process single-element generics (List<T>, Set<T>, etc.)
+    List<TypeName> innerTypeArguments = genericType.getInnerTypeArguments();
+    if (innerTypeArguments.size() != 1) {
+      return;
+    }
+
+    TypeName elementType = innerTypeArguments.get(0);
+    TypeElement elementTypeElement = retrieveTypeElementIfExists(elementType, context);
+
+    // Element type must be resolvable
+    if (elementTypeElement == null) {
+      return;
+    }
+
+    // Element type must have @SimpleBuilder annotation
+    if (!hasSimpleBuilderAnnotation(elementTypeElement)) {
+      return;
+    }
+
+    // Set the element builder type
+    TypeName elementBuilderType = createBuilderTypeName(elementTypeElement, context);
+    genericType.setElementBuilderType(elementBuilderType);
+  }
+
+  /**
+   * Gets the TypeElement for a given TypeName if it exists.
+   *
+   * @param typeName the type name to resolve
+   * @param context the processing context
+   * @return the TypeElement, or null if not found or not a TypeElement
+   */
+  private static TypeElement retrieveTypeElementIfExists(
+      TypeName typeName, ProcessingContext context) {
+    Element element = context.getTypeElement(typeName.getFullQualifiedName());
+    return element instanceof TypeElement typeElement ? typeElement : null;
+  }
+
+  /**
+   * Checks if a TypeElement has the @SimpleBuilder annotation.
+   *
+   * @param typeElement the type element to check
+   * @return true if the element has @SimpleBuilder annotation
+   */
+  private static boolean hasSimpleBuilderAnnotation(TypeElement typeElement) {
+    Optional<javax.lang.model.element.AnnotationMirror> annotation =
+        JavaLangAnalyser.findAnnotation(
+            typeElement, org.javahelpers.simple.builders.core.annotations.SimpleBuilder.class);
+    return annotation.isPresent();
+  }
+
+  /**
+   * Creates a TypeName for the builder of a given TypeElement.
+   *
+   * @param typeElement the type element to create builder name for
+   * @param context the processing context
+   * @return the TypeName for the builder
+   */
+  private static TypeName createBuilderTypeName(
+      TypeElement typeElement, ProcessingContext context) {
+    String builderClassName =
+        typeElement.getSimpleName().toString() + context.getConfiguration().getBuilderSuffix();
+    String packageName = extractPackageName(typeElement.getQualifiedName().toString());
+    return new TypeName(packageName, builderClassName);
+  }
+
+  /**
+   * Extracts the package name from a qualified class name.
+   *
+   * @param qualifiedName the fully qualified class name (e.g., "com.example.MyClass")
+   * @return the package name (e.g., "com.example"), or empty string if no package
+   */
+  private static String extractPackageName(String qualifiedName) {
+    int lastDot = qualifiedName.lastIndexOf('.');
+    return lastDot > 0 ? qualifiedName.substring(0, lastDot) : "";
+  }
+
+  /**
+   * Sets builder and constructor information on the TypeName.
+   *
+   * @param typeName the TypeName to enhance with builder/constructor info
+   * @param param the VariableElement representing the parameter
+   * @param context the processing context
+   */
+  private static void setBuilderAndConstructorInfo(
+      TypeName typeName, VariableElement param, ProcessingContext context) {
+    Element element = context.asElement(param.asType());
+    if (element instanceof TypeElement typeElement) {
+      setBuilderAndConstructorInfo(typeName, typeElement, context);
+    }
   }
 
   /**
@@ -467,5 +654,16 @@ public final class JavaLangMapper {
     }
 
     return typeName;
+  }
+
+  /**
+   * Checks if the type element represents a concrete class (not abstract).
+   *
+   * @param typeElement the type element to check
+   * @return true if it's a concrete class
+   */
+  private static boolean isConcreteClass(TypeElement typeElement) {
+    return typeElement.getKind() == javax.lang.model.element.ElementKind.CLASS
+        && !typeElement.getModifiers().contains(javax.lang.model.element.Modifier.ABSTRACT);
   }
 }

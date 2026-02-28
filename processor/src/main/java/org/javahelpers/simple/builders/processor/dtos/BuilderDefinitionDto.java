@@ -24,8 +24,10 @@
 
 package org.javahelpers.simple.builders.processor.dtos;
 
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 /** BuilderDefinitionDto holds all information for generating a builder. */
 public class BuilderDefinitionDto {
@@ -56,6 +58,31 @@ public class BuilderDefinitionDto {
    * interface.
    */
   private final List<NestedTypeDto> nestedTypes = new LinkedList<>();
+
+  /**
+   * Core builder methods (build, create, conditional, toString, etc.) to be generated. These are
+   * added by BuilderEnhancers and have ordering for generation sequence.
+   */
+  private final List<MethodDto> coreMethods = new LinkedList<>();
+
+  /**
+   * Class-level annotations to be added to the generated builder class. These are added by
+   * BuilderEnhancers and include annotations like @Generated, @BuilderImplementation, etc.
+   *
+   * <p>Uses a Set to ensure annotation uniqueness and prevent duplicates.
+   */
+  private final Set<AnnotationDto> classAnnotations = new LinkedHashSet<>();
+
+  /**
+   * Interfaces to be implemented by the generated builder class. These are added by
+   * BuilderEnhancers and include interfaces like IBuilderBase.
+   *
+   * <p>Uses a Set to ensure interface uniqueness and prevent duplicates.
+   */
+  private final Set<InterfaceName> interfaces = new LinkedHashSet<>();
+
+  /** Class-level JavaDoc for the generated builder class. */
+  private String classJavadoc;
 
   /** Configuration for builder generation. */
   private BuilderConfiguration configuration;
@@ -202,7 +229,61 @@ public class BuilderDefinitionDto {
   }
 
   /**
-   * Returns the builder configuration.
+   * Returns the list of core builder methods.
+   *
+   * @return the list of core methods
+   */
+  public List<MethodDto> getCoreMethods() {
+    return coreMethods;
+  }
+
+  /**
+   * Adds a core method to be generated in the builder.
+   *
+   * @param method the core method to add
+   */
+  public void addCoreMethod(MethodDto method) {
+    this.coreMethods.add(method);
+  }
+
+  /**
+   * Returns the set of class-level annotations.
+   *
+   * @return the set of class annotations (unique, no duplicates)
+   */
+  public Set<AnnotationDto> getClassAnnotations() {
+    return classAnnotations;
+  }
+
+  /**
+   * Adds a class-level annotation to be generated in the builder.
+   *
+   * @param annotation the class annotation to add
+   */
+  public void addClassAnnotation(AnnotationDto annotation) {
+    this.classAnnotations.add(annotation);
+  }
+
+  /**
+   * Returns the set of interfaces to be implemented by the builder.
+   *
+   * @return the set of interfaces (unique, no duplicates)
+   */
+  public Set<InterfaceName> getInterfaces() {
+    return interfaces;
+  }
+
+  /**
+   * Adds an interface to be implemented by the builder.
+   *
+   * @param interfaceType the interface to add
+   */
+  public void addInterface(InterfaceName interfaceType) {
+    this.interfaces.add(interfaceType);
+  }
+
+  /**
+   * Returns the configuration for builder generation.
    *
    * @return the builder configuration
    */
@@ -217,5 +298,23 @@ public class BuilderDefinitionDto {
    */
   public void setConfiguration(BuilderConfiguration configuration) {
     this.configuration = configuration;
+  }
+
+  /**
+   * Returns the class-level JavaDoc for the generated builder.
+   *
+   * @return the class JavaDoc, or null if not set
+   */
+  public String getClassJavadoc() {
+    return classJavadoc;
+  }
+
+  /**
+   * Sets the class-level JavaDoc for the generated builder.
+   *
+   * @param classJavadoc the class JavaDoc to set
+   */
+  public void setClassJavadoc(String classJavadoc) {
+    this.classJavadoc = classJavadoc;
   }
 }

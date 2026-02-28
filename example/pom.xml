@@ -101,7 +101,7 @@
           <execution>
             <id>default-testCompile</id>
             <configuration>
-              <!-- No annotation processor for test compilation -->
+              <!-- Disable annotation processing for test compilation to avoid classloader conflicts -->
               <proc>none</proc>
             </configuration>
           </execution>

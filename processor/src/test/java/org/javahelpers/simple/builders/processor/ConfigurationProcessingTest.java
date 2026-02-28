@@ -492,7 +492,7 @@ class ConfigurationProcessingTest {
    * builders with the same custom suffix.
    *
    * <p>For example, if PersonDto has an AddressDto field, and both use suffix "Factory", then
-   * PersonDtoFactory should have a method accepting Consumer&lt;AddressDtoFactory&gt;.
+   * PersonDtoFactory should have a method accepting {@code Consumer<AddressDtoFactory>}.
    */
   @Test
   void builderSuffix_WithNestedDto_ShouldRecognizeNestedBuilder() {

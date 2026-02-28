@@ -44,6 +44,12 @@ public class TypeName {
   /** Annotations on this type (TYPE_USE). */
   private final java.util.List<AnnotationDto> annotations = new java.util.ArrayList<>();
 
+  /** Builder type for this type if it has @SimpleBuilder annotation. */
+  private TypeName builderType;
+
+  /** Whether this type has an empty constructor. */
+  private boolean hasEmptyConstructor = false;
+
   /**
    * Constructor for TypeName.
    *
@@ -75,6 +81,15 @@ public class TypeName {
   }
 
   /**
+   * Returns the full qualified name (package + class name).
+   *
+   * @return full qualified name of type {@code java.lang.String}
+   */
+  public String getFullQualifiedName() {
+    return packageName.isEmpty() ? className : packageName + "." + className;
+  }
+
+  /**
    * Returns the list of annotations on this type.
    *
    * @return list of annotations
@@ -90,6 +105,42 @@ public class TypeName {
    */
   public void addAnnotation(AnnotationDto annotation) {
     this.annotations.add(annotation);
+  }
+
+  /**
+   * Returns the builder type for this type if it has @SimpleBuilder annotation.
+   *
+   * @return optional builder type
+   */
+  public Optional<TypeName> getBuilderType() {
+    return Optional.ofNullable(builderType);
+  }
+
+  /**
+   * Sets the builder type for this type.
+   *
+   * @param builderType the builder type
+   */
+  public void setBuilderType(TypeName builderType) {
+    this.builderType = builderType;
+  }
+
+  /**
+   * Returns whether this type has an empty constructor.
+   *
+   * @return true if the type has an empty constructor
+   */
+  public boolean hasEmptyConstructor() {
+    return hasEmptyConstructor;
+  }
+
+  /**
+   * Sets whether this type has an empty constructor.
+   *
+   * @param hasEmptyConstructor true if the type has an empty constructor
+   */
+  public void setHasEmptyConstructor(boolean hasEmptyConstructor) {
+    this.hasEmptyConstructor = hasEmptyConstructor;
   }
 
   /**
@@ -134,5 +185,22 @@ public class TypeName {
   @Override
   public int hashCode() {
     return new HashCodeBuilder(17, 37).append(packageName).append(className).toHashCode();
+  }
+
+  /**
+   * Checks if this type has an annotation with the given fully qualified name.
+   *
+   * @param annotationFqn the fully qualified name of the annotation to check for
+   * @return true if the type has the specified annotation
+   */
+  public boolean hasAnnotation(String annotationFqn) {
+    if (annotationFqn == null || annotations.isEmpty()) {
+      return false;
+    }
+    return annotations.stream()
+        .anyMatch(
+            annotation ->
+                annotation.getAnnotationType() != null
+                    && annotationFqn.equals(annotation.getAnnotationType().getFullQualifiedName()));
   }
 }
