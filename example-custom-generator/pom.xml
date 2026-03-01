@@ -4,7 +4,7 @@
   
   <groupId>org.javahelpers.simple.builders.example</groupId>
   <artifactId>example-custom-generator</artifactId>
-  <version>0.2.0</version>
+  <version>0.3.0</version>
   <name>Simple Builders - Example Custom Generator</name>
   <packaging>jar</packaging>
   <description>Custom generators for Simple Builders - example implementation</description>
