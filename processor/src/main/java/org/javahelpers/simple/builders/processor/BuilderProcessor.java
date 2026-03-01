@@ -76,9 +76,8 @@ public class BuilderProcessor extends AbstractProcessor {
     logger.debug("Loaded global configuration from compiler arguments: %s", globalConfig);
 
     this.context = new ProcessingContext(logger, globalConfig, processingEnv);
-    this.codeGenerator = new JavaCodeGenerator(processingEnv.getFiler(), logger);
-    this.jacksonModuleGenerator =
-        new JacksonModuleGenerator(processingEnv.getElementUtils(), logger);
+    this.codeGenerator = new JavaCodeGenerator(processingEnv, logger);
+    this.jacksonModuleGenerator = new JacksonModuleGenerator(processingEnv, logger);
 
     SourceVersion current = processingEnv.getSourceVersion();
     this.supportedJdk = isAtLeastJava17(current);

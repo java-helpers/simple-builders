@@ -40,8 +40,9 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.annotation.processing.Filer;
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.element.TypeElement;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.util.TrackedValue;
@@ -50,24 +51,20 @@ import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 
 /** JavaCodeGenerator generates with BuilderDefinitionDto JavaCode for the builder. */
 public class JavaCodeGenerator {
-  /** Util class for source code generation of type {@code javax.annotation.processing.Filer}. */
-  private final Filer filer;
+  /** Processing environment for accessing filer and element utilities. */
+  private final ProcessingEnvironment processingEnv;
 
   /** Logger for debug output during code generation. */
   private final ProcessingLogger logger;
 
-  /** Format string for throwing exceptions with field context. */
-  private static final String THROW_EXCEPTION_FORMAT = "throw new $T($S)";
-
   /**
    * Constructor for JavaCodeGenerator.
    *
-   * @param filer Util class for source code generation of type {@code
-   *     javax.annotation.processing.Filer}
+   * @param processingEnv Processing environment for accessing filer and element utilities
    * @param logger Logger for debug output
    */
-  public JavaCodeGenerator(Filer filer, ProcessingLogger logger) {
-    this.filer = filer;
+  public JavaCodeGenerator(ProcessingEnvironment processingEnv, ProcessingLogger logger) {
+    this.processingEnv = processingEnv;
     this.logger = logger;
   }
 
@@ -174,32 +171,90 @@ public class JavaCodeGenerator {
         "Writing builder class to file: %s.%s",
         builderDef.getBuilderTypeName().getPackageName(),
         builderDef.getBuilderTypeName().getClassName());
-    writeBuilderClassToFile(builderDef.getBuilderTypeName().getPackageName(), classBuilder.build());
+    writeBuilderClassToFile(classBuilder.build(), builderDef);
     logger.debug(
         "Successfully generated builder: %s", builderDef.getBuilderTypeName().getClassName());
   }
 
-  private void writeBuilderClassToFile(String packageName, TypeSpec typeSpec)
+  private void writeBuilderClassToFile(TypeSpec typeSpec, BuilderDefinitionDto builderDef)
       throws BuilderException {
+    // Extract qualified name from the builder definition
+    String qualifiedName = builderDef.getBuilderTypeName().getFullQualifiedName();
+
+    // Check if builder class already exists before attempting to write
+    if (builderClassAlreadyExists(qualifiedName)) {
+      throw new BuilderException(
+          null,
+          """
+          Builder class '%s' already exists. This may be a manually written builder or a previously generated builder.
+          To resolve this:
+          1. If you have a manual builder, consider renaming it or removing @SimpleBuilder from the DTO
+          2. If this is from a previous compilation, clean and rebuild the project
+          3. Check that you're not trying to generate multiple builders for the same DTO
+          """
+              .formatted(qualifiedName));
+    }
+
     try {
-      JavaFile.builder(packageName, typeSpec)
+      JavaFile.builder(builderDef.getBuilderTypeName().getPackageName(), typeSpec)
           .skipJavaLangImports(true)
           .addStaticImport(TrackedValue.class, "initialValue")
           .addStaticImport(TrackedValue.class, "changedValue")
           .addStaticImport(TrackedValue.class, "unsetValue")
           .build()
-          .writeTo(filer);
+          .writeTo(processingEnv.getFiler());
     } catch (IOException ex) {
-      throw new BuilderException(null, ex);
+      // Handle file system errors during file write
+      String message = ex.getMessage();
+      String errorMessage =
+          """
+          Unable to create builder class '%s': %s.
+          Check the build environment and ensure all necessary directories are accessible.
+          """
+              .formatted(
+                  qualifiedName, StringUtils.isNotBlank(message) ? message : "Unknown error");
+      throw new BuilderException(null, errorMessage);
+    }
+  }
+
+  /**
+   * Checks if a builder class already exists by attempting to find the type element.
+   *
+   * @param qualifiedName the fully qualified name of the class to check
+   * @return true if the class already exists, false otherwise
+   */
+  private boolean builderClassAlreadyExists(String qualifiedName) {
+    try {
+      TypeElement existingType = processingEnv.getElementUtils().getTypeElement(qualifiedName);
+      return existingType != null;
+    } catch (Exception e) {
+      // Log the exception at debug level - this should rarely happen but is useful for
+      // troubleshooting
+      logger.debug(
+          "Error checking if builder class '%s' already exists: %s",
+          qualifiedName, StringUtils.isNotBlank(e.getMessage()) ? e.getMessage() : "No message");
+      // If there's any error checking, assume the class doesn't exist
+      return false;
     }
   }
 
   private void writeSimpleClassToFile(String packageName, TypeSpec typeSpec)
       throws BuilderException {
     try {
-      JavaFile.builder(packageName, typeSpec).skipJavaLangImports(true).build().writeTo(filer);
+      JavaFile.builder(packageName, typeSpec)
+          .skipJavaLangImports(true)
+          .build()
+          .writeTo(processingEnv.getFiler());
     } catch (IOException ex) {
-      throw new BuilderException(null, ex);
+      // Handle file system issues for Jackson modules and other simple classes
+      String message = ex.getMessage();
+      String errorMessage =
+          """
+          Unable to create class: %s.
+          Check the build environment and ensure all necessary directories are accessible.
+          """
+              .formatted(StringUtils.isNotBlank(message) ? message : "Unknown error");
+      throw new BuilderException(null, errorMessage);
     }
   }
 
@@ -349,7 +404,7 @@ public class JavaCodeGenerator {
     if (field.isNonNullable()) {
       cb.beginControlFlow("if (this.$N.value() == null)", field.getFieldName())
           .addStatement(
-              THROW_EXCEPTION_FORMAT,
+              "throw new $T($S)",
               IllegalArgumentException.class,
               "Cannot initialize builder from instance: field '"
                   + field.getFieldName()
