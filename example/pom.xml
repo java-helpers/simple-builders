@@ -92,6 +92,11 @@
                   <artifactId>simple-builders-processor</artifactId>
                   <version>${project.version}</version>
                 </path>
+                <path>
+                  <groupId>org.javahelpers.simple.builders.example</groupId>
+                  <artifactId>example-custom-generator</artifactId>
+                  <version>${project.version}</version>
+                </path>
               </annotationProcessorPaths>
               <compilerArgs>
                 <arg>-Averbose=${simplebuilder.verbose}</arg>

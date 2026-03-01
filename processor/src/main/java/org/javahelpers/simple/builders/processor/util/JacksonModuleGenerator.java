@@ -27,8 +27,8 @@ package org.javahelpers.simple.builders.processor.util;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
-import javax.lang.model.util.Elements;
 import org.apache.commons.collections4.SetValuedMap;
 import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
 import org.javahelpers.simple.builders.processor.dtos.BuilderConfiguration;
@@ -44,17 +44,19 @@ import org.javahelpers.simple.builders.processor.dtos.JacksonModuleEntryDto;
  */
 public class JacksonModuleGenerator {
 
-  private final Elements elementUtils;
+  private final ProcessingEnvironment processingEnv;
   private final ProcessingLogger logger;
   private final SetValuedMap<String, JacksonModuleEntryDto> entriesByPackage =
       new HashSetValuedHashMap<>();
   private final boolean jacksonAvailable;
 
-  public JacksonModuleGenerator(Elements elementUtils, ProcessingLogger logger) {
-    this.elementUtils = elementUtils;
+  public JacksonModuleGenerator(ProcessingEnvironment processingEnv, ProcessingLogger logger) {
+    this.processingEnv = processingEnv;
     this.logger = logger;
     this.jacksonAvailable =
-        this.elementUtils.getTypeElement("com.fasterxml.jackson.databind.module.SimpleModule")
+        this.processingEnv
+                .getElementUtils()
+                .getTypeElement("com.fasterxml.jackson.databind.module.SimpleModule")
             != null;
   }
 

@@ -3344,4 +3344,120 @@ class BuilderProcessorTest {
         "new ArrayListBuilderWithElementBuilders<Helper, HelperBuilder>(this.helpers.value(), HelperBuilder::create)",
         "new ArrayListBuilderWithElementBuilders<Helper, HelperBuilder>(HelperBuilder::create)");
   }
+
+  @Test
+  void shouldHandleManualBuilderExistsAlongsideDto() {
+    // Given: A manually created builder class that conflicts with the generated one
+
+    JavaFileObject manualBuilder =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+
+            // Manually created builder that follows the same naming convention
+            public class PersonDtoBuilder {
+                private String name;
+                private int age;
+
+                public PersonDtoBuilder name(String name) {
+                    this.name = name;
+                    return this;
+                }
+
+                public PersonDtoBuilder age(int age) {
+                    this.age = age;
+                    return this;
+                }
+
+                public PersonDto build() {
+                    // Use reflection to avoid constructor signature issues
+                    try {
+                        return PersonDto.class.getDeclaredConstructor().newInstance();
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+            """);
+
+    JavaFileObject dtoWithAnnotation =
+        ProcessorTestUtils.simpleBuilderClass(
+            "test",
+            "PersonDto",
+            """
+                private String name;
+                private int age;
+
+                public String getName() { return name; }
+                public void setName(String name) { this.name = name; }
+
+                public int getAge() { return age; }
+                public void setAge(int age) { this.age = age; }
+            """);
+
+    // When: Compile both the manual builder and the DTO with @SimpleBuilder
+    Compilation compilation = compile(manualBuilder, dtoWithAnnotation);
+
+    // Then: Should succeed - processor should handle the conflict with a warning
+    assertThat(compilation).succeeded();
+    assertThat(compilation)
+        .hadWarningContaining(
+            "Failed to generate builder - Builder class 'test.PersonDtoBuilder' already exists.");
+
+    // The processor should detect the conflict and handle it gracefully
+    // Either by skipping generation or by generating with a different approach
+  }
+
+  @Test
+  void shouldHandleDifferentDtoNamesWithSuffixWithoutConflict() {
+    // Given: Two DTOs with different names that generate the same builder name with custom suffix
+    // Order + "DtoFactory" = OrderDtoFactory
+    // OrderDto + "Factory" = OrderDtoFactory (same result!)
+
+    JavaFileObject firstDto =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+            @SimpleBuilder(options = @SimpleBuilder.Options(builderSuffix = "DtoFactory"))
+            public class Order {
+                private String id;
+                public String getId() { return id; }
+                public void setId(String id) { this.id = id; }
+            }
+            """);
+
+    JavaFileObject secondDto =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+            @SimpleBuilder(options = @SimpleBuilder.Options(builderSuffix = "Factory"))
+            public class OrderDto {
+                private String number;
+                public String getNumber() { return number; }
+                public void setNumber(String number) { this.number = number; }
+            }
+            """);
+
+    // When: Compile both DTOs
+    Compilation compilation = compile(firstDto, secondDto);
+
+    // Then: Should succeed - processor should handle the naming by posting warnings
+    assertThat(compilation).succeeded();
+    assertThat(compilation)
+        .hadWarningContaining(
+            "Failed to generate builder - Unable to create builder class 'test.OrderDtoFactory': Attempt to recreate a file for type test.OrderDtoFactory.");
+
+    // Verify that a builder was generated
+    String generatedCode = loadGeneratedSource(compilation, "OrderDtoFactory");
+
+    // Basic verification that the builder class exists for the first DTO
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        "public class OrderDtoFactory implements IBuilderBase<Order>",
+        "@BuilderImplementation(forClass = Order.class)");
+  }
 }

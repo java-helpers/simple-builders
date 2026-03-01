@@ -14,6 +14,9 @@ This guide explains how to extend and customize simple-builders by creating cust
 - [Available Default Components](#available-default-components)
 - [Best Practices](#best-practices)
 - [Examples](#examples)
+- [Custom Generators: Complete Example](#custom-generators-complete-example)
+- [Common Pitfalls](#common-pitfalls)
+- [Integration with Frameworks](#integration-with-frameworks)
 
 ## Overview
 
@@ -509,6 +512,123 @@ public class BeanValidationEnhancer implements BuilderEnhancer {
     }
 }
 ```
+
+## Custom Generators: Complete Example
+
+For a complete, working example of custom generators, see the **[example-custom-generator](../example-custom-generator/README.md)** module. This example demonstrates:
+
+- **String validation generator** that adds `validateFieldName()` methods
+- **Proper Maven configuration** with annotation processor paths
+- **ServiceLoader registration** 
+- **Integration with existing DTOs**
+
+### Key Learnings from the Example
+
+#### 1. Module Structure
+```
+example-custom-generator/
+├── pom.xml                                    # Maven configuration
+├── src/main/java/.../custom/
+│   └── StringValidationGenerator.java         # Custom generator
+└── src/main/resources/META-INF/services/
+    └── org.javahelpers.simple.builders.processor.generators.Generator
+```
+
+#### 2. Maven Configuration
+
+**Important:** Custom generators only need to be in `annotationProcessorPaths`, not regular dependencies:
+
+```xml
+<annotationProcessorPaths>
+    <path>
+        <groupId>io.github.java-helpers</groupId>
+        <artifactId>simple-builders-processor</artifactId>
+        <version>${project.version}</version>
+    </path>
+    <path>
+        <groupId>your.group.id</groupId>
+        <artifactId>your-custom-generator</artifactId>
+        <version>${project.version}</version>
+    </path>
+</annotationProcessorPaths>
+```
+
+The generated builders only need `simple-builders-core` as a regular dependency.
+
+#### 3. TrackedValue Handling
+
+Custom generators must properly handle the framework's `TrackedValue<T>` wrapper:
+
+```java
+// Correct way to access field values
+if (!fieldName.isSet() || fieldName.value().trim().isEmpty()) {
+    throw new IllegalArgumentException("Field cannot be null or empty");
+}
+```
+
+#### 4. Generated Method Example
+
+The example generates validation methods like:
+
+```java
+/**
+ * Validates that the name field is not null or empty.
+ *
+ * @return this builder instance for chaining
+ * @throws IllegalArgumentException if name is null or empty
+ */
+public PersonDtoBuilder validateName() {
+    if (!name.isSet() || name.value().trim().isEmpty()) {
+        throw new IllegalArgumentException("Name cannot be null or empty");
+    }
+    return this;
+}
+```
+
+#### 5. Usage
+
+```java
+// Valid usage
+PersonDto person = PersonDtoBuilder.create()
+    .name("John Doe")
+    .validateName()  // Custom validation method
+    .build();
+
+// Invalid usage - throws IllegalArgumentException
+PersonDto invalidPerson = PersonDtoBuilder.create()
+    .name("")  // Empty string
+    .validateName()  // Throws exception
+    .build();
+```
+
+## Common Pitfalls
+
+### ⚠️ **Critical: Separate Module Required**
+
+Custom generators **must** be in a separate module, not the same project where you use them.
+
+```xml
+<annotationProcessorPaths>
+    <path>
+        <groupId>io.github.java-helpers</groupId>
+        <artifactId>simple-builders-processor</artifactId>
+        <version>${project.version}</version>
+    </path>
+    <path>
+        <groupId>your.group.id</groupId>
+        <artifactId>your-custom-generator</artifactId>  <!-- Separate module -->
+        <version>${project.version}</version>
+    </path>
+</annotationProcessorPaths>
+```
+
+**Why:** Annotation processors use separate classloaders.
+
+### Other Issues
+
+- **Missing service file** - `META-INF/services/...Generator`
+- **Wrong TrackedValue access** - Use `isSet()` and `value()`, not direct field access
+- **Missing dependencies** - Custom generator module needs `simple-builders-processor`
 
 ## Integration with Frameworks
 
