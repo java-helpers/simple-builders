@@ -24,6 +24,9 @@
 
 package org.javahelpers.simple.builders.processor.dtos;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 /**
  * Represents a primitive type in the Java language. This class provides type-safe constants for all
  * Java primitive types and serves as a way to unambiguously identify primitive types during
@@ -117,5 +120,25 @@ public class TypeNamePrimitive extends TypeName {
   @Override
   public String getFullQualifiedName() {
     return type.name().toLowerCase();
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    TypeNamePrimitive that = (TypeNamePrimitive) o;
+
+    return new EqualsBuilder().appendSuper(super.equals(o)).append(type, that.type).isEquals();
+  }
+
+  @Override
+  public int hashCode() {
+    return new HashCodeBuilder(17, 37).appendSuper(super.hashCode()).append(type).toHashCode();
   }
 }

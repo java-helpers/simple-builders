@@ -325,6 +325,8 @@
                     <exclude>**/*Mapper*.class</exclude>
                     <!-- Exclude DTOs package from coverage -->
                     <exclude>**/processor/dtos/**</exclude>
+                    <!-- Exclude exception classes from coverage (simple constructors) -->
+                    <exclude>**/processor/exceptions/**</exclude>
                   </excludes>
                 </configuration>
               </execution>

@@ -75,6 +75,24 @@ public final class JavaLangAnalyser {
     return ElementFilter.methodsIn(context.getAllMembers(typeElement)).stream()
         .filter(JavaLangAnalyser::isNoMethodOfObjectClass)
         .filter(JavaLangAnalyser::isSetterForField)
+        .sorted(
+            (m1, m2) -> {
+              // Sort by method name first, then by parameter type for consistent ordering
+              int nameCompare =
+                  m1.getSimpleName().toString().compareTo(m2.getSimpleName().toString());
+              if (nameCompare != 0) {
+                return nameCompare;
+              }
+              // If same method name (overloaded), sort by parameter type
+              if (m1.getParameters().size() == 1 && m2.getParameters().size() == 1) {
+                String param1 =
+                    StringUtils.deleteWhitespace(m1.getParameters().get(0).asType().toString());
+                String param2 =
+                    StringUtils.deleteWhitespace(m2.getParameters().get(0).asType().toString());
+                return param1.compareTo(param2);
+              }
+              return 0;
+            })
         .toList();
   }
 

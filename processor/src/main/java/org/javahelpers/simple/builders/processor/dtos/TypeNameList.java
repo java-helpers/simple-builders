@@ -24,7 +24,6 @@
 package org.javahelpers.simple.builders.processor.dtos;
 
 import java.util.List;
-import org.apache.commons.lang3.Strings;
 
 /**
  * Represents a type that implements the {@code java.util.List} interface.
@@ -43,21 +42,7 @@ import org.apache.commons.lang3.Strings;
  *   <li>{@code List} (raw type) -&gt; TypeNameList with 0 inner type arguments
  * </ul>
  */
-public class TypeNameList extends TypeNameGeneric {
-
-  private final boolean isConcreteImplementation;
-  private final TypeName elementType;
-
-  /**
-   * Checks if the given package and class name represent the {@code java.util.List} interface.
-   *
-   * @param packageName the package name
-   * @param className the class name
-   * @return {@code true} if this is {@code java.util.List}
-   */
-  private static boolean isListInterface(String packageName, String className) {
-    return Strings.CI.equals(packageName, "java.util") && Strings.CI.equals(className, "List");
-  }
+public class TypeNameList extends TypeNameCollection {
 
   /**
    * Creates a {@code TypeNameList} based on another {@code TypeName} as outer type and a list of
@@ -69,52 +54,6 @@ public class TypeNameList extends TypeNameGeneric {
    * @param elementType the actual List element type (extracted from List interface)
    */
   public TypeNameList(TypeName outerType, List<TypeName> innerTypeArguments, TypeName elementType) {
-    super(outerType, innerTypeArguments);
-    this.isConcreteImplementation = !isListInterface(getPackageName(), getClassName());
-    this.elementType = elementType;
-  }
-
-  /**
-   * Checks if this is a concrete List implementation (not the interface itself).
-   *
-   * @return {@code true} for concrete implementations like ArrayList, LinkedList, etc., {@code
-   *     false} if this is {@code java.util.List}
-   */
-  public boolean isConcreteImplementation() {
-    return isConcreteImplementation;
-  }
-
-  /**
-   * Checks if this List type is properly parameterized (not a raw type).
-   *
-   * <p>A parameterized List has an element type extracted from the List interface. A raw List has
-   * no element type.
-   *
-   * <p>This works correctly for both standard Lists like {@code List<String>} and custom
-   * implementations like {@code CustomList<X,Y> extends ArrayList<Y>}.
-   *
-   * @return {@code true} if this List has an element type
-   */
-  public boolean isParameterized() {
-    return elementType != null;
-  }
-
-  /**
-   * Gets the element type of this List.
-   *
-   * <p>For a parameterized List like {@code List<String>}, this returns the String type.
-   *
-   * <p>For custom implementations like {@code CustomList<X,Y> extends ArrayList<Y>}, this returns Y
-   * (the actual List element type), not X or both X and Y.
-   *
-   * @return the element type (extracted from the List interface)
-   * @throws IllegalStateException if this is a raw List with no type arguments
-   */
-  public TypeName getElementType() {
-    if (elementType == null) {
-      throw new IllegalStateException(
-          "Cannot get element type from raw List type: " + getClassName());
-    }
-    return elementType;
+    super(outerType, innerTypeArguments, elementType, "List");
   }
 }

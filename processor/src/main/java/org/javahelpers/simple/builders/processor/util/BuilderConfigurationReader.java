@@ -124,8 +124,8 @@ public class BuilderConfigurationReader {
         elementValues.entrySet()) {
       if (entry.getKey().getSimpleName().toString().equals("options")) {
         Object value = entry.getValue().getValue();
-        if (value instanceof AnnotationMirror) {
-          optionsMirror = (AnnotationMirror) value;
+        if (value instanceof AnnotationMirror mirrorValue) {
+          optionsMirror = mirrorValue;
         }
         break;
       }

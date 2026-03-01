@@ -202,16 +202,7 @@ public class BuilderProcessor extends AbstractProcessor {
       Set<? extends TypeElement> annotationsFound) {
     List<TypeElement> result = new ArrayList<>();
     for (TypeElement annotation : annotationsFound) {
-      // Only process real annotation specifications
-      if (annotation.getKind() != javax.lang.model.element.ElementKind.ANNOTATION_TYPE) {
-        continue;
-      }
-      // Skip @SimpleBuilder annotation because we only want to find annotations with
-      // @SimpleBuilder.Template
-      if (annotation
-          .getQualifiedName()
-          .toString()
-          .equals(org.javahelpers.simple.builders.core.annotations.SimpleBuilder.class.getName())) {
+      if (shouldSkipAnnotation(annotation)) {
         continue;
       }
       Template templateAnnotation =
@@ -222,5 +213,18 @@ public class BuilderProcessor extends AbstractProcessor {
       }
     }
     return result;
+  }
+
+  private static boolean shouldSkipAnnotation(TypeElement annotation) {
+    // Only process real annotation specifications
+    if (annotation.getKind() != javax.lang.model.element.ElementKind.ANNOTATION_TYPE) {
+      return true;
+    }
+    // Skip @SimpleBuilder annotation because we only want to find annotations with
+    // @SimpleBuilder.Template
+    return annotation
+        .getQualifiedName()
+        .toString()
+        .equals(org.javahelpers.simple.builders.core.annotations.SimpleBuilder.class.getName());
   }
 }

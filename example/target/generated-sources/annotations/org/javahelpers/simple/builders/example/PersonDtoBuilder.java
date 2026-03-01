@@ -37,16 +37,6 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
   private TrackedValue<String> name = unsetValue();
 
   /**
-   * Tracked value for <code>nickNames</code>: nickNames.
-   */
-  private TrackedValue<List<String>> nickNames = unsetValue();
-
-  /**
-   * Tracked value for <code>nickNames2</code>: nickNames2.
-   */
-  private TrackedValue<String[]> nickNames2 = unsetValue();
-
-  /**
    * Tracked value for <code>birthdate</code>: birthdate.
    */
   private TrackedValue<LocalDate> birthdate = unsetValue();
@@ -55,6 +45,16 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
    * Tracked value for <code>mannschaft</code>: mannschaft.
    */
   private TrackedValue<MannschaftDto> mannschaft = unsetValue();
+
+  /**
+   * Tracked value for <code>nickNames</code>: nickNames.
+   */
+  private TrackedValue<List<String>> nickNames = unsetValue();
+
+  /**
+   * Tracked value for <code>nickNames2</code>: nickNames2.
+   */
+  private TrackedValue<String[]> nickNames2 = unsetValue();
 
   /**
    * Empty constructor of builder for {@code org.javahelpers.simple.builders.example.PersonDto}.
@@ -69,9 +69,9 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
    */
   public PersonDtoBuilder(PersonDto instance) {
     this.name = initialValue(instance.getName());
-    this.nickNames = initialValue(instance.getNickNames());
     this.birthdate = initialValue(instance.getBirthdate());
     this.mannschaft = initialValue(instance.getMannschaft());
+    this.nickNames = initialValue(instance.getNickNames());
   }
 
   /**
@@ -347,10 +347,10 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
   @Override
   public PersonDto build() {
     PersonDto result = new PersonDto(this.name.value());
-    this.nickNames.ifSet(result::setNickNames);
-    this.nickNames2.ifSet(result::setNickNames2);
     this.birthdate.ifSet(result::setBirthdate);
     this.mannschaft.ifSet(result::setMannschaft);
+    this.nickNames.ifSet(result::setNickNames);
+    this.nickNames2.ifSet(result::setNickNames2);
     return result;
   }
 
@@ -363,10 +363,10 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
   public String toString() {
     return new ToStringBuilder(this, BuilderToStringStyle.INSTANCE)
             .append("name", this.name)
-            .append("nickNames", this.nickNames)
-            .append("nickNames2", this.nickNames2)
             .append("birthdate", this.birthdate)
             .append("mannschaft", this.mannschaft)
+            .append("nickNames", this.nickNames)
+            .append("nickNames2", this.nickNames2)
             .toString();
   }
 

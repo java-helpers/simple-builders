@@ -24,7 +24,6 @@
 package org.javahelpers.simple.builders.processor.dtos;
 
 import java.util.List;
-import org.apache.commons.lang3.Strings;
 
 /**
  * Represents a type that implements the {@code java.util.Set} interface.
@@ -43,21 +42,7 @@ import org.apache.commons.lang3.Strings;
  *   <li>{@code Set} (raw type) -&gt; TypeNameSet with 0 inner type arguments
  * </ul>
  */
-public class TypeNameSet extends TypeNameGeneric {
-
-  private final boolean isConcreteImplementation;
-  private final TypeName elementType;
-
-  /**
-   * Checks if the given package and class name represent the {@code java.util.Set} interface.
-   *
-   * @param packageName the package name
-   * @param className the class name
-   * @return {@code true} if this is {@code java.util.Set}
-   */
-  private static boolean isSetInterface(String packageName, String className) {
-    return Strings.CI.equals(packageName, "java.util") && Strings.CI.equals(className, "Set");
-  }
+public class TypeNameSet extends TypeNameCollection {
 
   /**
    * Creates a {@code TypeNameSet} based on another {@code TypeName} as outer type and a list of
@@ -69,46 +54,6 @@ public class TypeNameSet extends TypeNameGeneric {
    * @param elementType the actual Set element type (extracted from Set interface)
    */
   public TypeNameSet(TypeName outerType, List<TypeName> innerTypeArguments, TypeName elementType) {
-    super(outerType, innerTypeArguments);
-    this.isConcreteImplementation = !isSetInterface(getPackageName(), getClassName());
-    this.elementType = elementType;
-  }
-
-  /**
-   * Checks if this is a concrete Set implementation (not the interface itself).
-   *
-   * @return {@code true} for concrete implementations like HashSet, TreeSet, etc., {@code false} if
-   *     this is {@code java.util.Set}
-   */
-  public boolean isConcreteImplementation() {
-    return isConcreteImplementation;
-  }
-
-  /**
-   * Checks if this Set type is properly parameterized (not a raw type).
-   *
-   * <p>A parameterized Set has exactly 1 type argument (the element type). A raw Set has 0 type
-   * arguments.
-   *
-   * @return {@code true} if this Set has exactly 1 type argument
-   */
-  public boolean isParameterized() {
-    return elementType != null;
-  }
-
-  /**
-   * Gets the element type of this Set.
-   *
-   * <p>For a parameterized Set like {@code Set<String>}, this returns the String type.
-   *
-   * @return the element type (the single type argument)
-   * @throws IllegalStateException if this is a raw Set with no type arguments
-   */
-  public TypeName getElementType() {
-    if (elementType == null) {
-      throw new IllegalStateException(
-          "Cannot get element type from raw Set type: " + getClassName());
-    }
-    return elementType;
+    super(outerType, innerTypeArguments, elementType, "Set");
   }
 }

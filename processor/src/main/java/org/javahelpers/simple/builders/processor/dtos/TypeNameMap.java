@@ -25,6 +25,8 @@ package org.javahelpers.simple.builders.processor.dtos;
 
 import java.util.List;
 import org.apache.commons.lang3.Strings;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 /**
  * Represents a type that implements the {@code java.util.Map} interface.
@@ -128,5 +130,35 @@ public class TypeNameMap extends TypeNameGeneric {
       throw new IllegalStateException("Cannot get value type from raw Map type: " + getClassName());
     }
     return valueType;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    TypeNameMap that = (TypeNameMap) o;
+
+    return new EqualsBuilder()
+        .appendSuper(super.equals(o))
+        .append(isConcreteImplementation, that.isConcreteImplementation)
+        .append(keyType, that.keyType)
+        .append(valueType, that.valueType)
+        .isEquals();
+  }
+
+  @Override
+  public int hashCode() {
+    return new HashCodeBuilder(17, 37)
+        .appendSuper(super.hashCode())
+        .append(isConcreteImplementation)
+        .append(keyType)
+        .append(valueType)
+        .toHashCode();
   }
 }

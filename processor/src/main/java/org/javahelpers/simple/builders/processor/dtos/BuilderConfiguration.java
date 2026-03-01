@@ -337,72 +337,64 @@ public record BuilderConfiguration(
 
   @Override
   public String toString() {
-    ToStringBuilder builder = new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE);
+    return new ConfigToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
+        .appendValueIfSet("generateFieldSupplier", generateFieldSupplier)
+        .appendValueIfSet("generateFieldConsumer", generateFieldConsumer)
+        .appendValueIfSet("generateBuilderConsumer", generateBuilderConsumer)
+        .appendValueIfSet("generateConditionalHelper", generateConditionalHelper)
+        .appendIfNotDefault("builderAccess", builderAccess)
+        .appendIfNotDefault("methodAccess", methodAccess)
+        .appendValueIfSet("generateVarArgsHelpers", generateVarArgsHelpers)
+        .appendValueIfSet("generateUnboxedOptional", generateUnboxedOptional)
+        .appendValueIfSet("copyTypeAnnotations", copyTypeAnnotations)
+        .appendValueIfSet("usingArrayListBuilder", usingArrayListBuilder)
+        .appendValueIfSet(
+            "usingArrayListBuilderWithElementBuilders", usingArrayListBuilderWithElementBuilders)
+        .appendValueIfSet("usingHashSetBuilder", usingHashSetBuilder)
+        .appendValueIfSet(
+            "usingHashSetBuilderWithElementBuilders", usingHashSetBuilderWithElementBuilders)
+        .appendValueIfSet("usingHashMapBuilder", usingHashMapBuilder)
+        .appendValueIfSet("generateWithInterface", generateWithInterface)
+        .appendValueIfSet("usingJacksonDeserializerAnnotation", usingJacksonDeserializerAnnotation)
+        .appendValueIfSet("generateJacksonModule", generateJacksonModule)
+        .appendIfNotEmpty("jacksonModulePackage", jacksonModulePackage)
+        .appendIfNotEmpty("builderSuffix", builderSuffix)
+        .appendIfNotEmpty("setterSuffix", setterSuffix)
+        .toString();
+  }
 
-    if (generateFieldSupplier != UNSET) {
-      builder.append("generateFieldSupplier", generateFieldSupplier);
-    }
-    if (generateFieldConsumer != UNSET) {
-      builder.append("generateFieldConsumer", generateFieldConsumer);
-    }
-    if (generateBuilderConsumer != UNSET) {
-      builder.append("generateBuilderConsumer", generateBuilderConsumer);
-    }
-    if (generateConditionalHelper != UNSET) {
-      builder.append("generateConditionalHelper", generateConditionalHelper);
-    }
-    if (builderAccess != AccessModifier.DEFAULT) {
-      builder.append("builderAccess", builderAccess);
-    }
-    if (methodAccess != AccessModifier.DEFAULT) {
-      builder.append("methodAccess", methodAccess);
-    }
-    if (generateVarArgsHelpers != UNSET) {
-      builder.append("generateVarArgsHelpers", generateVarArgsHelpers);
-    }
-    if (generateUnboxedOptional != UNSET) {
-      builder.append("generateUnboxedOptional", generateUnboxedOptional);
-    }
-    if (copyTypeAnnotations != UNSET) {
-      builder.append("copyTypeAnnotations", copyTypeAnnotations);
-    }
-    if (usingArrayListBuilder != UNSET) {
-      builder.append("usingArrayListBuilder", usingArrayListBuilder);
-    }
-    if (usingArrayListBuilderWithElementBuilders != UNSET) {
-      builder.append(
-          "usingArrayListBuilderWithElementBuilders", usingArrayListBuilderWithElementBuilders);
-    }
-    if (usingHashSetBuilder != UNSET) {
-      builder.append("usingHashSetBuilder", usingHashSetBuilder);
-    }
-    if (usingHashSetBuilderWithElementBuilders != UNSET) {
-      builder.append(
-          "usingHashSetBuilderWithElementBuilders", usingHashSetBuilderWithElementBuilders);
-    }
-    if (usingHashMapBuilder != UNSET) {
-      builder.append("usingHashMapBuilder", usingHashMapBuilder);
-    }
-    if (generateWithInterface != UNSET) {
-      builder.append("generateWithInterface", generateWithInterface);
-    }
-    if (usingJacksonDeserializerAnnotation != UNSET) {
-      builder.append("usingJacksonDeserializerAnnotation", usingJacksonDeserializerAnnotation);
-    }
-    if (generateJacksonModule != UNSET) {
-      builder.append("generateJacksonModule", generateJacksonModule);
-    }
-    if (jacksonModulePackage != null) {
-      builder.append("jacksonModulePackage", jacksonModulePackage);
-    }
-    if (builderSuffix != null && !builderSuffix.equals("Builder")) {
-      builder.append("builderSuffix", builderSuffix);
-    }
-    if (setterSuffix != null && !setterSuffix.isEmpty()) {
-      builder.append("setterSuffix", setterSuffix);
+  private static class ConfigToStringBuilder {
+    final ToStringBuilder builder;
+
+    public ConfigToStringBuilder(
+        final BuilderConfiguration builderConfig, final ToStringStyle style) {
+      this.builder = new ToStringBuilder(builderConfig, style);
     }
 
-    return builder.toString();
+    public ConfigToStringBuilder appendIfNotEmpty(String fieldName, String value) {
+      if (value != null && !value.isEmpty()) {
+        builder.append(fieldName, value);
+      }
+      return this;
+    }
+
+    public ConfigToStringBuilder appendIfNotDefault(String fieldName, AccessModifier value) {
+      if (value != AccessModifier.DEFAULT) {
+        builder.append(fieldName, value);
+      }
+      return this;
+    }
+
+    public ConfigToStringBuilder appendValueIfSet(String fieldName, OptionState optionState) {
+      if (optionState != OptionState.UNSET) {
+        builder.append(fieldName, optionState);
+      }
+      return this;
+    }
+
+    public String toString() {
+      return builder.toString();
+    }
   }
 
   // === Builder Pattern ===
