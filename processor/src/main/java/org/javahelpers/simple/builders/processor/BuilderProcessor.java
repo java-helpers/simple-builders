@@ -28,6 +28,7 @@ import static org.javahelpers.simple.builders.processor.util.BuilderDefinitionCr
 
 import com.google.auto.service.AutoService;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -132,7 +133,13 @@ public class BuilderProcessor extends AbstractProcessor {
         "simple-builders: Processing round started. Found %d annotated elements.",
         elementsToProcess.size());
 
-    for (Element annotatedElement : elementsToProcess) {
+    // Sort elements alphabetically by simple name for deterministic processing
+    List<Element> sortedElements =
+        elementsToProcess.stream()
+            .sorted(Comparator.comparing(element -> element.getSimpleName().toString()))
+            .toList();
+
+    for (Element annotatedElement : sortedElements) {
       try {
         context.debug("------------------------------------");
         context.debug("simple-builders: Processing element: %s", annotatedElement.getSimpleName());
