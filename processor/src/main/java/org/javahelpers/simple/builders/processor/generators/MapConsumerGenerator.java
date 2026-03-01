@@ -48,6 +48,16 @@ import org.javahelpers.simple.builders.processor.util.ProcessingContext;
  * V>} for all map types.
  *
  * <p>This generator is enabled by default and can be deactivated by setting the configuration flag
+ * {@code generateMapConsumerMethods} to {@code false}.
+ *
+ * <p><b>Priority:</b> 50 (lower than core field methods but higher than most helper methods)
+ *
+ * <p><b>Generated methods:</b>
+ *
+ * <ul>
+ *   <li>{@code fieldName(Consumer<HashMapBuilder<K, V>> consumer)} - fluent method
+ * </ul>
+ *
  * {@code usingHashMapBuilder} to {@code DISABLED}. See the configuration documentation for details.
  *
  * <h3>Example to demonstrate the generated methods</h3>
@@ -77,8 +87,17 @@ public class MapConsumerGenerator implements MethodGenerator {
     return PRIORITY;
   }
 
+  /**
+   * Checks if this generator applies to the given field.
+   *
+   * @param field the field to check
+   * @param dtoType the DTO type being processed
+   * @param context the processing context
+   * @return true if this generator should be used for the field
+   */
   @Override
-  public boolean appliesTo(FieldDto field, TypeName dtoType, ProcessingContext context) {
+  public boolean appliesTo(
+      final FieldDto field, final TypeName dtoType, final ProcessingContext context) {
     BuilderConfiguration configuration = context.getConfiguration();
     TypeName fieldType = field.getFieldType();
     return
@@ -96,9 +115,17 @@ public class MapConsumerGenerator implements MethodGenerator {
         && !fieldTypeGeneric.hasEmptyConstructor();
   }
 
+  /**
+   * Generates methods for the given field.
+   *
+   * @param field the field to generate methods for
+   * @param builderType the builder type
+   * @param context the processing context
+   * @return list of generated methods
+   */
   @Override
   public List<MethodDto> generateMethods(
-      FieldDto field, TypeName builderType, ProcessingContext context) {
+      final FieldDto field, final TypeName builderType, final ProcessingContext context) {
     if (!(field.getFieldType() instanceof TypeNameMap fieldTypeGeneric
         && fieldTypeGeneric.isParameterized())) {
       return Collections.emptyList();
