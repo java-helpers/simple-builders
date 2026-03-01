@@ -55,6 +55,7 @@
   <modules>
     <module>core</module>
     <module>processor</module>
+    <module>example-custom-generator</module>
     <module>example</module>
   </modules>
 
