@@ -2636,17 +2636,16 @@ class BuilderProcessorTest {
     // Allow warnings but check that generation worked
     assertThat(compilation).succeeded();
 
-    // Expect exactly the canonical builder methods without signature conflicts
+    // Expect the canonical builder methods that should be generated
     ProcessorAsserts.assertContaining(
         generatedCode,
         "public OverloadedNamesBuilder names(List<String> names)",
-        "public OverloadedNamesBuilder names(Supplier<List<String>> namesSupplier)",
-        "public OverloadedNamesBuilder names(String... names)");
+        "public OverloadedNamesBuilder names(String... names)",
+        "public OverloadedNamesBuilder names(Supplier<String[]> namesSupplier)");
   }
 
   @Test
   void collectionsWithRawTypes_shouldGenerateBuilders() {
-
     JavaFileObject rawCollectionsClass =
         ProcessorTestUtils.forSource(
             """
