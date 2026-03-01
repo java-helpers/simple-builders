@@ -85,8 +85,10 @@ public final class JavaLangAnalyser {
               }
               // If same method name (overloaded), sort by parameter type
               if (m1.getParameters().size() == 1 && m2.getParameters().size() == 1) {
-                String param1 = m1.getParameters().get(0).asType().toString();
-                String param2 = m2.getParameters().get(0).asType().toString();
+                String param1 =
+                    StringUtils.deleteWhitespace(m1.getParameters().get(0).asType().toString());
+                String param2 =
+                    StringUtils.deleteWhitespace(m2.getParameters().get(0).asType().toString());
                 return param1.compareTo(param2);
               }
               return 0;
