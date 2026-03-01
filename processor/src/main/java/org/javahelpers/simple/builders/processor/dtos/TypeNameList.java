@@ -25,6 +25,8 @@ package org.javahelpers.simple.builders.processor.dtos;
 
 import java.util.List;
 import org.apache.commons.lang3.Strings;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 /**
  * Represents a type that implements the {@code java.util.List} interface.
@@ -116,5 +118,33 @@ public class TypeNameList extends TypeNameGeneric {
           "Cannot get element type from raw List type: " + getClassName());
     }
     return elementType;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    TypeNameList that = (TypeNameList) o;
+
+    return new EqualsBuilder()
+        .appendSuper(super.equals(o))
+        .append(isConcreteImplementation, that.isConcreteImplementation)
+        .append(elementType, that.elementType)
+        .isEquals();
+  }
+
+  @Override
+  public int hashCode() {
+    return new HashCodeBuilder(17, 37)
+        .appendSuper(super.hashCode())
+        .append(isConcreteImplementation)
+        .append(elementType)
+        .toHashCode();
   }
 }

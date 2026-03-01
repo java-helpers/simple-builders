@@ -25,6 +25,8 @@ package org.javahelpers.simple.builders.processor.dtos;
 
 import java.util.List;
 import java.util.Optional;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 /**
  * Represents a declared type that may carry one or more generic type arguments.
@@ -153,5 +155,33 @@ public class TypeNameGeneric extends TypeName {
             .orElse("");
 
     return baseName + "<" + typeArgs + ">";
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    TypeNameGeneric that = (TypeNameGeneric) o;
+
+    return new EqualsBuilder()
+        .appendSuper(super.equals(o))
+        .append(innerTypeArguments, that.innerTypeArguments)
+        .append(elementBuilderType, that.elementBuilderType)
+        .isEquals();
+  }
+
+  @Override
+  public int hashCode() {
+    return new HashCodeBuilder(17, 37)
+        .appendSuper(super.hashCode())
+        .append(innerTypeArguments)
+        .append(elementBuilderType)
+        .toHashCode();
   }
 }

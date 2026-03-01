@@ -25,6 +25,8 @@
 package org.javahelpers.simple.builders.processor.dtos;
 
 import java.util.Optional;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 /** TypeName is a specific array type. Holding name of class and package of inner type. */
 public class TypeNameArray extends TypeName {
@@ -75,5 +77,31 @@ public class TypeNameArray extends TypeName {
   @Override
   public String getFullQualifiedName() {
     return typeOfArray.getFullQualifiedName() + "[]";
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    TypeNameArray that = (TypeNameArray) o;
+
+    return new EqualsBuilder()
+        .appendSuper(super.equals(o))
+        .append(typeOfArray, that.typeOfArray)
+        .isEquals();
+  }
+
+  @Override
+  public int hashCode() {
+    return new HashCodeBuilder(17, 37)
+        .appendSuper(super.hashCode())
+        .append(typeOfArray)
+        .toHashCode();
   }
 }
