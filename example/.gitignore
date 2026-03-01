@@ -1,0 +1,2 @@
+# Include generated sources (they're ignored by main .gitignore)
+!/target/generated-test-sources/
