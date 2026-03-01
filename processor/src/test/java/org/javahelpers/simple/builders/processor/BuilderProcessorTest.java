@@ -2641,7 +2641,7 @@ class BuilderProcessorTest {
         generatedCode,
         "public OverloadedNamesBuilder names(List<String> names)",
         "public OverloadedNamesBuilder names(String... names)",
-        "public OverloadedNamesBuilder names(Supplier<String[]> namesSupplier)");
+        "public OverloadedNamesBuilder names(Supplier<List<String>> namesSupplier)");
   }
 
   @Test
