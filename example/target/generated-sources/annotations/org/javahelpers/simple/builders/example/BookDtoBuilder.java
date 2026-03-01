@@ -483,34 +483,4 @@ public class BookDtoBuilder {
     this.publisher.ifSet(result::setPublisher);
     return result;
   }
-
-  /**
-   * Returns a string representation of this builder, including only fields that have been set.
-   *
-   * @return string representation of the builder
-   */
-  @Override
-  public String toString() {
-    return new ToStringBuilder(this, BuilderToStringStyle.INSTANCE)
-            .append("title", this.title)
-            .append("author", this.author)
-            .append("isbn", this.isbn)
-            .append("pages", this.pages)
-            .append("price", this.price)
-            .append("exactPrice", this.exactPrice)
-            .append("available", this.available)
-            .append("rating", this.rating)
-            .append("edition", this.edition)
-            .append("salesCount", this.salesCount)
-            .append("discount", this.discount)
-            .append("category", this.category)
-            .append("publishDate", this.publishDate)
-            .append("lastUpdated", this.lastUpdated)
-            .append("subtitle", this.subtitle)
-            .append("tags", this.tags)
-            .append("genres", this.genres)
-            .append("metadata", this.metadata)
-            .append("publisher", this.publisher)
-            .toString();
-  }
 }
