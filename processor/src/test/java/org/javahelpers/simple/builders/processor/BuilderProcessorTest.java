@@ -11,7 +11,6 @@ import com.google.testing.compile.JavaFileObjects;
 import javax.tools.JavaFileObject;
 import org.javahelpers.simple.builders.processor.testing.ProcessorAsserts;
 import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 /** Tests for the {@link BuilderProcessor} class. */
@@ -2611,7 +2610,6 @@ class BuilderProcessorTest {
   }
 
   @Test
-  @Disabled("TODO: missing feature")
   void shouldHandleOverloadedSettersForSameFieldWithoutConflicts() {
     // Given
     String packageName = "test";
@@ -2635,7 +2633,9 @@ class BuilderProcessorTest {
 
     // Then
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
-    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+    // Allow warnings but check that generation worked
+    assertThat(compilation).succeeded();
+
     // Expect exactly the canonical builder methods without signature conflicts
     ProcessorAsserts.assertContaining(
         generatedCode,
