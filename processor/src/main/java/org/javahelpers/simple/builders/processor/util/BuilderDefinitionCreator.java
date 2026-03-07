@@ -130,14 +130,17 @@ public class BuilderDefinitionCreator {
     Optional<ExecutableElement> constructorOpt = findConstructorForBuilder(annotatedType, context);
     if (constructorOpt.isPresent()) {
       ExecutableElement ctor = constructorOpt.get();
-      context.debug(
-          "Analyzing constructor: %s with %d parameter(s)",
-          ctor.getSimpleName(), ctor.getParameters().size());
+      context
+          .getLogger()
+          .startOperation(
+              "Analyzing constructor with %d parameter(s)", ctor.getParameters().size());
+
       TypeName builderType =
           MethodGeneratorUtil.createGenericTypeName(
               builderDef.getBuilderTypeName(), builderDef.getGenerics());
 
       for (VariableElement param : ctor.getParameters()) {
+        context.getLogger().startOperation("Analyzing parameter: %s", param.getSimpleName());
         Optional<FieldDto> fieldFromCtor =
             createFieldFromConstructor(
                 annotatedType, param, builderType, context, fieldNameRegistry);
@@ -147,6 +150,8 @@ public class BuilderDefinitionCreator {
           constructorFields.add(field);
         }
       }
+
+      context.getLogger().endOperation();
     }
     return constructorFields;
   }
@@ -217,11 +222,15 @@ public class BuilderDefinitionCreator {
       }
     }
 
-    context
-        .getLogger()
-        .endOperation(
-            "Processed %d possible setters: added %d fields, skipped %d",
-            processedCount, addedCount, skippedCount);
+    if (addedCount != 0 || skippedCount != 0) {
+      context
+          .getLogger()
+          .endOperation(
+              "Processed %d possible setters: added %d fields, skipped %d",
+              processedCount, addedCount, skippedCount);
+    } else {
+      context.getLogger().endOperation("No setters found");
+    }
 
     return setterFields;
   }
