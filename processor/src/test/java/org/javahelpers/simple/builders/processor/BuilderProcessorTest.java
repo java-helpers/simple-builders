@@ -115,6 +115,7 @@ class BuilderProcessorTest {
         "[DEBUG] │  └─ Successfully generated builder: VerboseTestBuilder",
         "[DEBUG] ├─ Jackson module entry added",
         "[DEBUG] └─ Generated builder with 1 fields and 5 methods for VerboseTestBuilder",
+        "simple-builders: Successfully generated 1 builder(s) in this processing round",
         "");
   }
 

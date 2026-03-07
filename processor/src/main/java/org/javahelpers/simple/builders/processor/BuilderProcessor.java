@@ -148,6 +148,7 @@ public class BuilderProcessor extends AbstractProcessor {
             .sorted(Comparator.comparing(element -> element.getSimpleName().toString()))
             .toList();
 
+    int successfulGenerations = 0;
     for (Element annotatedElement : sortedElements) {
       context.startOperation("Processing element: " + annotatedElement.getSimpleName());
       try {
@@ -156,9 +157,7 @@ public class BuilderProcessor extends AbstractProcessor {
         BuilderConfiguration config = reader.resolveConfiguration(annotatedElement);
         context.debug("Configuration resolved: %s", config);
         process(annotatedElement, config);
-        context.info(
-            "simple-builders: Successfully generated builder for: %s",
-            annotatedElement.getSimpleName());
+        successfulGenerations++;
       } catch (RuntimeException ex) {
         // Unwrap BuilderException from RuntimeException wrapper
         if (ex.getCause() instanceof BuilderException builderEx) {
@@ -180,6 +179,13 @@ public class BuilderProcessor extends AbstractProcessor {
       } finally {
         context.endOperation();
       }
+    }
+
+    // Log summary of builder generation
+    if (successfulGenerations > 0) {
+      context.info(
+          "simple-builders: Successfully generated %d builder(s) in this processing round",
+          successfulGenerations);
     }
 
     // Reset indentation level at the end of each processing round to prevent cascading errors
