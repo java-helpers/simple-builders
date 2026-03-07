@@ -166,7 +166,7 @@ public class ProcessingLogger {
     // Use │ characters with proper spacing for better visual connection between hierarchical levels
     StringBuilder indent = new StringBuilder();
     for (int i = 0; i < level - 1; i++) {
-      indent.append("│ ");
+      indent.append("│  ");
     }
     // Add the specified prefix
     indent.append(prefix);
