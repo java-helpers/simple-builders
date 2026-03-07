@@ -268,6 +268,30 @@ public final class ProcessingContext {
   }
 
   /**
+   * Starts a new hierarchical operation context for logging.
+   *
+   * @param operationName the name of the operation being started
+   */
+  public void startOperation(String operationName) {
+    logger.startOperation(operationName);
+  }
+
+  /** Ends the current hierarchical operation context for logging. */
+  public void endOperation() {
+    logger.endOperation();
+  }
+
+  /**
+   * Executes a runnable operation within a hierarchical logging context.
+   *
+   * @param operationName the name of the operation
+   * @param operation the operation to execute
+   */
+  public void withOperation(String operationName, Runnable operation) {
+    logger.withOperation(operationName, operation);
+  }
+
+  /**
    * Logs a warning message without requiring a specific element context.
    *
    * @param format the format string

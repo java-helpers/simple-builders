@@ -75,24 +75,54 @@ public class JavaCodeGenerator {
    * @throws BuilderException if there is an error in source code generation
    */
   public void generateBuilder(BuilderDefinitionDto builderDef) throws BuilderException {
-    logger.debug(
-        "Starting code generation for builder: %s", builderDef.getBuilderTypeName().getClassName());
+    try {
+      logger.withOperation(
+          "Code generation for builder: " + builderDef.getBuilderTypeName().getClassName(),
+          () -> {
+            try {
+              TypeSpec.Builder classBuilder = createClassBuilder(builderDef);
+              logger.debug("Class builder created");
 
-    TypeSpec.Builder classBuilder = createClassBuilder(builderDef);
-    addClassMetadata(classBuilder, builderDef);
-    addFieldsToBuilder(classBuilder, builderDef);
-    addMethodsToBuilder(classBuilder, builderDef);
-    addConstructorsToBuilder(classBuilder, builderDef);
-    addNestedTypesToBuilder(classBuilder, builderDef);
-    addAnnotationsToBuilder(classBuilder, builderDef);
+              addClassMetadata(classBuilder, builderDef);
+              logger.debug("Class metadata added");
 
-    logger.debug(
-        "Writing builder class to file: %s.%s",
-        builderDef.getBuilderTypeName().getPackageName(),
-        builderDef.getBuilderTypeName().getClassName());
-    writeBuilderClassToFile(classBuilder.build(), builderDef);
-    logger.debug(
-        "Successfully generated builder: %s", builderDef.getBuilderTypeName().getClassName());
+              addFieldsToBuilder(classBuilder, builderDef);
+              logger.debug("Fields added: %d fields", builderDef.getAllFieldsForBuilder().size());
+
+              addMethodsToBuilder(classBuilder, builderDef);
+              logger.debug("Methods added: %d methods", builderDef.getCoreMethods().size());
+
+              addConstructorsToBuilder(classBuilder, builderDef);
+              logger.debug("Constructors added");
+
+              addNestedTypesToBuilder(classBuilder, builderDef);
+              logger.debug("Nested types added");
+
+              addAnnotationsToBuilder(classBuilder, builderDef);
+              logger.debug("Annotations added");
+
+              logger.debug(
+                  "Writing builder class to file: %s.%s",
+                  builderDef.getBuilderTypeName().getPackageName(),
+                  builderDef.getBuilderTypeName().getClassName());
+              writeBuilderClassToFile(classBuilder.build(), builderDef);
+              logger.debug(
+                  "Successfully generated builder: %s",
+                  builderDef.getBuilderTypeName().getClassName());
+            } catch (BuilderException ex) {
+              // Re-throw as RuntimeException to propagate out of lambda
+              throw new RuntimeException("Code generation failed", ex);
+            }
+          });
+    } catch (RuntimeException ex) {
+      // Unwrap BuilderException from RuntimeException wrapper
+      if (ex.getCause() instanceof BuilderException builderEx) {
+        throw builderEx;
+      } else {
+        // Re-throw unexpected runtime exceptions
+        throw ex;
+      }
+    }
   }
 
   private TypeSpec.Builder createClassBuilder(BuilderDefinitionDto builderDef) {
@@ -152,8 +182,18 @@ public class JavaCodeGenerator {
     logger.debug("  Resolved %d methods after conflict resolution", resolvedMethods.size());
 
     // Generate all methods in order
+    if (!resolvedMethods.isEmpty()) {
+      logger.debug(
+          "  Generating %d methods: %s...",
+          resolvedMethods.size(),
+          resolvedMethods.stream()
+                  .limit(3) // Show first 3 method names
+                  .map(m -> m.getMethodName())
+                  .collect(java.util.stream.Collectors.joining(", "))
+              + (resolvedMethods.size() > 3 ? " +" + (resolvedMethods.size() - 3) + " more" : ""));
+    }
+
     for (MethodDto methodDto : resolvedMethods) {
-      logger.debug("    Generating method: %s", methodDto);
       MethodSpec methodSpec = createMethod(methodDto);
       classBuilder.addMethod(methodSpec);
     }

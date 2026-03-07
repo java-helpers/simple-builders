@@ -42,6 +42,13 @@ public class ProcessingLogger {
   /** Flag indicating if debug logging is enabled. */
   private final boolean debugEnabled;
 
+  /** Thread-local indentation level for hierarchical logging. */
+  private static final ThreadLocal<Integer> indentationLevel = ThreadLocal.withInitial(() -> 0);
+
+  /** Thread-local operation context for hierarchical logging. */
+  private static final ThreadLocal<StringBuilder> operationContext =
+      ThreadLocal.withInitial(StringBuilder::new);
+
   /**
    * Constructs a new ProcessingLogger with the specified ProcessingEnvironment. The Messager is
    * used to report errors, warnings, and other notices during annotation processing. Debug logging
@@ -50,9 +57,18 @@ public class ProcessingLogger {
    * @param processingEnv the processing environment providing messager and options
    */
   public ProcessingLogger(ProcessingEnvironment processingEnv) {
+    // Reset ThreadLocal state to ensure clean state between test runs
+    resetThreadLocalState();
+
     this.messager = processingEnv.getMessager();
     CompilerArgumentsReader reader = new CompilerArgumentsReader(processingEnv);
     this.debugEnabled = reader.readBooleanValue(CompilerArgumentsEnum.VERBOSE);
+  }
+
+  /** Resets ThreadLocal state to ensure clean state between test runs. */
+  private void resetThreadLocalState() {
+    indentationLevel.set(0);
+    operationContext.set(new StringBuilder());
   }
 
   /**
@@ -94,8 +110,8 @@ public class ProcessingLogger {
    */
   public void debug(String message) {
     if (debugEnabled) {
-      String formatWithDebug = "[DEBUG] " + message;
-      messager.printMessage(Diagnostic.Kind.OTHER, formatWithDebug);
+      String indentedMessage = formatWithIndentation(message);
+      messager.printMessage(Diagnostic.Kind.OTHER, indentedMessage);
     }
   }
 
@@ -108,8 +124,9 @@ public class ProcessingLogger {
    */
   public void debug(String format, Object... args) {
     if (debugEnabled) {
-      String formatWithDebug = "[DEBUG] " + format;
-      messager.printMessage(Diagnostic.Kind.OTHER, String.format(formatWithDebug, args));
+      String message = String.format(format, args);
+      String indentedMessage = formatWithIndentation(message);
+      messager.printMessage(Diagnostic.Kind.OTHER, indentedMessage);
     }
   }
 
@@ -132,6 +149,92 @@ public class ProcessingLogger {
    * @param args arguments referenced by the format specifiers in the format string
    */
   public void warning(Element e, String format, Object... args) {
-    messager.printMessage(Diagnostic.Kind.WARNING, String.format(format, args), e);
+    String message = String.format(format, args);
+    String indentedMessage = formatWithIndentation(message);
+    messager.printMessage(Diagnostic.Kind.WARNING, indentedMessage, e);
+  }
+
+  /**
+   * Formats a message with appropriate indentation based on current context.
+   *
+   * @param message the message to format
+   * @return the formatted message with indentation
+   */
+  private String formatWithIndentation(String message) {
+    int level = indentationLevel.get();
+    if (level == 0) {
+      return "[DEBUG] " + message;
+    }
+
+    // Use │ characters for better visual connection between hierarchical levels
+    StringBuilder indent = new StringBuilder();
+    for (int i = 0; i < level; i++) {
+      if (i == level - 1) {
+        indent.append("│ ");
+      } else {
+        indent.append("│ ");
+      }
+    }
+    return "[DEBUG] " + indent + message;
+  }
+
+  /**
+   * Starts a new hierarchical operation context, increasing indentation for subsequent debug
+   * messages. This should be called before starting a major operation that has sub-operations.
+   *
+   * @param operationName the name of the operation being started
+   */
+  public void startOperation(String operationName) {
+    debug("┌─ %s", operationName);
+    indentationLevel.set(indentationLevel.get() + 1);
+    operationContext.get().append(operationName).append(" > ");
+  }
+
+  /**
+   * Ends the current hierarchical operation context, decreasing indentation for subsequent debug
+   * messages. This should be called after completing a major operation.
+   */
+  public void endOperation() {
+    int currentLevel = indentationLevel.get();
+    if (currentLevel > 0) {
+      indentationLevel.set(currentLevel - 1);
+
+      StringBuilder context = operationContext.get();
+      if (context.length() > 0) {
+        int lastSeparator = context.lastIndexOf(" > ");
+        if (lastSeparator >= 0) {
+          context.setLength(lastSeparator);
+        } else {
+          context.setLength(0);
+        }
+      }
+
+      debug("└─ Operation completed");
+    }
+  }
+
+  /**
+   * Executes a runnable operation within a hierarchical logging context. Automatically handles
+   * start/end operation logging.
+   *
+   * @param operationName the name of the operation
+   * @param operation the operation to execute
+   */
+  public void withOperation(String operationName, Runnable operation) {
+    startOperation(operationName);
+    try {
+      operation.run();
+    } finally {
+      endOperation();
+    }
+  }
+
+  /**
+   * Gets the current operation context for debugging purposes.
+   *
+   * @return the current operation context string
+   */
+  public String getCurrentOperationContext() {
+    return operationContext.get().toString();
   }
 }

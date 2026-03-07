@@ -62,14 +62,23 @@ class BuilderProcessorTest {
     // Then: Compilation succeeds and debug messages are present
     assertThat(compilation).succeeded();
 
-    // Verify key debug messages are logged
+    // Verify key debug messages are logged with hierarchical format
     ProcessorAsserts.assertHadNoteContaining(
         compilation,
         "simple-builders: PROCESSING ROUND START",
-        "[DEBUG] simple-builders: Processing element: VerboseTest",
-        "[DEBUG] Extracting builder definition from: test.VerboseTest",
-        "[DEBUG]   -> Adding field: name",
-        "[DEBUG] Successfully generated builder: VerboseTestBuilder");
+        "[DEBUG] ┌─ Initializing generator registry",
+        "[DEBUG] │ Loaded 14 method generators and 8 builder enhancers total",
+        "[DEBUG] └─ Operation completed",
+        "[DEBUG] ┌─ Processing element: VerboseTest",
+        "[DEBUG] │ Configuration resolved: BuilderConfiguration",
+        "[DEBUG] │ ┌─ Builder generation for VerboseTest",
+        "[DEBUG] │ │ Extracting builder definition from element",
+        "[DEBUG] │ │ ┌─ Code generation for builder: VerboseTestBuilder",
+        "[DEBUG] │ │ │ Fields added: 1 fields",
+        "[DEBUG] │ │ └─ Operation completed",
+        "[DEBUG] │ └─ Operation completed",
+        "[DEBUG] └─ Operation completed",
+        "simple-builders: Successfully generated builder for: VerboseTest");
   }
 
   @Test

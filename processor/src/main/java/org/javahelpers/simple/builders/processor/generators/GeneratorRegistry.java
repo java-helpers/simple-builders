@@ -121,6 +121,7 @@ public class GeneratorRegistry {
    * @param dtoType the DTO type the builder is for
    */
   public void enhanceBuilder(BuilderDefinitionDto builderDto, TypeName dtoType) {
+    int appliedEnhancers = 0;
     for (BuilderEnhancer enhancer : builderEnhancers) {
       if (enhancer.appliesTo(builderDto, dtoType, context)) {
         try {
@@ -129,10 +130,7 @@ public class GeneratorRegistry {
               enhancer.getClass().getSimpleName(), enhancer.getPriority());
 
           enhancer.enhanceBuilder(builderDto, context);
-
-          context.debug(
-              "     Enhanced builder %s with %s",
-              builderDto.getBuilderTypeName().getClassName(), enhancer.getClass().getSimpleName());
+          appliedEnhancers++;
         } catch (Exception e) {
           context.error(
               "Failed to apply enhancer %s to builder %s: %s",
@@ -142,19 +140,21 @@ public class GeneratorRegistry {
         }
       }
     }
+
+    if (appliedEnhancers > 0) {
+      context.debug("  Applied %d builder enhancers", appliedEnhancers);
+    }
   }
 
   /**
-   * Loads all generators (built-in and custom) via ServiceLoader.
+   * Loads all available generators from the service loader and separates them into method
+   * generators and builder enhancers.
    *
    * <p>Generators are discovered by looking for implementations of {@link Generator} declared in
    * {@code META-INF/services/org.javahelpers.simple.builders.processor.generators.Generator} files.
    *
    * <p>The loaded generators are separated into method generators and builder enhancers based on
-   * their type (using the sealed interface hierarchy).
-   *
-   * <p>If loading fails for any generator, a warning is logged but processing continues with the
-   * remaining generators.
+   * their type.
    */
   private void loadAllGenerators() {
     int methodGenCount = 0;
@@ -178,21 +178,16 @@ public class GeneratorRegistry {
         if (generator instanceof MethodGenerator methodGen) {
           methodGenerators.add(methodGen);
           methodGenCount++;
-          context.debug(
-              "Loaded method generator: %s (priority: %d)",
-              generatorClassName, methodGen.getPriority());
         } else if (generator instanceof BuilderEnhancer enhancer) {
           builderEnhancers.add(enhancer);
           enhancerCount++;
-          context.debug(
-              "Loaded builder enhancer: %s (priority: %d)",
-              generatorClassName, enhancer.getPriority());
         }
       }
     } catch (Exception e) {
       context.error("Failed to load generators: %s", e.getMessage());
     }
 
+    // Only log summary, not individual generators (too verbose)
     context.debug(
         "Loaded %d method generators and %d builder enhancers total",
         methodGenCount, enhancerCount);
