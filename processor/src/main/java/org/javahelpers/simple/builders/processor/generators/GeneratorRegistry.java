@@ -194,12 +194,9 @@ public class GeneratorRegistry {
     }
 
     // Only log summary, not individual generators (too verbose)
-    String summary =
-        String.format(
-            "Loaded %d method generators and %d builder enhancers total",
-            methodGenCount, enhancerCount);
-
-    context.debug(summary);
+    context.debug(
+        "Loaded %d method generators and %d builder enhancers total",
+        methodGenCount, enhancerCount);
   }
 
   /**

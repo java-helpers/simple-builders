@@ -158,19 +158,6 @@ public class BuilderProcessor extends AbstractProcessor {
         context.debug("Configuration resolved: %s", config);
         process(annotatedElement, config);
         successfulGenerations++;
-      } catch (RuntimeException ex) {
-        // Unwrap BuilderException from RuntimeException wrapper
-        if (ex.getCause() instanceof BuilderException builderEx) {
-          // All builder generation failures are warnings to allow other builders to be
-          // generated
-          context.warning(
-              annotatedElement,
-              "simple-builders: Failed to generate builder - %s",
-              builderEx.getMessage());
-        } else {
-          // Re-throw unexpected runtime exceptions
-          throw ex;
-        }
       } catch (BuilderException ex) {
         // All builder generation failures are warnings to allow other builders to be
         // generated
@@ -210,27 +197,20 @@ public class BuilderProcessor extends AbstractProcessor {
 
   private void process(Element annotatedElement, BuilderConfiguration config)
       throws BuilderException {
-    try {
-      context.initConfigurationForProcessingTarget(config);
-      BuilderDefinitionDto builderDef = extractFromElement(annotatedElement, context);
+    context.initConfigurationForProcessingTarget(config);
+    BuilderDefinitionDto builderDef = extractFromElement(annotatedElement, context);
+    codeGenerator.generateBuilder(builderDef);
 
-      codeGenerator.generateBuilder(builderDef);
+    // Collect info for Jackson Module if enabled
+    jacksonModuleGenerator.addEntry(builderDef, annotatedElement);
+    context.debug("Jackson module entry added");
 
-      // Collect info for Jackson Module if enabled
-      jacksonModuleGenerator.addEntry(builderDef, annotatedElement);
-      context.debug("Jackson module entry added");
-
-      // Add summary of what was generated
-      context.endOperation(
-          "Generated builder with %d fields and %d methods for %s",
-          builderDef.getAllFieldsForBuilder().size(),
-          builderDef.getCoreMethods().size(),
-          builderDef.getBuilderTypeName().getClassName());
-    } catch (BuilderException ex) {
-      context.endOperation();
-      // Re-throw as RuntimeException to propagate out of lambda
-      throw new RuntimeException("Builder generation failed", ex);
-    }
+    // Add summary of what was generated
+    context.endOperation(
+        "Generated builder with %d fields and %d methods for %s",
+        builderDef.getAllFieldsForBuilder().size(),
+        builderDef.getCoreMethods().size(),
+        builderDef.getBuilderTypeName().getClassName());
   }
 
   /**
