@@ -69,27 +69,38 @@ Set it permanently in your `pom.xml`:
 When debug logging is enabled, you'll see detailed output with visual separators:
 
 ```
-[INFO] [DEBUG] ===============================
 [INFO] simple-builders: PROCESSING ROUND START
-[INFO] [DEBUG] ===============================
 [INFO] [DEBUG] simple-builders: Processing round started. Found 3 annotated elements.
-[INFO] [DEBUG] ------------------------------------
-[INFO] [DEBUG] simple-builders: Processing element: PersonDto
-[INFO] [DEBUG] ------------------------------------
-[INFO] [DEBUG] Extracting builder definition from: org.example.PersonDto
-[INFO] [DEBUG] Builder will be generated as: org.example.PersonDtoBuilder
-[INFO] [DEBUG] Analyzing method: setName with 1 parameter(s)
-[INFO] [DEBUG]   -> Adding field: name (type: java.lang.String)
-[INFO] [DEBUG] Analyzing method: setAge with 1 parameter(s)
-[INFO] [DEBUG]   -> Adding field: age (type: int)
-[INFO] [DEBUG] Processed 2 possible setters: added 2 fields, skipped 0
-[INFO] [DEBUG] Starting code generation for builder: PersonDtoBuilder
-[INFO] [DEBUG] Generating 0 constructor fields and 2 setter fields
-[INFO] [DEBUG]   Generated 2 methods for field: name
-[INFO] [DEBUG]   Generated 2 methods for field: age
-[INFO] [DEBUG] Writing builder class to file: org.example.PersonDtoBuilder
-[INFO] [DEBUG] Successfully generated builder: PersonDtoBuilder
-[INFO] simple-builders: Successfully generated builder for: PersonDto
+[INFO] [DEBUG] Processing element: PersonDto
+[INFO] [DEBUG] ├─ Extracting builder definition from: org.example.PersonDto
+[INFO] [DEBUG] │  ├─ Builder will be generated as: org.example.PersonDtoBuilder
+[INFO] [DEBUG] │  ├─ Analysing setters for finding fields
+[INFO] [DEBUG] │  │  ├─ Analyzing method: setName with 1 parameter(s)
+[INFO] [DEBUG] │  │  │  └─ Adding field: name (type: java.lang.String)
+[INFO] [DEBUG] │  │  ├─ Analyzing method: setAge with 1 parameter(s)
+[INFO] [DEBUG] │  │  │  └─ Adding field: age (type: int)
+[INFO] [DEBUG] │  └─ Processed 2 possible setters: added 2 fields, skipped 0
+[INFO] [DEBUG] ├─ Code generation for builder: PersonDtoBuilder
+[INFO] [DEBUG] │  ├─ Class builder created
+[INFO] [DEBUG] │  ├─ Generating 0 constructor fields and 2 setter fields
+[INFO] [DEBUG] │  │  └─ Fields added: 2 fields
+[INFO] [DEBUG] │  ├─ Adding Methods for 4 candidates
+[INFO] [DEBUG] │  │  └─ 4 Methods added
+[INFO] [DEBUG] │  ├─ Writing builder class to file: org.example.PersonDtoBuilder
+[INFO] [DEBUG] │  └─ Successfully generated builder: PersonDtoBuilder
+[INFO] [DEBUG] Processing element: OrderDto
+[INFO] [DEBUG] ├─ Extracting builder definition from: org.example.OrderDto
+[INFO] [DEBUG] │  └─ Builder will be generated as: org.example.OrderDtoBuilder
+[INFO] [DEBUG] │  └─ Processed 1 possible setters: added 1 fields, skipped 0
+[INFO] [DEBUG] ├─ Code generation for builder: OrderDtoBuilder
+[INFO] [DEBUG] │  └─ Successfully generated builder: OrderDtoBuilder
+[INFO] [DEBUG] Processing element: CustomerDto
+[INFO] [DEBUG] ├─ Extracting builder definition from: org.example.CustomerDto
+[INFO] [DEBUG] │  └─ Builder will be generated as: org.example.CustomerDtoBuilder
+[INFO] [DEBUG] │  └─ Processed 1 possible setters: added 1 fields, skipped 0
+[INFO] [DEBUG] ├─ Code generation for builder: CustomerDtoBuilder
+[INFO] [DEBUG] │  └─ Successfully generated builder: CustomerDtoBuilder
+[INFO] simple-builders: Successfully generated 3 builder(s) in this processing round
 ```
 
 **Note**: Debug messages are prefixed with `[DEBUG]` and use `Diagnostic.Kind.OTHER` which appears as `[INFO]` in Maven output.
@@ -99,9 +110,8 @@ When debug logging is enabled, you'll see detailed output with visual separators
 Without debug logging enabled, you only see the INFO-level messages:
 
 ```
-[INFO] simple-builders: Successfully generated builder for: PersonDto
-[INFO] simple-builders: Successfully generated builder for: OrderDto
-[INFO] simple-builders: Successfully generated builder for: CustomerDto
+[INFO] simple-builders: PROCESSING ROUND START
+[INFO] simple-builders: Successfully generated 3 builder(s) in this processing round
 ```
 
 ## Troubleshooting
