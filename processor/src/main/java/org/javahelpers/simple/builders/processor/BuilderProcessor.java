@@ -70,13 +70,12 @@ public class BuilderProcessor extends AbstractProcessor {
   public synchronized void init(ProcessingEnvironment processingEnv) {
     super.init(processingEnv);
     ProcessingLogger logger = new ProcessingLogger(processingEnv);
+    logger.debug("Starting BuilderProcessor...");
 
     // Read global configuration from compiler arguments
-    logger.startOperation(
-        "Loaded global configuration from compiler arguments: BuilderConfiguration[]");
     CompilerArgumentsReader reader = new CompilerArgumentsReader(processingEnv);
     BuilderConfiguration globalConfig = reader.readBuilderConfiguration();
-    logger.endOperation();
+    logger.debug("Loaded global configuration from compiler arguments: %s", globalConfig);
 
     this.context = new ProcessingContext(logger, globalConfig, processingEnv);
     this.codeGenerator = new JavaCodeGenerator(processingEnv, logger);
@@ -213,16 +212,14 @@ public class BuilderProcessor extends AbstractProcessor {
 
       // Collect info for Jackson Module if enabled
       jacksonModuleGenerator.addEntry(builderDef, annotatedElement);
-      context.getLogger().debug("Jackson module entry added");
+      context.debug("Jackson module entry added");
 
       // Add summary of what was generated
-      context
-          .getLogger()
-          .endOperation(
-              "Generated builder with %d fields and %d methods for %s",
-              builderDef.getAllFieldsForBuilder().size(),
-              builderDef.getCoreMethods().size(),
-              builderDef.getBuilderTypeName().getClassName());
+      context.endOperation(
+          "Generated builder with %d fields and %d methods for %s",
+          builderDef.getAllFieldsForBuilder().size(),
+          builderDef.getCoreMethods().size(),
+          builderDef.getBuilderTypeName().getClassName());
     } catch (BuilderException ex) {
       context.endOperation();
       // Re-throw as RuntimeException to propagate out of lambda

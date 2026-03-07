@@ -74,13 +74,10 @@ public class GeneratorRegistry {
     loadAllGenerators();
     sortGeneratorsByPriority();
 
-    String initMessage =
-        String.format(
-            "Initialized GeneratorRegistry with %d method generators and %d builder enhancers",
-            methodGenerators.size(), builderEnhancers.size());
-
     // Log the closing message with └─ without changing indentation level
-    context.logClosingOperation(initMessage);
+    context.endOperation(
+        "Initialized GeneratorRegistry with %d method generators and %d builder enhancers",
+        methodGenerators.size(), builderEnhancers.size());
   }
 
   /**
@@ -115,7 +112,7 @@ public class GeneratorRegistry {
         }
       }
     }
-    context.getLogger().endOperation("Generated %d methods", allMethods.size());
+    context.endOperation("Generated %d methods", allMethods.size());
 
     return allMethods;
   }
@@ -149,9 +146,9 @@ public class GeneratorRegistry {
     }
 
     if (appliedEnhancers > 0) {
-      context.getLogger().endOperation("Applied %d builder enhancers", appliedEnhancers);
+      context.endOperation("Applied %d builder enhancers", appliedEnhancers);
     } else {
-      context.getLogger().endOperation();
+      context.endOperation();
     }
   }
 

@@ -258,7 +258,8 @@ public final class ProcessingContext {
   }
 
   /**
-   * Logs a debug message with a formatted string.
+   * Logs a debug message with a formatted string. Only visible when enabled via -Averbose=true or
+   * -Asimplebuilder.verbose=true.
    *
    * @param format the format string
    * @param args arguments referenced by the format specifiers in the format string
@@ -268,12 +269,13 @@ public final class ProcessingContext {
   }
 
   /**
-   * Starts a new hierarchical operation context for logging.
+   * Starts a new hierarchical operation context for logging with formatted message.
    *
-   * @param operationName the name of the operation being started
+   * @param format the format string for the operation message
+   * @param args arguments referenced by the format specifiers
    */
-  public void startOperation(String operationName) {
-    logger.startOperation(operationName);
+  public void startOperation(String format, Object... args) {
+    logger.startOperation(format, args);
   }
 
   /** Ends the current hierarchical operation context for logging. */
@@ -282,18 +284,8 @@ public final class ProcessingContext {
   }
 
   /** Ends the current hierarchical operation context with a closing message for logging. */
-  public void endOperation(String closingMessage) {
-    logger.endOperation(closingMessage);
-  }
-
-  /** Gets the underlying ProcessingLogger for direct access. */
-  public ProcessingLogger getLogger() {
-    return logger;
-  }
-
-  /** Logs a closing operation message with └─ character without changing indentation level. */
-  public void logClosingOperation(String closingMessage) {
-    logger.logClosingOperation(closingMessage);
+  public void endOperation(String format, Object... args) {
+    logger.endOperation(format, args);
   }
 
   /** Resets the indentation level to prevent cascading errors between processing runs. */

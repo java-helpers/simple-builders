@@ -24,8 +24,6 @@
 
 package org.javahelpers.simple.builders.processor.util;
 
-import java.util.HashMap;
-import java.util.Map;
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
@@ -47,14 +45,6 @@ public class ProcessingLogger {
   /** Thread-local indentation level for hierarchical logging. */
   private static final ThreadLocal<Integer> indentationLevel = ThreadLocal.withInitial(() -> 0);
 
-  /** Thread-local operation context for hierarchical logging. */
-  private static final ThreadLocal<StringBuilder> operationContext =
-      ThreadLocal.withInitial(StringBuilder::new);
-
-  /** Thread-local tracking of first operation at each indentation level. */
-  private static final ThreadLocal<Map<Integer, Boolean>> firstOperationAtLevel =
-      ThreadLocal.withInitial(HashMap::new);
-
   /**
    * Constructs a new ProcessingLogger with the specified ProcessingEnvironment. The Messager is
    * used to report errors, warnings, and other notices during annotation processing. Debug logging
@@ -74,7 +64,6 @@ public class ProcessingLogger {
   /** Resets ThreadLocal state to ensure clean state between test runs. */
   private void resetThreadLocalState() {
     indentationLevel.set(0);
-    operationContext.set(new StringBuilder());
   }
 
   /**
@@ -164,60 +153,52 @@ public class ProcessingLogger {
    * Formats a message with appropriate indentation based on current context.
    *
    * @param message the message to format
+   * @param prefix the prefix to add (e.g., "├─ ", "└─ ") or empty string for no prefix
    * @return the formatted message with indentation
    */
-  private String formatWithIndentation(String message) {
+  private String formatWithIndentation(String message, String prefix) {
     int level = indentationLevel.get();
     if (level == 0) {
+      // At level 0, no indentation or prefix
       return "[DEBUG] " + message;
     }
 
     // Use │ characters with proper spacing for better visual connection between hierarchical levels
     StringBuilder indent = new StringBuilder();
-    for (int i = 0; i < level; i++) {
+    for (int i = 0; i < level - 1; i++) {
       indent.append("│ ");
     }
-    // Add ├─ for debug messages inside operations
-    indent.append("├─ ");
+    // Add the specified prefix
+    indent.append(prefix);
     return "[DEBUG] " + indent + message;
   }
 
-  private String formatOperationMessage(String message) {
-    int level = indentationLevel.get();
-    if (level == 0) {
-      return "[DEBUG] " + message;
-    }
-
-    // Use │ characters with proper spacing for operation messages (no ├─ prefix)
-    StringBuilder indent = new StringBuilder();
-    for (int i = 0; i < level; i++) {
-      indent.append("│ ");
-    }
-    return "[DEBUG] " + indent + message;
+  /**
+   * Formats a message with ├─ prefix for debug messages.
+   *
+   * @param message the message to format
+   * @return the formatted message with indentation and ├─ prefix
+   */
+  private String formatWithIndentation(String message) {
+    return formatWithIndentation(message, "├─ ");
   }
 
   /**
    * Starts a new hierarchical operation context, increasing indentation for subsequent debug
    * messages. This should be called before starting a major operation that has sub-operations.
    *
-   * @param operationName the name of the operation being started
+   * @param formatClosingMessage the format string for the operation message
+   * @param args arguments referenced by the format specifiers
    */
   public void startOperation(String formatClosingMessage, Object... args) {
     int currentLevel = indentationLevel.get();
-    Map<Integer, Boolean> firstOps = firstOperationAtLevel.get();
 
-    // Mark that we've had an operation at this level
-    firstOps.put(currentLevel, false);
-
-    StringBuilder context = operationContext.get();
-    context.append("├─ ").append(String.format(formatClosingMessage, args));
-
-    // Log the operation directly without going through debug() to avoid extra indentation
-    String operationMessage = formatOperationMessage(context.toString());
+    // Log the operation start message with proper prefix handling
+    String operationMessage = formatWithIndentation(String.format(formatClosingMessage, args));
     messager.printMessage(Diagnostic.Kind.NOTE, operationMessage);
 
+    // Increase indentation for subsequent messages
     indentationLevel.set(currentLevel + 1);
-    context.setLength(0); // Reset for next operation
   }
 
   /**
@@ -237,42 +218,21 @@ public class ProcessingLogger {
    * This should be called after completing an operation started with startOperation when you want
    * to log a closing message with the proper tree structure (using └─ for the last operation).
    *
-   * @param closingMessage the message to log for the operation completion
+   * @param formatClosingMessage the format string for the closing message
+   * @param args arguments referenced by the format specifiers
    */
   public void endOperation(String formatClosingMessage, Object... args) {
     int currentLevel = indentationLevel.get();
 
     // Log the closing message with └─ to indicate it's the last operation at this level
-    StringBuilder context = operationContext.get();
-    context.append("└─ ").append(String.format(formatClosingMessage, args));
-
-    // Log the operation directly without going through debug() to avoid extra indentation
-    String operationMessage = formatOperationMessage(context.toString());
+    String closingMessage = String.format(formatClosingMessage, args);
+    String operationMessage = formatWithIndentation(closingMessage, "└─ ");
     messager.printMessage(Diagnostic.Kind.NOTE, operationMessage);
 
-    context.setLength(0); // Reset for next operation
+    // Decrease indentation level
     if (currentLevel > 0) {
       indentationLevel.set(currentLevel - 1);
     }
-  }
-
-  /**
-   * Logs a closing operation message with └─ character without changing indentation level. This is
-   * useful for logging the completion of an operation while staying at the same indentation level.
-   *
-   * @param closingMessage the message to log for the operation completion
-   */
-  public void logClosingOperation(String closingMessage) {
-    // Log the closing message with └─ to indicate it's the last operation at this level
-    StringBuilder context = operationContext.get();
-    context.append("└─ ").append(closingMessage);
-
-    // Log the operation directly without going through debug() to avoid extra indentation
-    // Use formatOperationMessage instead of formatWithIndentation to avoid double ├─
-    String operationMessage = formatOperationMessage(context.toString());
-    messager.printMessage(Diagnostic.Kind.NOTE, operationMessage);
-
-    context.setLength(0); // Reset for next operation
   }
 
   /**
@@ -281,21 +241,10 @@ public class ProcessingLogger {
    */
   public void resetIndentation() {
     indentationLevel.set(0);
-    operationContext.get().setLength(0);
-    firstOperationAtLevel.get().clear(); // Reset first operation tracking
   }
 
   /** Gets the current indentation level for debugging purposes. */
   public int getCurrentIndentationLevel() {
     return indentationLevel.get();
-  }
-
-  /**
-   * Gets the current operation context for debugging purposes.
-   *
-   * @return the current operation context string
-   */
-  public String getCurrentOperationContext() {
-    return operationContext.get().toString();
   }
 }

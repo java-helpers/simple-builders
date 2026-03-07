@@ -64,9 +64,8 @@ public class BuilderDefinitionCreator {
     validateAnnotatedElement(annotatedElement);
     TypeElement annotatedType = (TypeElement) annotatedElement;
 
-    context
-        .getLogger()
-        .startOperation("Extracting builder definition from: %s", annotatedType.getQualifiedName());
+    context.startOperation(
+        "Extracting builder definition from: %s", annotatedType.getQualifiedName());
 
     BuilderDefinitionDto result = initializeBuilderDefinition(annotatedType, context);
 
@@ -84,10 +83,10 @@ public class BuilderDefinitionCreator {
     // Apply builder enhancers (including With interface generation)
     context.getGeneratorRegistry().enhanceBuilder(result, result.getBuildingTargetTypeName());
 
-    context
-        .getLogger()
-        .endOperation(
-            "Builder definition extracted: %s", result.getBuilderTypeName().getClassName());
+    context.debug("Builder will be generated as: %s", result.getBuilderTypeName().getClassName());
+
+    context.endOperation(
+        "Builder definition extracted: %s", result.getBuilderTypeName().getClassName());
 
     return result;
   }
@@ -130,17 +129,15 @@ public class BuilderDefinitionCreator {
     Optional<ExecutableElement> constructorOpt = findConstructorForBuilder(annotatedType, context);
     if (constructorOpt.isPresent()) {
       ExecutableElement ctor = constructorOpt.get();
-      context
-          .getLogger()
-          .startOperation(
-              "Analyzing constructor with %d parameter(s)", ctor.getParameters().size());
+      context.startOperation(
+          "Analyzing constructor with %d parameter(s)", ctor.getParameters().size());
 
       TypeName builderType =
           MethodGeneratorUtil.createGenericTypeName(
               builderDef.getBuilderTypeName(), builderDef.getGenerics());
 
       for (VariableElement param : ctor.getParameters()) {
-        context.getLogger().startOperation("Analyzing parameter: %s", param.getSimpleName());
+        context.startOperation("Analyzing parameter: %s", param.getSimpleName());
         Optional<FieldDto> fieldFromCtor =
             createFieldFromConstructor(
                 annotatedType, param, builderType, context, fieldNameRegistry);
@@ -151,7 +148,7 @@ public class BuilderDefinitionCreator {
         }
       }
 
-      context.getLogger().endOperation();
+      context.endOperation();
     }
     return constructorFields;
   }
@@ -186,11 +183,9 @@ public class BuilderDefinitionCreator {
             result.getBuilderTypeName(), result.getGenerics());
 
     for (ExecutableElement mth : methods) {
-      context
-          .getLogger()
-          .startOperation(
-              "Analyzing method: %s with %d parameter(s)",
-              mth.getSimpleName(), mth.getParameters().size());
+      context.startOperation(
+          "Analyzing method: %s with %d parameter(s)",
+          mth.getSimpleName(), mth.getParameters().size());
 
       if (isMethodRelevantForBuilder(mth, context)) {
         // Extract the original field name from the setter method (before any renaming)
@@ -223,13 +218,11 @@ public class BuilderDefinitionCreator {
     }
 
     if (addedCount != 0 || skippedCount != 0) {
-      context
-          .getLogger()
-          .endOperation(
-              "Processed %d possible setters: added %d fields, skipped %d",
-              processedCount, addedCount, skippedCount);
+      context.endOperation(
+          "Processed %d possible setters: added %d fields, skipped %d",
+          processedCount, addedCount, skippedCount);
     } else {
-      context.getLogger().endOperation("No setters found");
+      context.endOperation("No setters found");
     }
 
     return setterFields;
@@ -242,9 +235,7 @@ public class BuilderDefinitionCreator {
         && !field.getFieldType().getPackageName().isEmpty()) {
       fieldTypeName = field.getFieldType().getPackageName() + "." + fieldTypeName;
     }
-    context
-        .getLogger()
-        .endOperation("Adding field: %s (type: %s)", field.getFieldName(), fieldTypeName);
+    context.endOperation("Adding field: %s (type: %s)", field.getFieldName(), fieldTypeName);
   }
 
   private static boolean isMethodRelevantForBuilder(
