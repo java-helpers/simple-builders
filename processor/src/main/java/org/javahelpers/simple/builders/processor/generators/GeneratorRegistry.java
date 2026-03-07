@@ -74,9 +74,13 @@ public class GeneratorRegistry {
     loadAllGenerators();
     sortGeneratorsByPriority();
 
-    context.debug(
-        "Initialized GeneratorRegistry with %d method generators and %d builder enhancers",
-        methodGenerators.size(), builderEnhancers.size());
+    String initMessage =
+        String.format(
+            "Initialized GeneratorRegistry with %d method generators and %d builder enhancers",
+            methodGenerators.size(), builderEnhancers.size());
+
+    // Log the closing message with └─ without changing indentation level
+    context.logClosingOperation(initMessage);
   }
 
   /**
@@ -91,11 +95,12 @@ public class GeneratorRegistry {
       FieldDto field, TypeName dtoType, TypeName builderType) {
     List<MethodDto> allMethods = new ArrayList<>();
 
+    context.startOperation("Processing method generators");
     for (MethodGenerator generator : methodGenerators) {
       if (generator.appliesTo(field, dtoType, context)) {
         try {
           context.debug(
-              "  -> Applying method generator: %s (priority: %d)",
+              "Applying: %s (priority: %d)",
               generator.getClass().getSimpleName(), generator.getPriority());
 
           List<MethodDto> generatedMethods = generator.generateMethods(field, builderType, context);
@@ -110,6 +115,7 @@ public class GeneratorRegistry {
         }
       }
     }
+    context.getLogger().endOperation("Generated %d methods", allMethods.size());
 
     return allMethods;
   }
@@ -122,11 +128,12 @@ public class GeneratorRegistry {
    */
   public void enhanceBuilder(BuilderDefinitionDto builderDto, TypeName dtoType) {
     int appliedEnhancers = 0;
+    context.startOperation("Processing class based enhancer");
     for (BuilderEnhancer enhancer : builderEnhancers) {
       if (enhancer.appliesTo(builderDto, dtoType, context)) {
         try {
           context.debug(
-              "  -> Applying builder enhancer: %s (priority: %d)",
+              "Applying: %s (priority: %d)",
               enhancer.getClass().getSimpleName(), enhancer.getPriority());
 
           enhancer.enhanceBuilder(builderDto, context);
@@ -142,7 +149,9 @@ public class GeneratorRegistry {
     }
 
     if (appliedEnhancers > 0) {
-      context.debug("  Applied %d builder enhancers", appliedEnhancers);
+      context.getLogger().endOperation("Applied %d builder enhancers", appliedEnhancers);
+    } else {
+      context.getLogger().endOperation();
     }
   }
 
@@ -188,9 +197,12 @@ public class GeneratorRegistry {
     }
 
     // Only log summary, not individual generators (too verbose)
-    context.debug(
-        "Loaded %d method generators and %d builder enhancers total",
-        methodGenCount, enhancerCount);
+    String summary =
+        String.format(
+            "Loaded %d method generators and %d builder enhancers total",
+            methodGenCount, enhancerCount);
+
+    context.debug(summary);
   }
 
   /**

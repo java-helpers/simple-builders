@@ -92,10 +92,6 @@ public class JacksonAnnotationEnhancer implements BuilderEnhancer {
   public void enhanceBuilder(BuilderDefinitionDto builderDto, ProcessingContext context) {
     AnnotationDto jacksonAnnotation = createJsonPOJOBuilderAnnotation(builderDto);
     builderDto.addClassAnnotation(jacksonAnnotation);
-
-    context.debug(
-        "Added @JsonPOJOBuilder annotation to builder %s",
-        builderDto.getBuilderTypeName().getClassName());
   }
 
   /**

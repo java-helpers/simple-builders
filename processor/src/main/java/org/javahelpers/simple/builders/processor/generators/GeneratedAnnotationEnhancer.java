@@ -81,10 +81,6 @@ public class GeneratedAnnotationEnhancer implements BuilderEnhancer {
   public void enhanceBuilder(BuilderDefinitionDto builderDto, ProcessingContext context) {
     AnnotationDto generatedAnnotation = createGeneratedAnnotation();
     builderDto.addClassAnnotation(generatedAnnotation);
-
-    context.debug(
-        "Added @Generated annotation to builder %s",
-        builderDto.getBuilderTypeName().getClassName());
   }
 
   /**

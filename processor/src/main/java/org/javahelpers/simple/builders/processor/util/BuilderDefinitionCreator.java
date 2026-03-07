@@ -64,7 +64,9 @@ public class BuilderDefinitionCreator {
     validateAnnotatedElement(annotatedElement);
     TypeElement annotatedType = (TypeElement) annotatedElement;
 
-    context.debug("Extracting builder definition from: %s", annotatedType.getQualifiedName());
+    context
+        .getLogger()
+        .startOperation("Extracting builder definition from: %s", annotatedType.getQualifiedName());
 
     BuilderDefinitionDto result = initializeBuilderDefinition(annotatedType, context);
 
@@ -81,6 +83,11 @@ public class BuilderDefinitionCreator {
 
     // Apply builder enhancers (including With interface generation)
     context.getGeneratorRegistry().enhanceBuilder(result, result.getBuildingTargetTypeName());
+
+    context
+        .getLogger()
+        .endOperation(
+            "Builder definition extracted: %s", result.getBuilderTypeName().getClassName());
 
     return result;
   }
@@ -155,6 +162,7 @@ public class BuilderDefinitionCreator {
       BuilderDefinitionDto result,
       ProcessingContext context,
       Map<String, FieldDto> fieldNameRegistry) {
+    context.startOperation("Analysing setters for finding fields");
     List<FieldDto> setterFields = new LinkedList<>();
 
     // Build a set of constructor field names to avoid duplicates from setters
@@ -173,9 +181,11 @@ public class BuilderDefinitionCreator {
             result.getBuilderTypeName(), result.getGenerics());
 
     for (ExecutableElement mth : methods) {
-      context.debug(
-          "Analyzing method: %s with %d parameter(s)",
-          mth.getSimpleName(), mth.getParameters().size());
+      context
+          .getLogger()
+          .startOperation(
+              "Analyzing method: %s with %d parameter(s)",
+              mth.getSimpleName(), mth.getParameters().size());
 
       if (isMethodRelevantForBuilder(mth, context)) {
         // Extract the original field name from the setter method (before any renaming)
@@ -207,9 +217,11 @@ public class BuilderDefinitionCreator {
       }
     }
 
-    context.debug(
-        "Processed %d possible setters: added %d fields, skipped %d",
-        processedCount, addedCount, skippedCount);
+    context
+        .getLogger()
+        .endOperation(
+            "Processed %d possible setters: added %d fields, skipped %d",
+            processedCount, addedCount, skippedCount);
 
     return setterFields;
   }
@@ -221,29 +233,31 @@ public class BuilderDefinitionCreator {
         && !field.getFieldType().getPackageName().isEmpty()) {
       fieldTypeName = field.getFieldType().getPackageName() + "." + fieldTypeName;
     }
-    context.debug("  -> Adding field: %s (type: %s)", field.getFieldName(), fieldTypeName);
+    context
+        .getLogger()
+        .endOperation("Adding field: %s (type: %s)", field.getFieldName(), fieldTypeName);
   }
 
   private static boolean isMethodRelevantForBuilder(
       ExecutableElement mth, ProcessingContext context) {
     if (!hasNoThrowablesDeclared(mth)) {
-      context.debug("  -> Skipping: declares throwables");
+      context.debug("Skipping: declares throwables");
       return false;
     }
     if (!hasNoReturnValue(mth)) {
-      context.debug("  -> Skipping: has return value");
+      context.debug("Skipping: has return value");
       return false;
     }
     if (!hasNotAnnotation(IgnoreInBuilder.class, mth)) {
-      context.debug("  -> Skipping: has @IgnoreInBuilder annotation");
+      context.debug("Skipping: has @IgnoreInBuilder annotation");
       return false;
     }
     if (!isNotPrivate(mth)) {
-      context.debug("  -> Skipping: is private");
+      context.debug("Skipping: is private");
       return false;
     }
     if (!isNotStatic(mth)) {
-      context.debug("  -> Skipping: is static");
+      context.debug("Skipping: is static");
       return false;
     }
     return true;

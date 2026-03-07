@@ -281,14 +281,24 @@ public final class ProcessingContext {
     logger.endOperation();
   }
 
-  /**
-   * Executes a runnable operation within a hierarchical logging context.
-   *
-   * @param operationName the name of the operation
-   * @param operation the operation to execute
-   */
-  public void withOperation(String operationName, Runnable operation) {
-    logger.withOperation(operationName, operation);
+  /** Ends the current hierarchical operation context with a closing message for logging. */
+  public void endOperation(String closingMessage) {
+    logger.endOperation(closingMessage);
+  }
+
+  /** Gets the underlying ProcessingLogger for direct access. */
+  public ProcessingLogger getLogger() {
+    return logger;
+  }
+
+  /** Logs a closing operation message with └─ character without changing indentation level. */
+  public void logClosingOperation(String closingMessage) {
+    logger.logClosingOperation(closingMessage);
+  }
+
+  /** Resets the indentation level to prevent cascading errors between processing runs. */
+  public void resetIndentation() {
+    logger.resetIndentation();
   }
 
   /**

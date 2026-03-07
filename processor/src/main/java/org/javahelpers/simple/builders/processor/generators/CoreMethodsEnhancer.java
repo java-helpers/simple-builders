@@ -107,9 +107,6 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
     // Add toString() method
     MethodDto toStringMethod = createToStringMethod(builderDto);
     builderDto.addCoreMethod(toStringMethod);
-
-    context.debug(
-        "Added core methods to builder %s", builderDto.getBuilderTypeName().getClassName());
   }
 
   /** Creates the build() method. */
