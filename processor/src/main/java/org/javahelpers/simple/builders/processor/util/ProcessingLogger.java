@@ -87,13 +87,36 @@ public class ProcessingLogger {
   }
 
   /**
+   * Formats a message with hierarchical indentation and proper spacing for alignment. Used by info
+   * and warning methods when debug mode is enabled.
+   *
+   * @param message the message to format
+   * @param spaces the number of spaces to add before the hierarchy for alignment
+   * @return the formatted message with proper indentation and spacing
+   */
+  private String formatHierarchicalMessage(String message, int spaces) {
+    String prefix = getCurrentIndentationLevel() > 0 ? "└─ " : "";
+    String spacing = " ".repeat(spaces);
+    return String.format("%s%s", spacing, formatWithIndentationNoDebug(message, prefix));
+  }
+
+  /**
    * Posts an info-level message with a formatted string.
    *
    * @param format the format string
    * @param args arguments referenced by the format specifiers in the format string
    */
   public void info(String format, Object... args) {
-    messager.printMessage(Diagnostic.Kind.NOTE, String.format(format, args));
+    String message = String.format(format, args);
+    if (debugEnabled) {
+      // When debug is enabled, add spaces to align with [DEBUG] prefix (which is 6 characters
+      // longer)
+      String indentedMessage = formatHierarchicalMessage(message, 8); // Add 8 spaces for alignment
+      messager.printMessage(Diagnostic.Kind.NOTE, indentedMessage);
+    } else {
+      // When debug is disabled, use flat formatting (current behavior)
+      messager.printMessage(Diagnostic.Kind.NOTE, message);
+    }
   }
 
   /**
@@ -133,7 +156,16 @@ public class ProcessingLogger {
    * @param args arguments referenced by the format specifiers in the format string
    */
   public void warning(String format, Object... args) {
-    messager.printMessage(Diagnostic.Kind.WARNING, String.format(format, args));
+    String message = String.format(format, args);
+    if (debugEnabled) {
+      // When debug is enabled, add spaces to align with [DEBUG] prefix (which is 5 characters
+      // longer)
+      String indentedMessage = formatHierarchicalMessage(message, 5); // Add 5 spaces for alignment
+      messager.printMessage(Diagnostic.Kind.WARNING, indentedMessage);
+    } else {
+      // When debug is disabled, print flat
+      messager.printMessage(Diagnostic.Kind.WARNING, message);
+    }
   }
 
   /**
@@ -145,8 +177,15 @@ public class ProcessingLogger {
    */
   public void warning(Element e, String format, Object... args) {
     String message = String.format(format, args);
-    String indentedMessage = formatWithIndentation(message);
-    messager.printMessage(Diagnostic.Kind.WARNING, indentedMessage, e);
+    if (debugEnabled) {
+      // When debug is enabled, add spaces to align with [DEBUG] prefix (which is 5 characters
+      // longer)
+      String indentedMessage = formatHierarchicalMessage(message, 5); // Add 5 spaces for alignment
+      messager.printMessage(Diagnostic.Kind.WARNING, indentedMessage, e);
+    } else {
+      // When debug is disabled, print flat
+      messager.printMessage(Diagnostic.Kind.WARNING, message, e);
+    }
   }
 
   /**
@@ -171,6 +210,30 @@ public class ProcessingLogger {
     // Add the specified prefix
     indent.append(prefix);
     return "[DEBUG] " + indent + message;
+  }
+
+  /**
+   * Formats a message with indentation but without [DEBUG] prefix for INFO/WARNING messages.
+   *
+   * @param message the message to format
+   * @param prefix the prefix to add (e.g., "├─ ", "└─ ") or empty string for no prefix
+   * @return the formatted message with indentation but without [DEBUG] prefix
+   */
+  private String formatWithIndentationNoDebug(String message, String prefix) {
+    int level = indentationLevel.get();
+    if (level == 0) {
+      // At level 0, no indentation or prefix
+      return message;
+    }
+
+    // Use │ characters with proper spacing for better visual connection between hierarchical levels
+    StringBuilder indent = new StringBuilder();
+    for (int i = 0; i < level - 1; i++) {
+      indent.append("│  ");
+    }
+    // Add the specified prefix
+    indent.append(prefix);
+    return indent + message;
   }
 
   /**

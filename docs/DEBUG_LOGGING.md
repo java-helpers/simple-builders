@@ -4,10 +4,10 @@ The Simple Builders annotation processor supports conditional debug logging that
 
 ## Logging Levels
 
-- **INFO**: Always visible - Shows success messages for each builder generated
-- **WARNING**: Always visible - Shows when a builder cannot be generated (e.g., wrong annotation target, generation errors). Other builders will continue to be generated.
+- **INFO**: Always visible - Shows success messages for each builder generated. When debug mode is enabled, INFO messages use hierarchical indentation.
+- **WARNING**: Always visible - Shows when a builder cannot be generated (e.g., wrong annotation target, generation errors). When debug mode is enabled, WARNING messages use hierarchical indentation.
 - **ERROR**: Always visible - Shows fatal configuration errors (e.g., unsupported JDK version). Stops compilation completely.
-- **DEBUG**: Conditional - Shows detailed tracing of field discovery, method analysis, and code generation steps
+- **DEBUG**: Conditional - Shows detailed tracing of field discovery, method analysis, and code generation steps with hierarchical indentation
 
 ## Enabling Debug Logging
 
@@ -64,6 +64,26 @@ Set it permanently in your `pom.xml`:
 </build>
 ```
 
+## Conditional Hierarchical Logging
+
+The Simple Builders processor provides **conditional hierarchical logging** to balance readability in production with detailed debugging when needed:
+
+### **When Debug Mode is DISABLED (Default):**
+- INFO and WARNING messages appear flat without indentation
+- Suitable for production systems where log noise should be minimized
+- Example: `simple-builders: Successfully generated 3 builder(s) in this processing round`
+
+### **When Debug Mode is ENABLED (-Averbose=true):**
+- INFO and WARNING messages use hierarchical indentation with `[INFO]` and `[WARNING]` prefixes (no `[DEBUG]` prefix)
+- Provides full visibility into the processing hierarchy
+- Example: `[INFO] │  └─ simple-builders: Successfully generated 3 builder(s) in this processing round`
+- Example: `[WARNING] │  │  ├─ Builder field conflict: field 'name'...`
+- Example: `[DEBUG] │  │  │  └─ Processing method: setName`
+- DEBUG messages always use hierarchical indentation with `[DEBUG]` prefix
+- All message types align vertically despite different prefix lengths
+
+This approach ensures clean production logs while maintaining full debugging capabilities when needed.
+
 ## Example Debug Output
 
 When debug logging is enabled, you'll see detailed output with visual separators:
@@ -94,10 +114,11 @@ When debug logging is enabled, you'll see detailed output with visual separators
 [INFO] [DEBUG] │  └─ Processed 1 possible setters: added 1 fields, skipped 0
 [INFO] [DEBUG] ├─ Code generation for builder: OrderDtoBuilder
 [INFO] [DEBUG] │  └─ Successfully generated builder: OrderDtoBuilder
-[INFO] [DEBUG] Processing element: CustomerDto
+[INFO] [DEBUG] Processing element: CustomerDto (with conflicts)
 [INFO] [DEBUG] ├─ Extracting builder definition from: org.example.CustomerDto
 [INFO] [DEBUG] │  └─ Builder will be generated as: org.example.CustomerDtoBuilder
-[INFO] [DEBUG] │  └─ Processed 1 possible setters: added 1 fields, skipped 0
+[INFO] [DEBUG] │  └─ Processed 2 possible setters: added 2 fields, skipped 0
+[WARNING]   │  │  ├─ Builder field conflict: field 'name' (type Optional) renamed to 'nameOptional' to avoid conflict
 [INFO] [DEBUG] ├─ Code generation for builder: CustomerDtoBuilder
 [INFO] [DEBUG] │  └─ Successfully generated builder: CustomerDtoBuilder
 [INFO] simple-builders: Successfully generated 3 builder(s) in this processing round
