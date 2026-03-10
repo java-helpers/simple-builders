@@ -118,10 +118,10 @@ When debug logging is enabled, you'll see detailed output with visual separators
 [INFO] [DEBUG] ├─ Extracting builder definition from: org.example.CustomerDto
 [INFO] [DEBUG] │  └─ Builder will be generated as: org.example.CustomerDtoBuilder
 [INFO] [DEBUG] │  └─ Processed 2 possible setters: added 2 fields, skipped 0
-[WARNING]   │  │  ├─ Builder field conflict: field 'name' (type Optional) renamed to 'nameOptional' to avoid conflict
+[WARNING]      │  │  ├─ Builder field conflict: field 'name' (type Optional) renamed to 'nameOptional' to avoid conflict
 [INFO] [DEBUG] ├─ Code generation for builder: CustomerDtoBuilder
 [INFO] [DEBUG] │  └─ Successfully generated builder: CustomerDtoBuilder
-[INFO] simple-builders: Successfully generated 3 builder(s) in this processing round
+[INFO]         simple-builders: Successfully generated 3 builder(s) in this processing round
 ```
 
 **Note**: Debug messages are prefixed with `[DEBUG]` and use `Diagnostic.Kind.OTHER` which appears as `[INFO]` in Maven output.
