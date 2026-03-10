@@ -74,12 +74,11 @@ The Simple Builders processor provides **conditional hierarchical logging** to b
 - Example: `simple-builders: Successfully generated 3 builder(s) in this processing round`
 
 ### **When Debug Mode is ENABLED (-Averbose=true):**
-- INFO and WARNING messages use hierarchical indentation with `[INFO]` and `[WARNING]` prefixes (no `[DEBUG]` prefix)
+- INFO and WARNING messages have no extra prefix, DEBUG messages are posted on `[INFO]` chanel so they have the prefix `[INFO] [DEBUG]`
 - Provides full visibility into the processing hierarchy
-- Example: `[INFO] │  └─ simple-builders: Successfully generated 3 builder(s) in this processing round`
-- Example: `[WARNING] │  │  ├─ Builder field conflict: field 'name'...`
-- Example: `[DEBUG] │  │  │  └─ Processing method: setName`
-- DEBUG messages always use hierarchical indentation with `[DEBUG]` prefix
+- Example: `[INFO]         │  └─ simple-builders: Successfully generated 3 builder(s) in this processing round`
+- Example: `[WARNING]      │  │  ├─ Builder field conflict: field 'name'...`
+- Example: `[INFO] [DEBUG] │  │  │  └─ Processing method: setName`
 - All message types align vertically despite different prefix lengths
 
 This approach ensures clean production logs while maintaining full debugging capabilities when needed.
@@ -118,7 +117,7 @@ When debug logging is enabled, you'll see detailed output with visual separators
 [INFO] [DEBUG] ├─ Extracting builder definition from: org.example.CustomerDto
 [INFO] [DEBUG] │  └─ Builder will be generated as: org.example.CustomerDtoBuilder
 [INFO] [DEBUG] │  └─ Processed 2 possible setters: added 2 fields, skipped 0
-[WARNING]      │  │  ├─ Builder field conflict: field 'name' (type Optional) renamed to 'nameOptional' to avoid conflict
+[WARNING]      │  │  └─ Builder field conflict: field 'name' (type Optional) renamed to 'nameOptional' to avoid conflict
 [INFO] [DEBUG] ├─ Code generation for builder: CustomerDtoBuilder
 [INFO] [DEBUG] │  └─ Successfully generated builder: CustomerDtoBuilder
 [INFO]         simple-builders: Successfully generated 3 builder(s) in this processing round
