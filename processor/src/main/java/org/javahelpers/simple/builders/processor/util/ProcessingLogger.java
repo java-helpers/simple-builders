@@ -304,6 +304,8 @@ public class ProcessingLogger {
    */
   public void resetIndentation() {
     indentationLevel.set(0);
+    // Clean up ThreadLocal to prevent memory leaks
+    indentationLevel.remove();
   }
 
   /** Gets the current indentation level for debugging purposes. */
