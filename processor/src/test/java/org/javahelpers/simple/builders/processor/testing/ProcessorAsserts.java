@@ -78,14 +78,12 @@ public final class ProcessorAsserts {
 
     for (AssertRecord check : checks) {
       String normalizedSearch = normalizeWhitespace(check.search());
-      if (check instanceof ContainsAssertRecord) {
-        if (!normalizedGenerated.contains(normalizedSearch)) {
-          failures.add(check.message());
-        }
-      } else if (check instanceof NotContainsAssertRecord) {
-        if (normalizedGenerated.contains(normalizedSearch)) {
-          failures.add(check.message());
-        }
+      if (check instanceof ContainsAssertRecord
+          && !normalizedGenerated.contains(normalizedSearch)) {
+        failures.add(check.message());
+      } else if (check instanceof NotContainsAssertRecord
+          && normalizedGenerated.contains(normalizedSearch)) {
+        failures.add(check.message());
       }
     }
 
