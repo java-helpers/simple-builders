@@ -316,10 +316,20 @@ public class JavaCodeGenerator {
    * @return list of all methods with conflicts resolved, sorted by ordering for proper generation
    */
   private List<MethodDto> resolveMethodConflicts(Map<MethodDto, FieldDto> methodToField) {
-    Map<String, MethodDto> signatureToMethod = new HashMap<>();
+    MethodDto.MethodComparator comparator = new MethodDto.MethodComparator();
+
+    // Sort entries using MethodComparator for deterministic conflict resolution
+    // This ensures consistent behavior when multiple methods have the same signature
+    List<Map.Entry<MethodDto, FieldDto>> sortedEntries =
+        methodToField.entrySet().stream()
+            .sorted((e1, e2) -> comparator.compare(e1.getKey(), e2.getKey()))
+            .toList();
+
+    // Use LinkedHashMap to preserve insertion order from sorted entries
+    Map<String, MethodDto> signatureToMethod = new java.util.LinkedHashMap<>();
 
     // Process all methods and resolve conflicts
-    for (Map.Entry<MethodDto, FieldDto> entry : methodToField.entrySet()) {
+    for (Map.Entry<MethodDto, FieldDto> entry : sortedEntries) {
       MethodDto method = entry.getKey();
       FieldDto field = entry.getValue();
       String signature = method.getSignatureKey();
@@ -353,8 +363,8 @@ public class JavaCodeGenerator {
       }
     }
 
-    // Sort methods using enhanced sorting logic
-    return signatureToMethod.values().stream().sorted(new MethodDto.MethodComparator()).toList();
+    // Return methods in insertion order (already sorted from conflict resolution)
+    return new java.util.ArrayList<>(signatureToMethod.values());
   }
 
   /**

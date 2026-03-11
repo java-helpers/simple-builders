@@ -102,8 +102,8 @@ public class FieldConflictExampleBuilder implements IBuilderBase<FieldConflictEx
    * @param nameSupplier supplier for name
    * @return current instance of builder
    */
-  public FieldConflictExampleBuilder name(Supplier<Optional<String>> nameSupplier) {
-    this.nameOptional = changedValue(nameSupplier.get());
+  public FieldConflictExampleBuilder name(Supplier<String> nameSupplier) {
+    this.name = changedValue(nameSupplier.get());
     return this;
   }
 
