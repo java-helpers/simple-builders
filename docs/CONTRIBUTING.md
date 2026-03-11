@@ -230,11 +230,19 @@ For complete documentation, see [DEBUG_LOGGING.md](DEBUG_LOGGING.md).
 ```
 ========== Compilation Diagnostics ==========
 --- NOTES ---
-[DEBUG] simple-builders: Processing element: Project
-[DEBUG] Extracting builder definition from: test.Project
-[DEBUG] Analyzing method: setName with 1 parameter(s)
-[DEBUG]   -> Adding field: name (type: java.lang.String)
-[DEBUG] Generated 4 methods for field: name
+[DEBUG] simple-builders: Processing round started. Found 1 annotated elements.
+[DEBUG] Processing element: Project
+[DEBUG] ├─ Extracting builder definition from: test.Project
+[DEBUG] │  ├─ Builder will be generated as: test.ProjectBuilder
+[DEBUG] │  ├─ Analysing setters for finding fields
+[DEBUG] │  │  ├─ Analyzing method: setName with 1 parameter(s)
+[DEBUG] │  │  │  └─ Adding field: name (type: java.lang.String)
+[DEBUG] │  └─ Processed 1 possible setters: added 1 fields, skipped 0
+[DEBUG] ├─ Code generation for builder: ProjectBuilder
+[DEBUG] │  ├─ Adding Methods for 4 candidates
+[DEBUG] │  │  └─ 4 Methods added
+[DEBUG] │  └─ Successfully generated builder: ProjectBuilder
+simple-builders: Successfully generated 1 builder(s) in this processing round
 =============================================
 
 ========== Generated Source Files ==========

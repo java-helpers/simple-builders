@@ -4,10 +4,10 @@ The Simple Builders annotation processor supports conditional debug logging that
 
 ## Logging Levels
 
-- **INFO**: Always visible - Shows success messages for each builder generated
-- **WARNING**: Always visible - Shows when a builder cannot be generated (e.g., wrong annotation target, generation errors). Other builders will continue to be generated.
+- **INFO**: Always visible - Shows success messages for each builder generated. When debug mode is enabled, INFO messages use hierarchical indentation.
+- **WARNING**: Always visible - Shows when a builder cannot be generated (e.g., wrong annotation target, generation errors). When debug mode is enabled, WARNING messages use hierarchical indentation.
 - **ERROR**: Always visible - Shows fatal configuration errors (e.g., unsupported JDK version). Stops compilation completely.
-- **DEBUG**: Conditional - Shows detailed tracing of field discovery, method analysis, and code generation steps
+- **DEBUG**: Conditional - Shows detailed tracing of field discovery, method analysis, and code generation steps with hierarchical indentation
 
 ## Enabling Debug Logging
 
@@ -64,32 +64,63 @@ Set it permanently in your `pom.xml`:
 </build>
 ```
 
+## Conditional Hierarchical Logging
+
+The Simple Builders processor provides **conditional hierarchical logging** to balance readability in production with detailed debugging when needed:
+
+### **When Debug Mode is DISABLED (Default):**
+- INFO and WARNING messages appear flat without indentation
+- Suitable for production systems where log noise should be minimized
+- Example: `simple-builders: Successfully generated 3 builder(s) in this processing round`
+
+### **When Debug Mode is ENABLED (-Averbose=true):**
+- INFO and WARNING messages have no extra prefix, DEBUG messages are posted on `[INFO]` chanel so they have the prefix `[INFO] [DEBUG]`
+- Provides full visibility into the processing hierarchy
+- Example: `[INFO]         │  └─ simple-builders: Successfully generated 3 builder(s) in this processing round`
+- Example: `[WARNING]      │  │  ├─ Builder field conflict: field 'name'...`
+- Example: `[INFO] [DEBUG] │  │  │  └─ Processing method: setName`
+- All message types align vertically despite different prefix lengths
+
+This approach ensures clean production logs while maintaining full debugging capabilities when needed.
+
 ## Example Debug Output
 
 When debug logging is enabled, you'll see detailed output with visual separators:
 
 ```
-[INFO] [DEBUG] ===============================
 [INFO] simple-builders: PROCESSING ROUND START
-[INFO] [DEBUG] ===============================
 [INFO] [DEBUG] simple-builders: Processing round started. Found 3 annotated elements.
-[INFO] [DEBUG] ------------------------------------
-[INFO] [DEBUG] simple-builders: Processing element: PersonDto
-[INFO] [DEBUG] ------------------------------------
-[INFO] [DEBUG] Extracting builder definition from: org.example.PersonDto
-[INFO] [DEBUG] Builder will be generated as: org.example.PersonDtoBuilder
-[INFO] [DEBUG] Analyzing method: setName with 1 parameter(s)
-[INFO] [DEBUG]   -> Adding field: name (type: java.lang.String)
-[INFO] [DEBUG] Analyzing method: setAge with 1 parameter(s)
-[INFO] [DEBUG]   -> Adding field: age (type: int)
-[INFO] [DEBUG] Processed 2 possible setters: added 2 fields, skipped 0
-[INFO] [DEBUG] Starting code generation for builder: PersonDtoBuilder
-[INFO] [DEBUG] Generating 0 constructor fields and 2 setter fields
-[INFO] [DEBUG]   Generated 2 methods for field: name
-[INFO] [DEBUG]   Generated 2 methods for field: age
-[INFO] [DEBUG] Writing builder class to file: org.example.PersonDtoBuilder
-[INFO] [DEBUG] Successfully generated builder: PersonDtoBuilder
-[INFO] simple-builders: Successfully generated builder for: PersonDto
+[INFO] [DEBUG] Processing element: PersonDto
+[INFO] [DEBUG] ├─ Extracting builder definition from: org.example.PersonDto
+[INFO] [DEBUG] │  ├─ Builder will be generated as: org.example.PersonDtoBuilder
+[INFO] [DEBUG] │  ├─ Analysing setters for finding fields
+[INFO] [DEBUG] │  │  ├─ Analyzing method: setName with 1 parameter(s)
+[INFO] [DEBUG] │  │  │  └─ Adding field: name (type: java.lang.String)
+[INFO] [DEBUG] │  │  ├─ Analyzing method: setAge with 1 parameter(s)
+[INFO] [DEBUG] │  │  │  └─ Adding field: age (type: int)
+[INFO] [DEBUG] │  └─ Processed 2 possible setters: added 2 fields, skipped 0
+[INFO] [DEBUG] ├─ Code generation for builder: PersonDtoBuilder
+[INFO] [DEBUG] │  ├─ Class builder created
+[INFO] [DEBUG] │  ├─ Generating 0 constructor fields and 2 setter fields
+[INFO] [DEBUG] │  │  └─ Fields added: 2 fields
+[INFO] [DEBUG] │  ├─ Adding Methods for 4 candidates
+[INFO] [DEBUG] │  │  └─ 4 Methods added
+[INFO] [DEBUG] │  ├─ Writing builder class to file: org.example.PersonDtoBuilder
+[INFO] [DEBUG] │  └─ Successfully generated builder: PersonDtoBuilder
+[INFO] [DEBUG] Processing element: OrderDto
+[INFO] [DEBUG] ├─ Extracting builder definition from: org.example.OrderDto
+[INFO] [DEBUG] │  └─ Builder will be generated as: org.example.OrderDtoBuilder
+[INFO] [DEBUG] │  └─ Processed 1 possible setters: added 1 fields, skipped 0
+[INFO] [DEBUG] ├─ Code generation for builder: OrderDtoBuilder
+[INFO] [DEBUG] │  └─ Successfully generated builder: OrderDtoBuilder
+[INFO] [DEBUG] Processing element: CustomerDto (with conflicts)
+[INFO] [DEBUG] ├─ Extracting builder definition from: org.example.CustomerDto
+[INFO] [DEBUG] │  └─ Builder will be generated as: org.example.CustomerDtoBuilder
+[INFO] [DEBUG] │  └─ Processed 2 possible setters: added 2 fields, skipped 0
+[WARNING]      │  │  └─ Builder field conflict: field 'name' (type Optional) renamed to 'nameOptional' to avoid conflict
+[INFO] [DEBUG] ├─ Code generation for builder: CustomerDtoBuilder
+[INFO] [DEBUG] │  └─ Successfully generated builder: CustomerDtoBuilder
+[INFO]         simple-builders: Successfully generated 3 builder(s) in this processing round
 ```
 
 **Note**: Debug messages are prefixed with `[DEBUG]` and use `Diagnostic.Kind.OTHER` which appears as `[INFO]` in Maven output.
@@ -99,9 +130,8 @@ When debug logging is enabled, you'll see detailed output with visual separators
 Without debug logging enabled, you only see the INFO-level messages:
 
 ```
-[INFO] simple-builders: Successfully generated builder for: PersonDto
-[INFO] simple-builders: Successfully generated builder for: OrderDto
-[INFO] simple-builders: Successfully generated builder for: CustomerDto
+[INFO] simple-builders: PROCESSING ROUND START
+[INFO] simple-builders: Successfully generated 3 builder(s) in this processing round
 ```
 
 ## Troubleshooting

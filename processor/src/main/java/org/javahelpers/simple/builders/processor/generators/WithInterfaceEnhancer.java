@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2025 Andreas Igel
+ * Copyright (c) 2026 Andreas Igel
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -96,25 +96,17 @@ public class WithInterfaceEnhancer implements BuilderEnhancer {
 
   @Override
   public void enhanceBuilder(BuilderDefinitionDto builderDto, ProcessingContext context) {
-    NestedTypeDto withInterface = createWithInterface(builderDto, context);
+    NestedTypeDto withInterface = createWithInterface(builderDto);
     builderDto.addNestedType(withInterface);
-
-    context.debug(
-        "Added With interface to builder %s", builderDto.getBuilderTypeName().getClassName());
   }
 
   /**
    * Creates the "With" interface for the builder.
    *
    * @param builderDto the builder definition
-   * @param context the processing context
    * @return the nested type DTO for the With interface
    */
-  private NestedTypeDto createWithInterface(
-      BuilderDefinitionDto builderDto, ProcessingContext context) {
-    context.debug(
-        "Creating With interface for: %s", builderDto.getBuilderTypeName().getClassName());
-
+  private NestedTypeDto createWithInterface(BuilderDefinitionDto builderDto) {
     NestedTypeDto withInterface = new NestedTypeDto();
     withInterface.setTypeName("With");
     withInterface.setKind(NestedTypeDto.NestedTypeKind.INTERFACE);

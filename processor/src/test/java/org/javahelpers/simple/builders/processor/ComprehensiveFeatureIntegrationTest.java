@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2025 Andreas Igel
+ * Copyright (c) 2026 Andreas Igel
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -136,11 +136,6 @@ class ComprehensiveFeatureIntegrationTest {
     assertThat(compilation).succeeded();
 
     String generatedCode = loadGeneratedSource(compilation, "PersonDtoBuilder");
-
-    // Debug output: Print generated code for comparison when test fails
-    System.out.println("=== Generated PersonDtoBuilder ===");
-    System.out.println(generatedCode);
-    System.out.println("=== End of Generated Code ===");
 
     // This test uses full code comparison to ensure ALL features are generated.
     // When a new feature is added, this expected code MUST be updated or the test will fail.

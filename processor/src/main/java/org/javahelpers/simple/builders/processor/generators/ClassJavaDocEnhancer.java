@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2025 Andreas Igel
+ * Copyright (c) 2026 Andreas Igel
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -93,9 +93,6 @@ public class ClassJavaDocEnhancer implements BuilderEnhancer {
 
     CodeBlock javadoc = createClassJavadoc(dtoClass);
     builderDto.setClassJavadoc(javadoc.toString());
-
-    context.debug(
-        "Added class JavaDoc to builder %s", builderDto.getBuilderTypeName().getClassName());
   }
 
   /**

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2025 Andreas Igel
+ * Copyright (c) 2026 Andreas Igel
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -258,13 +258,39 @@ public final class ProcessingContext {
   }
 
   /**
-   * Logs a debug message with a formatted string.
+   * Logs a debug message with a formatted string. Only visible when enabled via -Averbose=true or
+   * -Asimplebuilder.verbose=true.
    *
    * @param format the format string
    * @param args arguments referenced by the format specifiers in the format string
    */
   public void debug(String format, Object... args) {
     logger.debug(format, args);
+  }
+
+  /**
+   * Starts a new hierarchical operation context for logging with formatted message.
+   *
+   * @param format the format string for the operation message
+   * @param args arguments referenced by the format specifiers
+   */
+  public void debugStartOperation(String format, Object... args) {
+    logger.debugStartOperation(format, args);
+  }
+
+  /** Ends the current hierarchical operation context for logging. */
+  public void debugEndOperation() {
+    logger.debugEndOperation();
+  }
+
+  /** Ends the current hierarchical operation context with a closing message for logging. */
+  public void debugEndOperation(String format, Object... args) {
+    logger.debugEndOperation(format, args);
+  }
+
+  /** Resets the indentation level to prevent cascading errors between processing runs. */
+  public void resetIndentation() {
+    logger.resetIndentation();
   }
 
   /**

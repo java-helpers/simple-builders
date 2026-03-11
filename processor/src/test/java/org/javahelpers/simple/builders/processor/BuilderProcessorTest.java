@@ -1,3 +1,27 @@
+/*
+ * MIT License
+ *
+ * Copyright (c) 2025 Andreas Igel
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 package org.javahelpers.simple.builders.processor;
 
 import static com.google.testing.compile.CompilationSubject.assertThat;
@@ -62,14 +86,61 @@ class BuilderProcessorTest {
     // Then: Compilation succeeds and debug messages are present
     assertThat(compilation).succeeded();
 
-    // Verify key debug messages are logged
+    // Verify key debug messages are logged with hierarchical format
     ProcessorAsserts.assertHadNoteContaining(
         compilation,
+        "[DEBUG] Starting BuilderProcessor...",
+        "[DEBUG] Loaded global configuration from compiler arguments: BuilderConfiguration[]",
+        "[DEBUG] Initializing generator registry",
+        "[DEBUG] ├─ Loaded 14 method generators and 8 builder enhancers total",
+        "[DEBUG] └─ Initialized GeneratorRegistry with 14 method generators and 8 builder",
         "simple-builders: PROCESSING ROUND START",
-        "[DEBUG] simple-builders: Processing element: VerboseTest",
-        "[DEBUG] Extracting builder definition from: test.VerboseTest",
-        "[DEBUG]   -> Adding field: name",
-        "[DEBUG] Successfully generated builder: VerboseTestBuilder");
+        "[DEBUG] simple-builders: Processing round started. Found 1 annotated elements.",
+        "[DEBUG] Processing element: VerboseTest",
+        "[DEBUG] ├─ Resolving configuration for element: VerboseTest",
+        "[DEBUG] │  ├─ Template annotations ignored because @SimpleBuilder present",
+        "[DEBUG] │  └─ Resulting configuration resolved: BuilderConfiguration[",
+        "[DEBUG] ├─ Extracting builder definition from: test.VerboseTest",
+        "[DEBUG] │  ├─ Builder will be generated as: test.VerboseTestBuilder",
+        "[DEBUG] │  ├─ Analysing setters for finding fields",
+        "[DEBUG] │  │  ├─ Analyzing method: setName with 1 parameter(s)",
+        "[DEBUG] │  │  │  ├─ Processing method generators",
+        "[DEBUG] │  │  │  │  ├─ Applying: BasicSetterGenerator (priority: 100)",
+        "[DEBUG] │  │  │  │  ├─ Applying: StringFormatHelperGenerator (priority: 80)",
+        "[DEBUG] │  │  │  │  ├─ Applying: SupplierMethodGenerator (priority: 60)",
+        "[DEBUG] │  │  │  │  ├─ Applying: StringBuilderConsumerGenerator (priority: 45)",
+        "[DEBUG] │  │  │  │  └─ Generated 4 methods",
+        "[DEBUG] │  │  │  └─ Adding field: name (type: java.lang.String)",
+        "[DEBUG] │  │  └─ Processed 1 possible setters: added 1 fields, skipped 0",
+        "[DEBUG] │  ├─ Processing class based enhancer",
+        "[DEBUG] │  │  ├─ Applying: ClassJavaDocEnhancer (priority: 200)",
+        "[DEBUG] │  │  ├─ Applying: GeneratedAnnotationEnhancer (priority: 120)",
+        "[DEBUG] │  │  ├─ Applying: BuilderImplementationAnnotationEnhancer (priority: 115)",
+        "[DEBUG] │  │  ├─ Applying: CoreMethodsEnhancer (priority: 100)",
+        "[DEBUG] │  │  ├─ Applying: WithInterfaceEnhancer (priority: 95)",
+        "[DEBUG] │  │  ├─ Applying: InterfaceEnhancer (priority: 90)",
+        "[DEBUG] │  │  ├─ Applying: ConditionalEnhancer (priority: 80)",
+        "[DEBUG] │  │  └─ Applied 7 builder enhancers",
+        "[DEBUG] │  └─ Builder definition extracted: VerboseTestBuilder",
+        "[DEBUG] ├─ Code generation for builder: VerboseTestBuilder",
+        "[DEBUG] │  ├─ Class builder created",
+        "[DEBUG] │  ├─ Class metadata added",
+        "[DEBUG] │  ├─ Generating 0 constructor fields and 1 setter fields",
+        "[DEBUG] │  │  └─ Fields added: 1 fields",
+        "[DEBUG] │  ├─ Adding Methods for 9 candidates",
+        "[DEBUG] │  │  ├─ Resolved 9 methods after conflict resolution",
+        "[DEBUG] │  │  └─ 9 Methods added",
+        "[DEBUG] │  ├─ Constructors added",
+        "[DEBUG] │  ├─ Generating 1 nested type(s)",
+        "[DEBUG] │  │  ├─ Generated nested type: With",
+        "[DEBUG] │  │  └─ Nested types added",
+        "[DEBUG] │  ├─ Class-level annotations added",
+        "[DEBUG] │  ├─ Writing builder class to file: test.VerboseTestBuilder",
+        "[DEBUG] │  └─ Successfully generated builder: VerboseTestBuilder",
+        "[DEBUG] ├─ Jackson module entry added",
+        "[DEBUG] └─ Generated builder with 1 fields and 5 methods for VerboseTestBuilder",
+        "simple-builders: Successfully generated 1 builder(s) in this processing round",
+        "");
   }
 
   @Test
@@ -2641,7 +2712,7 @@ class BuilderProcessorTest {
         generatedCode,
         "public OverloadedNamesBuilder names(List<String> names)",
         "public OverloadedNamesBuilder names(String... names)",
-        "public OverloadedNamesBuilder names(Supplier<List<String>> namesSupplier)");
+        "public OverloadedNamesBuilder names(Supplier<String[]> namesSupplier)");
   }
 
   @Test

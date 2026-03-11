@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2025 Andreas Igel
+ * Copyright (c) 2026 Andreas Igel
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -107,9 +107,6 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
     // Add toString() method
     MethodDto toStringMethod = createToStringMethod(builderDto);
     builderDto.addCoreMethod(toStringMethod);
-
-    context.debug(
-        "Added core methods to builder %s", builderDto.getBuilderTypeName().getClassName());
   }
 
   /** Creates the build() method. */

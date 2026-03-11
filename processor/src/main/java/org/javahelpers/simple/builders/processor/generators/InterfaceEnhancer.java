@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2025 Andreas Igel
+ * Copyright (c) 2026 Andreas Igel
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -92,10 +92,6 @@ public class InterfaceEnhancer implements BuilderEnhancer {
     // Add the IBuilderBase interface to the builder
     InterfaceName builderBaseInterface = createBuilderBaseInterface(builderDto);
     builderDto.addInterface(builderBaseInterface);
-
-    context.debug(
-        "Added IBuilderBase interface to builder %s",
-        builderDto.getBuilderTypeName().getClassName());
   }
 
   /**
