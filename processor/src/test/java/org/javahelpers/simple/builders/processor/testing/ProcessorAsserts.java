@@ -77,12 +77,7 @@ public final class ProcessorAsserts {
     List<String> failures = new ArrayList<>();
 
     for (AssertRecord check : checks) {
-      String normalizedSearch = normalizeWhitespace(check.search());
-      if (check instanceof ContainsAssertRecord
-          && !normalizedGenerated.contains(normalizedSearch)) {
-        failures.add(check.message());
-      } else if (check instanceof NotContainsAssertRecord
-          && normalizedGenerated.contains(normalizedSearch)) {
+      if (isAssertNotFullfilled(check, normalizedGenerated)) {
         failures.add(check.message());
       }
     }
@@ -132,5 +127,13 @@ public final class ProcessorAsserts {
    */
   public static void assertNormalizedEquals(String expected, String actual, String message) {
     assertEquals(normalizeWhitespace(expected), normalizeWhitespace(actual), message);
+  }
+
+  private static boolean isAssertNotFullfilled(AssertRecord check, String normalizedGenerated) {
+    String normalizedSearch = normalizeWhitespace(check.search());
+    return (check instanceof ContainsAssertRecord
+            && !normalizedGenerated.contains(normalizedSearch))
+        || (check instanceof NotContainsAssertRecord
+            && normalizedGenerated.contains(normalizedSearch));
   }
 }
