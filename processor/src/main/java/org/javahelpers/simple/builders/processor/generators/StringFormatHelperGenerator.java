@@ -111,8 +111,8 @@ public class StringFormatHelperGenerator implements MethodGenerator {
     if (isString(fieldType) && !(fieldType instanceof TypeNameArray)) {
       MethodDto method =
           createStringFormatMethodWithTransform(
-              field.getFieldNameEstimated(),
-              field.getFieldName(),
+              field.getOriginalFieldName(),
+              field.getFieldNameInBuilder(),
               "String.format(format, args)",
               field.getParameterAnnotations(),
               builderType,
@@ -124,8 +124,8 @@ public class StringFormatHelperGenerator implements MethodGenerator {
       if (!innerTypes.isEmpty() && isString(innerTypes.get(0))) {
         MethodDto method =
             createStringFormatMethodWithTransform(
-                field.getFieldNameEstimated(),
-                field.getFieldName(),
+                field.getOriginalFieldName(),
+                field.getFieldNameInBuilder(),
                 "Optional.of(String.format(format, args))",
                 field.getParameterAnnotations(),
                 builderType,

@@ -34,11 +34,11 @@ import org.apache.commons.lang3.StringUtils;
  * that field.
  */
 public class FieldDto {
-  /** Name of field in Builder. */
-  private String fieldName;
+  /** Name of the field as it appears in the original DTO (used for method names and setters). */
+  private String originalFieldName;
 
-  /** Name of field according to estimation by constructors and setters. */
-  private String fieldNameEstimated;
+  /** Name of the field as stored in the builder (may be renamed to avoid conflicts). */
+  private String fieldNameInBuilder;
 
   /** Type of field. Containing generic, name of package and class */
   private TypeName fieldType;
@@ -72,49 +72,51 @@ public class FieldDto {
   private final List<AnnotationDto> parameterAnnotations = new ArrayList<>();
 
   /**
-   * Getting name of field.
+   * Gets the original field name from the DTO. This name is used for generating method names,
+   * parameter names, and setter method names (e.g., "userName" becomes "setUserName").
    *
-   * @return the name of the field
+   * @return the original field name from the DTO
    */
-  public String getFieldName() {
-    return fieldName;
+  public String getOriginalFieldName() {
+    return originalFieldName;
   }
 
   /**
-   * Setting name of field.
+   * Sets the original field name from the DTO.
    *
-   * @param fieldName the name to set for this field
+   * @param originalFieldName the original field name from the DTO
    */
-  public void setFieldName(String fieldName) {
-    this.fieldName = fieldName;
+  public void setOriginalFieldName(String originalFieldName) {
+    this.originalFieldName = originalFieldName;
   }
 
   /**
-   * Getting name of field estimated by constructor and setter.
+   * Gets the field name as stored in the builder. This name may be different from the original
+   * field name if renaming was required to avoid conflicts with other fields or reserved words.
    *
-   * @return the estimated name of the field
+   * @return the field name as used in the builder
    */
-  public String getFieldNameEstimated() {
-    return fieldNameEstimated;
+  public String getFieldNameInBuilder() {
+    return fieldNameInBuilder;
   }
 
   /**
-   * Setting name of field estimated by constructor and setter.
+   * Sets the field name as stored in the builder.
    *
-   * @param fieldNameEstimated the estimated name to set for this field
+   * @param fieldNameInBuilder the field name to use in the builder
    */
-  public void setFieldNameEstimated(String fieldNameEstimated) {
-    this.fieldNameEstimated = fieldNameEstimated;
+  public void setFieldNameInBuilder(String fieldNameInBuilder) {
+    this.fieldNameInBuilder = fieldNameInBuilder;
   }
 
   /**
-   * Getting name of setter method to use in build() method. This is always set during field
-   * creation and represents the actual setter method name in the DTO.
+   * Gets the setter method name for this field. The setter name is derived from the original field
+   * name and follows JavaBean conventions (e.g., "userName" becomes "setUserName").
    *
-   * @return name of setter for field (never null)
+   * @return the setter method name for this field (never null)
    */
   public String getSetterName() {
-    return "set" + StringUtils.capitalize(fieldNameEstimated);
+    return "set" + StringUtils.capitalize(originalFieldName);
   }
 
   /**

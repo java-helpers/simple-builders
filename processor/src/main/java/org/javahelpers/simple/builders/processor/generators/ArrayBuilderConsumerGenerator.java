@@ -112,8 +112,8 @@ public class ArrayBuilderConsumerGenerator implements MethodGenerator {
       TypeName elementType,
       TypeName returnBuilderType,
       ProcessingContext context) {
-    String fieldName = field.getFieldNameEstimated();
-    String fieldNameInBuilder = field.getFieldName();
+    String fieldName = field.getOriginalFieldName();
+    String fieldNameInBuilder = field.getFieldNameInBuilder();
     TypeNameGeneric builderTypeGeneric = new TypeNameGeneric(collectionBuilderType, elementType);
     TypeNameGeneric consumerType = MethodGeneratorUtil.createConsumerType(builderTypeGeneric);
 

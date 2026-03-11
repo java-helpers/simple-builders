@@ -147,7 +147,7 @@ public final class MethodGeneratorUtil {
       ProcessingContext context) {
 
     MethodParameterDto parameter = new MethodParameterDto();
-    parameter.setParameterName(field.getFieldNameEstimated());
+    parameter.setParameterName(field.getOriginalFieldName());
     parameter.setParameterTypeName(parameterType);
 
     if (field.getParameterAnnotations() != null) {
@@ -156,7 +156,7 @@ public final class MethodGeneratorUtil {
 
     MethodDto methodDto =
         new MethodDto(
-            generateBuilderMethodName(field.getFieldNameEstimated(), context), builderType);
+            generateBuilderMethodName(field.getOriginalFieldName(), context), builderType);
     methodDto.addParameter(parameter);
     setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
 
@@ -172,7 +172,7 @@ public final class MethodGeneratorUtil {
         this.$fieldName:N = $builderFieldWrapper:T.changedValue($dtoMethodParams:N);
         return this;
         """);
-    methodDto.addArgument("fieldName", field.getFieldName());
+    methodDto.addArgument("fieldName", field.getFieldNameInBuilder());
     methodDto.addArgument("dtoMethodParams", params);
     methodDto.addArgument("builderFieldWrapper", TRACKED_VALUE_TYPE);
 
@@ -186,7 +186,7 @@ public final class MethodGeneratorUtil {
         @return current instance of builder
         """
             .formatted(
-                field.getFieldNameEstimated(), parameter.getParameterName(), field.getJavaDoc()));
+                field.getOriginalFieldName(), parameter.getParameterName(), field.getJavaDoc()));
 
     return methodDto;
   }
@@ -213,10 +213,11 @@ public final class MethodGeneratorUtil {
       ProcessingContext context) {
     TypeNameGeneric consumerType = createConsumerType(fieldBuilderType);
     MethodParameterDto parameter = new MethodParameterDto();
-    parameter.setParameterName(field.getFieldName() + BUILDER_SUFFIX + SUFFIX_CONSUMER);
+    parameter.setParameterName(field.getFieldNameInBuilder() + BUILDER_SUFFIX + SUFFIX_CONSUMER);
     parameter.setParameterTypeName(consumerType);
     MethodDto methodDto =
-        new MethodDto(generateBuilderMethodName(field.getFieldName(), context), parentBuilderType);
+        new MethodDto(
+            generateBuilderMethodName(field.getOriginalFieldName(), context), parentBuilderType);
     methodDto.addParameter(parameter);
     setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
 
@@ -230,7 +231,7 @@ public final class MethodGeneratorUtil {
         return this;
         """
             .formatted(existingValueConstructorArgs, emptyConstructorArgs));
-    methodDto.addArgument("fieldName", field.getFieldName());
+    methodDto.addArgument("fieldName", field.getFieldNameInBuilder());
     methodDto.addArgument("dtoMethodParam", parameter.getParameterName());
     methodDto.addArgument("helperType", fieldBuilderType);
     methodDto.addArgument("buildExpression", buildExpression);
@@ -244,7 +245,8 @@ public final class MethodGeneratorUtil {
         @param %s consumer providing an instance of a builder for %s
         @return current instance of builder
         """
-            .formatted(field.getFieldName(), parameter.getParameterName(), field.getJavaDoc()));
+            .formatted(
+                field.getFieldNameInBuilder(), parameter.getParameterName(), field.getJavaDoc()));
     return methodDto;
   }
 
@@ -343,12 +345,12 @@ public final class MethodGeneratorUtil {
       FieldDto field, TypeName fieldType, TypeName builderType, ProcessingContext context) {
     TypeNameGeneric consumerType = createConsumerType(fieldType);
     MethodParameterDto parameter = new MethodParameterDto();
-    parameter.setParameterName(field.getFieldNameEstimated() + SUFFIX_CONSUMER);
+    parameter.setParameterName(field.getOriginalFieldName() + SUFFIX_CONSUMER);
     parameter.setParameterTypeName(consumerType);
 
     MethodDto methodDto =
         new MethodDto(
-            generateBuilderMethodName(field.getFieldNameEstimated(), context), builderType);
+            generateBuilderMethodName(field.getOriginalFieldName(), context), builderType);
     methodDto.addParameter(parameter);
     setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
 
@@ -359,7 +361,7 @@ public final class MethodGeneratorUtil {
         this.$fieldName:N = $builderFieldWrapper:T.changedValue(consumer);
         return this;
         """);
-    methodDto.addArgument("fieldName", field.getFieldName());
+    methodDto.addArgument("fieldName", field.getFieldNameInBuilder());
     methodDto.addArgument("dtoMethodParam", parameter.getParameterName());
     methodDto.addArgument("helperType", fieldType);
     methodDto.addArgument("builderFieldWrapper", TRACKED_VALUE_TYPE);
@@ -373,7 +375,7 @@ public final class MethodGeneratorUtil {
         @return current instance of builder
         """
             .formatted(
-                field.getFieldNameEstimated(), parameter.getParameterName(), field.getJavaDoc()));
+                field.getOriginalFieldName(), parameter.getParameterName(), field.getJavaDoc()));
 
     return methodDto;
   }

@@ -103,8 +103,8 @@ public class ArrayConversionGenerator implements MethodGenerator {
       TypeName elementType,
       TypeName builderType,
       ProcessingContext context) {
-    String fieldName = field.getFieldNameEstimated();
-    String fieldNameInBuilder = field.getFieldName();
+    String fieldName = field.getOriginalFieldName();
+    String fieldNameInBuilder = field.getFieldNameInBuilder();
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName(fieldName);
     parameter.setParameterTypeName(listType);

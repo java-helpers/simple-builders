@@ -195,7 +195,7 @@ class CustomizingDocumentationTest {
 
                 @Override
                 public List<MethodDto> generateMethods(FieldDto field, TypeName builderType, ProcessingContext context) {
-                    String fieldName = field.getFieldName();
+                    String fieldName = field.getFieldNameInBuilder();
                     String methodName = "custom" + capitalize(fieldName);
 
                     MethodDto method = new MethodDto(methodName, builderType);
@@ -302,7 +302,7 @@ class CustomizingDocumentationTest {
                         // Generation logic
                         return List.of();
                     } catch (Exception e) {
-                        context.error("Failed to generate method for field %s: %s", field.getFieldName(), e.getMessage());
+                        context.error("Failed to generate method for field %s: %s", field.getFieldNameInBuilder(), e.getMessage());
                         return List.of(); // Return empty list on error
                     }
                 }
@@ -408,7 +408,7 @@ class CustomizingDocumentationTest {
 
                 @Override
                 public List<MethodDto> generateMethods(FieldDto field, TypeName builderType, ProcessingContext context) {
-                    String fieldName = field.getFieldName();
+                    String fieldName = field.getFieldNameInBuilder();
                     String methodName = "validated" + capitalize(fieldName);
 
                     MethodDto method = new MethodDto(methodName, builderType);
@@ -589,7 +589,7 @@ class CustomizingDocumentationTest {
 
                 @Override
                 public List<MethodDto> generateMethods(FieldDto field, TypeName builderType, ProcessingContext context) {
-                    String fieldName = field.getFieldName();
+                    String fieldName = field.getFieldNameInBuilder();
                     String methodName = fieldName + "FromString";
 
                     MethodDto method = new MethodDto(methodName, builderType);

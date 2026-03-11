@@ -170,7 +170,7 @@ public class BuilderDefinitionCreator {
     // Build a set of constructor field names to avoid duplicates from setters
     Set<String> ctorFieldNames =
         result.getConstructorFieldsForBuilder().stream()
-            .map(FieldDto::getFieldName)
+            .map(FieldDto::getFieldNameInBuilder)
             .collect(toSet());
 
     List<ExecutableElement> methods = findAllPossibleSettersOfClass(annotatedType, context);
@@ -235,7 +235,8 @@ public class BuilderDefinitionCreator {
         && !field.getFieldType().getPackageName().isEmpty()) {
       fieldTypeName = field.getFieldType().getPackageName() + "." + fieldTypeName;
     }
-    context.debugEndOperation("Adding field: %s (type: %s)", field.getFieldName(), fieldTypeName);
+    context.debugEndOperation(
+        "Adding field: %s (type: %s)", field.getFieldNameInBuilder(), fieldTypeName);
   }
 
   private static boolean isMethodRelevantForBuilder(
@@ -437,8 +438,9 @@ public class BuilderDefinitionCreator {
     TypeMirror fieldTypeMirror = param.asType();
 
     FieldDto field = new FieldDto();
-    field.setFieldName(fieldNameInBuilder); // Use renamed field name for builder field storage
-    field.setFieldNameEstimated(fieldName);
+    field.setFieldNameInBuilder(
+        fieldNameInBuilder); // Use renamed field name for builder field storage
+    field.setOriginalFieldName(fieldName);
     field.setFieldType(fieldType);
     field.setJavaDoc(javaDoc);
 

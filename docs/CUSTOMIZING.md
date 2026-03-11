@@ -99,14 +99,15 @@ public class CustomValidationGenerator implements MethodGenerator {
     
     @Override
     public List<MethodDto> generateMethods(FieldDto field, TypeName builderType, ProcessingContext context) {
-        String fieldName = field.getFieldName();
-        String methodName = "validated" + capitalize(fieldName);
+        String fieldInDto = field.getOriginalFieldName();
+        String fieldInBuilder = field.getFieldNameInBuilder();
+        String methodName = "validated" + capitalize(fieldInDto);
         
         // Generate validation setter method
         MethodDto method = new MethodDto(methodName, builderType);
         
         // Add parameter
-        String parameterName = fieldName;
+        String parameterName = fieldInDto;
         MethodParameterDto parameter = new MethodParameterDto();
         parameter.setParameterName(parameterName);
         parameter.setParameterTypeName(new TypeName("java.lang", "String"));
@@ -310,7 +311,7 @@ public List<MethodDto> generateMethods(FieldDto field, TypeName builderType, Pro
         // Your generation logic
         return methods;
     } catch (Exception e) {
-        context.error("Failed to generate method for field %s: %s", field.getFieldName(), e.getMessage());
+        context.error("Failed to generate method for field %s: %s", field.getFieldNameInBuilder(), e.getMessage());
         return List.of(); // Return empty list on error
     }
 }
@@ -406,13 +407,14 @@ public class DateParserGenerator implements MethodGenerator {
     
     @Override
     public List<MethodDto> generateMethods(FieldDto field, TypeName builderType, ProcessingContext context) {
-        String fieldName = field.getFieldName();
-        String methodName = fieldName + "FromString";
+        String fieldInDto = field.getOriginalFieldName();
+        String fieldInBuilder = field.getFieldNameInBuilder();
+        String methodName = fieldInDto + "FromString";
         
         MethodDto method = new MethodDto(methodName, builderType);
         
         // Add parameter
-        String parameterName = fieldName + "String";
+        String parameterName = fieldInDto + "String";
         MethodParameterDto parameter = new MethodParameterDto();
         parameter.setParameterName(parameterName);
         parameter.setParameterTypeName(new TypeName("java.lang", "String"));

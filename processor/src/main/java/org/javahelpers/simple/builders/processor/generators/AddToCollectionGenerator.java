@@ -101,8 +101,8 @@ public class AddToCollectionGenerator implements MethodGenerator {
     if (fieldType instanceof TypeNameList listType && listType.isParameterized()) {
       MethodDto addMethod =
           createAddToCollectionMethod(
-              field.getFieldNameEstimated(),
-              field.getFieldName(),
+              field.getOriginalFieldName(),
+              field.getFieldNameInBuilder(),
               listType,
               listType.getElementType(),
               builderType,
@@ -111,8 +111,8 @@ public class AddToCollectionGenerator implements MethodGenerator {
     } else if (fieldType instanceof TypeNameSet setType && setType.isParameterized()) {
       MethodDto addMethod =
           createAddToCollectionMethod(
-              field.getFieldNameEstimated(),
-              field.getFieldName(),
+              field.getOriginalFieldName(),
+              field.getFieldNameInBuilder(),
               setType,
               setType.getElementType(),
               builderType,
@@ -124,13 +124,13 @@ public class AddToCollectionGenerator implements MethodGenerator {
   }
 
   private MethodDto createAddToCollectionMethod(
-      String fieldNameEstimated,
-      String fieldName,
+      String originalFieldName,
+      String fieldNameInBuilder,
       TypeName fieldType,
       TypeName elementType,
       TypeName builderType,
       ProcessingContext context) {
-    String methodName = "add2" + StringUtils.capitalize(fieldNameEstimated);
+    String methodName = "add2" + StringUtils.capitalize(originalFieldName);
     MethodDto methodDto = new MethodDto(methodName, builderType);
 
     MethodParameterDto parameter = new MethodParameterDto();
@@ -166,7 +166,7 @@ public class AddToCollectionGenerator implements MethodGenerator {
         """);
     methodDto.addArgument("collectionVarType", collectionVarType);
     methodDto.addArgument("collectionImpl", new TypeName("java.util", collectionImpl));
-    methodDto.addArgument("fieldName", fieldName);
+    methodDto.addArgument("fieldName", fieldNameInBuilder);
     methodDto.addArgument("elementType", elementType);
     methodDto.addArgument("builderFieldWrapper", TRACKED_VALUE_TYPE);
     methodDto.setPriority(MethodDto.PRIORITY_MEDIUM);
@@ -178,7 +178,7 @@ public class AddToCollectionGenerator implements MethodGenerator {
         @param element the element to add
         @return current instance of builder
         """
-            .formatted(fieldName));
+            .formatted(originalFieldName));
 
     return methodDto;
   }
