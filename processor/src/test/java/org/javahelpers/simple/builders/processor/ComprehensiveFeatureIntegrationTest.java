@@ -137,11 +137,6 @@ class ComprehensiveFeatureIntegrationTest {
 
     String generatedCode = loadGeneratedSource(compilation, "PersonDtoBuilder");
 
-    // Debug output: Print generated code for comparison when test fails
-    System.out.println("=== Generated PersonDtoBuilder ===");
-    System.out.println(generatedCode);
-    System.out.println("=== End of Generated Code ===");
-
     // This test uses full code comparison to ensure ALL features are generated.
     // When a new feature is added, this expected code MUST be updated or the test will fail.
     // This will catch when new features like add2FieldName are added but not included here.
