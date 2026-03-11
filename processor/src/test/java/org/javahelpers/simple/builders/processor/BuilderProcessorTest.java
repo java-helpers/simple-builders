@@ -2695,7 +2695,7 @@ class BuilderProcessorTest {
                 private java.util.List<String> names;
 
                 public java.util.List<String> getNames() { return names; }
-                public void setNames(java.util.List<String> names) { this.names = names; }
+                public void setNames(String[] names) { this.names = names; }
                 public void setNames(String... names) { this.names = java.util.List.of(names); }
             """);
 
