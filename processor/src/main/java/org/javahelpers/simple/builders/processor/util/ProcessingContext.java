@@ -274,18 +274,18 @@ public final class ProcessingContext {
    * @param format the format string for the operation message
    * @param args arguments referenced by the format specifiers
    */
-  public void startOperation(String format, Object... args) {
-    logger.startOperation(format, args);
+  public void debugStartOperation(String format, Object... args) {
+    logger.debugStartOperation(format, args);
   }
 
   /** Ends the current hierarchical operation context for logging. */
-  public void endOperation() {
-    logger.endOperation();
+  public void debugEndOperation() {
+    logger.debugEndOperation();
   }
 
   /** Ends the current hierarchical operation context with a closing message for logging. */
-  public void endOperation(String format, Object... args) {
-    logger.endOperation(format, args);
+  public void debugEndOperation(String format, Object... args) {
+    logger.debugEndOperation(format, args);
   }
 
   /** Resets the indentation level to prevent cascading errors between processing runs. */

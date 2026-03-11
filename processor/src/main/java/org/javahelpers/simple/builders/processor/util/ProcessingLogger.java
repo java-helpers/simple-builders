@@ -253,12 +253,14 @@ public class ProcessingLogger {
    * @param formatClosingMessage the format string for the operation message
    * @param args arguments referenced by the format specifiers
    */
-  public void startOperation(String formatClosingMessage, Object... args) {
+  public void debugStartOperation(String formatClosingMessage, Object... args) {
     int currentLevel = indentationLevel.get();
 
     // Log the operation start message with proper prefix handling
-    String operationMessage = formatWithIndentation(String.format(formatClosingMessage, args));
-    messager.printMessage(Diagnostic.Kind.NOTE, operationMessage);
+    if (debugEnabled) {
+      String operationMessage = formatWithIndentation(String.format(formatClosingMessage, args));
+      messager.printMessage(Diagnostic.Kind.NOTE, operationMessage);
+    }
 
     // Increase indentation for subsequent messages
     indentationLevel.set(currentLevel + 1);
@@ -268,7 +270,7 @@ public class ProcessingLogger {
    * Ends the current hierarchical operation context, decreasing indentation. This should be called
    * after completing an operation started with startOperation.
    */
-  public void endOperation() {
+  public void debugEndOperation() {
     int currentLevel = indentationLevel.get();
     if (currentLevel > 0) {
       indentationLevel.set(currentLevel - 1);
@@ -284,13 +286,15 @@ public class ProcessingLogger {
    * @param formatClosingMessage the format string for the closing message
    * @param args arguments referenced by the format specifiers
    */
-  public void endOperation(String formatClosingMessage, Object... args) {
+  public void debugEndOperation(String formatClosingMessage, Object... args) {
     int currentLevel = indentationLevel.get();
 
     // Log the closing message with └─ to indicate it's the last operation at this level
-    String closingMessage = String.format(formatClosingMessage, args);
-    String operationMessage = formatWithIndentation(closingMessage, "└─ ");
-    messager.printMessage(Diagnostic.Kind.NOTE, operationMessage);
+    if (debugEnabled) {
+      String closingMessage = String.format(formatClosingMessage, args);
+      String operationMessage = formatWithIndentation(closingMessage, "└─ ");
+      messager.printMessage(Diagnostic.Kind.NOTE, operationMessage);
+    }
 
     // Decrease indentation level
     if (currentLevel > 0) {

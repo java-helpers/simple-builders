@@ -75,7 +75,7 @@ public class GeneratorRegistry {
     sortGeneratorsByPriority();
 
     // Log the closing message with └─ without changing indentation level
-    context.endOperation(
+    context.debugEndOperation(
         "Initialized GeneratorRegistry with %d method generators and %d builder enhancers",
         methodGenerators.size(), builderEnhancers.size());
   }
@@ -92,7 +92,7 @@ public class GeneratorRegistry {
       FieldDto field, TypeName dtoType, TypeName builderType) {
     List<MethodDto> allMethods = new ArrayList<>();
 
-    context.startOperation("Processing method generators");
+    context.debugStartOperation("Processing method generators");
     for (MethodGenerator generator : methodGenerators) {
       if (generator.appliesTo(field, dtoType, context)) {
         try {
@@ -112,7 +112,7 @@ public class GeneratorRegistry {
         }
       }
     }
-    context.endOperation("Generated %d methods", allMethods.size());
+    context.debugEndOperation("Generated %d methods", allMethods.size());
 
     return allMethods;
   }
@@ -125,7 +125,7 @@ public class GeneratorRegistry {
    */
   public void enhanceBuilder(BuilderDefinitionDto builderDto, TypeName dtoType) {
     int appliedEnhancers = 0;
-    context.startOperation("Processing class based enhancer");
+    context.debugStartOperation("Processing class based enhancer");
     for (BuilderEnhancer enhancer : builderEnhancers) {
       if (enhancer.appliesTo(builderDto, dtoType, context)) {
         try {
@@ -146,9 +146,9 @@ public class GeneratorRegistry {
     }
 
     if (appliedEnhancers > 0) {
-      context.endOperation("Applied %d builder enhancers", appliedEnhancers);
+      context.debugEndOperation("Applied %d builder enhancers", appliedEnhancers);
     } else {
-      context.endOperation();
+      context.debugEndOperation();
     }
   }
 

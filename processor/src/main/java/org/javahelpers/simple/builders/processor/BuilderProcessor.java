@@ -82,11 +82,11 @@ public class BuilderProcessor extends AbstractProcessor {
     this.jacksonModuleGenerator = new JacksonModuleGenerator(processingEnv, logger);
 
     // Initialize GeneratorRegistry once during processor initialization
-    context.startOperation("Initializing generator registry");
+    context.debugStartOperation("Initializing generator registry");
     try {
       context.getGeneratorRegistry();
     } finally {
-      context.endOperation();
+      context.debugEndOperation();
     }
 
     SourceVersion current = processingEnv.getSourceVersion();
@@ -150,7 +150,7 @@ public class BuilderProcessor extends AbstractProcessor {
 
     int successfulGenerations = 0;
     for (Element annotatedElement : sortedElements) {
-      context.startOperation("Processing element: " + annotatedElement.getSimpleName());
+      context.debugStartOperation("Processing element: " + annotatedElement.getSimpleName());
       try {
         // Resolve configuration per-element to handle all layers
         // (defaults, global, template, inline)
@@ -164,7 +164,7 @@ public class BuilderProcessor extends AbstractProcessor {
         context.warning(
             annotatedElement, "simple-builders: Failed to generate builder - %s", ex.getMessage());
       } finally {
-        context.endOperation();
+        context.debugEndOperation();
       }
     }
 
@@ -206,7 +206,7 @@ public class BuilderProcessor extends AbstractProcessor {
     context.debug("Jackson module entry added");
 
     // Add summary of what was generated
-    context.endOperation(
+    context.debugEndOperation(
         "Generated builder with %d fields and %d methods for %s",
         builderDef.getAllFieldsForBuilder().size(),
         builderDef.getCoreMethods().size(),

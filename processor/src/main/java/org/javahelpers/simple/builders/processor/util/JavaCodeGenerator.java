@@ -75,7 +75,7 @@ public class JavaCodeGenerator {
    * @throws BuilderException if there is an error in source code generation
    */
   public void generateBuilder(BuilderDefinitionDto builderDef) throws BuilderException {
-    logger.startOperation(
+    logger.debugStartOperation(
         "Code generation for builder: %s", builderDef.getBuilderTypeName().getClassName());
     TypeSpec.Builder classBuilder = createClassBuilder(builderDef);
     addClassMetadata(classBuilder, builderDef);
@@ -86,7 +86,7 @@ public class JavaCodeGenerator {
     addAnnotationsToBuilder(classBuilder, builderDef);
 
     writeBuilderClassToFile(classBuilder.build(), builderDef);
-    logger.endOperation(
+    logger.debugEndOperation(
         "Successfully generated builder: %s", builderDef.getBuilderTypeName().getClassName());
   }
 
@@ -126,7 +126,7 @@ public class JavaCodeGenerator {
   }
 
   private void addFieldsToBuilder(TypeSpec.Builder classBuilder, BuilderDefinitionDto builderDef) {
-    logger.startOperation(
+    logger.debugStartOperation(
         "Generating %d constructor fields and %d setter fields",
         builderDef.getConstructorFieldsForBuilder().size(),
         builderDef.getSetterFieldsForBuilder().size());
@@ -141,13 +141,13 @@ public class JavaCodeGenerator {
       FieldSpec fieldSpec = createFieldMember(fieldDto);
       classBuilder.addField(fieldSpec);
     }
-    logger.endOperation("Fields added: %d fields", builderDef.getAllFieldsForBuilder().size());
+    logger.debugEndOperation("Fields added: %d fields", builderDef.getAllFieldsForBuilder().size());
   }
 
   private void addMethodsToBuilder(TypeSpec.Builder classBuilder, BuilderDefinitionDto builderDef) {
     // Collect all methods from all fields, setting javadoc and tracking field relationship
     Map<MethodDto, FieldDto> allMethods = collectAllMethods(builderDef);
-    logger.startOperation("Adding Methods for %d candidates", allMethods.size());
+    logger.debugStartOperation("Adding Methods for %d candidates", allMethods.size());
 
     // Resolve conflicts and sort by ordering
     List<MethodDto> resolvedMethods = resolveMethodConflicts(allMethods);
@@ -160,7 +160,7 @@ public class JavaCodeGenerator {
       classBuilder.addMethod(methodSpec);
       generatedCnt++;
     }
-    logger.endOperation("%d Methods added", generatedCnt);
+    logger.debugEndOperation("%d Methods added", generatedCnt);
   }
 
   private Map<MethodDto, FieldDto> collectAllMethods(BuilderDefinitionDto builderDef) {
@@ -197,13 +197,13 @@ public class JavaCodeGenerator {
       return;
     }
     // Adding nested types (e.g., With interface)
-    logger.startOperation("Generating %d nested type(s)", builderDef.getNestedTypes().size());
+    logger.debugStartOperation("Generating %d nested type(s)", builderDef.getNestedTypes().size());
     for (NestedTypeDto nestedType : builderDef.getNestedTypes()) {
       TypeSpec nestedTypeSpec = createNestedType(nestedType);
       classBuilder.addType(nestedTypeSpec);
       logger.debug("Generated nested type: %s", nestedType.getTypeName());
     }
-    logger.endOperation("Nested types added");
+    logger.debugEndOperation("Nested types added");
   }
 
   private void addAnnotationsToBuilder(

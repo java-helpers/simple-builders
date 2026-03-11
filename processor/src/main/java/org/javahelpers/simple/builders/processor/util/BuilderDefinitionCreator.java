@@ -64,7 +64,7 @@ public class BuilderDefinitionCreator {
     validateAnnotatedElement(annotatedElement);
     TypeElement annotatedType = (TypeElement) annotatedElement;
 
-    context.startOperation(
+    context.debugStartOperation(
         "Extracting builder definition from: %s", annotatedType.getQualifiedName());
 
     BuilderDefinitionDto result = initializeBuilderDefinition(annotatedType, context);
@@ -85,7 +85,7 @@ public class BuilderDefinitionCreator {
 
     context.debug("Builder will be generated as: %s", result.getBuilderTypeName().getClassName());
 
-    context.endOperation(
+    context.debugEndOperation(
         "Builder definition extracted: %s", result.getBuilderTypeName().getClassName());
 
     return result;
@@ -129,7 +129,7 @@ public class BuilderDefinitionCreator {
     Optional<ExecutableElement> constructorOpt = findConstructorForBuilder(annotatedType, context);
     if (constructorOpt.isPresent()) {
       ExecutableElement ctor = constructorOpt.get();
-      context.startOperation(
+      context.debugStartOperation(
           "Analyzing constructor with %d parameter(s)", ctor.getParameters().size());
 
       TypeName builderType =
@@ -137,7 +137,7 @@ public class BuilderDefinitionCreator {
               builderDef.getBuilderTypeName(), builderDef.getGenerics());
 
       for (VariableElement param : ctor.getParameters()) {
-        context.startOperation("Analyzing parameter: %s", param.getSimpleName());
+        context.debugStartOperation("Analyzing parameter: %s", param.getSimpleName());
         Optional<FieldDto> fieldFromCtor =
             createFieldFromConstructor(
                 annotatedType, param, builderType, context, fieldNameRegistry);
@@ -148,7 +148,7 @@ public class BuilderDefinitionCreator {
         }
       }
 
-      context.endOperation();
+      context.debugEndOperation();
     }
     return constructorFields;
   }
@@ -164,7 +164,7 @@ public class BuilderDefinitionCreator {
       BuilderDefinitionDto result,
       ProcessingContext context,
       Map<String, FieldDto> fieldNameRegistry) {
-    context.startOperation("Analysing setters for finding fields");
+    context.debugStartOperation("Analysing setters for finding fields");
     List<FieldDto> setterFields = new LinkedList<>();
 
     // Build a set of constructor field names to avoid duplicates from setters
@@ -183,7 +183,7 @@ public class BuilderDefinitionCreator {
             result.getBuilderTypeName(), result.getGenerics());
 
     for (ExecutableElement mth : methods) {
-      context.startOperation(
+      context.debugStartOperation(
           "Analyzing method: %s with %d parameter(s)",
           mth.getSimpleName(), mth.getParameters().size());
 
@@ -218,11 +218,11 @@ public class BuilderDefinitionCreator {
     }
 
     if (addedCount != 0 || skippedCount != 0) {
-      context.endOperation(
+      context.debugEndOperation(
           "Processed %d possible setters: added %d fields, skipped %d",
           processedCount, addedCount, skippedCount);
     } else {
-      context.endOperation("No setters found");
+      context.debugEndOperation("No setters found");
     }
 
     return setterFields;
@@ -235,7 +235,7 @@ public class BuilderDefinitionCreator {
         && !field.getFieldType().getPackageName().isEmpty()) {
       fieldTypeName = field.getFieldType().getPackageName() + "." + fieldTypeName;
     }
-    context.endOperation("Adding field: %s (type: %s)", field.getFieldName(), fieldTypeName);
+    context.debugEndOperation("Adding field: %s (type: %s)", field.getFieldName(), fieldTypeName);
   }
 
   private static boolean isMethodRelevantForBuilder(
