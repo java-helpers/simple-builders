@@ -66,24 +66,25 @@ public class StringValidationGenerator implements MethodGenerator {
 
     @Override
     public List<MethodDto> generateMethods(FieldDto field, TypeName builderType, ProcessingContext context) {
-        String fieldName = field.getFieldName();
-        String methodName = "validate" + StringUtils.capitalize(fieldName);
+        String fieldInDto = field.getOriginalFieldName();
+        String fieldInBuilder = field.getFieldNameInBuilder();
+        String methodName = "validate" + StringUtils.capitalize(fieldInDto);
         
         String methodBody = String.format(
             "if (!%s.isSet() || %s.value().trim().isEmpty()) {\n" +
             "    throw new IllegalArgumentException(\"%s cannot be null or empty\");\n" +
             "}\n" +
             "return this;",
-            fieldName, fieldName, StringUtils.capitalize(fieldName)
+            fieldInBuilder, fieldInBuilder, StringUtils.capitalize(fieldInDto)
         );
 
         MethodDto validationMethod = new MethodDto(methodName, builderType);
         validationMethod.setCode(methodBody);
         validationMethod.setJavadoc(
-            "Validates that the " + fieldName + " field is not null or empty.\n" +
+            "Validates that the " + fieldInDto + " field is not null or empty.\n" +
             "\n" +
             "@return this builder instance for chaining\n" +
-            "@throws IllegalArgumentException if " + fieldName + " is null or empty"
+            "@throws IllegalArgumentException if " + fieldInDto + " is null or empty"
         );
 
         return List.of(validationMethod);

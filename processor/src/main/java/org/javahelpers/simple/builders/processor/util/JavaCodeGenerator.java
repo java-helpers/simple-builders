@@ -378,7 +378,7 @@ public class JavaCodeGenerator {
     if (field == null) {
       return "core method '" + method.getMethodName() + "'";
     } else {
-      return "field '" + field.getFieldName() + "'";
+      return "field '" + field.getFieldNameInBuilder() + "'";
     }
   }
 
@@ -453,18 +453,18 @@ public class JavaCodeGenerator {
     // Initialize field from source instance
     cb.addStatement(
         "this.$N = $T.initialValue(instance.$N())",
-        field.getFieldName(),
+        field.getFieldNameInBuilder(),
         ClassName.get(TrackedValue.class),
         getter);
 
     // Validate non-nullable fields immediately - fail fast if source object is invalid
     if (field.isNonNullable()) {
-      cb.beginControlFlow("if (this.$N.value() == null)", field.getFieldName())
+      cb.beginControlFlow("if (this.$N.value() == null)", field.getFieldNameInBuilder())
           .addStatement(
               "throw new $T($S)",
               IllegalArgumentException.class,
               "Cannot initialize builder from instance: field '"
-                  + field.getFieldName()
+                  + field.getFieldNameInBuilder()
                   + "' is marked as non-null but source object has null value")
           .endControlFlow();
     }
@@ -480,10 +480,10 @@ public class JavaCodeGenerator {
     ParameterizedTypeName wrappedFieldType =
         ParameterizedTypeName.get(builderFieldWrapper, fieldType);
 
-    return FieldSpec.builder(wrappedFieldType, fieldDto.getFieldName(), Modifier.PRIVATE)
+    return FieldSpec.builder(wrappedFieldType, fieldDto.getFieldNameInBuilder(), Modifier.PRIVATE)
         .addJavadoc(
             "Tracked value for <code>$L</code>: $L.\n",
-            fieldDto.getFieldName(),
+            fieldDto.getFieldNameInBuilder(),
             fieldDto.getJavaDoc())
         .initializer("$T.unsetValue()", builderFieldWrapper)
         .build();

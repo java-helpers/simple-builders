@@ -108,7 +108,7 @@ public class GeneratorRegistry {
         } catch (Exception e) {
           context.error(
               "Failed to apply method generator %s to field %s: %s",
-              generator.getClass().getName(), field.getFieldName(), e.getMessage());
+              generator.getClass().getName(), field.getFieldNameInBuilder(), e.getMessage());
         }
       }
     }

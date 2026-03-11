@@ -134,17 +134,17 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
     for (var field : builderDto.getConstructorFieldsForBuilder()) {
       if (field.isNonNullable()) {
         code.append("if (!this.")
-            .append(field.getFieldName())
+            .append(field.getFieldNameInBuilder())
             .append(".isSet()) {\n")
             .append("  throw new IllegalStateException(\"Required field '")
-            .append(field.getFieldName())
+            .append(field.getFieldNameInBuilder())
             .append("' must be set before calling build()\");\n")
             .append("}\n");
         code.append("if (this.")
-            .append(field.getFieldName())
+            .append(field.getFieldNameInBuilder())
             .append(".value() == null) {\n")
             .append("  throw new IllegalStateException(\"Field '")
-            .append(field.getFieldName())
+            .append(field.getFieldNameInBuilder())
             .append("' is marked as non-null but null value was provided\");\n")
             .append("}\n");
       }
@@ -154,12 +154,12 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
     for (var field : builderDto.getSetterFieldsForBuilder()) {
       if (field.isNonNullable()) {
         code.append("if (this.")
-            .append(field.getFieldName())
+            .append(field.getFieldNameInBuilder())
             .append(".isSet() && this.")
-            .append(field.getFieldName())
+            .append(field.getFieldNameInBuilder())
             .append(".value() == null) {\n")
             .append("  throw new IllegalStateException(\"Field '")
-            .append(field.getFieldName())
+            .append(field.getFieldNameInBuilder())
             .append("' is marked as non-null but null value was provided\");\n")
             .append("}\n");
       }
@@ -180,7 +180,7 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
     // Apply setter-based fields
     for (var field : builderDto.getSetterFieldsForBuilder()) {
       code.append("this.")
-          .append(field.getFieldName())
+          .append(field.getFieldNameInBuilder())
           .append(".ifSet(result::")
           .append(field.getSetterName())
           .append(");\n");
@@ -277,7 +277,7 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
   /** Creates the constructor arguments string for the build() method. */
   private String createConstructorArgsString(BuilderDefinitionDto builderDto) {
     return builderDto.getConstructorFieldsForBuilder().stream()
-        .map(field -> "this." + field.getFieldName() + ".value()")
+        .map(field -> "this." + field.getFieldNameInBuilder() + ".value()")
         .reduce((a, b) -> a + ", " + b)
         .orElse("");
   }
@@ -294,9 +294,9 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
     for (int i = 0; i < allFields.size(); i++) {
       FieldDto field = allFields.get(i);
       sb.append("\n        .append(\"")
-          .append(field.getFieldName())
+          .append(field.getFieldNameInBuilder())
           .append("\", this.")
-          .append(field.getFieldName())
+          .append(field.getFieldNameInBuilder())
           .append(")");
     }
 

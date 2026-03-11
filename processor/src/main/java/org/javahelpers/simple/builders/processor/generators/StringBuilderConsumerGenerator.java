@@ -104,8 +104,8 @@ public class StringBuilderConsumerGenerator implements MethodGenerator {
             : "builder.toString()";
     MethodDto method =
         createStringBuilderConsumer(
-            field.getFieldName(),
-            field.getFieldName(),
+            field.getOriginalFieldName(),
+            field.getFieldNameInBuilder(),
             field.getJavaDoc(),
             transform,
             builderType,

@@ -92,8 +92,8 @@ public class SupplierMethodGenerator implements MethodGenerator {
 
     MethodDto supplierMethod =
         createFieldSupplier(
-            field.getFieldNameEstimated(),
-            field.getFieldName(),
+            field.getOriginalFieldName(),
+            field.getFieldNameInBuilder(),
             field.getJavaDoc(),
             field.getFieldType(),
             builderType,
