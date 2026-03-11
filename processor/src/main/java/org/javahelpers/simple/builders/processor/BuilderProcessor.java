@@ -70,6 +70,7 @@ public class BuilderProcessor extends AbstractProcessor {
   public synchronized void init(ProcessingEnvironment processingEnv) {
     super.init(processingEnv);
     ProcessingLogger logger = new ProcessingLogger(processingEnv);
+    logger.debug("Starting BuilderProcessor...");
 
     // Read global configuration from compiler arguments
     CompilerArgumentsReader reader = new CompilerArgumentsReader(processingEnv);
@@ -79,6 +80,14 @@ public class BuilderProcessor extends AbstractProcessor {
     this.context = new ProcessingContext(logger, globalConfig, processingEnv);
     this.codeGenerator = new JavaCodeGenerator(processingEnv, logger);
     this.jacksonModuleGenerator = new JacksonModuleGenerator(processingEnv, logger);
+
+    // Initialize GeneratorRegistry once during processor initialization
+    context.debugStartOperation("Initializing generator registry");
+    try {
+      context.getGeneratorRegistry();
+    } finally {
+      context.debugEndOperation();
+    }
 
     SourceVersion current = processingEnv.getSourceVersion();
     this.supportedJdk = isAtLeastJava17(current);
@@ -102,6 +111,8 @@ public class BuilderProcessor extends AbstractProcessor {
       for (var module : modules) {
         codeGenerator.generateJacksonModule(module);
       }
+      // Reset indentation after Jackson module generation as well
+      context.resetIndentation();
       return false;
     }
 
@@ -126,9 +137,7 @@ public class BuilderProcessor extends AbstractProcessor {
       elementsToProcess.addAll(roundEnv.getElementsAnnotatedWith(annotation));
     }
 
-    context.debug("===============================");
     context.info("simple-builders: PROCESSING ROUND START");
-    context.debug("===============================");
     context.debug(
         "simple-builders: Processing round started. Found %d annotated elements.",
         elementsToProcess.size());
@@ -139,24 +148,35 @@ public class BuilderProcessor extends AbstractProcessor {
             .sorted(Comparator.comparing(element -> element.getSimpleName().toString()))
             .toList();
 
+    int successfulGenerations = 0;
     for (Element annotatedElement : sortedElements) {
+      context.debugStartOperation("Processing element: " + annotatedElement.getSimpleName());
       try {
-        context.debug("------------------------------------");
-        context.debug("simple-builders: Processing element: %s", annotatedElement.getSimpleName());
-        context.debug("------------------------------------");
         // Resolve configuration per-element to handle all layers
         // (defaults, global, template, inline)
         BuilderConfiguration config = reader.resolveConfiguration(annotatedElement);
+        context.debug("Configuration resolved: %s", config);
         process(annotatedElement, config);
-        context.info(
-            "simple-builders: Successfully generated builder for: %s",
-            annotatedElement.getSimpleName());
+        successfulGenerations++;
       } catch (BuilderException ex) {
-        // All builder generation failures are warnings to allow other builders to be generated
+        // All builder generation failures are warnings to allow other builders to be
+        // generated
         context.warning(
             annotatedElement, "simple-builders: Failed to generate builder - %s", ex.getMessage());
+      } finally {
+        context.debugEndOperation();
       }
     }
+
+    // Log summary of builder generation
+    if (successfulGenerations > 0) {
+      context.info(
+          "simple-builders: Successfully generated %d builder(s) in this processing round",
+          successfulGenerations);
+    }
+
+    // Reset indentation level at the end of each processing round to prevent cascading errors
+    context.resetIndentation();
     return true;
   }
 
@@ -183,6 +203,14 @@ public class BuilderProcessor extends AbstractProcessor {
 
     // Collect info for Jackson Module if enabled
     jacksonModuleGenerator.addEntry(builderDef, annotatedElement);
+    context.debug("Jackson module entry added");
+
+    // Add summary of what was generated
+    context.debugEndOperation(
+        "Generated builder with %d fields and %d methods for %s",
+        builderDef.getAllFieldsForBuilder().size(),
+        builderDef.getCoreMethods().size(),
+        builderDef.getBuilderTypeName().getClassName());
   }
 
   /**

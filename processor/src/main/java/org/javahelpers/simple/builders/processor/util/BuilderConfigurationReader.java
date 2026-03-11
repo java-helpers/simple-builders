@@ -231,8 +231,7 @@ public class BuilderConfigurationReader {
     // If @SimpleBuilder is present, ignore template annotations
     if (hasSimpleBuilderAnnotation(element)) {
       logger.debug(
-          "Template annotations ignored for '%s' (direct @SimpleBuilder present)",
-          element.getSimpleName());
+          "Template annotations ignored because @SimpleBuilder present", element.getSimpleName());
       return null;
     }
 
@@ -240,6 +239,7 @@ public class BuilderConfigurationReader {
     for (AnnotationMirror mirror : element.getAnnotationMirrors()) {
       BuilderConfiguration templateConfig = checkForTemplateAnnotation(mirror, element);
       if (templateConfig != null) {
+        logger.debug("Annotation based Configuration: %s", templateConfig.toString());
         return templateConfig;
       }
     }
@@ -350,7 +350,8 @@ public class BuilderConfigurationReader {
    * @return the fully resolved configuration with all sources merged
    */
   public BuilderConfiguration resolveConfiguration(Element element) throws BuilderException {
-    logger.debug("Resolving configuration for element: %s", element.getSimpleName());
+    String elementName = element.getSimpleName().toString();
+    logger.debugStartOperation("Resolving configuration for element: %s", elementName);
 
     BuilderConfiguration templateConfig = readFromTemplate(element);
     BuilderConfiguration inlineConfig = readFromInlineOptions(element);
@@ -364,8 +365,7 @@ public class BuilderConfigurationReader {
     // Validate access modifiers and warn about problematic configurations
     validateAccessModifiers(element, result);
 
-    logger.debug("Configuration resolved for '%s': %s", element.getSimpleName(), result.toString());
-
+    logger.debugEndOperation("Resulting configuration resolved: %s", result.toString());
     return result;
   }
 

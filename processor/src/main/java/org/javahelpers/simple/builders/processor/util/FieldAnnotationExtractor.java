@@ -80,10 +80,6 @@ public final class FieldAnnotationExtractor {
     List<AnnotationDto> annotations = new ArrayList<>();
     List<? extends AnnotationMirror> annotationMirrors = param.getAnnotationMirrors();
 
-    context.debug(
-        "  -> Extracting %d annotation(s) from field %s",
-        annotationMirrors.size(), param.getSimpleName());
-
     for (AnnotationMirror mirror : annotationMirrors) {
       extractAnnotation(mirror, context).ifPresent(annotations::add);
     }
@@ -103,10 +99,6 @@ public final class FieldAnnotationExtractor {
       javax.lang.model.type.TypeMirror typeMirror, ProcessingContext context) {
     List<AnnotationDto> annotations = new ArrayList<>();
     List<? extends AnnotationMirror> annotationMirrors = typeMirror.getAnnotationMirrors();
-
-    context.debug(
-        "  -> Extracting %d annotation(s) from type %s",
-        annotationMirrors.size(), typeMirror.toString());
 
     for (AnnotationMirror mirror : annotationMirrors) {
       extractAnnotation(mirror, context).ifPresent(annotations::add);

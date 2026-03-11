@@ -93,9 +93,6 @@ public class ClassJavaDocEnhancer implements BuilderEnhancer {
 
     CodeBlock javadoc = createClassJavadoc(dtoClass);
     builderDto.setClassJavadoc(javadoc.toString());
-
-    context.debug(
-        "Added class JavaDoc to builder %s", builderDto.getBuilderTypeName().getClassName());
   }
 
   /**
