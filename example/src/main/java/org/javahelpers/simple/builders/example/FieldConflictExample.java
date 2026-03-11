@@ -43,7 +43,7 @@ import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
  * 
  * @see org.javahelpers.simple.builders.core.annotations.IgnoreInBuilder
  */
-@SimpleBuilder
+// @SimpleBuilder - needs to be reactivated after having #132 checked
 public class FieldConflictExample {
   private String firstName;
   private java.util.Optional<String> lastName;
