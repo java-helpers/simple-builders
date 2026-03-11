@@ -4,6 +4,8 @@ updates:
     directories:
       - "/core"
       - "/processor"
+      - "/example-custom-generator"
+      - "/example"
     schedule:
       interval: "weekly"
     labels:
