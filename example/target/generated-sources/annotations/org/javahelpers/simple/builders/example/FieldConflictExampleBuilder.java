@@ -116,7 +116,7 @@ public class FieldConflictExampleBuilder implements IBuilderBase<FieldConflictEx
    * @return current instance of builder
    */
   public FieldConflictExampleBuilder name(String format, Object... args) {
-    this.name = changedValue(String.format(format, args));
+    this.nameOptional = changedValue(Optional.of(String.format(format, args)));
     return this;
   }
 
