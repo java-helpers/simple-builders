@@ -11,7 +11,6 @@ import com.google.testing.compile.JavaFileObjects;
 import javax.tools.JavaFileObject;
 import org.javahelpers.simple.builders.processor.testing.ProcessorAsserts;
 import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 /** Tests for the {@link BuilderProcessor} class. */
@@ -2658,7 +2657,6 @@ class BuilderProcessorTest {
   }
 
   @Test
-  @Disabled("Instabil test")
   void shouldHandleOverloadedSettersForSameFieldWithoutConflicts() {
     // Given
     String packageName = "test";
@@ -2690,7 +2688,7 @@ class BuilderProcessorTest {
         generatedCode,
         "public OverloadedNamesBuilder names(List<String> names)",
         "public OverloadedNamesBuilder names(String... names)",
-        "public OverloadedNamesBuilder names(Supplier<List<String>> namesSupplier)");
+        "public OverloadedNamesBuilder names(Supplier<String[]> namesSupplier)");
   }
 
   @Test
