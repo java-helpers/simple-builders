@@ -76,7 +76,7 @@ public class JavaCodeGenerator {
    */
   public void generateBuilder(BuilderDefinitionDto builderDef) throws BuilderException {
     logger.startOperation(
-        "Code generation for builder: " + builderDef.getBuilderTypeName().getClassName());
+        "Code generation for builder: %s", builderDef.getBuilderTypeName().getClassName());
     TypeSpec.Builder classBuilder = createClassBuilder(builderDef);
     addClassMetadata(classBuilder, builderDef);
     addFieldsToBuilder(classBuilder, builderDef);

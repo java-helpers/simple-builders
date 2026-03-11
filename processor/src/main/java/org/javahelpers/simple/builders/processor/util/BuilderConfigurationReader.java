@@ -351,7 +351,7 @@ public class BuilderConfigurationReader {
    */
   public BuilderConfiguration resolveConfiguration(Element element) throws BuilderException {
     String elementName = element.getSimpleName().toString();
-    logger.startOperation("Resolving configuration for element: " + elementName);
+    logger.startOperation("Resolving configuration for element: %s", elementName);
 
     BuilderConfiguration templateConfig = readFromTemplate(element);
     BuilderConfiguration inlineConfig = readFromInlineOptions(element);
