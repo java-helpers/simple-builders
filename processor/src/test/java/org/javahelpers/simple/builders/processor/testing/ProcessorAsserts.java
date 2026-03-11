@@ -7,7 +7,6 @@ import com.google.testing.compile.Compilation;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.function.Executable;
 
 /**
  * Assertion helpers for processor tests. Centralizes common positive and negative checks and
@@ -74,23 +73,19 @@ public final class ProcessorAsserts {
 
   /** Assert that generated code matches all provided checks (positive or negative). */
   public static void assertingResult(String generatedCode, AssertRecord... checks) {
-    List<Executable> executables = new ArrayList<>();
     String normalizedGenerated = normalizeWhitespace(generatedCode);
+    List<String> failures = new ArrayList<>();
+
     for (AssertRecord check : checks) {
-      String normalizedSearch = normalizeWhitespace(check.search());
-      if (check instanceof ContainsAssertRecord) {
-        executables.add(
-            () ->
-                Assertions.assertTrue(
-                    normalizedGenerated.contains(normalizedSearch), check.message()));
-      } else if (check instanceof NotContainsAssertRecord) {
-        executables.add(
-            () ->
-                Assertions.assertFalse(
-                    normalizedGenerated.contains(normalizedSearch), check.message()));
+      if (isAssertNotFullfilled(check, normalizedGenerated)) {
+        failures.add(check.message());
       }
     }
-    Assertions.assertAll(executables.toArray(new Executable[0]));
+
+    if (!failures.isEmpty()) {
+      String combinedMessage = "\n" + String.join("\n", failures);
+      Assertions.fail(combinedMessage);
+    }
   }
 
   /** Convenience overload: accept plain strings and convert to NotContainsAssertRecord. */
@@ -132,5 +127,13 @@ public final class ProcessorAsserts {
    */
   public static void assertNormalizedEquals(String expected, String actual, String message) {
     assertEquals(normalizeWhitespace(expected), normalizeWhitespace(actual), message);
+  }
+
+  private static boolean isAssertNotFullfilled(AssertRecord check, String normalizedGenerated) {
+    String normalizedSearch = normalizeWhitespace(check.search());
+    return (check instanceof ContainsAssertRecord
+            && !normalizedGenerated.contains(normalizedSearch))
+        || (check instanceof NotContainsAssertRecord
+            && normalizedGenerated.contains(normalizedSearch));
   }
 }
