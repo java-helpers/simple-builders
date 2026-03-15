@@ -46,6 +46,7 @@ import javax.lang.model.element.TypeElement;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.util.TrackedValue;
+import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.annotation.InterfaceName;
@@ -79,7 +80,7 @@ public class JavaCodeGenerator {
   }
 
   /**
-   * Generating source code file for builder using Javapoet.
+   * Generates a builder class from the given builder definition.
    *
    * @param builderDef dto of all information to create the builder
    * @throws BuilderException if there is an error in source code generation
@@ -120,7 +121,8 @@ public class JavaCodeGenerator {
     }
 
     // Set builder class access level
-    Modifier builderAccessModifier = map2Modifier(builderDef.getConfiguration().getBuilderAccess());
+    Modifier builderAccessModifier =
+        JavaLangMapper.mapAccessModifier(builderDef.getConfiguration().getBuilderAccess());
     if (builderAccessModifier != null) {
       classBuilder.addModifiers(builderAccessModifier);
     }
@@ -402,7 +404,8 @@ public class JavaCodeGenerator {
       TypeSpec.Builder classBuilder, BuilderDefinitionDto builderDef) {
     // Get access modifiers from configuration
     Modifier constructorAccessModifier =
-        map2Modifier(builderDef.getConfiguration().getBuilderConstructorAccess());
+        JavaLangMapper.mapAccessModifier(
+            builderDef.getConfiguration().getBuilderConstructorAccess());
     ClassName dtoBaseClass = map2ClassName(builderDef.getBuildingTargetTypeName());
 
     // Generate empty constructor
