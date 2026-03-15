@@ -191,9 +191,7 @@ public class BuilderDefinitionCreator {
             result.getBuilderTypeName(), result.getGenerics());
 
     for (ExecutableElement mth : methods) {
-      context.debugStartOperation(
-          "Analyzing method: %s with %d parameter(s)",
-          mth.getSimpleName(), mth.getParameters().size());
+      context.debugStartOperation("Analyzing method: %s", mth.toString());
 
       if (isMethodRelevantForBuilder(mth, context)) {
         // Extract the original field name from the setter method (before any renaming)

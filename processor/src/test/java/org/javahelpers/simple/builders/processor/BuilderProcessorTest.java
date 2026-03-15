@@ -35,7 +35,6 @@ import com.google.testing.compile.JavaFileObjects;
 import javax.tools.JavaFileObject;
 import org.javahelpers.simple.builders.processor.testing.ProcessorAsserts;
 import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 /** Tests for the {@link BuilderProcessor} class. */
@@ -104,7 +103,7 @@ class BuilderProcessorTest {
         "[DEBUG] ├─ Extracting builder definition from: test.VerboseTest",
         "[DEBUG] │  ├─ Builder will be generated as: test.VerboseTestBuilder",
         "[DEBUG] │  ├─ Analysing setters for finding fields",
-        "[DEBUG] │  │  ├─ Analyzing method: setName with 1 parameter(s)",
+        "[DEBUG] │  │  ├─ Analyzing method: setName(java.lang.String)",
         "[DEBUG] │  │  │  ├─ Processing method generators",
         "[DEBUG] │  │  │  │  ├─ Applying: BasicSetterGenerator (priority: 100)",
         "[DEBUG] │  │  │  │  ├─ Applying: StringFormatHelperGenerator (priority: 80)",
@@ -2682,7 +2681,6 @@ class BuilderProcessorTest {
   }
 
   @Test
-  @Disabled("Missing feature: #131")
   void shouldHandleOverloadedSettersForSameFieldWithoutConflicts() {
     // Given
     String packageName = "test";
@@ -2697,8 +2695,8 @@ class BuilderProcessorTest {
                 private java.util.List<String> names;
 
                 public java.util.List<String> getNames() { return names; }
-                public void setNames(String[] names) { this.names = names; }
-                public void setNames(String... names) { this.names = java.util.List.of(names); }
+                public void setNames(String[] names) { this.names = java.util.List.of(names); }
+                public void setNames(java.util.List<String> names) { this.names = names; }
             """);
 
     // When

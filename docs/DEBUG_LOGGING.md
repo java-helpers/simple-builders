@@ -94,9 +94,9 @@ When debug logging is enabled, you'll see detailed output with visual separators
 [INFO] [DEBUG] ├─ Extracting builder definition from: org.example.PersonDto
 [INFO] [DEBUG] │  ├─ Builder will be generated as: org.example.PersonDtoBuilder
 [INFO] [DEBUG] │  ├─ Analysing setters for finding fields
-[INFO] [DEBUG] │  │  ├─ Analyzing method: setName with 1 parameter(s)
+[INFO] [DEBUG] │  │  ├─ Analyzing method: setName(java.lang.String)
 [INFO] [DEBUG] │  │  │  └─ Adding field: name (type: java.lang.String)
-[INFO] [DEBUG] │  │  ├─ Analyzing method: setAge with 1 parameter(s)
+[INFO] [DEBUG] │  │  ├─ Analyzing method: setAge(int)
 [INFO] [DEBUG] │  │  │  └─ Adding field: age (type: int)
 [INFO] [DEBUG] │  └─ Processed 2 possible setters: added 2 fields, skipped 0
 [INFO] [DEBUG] ├─ Code generation for builder: PersonDtoBuilder
