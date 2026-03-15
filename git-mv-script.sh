@@ -5,6 +5,22 @@
 
 echo "Starting git mv operations to preserve file history..."
 
+# Create destination directories first
+mkdir -p "processor/src/main/java/org/javahelpers/simple/builders/processor/model/core"
+mkdir -p "processor/src/main/java/org/javahelpers/simple/builders/processor/model/method"
+mkdir -p "processor/src/main/java/org/javahelpers/simple/builders/processor/model/type"
+mkdir -p "processor/src/main/java/org/javahelpers/simple/builders/processor/model/integration"
+mkdir -p "processor/src/main/java/org/javahelpers/simple/builders/processor/model/annotation"
+mkdir -p "processor/src/main/java/org/javahelpers/simple/builders/processor/generators/field"
+mkdir -p "processor/src/main/java/org/javahelpers/simple/builders/processor/generators/builder"
+mkdir -p "processor/src/main/java/org/javahelpers/simple/builders/processor/generators/helper"
+mkdir -p "processor/src/main/java/org/javahelpers/simple/builders/processor/processing"
+mkdir -p "processor/src/main/java/org/javahelpers/simple/builders/processor/analysis"
+mkdir -p "processor/src/main/java/org/javahelpers/simple/builders/processor/validation"
+mkdir -p "processor/src/main/java/org/javahelpers/simple/builders/processor/classgen/javapoet"
+
+echo "Created destination directories"
+
 # Move model classes from dtos to model subpackages
 git mv "processor/src/main/java/org/javahelpers/simple/builders/processor/dtos/BuilderConfiguration.java" "processor/src/main/java/org/javahelpers/simple/builders/processor/model/core/"
 git mv "processor/src/main/java/org/javahelpers/simple/builders/processor/dtos/BuilderDefinitionDto.java" "processor/src/main/java/org/javahelpers/simple/builders/processor/model/core/"
