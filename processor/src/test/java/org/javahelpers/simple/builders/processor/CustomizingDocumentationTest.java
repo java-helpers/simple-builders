@@ -188,43 +188,31 @@ class CustomizingDocumentationTest {
             import java.util.List;
 
             public class CustomHelperGenerator implements MethodGenerator {
-
-                private static final TypeName TRACKED_VALUE_TYPE =
-                    new TypeName("org.javahelpers.simple.builders.core.util", "TrackedValue");
-
                 @Override
                 public boolean appliesTo(FieldDto field, TypeName dtoType, ProcessingContext context) {
-                    return "java.lang.String".equals(field.getFieldType().getFullQualifiedName())
-                        && field.hasAnnotation("javax.validation.constraints.Email");
+                    return "java.lang.String".equals(field.getFieldType().getFullQualifiedName());
                 }
 
                 @Override
                 public List<MethodDto> generateMethods(FieldDto field, TypeName builderType, ProcessingContext context) {
                     String fieldName = field.getFieldNameInBuilder();
-                    String methodName = "validated" + capitalize(fieldName);
+                    String methodName = "custom" + capitalize(fieldName);
 
                     MethodDto method = new MethodDto(methodName, builderType);
 
-                    String parameterName = fieldName;
                     MethodParameterDto parameter = new MethodParameterDto();
-                    parameter.setParameterName(parameterName);
+                    parameter.setParameterName("value");
                     parameter.setParameterTypeName(new TypeName("java.lang", "String"));
                     method.addParameter(parameter);
 
-                    method.setCode(String.format(
-                        "if (%s != null && %s.contains(\\"@\\")) { " +
-                        "this.%s = $builderFieldWrapper:T.changedValue(%s); " +
-                        "return this; } " +
-                        "throw new IllegalArgumentException(\\"Invalid email: \\" + %s);",
-                        parameterName, parameterName, fieldName, parameterName, parameterName));
-                    method.addArgument("builderFieldWrapper", TRACKED_VALUE_TYPE);
+                    method.setCode("return this." + fieldName + "(value.toUpperCase());");
 
                     return List.of(method);
                 }
 
                 @Override
                 public int getPriority() {
-                    return 1000;
+                    return 200;
                 }
 
                 private String capitalize(String str) {
@@ -413,6 +401,7 @@ class CustomizingDocumentationTest {
 
                 @Override
                 public boolean appliesTo(FieldDto field, TypeName dtoType, ProcessingContext context) {
+                    // Only apply to String fields with @Email annotation
                     return "java.lang.String".equals(field.getFieldType().getFullQualifiedName())
                         && field.hasAnnotation("javax.validation.constraints.Email");
                 }
