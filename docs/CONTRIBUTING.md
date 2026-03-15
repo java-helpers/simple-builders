@@ -235,7 +235,7 @@ For complete documentation, see [DEBUG_LOGGING.md](DEBUG_LOGGING.md).
 [DEBUG] ├─ Extracting builder definition from: test.Project
 [DEBUG] │  ├─ Builder will be generated as: test.ProjectBuilder
 [DEBUG] │  ├─ Analysing setters for finding fields
-[DEBUG] │  │  ├─ Analyzing method: setName with 1 parameter(s)
+[DEBUG] │  │  ├─ Analyzing method: setName(java.lang.String)
 [DEBUG] │  │  │  └─ Adding field: name (type: java.lang.String)
 [DEBUG] │  └─ Processed 1 possible setters: added 1 fields, skipped 0
 [DEBUG] ├─ Code generation for builder: ProjectBuilder
