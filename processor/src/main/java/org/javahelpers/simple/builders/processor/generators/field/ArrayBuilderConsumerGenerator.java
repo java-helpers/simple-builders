@@ -25,7 +25,7 @@
 package org.javahelpers.simple.builders.processor.generators.field;
 
 import static org.javahelpers.simple.builders.processor.analysis.JavaLangMapper.map2TypeName;
-import static org.javahelpers.simple.builders.processor.generators.field.MethodGeneratorUtil.*;
+import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.*;
 
 import java.util.List;
 import org.javahelpers.simple.builders.core.builders.ArrayListBuilder;
@@ -121,7 +121,7 @@ public class ArrayBuilderConsumerGenerator implements MethodGenerator {
     String fieldName = field.getOriginalFieldName();
     String fieldNameInBuilder = field.getFieldNameInBuilder();
     TypeNameGeneric builderTypeGeneric = new TypeNameGeneric(collectionBuilderType, elementType);
-    TypeNameGeneric consumerType = MethodGeneratorUtil.createConsumerType(builderTypeGeneric);
+    TypeNameGeneric consumerType = createConsumerType(builderTypeGeneric);
 
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName(fieldName + BUILDER_SUFFIX + SUFFIX_CONSUMER);

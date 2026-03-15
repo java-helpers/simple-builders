@@ -22,12 +22,12 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.generators.util;
+package org.javahelpers.simple.builders.processor.generators.field;
 
 import java.util.Collections;
 import java.util.List;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
-import org.javahelpers.simple.builders.processor.generators.field.MethodGeneratorUtil;
+import org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;

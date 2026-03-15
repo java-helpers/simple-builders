@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.generators.field;
+package org.javahelpers.simple.builders.processor.generators.util;
 
 import java.util.List;
 import java.util.Map;

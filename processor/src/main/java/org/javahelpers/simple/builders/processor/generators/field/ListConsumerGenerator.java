@@ -25,7 +25,7 @@
 package org.javahelpers.simple.builders.processor.generators.field;
 
 import static org.javahelpers.simple.builders.processor.analysis.JavaLangMapper.map2TypeName;
-import static org.javahelpers.simple.builders.processor.generators.field.MethodGeneratorUtil.*;
+import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.*;
 
 import java.util.Collections;
 import java.util.List;
@@ -131,14 +131,14 @@ public class ListConsumerGenerator implements MethodGenerator {
               elementType,
               elementBuilderType.get());
       MethodDto method =
-          MethodGeneratorUtil.createFieldConsumerWithElementBuilders(
+          createFieldConsumerWithElementBuilders(
               field, collectionBuilderType, elementBuilderType.get(), builderType, context);
       return List.of(method);
     } else if (context.getConfiguration().shouldUseArrayListBuilder()) {
       TypeName arrayListBuilderType = map2TypeName(ArrayListBuilder.class);
       TypeNameGeneric builderTypeGeneric = new TypeNameGeneric(arrayListBuilderType, elementType);
       MethodDto method =
-          MethodGeneratorUtil.createFieldConsumerWithBuilder(
+          createFieldConsumerWithBuilder(
               field,
               builderTypeGeneric,
               "this.$fieldName:N.value()",

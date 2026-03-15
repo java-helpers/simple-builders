@@ -24,6 +24,8 @@
 
 package org.javahelpers.simple.builders.processor.generators.field;
 
+import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.*;
+
 import java.util.Collections;
 import java.util.List;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
@@ -86,7 +88,7 @@ public class BasicSetterGenerator implements MethodGenerator {
       FieldDto field, TypeName builderType, ProcessingContext context) {
 
     MethodDto setterMethod =
-        MethodGeneratorUtil.createBuilderMethodForFieldWithTransform(
+        createBuilderMethodForFieldWithTransform(
             field, null, field.getFieldType(), builderType, context);
 
     return Collections.singletonList(setterMethod);

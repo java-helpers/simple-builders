@@ -24,6 +24,8 @@
 
 package org.javahelpers.simple.builders.processor.generators.field;
 
+import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.*;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -102,7 +104,7 @@ public class NestedBuilderConsumerGenerator implements MethodGenerator {
 
     TypeName fieldBuilderType = fieldBuilderOpt.get();
     MethodDto method =
-        MethodGeneratorUtil.createFieldConsumerWithBuilder(
+        createFieldConsumerWithBuilder(
             field,
             fieldBuilderType,
             "this.$fieldName:N.value()",

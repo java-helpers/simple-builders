@@ -25,7 +25,7 @@
 package org.javahelpers.simple.builders.processor.generators.field;
 
 import static org.javahelpers.simple.builders.processor.analysis.JavaLangMapper.map2TypeName;
-import static org.javahelpers.simple.builders.processor.generators.field.MethodGeneratorUtil.*;
+import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.*;
 
 import java.util.Collections;
 import java.util.List;
@@ -144,7 +144,7 @@ public class MapConsumerGenerator implements MethodGenerator {
             fieldTypeGeneric.getKeyType(),
             fieldTypeGeneric.getValueType());
     MethodDto mapConsumerWithBuilder =
-        MethodGeneratorUtil.createFieldConsumerWithBuilder(
+        createFieldConsumerWithBuilder(
             field,
             builderTargetTypeName,
             "this.$fieldName:N.value()",

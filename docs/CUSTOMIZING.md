@@ -262,14 +262,15 @@ compileJava {
 | Generator | Purpose | Priority |
 |-----------|---------|----------|
 | [`BasicSetterGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/field/BasicSetterGenerator.java) | Basic field setters | 100 |
-| [`SupplierMethodGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/util/SupplierMethodGenerator.java) | Supplier-based setters | 80 |
+| [`OptionalHelperGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/field/OptionalHelperGenerator.java) | Optional field helpers | 80 |
 | [`FieldInstanceConsumerGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/field/FieldInstanceConsumerGenerator.java) | Consumer-based setters | 80 |
 | [`NestedBuilderConsumerGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/field/NestedBuilderConsumerGenerator.java) | Builder consumer methods | 80 |
 | [`MapConsumerGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/field/MapConsumerGenerator.java) | Map consumer methods | 80 |
 | [`ListConsumerGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/field/ListConsumerGenerator.java) | List consumer methods | 80 |
 | [`SetConsumerGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/field/SetConsumerGenerator.java) | Set consumer methods | 80 |
-| [`StringFormatHelperGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/util/StringFormatHelperGenerator.java) | String.format helpers | 80 |
-| [`VarArgsHelperGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/util/VarArgsHelperGenerator.java) | Varargs helpers | 50 |
+| [`StringFormatHelperGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/field/StringFormatHelperGenerator.java) | String.format helpers | 80 |
+| [`SupplierMethodGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/field/SupplierMethodGenerator.java) | Supplier-based setters | 80 |
+| [`VarArgsHelperGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/field/VarArgsHelperGenerator.java) | Varargs helpers | 50 |
 | [`AddToCollectionGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/field/AddToCollectionGenerator.java) | add2FieldName methods for List/Set | 30 |
 | [`ArrayConversionGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/field/ArrayConversionGenerator.java) | Array-from-List conversion methods | 35 |
 | [`ArrayBuilderConsumerGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/field/ArrayBuilderConsumerGenerator.java) | ArrayListBuilder consumer methods for arrays | 25 |
