@@ -22,7 +22,9 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.dtos;
+package org.javahelpers.simple.builders.processor.model.method;
+
+import org.javahelpers.simple.builders.processor.model.type.TypeName;
 
 /**
  * Placeholder value for type contents.Implements {@code MethodCodePlaceholder} to support a generic

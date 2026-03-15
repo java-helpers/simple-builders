@@ -22,12 +22,12 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.util;
+package org.javahelpers.simple.builders.processor.processing;
 
 import static java.util.stream.Collectors.toSet;
-import static org.javahelpers.simple.builders.processor.util.AnnotationValidator.validateAnnotatedElement;
-import static org.javahelpers.simple.builders.processor.util.JavaLangAnalyser.*;
-import static org.javahelpers.simple.builders.processor.util.JavaLangMapper.map2MethodParameter;
+import static org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyser.*;
+import static org.javahelpers.simple.builders.processor.analysis.JavaLangMapper.map2MethodParameter;
+import static org.javahelpers.simple.builders.processor.validation.AnnotationValidator.validateAnnotatedElement;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -40,9 +40,17 @@ import javax.lang.model.type.TypeMirror;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.javahelpers.simple.builders.core.annotations.IgnoreInBuilder;
-import org.javahelpers.simple.builders.processor.dtos.*;
-import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
-import org.javahelpers.simple.builders.processor.generators.MethodGeneratorUtil;
+import org.javahelpers.simple.builders.processor.analysis.FieldAnnotationExtractor;
+import org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyser;
+import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
+import org.javahelpers.simple.builders.processor.classgen.javapoet.BuilderException;
+import org.javahelpers.simple.builders.processor.generators.field.MethodGeneratorUtil;
+import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
+import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
+import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
+import org.javahelpers.simple.builders.processor.model.type.TypeName;
 
 /** Class for creating a specific BuilderDefinitionDto for an annotated DTO class. */
 public class BuilderDefinitionCreator {

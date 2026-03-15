@@ -22,14 +22,15 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.generators;
+package org.javahelpers.simple.builders.processor.generators.field;
 
 import java.util.Collections;
 import java.util.List;
-import org.javahelpers.simple.builders.processor.dtos.FieldDto;
-import org.javahelpers.simple.builders.processor.dtos.MethodDto;
-import org.javahelpers.simple.builders.processor.dtos.TypeName;
-import org.javahelpers.simple.builders.processor.util.ProcessingContext;
+import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
+import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
 /**
  * Generates basic setter methods for all fields of the builder.

@@ -21,16 +21,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.javahelpers.simple.builders.processor.generators;
+package org.javahelpers.simple.builders.processor.generators.builder;
 
-import org.javahelpers.simple.builders.processor.dtos.BuilderDefinitionDto;
-import org.javahelpers.simple.builders.processor.dtos.MethodDto;
-import org.javahelpers.simple.builders.processor.dtos.MethodParameterDto;
-import org.javahelpers.simple.builders.processor.dtos.NestedTypeDto;
-import org.javahelpers.simple.builders.processor.dtos.TypeName;
-import org.javahelpers.simple.builders.processor.dtos.TypeNameGeneric;
-import org.javahelpers.simple.builders.processor.util.JavaLangMapper;
-import org.javahelpers.simple.builders.processor.util.ProcessingContext;
+import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
+import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
+import org.javahelpers.simple.builders.processor.generators.field.MethodGeneratorUtil;
+import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
+import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
+import org.javahelpers.simple.builders.processor.model.type.NestedTypeDto;
+import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
+import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
 /**
  * Enhancer that adds the "With" interface to generated builders.

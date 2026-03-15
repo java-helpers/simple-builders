@@ -22,10 +22,12 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.dtos;
+package org.javahelpers.simple.builders.processor.model.method;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
+import org.javahelpers.simple.builders.processor.model.type.TypeName;
 
 /** MethodParameterDto contains all information for generating parameters in method headers. */
 public class MethodParameterDto {

@@ -21,11 +21,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.javahelpers.simple.builders.processor.util;
+package org.javahelpers.simple.builders.processor.analysis;
 
 import org.apache.commons.lang3.Strings;
-import org.javahelpers.simple.builders.processor.dtos.TypeName;
-import org.javahelpers.simple.builders.processor.dtos.TypeNameGeneric;
+import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
 
 /** Helperclass to extract insights from TypeName. */
 public class TypeNameAnalyser {

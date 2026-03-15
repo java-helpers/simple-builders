@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.dtos;
+package org.javahelpers.simple.builders.processor.model.integration;
 
 import java.util.Collection;
 import java.util.HashSet;

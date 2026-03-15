@@ -21,9 +21,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.javahelpers.simple.builders.processor.generators.builder;
+package org.javahelpers.simple.builders.processor.generators;
 
-import org.javahelpers.simple.builders.processor.generators.Generator;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.ProcessingContext;

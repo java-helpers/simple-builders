@@ -22,12 +22,13 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.dtos;
+package org.javahelpers.simple.builders.processor.model.annotation;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.javahelpers.simple.builders.processor.model.type.TypeName;
 
 /**
  * DTO representing an annotation to be copied from the target class field to the builder class

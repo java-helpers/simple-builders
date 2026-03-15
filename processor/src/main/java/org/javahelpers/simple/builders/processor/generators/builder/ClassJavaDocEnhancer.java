@@ -22,13 +22,14 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.generators;
+package org.javahelpers.simple.builders.processor.generators.builder;
 
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.CodeBlock;
-import org.javahelpers.simple.builders.processor.dtos.BuilderDefinitionDto;
-import org.javahelpers.simple.builders.processor.dtos.TypeName;
-import org.javahelpers.simple.builders.processor.util.ProcessingContext;
+import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
+import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
+import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
 /**
  * Enhancer that adds class-level JavaDoc to generated builder classes.

@@ -26,11 +26,11 @@ package org.javahelpers.simple.builders.example.custom;
 
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
-import org.javahelpers.simple.builders.processor.dtos.FieldDto;
-import org.javahelpers.simple.builders.processor.dtos.MethodDto;
-import org.javahelpers.simple.builders.processor.dtos.TypeName;
+import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
-import org.javahelpers.simple.builders.processor.util.ProcessingContext;
+import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
 /**
  * Custom generator that adds validation methods for String fields.

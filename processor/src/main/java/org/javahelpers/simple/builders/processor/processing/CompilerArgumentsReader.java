@@ -22,14 +22,13 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.util;
+package org.javahelpers.simple.builders.processor.processing;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import org.apache.commons.lang3.Strings;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.core.enums.OptionState;
-import org.javahelpers.simple.builders.processor.dtos.BuilderConfiguration;
-import org.javahelpers.simple.builders.processor.enums.CompilerArgumentsEnum;
+import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 
 /**
  * Utility class for reading compiler arguments from the annotation processing environment.

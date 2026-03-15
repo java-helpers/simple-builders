@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.dtos;
+package org.javahelpers.simple.builders.processor.model.core;
 
 import static org.javahelpers.simple.builders.core.enums.AccessModifier.*;
 import static org.javahelpers.simple.builders.core.enums.OptionState.*;

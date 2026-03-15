@@ -22,12 +22,21 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.generators;
+package org.javahelpers.simple.builders.processor.generators.helper;
 
 import java.util.Collections;
 import java.util.List;
-import org.javahelpers.simple.builders.processor.dtos.*;
-import org.javahelpers.simple.builders.processor.util.ProcessingContext;
+import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
+import org.javahelpers.simple.builders.processor.generators.field.MethodGeneratorUtil;
+import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.simple.builders.processor.model.type.TypeNameArray;
+import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
+import org.javahelpers.simple.builders.processor.model.type.TypeNameList;
+import org.javahelpers.simple.builders.processor.model.type.TypeNameMap;
+import org.javahelpers.simple.builders.processor.model.type.TypeNameSet;
+import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
 /**
  * Generates varargs helper methods for List, Set, and Map fields.

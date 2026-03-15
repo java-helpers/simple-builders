@@ -21,15 +21,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.javahelpers.simple.builders.processor.generators;
+package org.javahelpers.simple.builders.processor.generators.builder;
 
 import java.util.function.BooleanSupplier;
 import javax.lang.model.element.Modifier;
-import org.javahelpers.simple.builders.processor.dtos.BuilderDefinitionDto;
-import org.javahelpers.simple.builders.processor.dtos.MethodDto;
-import org.javahelpers.simple.builders.processor.dtos.TypeName;
-import org.javahelpers.simple.builders.processor.util.JavaLangMapper;
-import org.javahelpers.simple.builders.processor.util.ProcessingContext;
+import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
+import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
+import org.javahelpers.simple.builders.processor.generators.field.MethodGeneratorUtil;
+import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
+import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
+import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
 /**
  * Enhancer that adds conditional methods to generated builders.
@@ -189,8 +192,7 @@ public class ConditionalEnhancer implements BuilderEnhancer {
 
   /** Adds a parameter to the method. */
   private void addParameter(MethodDto method, String name, TypeName type) {
-    org.javahelpers.simple.builders.processor.dtos.MethodParameterDto parameter =
-        new org.javahelpers.simple.builders.processor.dtos.MethodParameterDto();
+    MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName(name);
     parameter.setParameterTypeName(type);
     method.addParameter(parameter);

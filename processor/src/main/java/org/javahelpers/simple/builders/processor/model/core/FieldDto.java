@@ -22,12 +22,16 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.dtos;
+package org.javahelpers.simple.builders.processor.model.core;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
+import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
+import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+import org.javahelpers.simple.builders.processor.model.type.GenericParameterDto;
+import org.javahelpers.simple.builders.processor.model.type.TypeName;
 
 /**
  * Definition of a field. Containing all information to generate methods in builder to set or modify

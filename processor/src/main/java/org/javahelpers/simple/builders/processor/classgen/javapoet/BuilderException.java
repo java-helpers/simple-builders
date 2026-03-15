@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.exceptions;
+package org.javahelpers.simple.builders.processor.classgen.javapoet;
 
 import javax.lang.model.element.Element;
 

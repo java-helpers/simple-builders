@@ -9,7 +9,7 @@ import com.google.testing.compile.Compilation;
 import javax.tools.JavaFileObject;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.core.enums.OptionState;
-import org.javahelpers.simple.builders.processor.dtos.BuilderConfiguration;
+import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.testing.ProcessorAsserts;
 import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
 import org.junit.jupiter.api.Test;

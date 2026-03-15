@@ -22,10 +22,11 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.dtos;
+package org.javahelpers.simple.builders.processor.model.method;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.javahelpers.simple.builders.processor.model.type.TypeName;
 
 /** DTO for holding information of code implementation. */
 public class MethodCodeDto {

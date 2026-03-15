@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.javahelpers.simple.builders.processor.util;
+package org.javahelpers.simple.builders.processor.analysis;
 
 import static javax.lang.model.element.Modifier.DEFAULT;
 import static javax.lang.model.element.Modifier.PROTECTED;
@@ -43,7 +43,18 @@ import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.SimpleTypeVisitor14;
-import org.javahelpers.simple.builders.processor.dtos.*;
+import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
+import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
+import org.javahelpers.simple.builders.processor.model.type.GenericParameterDto;
+import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.simple.builders.processor.model.type.TypeNameArray;
+import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
+import org.javahelpers.simple.builders.processor.model.type.TypeNameList;
+import org.javahelpers.simple.builders.processor.model.type.TypeNameMap;
+import org.javahelpers.simple.builders.processor.model.type.TypeNamePrimitive;
+import org.javahelpers.simple.builders.processor.model.type.TypeNameSet;
+import org.javahelpers.simple.builders.processor.model.type.TypeNameVariable;
+import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
 /** Helper functions to create simple builder types from java.lang types. */
 public final class JavaLangMapper {

@@ -22,10 +22,10 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.util;
+package org.javahelpers.simple.builders.processor.classgen.javapoet;
 
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static org.javahelpers.simple.builders.processor.util.JavapoetMapper.*;
+import static org.javahelpers.simple.builders.processor.classgen.javapoet.JavapoetMapper.*;
 
 import com.palantir.javapoet.AnnotationSpec;
 import com.palantir.javapoet.ClassName;
@@ -46,8 +46,17 @@ import javax.lang.model.element.TypeElement;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.util.TrackedValue;
-import org.javahelpers.simple.builders.processor.dtos.*;
-import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
+import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
+import org.javahelpers.simple.builders.processor.model.annotation.InterfaceName;
+import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
+import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+import org.javahelpers.simple.builders.processor.model.integration.JacksonModuleDefinitionDto;
+import org.javahelpers.simple.builders.processor.model.integration.JacksonModuleEntryDto;
+import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
+import org.javahelpers.simple.builders.processor.model.type.NestedTypeDto;
+import org.javahelpers.simple.builders.processor.model.type.TypeNameArray;
+import org.javahelpers.simple.builders.processor.processing.ProcessingLogger;
 
 /** JavaCodeGenerator generates with BuilderDefinitionDto JavaCode for the builder. */
 public class JavaCodeGenerator {

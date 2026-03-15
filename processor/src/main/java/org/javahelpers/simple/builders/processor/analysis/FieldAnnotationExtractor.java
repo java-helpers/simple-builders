@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.util;
+package org.javahelpers.simple.builders.processor.analysis;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,8 +35,9 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
-import org.javahelpers.simple.builders.processor.dtos.AnnotationDto;
-import org.javahelpers.simple.builders.processor.dtos.TypeName;
+import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
+import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
 /** Extractor for field annotations, converting them from Java model elements to DTOs. */
 public final class FieldAnnotationExtractor {

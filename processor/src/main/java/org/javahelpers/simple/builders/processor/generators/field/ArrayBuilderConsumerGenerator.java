@@ -22,15 +22,21 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.generators;
+package org.javahelpers.simple.builders.processor.generators.field;
 
-import static org.javahelpers.simple.builders.processor.generators.MethodGeneratorUtil.*;
-import static org.javahelpers.simple.builders.processor.util.JavaLangMapper.map2TypeName;
+import static org.javahelpers.simple.builders.processor.analysis.JavaLangMapper.map2TypeName;
+import static org.javahelpers.simple.builders.processor.generators.field.MethodGeneratorUtil.*;
 
 import java.util.List;
 import org.javahelpers.simple.builders.core.builders.ArrayListBuilder;
-import org.javahelpers.simple.builders.processor.dtos.*;
-import org.javahelpers.simple.builders.processor.util.ProcessingContext;
+import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
+import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
+import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.simple.builders.processor.model.type.TypeNameArray;
+import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
+import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
 /**
  * Generates ArrayListBuilder consumer methods for array fields.

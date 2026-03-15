@@ -30,12 +30,11 @@ import java.util.List;
 import java.util.ServiceLoader;
 import javax.annotation.processing.ProcessingEnvironment;
 import org.apache.commons.collections4.CollectionUtils;
-import org.javahelpers.simple.builders.processor.dtos.BuilderDefinitionDto;
-import org.javahelpers.simple.builders.processor.dtos.FieldDto;
-import org.javahelpers.simple.builders.processor.dtos.MethodDto;
-import org.javahelpers.simple.builders.processor.dtos.TypeName;
-import org.javahelpers.simple.builders.processor.util.ComponentFilter;
-import org.javahelpers.simple.builders.processor.util.ProcessingContext;
+import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
+import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
 /**
  * Unified registry that manages all generators (both method generators and builder enhancers).

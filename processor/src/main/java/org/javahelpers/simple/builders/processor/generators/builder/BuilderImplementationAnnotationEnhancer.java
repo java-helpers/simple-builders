@@ -21,14 +21,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.javahelpers.simple.builders.processor.generators;
+package org.javahelpers.simple.builders.processor.generators.builder;
 
 import org.javahelpers.simple.builders.core.annotations.BuilderImplementation;
-import org.javahelpers.simple.builders.processor.dtos.AnnotationDto;
-import org.javahelpers.simple.builders.processor.dtos.BuilderDefinitionDto;
-import org.javahelpers.simple.builders.processor.dtos.TypeName;
-import org.javahelpers.simple.builders.processor.util.JavaLangMapper;
-import org.javahelpers.simple.builders.processor.util.ProcessingContext;
+import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
+import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
+import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
+import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
+import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
 /**
  * Enhancer that adds the @BuilderImplementation annotation to generated builder classes.

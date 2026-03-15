@@ -22,17 +22,26 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.generators;
+package org.javahelpers.simple.builders.processor.generators.field;
 
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import javax.lang.model.element.Modifier;
 import org.apache.commons.lang3.StringUtils;
-import org.javahelpers.simple.builders.processor.dtos.*;
-import org.javahelpers.simple.builders.processor.util.JavaLangMapper;
-import org.javahelpers.simple.builders.processor.util.JavapoetMapper;
-import org.javahelpers.simple.builders.processor.util.ProcessingContext;
+import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
+import org.javahelpers.simple.builders.processor.classgen.javapoet.JavapoetMapper;
+import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
+import org.javahelpers.simple.builders.processor.model.type.GenericParameterDto;
+import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
+import org.javahelpers.simple.builders.processor.model.type.TypeNameList;
+import org.javahelpers.simple.builders.processor.model.type.TypeNameMap;
+import org.javahelpers.simple.builders.processor.model.type.TypeNameSet;
+import org.javahelpers.simple.builders.processor.model.type.TypeNameVariable;
+import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
 /**
  * Utility class providing common functionality for method generators.

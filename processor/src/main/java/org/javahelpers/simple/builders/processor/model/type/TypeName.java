@@ -22,13 +22,14 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.dtos;
+package org.javahelpers.simple.builders.processor.model.type;
 
 import static java.util.Objects.requireNonNull;
 
 import java.util.Optional;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 
 /**
  * TypeName is the unambiguously definition of a type. Holding name of class and package. Could be

@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.dtos;
+package org.javahelpers.simple.builders.processor.model.method;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -30,6 +30,9 @@ import java.util.List;
 import java.util.Optional;
 import javax.lang.model.element.Modifier;
 import org.apache.commons.lang3.StringUtils;
+import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
+import org.javahelpers.simple.builders.processor.model.type.GenericParameterDto;
+import org.javahelpers.simple.builders.processor.model.type.TypeName;
 
 /** MethodDto containing all information to generate a method in builder. */
 public class MethodDto {
@@ -350,8 +353,7 @@ public class MethodDto {
    *
    * @param annotation the annotation to add
    */
-  public void addAnnotation(
-      org.javahelpers.simple.builders.processor.dtos.AnnotationDto annotation) {
+  public void addAnnotation(AnnotationDto annotation) {
     this.annotations.add(annotation);
   }
 

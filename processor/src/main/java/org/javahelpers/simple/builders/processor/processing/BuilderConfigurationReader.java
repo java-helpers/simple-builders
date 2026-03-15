@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.util;
+package org.javahelpers.simple.builders.processor.processing;
 
 import java.util.Map;
 import javax.lang.model.element.AnnotationMirror;
@@ -33,8 +33,8 @@ import javax.lang.model.util.Elements;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.core.enums.OptionState;
-import org.javahelpers.simple.builders.processor.dtos.BuilderConfiguration;
-import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
+import org.javahelpers.simple.builders.processor.classgen.javapoet.BuilderException;
+import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 
 /**
  * Reads builder configuration from annotated elements.

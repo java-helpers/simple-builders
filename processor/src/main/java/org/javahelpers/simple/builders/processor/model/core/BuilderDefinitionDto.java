@@ -22,12 +22,18 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.dtos;
+package org.javahelpers.simple.builders.processor.model.core;
 
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
+import org.javahelpers.simple.builders.processor.model.annotation.InterfaceName;
+import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+import org.javahelpers.simple.builders.processor.model.type.GenericParameterDto;
+import org.javahelpers.simple.builders.processor.model.type.NestedTypeDto;
+import org.javahelpers.simple.builders.processor.model.type.TypeName;
 
 /** BuilderDefinitionDto holds all information for generating a builder. */
 public class BuilderDefinitionDto {

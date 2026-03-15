@@ -21,19 +21,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.javahelpers.simple.builders.processor.generators;
+package org.javahelpers.simple.builders.processor.generators.builder;
 
 import java.util.ArrayList;
 import java.util.List;
 import javax.lang.model.element.Modifier;
-import org.javahelpers.simple.builders.processor.dtos.AnnotationDto;
-import org.javahelpers.simple.builders.processor.dtos.BuilderDefinitionDto;
-import org.javahelpers.simple.builders.processor.dtos.FieldDto;
-import org.javahelpers.simple.builders.processor.dtos.GenericParameterDto;
-import org.javahelpers.simple.builders.processor.dtos.MethodDto;
-import org.javahelpers.simple.builders.processor.dtos.TypeName;
-import org.javahelpers.simple.builders.processor.util.JavaLangMapper;
-import org.javahelpers.simple.builders.processor.util.ProcessingContext;
+import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
+import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
+import org.javahelpers.simple.builders.processor.generators.field.MethodGeneratorUtil;
+import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
+import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
+import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+import org.javahelpers.simple.builders.processor.model.type.GenericParameterDto;
+import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
 /**
  * Enhancer that adds core builder methods (build, create, toString).
@@ -121,8 +123,7 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
 
     // Add @Override annotation only if implementing IBuilderBase interface
     if (builderDto.getConfiguration().shouldImplementBuilderBase()) {
-      org.javahelpers.simple.builders.processor.dtos.AnnotationDto overrideAnnotation =
-          new org.javahelpers.simple.builders.processor.dtos.AnnotationDto();
+      AnnotationDto overrideAnnotation = new AnnotationDto();
       overrideAnnotation.setAnnotationType(JavaLangMapper.map2TypeName(Override.class));
       method.addAnnotation(overrideAnnotation);
     }
@@ -237,10 +238,7 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
 
   /** Creates the toString() method. */
   protected MethodDto createToStringMethod(BuilderDefinitionDto builderDto) {
-    MethodDto method =
-        new MethodDto(
-            "toString",
-            new org.javahelpers.simple.builders.processor.dtos.TypeName("java.lang", "String"));
+    MethodDto method = new MethodDto("toString", new TypeName("java.lang", "String"));
     method.setOrdering(ORDERING_TO_STRING);
     method.setPriority(MethodDto.PRIORITY_HIGHEST);
     method.setModifier(Modifier.PUBLIC);
@@ -256,13 +254,10 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
 
     // Add template arguments for code generation
     method.addArgument(
-        "toStringBuilder",
-        new org.javahelpers.simple.builders.processor.dtos.TypeName(
-            "org.apache.commons.lang3.builder", "ToStringBuilder"));
+        "toStringBuilder", new TypeName("org.apache.commons.lang3.builder", "ToStringBuilder"));
     method.addArgument(
         "toStringStyle",
-        new org.javahelpers.simple.builders.processor.dtos.TypeName(
-            "org.javahelpers.simple.builders.core.util", "BuilderToStringStyle"));
+        new TypeName("org.javahelpers.simple.builders.core.util", "BuilderToStringStyle"));
 
     method.setJavadoc(
         """

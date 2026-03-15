@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.util;
+package org.javahelpers.simple.builders.processor.processing;
 
 import java.util.List;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -32,9 +32,9 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
-import org.javahelpers.simple.builders.processor.dtos.BuilderConfiguration;
-import org.javahelpers.simple.builders.processor.dtos.TypeName;
 import org.javahelpers.simple.builders.processor.generators.GeneratorRegistry;
+import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
+import org.javahelpers.simple.builders.processor.model.type.TypeName;
 
 /**
  * Context object that wraps Elements, Types, and logging utilities from annotation processing,

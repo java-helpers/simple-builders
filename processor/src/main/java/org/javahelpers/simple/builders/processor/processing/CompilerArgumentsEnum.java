@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.enums;
+package org.javahelpers.simple.builders.processor.processing;
 
 /**
  * Enumeration of all builder configuration compiler arguments.

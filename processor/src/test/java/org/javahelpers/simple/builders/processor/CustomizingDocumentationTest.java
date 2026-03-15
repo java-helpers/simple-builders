@@ -95,10 +95,10 @@ class CustomizingDocumentationTest {
             package com.example.test;
 
             import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
-            import org.javahelpers.simple.builders.processor.dtos.FieldDto;
-            import org.javahelpers.simple.builders.processor.dtos.MethodDto;
-            import org.javahelpers.simple.builders.processor.dtos.TypeName;
-            import org.javahelpers.simple.builders.processor.util.ProcessingContext;
+            import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+            import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+            import org.javahelpers.simple.builders.processor.model.type.TypeName;
+            import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
             import java.util.List;
 
             public class TestMethodGenerator implements MethodGenerator {
@@ -139,9 +139,9 @@ class CustomizingDocumentationTest {
             package com.example.test;
 
             import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
-            import org.javahelpers.simple.builders.processor.dtos.BuilderDefinitionDto;
-            import org.javahelpers.simple.builders.processor.dtos.TypeName;
-            import org.javahelpers.simple.builders.processor.util.ProcessingContext;
+            import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
+            import org.javahelpers.simple.builders.processor.model.type.TypeName;
+            import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
             public class TestBuilderEnhancer implements BuilderEnhancer {
                 @Override
@@ -180,39 +180,51 @@ class CustomizingDocumentationTest {
             package com.example.test;
 
             import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
-            import org.javahelpers.simple.builders.processor.dtos.FieldDto;
-            import org.javahelpers.simple.builders.processor.dtos.MethodDto;
-            import org.javahelpers.simple.builders.processor.dtos.MethodParameterDto;
-            import org.javahelpers.simple.builders.processor.dtos.TypeName;
-            import org.javahelpers.simple.builders.processor.util.ProcessingContext;
+            import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+            import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+            import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
+            import org.javahelpers.simple.builders.processor.model.type.TypeName;
+            import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
             import java.util.List;
 
             public class CustomHelperGenerator implements MethodGenerator {
+
+                private static final TypeName TRACKED_VALUE_TYPE =
+                    new TypeName("org.javahelpers.simple.builders.core.util", "TrackedValue");
+
                 @Override
                 public boolean appliesTo(FieldDto field, TypeName dtoType, ProcessingContext context) {
-                    return "java.lang.String".equals(field.getFieldType().getFullQualifiedName());
+                    return "java.lang.String".equals(field.getFieldType().getFullQualifiedName())
+                        && field.hasAnnotation("javax.validation.constraints.Email");
                 }
 
                 @Override
                 public List<MethodDto> generateMethods(FieldDto field, TypeName builderType, ProcessingContext context) {
                     String fieldName = field.getFieldNameInBuilder();
-                    String methodName = "custom" + capitalize(fieldName);
+                    String methodName = "validated" + capitalize(fieldName);
 
                     MethodDto method = new MethodDto(methodName, builderType);
 
+                    String parameterName = fieldName;
                     MethodParameterDto parameter = new MethodParameterDto();
-                    parameter.setParameterName("value");
+                    parameter.setParameterName(parameterName);
                     parameter.setParameterTypeName(new TypeName("java.lang", "String"));
                     method.addParameter(parameter);
 
-                    method.setCode("return this." + fieldName + "(value.toUpperCase());");
+                    method.setCode(String.format(
+                        "if (%s != null && %s.contains(\\"@\\")) { " +
+                        "this.%s = $builderFieldWrapper:T.changedValue(%s); " +
+                        "return this; } " +
+                        "throw new IllegalArgumentException(\\"Invalid email: \\" + %s);",
+                        parameterName, parameterName, fieldName, parameterName, parameterName));
+                    method.addArgument("builderFieldWrapper", TRACKED_VALUE_TYPE);
 
                     return List.of(method);
                 }
 
                 @Override
                 public int getPriority() {
-                    return 200;
+                    return 1000;
                 }
 
                 private String capitalize(String str) {
@@ -241,10 +253,10 @@ class CustomizingDocumentationTest {
             package com.example.test;
 
             import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
-            import org.javahelpers.simple.builders.processor.dtos.FieldDto;
-            import org.javahelpers.simple.builders.processor.dtos.MethodDto;
-            import org.javahelpers.simple.builders.processor.dtos.TypeName;
-            import org.javahelpers.simple.builders.processor.util.ProcessingContext;
+            import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+            import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+            import org.javahelpers.simple.builders.processor.model.type.TypeName;
+            import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
             import java.util.List;
 
             public class HighPriorityGenerator implements MethodGenerator {
@@ -284,10 +296,10 @@ class CustomizingDocumentationTest {
             package com.example.test;
 
             import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
-            import org.javahelpers.simple.builders.processor.dtos.FieldDto;
-            import org.javahelpers.simple.builders.processor.dtos.MethodDto;
-            import org.javahelpers.simple.builders.processor.dtos.TypeName;
-            import org.javahelpers.simple.builders.processor.util.ProcessingContext;
+            import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+            import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+            import org.javahelpers.simple.builders.processor.model.type.TypeName;
+            import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
             import java.util.List;
 
             public class SafeGenerator implements MethodGenerator {
@@ -333,10 +345,10 @@ class CustomizingDocumentationTest {
             package com.example.test;
 
             import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
-            import org.javahelpers.simple.builders.processor.dtos.FieldDto;
-            import org.javahelpers.simple.builders.processor.dtos.MethodDto;
-            import org.javahelpers.simple.builders.processor.dtos.TypeName;
-            import org.javahelpers.simple.builders.processor.util.ProcessingContext;
+            import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+            import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+            import org.javahelpers.simple.builders.processor.model.type.TypeName;
+            import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
             import java.util.List;
 
             public class ConditionalGenerator implements MethodGenerator {
@@ -387,11 +399,11 @@ class CustomizingDocumentationTest {
             package com.example.test;
 
             import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
-            import org.javahelpers.simple.builders.processor.dtos.FieldDto;
-            import org.javahelpers.simple.builders.processor.dtos.MethodDto;
-            import org.javahelpers.simple.builders.processor.dtos.MethodParameterDto;
-            import org.javahelpers.simple.builders.processor.dtos.TypeName;
-            import org.javahelpers.simple.builders.processor.util.ProcessingContext;
+            import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+            import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+            import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
+            import org.javahelpers.simple.builders.processor.model.type.TypeName;
+            import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
             import java.util.List;
 
             public class CustomValidationGenerator implements MethodGenerator {
@@ -401,7 +413,6 @@ class CustomizingDocumentationTest {
 
                 @Override
                 public boolean appliesTo(FieldDto field, TypeName dtoType, ProcessingContext context) {
-                    // Only apply to String fields with @Email annotation
                     return "java.lang.String".equals(field.getFieldType().getFullQualifiedName())
                         && field.hasAnnotation("javax.validation.constraints.Email");
                 }
@@ -462,11 +473,11 @@ class CustomizingDocumentationTest {
             package com.example.test;
 
             import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
-            import org.javahelpers.simple.builders.processor.dtos.AnnotationDto;
-            import org.javahelpers.simple.builders.processor.dtos.BuilderDefinitionDto;
-            import org.javahelpers.simple.builders.processor.dtos.MethodDto;
-            import org.javahelpers.simple.builders.processor.dtos.TypeName;
-            import org.javahelpers.simple.builders.processor.util.ProcessingContext;
+            import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
+            import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
+            import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+            import org.javahelpers.simple.builders.processor.model.type.TypeName;
+            import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
             public class CustomValidationEnhancer implements BuilderEnhancer {
 
@@ -572,11 +583,11 @@ class CustomizingDocumentationTest {
             package com.example.test;
 
             import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
-            import org.javahelpers.simple.builders.processor.dtos.FieldDto;
-            import org.javahelpers.simple.builders.processor.dtos.MethodDto;
-            import org.javahelpers.simple.builders.processor.dtos.MethodParameterDto;
-            import org.javahelpers.simple.builders.processor.dtos.TypeName;
-            import org.javahelpers.simple.builders.processor.util.ProcessingContext;
+            import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+            import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+            import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
+            import org.javahelpers.simple.builders.processor.model.type.TypeName;
+            import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
             import java.util.List;
 
             public class DateParserGenerator implements MethodGenerator {
@@ -636,11 +647,11 @@ class CustomizingDocumentationTest {
             package com.example.test;
 
             import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
-            import org.javahelpers.simple.builders.processor.dtos.BuilderDefinitionDto;
-            import org.javahelpers.simple.builders.processor.dtos.MethodDto;
-            import org.javahelpers.simple.builders.processor.dtos.MethodParameterDto;
-            import org.javahelpers.simple.builders.processor.dtos.TypeName;
-            import org.javahelpers.simple.builders.processor.util.ProcessingContext;
+            import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
+            import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+            import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
+            import org.javahelpers.simple.builders.processor.model.type.TypeName;
+            import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
             public class BuilderFactoryEnhancer implements BuilderEnhancer {
 

@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.util;
+package org.javahelpers.simple.builders.processor.generators;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -30,7 +30,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.processing.ProcessingEnvironment;
 import org.apache.commons.lang3.StringUtils;
-import org.javahelpers.simple.builders.processor.enums.CompilerArgumentsEnum;
+import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsEnum;
+import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsReader;
 
 /**
  * Utility class for filtering generators and enhancers based on deactivation patterns.

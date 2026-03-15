@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.dtos;
+package org.javahelpers.simple.builders.processor.model.annotation;
 
 import static java.util.Objects.requireNonNull;
 
@@ -30,6 +30,7 @@ import java.util.List;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.javahelpers.simple.builders.processor.model.type.TypeName;
 
 /**
  * InterfaceName represents a Java interface type with package and class name information.

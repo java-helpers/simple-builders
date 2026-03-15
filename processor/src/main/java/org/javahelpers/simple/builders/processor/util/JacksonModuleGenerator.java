@@ -31,10 +31,11 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import org.apache.commons.collections4.SetValuedMap;
 import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
-import org.javahelpers.simple.builders.processor.dtos.BuilderConfiguration;
-import org.javahelpers.simple.builders.processor.dtos.BuilderDefinitionDto;
-import org.javahelpers.simple.builders.processor.dtos.JacksonModuleDefinitionDto;
-import org.javahelpers.simple.builders.processor.dtos.JacksonModuleEntryDto;
+import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
+import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
+import org.javahelpers.simple.builders.processor.model.integration.JacksonModuleDefinitionDto;
+import org.javahelpers.simple.builders.processor.model.integration.JacksonModuleEntryDto;
+import org.javahelpers.simple.builders.processor.processing.ProcessingLogger;
 
 /**
  * Generates Jackson SimpleModules to register all generated builders.

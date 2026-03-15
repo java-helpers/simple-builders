@@ -22,10 +22,11 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.dtos;
+package org.javahelpers.simple.builders.processor.model.type;
 
 import java.util.LinkedList;
 import java.util.List;
+import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 
 /**
  * Represents a nested type (interface or class) to be generated inside the builder.

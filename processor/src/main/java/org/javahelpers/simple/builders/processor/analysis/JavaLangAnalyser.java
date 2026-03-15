@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.util;
+package org.javahelpers.simple.builders.processor.analysis;
 
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.STATIC;
@@ -42,6 +42,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilderConstructor;
+import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
 /** Helperclass for extrating specific information from existing classes. */
 public final class JavaLangAnalyser {

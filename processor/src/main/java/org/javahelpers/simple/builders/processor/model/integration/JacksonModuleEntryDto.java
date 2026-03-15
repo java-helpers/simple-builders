@@ -22,7 +22,9 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.dtos;
+package org.javahelpers.simple.builders.processor.model.integration;
+
+import org.javahelpers.simple.builders.processor.model.type.TypeName;
 
 /**
  * Represents an entry for a Jackson module registration. Maps a DTO type to its builder type.
