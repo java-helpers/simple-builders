@@ -4,7 +4,7 @@
   
   <groupId>io.github.java-helpers</groupId>
   <artifactId>simple-builders-example</artifactId>
-  <version>0.3.0</version>
+  <version>0.4.0</version>
   <name>Simple Builders - Example</name>
   <packaging>jar</packaging>
   <description>Example usage of Simple Builders - not meant for deployment</description>
