@@ -103,7 +103,7 @@ class BuilderProcessorTest {
         "[DEBUG] ├─ Extracting builder definition from: test.VerboseTest",
         "[DEBUG] │  ├─ Builder will be generated as: test.VerboseTestBuilder",
         "[DEBUG] │  ├─ Analysing setters for finding fields",
-        "[DEBUG] │  │  ├─ Analyzing method: setName with 1 parameter(s)",
+        "[DEBUG] │  │  ├─ Analyzing method: setName(java.lang.String)",
         "[DEBUG] │  │  │  ├─ Processing method generators",
         "[DEBUG] │  │  │  │  ├─ Applying: BasicSetterGenerator (priority: 100)",
         "[DEBUG] │  │  │  │  ├─ Applying: StringFormatHelperGenerator (priority: 80)",
