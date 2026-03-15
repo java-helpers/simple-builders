@@ -80,11 +80,11 @@ A single generator can implement both field-level and builder-level functionalit
 package com.yourpackage;
 
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
-import org.javahelpers.simple.builders.processor.dtos.FieldDto;
-import org.javahelpers.simple.builders.processor.dtos.MethodDto;
-import org.javahelpers.simple.builders.processor.dtos.MethodParameterDto;
-import org.javahelpers.simple.builders.processor.dtos.TypeName;
-import org.javahelpers.simple.builders.processor.util.ProcessingContext;
+import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
+import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
 import java.util.List;
 
@@ -142,9 +142,9 @@ public class CustomValidationGenerator implements MethodGenerator {
 package com.yourpackage;
 
 import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
-import org.javahelpers.simple.builders.processor.dtos.BuilderDefinitionDto;
-import org.javahelpers.simple.builders.processor.dtos.TypeName;
-import org.javahelpers.simple.builders.processor.util.ProcessingContext;
+import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
+import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
 public class CustomValidationEnhancer implements BuilderEnhancer {
     
@@ -261,31 +261,31 @@ compileJava {
 
 | Generator | Purpose | Priority |
 |-----------|---------|----------|
-| [`BasicSetterGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/BasicSetterGenerator.java) | Basic field setters | 100 |
-| [`SupplierMethodGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/SupplierMethodGenerator.java) | Supplier-based setters | 80 |
+| [`BasicSetterGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/field/BasicSetterGenerator.java) | Basic field setters | 100 |
+| [`SupplierMethodGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/util/SupplierMethodGenerator.java) | Supplier-based setters | 80 |
 | [`FieldInstanceConsumerGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/field/FieldInstanceConsumerGenerator.java) | Consumer-based setters | 80 |
 | [`NestedBuilderConsumerGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/field/NestedBuilderConsumerGenerator.java) | Builder consumer methods | 80 |
-| [`MapConsumerGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/MapConsumerGenerator.java) | Map consumer methods | 80 |
-| [`ListConsumerGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/ListConsumerGenerator.java) | List consumer methods | 80 |
-| [`SetConsumerGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/SetConsumerGenerator.java) | Set consumer methods | 80 |
-| [`StringFormatHelperGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/StringFormatHelperGenerator.java) | String.format helpers | 80 |
-| [`VarArgsHelperGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/VarArgsHelperGenerator.java) | Varargs helpers | 50 |
-| [`AddToCollectionGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/AddToCollectionGenerator.java) | add2FieldName methods for List/Set | 30 |
-| [`ArrayConversionGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/ArrayConversionGenerator.java) | Array-from-List conversion methods | 35 |
-| [`ArrayBuilderConsumerGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/ArrayBuilderConsumerGenerator.java) | ArrayListBuilder consumer methods for arrays | 25 |
+| [`MapConsumerGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/field/MapConsumerGenerator.java) | Map consumer methods | 80 |
+| [`ListConsumerGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/field/ListConsumerGenerator.java) | List consumer methods | 80 |
+| [`SetConsumerGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/field/SetConsumerGenerator.java) | Set consumer methods | 80 |
+| [`StringFormatHelperGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/util/StringFormatHelperGenerator.java) | String.format helpers | 80 |
+| [`VarArgsHelperGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/util/VarArgsHelperGenerator.java) | Varargs helpers | 50 |
+| [`AddToCollectionGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/field/AddToCollectionGenerator.java) | add2FieldName methods for List/Set | 30 |
+| [`ArrayConversionGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/field/ArrayConversionGenerator.java) | Array-from-List conversion methods | 35 |
+| [`ArrayBuilderConsumerGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/field/ArrayBuilderConsumerGenerator.java) | ArrayListBuilder consumer methods for arrays | 25 |
 
 ### Builder-Level Generators
 
 | Generator | Purpose | Priority |
 |----------|---------|----------|
-| [`ConditionalEnhancer`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/ConditionalEnhancer.java) | Conditional logic methods | 100 |
-| [`JacksonAnnotationEnhancer`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/JacksonAnnotationEnhancer.java) | Jackson annotations | 100 |
-| [`CoreMethodsEnhancer`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/CoreMethodsEnhancer.java) | Core builder methods (build, create, toString) | 100 |
-| [`WithInterfaceEnhancer`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/WithInterfaceEnhancer.java) | With interface implementation | 90 |
-| [`InterfaceEnhancer`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/InterfaceEnhancer.java) | Builder interface implementation | 90 |
-| [`GeneratedAnnotationEnhancer`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/GeneratedAnnotationEnhancer.java) | @Generated annotation | 10 |
-| [`BuilderImplementationAnnotationEnhancer`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/BuilderImplementationAnnotationEnhancer.java) | @BuilderImplementation annotation | 10 |
-| [`ClassJavaDocEnhancer`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/ClassJavaDocEnhancer.java) | Class-level JavaDoc | 10 |
+| [`ConditionalEnhancer`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/builder/ConditionalEnhancer.java) | Conditional logic methods | 100 |
+| [`JacksonAnnotationEnhancer`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/builder/JacksonAnnotationEnhancer.java) | Jackson annotations | 100 |
+| [`CoreMethodsEnhancer`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/builder/CoreMethodsEnhancer.java) | Core builder methods (build, create, toString) | 100 |
+| [`WithInterfaceEnhancer`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/builder/WithInterfaceEnhancer.java) | With interface implementation | 90 |
+| [`InterfaceEnhancer`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/builder/InterfaceEnhancer.java) | Builder interface implementation | 90 |
+| [`GeneratedAnnotationEnhancer`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/builder/GeneratedAnnotationEnhancer.java) | @Generated annotation | 10 |
+| [`BuilderImplementationAnnotationEnhancer`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/builder/BuilderImplementationAnnotationEnhancer.java) | @BuilderImplementation annotation | 10 |
+| [`ClassJavaDocEnhancer`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/builder/ClassJavaDocEnhancer.java) | Class-level JavaDoc | 10 |
 
 ## Best Practices
 
