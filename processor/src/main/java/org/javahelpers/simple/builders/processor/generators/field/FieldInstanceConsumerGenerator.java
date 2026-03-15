@@ -80,7 +80,7 @@ import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
  *     .build();
  * }</pre>
  */
-public class FieldConsumerGenerator implements MethodGenerator {
+public class FieldInstanceConsumerGenerator implements MethodGenerator {
 
   private static final int PRIORITY = 54;
 

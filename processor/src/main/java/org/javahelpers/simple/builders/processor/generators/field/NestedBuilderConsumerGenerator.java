@@ -22,13 +22,13 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.generators;
+package org.javahelpers.simple.builders.processor.generators.field;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import org.javahelpers.simple.builders.processor.generators.field.MethodGeneratorUtil;
+import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
@@ -75,7 +75,7 @@ import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
  *     .build();
  * }</pre>
  */
-public class BuilderConsumerGenerator implements MethodGenerator {
+public class NestedBuilderConsumerGenerator implements MethodGenerator {
 
   private static final int PRIORITY = 55;
 

@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.generators.helper;
+package org.javahelpers.simple.builders.processor.generators.util;
 
 import java.util.Collections;
 import java.util.List;

@@ -18,7 +18,7 @@
  * <ul>
  *   <li>field - Generators that create methods for individual fields
  *   <li>builder - Enhancers that modify the entire builder
- *   <li>helper - Utility generators for common patterns
+ *   <li>util - Utility generators for common patterns
  * </ul>
  */
 package org.javahelpers.simple.builders.processor.generators;

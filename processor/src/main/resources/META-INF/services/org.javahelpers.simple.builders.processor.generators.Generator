@@ -4,16 +4,16 @@
 
 # Field-level method generators (priority 100-25)
 org.javahelpers.simple.builders.processor.generators.field.BasicSetterGenerator
-org.javahelpers.simple.builders.processor.generators.helper.StringFormatHelperGenerator
-org.javahelpers.simple.builders.processor.generators.helper.OptionalHelperGenerator
-org.javahelpers.simple.builders.processor.generators.BuilderConsumerGenerator
-org.javahelpers.simple.builders.processor.generators.field.FieldConsumerGenerator
+org.javahelpers.simple.builders.processor.generators.util.StringFormatHelperGenerator
+org.javahelpers.simple.builders.processor.generators.util.OptionalHelperGenerator
+org.javahelpers.simple.builders.processor.generators.field.NestedBuilderConsumerGenerator
+org.javahelpers.simple.builders.processor.generators.field.FieldInstanceConsumerGenerator
 org.javahelpers.simple.builders.processor.generators.field.ListConsumerGenerator
 org.javahelpers.simple.builders.processor.generators.field.MapConsumerGenerator
 org.javahelpers.simple.builders.processor.generators.field.SetConsumerGenerator
 org.javahelpers.simple.builders.processor.generators.field.StringBuilderConsumerGenerator
-org.javahelpers.simple.builders.processor.generators.helper.SupplierMethodGenerator
-org.javahelpers.simple.builders.processor.generators.helper.VarArgsHelperGenerator
+org.javahelpers.simple.builders.processor.generators.util.SupplierMethodGenerator
+org.javahelpers.simple.builders.processor.generators.util.VarArgsHelperGenerator
 org.javahelpers.simple.builders.processor.generators.field.AddToCollectionGenerator
 org.javahelpers.simple.builders.processor.generators.field.ArrayConversionGenerator
 org.javahelpers.simple.builders.processor.generators.field.ArrayBuilderConsumerGenerator

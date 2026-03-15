@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.generators.helper;
+package org.javahelpers.simple.builders.processor.generators.util;
 
 import static org.javahelpers.simple.builders.processor.analysis.JavaLangMapper.map2TypeName;
 import static org.javahelpers.simple.builders.processor.analysis.TypeNameAnalyser.isParameterizedOptional;
