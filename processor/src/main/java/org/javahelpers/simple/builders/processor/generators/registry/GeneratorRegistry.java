@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.generators;
+package org.javahelpers.simple.builders.processor.generators.registry;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -30,6 +30,9 @@ import java.util.List;
 import java.util.ServiceLoader;
 import javax.annotation.processing.ProcessingEnvironment;
 import org.apache.commons.collections4.CollectionUtils;
+import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
+import org.javahelpers.simple.builders.processor.generators.Generator;
+import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;

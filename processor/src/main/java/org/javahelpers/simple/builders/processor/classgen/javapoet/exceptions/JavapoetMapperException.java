@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.classgen.javapoet;
+package org.javahelpers.simple.builders.processor.classgen.javapoet.exceptions;
 
 /** Special exception for errors in mapping to Javapoet classes. */
 public class JavapoetMapperException extends RuntimeException {

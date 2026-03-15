@@ -27,7 +27,7 @@ package org.javahelpers.simple.builders.processor.processing;
 import static java.util.stream.Collectors.toSet;
 import static org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyser.*;
 import static org.javahelpers.simple.builders.processor.analysis.JavaLangMapper.map2MethodParameter;
-import static org.javahelpers.simple.builders.processor.validation.AnnotationValidator.validateAnnotatedElement;
+import static org.javahelpers.simple.builders.processor.processing.AnnotationValidator.validateAnnotatedElement;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -43,7 +43,7 @@ import org.javahelpers.simple.builders.core.annotations.IgnoreInBuilder;
 import org.javahelpers.simple.builders.processor.analysis.FieldAnnotationExtractor;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyser;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
-import org.javahelpers.simple.builders.processor.classgen.javapoet.BuilderException;
+import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 import org.javahelpers.simple.builders.processor.generators.field.MethodGeneratorUtil;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;

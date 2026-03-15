@@ -22,14 +22,14 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.validation;
+package org.javahelpers.simple.builders.processor.processing;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.NestingKind;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
-import org.javahelpers.simple.builders.processor.classgen.javapoet.BuilderException;
+import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 
 /**
  * AnnotationValidator validates the positions of annotations. Responsible for throwing exceptions

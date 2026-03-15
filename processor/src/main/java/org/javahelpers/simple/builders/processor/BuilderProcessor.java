@@ -42,8 +42,9 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder.Template;
-import org.javahelpers.simple.builders.processor.classgen.javapoet.BuilderException;
 import org.javahelpers.simple.builders.processor.classgen.javapoet.JavaCodeGenerator;
+import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
+import org.javahelpers.simple.builders.processor.generators.integration.JacksonModuleGenerator;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.processing.BuilderConfigurationReader;
@@ -51,7 +52,6 @@ import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsEnu
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsReader;
 import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 import org.javahelpers.simple.builders.processor.processing.ProcessingLogger;
-import org.javahelpers.simple.builders.processor.util.JacksonModuleGenerator;
 
 /**
  * BuilderProcessor is an annotation processor for execution in generate-sources phase. The
