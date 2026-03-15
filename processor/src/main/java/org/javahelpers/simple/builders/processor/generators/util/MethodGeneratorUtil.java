@@ -30,7 +30,6 @@ import java.util.function.Consumer;
 import javax.lang.model.element.Modifier;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
-import org.javahelpers.simple.builders.processor.classgen.javapoet.JavapoetMapper;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
@@ -96,7 +95,7 @@ public final class MethodGeneratorUtil {
    * @return the Modifier for method access, or null for package-private
    */
   public static Modifier getMethodAccessModifier(ProcessingContext context) {
-    return JavapoetMapper.map2Modifier(context.getConfiguration().getMethodAccess());
+    return JavaLangMapper.mapAccessModifier(context.getConfiguration().getMethodAccess());
   }
 
   /**
