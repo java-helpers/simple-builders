@@ -2681,7 +2681,6 @@ class BuilderProcessorTest {
   }
 
   @Test
-  // @Disabled("Missing feature: #131")
   void shouldHandleOverloadedSettersForSameFieldWithoutConflicts() {
     // Given
     String packageName = "test";
