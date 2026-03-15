@@ -35,7 +35,6 @@ import com.google.testing.compile.JavaFileObjects;
 import javax.tools.JavaFileObject;
 import org.javahelpers.simple.builders.processor.testing.ProcessorAsserts;
 import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 /** Tests for the {@link BuilderProcessor} class. */
@@ -2682,7 +2681,7 @@ class BuilderProcessorTest {
   }
 
   @Test
-  @Disabled("Missing feature: #131")
+  // @Disabled("Missing feature: #131")
   void shouldHandleOverloadedSettersForSameFieldWithoutConflicts() {
     // Given
     String packageName = "test";
@@ -2697,7 +2696,7 @@ class BuilderProcessorTest {
                 private java.util.List<String> names;
 
                 public java.util.List<String> getNames() { return names; }
-                public void setNames(String[] names) { this.names = names; }
+                public void setNames(java.util.List<String> names) { this.names = names; }
                 public void setNames(String... names) { this.names = java.util.List.of(names); }
             """);
 
