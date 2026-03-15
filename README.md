@@ -302,7 +302,7 @@ Or in Maven:
 </plugin>
 ```
 
-📋 **For a complete list of all available compiler arguments, see [`CompilerArgumentsEnum`](processor/src/main/java/org/javahelpers/simple/builders/processor/enums/CompilerArgumentsEnum.java).**
+📋 **For a complete list of all available compiler arguments, see [`CompilerArgumentsEnum`](processor/src/main/java/org/javahelpers/simple/builders/processor/processing/CompilerArgumentsEnum.java).**
 
 📖 **For complete documentation, examples, and all available options, see the [Configuration Guide](docs/CONFIGURATION.md).**
 

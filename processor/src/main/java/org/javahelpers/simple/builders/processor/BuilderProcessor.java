@@ -24,7 +24,7 @@
 
 package org.javahelpers.simple.builders.processor;
 
-import static org.javahelpers.simple.builders.processor.util.BuilderDefinitionCreator.extractFromElement;
+import static org.javahelpers.simple.builders.processor.processing.BuilderDefinitionCreator.extractFromElement;
 
 import com.google.auto.service.AutoService;
 import java.util.ArrayList;
@@ -42,16 +42,16 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder.Template;
-import org.javahelpers.simple.builders.processor.dtos.BuilderConfiguration;
-import org.javahelpers.simple.builders.processor.dtos.BuilderDefinitionDto;
-import org.javahelpers.simple.builders.processor.enums.CompilerArgumentsEnum;
+import org.javahelpers.simple.builders.processor.classgen.javapoet.JavaCodeGenerator;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
-import org.javahelpers.simple.builders.processor.util.BuilderConfigurationReader;
-import org.javahelpers.simple.builders.processor.util.CompilerArgumentsReader;
-import org.javahelpers.simple.builders.processor.util.JacksonModuleGenerator;
-import org.javahelpers.simple.builders.processor.util.JavaCodeGenerator;
-import org.javahelpers.simple.builders.processor.util.ProcessingContext;
-import org.javahelpers.simple.builders.processor.util.ProcessingLogger;
+import org.javahelpers.simple.builders.processor.generators.integration.JacksonModuleGenerator;
+import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
+import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
+import org.javahelpers.simple.builders.processor.processing.BuilderConfigurationReader;
+import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsEnum;
+import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsReader;
+import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
+import org.javahelpers.simple.builders.processor.processing.ProcessingLogger;
 
 /**
  * BuilderProcessor is an annotation processor for execution in generate-sources phase. The

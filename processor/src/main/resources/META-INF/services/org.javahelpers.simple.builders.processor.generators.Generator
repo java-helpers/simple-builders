@@ -3,27 +3,27 @@
 # Generators can provide field-level method generation, builder-level enhancement, or both
 
 # Field-level method generators (priority 100-25)
-org.javahelpers.simple.builders.processor.generators.BasicSetterGenerator
-org.javahelpers.simple.builders.processor.generators.StringFormatHelperGenerator
-org.javahelpers.simple.builders.processor.generators.OptionalHelperGenerator
-org.javahelpers.simple.builders.processor.generators.BuilderConsumerGenerator
-org.javahelpers.simple.builders.processor.generators.FieldConsumerGenerator
-org.javahelpers.simple.builders.processor.generators.ListConsumerGenerator
-org.javahelpers.simple.builders.processor.generators.MapConsumerGenerator
-org.javahelpers.simple.builders.processor.generators.SetConsumerGenerator
-org.javahelpers.simple.builders.processor.generators.StringBuilderConsumerGenerator
-org.javahelpers.simple.builders.processor.generators.SupplierMethodGenerator
-org.javahelpers.simple.builders.processor.generators.VarArgsHelperGenerator
-org.javahelpers.simple.builders.processor.generators.AddToCollectionGenerator
-org.javahelpers.simple.builders.processor.generators.ArrayConversionGenerator
-org.javahelpers.simple.builders.processor.generators.ArrayBuilderConsumerGenerator
+org.javahelpers.simple.builders.processor.generators.field.BasicSetterGenerator
+org.javahelpers.simple.builders.processor.generators.field.StringFormatHelperGenerator
+org.javahelpers.simple.builders.processor.generators.field.OptionalHelperGenerator
+org.javahelpers.simple.builders.processor.generators.field.NestedBuilderConsumerGenerator
+org.javahelpers.simple.builders.processor.generators.field.FieldInstanceConsumerGenerator
+org.javahelpers.simple.builders.processor.generators.field.ListConsumerGenerator
+org.javahelpers.simple.builders.processor.generators.field.MapConsumerGenerator
+org.javahelpers.simple.builders.processor.generators.field.SetConsumerGenerator
+org.javahelpers.simple.builders.processor.generators.field.StringBuilderConsumerGenerator
+org.javahelpers.simple.builders.processor.generators.field.SupplierMethodGenerator
+org.javahelpers.simple.builders.processor.generators.field.VarArgsHelperGenerator
+org.javahelpers.simple.builders.processor.generators.field.AddToCollectionGenerator
+org.javahelpers.simple.builders.processor.generators.field.ArrayConversionGenerator
+org.javahelpers.simple.builders.processor.generators.field.ArrayBuilderConsumerGenerator
 
 # Builder-level enhancers (priority 100-10)
-org.javahelpers.simple.builders.processor.generators.GeneratedAnnotationEnhancer
-org.javahelpers.simple.builders.processor.generators.BuilderImplementationAnnotationEnhancer
-org.javahelpers.simple.builders.processor.generators.JacksonAnnotationEnhancer
-org.javahelpers.simple.builders.processor.generators.InterfaceEnhancer
-org.javahelpers.simple.builders.processor.generators.ClassJavaDocEnhancer
-org.javahelpers.simple.builders.processor.generators.CoreMethodsEnhancer
-org.javahelpers.simple.builders.processor.generators.WithInterfaceEnhancer
-org.javahelpers.simple.builders.processor.generators.ConditionalEnhancer
+org.javahelpers.simple.builders.processor.generators.builder.GeneratedAnnotationEnhancer
+org.javahelpers.simple.builders.processor.generators.builder.BuilderImplementationAnnotationEnhancer
+org.javahelpers.simple.builders.processor.generators.builder.JacksonAnnotationEnhancer
+org.javahelpers.simple.builders.processor.generators.builder.InterfaceEnhancer
+org.javahelpers.simple.builders.processor.generators.builder.ClassJavaDocEnhancer
+org.javahelpers.simple.builders.processor.generators.builder.CoreMethodsEnhancer
+org.javahelpers.simple.builders.processor.generators.builder.WithInterfaceEnhancer
+org.javahelpers.simple.builders.processor.generators.builder.ConditionalEnhancer
