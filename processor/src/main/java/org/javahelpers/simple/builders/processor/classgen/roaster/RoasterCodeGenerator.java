@@ -149,6 +149,7 @@ public class RoasterCodeGenerator {
     applyVisibility(
         source, JavaLangMapper.mapAccessModifier(builderDef.getConfiguration().getBuilderAccess()));
     addGenericDeclarations(source, builderDef.getGenerics());
+    addTrackedValueStaticImports(source);
     collectImports(builderDef).forEach(source::addImport);
     for (InterfaceName interfaceName : builderDef.getInterfaces()) {
       source.addInterface(RoasterMapper.mapInterfaceToTypeName(interfaceName));
@@ -160,14 +161,9 @@ public class RoasterCodeGenerator {
 
   private String renderClassSource(JavaClassSource source, BuilderDefinitionDto builderDef) {
     String rendered = source.toUnformattedString();
-    rendered = injectTrackedValueStaticImports(rendered);
-    rendered = normalizeJavadocs(rendered);
-    rendered = normalizeBuilderClassJavadoc(rendered);
     rendered =
         simplifyImportedTypeReferences(
             rendered, collectImports(builderDef), builderDef.getBuilderTypeName().getPackageName());
-    rendered = normalizeToStringChains(rendered);
-    rendered = alignClosingBraceSpacing(rendered);
     return rendered;
   }
 
@@ -580,18 +576,18 @@ public class RoasterCodeGenerator {
       if (!inTags && line.startsWith("@")) {
         inTags = true;
       }
-      if (inTags) {
+      if (inTags && line.startsWith("@")) {
         int firstSpace = line.indexOf(' ');
         if (firstSpace > 1) {
           source
               .getJavaDoc()
-              .addTagValue(line.substring(1, firstSpace), line.substring(firstSpace + 1));
+              .addTagValue(line.substring(0, firstSpace), line.substring(firstSpace + 1));
         } else if (line.length() > 1) {
-          source.getJavaDoc().addTagValue(line.substring(1), "");
+          source.getJavaDoc().addTagValue(line, "");
         }
       } else {
         if (text.length() > 0) {
-          text.append("\n");
+          text.append('\n');
         }
         text.append(line);
       }
@@ -665,25 +661,10 @@ public class RoasterCodeGenerator {
     }
   }
 
-  private String injectTrackedValueStaticImports(String sourceCode) {
-    String staticImports =
-        "import static "
-            + TrackedValue.class.getName()
-            + ".changedValue;\n"
-            + "import static "
-            + TrackedValue.class.getName()
-            + ".initialValue;\n"
-            + "import static "
-            + TrackedValue.class.getName()
-            + ".unsetValue;\n\n";
-
-    int packageEnd = sourceCode.startsWith("package ") ? sourceCode.indexOf("\n\n") : -1;
-    if (packageEnd >= 0) {
-      return sourceCode.substring(0, packageEnd + 2)
-          + staticImports
-          + sourceCode.substring(packageEnd + 2);
-    }
-    return staticImports + sourceCode;
+  private void addTrackedValueStaticImports(JavaClassSource source) {
+    source.addImport(TrackedValue.class.getName() + ".changedValue").setStatic(true);
+    source.addImport(TrackedValue.class.getName() + ".initialValue").setStatic(true);
+    source.addImport(TrackedValue.class.getName() + ".unsetValue").setStatic(true);
   }
 
   private String alignClosingBraceSpacing(String sourceCode) {
