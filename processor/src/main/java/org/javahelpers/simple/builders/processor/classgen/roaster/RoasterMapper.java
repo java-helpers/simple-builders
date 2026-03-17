@@ -34,7 +34,6 @@ import org.javahelpers.simple.builders.processor.model.method.MethodCodeDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodCodePlaceholder;
 import org.javahelpers.simple.builders.processor.model.method.MethodCodeStringPlaceholder;
 import org.javahelpers.simple.builders.processor.model.method.MethodCodeTypePlaceholder;
-import org.javahelpers.simple.builders.processor.model.type.GenericParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameArray;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
@@ -107,36 +106,6 @@ public final class RoasterMapper {
   }
 
   /**
-   * Maps generic declarations like {@code <T extends Number>}.
-   *
-   * @param generics generic parameter list
-   * @return source code for generic declaration or empty string
-   */
-  public static String mapGenericDeclaration(List<GenericParameterDto> generics) {
-    if (CollectionUtils.isEmpty(generics)) {
-      return "";
-    }
-    String value =
-        generics.stream()
-            .map(RoasterMapper::mapGenericDeclaration)
-            .reduce((a, b) -> a + ", " + b)
-            .orElse("");
-    return "<" + value + ">";
-  }
-
-  private static String mapGenericDeclaration(GenericParameterDto genericParameter) {
-    if (CollectionUtils.isEmpty(genericParameter.getUpperBounds())) {
-      return genericParameter.getName();
-    }
-    String bounds =
-        genericParameter.getUpperBounds().stream()
-            .map(RoasterMapper::mapType)
-            .reduce((a, b) -> a + " & " + b)
-            .orElse("");
-    return genericParameter.getName() + " extends " + bounds;
-  }
-
-  /**
    * Maps an annotation to source code.
    *
    * @param annotationDto annotation DTO
@@ -168,16 +137,6 @@ public final class RoasterMapper {
       return member.getValue();
     }
     return member.getKey() + " = " + member.getValue();
-  }
-
-  /**
-   * Maps a list of annotations to source code lines.
-   *
-   * @param annotations annotations to map
-   * @return list of annotation strings
-   */
-  public static List<String> mapAnnotations(List<AnnotationDto> annotations) {
-    return annotations.stream().map(RoasterMapper::mapAnnotation).toList();
   }
 
   /**

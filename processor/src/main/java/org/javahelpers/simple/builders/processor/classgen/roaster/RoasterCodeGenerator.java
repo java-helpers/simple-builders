@@ -24,11 +24,7 @@
 
 package org.javahelpers.simple.builders.processor.classgen.roaster;
 
-import static javax.lang.model.element.Modifier.PUBLIC;
-import static org.javahelpers.simple.builders.processor.classgen.roaster.RoasterMapper.mapAnnotation;
-import static org.javahelpers.simple.builders.processor.classgen.roaster.RoasterMapper.mapAnnotations;
 import static org.javahelpers.simple.builders.processor.classgen.roaster.RoasterMapper.mapBoxedType;
-import static org.javahelpers.simple.builders.processor.classgen.roaster.RoasterMapper.mapGenericDeclaration;
 import static org.javahelpers.simple.builders.processor.classgen.roaster.RoasterMapper.mapType;
 import static org.javahelpers.simple.builders.processor.classgen.roaster.RoasterMapper.quote;
 import static org.javahelpers.simple.builders.processor.classgen.roaster.RoasterMapper.resolveCodeTemplate;
@@ -86,7 +82,6 @@ public class RoasterCodeGenerator {
   private static final String FORMATTER_PROFILE_RESOURCE = "eclipse-java-format.xml";
   private static final String INDENT = "  ";
   private static final String DOUBLE_INDENT = INDENT + INDENT;
-  private static final String TRIPLE_INDENT = DOUBLE_INDENT + INDENT;
 
   /** Processing environment for accessing filer and element utilities. */
   private final ProcessingEnvironment processingEnv;
@@ -389,88 +384,6 @@ public class RoasterCodeGenerator {
     method.setBody(body);
   }
 
-  private String buildMethodSignature(
-      MethodDto methodDto, boolean nestedTypeMethod, boolean interfaceMethod) {
-    StringBuilder signature = new StringBuilder();
-    Modifier modifier = methodDto.getModifier().orElse(null);
-    String genericDeclaration = mapGenericDeclaration(methodDto.getGenericParameters());
-
-    if (nestedTypeMethod) {
-      signature.append(PUBLIC.toString().toLowerCase()).append(" ");
-      if (interfaceMethod
-          && methodDto.getMethodCodeDto() != null
-          && StringUtils.isNotBlank(methodDto.getMethodCodeDto().getCodeFormat())) {
-        signature.append("default ");
-      }
-    } else {
-      signature.append(buildMethodPrefix(modifier, methodDto.isStatic(), genericDeclaration));
-    }
-
-    if (nestedTypeMethod && StringUtils.isNotBlank(genericDeclaration)) {
-      signature.append(genericDeclaration).append(" ");
-    }
-
-    signature
-        .append(mapType(methodDto.getReturnType()))
-        .append(" ")
-        .append(methodDto.getMethodName())
-        .append("(")
-        .append(buildParameterList(methodDto.getParameters()))
-        .append(")");
-    return signature.toString();
-  }
-
-  private String buildMethodPrefix(Modifier modifier, boolean isStatic, String genericDeclaration) {
-    StringBuilder prefix = new StringBuilder();
-    if (modifier != null) {
-      prefix.append(toSourceModifier(modifier)).append(" ");
-    }
-    if (isStatic) {
-      prefix.append("static ");
-    }
-    if (StringUtils.isNotBlank(genericDeclaration)) {
-      prefix.append(genericDeclaration).append(" ");
-    }
-    return prefix.toString();
-  }
-
-  private String buildParameterList(List<MethodParameterDto> parameters) {
-    StringBuilder result = new StringBuilder();
-    for (int i = 0; i < parameters.size(); i++) {
-      if (i > 0) {
-        result.append(", ");
-      }
-      result.append(buildParameter(parameters.get(i), i == parameters.size() - 1));
-    }
-    return result.toString();
-  }
-
-  private String buildParameter(MethodParameterDto paramDto, boolean lastParameter) {
-    StringBuilder parameter = new StringBuilder();
-    if (CollectionUtils.isNotEmpty(paramDto.getAnnotations())) {
-      parameter
-          .append(
-              mapAnnotations(paramDto.getAnnotations()).stream()
-                  .reduce((a, b) -> a + " " + b)
-                  .orElse(""))
-          .append(" ");
-    }
-
-    if (lastParameter && paramDto.getParameterType() instanceof TypeNameArray arrayType) {
-      parameter
-          .append(mapType(arrayType.getTypeOfArray()))
-          .append("...")
-          .append(" ")
-          .append(paramDto.getParameterName());
-    } else {
-      parameter
-          .append(mapType(paramDto.getParameterType()))
-          .append(" ")
-          .append(paramDto.getParameterName());
-    }
-    return parameter.toString();
-  }
-
   private void appendNestedTypes(JavaClassSource source, BuilderDefinitionDto builderDef) {
     if (CollectionUtils.isEmpty(builderDef.getNestedTypes())) {
       return;
@@ -666,175 +579,6 @@ public class RoasterCodeGenerator {
     source.addImport(TrackedValue.class.getName() + ".unsetValue").setStatic(true);
   }
 
-  private String alignClosingBraceSpacing(String sourceCode) {
-    String normalized = sourceCode.replace("\r\n", "\n").replace("\r", "\n");
-    normalized = normalized.replaceAll("\\n{3,}", "\n\n");
-    normalized = normalized.replaceAll("\\n\\s*\\n\\}", "\n}");
-    normalized = normalized.replaceAll("\\}\\s+\\}", "}\n}");
-    normalized = normalized.replaceAll("(?m)^}(\\n([ \\t]+)})", "\t}$1");
-    normalized = normalized.replaceAll("(import [^\\n]+;)(/\\*\\*)", "$1\n\n$2");
-    normalized = normalized.replaceAll("@java\\.lang\\.Override", "@Override");
-    normalized =
-        normalized.replaceAll("@javax\\.annotation\\.processing\\.Generated", "@Generated");
-    normalized =
-        normalized.replaceAll(
-            "@org\\.javahelpers\\.simple\\.builders\\.core\\.annotations\\.BuilderImplementation",
-            "@BuilderImplementation");
-    return normalized;
-  }
-
-  private String simplifyImportedTypeReferences(
-      String sourceCode, Set<String> imports, String currentPackage) {
-    String normalized = sourceCode;
-    for (String importedType : imports) {
-      if (StringUtils.isBlank(importedType) || !importedType.contains(".")) {
-        continue;
-      }
-      String simpleName = importedType.substring(importedType.lastIndexOf('.') + 1);
-      normalized = normalized.replace("@" + importedType, "@" + simpleName);
-    }
-    if (StringUtils.isNotBlank(currentPackage)) {
-      String escapedPackage = java.util.regex.Pattern.quote(currentPackage);
-      normalized =
-          normalized.replaceAll(
-              "(\\(\\s*)@" + escapedPackage + "\\.([A-Za-z_$][A-Za-z0-9_$]*)", "$1@$2");
-      normalized =
-          normalized.replaceAll(
-              "(,\\s*)@" + escapedPackage + "\\.([A-Za-z_$][A-Za-z0-9_$]*)", "$1@$2");
-    }
-    return normalized;
-  }
-
-  private String normalizeJavadocs(String sourceCode) {
-    String normalized = sourceCode.replace("\r\n", "\n").replace("\r", "\n");
-    java.util.regex.Pattern pattern =
-        java.util.regex.Pattern.compile(
-            "(?m)^([ \\t]*)/\\*\\*(.*?)^[ \\t]*\\*/", java.util.regex.Pattern.DOTALL);
-    java.util.regex.Matcher matcher = pattern.matcher(normalized);
-    StringBuffer result = new StringBuffer();
-    while (matcher.find()) {
-      String indent = matcher.group(1);
-      String content = matcher.group(2);
-      String replacement = rebuildJavadocBlock(indent, content);
-      matcher.appendReplacement(result, java.util.regex.Matcher.quoteReplacement(replacement));
-    }
-    matcher.appendTail(result);
-    return result.toString();
-  }
-
-  private String rebuildJavadocBlock(String indent, String content) {
-    StringBuilder rebuilt = new StringBuilder();
-    rebuilt.append(indent).append("/**\n");
-    String[] lines = content.split("\n", -1);
-    int start = 0;
-    int end = lines.length;
-    while (start < end && lines[start].isBlank()) {
-      start++;
-    }
-    while (end > start && lines[end - 1].isBlank()) {
-      end--;
-    }
-    for (int i = start; i < end; i++) {
-      String rawLine = lines[i];
-      String line = rawLine.stripLeading();
-      if (line.startsWith("*")) {
-        line = line.substring(1).stripLeading();
-      }
-      if (line.startsWith("<p>")) {
-        rebuilt.append(indent).append(" * <p>\n");
-        String remainder = line.substring(3).stripLeading();
-        if (!remainder.isEmpty()) {
-          rebuilt.append(indent).append(" * ").append(remainder).append("\n");
-        }
-        continue;
-      }
-      if (line.startsWith("param ")) {
-        line = "@param " + line.substring("param ".length());
-      } else if (line.startsWith("return ")) {
-        line = "@return " + line.substring("return ".length());
-      } else if (line.startsWith("throws ")) {
-        line = "@throws " + line.substring("throws ".length());
-      } else if (line.startsWith("see ")) {
-        line = "@see " + line.substring("see ".length());
-      }
-      if (line.isBlank()) {
-        rebuilt.append(indent).append(" *\n");
-      } else {
-        rebuilt.append(indent).append(" * ").append(line).append("\n");
-      }
-    }
-    rebuilt.append(indent).append(" */");
-    return rebuilt.toString();
-  }
-
-  private String normalizeBuilderClassJavadoc(String sourceCode) {
-    String normalized = sourceCode.replace("\r\n", "\n").replace("\r", "\n");
-    normalized = normalized.replace("\n<p>\n", "\n * <p>\n");
-    normalized =
-        normalized.replace(
-            "\nThis builder provides a fluent API for creating instances of",
-            "\n * This builder provides a fluent API for creating instances of");
-    normalized =
-        normalized.replace(
-            "\nmethod chaining and validation. Use the static {@code create()} method",
-            "\n * method chaining and validation. Use the static {@code create()} method");
-    normalized =
-        normalized.replace(
-            "\nto obtain a new builder instance, configure the desired properties using",
-            "\n * to obtain a new builder instance, configure the desired properties using");
-    normalized =
-        normalized.replace(
-            "\nthe setter methods, and then call {@code build()} to create the final DTO.",
-            "\n * the setter methods, and then call {@code build()} to create the final DTO.");
-    return normalized;
-  }
-
-  private String normalizeToStringChains(String sourceCode) {
-    java.util.regex.Pattern pattern =
-        java.util.regex.Pattern.compile(
-            "(?m)^([ \\t]*)return new ToStringBuilder\\(this, BuilderToStringStyle\\.INSTANCE\\)([\\s\\S]*?)\\.toString\\(\\);");
-    java.util.regex.Matcher matcher = pattern.matcher(sourceCode);
-    StringBuffer result = new StringBuffer();
-    while (matcher.find()) {
-      String indent = matcher.group(1);
-      String middle = matcher.group(2);
-      java.util.regex.Matcher appendMatcher =
-          java.util.regex.Pattern.compile("\\.append\\([\\s\\S]*?\\)").matcher(middle);
-      StringBuilder replacement = new StringBuilder();
-      replacement
-          .append(indent)
-          .append("return new ToStringBuilder(this, BuilderToStringStyle.INSTANCE)\n");
-      while (appendMatcher.find()) {
-        replacement.append(indent).append("    ").append(appendMatcher.group()).append("\n");
-      }
-      replacement.append(indent).append("    .toString();");
-      matcher.appendReplacement(
-          result, java.util.regex.Matcher.quoteReplacement(replacement.toString()));
-    }
-    matcher.appendTail(result);
-    return result.toString();
-  }
-
-  private void appendClassJavadoc(StringBuilder source, String javadoc, String indent) {
-    appendJavadoc(source, javadoc, indent);
-  }
-
-  private void appendImports(StringBuilder source, Set<String> imports) {
-    if (imports.isEmpty()) {
-      return;
-    }
-    imports.stream()
-        .sorted()
-        .forEach(value -> source.append("import ").append(value).append(";\n"));
-    source.append("\n");
-  }
-
-  private void appendTrackedValueStaticImports(StringBuilder source) {
-    source.append("import static ").append(TrackedValue.class.getName()).append(".changedValue;\n");
-    source.append("import static ").append(TrackedValue.class.getName()).append(".initialValue;\n");
-    source.append("import static ").append(TrackedValue.class.getName()).append(".unsetValue;\n\n");
-  }
-
   private Set<String> collectImports(BuilderDefinitionDto builderDef) {
     Set<String> imports = new LinkedHashSet<>();
     String currentPackage = builderDef.getBuilderTypeName().getPackageName();
@@ -964,7 +708,7 @@ public class RoasterCodeGenerator {
     if (StringUtils.isBlank(fqn)
         || !fqn.contains(".")
         || fqn.startsWith("java.lang.")
-        || StringUtils.equals(packageNameOf(fqn), currentPackage)) {
+        || java.util.Objects.equals(packageNameOf(fqn), currentPackage)) {
       return;
     }
     imports.add(fqn);
@@ -994,50 +738,6 @@ public class RoasterCodeGenerator {
         || code.contains("Optional.ofNullable(")) {
       imports.add(java.util.Optional.class.getName());
     }
-  }
-
-  private void appendJavadoc(StringBuilder source, String javadoc, String indent) {
-    if (StringUtils.isBlank(javadoc)) {
-      return;
-    }
-    source.append(indent).append("/**\n");
-    String normalized = javadoc.replace("\r\n", "\n").replace("\r", "\n").replaceFirst("\\n+$", "");
-    for (String line : normalized.split("\n", -1)) {
-      source.append(indent).append(" *");
-      if (!line.isEmpty()) {
-        source.append(" ").append(line.replace("*/", "* /"));
-      }
-      source.append("\n");
-    }
-    source.append(indent).append(" */\n");
-  }
-
-  private void appendAnnotations(
-      StringBuilder source, java.util.Collection<AnnotationDto> annotations, String indent) {
-    if (CollectionUtils.isEmpty(annotations)) {
-      return;
-    }
-    for (AnnotationDto annotation : annotations) {
-      source.append(indent).append(mapAnnotation(annotation)).append("\n");
-    }
-  }
-
-  private void appendIndentedBody(StringBuilder source, String body, String indent) {
-    if (StringUtils.isBlank(body)) {
-      return;
-    }
-    String normalized = body.replace("\r\n", "\n").replace("\r", "\n").replaceFirst("\\n+$", "");
-    for (String line : normalized.split("\n", -1)) {
-      if (line.isEmpty()) {
-        source.append(indent).append("\n");
-      } else {
-        source.append(indent).append(line).append("\n");
-      }
-    }
-  }
-
-  private String toSourceModifier(Modifier modifier) {
-    return modifier.toString().toLowerCase();
   }
 
   private String formatSource(String rawSource) {
