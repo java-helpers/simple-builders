@@ -364,7 +364,7 @@ This project was made possible thanks to the following:
 
 ### Tools and Libraries
 
-- **[JavaPoet](https://github.com/palantir/javapoet)** - An excellent library for generating Java source code. Originally created by Square, now maintained by Palantir. JavaPoet made it straightforward to generate clean, readable builder code.
+- **[Roaster](https://github.com/forge/roaster)** - A fluent Java source generation and formatting library from the JBoss Forge ecosystem. Roaster is used to generate and format the builder source code.
 - **[Google Compile Testing](https://github.com/google/compile-testing)** - Essential for testing annotation processors with comprehensive compilation diagnostics.
 
 ### Learning Resources
@@ -372,7 +372,7 @@ This project was made possible thanks to the following:
 The following resources were invaluable for understanding annotation processing:
 
 - **[Baeldung: Java Annotation Processing and Creating a Builder](https://www.baeldung.com/java-annotation-processing-builder)** - Comprehensive guide to annotation processing fundamentals
-- **[SkyRo Tech: Code Generation with JavaPoet in Practice](https://medium.com/skyro-tech/code-generation-with-javapoet-on-practice-bfbe8ca56a61)** - Practical examples of using JavaPoet
+- **[Roaster GitHub Repository](https://github.com/forge/roaster)** - Reference for Java source generation and formatting with Roaster
 - **[Annotation Processing Demo](https://github.com/ledungcobra/annotation-processing-demo)** by Le Dung - Hands-on examples of annotation processor implementation
 
 Thank you to all contributors and the Java community for making this project possible!

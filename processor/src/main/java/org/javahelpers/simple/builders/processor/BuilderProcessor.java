@@ -42,7 +42,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder.Template;
-import org.javahelpers.simple.builders.processor.classgen.javapoet.JavaCodeGenerator;
+import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterCodeGenerator;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 import org.javahelpers.simple.builders.processor.generators.integration.JacksonModuleGenerator;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
@@ -62,7 +62,7 @@ import org.javahelpers.simple.builders.processor.processing.ProcessingLogger;
 @SupportedAnnotationTypes("*")
 public class BuilderProcessor extends AbstractProcessor {
   private ProcessingContext context;
-  private JavaCodeGenerator codeGenerator;
+  private RoasterCodeGenerator codeGenerator;
   private JacksonModuleGenerator jacksonModuleGenerator;
   private boolean supportedJdk = true;
 
@@ -78,7 +78,7 @@ public class BuilderProcessor extends AbstractProcessor {
     logger.debug("Loaded global configuration from compiler arguments: %s", globalConfig);
 
     this.context = new ProcessingContext(logger, globalConfig, processingEnv);
-    this.codeGenerator = new JavaCodeGenerator(processingEnv, logger);
+    this.codeGenerator = new RoasterCodeGenerator(processingEnv, logger);
     this.jacksonModuleGenerator = new JacksonModuleGenerator(processingEnv, logger);
 
     // Initialize GeneratorRegistry once during processor initialization
