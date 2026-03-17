@@ -42,6 +42,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
@@ -134,7 +136,7 @@ public class RoasterCodeGenerator {
     appendNestedTypes(source, builderDef);
     logger.debug("Class-level annotations added");
     logger.debug("Builder source created");
-    return formatSource(renderClassSource(source, builderDef));
+    return renderClassSource(source, builderDef);
   }
 
   private JavaClassSource createClassSource(BuilderDefinitionDto builderDef) {
@@ -150,7 +152,7 @@ public class RoasterCodeGenerator {
         source, JavaLangMapper.mapAccessModifier(builderDef.getConfiguration().getBuilderAccess()));
     addGenericDeclarations(source, builderDef.getGenerics());
     addTrackedValueStaticImports(source);
-    collectImports(builderDef).forEach(source::addImport);
+    collectImports(builderDef).stream().sorted().forEach(source::addImport);
     for (InterfaceName interfaceName : builderDef.getInterfaces()) {
       source.addInterface(RoasterMapper.mapInterfaceToTypeName(interfaceName));
     }
@@ -161,10 +163,7 @@ public class RoasterCodeGenerator {
 
   private String renderClassSource(JavaClassSource source, BuilderDefinitionDto builderDef) {
     String rendered = source.toUnformattedString();
-    rendered =
-        simplifyImportedTypeReferences(
-            rendered, collectImports(builderDef), builderDef.getBuilderTypeName().getPackageName());
-    return rendered;
+    return formatSource(rendered);
   }
 
   private void appendFields(JavaClassSource source, BuilderDefinitionDto builderDef) {
@@ -602,8 +601,8 @@ public class RoasterCodeGenerator {
       return;
     }
     for (AnnotationDto annotationDto : annotations) {
-      AnnotationSource<?> annotation = source.addAnnotation();
-      annotation.setName(annotationDto.getAnnotationType().getClassName());
+      AnnotationSource<?> annotation =
+          source.addAnnotation(annotationDto.getAnnotationType().getFullQualifiedName());
       for (Map.Entry<String, String> member : annotationDto.getMembers().entrySet()) {
         if ("value".equals(member.getKey())) {
           annotation.setLiteralValue(member.getValue());
@@ -841,6 +840,8 @@ public class RoasterCodeGenerator {
     String currentPackage = builderDef.getBuilderTypeName().getPackageName();
 
     addImportIfNeeded(imports, currentPackage, TrackedValue.class.getName());
+    addImportIfNeeded(imports, currentPackage, Consumer.class.getName());
+    addImportIfNeeded(imports, currentPackage, Supplier.class.getName());
     addTypeImports(imports, currentPackage, builderDef.getBuildingTargetTypeName());
     addTypeImports(imports, currentPackage, builderDef.getBuilderTypeName());
     builderDef
@@ -963,7 +964,7 @@ public class RoasterCodeGenerator {
     if (StringUtils.isBlank(fqn)
         || !fqn.contains(".")
         || fqn.startsWith("java.lang.")
-        || currentPackage.equals(packageNameOf(fqn))) {
+        || StringUtils.equals(packageNameOf(fqn), currentPackage)) {
       return;
     }
     imports.add(fqn);
