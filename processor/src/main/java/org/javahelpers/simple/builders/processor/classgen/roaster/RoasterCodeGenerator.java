@@ -34,11 +34,13 @@ import static org.javahelpers.simple.builders.processor.classgen.roaster.Roaster
 import static org.javahelpers.simple.builders.processor.classgen.roaster.RoasterMapper.resolveCodeTemplate;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Writer;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Modifier;
@@ -75,9 +77,11 @@ import org.jboss.forge.roaster.model.source.JavaSource;
 import org.jboss.forge.roaster.model.source.MethodSource;
 import org.jboss.forge.roaster.model.source.ParameterSource;
 import org.jboss.forge.roaster.model.source.TypeVariableSource;
+import org.jboss.forge.roaster.model.util.FormatterProfileReader;
 
 /** Roaster-based code generator for builder source files. */
 public class RoasterCodeGenerator {
+  private static final String FORMATTER_PROFILE_RESOURCE = "eclipse-java-format.xml";
   private static final String INDENT = "  ";
   private static final String DOUBLE_INDENT = INDENT + INDENT;
   private static final String TRIPLE_INDENT = DOUBLE_INDENT + INDENT;
@@ -88,6 +92,8 @@ public class RoasterCodeGenerator {
   /** Logger for debug output during code generation. */
   private final ProcessingLogger logger;
 
+  private final Properties formatterProperties;
+
   /**
    * Constructor for RoasterCodeGenerator.
    *
@@ -97,6 +103,7 @@ public class RoasterCodeGenerator {
   public RoasterCodeGenerator(ProcessingEnvironment processingEnv, ProcessingLogger logger) {
     this.processingEnv = processingEnv;
     this.logger = logger;
+    this.formatterProperties = loadFormatterProperties();
   }
 
   /**
@@ -1052,7 +1059,39 @@ public class RoasterCodeGenerator {
   }
 
   private String formatSource(String rawSource) {
-    return rawSource;
+    if (formatterProperties == null) {
+      return rawSource;
+    }
+    try {
+      return Roaster.format(formatterProperties, rawSource);
+    } catch (Exception ex) {
+      logger.warning(
+          "simple-builders: Failed to format generated source with bundled Eclipse formatter profile: %s",
+          StringUtils.defaultIfBlank(ex.getMessage(), ex.getClass().getSimpleName()));
+      return rawSource;
+    }
+  }
+
+  private Properties loadFormatterProperties() {
+    try (InputStream inputStream =
+        RoasterCodeGenerator.class
+            .getClassLoader()
+            .getResourceAsStream(FORMATTER_PROFILE_RESOURCE)) {
+      if (inputStream == null) {
+        logger.warning(
+            "simple-builders: Bundled Eclipse formatter profile '%s' was not found on the processor classpath.",
+            FORMATTER_PROFILE_RESOURCE);
+        return null;
+      }
+      FormatterProfileReader profileReader = FormatterProfileReader.fromEclipseXml(inputStream);
+      return profileReader.getDefaultProperties();
+    } catch (IOException ex) {
+      logger.warning(
+          "simple-builders: Failed to load bundled Eclipse formatter profile '%s': %s",
+          FORMATTER_PROFILE_RESOURCE,
+          StringUtils.defaultIfBlank(ex.getMessage(), ex.getClass().getSimpleName()));
+      return null;
+    }
   }
 
   private void writeBuilderClassToFile(String sourceCode, BuilderDefinitionDto builderDef)
