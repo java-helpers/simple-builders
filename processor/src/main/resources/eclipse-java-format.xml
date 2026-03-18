@@ -34,5 +34,8 @@
     <setting id="org.eclipse.jdt.core.formatter.indent_breaks_compare_to_cases" value="true"/>
     <setting id="org.eclipse.jdt.core.formatter.indent_empty_lines" value="false"/>
     <setting id="org.eclipse.jdt.core.formatter.lineSplit" value="120"/>
+    <setting id="org.eclipse.jdt.core.formatter.blank_lines_between_import_groups" value="1"/>
+    <setting id="org.eclipse.jdt.core.formatter.blank_lines_after_imports" value="1"/>
+    <setting id="org.eclipse.jdt.core.formatter.blank_lines_before_imports" value="1"/>
   </profile>
 </profiles>

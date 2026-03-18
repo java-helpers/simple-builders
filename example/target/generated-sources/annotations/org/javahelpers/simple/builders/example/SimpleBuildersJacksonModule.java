@@ -4,13 +4,12 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
 public class SimpleBuildersJacksonModule extends SimpleModule {
-  public SimpleBuildersJacksonModule() {
-    setMixInAnnotation(JacksonIntegrationDto.class, JacksonIntegrationDtoMixin.class);
+
+  @JsonDeserialize(builder = JacksonIntegrationDtoBuilder.class)
+  private interface JacksonIntegrationDtoMixin {
   }
 
-  @JsonDeserialize(
-      builder = JacksonIntegrationDtoBuilder.class
-  )
-  private interface JacksonIntegrationDtoMixin {
+  public SimpleBuildersJacksonModule() {
+    setMixInAnnotation(JacksonIntegrationDto.class, JacksonIntegrationDtoMixin.class);
   }
 }
