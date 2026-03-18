@@ -70,6 +70,7 @@ import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster.model.source.AnnotationSource;
 import org.jboss.forge.roaster.model.source.FieldSource;
 import org.jboss.forge.roaster.model.source.JavaClassSource;
+import org.jboss.forge.roaster.model.source.JavaDocSource;
 import org.jboss.forge.roaster.model.source.JavaInterfaceSource;
 import org.jboss.forge.roaster.model.source.JavaSource;
 import org.jboss.forge.roaster.model.source.MethodSource;
@@ -119,20 +120,30 @@ public class RoasterCodeGenerator {
   }
 
   private String createBuilderSource(BuilderDefinitionDto builderDef) {
-    logger.debug("Creating builder source for %s", builderDef.getBuilderTypeName());
-    logger.debug("Class builder created");
     JavaClassSource source = createClassSource(builderDef);
-    logger.debug("Class metadata added");
+    addClassMetadata(source, builderDef);
     appendFields(source, builderDef);
     appendConstructors(source, builderDef);
     appendMethods(source, builderDef);
     appendNestedTypes(source, builderDef);
-    logger.debug("Class-level annotations added");
-    logger.debug("Builder source created");
+    applyClassAnnotations(source, builderDef);
     return renderClassSource(source, builderDef);
   }
 
+  private void applyClassAnnotations(JavaClassSource source, BuilderDefinitionDto builderDef) {
+    if (CollectionUtils.isEmpty(builderDef.getClassAnnotations())) {
+      return;
+    }
+    // Adding annotations from enhancers
+    applyAnnotations(source, builderDef.getClassAnnotations());
+    logger.debug("Class-level annotations added");
+  }
+
   private JavaClassSource createClassSource(BuilderDefinitionDto builderDef) {
+    if (CollectionUtils.isNotEmpty(builderDef.getGenerics())) {
+      logger.debug("Builder has %d generic type parameter(s)", builderDef.getGenerics().size());
+    }
+
     JavaClassSource source = Roaster.create(JavaClassSource.class);
     String packageName = builderDef.getBuilderTypeName().getPackageName();
     if (StringUtils.isNotBlank(packageName)) {
@@ -141,17 +152,27 @@ public class RoasterCodeGenerator {
       source.setDefaultPackage();
     }
     source.setName(builderDef.getBuilderTypeName().getClassName());
-    applyVisibility(
-        source, JavaLangMapper.mapAccessModifier(builderDef.getConfiguration().getBuilderAccess()));
     addGenericDeclarations(source, builderDef.getGenerics());
     addTrackedValueStaticImports(source);
     collectImports(builderDef).stream().sorted().forEach(source::addImport);
+    logger.debug("Class builder created");
+    return source;
+  }
+
+  private void addClassMetadata(JavaClassSource source, BuilderDefinitionDto builderDef) {
+    // Add class JavaDoc if provided by enhancer
+    applyJavadoc(source, builderDef.getClassJavadoc());
+
+    // Set builder class access level
+    applyVisibility(
+        source, JavaLangMapper.mapAccessModifier(builderDef.getConfiguration().getBuilderAccess()));
+
+    // Adding interfaces from enhancers
     for (InterfaceName interfaceName : builderDef.getInterfaces()) {
       source.addInterface(RoasterMapper.mapInterfaceToTypeName(interfaceName));
     }
-    applyJavadoc(source, builderDef.getClassJavadoc());
-    applyAnnotations(source, builderDef.getClassAnnotations());
-    return source;
+
+    logger.debug("Class metadata added");
   }
 
   private String renderClassSource(JavaClassSource source, BuilderDefinitionDto builderDef) {
@@ -182,8 +203,11 @@ public class RoasterCodeGenerator {
     field.setType(TrackedValue.class.getSimpleName() + "<" + boxedFieldType + ">");
     field.setPrivate();
     field.setLiteralInitializer("unsetValue()");
-    applyJavadoc(
-        field,
+    applyJavaDocToField(field.getJavaDoc(), fieldDto);
+  }
+
+  private void applyJavaDocToField(JavaDocSource<?> javaDoc, FieldDto fieldDto) {
+    javaDoc.setText(
         "Tracked value for <code>%s</code>: %s."
             .formatted(
                 fieldDto.getFieldNameInBuilder(),
@@ -191,11 +215,6 @@ public class RoasterCodeGenerator {
   }
 
   private void appendConstructors(JavaClassSource source, BuilderDefinitionDto builderDef) {
-    generateConstructors(source, builderDef);
-    logger.debug("Constructors added");
-  }
-
-  private void generateConstructors(JavaClassSource source, BuilderDefinitionDto builderDef) {
     Modifier constructorAccessModifier =
         JavaLangMapper.mapAccessModifier(
             builderDef.getConfiguration().getBuilderConstructorAccess());
@@ -212,6 +231,7 @@ public class RoasterCodeGenerator {
         builderDef.getBuilderTypeName().getClassName(),
         builderDef.getAllFieldsForBuilder(),
         constructorAccessModifier);
+    logger.debug("Constructors added");
   }
 
   private void appendEmptyConstructor(
@@ -564,17 +584,21 @@ public class RoasterCodeGenerator {
     for (int i = 0; i < methodDto.getParameters().size(); i++) {
       MethodParameterDto paramDto = methodDto.getParameters().get(i);
       boolean lastParameter = i == methodDto.getParameters().size() - 1;
-      String parameterType =
-          lastParameter && paramDto.getParameterType() instanceof TypeNameArray arrayType
-              ? mapType(arrayType.getTypeOfArray())
-              : mapType(paramDto.getParameterType());
-      ParameterSource<?> parameter =
-          method.addParameter(parameterType, paramDto.getParameterName());
-      if (lastParameter && paramDto.getParameterType() instanceof TypeNameArray) {
-        parameter.setVarArgs(true);
-      }
-      applyAnnotations(parameter, paramDto.getAnnotations());
+      addParameter(method, paramDto, lastParameter);
     }
+  }
+
+  private void addParameter(
+      MethodSource<?> method, MethodParameterDto paramDto, boolean lastParameter) {
+    String parameterType =
+        lastParameter && paramDto.getParameterType() instanceof TypeNameArray arrayType
+            ? mapType(arrayType.getTypeOfArray())
+            : mapType(paramDto.getParameterType());
+    ParameterSource<?> parameter = method.addParameter(parameterType, paramDto.getParameterName());
+    if (lastParameter && paramDto.getParameterType() instanceof TypeNameArray) {
+      parameter.setVarArgs(true);
+    }
+    applyAnnotations(parameter, paramDto.getAnnotations());
   }
 
   private void addTrackedValueStaticImports(JavaClassSource source) {
