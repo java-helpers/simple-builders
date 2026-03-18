@@ -503,7 +503,10 @@ public class RoasterCodeGenerator {
     if (StringUtils.isBlank(javadoc)) {
       return;
     }
-    String normalized = javadoc.replace("\r\n", "\n").replace("\r", "\n").replaceFirst("\\n+$", "");
+    // Normalize line endings without regex to avoid ReDoS vulnerability
+    String normalized = javadoc.replace("\r\n", "\n").replace("\r", "\n");
+    // Remove trailing newlines using StringUtils
+    normalized = StringUtils.stripEnd(normalized, "\n");
     String[] lines = normalized.split("\n", -1);
     StringBuilder text = new StringBuilder();
     source.getJavaDoc().removeAllTags();
