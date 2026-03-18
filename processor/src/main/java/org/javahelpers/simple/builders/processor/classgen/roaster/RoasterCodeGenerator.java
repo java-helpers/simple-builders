@@ -127,7 +127,7 @@ public class RoasterCodeGenerator {
     appendMethods(source, builderDef);
     appendNestedTypes(source, builderDef);
     applyClassAnnotations(source, builderDef);
-    return renderClassSource(source, builderDef);
+    return renderClassSource(source);
   }
 
   private void applyClassAnnotations(JavaClassSource source, BuilderDefinitionDto builderDef) {
@@ -175,7 +175,7 @@ public class RoasterCodeGenerator {
     logger.debug("Class metadata added");
   }
 
-  private String renderClassSource(JavaClassSource source, BuilderDefinitionDto builderDef) {
+  private String renderClassSource(JavaClassSource source) {
     String rendered = source.toUnformattedString();
     return formatSource(rendered);
   }
@@ -398,7 +398,7 @@ public class RoasterCodeGenerator {
       MethodDto methodDto,
       boolean nestedTypeMethod,
       boolean interfaceMethod) {
-    MethodSource method = source.addMethod();
+    MethodSource<JavaClassSource> method = source.addMethod();
     configureMethod(method, methodDto, nestedTypeMethod, interfaceMethod);
     String body =
         methodDto.getMethodCodeDto() != null
@@ -439,9 +439,9 @@ public class RoasterCodeGenerator {
   }
 
   private void appendNestedMethod(JavaSource<?> source, MethodDto methodDto, boolean isInterface) {
-    org.jboss.forge.roaster.model.source.MethodHolderSource methodHolder =
-        (org.jboss.forge.roaster.model.source.MethodHolderSource) source;
-    MethodSource method = methodHolder.addMethod();
+    org.jboss.forge.roaster.model.source.MethodHolderSource<?> methodHolder =
+        (org.jboss.forge.roaster.model.source.MethodHolderSource<?>) source;
+    MethodSource<?> method = methodHolder.addMethod();
     configureMethod(method, methodDto, true, isInterface);
     if (methodDto.getMethodCodeDto() != null
         && StringUtils.isNotBlank(methodDto.getMethodCodeDto().getCodeFormat())) {
@@ -516,22 +516,27 @@ public class RoasterCodeGenerator {
         inTags = true;
       }
       if (inTags && line.startsWith("@")) {
-        int firstSpace = line.indexOf(' ');
-        if (firstSpace > 1) {
-          source
-              .getJavaDoc()
-              .addTagValue(line.substring(0, firstSpace), line.substring(firstSpace + 1));
-        } else if (line.length() > 1) {
-          source.getJavaDoc().addTagValue(line, "");
-        }
+        processJavadocTag(source, line);
       } else {
-        if (text.length() > 0) {
+        if (!text.isEmpty()) {
           text.append('\n');
         }
         text.append(line);
       }
     }
     source.getJavaDoc().setText(text.toString());
+  }
+
+  private void processJavadocTag(
+      org.jboss.forge.roaster.model.source.JavaDocCapableSource<?> source, String line) {
+    int firstSpace = line.indexOf(' ');
+    if (firstSpace > 1) {
+      source
+          .getJavaDoc()
+          .addTagValue(line.substring(0, firstSpace), line.substring(firstSpace + 1));
+    } else if (line.length() > 1) {
+      source.getJavaDoc().addTagValue(line, "");
+    }
   }
 
   private void applyAnnotations(
@@ -767,7 +772,7 @@ public class RoasterCodeGenerator {
   }
 
   private String formatSource(String rawSource) {
-    if (formatterProperties == null) {
+    if (formatterProperties.isEmpty()) {
       return rawSource;
     }
     try {
@@ -789,7 +794,7 @@ public class RoasterCodeGenerator {
         logger.warning(
             "simple-builders: Bundled Eclipse formatter profile '%s' was not found on the processor classpath.",
             FORMATTER_PROFILE_RESOURCE);
-        return null;
+        return new Properties();
       }
       FormatterProfileReader profileReader = FormatterProfileReader.fromEclipseXml(inputStream);
       return profileReader.getDefaultProperties();
@@ -798,7 +803,7 @@ public class RoasterCodeGenerator {
           "simple-builders: Failed to load bundled Eclipse formatter profile '%s': %s",
           FORMATTER_PROFILE_RESOURCE,
           StringUtils.defaultIfBlank(ex.getMessage(), ex.getClass().getSimpleName()));
-      return null;
+      return new Properties();
     }
   }
 
@@ -923,7 +928,7 @@ public class RoasterCodeGenerator {
       for (JacksonModuleEntryDto entry : moduleDef.getEntries()) {
         String mixinName = entry.dtoType().getClassName() + "Mixin";
         constructorBody.append(
-            "setMixInAnnotation(%s.class, %s.class);\n"
+            "setMixInAnnotation(%s.class, %s.class);%n"
                 .formatted(entry.dtoType().getClassName(), mixinName));
       }
       constructor.setBody(constructorBody.toString());
