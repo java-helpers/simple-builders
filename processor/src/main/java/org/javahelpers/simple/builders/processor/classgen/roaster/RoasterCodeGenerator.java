@@ -220,22 +220,14 @@ public class RoasterCodeGenerator {
             builderDef.getConfiguration().getBuilderConstructorAccess());
     TypeName dtoBaseClass = builderDef.getBuildingTargetTypeName();
 
-    appendEmptyConstructor(
-        source,
-        dtoBaseClass,
-        builderDef.getBuilderTypeName().getClassName(),
-        constructorAccessModifier);
+    appendEmptyConstructor(source, dtoBaseClass, constructorAccessModifier);
     appendConstructorWithInstance(
-        source,
-        dtoBaseClass,
-        builderDef.getBuilderTypeName().getClassName(),
-        builderDef.getAllFieldsForBuilder(),
-        constructorAccessModifier);
+        source, dtoBaseClass, builderDef.getAllFieldsForBuilder(), constructorAccessModifier);
     logger.debug("Constructors added");
   }
 
   private void appendEmptyConstructor(
-      JavaClassSource source, TypeName dtoClass, String builderClassName, Modifier accessModifier) {
+      JavaClassSource source, TypeName dtoClass, Modifier accessModifier) {
     MethodSource<JavaClassSource> constructor = source.addMethod();
     constructor.setConstructor(true);
     applyVisibility(constructor, accessModifier);
@@ -248,7 +240,6 @@ public class RoasterCodeGenerator {
   private void appendConstructorWithInstance(
       JavaClassSource source,
       TypeName dtoBaseClass,
-      String builderClassName,
       List<FieldDto> fields,
       Modifier accessModifier) {
     MethodSource<JavaClassSource> constructor = source.addMethod();
