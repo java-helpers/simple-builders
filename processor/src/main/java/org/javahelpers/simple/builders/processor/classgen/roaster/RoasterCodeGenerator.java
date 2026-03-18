@@ -27,7 +27,6 @@ package org.javahelpers.simple.builders.processor.classgen.roaster;
 import static org.javahelpers.simple.builders.processor.classgen.roaster.RoasterMapper.mapBoxedType;
 import static org.javahelpers.simple.builders.processor.classgen.roaster.RoasterMapper.mapType;
 import static org.javahelpers.simple.builders.processor.classgen.roaster.RoasterMapper.packageNameOf;
-import static org.javahelpers.simple.builders.processor.classgen.roaster.RoasterMapper.quote;
 import static org.javahelpers.simple.builders.processor.classgen.roaster.RoasterMapper.resolveCodeTemplate;
 
 import java.io.IOException;
@@ -81,8 +80,6 @@ import org.jboss.forge.roaster.model.util.FormatterProfileReader;
 /** Roaster-based code generator for builder source files. */
 public class RoasterCodeGenerator {
   private static final String FORMATTER_PROFILE_RESOURCE = "eclipse-java-format.xml";
-  private static final String INDENT = "  ";
-  private static final String DOUBLE_INDENT = INDENT + INDENT;
 
   /** Processing environment for accessing filer and element utilities. */
   private final ProcessingEnvironment processingEnv;
@@ -242,10 +239,10 @@ public class RoasterCodeGenerator {
     applyJavadoc(
         constructor,
         """
-        Initialisation of builder for {@code %s} by a instance.
+            Initialisation of builder for {@code %s} by a instance.
 
-        @param instance object instance for initialisiation
-        """
+            @param instance object instance for initialisiation
+            """
             .formatted(dtoBaseClass.getFullQualifiedName()));
   }
 
@@ -262,28 +259,26 @@ public class RoasterCodeGenerator {
   private void addFieldInitializationWithValidation(
       StringBuilder body, FieldDto field, String getter) {
     String fieldInBuilder = field.getFieldNameInBuilder();
-    body.append("this.")
-        .append(fieldInBuilder)
-        .append(" = initialValue(instance.")
-        .append(getter)
-        .append("());\n");
 
+    String initialisationCode =
+        """
+        this.%s = initialValue(instance.%s());
+        """
+            .formatted(fieldInBuilder, getter);
+
+    String validationCode = "";
     if (field.isNonNullable()) {
-      body.append("if (this.")
-          .append(fieldInBuilder)
-          .append(".value() == null) {\n")
-          .append(INDENT)
-          .append("throw new ")
-          .append(IllegalArgumentException.class.getSimpleName())
-          .append("(")
-          .append(
-              quote(
-                  "Cannot initialize builder from instance: field '"
-                      + fieldInBuilder
-                      + "' is marked as non-null but source object has null value"))
-          .append(");\n")
-          .append("}\n");
+      validationCode =
+          """
+
+          if (this.%s.value() == null) {
+            throw new IllegalArgumentException("Cannot initialize builder from instance: field '%s' is marked as non-null but source object has null value");
+          }
+          """
+              .formatted(fieldInBuilder, fieldInBuilder);
     }
+
+    body.append(initialisationCode).append(validationCode);
   }
 
   private void appendMethods(JavaClassSource source, BuilderDefinitionDto builderDef) {
@@ -340,7 +335,8 @@ public class RoasterCodeGenerator {
       if (existing == null) {
         signatureToMethod.put(signature, method);
       } else {
-        String existingSource = createSourceDescriptionForLogging(existing, methodToField.get(existing));
+        String existingSource =
+            createSourceDescriptionForLogging(existing, methodToField.get(existing));
         String newSource = createSourceDescriptionForLogging(method, field);
 
         if (method.getPriority() > existing.getPriority()) {
@@ -363,7 +359,7 @@ public class RoasterCodeGenerator {
     return new java.util.ArrayList<>(signatureToMethod.values());
   }
 
-    /**
+  /**
    * Creates a description string for method source identification.
    *
    * @param method method to describe
@@ -791,12 +787,12 @@ public class RoasterCodeGenerator {
       throw new BuilderException(
           null,
           """
-          Builder class '%s' already exists. This may be a manually written builder or a previously generated builder.
-          To resolve this:
-          1. If you have a manual builder, consider renaming it or removing @SimpleBuilder from the DTO
-          2. If this is from a previous compilation, clean and rebuild the project
-          3. Check that you're not trying to generate multiple builders for the same DTO
-          """
+              Builder class '%s' already exists. This may be a manually written builder or a previously generated builder.
+              To resolve this:
+              1. If you have a manual builder, consider renaming it or removing @SimpleBuilder from the DTO
+              2. If this is from a previous compilation, clean and rebuild the project
+              3. Check that you're not trying to generate multiple builders for the same DTO
+              """
               .formatted(qualifiedName));
     }
 
@@ -847,59 +843,80 @@ public class RoasterCodeGenerator {
 
     logger.info("Generating Jackson Module '%s' in package '%s'", moduleClassName, packageName);
 
-    StringBuilder source = new StringBuilder();
-    if (StringUtils.isNotBlank(packageName)) {
-      source.append("package ").append(packageName).append(";\n\n");
-    }
-    source.append("import com.fasterxml.jackson.databind.annotation.JsonDeserialize;\n");
-    source.append("import com.fasterxml.jackson.databind.module.SimpleModule;\n");
-    for (JacksonModuleEntryDto entry : moduleDef.getEntries()) {
-      appendModuleImport(source, packageName, entry.dtoType().getFullQualifiedName());
-      appendModuleImport(source, packageName, entry.builderType().getFullQualifiedName());
-    }
-    source.append("\n");
-
-    source
-        .append("public class ")
-        .append(moduleClassName)
-        .append(" extends ")
-        .append("SimpleModule")
-        .append(" {\n\n");
-
-    for (JacksonModuleEntryDto entry : moduleDef.getEntries()) {
-      String mixinName = entry.dtoType().getClassName() + "Mixin";
-      source
-          .append(INDENT)
-          .append("@JsonDeserialize(builder = ")
-          .append(entry.builderType().getClassName())
-          .append(".class)\n")
-          .append(INDENT)
-          .append("private interface ")
-          .append(mixinName)
-          .append(" {}\n\n");
-    }
-
-    source.append(INDENT).append("public ").append(moduleClassName).append("() {\n");
-    for (JacksonModuleEntryDto entry : moduleDef.getEntries()) {
-      String mixinName = entry.dtoType().getClassName() + "Mixin";
-      source
-          .append(DOUBLE_INDENT)
-          .append("setMixInAnnotation(")
-          .append(entry.dtoType().getClassName())
-          .append(".class, ")
-          .append(mixinName)
-          .append(".class);\n");
-    }
-    source.append(INDENT).append("}\n");
-    source.append("}\n");
-
     try {
-      writeSimpleClassToFile(packageName, moduleClassName, formatSource(source.toString()));
+      // Create the class using Roaster
+      JavaClassSource moduleClass = Roaster.create(JavaClassSource.class);
+      moduleClass.setPackage(packageName);
+      moduleClass.setName(moduleClassName);
+      moduleClass.setSuperType("SimpleModule");
+
+      // Collect imports in a list, sort them, then add to Roaster
+      Set<String> imports = new LinkedHashSet<>();
+      imports.add("com.fasterxml.jackson.databind.annotation.JsonDeserialize");
+      imports.add("com.fasterxml.jackson.databind.module.SimpleModule");
+
+      // Adding imports for DTO types
+      moduleDef.getEntries().stream()
+          .filter(e -> shouldAddImport(packageName, e.dtoType().getFullQualifiedName()))
+          .forEach(e -> imports.add(e.dtoType().getFullQualifiedName()));
+
+      // Adding imports for builder types
+      moduleDef.getEntries().stream()
+          .filter(e -> shouldAddImport(packageName, e.builderType().getFullQualifiedName()))
+          .forEach(e -> imports.add(e.builderType().getFullQualifiedName()));
+
+      // Sort imports and add to Roaster
+      imports.stream().sorted().forEach(moduleClass::addImport);
+
+      // Add mixin interfaces as nested interfaces
+      for (JacksonModuleEntryDto entry : moduleDef.getEntries()) {
+        String mixinName = entry.dtoType().getClassName() + "Mixin";
+
+        // Create the nested interface
+        JavaInterfaceSource mixinInterface = Roaster.create(JavaInterfaceSource.class);
+        mixinInterface.setName(mixinName);
+        mixinInterface.setPrivate();
+
+        // Add the JsonDeserialize annotation
+        AnnotationSource<JavaInterfaceSource> annotation =
+            mixinInterface.addAnnotation("JsonDeserialize");
+        annotation.setLiteralValue("builder", entry.builderType().getClassName() + ".class");
+
+        // Add as nested type to the module class
+        moduleClass.addNestedType(mixinInterface);
+      }
+
+      // Add constructor
+      MethodSource<JavaClassSource> constructor = moduleClass.addMethod();
+      constructor.setConstructor(true);
+      constructor.setPublic();
+
+      // Build constructor body
+      StringBuilder constructorBody = new StringBuilder();
+      for (JacksonModuleEntryDto entry : moduleDef.getEntries()) {
+        String mixinName = entry.dtoType().getClassName() + "Mixin";
+        constructorBody.append(
+            "setMixInAnnotation(%s.class, %s.class);\n"
+                .formatted(entry.dtoType().getClassName(), mixinName));
+      }
+      constructor.setBody(constructorBody.toString());
+
+      // Write the generated class
+      String source = formatSource(moduleClass.toString());
+      writeSimpleClassToFile(packageName, moduleClassName, source);
+
     } catch (BuilderException e) {
       logger.warning(
           "simple-builders: Error generating Jackson module for package %s: %s\n%s",
           packageName, e.getMessage(), java.util.Arrays.toString(e.getStackTrace()));
     }
+  }
+
+  private boolean shouldAddImport(String currentPackage, String fqn) {
+    return StringUtils.isNotBlank(fqn)
+        && fqn.contains(".")
+        && !fqn.startsWith("java.lang.")
+        && !currentPackage.equals(packageNameOf(fqn));
   }
 
   private void writeSimpleClassToFile(String packageName, String className, String sourceCode)
@@ -921,15 +938,5 @@ public class RoasterCodeGenerator {
               .formatted(StringUtils.isNotBlank(message) ? message : "Unknown error");
       throw new BuilderException(null, errorMessage);
     }
-  }
-
-  private void appendModuleImport(StringBuilder source, String currentPackage, String fqn) {
-    if (StringUtils.isBlank(fqn)
-        || !fqn.contains(".")
-        || fqn.startsWith("java.lang.")
-        || currentPackage.equals(packageNameOf(fqn))) {
-      return;
-    }
-    source.append("import ").append(fqn).append(";\n");
   }
 }
