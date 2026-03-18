@@ -26,6 +26,7 @@ package org.javahelpers.simple.builders.processor.classgen.roaster;
 
 import static org.javahelpers.simple.builders.processor.classgen.roaster.RoasterMapper.mapBoxedType;
 import static org.javahelpers.simple.builders.processor.classgen.roaster.RoasterMapper.mapType;
+import static org.javahelpers.simple.builders.processor.classgen.roaster.RoasterMapper.packageNameOf;
 import static org.javahelpers.simple.builders.processor.classgen.roaster.RoasterMapper.quote;
 import static org.javahelpers.simple.builders.processor.classgen.roaster.RoasterMapper.resolveCodeTemplate;
 
@@ -339,8 +340,8 @@ public class RoasterCodeGenerator {
       if (existing == null) {
         signatureToMethod.put(signature, method);
       } else {
-        String existingSource = getSourceDescription(existing, methodToField.get(existing));
-        String newSource = getSourceDescription(method, field);
+        String existingSource = createSourceDescriptionForLogging(existing, methodToField.get(existing));
+        String newSource = createSourceDescriptionForLogging(method, field);
 
         if (method.getPriority() > existing.getPriority()) {
           signatureToMethod.put(signature, method);
@@ -362,7 +363,14 @@ public class RoasterCodeGenerator {
     return new java.util.ArrayList<>(signatureToMethod.values());
   }
 
-  private String getSourceDescription(MethodDto method, FieldDto field) {
+    /**
+   * Creates a description string for method source identification.
+   *
+   * @param method method to describe
+   * @param field associated field (may be null)
+   * @return description string for logging/debugging
+   */
+  public static String createSourceDescriptionForLogging(MethodDto method, FieldDto field) {
     if (field == null) {
       return "core method '" + method.getMethodName() + "'";
     }
@@ -712,11 +720,6 @@ public class RoasterCodeGenerator {
       return;
     }
     imports.add(fqn);
-  }
-
-  private String packageNameOf(String fqn) {
-    int idx = fqn.lastIndexOf('.');
-    return idx < 0 ? "" : fqn.substring(0, idx);
   }
 
   private void addBodyImports(Set<String> imports, String currentPackage, MethodDto method) {

@@ -207,6 +207,17 @@ public final class RoasterMapper {
     return "\"" + escaped + "\"";
   }
 
+  /**
+   * Extracts package name from fully qualified name.
+   *
+   * @param fqn fully qualified name
+   * @return package name or empty string if no package
+   */
+  public static String packageNameOf(String fqn) {
+    int idx = fqn.lastIndexOf('.');
+    return idx < 0 ? "" : fqn.substring(0, idx);
+  }
+
   private static String prependTypeUseAnnotations(
       String baseType, List<AnnotationDto> annotations) {
     if (CollectionUtils.isEmpty(annotations)) {
