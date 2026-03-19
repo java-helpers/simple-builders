@@ -463,6 +463,8 @@ class BuilderConfigurationReaderTest {
         import static org.javahelpers.simple.builders.core.util.TrackedValue.unsetValue;
 
         import java.util.List;
+        import java.util.function.Consumer;
+        import java.util.function.Supplier;
         import org.apache.commons.lang3.builder.ToStringBuilder;
         import org.javahelpers.simple.builders.core.interfaces.IBuilderBase;
         import org.javahelpers.simple.builders.core.util.BuilderToStringStyle;
@@ -471,17 +473,16 @@ class BuilderConfigurationReaderTest {
         /**
          * Builder for {@code test.PersonDto}.
          * <p>
-         * This builder provides a fluent API for creating instances of test.PersonDto with
-         * method chaining and validation. Use the static {@code create()} method
-         * to obtain a new builder instance, configure the desired properties using
-         * the setter methods, and then call {@code build()} to create the final DTO.
+         * This builder provides a fluent API for creating instances of test.PersonDto with method chaining and validation. Use
+         * the static {@code create()} method to obtain a new builder instance, configure the desired properties using the
+         * setter methods, and then call {@code build()} to create the final DTO.
          */
         public class PersonDtoMinimalBuilder implements IBuilderBase<PersonDto> {
+
           /**
            * Tracked value for <code>name</code>: name.
            */
           private TrackedValue<String> name = unsetValue();
-
           /**
            * Tracked value for <code>tags</code>: tags.
            */
@@ -552,8 +553,7 @@ class BuilderConfigurationReaderTest {
            */
           @Override
           public String toString() {
-            return new ToStringBuilder(this, BuilderToStringStyle.INSTANCE)
-                .append("name", this.name)
+            return new ToStringBuilder(this, BuilderToStringStyle.INSTANCE).append("name", this.name)
                 .append("tags", this.tags)
                 .toString();
           }

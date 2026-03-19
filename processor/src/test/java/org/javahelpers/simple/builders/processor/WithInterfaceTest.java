@@ -52,7 +52,8 @@ class WithInterfaceTest {
          */
         public interface With {
             /**
-             * Initializes a builder from an  instance of this class, using methods of this builder to change values and returns the new built object.
+             * Initializes a builder from an instance of this class, using methods of this builder to change values and returns
+             * the new built object.
              *
              * @param b the consumer to apply modifications
              * @return the modified instance
@@ -62,7 +63,9 @@ class WithInterfaceTest {
                 try {
                     builder = new ProjectBuilder(Project.class.cast(this));
                 } catch (ClassCastException ex) {
-                    throw new IllegalArgumentException("The interface 'ProjectBuilder.With' should only be implemented by classes, which could be casted to 'Project'", ex);
+                    throw new IllegalArgumentException(
+                        "The interface 'ProjectBuilder.With' should only be implemented by classes, which could be casted to 'Project'",
+                        ex);
                 }
                 b.accept(builder);
                 return builder.build();
@@ -77,7 +80,9 @@ class WithInterfaceTest {
                 try {
                     return new ProjectBuilder(Project.class.cast(this));
                 } catch (ClassCastException ex) {
-                    throw new IllegalArgumentException("The interface 'ProjectBuilder.With' should only be implemented by classes, which could be casted to 'Project'", ex);
+                    throw new IllegalArgumentException(
+                        "The interface 'ProjectBuilder.With' should only be implemented by classes, which could be casted to 'Project'",
+                        ex);
                 }
             }
         }
@@ -121,7 +126,8 @@ class WithInterfaceTest {
          */
         public interface With {
             /**
-             * Initializes a builder from an  instance of this class, using methods of this builder to change values and returns the new built object.
+             * Initializes a builder from an instance of this class, using methods of this builder to change values and returns
+             * the new built object.
              *
              * @param b the consumer to apply modifications
              * @return the modified instance
@@ -131,7 +137,9 @@ class WithInterfaceTest {
                 try {
                     builder = new UserBuilder(User.class.cast(this));
                 } catch (ClassCastException ex) {
-                    throw new IllegalArgumentException("The interface 'UserBuilder.With' should only be implemented by classes, which could be casted to 'User'", ex);
+                    throw new IllegalArgumentException(
+                        "The interface 'UserBuilder.With' should only be implemented by classes, which could be casted to 'User'",
+                        ex);
                 }
                 b.accept(builder);
                 return builder.build();
@@ -146,7 +154,9 @@ class WithInterfaceTest {
                 try {
                     return new UserBuilder(User.class.cast(this));
                 } catch (ClassCastException ex) {
-                    throw new IllegalArgumentException("The interface 'UserBuilder.With' should only be implemented by classes, which could be casted to 'User'", ex);
+                    throw new IllegalArgumentException(
+                        "The interface 'UserBuilder.With' should only be implemented by classes, which could be casted to 'User'",
+                        ex);
                 }
             }
         }
@@ -187,7 +197,8 @@ class WithInterfaceTest {
          */
         public interface With {
             /**
-             * Initializes a builder from an  instance of this class, using methods of this builder to change values and returns the new built object.
+             * Initializes a builder from an instance of this class, using methods of this builder to change values and returns
+             * the new built object.
              *
              * @param b the consumer to apply modifications
              * @return the modified instance
@@ -197,7 +208,9 @@ class WithInterfaceTest {
                 try {
                     builder = new ConfigBuilder(Config.class.cast(this));
                 } catch (ClassCastException ex) {
-                    throw new IllegalArgumentException("The interface 'ConfigBuilder.With' should only be implemented by classes, which could be casted to 'Config'", ex);
+                    throw new IllegalArgumentException(
+                        "The interface 'ConfigBuilder.With' should only be implemented by classes, which could be casted to 'Config'",
+                        ex);
                 }
                 b.accept(builder);
                 return builder.build();
@@ -212,7 +225,9 @@ class WithInterfaceTest {
                 try {
                     return new ConfigBuilder(Config.class.cast(this));
                 } catch (ClassCastException ex) {
-                    throw new IllegalArgumentException("The interface 'ConfigBuilder.With' should only be implemented by classes, which could be casted to 'Config'", ex);
+                    throw new IllegalArgumentException(
+                        "The interface 'ConfigBuilder.With' should only be implemented by classes, which could be casted to 'Config'",
+                        ex);
                 }
             }
         }

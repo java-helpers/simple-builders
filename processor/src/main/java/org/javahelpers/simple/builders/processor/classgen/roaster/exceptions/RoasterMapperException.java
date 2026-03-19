@@ -22,17 +22,17 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.classgen.javapoet.exceptions;
+package org.javahelpers.simple.builders.processor.classgen.roaster.exceptions;
 
-/** Special exception for errors in mapping to Javapoet classes. */
-public class JavapoetMapperException extends RuntimeException {
+/** Special exception for errors in mapping to Roaster classes. */
+public class RoasterMapperException extends RuntimeException {
 
   /**
    * Creating an exception with message and parameters.
    *
    * @param cause root cause of current exception, containing stacktrace
    */
-  public JavapoetMapperException(Throwable cause) {
+  public RoasterMapperException(Throwable cause) {
     super(cause.getMessage(), cause);
   }
 
@@ -40,9 +40,9 @@ public class JavapoetMapperException extends RuntimeException {
    * Creating an exception with message and parameters.
    *
    * @param message A specific message, supports String.format arguments
-   * @param args Arguments for Stringlformat on message
+   * @param args Arguments for String.format on message
    */
-  public JavapoetMapperException(String message, Object... args) {
+  public RoasterMapperException(String message, Object... args) {
     super(String.format(message, args));
   }
 
@@ -51,9 +51,9 @@ public class JavapoetMapperException extends RuntimeException {
    *
    * @param cause root cause of current exception, containing stacktrace
    * @param message A specific message, supports String.format arguments
-   * @param args Arguments for Stringlformat on message
+   * @param args Arguments for String.format on message
    */
-  public JavapoetMapperException(Throwable cause, String message, Object... args) {
+  public RoasterMapperException(Throwable cause, String message, Object... args) {
     super(String.format(message, args), cause);
   }
 }

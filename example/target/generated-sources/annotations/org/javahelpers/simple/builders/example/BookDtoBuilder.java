@@ -3,7 +3,6 @@ package org.javahelpers.simple.builders.example;
 import static org.javahelpers.simple.builders.core.util.TrackedValue.changedValue;
 import static org.javahelpers.simple.builders.core.util.TrackedValue.initialValue;
 import static org.javahelpers.simple.builders.core.util.TrackedValue.unsetValue;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -11,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.javahelpers.simple.builders.core.util.BuilderToStringStyle;
 import org.javahelpers.simple.builders.core.util.TrackedValue;
@@ -19,101 +20,83 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  * Builder for {@code org.javahelpers.simple.builders.example.BookDto}.
  * <p>
  * This builder provides a fluent API for creating instances of org.javahelpers.simple.builders.example.BookDto with
- * method chaining and validation. Use the static {@code create()} method
- * to obtain a new builder instance, configure the desired properties using
- * the setter methods, and then call {@code build()} to create the final DTO.
+ * method chaining and validation. Use the static {@code create()} method to obtain a new builder instance, configure
+ * the desired properties using the setter methods, and then call {@code build()} to create the final DTO.
  */
 public class BookDtoBuilder {
+
   /**
    * Tracked value for <code>author</code>: the book author to set.
    */
   private TrackedValue<String> author = unsetValue();
-
   /**
    * Tracked value for <code>available</code>: true if available, false otherwise.
    */
   private TrackedValue<Boolean> available = unsetValue();
-
   /**
    * Tracked value for <code>category</code>: the category code to set.
    */
   private TrackedValue<Character> category = unsetValue();
-
   /**
    * Tracked value for <code>discount</code>: the discount percentage to set.
    */
   private TrackedValue<Float> discount = unsetValue();
-
   /**
    * Tracked value for <code>edition</code>: the edition number to set.
    */
   private TrackedValue<Short> edition = unsetValue();
-
   /**
    * Tracked value for <code>exactPrice</code>: the exact book price to set.
    */
   private TrackedValue<BigDecimal> exactPrice = unsetValue();
-
   /**
    * Tracked value for <code>genres</code>: the set of genres to set.
    */
   private TrackedValue<Set<String>> genres = unsetValue();
-
   /**
    * Tracked value for <code>isbn</code>: the ISBN to set.
    */
   private TrackedValue<String> isbn = unsetValue();
-
   /**
    * Tracked value for <code>lastUpdated</code>: the last update timestamp to set.
    */
   private TrackedValue<LocalDateTime> lastUpdated = unsetValue();
-
   /**
    * Tracked value for <code>metadata</code>: the metadata map to set.
    */
   private TrackedValue<Map<String, String>> metadata = unsetValue();
-
   /**
    * Tracked value for <code>pages</code>: the page count to set.
    */
   private TrackedValue<Integer> pages = unsetValue();
-
   /**
    * Tracked value for <code>price</code>: the book price to set.
    */
   private TrackedValue<Double> price = unsetValue();
-
   /**
    * Tracked value for <code>publishDate</code>: the publication date to set.
    */
   private TrackedValue<LocalDate> publishDate = unsetValue();
-
   /**
    * Tracked value for <code>publisher</code>: the publisher to set.
    */
   private TrackedValue<PersonDto> publisher = unsetValue();
-
   /**
    * Tracked value for <code>rating</code>: the book rating to set.
    */
   private TrackedValue<Byte> rating = unsetValue();
-
   /**
    * Tracked value for <code>salesCount</code>: the sales count to set.
    */
   private TrackedValue<Long> salesCount = unsetValue();
-
   /**
    * Tracked value for <code>subtitle</code>: an Optional containing the subtitle to set.
    */
   private TrackedValue<Optional<String>> subtitle = unsetValue();
-
   /**
    * Tracked value for <code>tags</code>: the list of tags to set.
    */
   private TrackedValue<List<String>> tags = unsetValue();
-
   /**
    * Tracked value for <code>title</code>: the book title to set.
    */
@@ -127,26 +110,30 @@ public class BookDtoBuilder {
 
   /**
    * Initialisation of builder for {@code org.javahelpers.simple.builders.example.BookDto} by a instance.
-   *
+   * 
    * @param instance object instance for initialisiation
    */
   public BookDtoBuilder(BookDto instance) {
     this.author = initialValue(instance.getAuthor());
     this.available = initialValue(instance.isAvailable());
     if (this.available.value() == null) {
-      throw new IllegalArgumentException("Cannot initialize builder from instance: field 'available' is marked as non-null but source object has null value");
+      throw new IllegalArgumentException(
+          "Cannot initialize builder from instance: field 'available' is marked as non-null but source object has null value");
     }
     this.category = initialValue(instance.getCategory());
     if (this.category.value() == null) {
-      throw new IllegalArgumentException("Cannot initialize builder from instance: field 'category' is marked as non-null but source object has null value");
+      throw new IllegalArgumentException(
+          "Cannot initialize builder from instance: field 'category' is marked as non-null but source object has null value");
     }
     this.discount = initialValue(instance.getDiscount());
     if (this.discount.value() == null) {
-      throw new IllegalArgumentException("Cannot initialize builder from instance: field 'discount' is marked as non-null but source object has null value");
+      throw new IllegalArgumentException(
+          "Cannot initialize builder from instance: field 'discount' is marked as non-null but source object has null value");
     }
     this.edition = initialValue(instance.getEdition());
     if (this.edition.value() == null) {
-      throw new IllegalArgumentException("Cannot initialize builder from instance: field 'edition' is marked as non-null but source object has null value");
+      throw new IllegalArgumentException(
+          "Cannot initialize builder from instance: field 'edition' is marked as non-null but source object has null value");
     }
     this.exactPrice = initialValue(instance.getExactPrice());
     this.genres = initialValue(instance.getGenres());
@@ -155,21 +142,25 @@ public class BookDtoBuilder {
     this.metadata = initialValue(instance.getMetadata());
     this.pages = initialValue(instance.getPages());
     if (this.pages.value() == null) {
-      throw new IllegalArgumentException("Cannot initialize builder from instance: field 'pages' is marked as non-null but source object has null value");
+      throw new IllegalArgumentException(
+          "Cannot initialize builder from instance: field 'pages' is marked as non-null but source object has null value");
     }
     this.price = initialValue(instance.getPrice());
     if (this.price.value() == null) {
-      throw new IllegalArgumentException("Cannot initialize builder from instance: field 'price' is marked as non-null but source object has null value");
+      throw new IllegalArgumentException(
+          "Cannot initialize builder from instance: field 'price' is marked as non-null but source object has null value");
     }
     this.publishDate = initialValue(instance.getPublishDate());
     this.publisher = initialValue(instance.getPublisher());
     this.rating = initialValue(instance.getRating());
     if (this.rating.value() == null) {
-      throw new IllegalArgumentException("Cannot initialize builder from instance: field 'rating' is marked as non-null but source object has null value");
+      throw new IllegalArgumentException(
+          "Cannot initialize builder from instance: field 'rating' is marked as non-null but source object has null value");
     }
     this.salesCount = initialValue(instance.getSalesCount());
     if (this.salesCount.value() == null) {
-      throw new IllegalArgumentException("Cannot initialize builder from instance: field 'salesCount' is marked as non-null but source object has null value");
+      throw new IllegalArgumentException(
+          "Cannot initialize builder from instance: field 'salesCount' is marked as non-null but source object has null value");
     }
     this.subtitle = initialValue(instance.getSubtitle());
     this.tags = initialValue(instance.getTags());
@@ -178,7 +169,7 @@ public class BookDtoBuilder {
 
   /**
    * Creating a new builder for {@code org.javahelpers.simple.builders.example.BookDto}.
-   *
+   * 
    * @return builder for {@code org.javahelpers.simple.builders.example.BookDto}
    */
   public static BookDtoBuilder create() {
@@ -187,7 +178,7 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>author</code>.
-   *
+   * 
    * @param author the book author to set
    * @return current instance of builder
    */
@@ -198,7 +189,7 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>available</code>.
-   *
+   * 
    * @param available true if available, false otherwise
    * @return current instance of builder
    */
@@ -209,7 +200,7 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>category</code>.
-   *
+   * 
    * @param category the category code to set
    * @return current instance of builder
    */
@@ -220,7 +211,7 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>discount</code>.
-   *
+   * 
    * @param discount the discount percentage to set
    * @return current instance of builder
    */
@@ -231,7 +222,7 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>edition</code>.
-   *
+   * 
    * @param edition the edition number to set
    * @return current instance of builder
    */
@@ -242,7 +233,7 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>exactPrice</code>.
-   *
+   * 
    * @param exactPrice the exact book price to set
    * @return current instance of builder
    */
@@ -253,7 +244,7 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>genres</code>.
-   *
+   * 
    * @param genres the set of genres to set
    * @return current instance of builder
    */
@@ -264,7 +255,7 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>isbn</code>.
-   *
+   * 
    * @param isbn the ISBN to set
    * @return current instance of builder
    */
@@ -275,7 +266,7 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>lastUpdated</code>.
-   *
+   * 
    * @param lastUpdated the last update timestamp to set
    * @return current instance of builder
    */
@@ -286,7 +277,7 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>metadata</code>.
-   *
+   * 
    * @param metadata the metadata map to set
    * @return current instance of builder
    */
@@ -297,7 +288,7 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>pages</code>.
-   *
+   * 
    * @param pages the page count to set
    * @return current instance of builder
    */
@@ -308,7 +299,7 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>price</code>.
-   *
+   * 
    * @param price the book price to set
    * @return current instance of builder
    */
@@ -319,7 +310,7 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>publishDate</code>.
-   *
+   * 
    * @param publishDate the publication date to set
    * @return current instance of builder
    */
@@ -330,7 +321,7 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>publisher</code>.
-   *
+   * 
    * @param publisher the publisher to set
    * @return current instance of builder
    */
@@ -341,7 +332,7 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>rating</code>.
-   *
+   * 
    * @param rating the book rating to set
    * @return current instance of builder
    */
@@ -352,7 +343,7 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>salesCount</code>.
-   *
+   * 
    * @param salesCount the sales count to set
    * @return current instance of builder
    */
@@ -363,7 +354,7 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>subtitle</code>.
-   *
+   * 
    * @param subtitle an Optional containing the subtitle to set
    * @return current instance of builder
    */
@@ -374,7 +365,7 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>tags</code>.
-   *
+   * 
    * @param tags the list of tags to set
    * @return current instance of builder
    */
@@ -385,7 +376,7 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>title</code>.
-   *
+   * 
    * @param title the book title to set
    * @return current instance of builder
    */
@@ -396,39 +387,39 @@ public class BookDtoBuilder {
 
   /**
    * Validates that the author field is not null or empty.
-   *
+   * 
    * @return this builder instance for chaining
    * @throws IllegalArgumentException if author is null or empty
    */
   BookDtoBuilder validateAuthor() {
     if (!author.isSet() || author.value().trim().isEmpty()) {
-        throw new IllegalArgumentException("Author cannot be null or empty");
+      throw new IllegalArgumentException("Author cannot be null or empty");
     }
     return this;
   }
 
   /**
    * Validates that the isbn field is not null or empty.
-   *
+   * 
    * @return this builder instance for chaining
    * @throws IllegalArgumentException if isbn is null or empty
    */
   BookDtoBuilder validateIsbn() {
     if (!isbn.isSet() || isbn.value().trim().isEmpty()) {
-        throw new IllegalArgumentException("Isbn cannot be null or empty");
+      throw new IllegalArgumentException("Isbn cannot be null or empty");
     }
     return this;
   }
 
   /**
    * Validates that the title field is not null or empty.
-   *
+   * 
    * @return this builder instance for chaining
    * @throws IllegalArgumentException if title is null or empty
    */
   BookDtoBuilder validateTitle() {
     if (!title.isSet() || title.value().trim().isEmpty()) {
-        throw new IllegalArgumentException("Title cannot be null or empty");
+      throw new IllegalArgumentException("Title cannot be null or empty");
     }
     return this;
   }
@@ -486,31 +477,30 @@ public class BookDtoBuilder {
 
   /**
    * Returns a string representation of this builder, including only fields that have been set.
-   *
+   * 
    * @return string representation of the builder
    */
   @Override
   public String toString() {
-    return new ToStringBuilder(this, BuilderToStringStyle.INSTANCE)
-            .append("author", this.author)
-            .append("available", this.available)
-            .append("category", this.category)
-            .append("discount", this.discount)
-            .append("edition", this.edition)
-            .append("exactPrice", this.exactPrice)
-            .append("genres", this.genres)
-            .append("isbn", this.isbn)
-            .append("lastUpdated", this.lastUpdated)
-            .append("metadata", this.metadata)
-            .append("pages", this.pages)
-            .append("price", this.price)
-            .append("publishDate", this.publishDate)
-            .append("publisher", this.publisher)
-            .append("rating", this.rating)
-            .append("salesCount", this.salesCount)
-            .append("subtitle", this.subtitle)
-            .append("tags", this.tags)
-            .append("title", this.title)
-            .toString();
+    return new ToStringBuilder(this, BuilderToStringStyle.INSTANCE).append("author", this.author)
+        .append("available", this.available)
+        .append("category", this.category)
+        .append("discount", this.discount)
+        .append("edition", this.edition)
+        .append("exactPrice", this.exactPrice)
+        .append("genres", this.genres)
+        .append("isbn", this.isbn)
+        .append("lastUpdated", this.lastUpdated)
+        .append("metadata", this.metadata)
+        .append("pages", this.pages)
+        .append("price", this.price)
+        .append("publishDate", this.publishDate)
+        .append("publisher", this.publisher)
+        .append("rating", this.rating)
+        .append("salesCount", this.salesCount)
+        .append("subtitle", this.subtitle)
+        .append("tags", this.tags)
+        .append("title", this.title)
+        .toString();
   }
 }

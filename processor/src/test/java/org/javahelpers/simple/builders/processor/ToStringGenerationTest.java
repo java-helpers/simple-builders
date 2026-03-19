@@ -186,10 +186,9 @@ class ToStringGenerationTest {
         """
         @Override
         public String toString() {
-          return new ToStringBuilder(this, BuilderToStringStyle.INSTANCE)
-              .append("name", this.name)
-              .append("price", this.price)
-              .toString();
+            return new ToStringBuilder(this, BuilderToStringStyle.INSTANCE).append("name", this.name)
+                    .append("price", this.price)
+                    .toString();
         }
         """;
 
