@@ -24,6 +24,7 @@
 
 package org.javahelpers.simple.builders.processor;
 
+import static com.google.testing.compile.CompilationSubject.assertThat;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.assertContaining;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.assertGenerationSucceeded;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.assertNotContaining;
@@ -138,6 +139,51 @@ class RoasterCodeGeneratorEdgeCasesTest {
     assertContaining(generatedCode, "public class NoNestedTypesDtoBuilder");
     // Verify no With interface is generated
     assertNotContaining(generatedCode, "public interface With");
+  }
+
+  /**
+   * Tests that the code generator detects and reports when a builder class already exists.
+   *
+   * <p>This edge case verifies that if a builder class with the same name already exists (either
+   * manually written or from a previous compilation), the processor detects the conflict and issues
+   * a warning, allowing compilation to succeed gracefully.
+   */
+  @Test
+  void shouldDetectExistingBuilderClass() {
+    JavaFileObject dto =
+        JavaFileObjects.forSourceString(
+            "test.PersonDto",
+            """
+            package test;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+            @SimpleBuilder
+            public class PersonDto {
+              private String name;
+              public String getName() { return name; }
+              public void setName(String name) { this.name = name; }
+            }
+            """);
+
+    // Create a builder class that already exists
+    JavaFileObject existingBuilder =
+        JavaFileObjects.forSourceString(
+            "test.PersonDtoBuilder",
+            """
+            package test;
+
+            public class PersonDtoBuilder {
+              // Manually written or previously generated builder
+            }
+            """);
+
+    Compilation compilation = ProcessorTestUtils.createCompiler().compile(dto, existingBuilder);
+
+    // Verify compilation succeeds with a warning about the existing builder
+    assertThat(compilation).succeeded();
+    assertThat(compilation)
+        .hadWarningContaining(
+            "Failed to generate builder - Builder class 'test.PersonDtoBuilder' already exists");
   }
 
   /**
