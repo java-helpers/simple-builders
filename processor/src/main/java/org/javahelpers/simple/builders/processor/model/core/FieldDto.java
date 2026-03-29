@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
+import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 import org.javahelpers.simple.builders.processor.model.type.GenericParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
@@ -51,7 +52,7 @@ public class FieldDto {
   private final List<MethodDto> fieldSetterMethodsList = new ArrayList<>();
 
   /** Optional Javadoc of the field extracted from setter or constructor. */
-  private String javaDoc;
+  private JavadocDto javaDoc;
 
   /** Method-level generics declared on the setter, to be reused in builder methods. */
   private final List<GenericParameterDto> fieldGenerics = new ArrayList<>();
@@ -163,18 +164,18 @@ public class FieldDto {
   /**
    * Getting extracted Javadoc.
    *
-   * @return Javadoc text or null if none present
+   * @return Javadoc or null if none present
    */
-  public String getJavaDoc() {
+  public JavadocDto getJavaDoc() {
     return javaDoc;
   }
 
   /**
    * Setting extracted Javadoc.
    *
-   * @param javaDoc Javadoc text
+   * @param javaDoc Javadoc
    */
-  public void setJavaDoc(String javaDoc) {
+  public void setJavaDoc(JavadocDto javaDoc) {
     this.javaDoc = javaDoc;
   }
 

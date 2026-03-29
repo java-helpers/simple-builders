@@ -30,6 +30,8 @@ import java.util.List;
 import java.util.Set;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.annotation.InterfaceName;
+import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
+import org.javahelpers.simple.builders.processor.model.integration.JacksonModuleDefinitionDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 import org.javahelpers.simple.builders.processor.model.type.GenericParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.NestedTypeDto;
@@ -88,7 +90,7 @@ public class BuilderDefinitionDto {
   private final Set<InterfaceName> interfaces = new LinkedHashSet<>();
 
   /** Class-level JavaDoc for the generated builder class. */
-  private String classJavadoc;
+  private JavadocDto classJavadoc;
 
   /** Configuration for builder generation. */
   private BuilderConfiguration configuration;
@@ -311,7 +313,7 @@ public class BuilderDefinitionDto {
    *
    * @return the class JavaDoc, or null if not set
    */
-  public String getClassJavadoc() {
+  public JavadocDto getClassJavadoc() {
     return classJavadoc;
   }
 
@@ -320,7 +322,7 @@ public class BuilderDefinitionDto {
    *
    * @param classJavadoc the class JavaDoc to set
    */
-  public void setClassJavadoc(String classJavadoc) {
+  public void setClassJavadoc(JavadocDto classJavadoc) {
     this.classJavadoc = classJavadoc;
   }
 }
