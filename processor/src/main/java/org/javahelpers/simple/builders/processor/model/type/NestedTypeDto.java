@@ -26,6 +26,7 @@ package org.javahelpers.simple.builders.processor.model.type;
 
 import java.util.LinkedList;
 import java.util.List;
+import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 
 /**
@@ -48,7 +49,7 @@ public class NestedTypeDto {
   private final List<MethodDto> methods = new LinkedList<>();
 
   /** Javadoc comment for this nested type. */
-  private String javadoc;
+  private JavadocDto javadoc;
 
   public enum NestedTypeKind {
     INTERFACE,
@@ -87,11 +88,11 @@ public class NestedTypeDto {
     this.methods.add(method);
   }
 
-  public String getJavadoc() {
+  public JavadocDto getJavadoc() {
     return javadoc;
   }
 
-  public void setJavadoc(String javadoc) {
+  public void setJavadoc(JavadocDto javadoc) {
     this.javadoc = javadoc;
   }
 }

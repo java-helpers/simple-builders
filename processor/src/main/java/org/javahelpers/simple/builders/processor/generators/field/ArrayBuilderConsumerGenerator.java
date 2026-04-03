@@ -30,7 +30,9 @@ import static org.javahelpers.simple.builders.processor.generators.util.MethodGe
 import java.util.List;
 import org.javahelpers.simple.builders.core.builders.ArrayListBuilder;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
+import org.javahelpers.simple.builders.processor.generators.util.JavadocConstants;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
@@ -145,13 +147,10 @@ public class ArrayBuilderConsumerGenerator implements MethodGenerator {
     methodDto.addArgument("elementType", elementType);
     methodDto.setPriority(MethodDto.PRIORITY_MEDIUM);
     methodDto.setJavadoc(
-        """
-        Sets the value for <code>%s</code> using the fluent builder consumer.
-
-        @param %s consumer for %s
-        @return current instance of builder
-        """
-            .formatted(fieldName, parameter.getParameterName(), field.getJavaDoc()));
+        new JavadocDto(
+                "Sets the value for <code>%s</code> using the fluent builder consumer.", fieldName)
+            .addParam(parameter.getParameterName(), "consumer for %s", fieldName)
+            .addReturn(JavadocConstants.RETURN_BUILDER_INSTANCE));
     return methodDto;
   }
 }

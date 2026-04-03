@@ -31,6 +31,7 @@ import java.util.Optional;
 import javax.lang.model.element.Modifier;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
+import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.type.GenericParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 
@@ -61,7 +62,7 @@ public class MethodDto {
   private TypeName returnType;
 
   /** Javadoc comment for the method. */
-  private String javadoc;
+  private JavadocDto javadoc;
 
   /** List of annotations on this method. */
   private final List<AnnotationDto> annotations = new ArrayList<>();
@@ -326,7 +327,7 @@ public class MethodDto {
     return sb.toString();
   }
 
-  public String getJavadoc() {
+  public JavadocDto getJavadoc() {
     return javadoc;
   }
 
@@ -335,7 +336,7 @@ public class MethodDto {
    *
    * @param javadoc the Javadoc comment
    */
-  public void setJavadoc(String javadoc) {
+  public void setJavadoc(JavadocDto javadoc) {
     this.javadoc = javadoc;
   }
 

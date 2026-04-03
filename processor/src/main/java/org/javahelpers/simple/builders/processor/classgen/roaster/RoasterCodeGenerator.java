@@ -55,6 +55,8 @@ import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.integration.JacksonModuleDefinitionDto;
 import org.javahelpers.simple.builders.processor.model.integration.JacksonModuleEntryDto;
+import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
+import org.javahelpers.simple.builders.processor.model.javadoc.JavadocTagDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodCodePlaceholder;
 import org.javahelpers.simple.builders.processor.model.method.MethodCodeTypePlaceholder;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
@@ -207,11 +209,10 @@ public class RoasterCodeGenerator {
   }
 
   private void applyJavaDocToField(JavaDocSource<?> javaDoc, FieldDto fieldDto) {
-    javaDoc.setText(
-        "Tracked value for <code>%s</code>: %s."
-            .formatted(
-                fieldDto.getFieldNameInBuilder(),
-                StringUtils.defaultString(fieldDto.getJavaDoc())));
+    JavadocDto trackedValueJavadoc = fieldDto.getJavaDoc();
+    if (trackedValueJavadoc != null) {
+      javaDoc.setText(trackedValueJavadoc.getDescription());
+    }
   }
 
   private void appendConstructors(JavaClassSource source, BuilderDefinitionDto builderDef) {
@@ -234,7 +235,8 @@ public class RoasterCodeGenerator {
     constructor.setBody("");
     applyJavadoc(
         constructor,
-        "Empty constructor of builder for {@code %s}.".formatted(dtoClass.getFullQualifiedName()));
+        new JavadocDto(
+            "Empty constructor of builder for {@code %s}.", dtoClass.getFullQualifiedName()));
   }
 
   private void appendConstructorWithInstance(
@@ -249,12 +251,10 @@ public class RoasterCodeGenerator {
     constructor.setBody(buildConstructorBody(fields));
     applyJavadoc(
         constructor,
-        """
-            Initialisation of builder for {@code %s} by a instance.
-
-            @param instance object instance for initialisiation
-            """
-            .formatted(dtoBaseClass.getFullQualifiedName()));
+        new JavadocDto(
+                "Initialisation of builder for {@code %s} by a instance.",
+                dtoBaseClass.getFullQualifiedName())
+            .addParam("instance", "object instance for initialisiation"));
   }
 
   private String buildConstructorBody(List<FieldDto> fields) {
@@ -490,43 +490,28 @@ public class RoasterCodeGenerator {
   }
 
   private void applyJavadoc(
-      org.jboss.forge.roaster.model.source.JavaDocCapableSource<?> source, String javadoc) {
-    if (StringUtils.isBlank(javadoc)) {
+      org.jboss.forge.roaster.model.source.JavaDocCapableSource<?> source, JavadocDto javadoc) {
+    if (javadoc == null || !javadoc.hasContent()) {
       return;
     }
-    // Normalize line endings without regex to avoid ReDoS vulnerability
-    String normalized = javadoc.replace("\r\n", "\n").replace("\r", "\n");
-    // Remove trailing newlines using StringUtils
-    normalized = StringUtils.stripEnd(normalized, "\n");
-    String[] lines = normalized.split("\n", -1);
-    StringBuilder text = new StringBuilder();
-    source.getJavaDoc().removeAllTags();
-    boolean inTags = false;
-    for (String line : lines) {
-      if (!inTags && line.startsWith("@")) {
-        inTags = true;
-      }
-      if (inTags && line.startsWith("@")) {
-        processJavadocTag(source, line);
-      } else {
-        if (!text.isEmpty()) {
-          text.append('\n');
-        }
-        text.append(line);
-      }
-    }
-    source.getJavaDoc().setText(text.toString());
-  }
 
-  private void processJavadocTag(
-      org.jboss.forge.roaster.model.source.JavaDocCapableSource<?> source, String line) {
-    int firstSpace = line.indexOf(' ');
-    if (firstSpace > 1) {
-      source
-          .getJavaDoc()
-          .addTagValue(line.substring(0, firstSpace), line.substring(firstSpace + 1));
-    } else if (line.length() > 1) {
-      source.getJavaDoc().addTagValue(line, "");
+    // Note: source.getJavaDoc() never returns null - Roaster creates the JavaDoc if it doesn't
+    // exist
+    // The early return above ensures we only create JavaDoc when there's actual content to set
+
+    // Set description text
+    if (StringUtils.isNotBlank(javadoc.getDescription())) {
+      source.getJavaDoc().setText(javadoc.getDescription());
+    }
+
+    // Remove existing tags and add new ones
+    source.getJavaDoc().removeAllTags();
+    for (JavadocTagDto tag : javadoc.getTags()) {
+      if (tag.hasValue()) {
+        source.getJavaDoc().addTagValue(tag.getFullTagName(), tag.tagValue());
+      } else {
+        source.getJavaDoc().addTagValue(tag.getFullTagName(), "");
+      }
     }
   }
 

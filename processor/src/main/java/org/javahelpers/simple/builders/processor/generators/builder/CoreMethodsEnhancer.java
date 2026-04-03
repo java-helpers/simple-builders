@@ -32,6 +32,7 @@ import org.javahelpers.simple.builders.processor.generators.util.MethodGenerator
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 import org.javahelpers.simple.builders.processor.model.type.GenericParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
@@ -193,7 +194,7 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
     method.addArgument("dtoBaseType", builderDto.getBuildingTargetTypeName());
     method.addArgument("buildResultType", returnType);
 
-    method.setJavadoc("Builds the configured DTO instance.");
+    method.setJavadoc(new JavadocDto("Builds the configured DTO instance."));
 
     return method;
   }
@@ -226,12 +227,8 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
     String targetFullName = builderDto.getBuildingTargetTypeName().getFullQualifiedName();
 
     method.setJavadoc(
-        """
-        Creating a new builder for {@code %s}.
-
-        @return builder for {@code %s}
-        """
-            .formatted(targetFullName, targetFullName));
+        new JavadocDto("Creating a new builder for {@code %s}.", targetFullName)
+            .addReturn("builder for {@code %s}", targetFullName));
 
     return method;
   }
@@ -260,11 +257,9 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
         new TypeName("org.javahelpers.simple.builders.core.util", "BuilderToStringStyle"));
 
     method.setJavadoc(
-        """
-        Returns a string representation of this builder, including only fields that have been set.
-
-        @return string representation of the builder
-        """);
+        new JavadocDto(
+                "Returns a string representation of this builder, including only fields that have been set.")
+            .addReturn("string representation of the builder"));
 
     return method;
   }

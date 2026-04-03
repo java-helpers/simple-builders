@@ -48,6 +48,7 @@ import org.javahelpers.simple.builders.processor.generators.util.MethodGenerator
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
@@ -303,10 +304,7 @@ public class BuilderDefinitionCreator {
 
     // Extract only the @param Javadoc for the single setter parameter (if present)
     String fullJavaDoc = context.getDocComment(mth);
-    String javaDoc = JavaLangAnalyser.extractParamJavaDoc(fullJavaDoc, fieldParameter);
-    if (javaDoc == null) {
-      javaDoc = fieldName;
-    }
+    String javaDocDescription = JavaLangAnalyser.extractParamJavaDoc(fullJavaDoc, fieldParameter);
 
     // Check for field name conflicts and rename if necessary
     String finalFieldName =
@@ -315,7 +313,13 @@ public class BuilderDefinitionCreator {
     // Pass both original field name (for methods) and final field name (for builder field)
     Optional<FieldDto> result =
         createFieldDto(
-            fieldName, finalFieldName, javaDoc, fieldParameter, dtoType, builderType, context);
+            fieldName,
+            finalFieldName,
+            javaDocDescription,
+            fieldParameter,
+            dtoType,
+            builderType,
+            context);
 
     if (result.isPresent()) {
       fieldNameRegistry.put(finalFieldName, result.get());
@@ -335,12 +339,9 @@ public class BuilderDefinitionCreator {
       ProcessingContext context,
       Map<String, FieldDto> fieldNameRegistry) {
     String fieldName = param.getSimpleName().toString();
-    // Set javadoc (default to field name if no javadoc found)
-    String javaDoc =
+    // Extract javadoc from constructor parameter (if present)
+    String javaDocDescription =
         JavaLangAnalyser.extractParamJavaDoc(context.getDocComment(annotatedType), param);
-    if (javaDoc == null) {
-      javaDoc = fieldName;
-    }
 
     // Convert TypeElement to TypeName once
     TypeName dtoType = JavaLangMapper.map2TypeName(annotatedType, context);
@@ -350,7 +351,8 @@ public class BuilderDefinitionCreator {
 
     // Pass both original field name (for methods) and final field name (for builder field)
     Optional<FieldDto> result =
-        createFieldDto(fieldName, finalFieldName, javaDoc, param, dtoType, builderType, context);
+        createFieldDto(
+            fieldName, finalFieldName, javaDocDescription, param, dtoType, builderType, context);
 
     if (result.isPresent()) {
       fieldNameRegistry.put(finalFieldName, result.get());
@@ -430,7 +432,7 @@ public class BuilderDefinitionCreator {
   private static Optional<FieldDto> createFieldDto(
       String fieldName,
       String fieldNameInBuilder,
-      String javaDoc,
+      String javaDocDescription,
       VariableElement param,
       TypeName dtoType,
       TypeName builderType,
@@ -448,7 +450,17 @@ public class BuilderDefinitionCreator {
         fieldNameInBuilder); // Use renamed field name for builder field storage
     field.setOriginalFieldName(fieldName);
     field.setFieldType(fieldType);
-    field.setJavaDoc(javaDoc);
+
+    // Store original javadoc description for reuse in builder method javadocs
+    field.setOriginalJavaDocDescription(StringUtils.trimToNull(javaDocDescription));
+
+    // Create javadoc for the tracked value field in the builder
+    String javaDocDescriptionOrFieldname = field.getJavaDocDescriptionOrFieldName();
+    JavadocDto trackedValueJavadoc =
+        new JavadocDto(
+            "Tracked value for <code>%s</code>: %s.",
+            fieldNameInBuilder, javaDocDescriptionOrFieldname);
+    field.setJavaDoc(trackedValueJavadoc);
 
     // Note: setterName will be set explicitly by the caller before field renaming
 
