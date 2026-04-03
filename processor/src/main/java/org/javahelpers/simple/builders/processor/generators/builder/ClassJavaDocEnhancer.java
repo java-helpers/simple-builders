@@ -26,6 +26,7 @@ package org.javahelpers.simple.builders.processor.generators.builder;
 
 import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
+import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
@@ -86,7 +87,7 @@ public class ClassJavaDocEnhancer implements BuilderEnhancer {
   @Override
   public void enhanceBuilder(BuilderDefinitionDto builderDto, ProcessingContext context) {
     TypeName targetType = builderDto.getBuildingTargetTypeName();
-    String javadoc = createClassJavadoc(targetType);
+    JavadocDto javadoc = createClassJavadoc(targetType);
     builderDto.setClassJavadoc(javadoc);
   }
 
@@ -94,19 +95,20 @@ public class ClassJavaDocEnhancer implements BuilderEnhancer {
    * Creates comprehensive JavaDoc for the builder class.
    *
    * @param targetType the target DTO type
-   * @return String containing the JavaDoc content
+   * @return JavadocDto containing the JavaDoc content
    */
-  private String createClassJavadoc(TypeName targetType) {
+  private JavadocDto createClassJavadoc(TypeName targetType) {
     String qualifiedClassName = targetType.getFullQualifiedName();
-    return String.format(
-        """
-        Builder for {@code %s}.
-        <p>
-        This builder provides a fluent API for creating instances of %s with
-        method chaining and validation. Use the static {@code create()} method
-        to obtain a new builder instance, configure the desired properties using
-        the setter methods, and then call {@code build()} to create the final DTO.
-        """,
-        qualifiedClassName, qualifiedClassName);
+    return new JavadocDto(
+        String.format(
+            """
+            Builder for {@code %s}.
+            <p>
+            This builder provides a fluent API for creating instances of %s with
+            method chaining and validation. Use the static {@code create()} method
+            to obtain a new builder instance, configure the desired properties using
+            the setter methods, and then call {@code build()} to create the final DTO.\
+            """,
+            qualifiedClassName, qualifiedClassName));
   }
 }

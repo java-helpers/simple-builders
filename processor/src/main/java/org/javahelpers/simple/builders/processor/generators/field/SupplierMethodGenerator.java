@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.function.Supplier;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
@@ -95,7 +96,7 @@ public class SupplierMethodGenerator implements MethodGenerator {
         createFieldSupplier(
             field.getOriginalFieldName(),
             field.getFieldNameInBuilder(),
-            field.getJavaDoc(),
+            field.getJavaDoc() != null ? field.getJavaDoc().getDescription() : null,
             field.getFieldType(),
             builderType,
             context);
@@ -144,13 +145,11 @@ public class SupplierMethodGenerator implements MethodGenerator {
     methodDto.setPriority(MethodDto.PRIORITY_HIGH);
 
     methodDto.setJavadoc(
-        """
-        Sets the value for <code>%s</code> by invoking the provided supplier.
-
-        @param %s supplier for %s
-        @return current instance of builder
-        """
-            .formatted(fieldName, parameter.getParameterName(), fieldJavaDoc));
+        new JavadocDto(
+                "Sets the value for <code>%s</code> by invoking the provided supplier."
+                    .formatted(fieldName))
+            .addParam(parameterName, "supplier for " + fieldJavaDoc)
+            .addReturn("current instance of builder"));
 
     return methodDto;
   }

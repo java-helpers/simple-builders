@@ -27,6 +27,7 @@ import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
 import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
 import org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
+import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.NestedTypeDto;
@@ -114,7 +115,8 @@ public class WithInterfaceEnhancer implements BuilderEnhancer {
     withInterface.setKind(NestedTypeDto.NestedTypeKind.INTERFACE);
     withInterface.setPublic(true);
     withInterface.setJavadoc(
-        "Interface that can be implemented by the DTO to provide fluent modification methods.");
+        new JavadocDto(
+            "Interface that can be implemented by the DTO to provide fluent modification methods."));
 
     // Create the first method: DtoType with(Consumer<BuilderType> b)
     MethodDto withConsumerMethod = createWithConsumerMethod(builderDto);
@@ -166,12 +168,10 @@ public class WithInterfaceEnhancer implements BuilderEnhancer {
         "illegalargumentexception", JavaLangMapper.map2TypeName(IllegalArgumentException.class));
 
     method.setJavadoc(
-        """
-      Initializes a builder from an  instance of this class, using methods of this builder to change values and returns the new built object.
-
-      @param b the consumer to apply modifications
-      @return the modified instance
-      """);
+        new JavadocDto(
+                "Initializes a builder from an instance of this class, using methods of this builder to change values and returns the new built object.")
+            .addParam("b", "the consumer to apply modifications")
+            .addReturn("the modified instance"));
 
     return method;
   }
@@ -202,11 +202,8 @@ public class WithInterfaceEnhancer implements BuilderEnhancer {
         "illegalargumentexception", JavaLangMapper.map2TypeName(IllegalArgumentException.class));
 
     method.setJavadoc(
-        """
-      Creates a builder initialized from this instance.
-
-      @return a builder initialized with this instance's values
-      """);
+        new JavadocDto("Creates a builder initialized from this instance.")
+            .addReturn("a builder initialized with this instance's values"));
 
     return method;
   }

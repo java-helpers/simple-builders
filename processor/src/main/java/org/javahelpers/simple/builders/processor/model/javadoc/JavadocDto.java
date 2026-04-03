@@ -29,12 +29,14 @@ import java.util.List;
 import java.util.Objects;
 import org.apache.commons.lang3.StringUtils;
 
-/** Represents structured Javadoc with description text and tags.
- * 
- * <p>Used for method and class-level javadoc. Note that @param tags are for documenting
- * method parameters, not for individual parameter javadoc.
- * 
+/**
+ * Represents structured Javadoc with description text and tags.
+ *
+ * <p>Used for method and class-level javadoc. Note that @param tags are for documenting method
+ * parameters, not for individual parameter javadoc.
+ *
  * <p>Example usage for a method:
+ *
  * <pre>{@code
  * JavadocDto javadoc = new JavadocDto("Builds a new PersonDto.")
  *     .addParam("name", "the person's name")
@@ -42,8 +44,9 @@ import org.apache.commons.lang3.StringUtils;
  *     .addReturn("a new PersonDto instance")
  *     .addThrows("IllegalArgumentException", "if name is null");
  * }</pre>
- * 
+ *
  * <p>Example usage for a class:
+ *
  * <pre>{@code
  * JavadocDto classJavadoc = new JavadocDto("Builder for PersonDto objects.")
  *     .addSee("PersonDto")
@@ -130,7 +133,9 @@ public class JavadocDto {
    * @param tagName the tag name without @ prefix
    */
   public void addTag(String tagName) {
-    addTag(JavadocTagDto.withoutValue(tagName));
+    if (tagName != null) {
+      tags.add(JavadocTagDto.withoutValue(tagName));
+    }
   }
 
   /**
@@ -209,9 +214,7 @@ public class JavadocDto {
    * @return list of matching tags
    */
   public List<JavadocTagDto> getTags(String tagName) {
-    return tags.stream()
-        .filter(tag -> Objects.equals(tag.tagName(), tagName))
-        .toList();
+    return tags.stream().filter(tag -> Objects.equals(tag.tagName(), tagName)).toList();
   }
 
   /**
@@ -242,9 +245,7 @@ public class JavadocDto {
     return tags.removeIf(tag -> Objects.equals(tag.tagName(), tagName));
   }
 
-  /**
-   * Clears all tags.
-   */
+  /** Clears all tags. */
   public void clearTags() {
     tags.clear();
   }
@@ -264,9 +265,6 @@ public class JavadocDto {
 
   @Override
   public String toString() {
-    return "JavadocDto{" +
-        "description='" + description + '\'' +
-        ", tags=" + tags +
-        '}';
+    return "JavadocDto{" + "description='" + description + '\'' + ", tags=" + tags + '}';
   }
 }

@@ -30,6 +30,7 @@ import static org.javahelpers.simple.builders.processor.generators.util.MethodGe
 import java.util.List;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
@@ -128,14 +129,12 @@ public class ArrayConversionGenerator implements MethodGenerator {
     methodDto.addArgument("builderFieldWrapper", TRACKED_VALUE_TYPE);
     methodDto.addArgument("elementType", elementType);
     methodDto.setPriority(MethodDto.PRIORITY_HIGH);
+    String fieldJavadocDesc =
+        field.getJavaDoc() != null ? field.getJavaDoc().getDescription() : null;
     methodDto.setJavadoc(
-        """
-        Sets the value for <code>%s</code>.
-
-        @param %s %s
-        @return current instance of builder
-        """
-            .formatted(fieldName, parameter.getParameterName(), field.getJavaDoc()));
+        new JavadocDto("Sets the value for <code>%s</code>.".formatted(fieldName))
+            .addParam(parameter.getParameterName(), fieldJavadocDesc)
+            .addReturn("current instance of builder"));
     return methodDto;
   }
 }

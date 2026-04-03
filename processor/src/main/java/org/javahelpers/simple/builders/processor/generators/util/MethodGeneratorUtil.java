@@ -31,6 +31,7 @@ import javax.lang.model.element.Modifier;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.GenericParameterDto;
@@ -186,15 +187,13 @@ public final class MethodGeneratorUtil {
 
     methodDto.setPriority(transform == null ? MethodDto.PRIORITY_HIGHEST : MethodDto.PRIORITY_HIGH);
 
+    String fieldJavadocDesc =
+        field.getJavaDoc() != null ? field.getJavaDoc().getDescription() : null;
     methodDto.setJavadoc(
-        """
-        Sets the value for <code>%s</code>.
-
-        @param %s %s
-        @return current instance of builder
-        """
-            .formatted(
-                field.getOriginalFieldName(), parameter.getParameterName(), field.getJavaDoc()));
+        new JavadocDto(
+                "Sets the value for <code>%s</code>.".formatted(field.getOriginalFieldName()))
+            .addParam(parameter.getParameterName(), fieldJavadocDesc)
+            .addReturn("current instance of builder"));
 
     return methodDto;
   }
@@ -246,15 +245,17 @@ public final class MethodGeneratorUtil {
     additionalTemplateArguments.forEach(methodDto::addArgument);
     methodDto.addArgument("builderFieldWrapper", TRACKED_VALUE_TYPE);
     methodDto.setPriority(MethodDto.PRIORITY_MEDIUM);
+    String fieldJavadocDesc =
+        field.getJavaDoc() != null ? field.getJavaDoc().getDescription() : null;
     methodDto.setJavadoc(
-        """
-        Sets the value for <code>%s</code> using a builder consumer that produces the value.
+        new JavadocDto(
+                "Sets the value for <code>%s</code> using a builder consumer that produces the value."
+                    .formatted(field.getFieldNameInBuilder()))
+            .addParam(
+                parameter.getParameterName(),
+                "consumer providing an instance of a builder for " + fieldJavadocDesc)
+            .addReturn("current instance of builder"));
 
-        @param %s consumer providing an instance of a builder for %s
-        @return current instance of builder
-        """
-            .formatted(
-                field.getFieldNameInBuilder(), parameter.getParameterName(), field.getJavaDoc()));
     return methodDto;
   }
 
@@ -375,15 +376,16 @@ public final class MethodGeneratorUtil {
     methodDto.addArgument("builderFieldWrapper", TRACKED_VALUE_TYPE);
     methodDto.setPriority(MethodDto.PRIORITY_MEDIUM);
 
+    String fieldJavadocDesc =
+        field.getJavaDoc() != null ? field.getJavaDoc().getDescription() : null;
     methodDto.setJavadoc(
-        """
-        Sets the value for <code>%s</code> by executing the provided consumer.
-
-        @param %s consumer providing an instance of %s
-        @return current instance of builder
-        """
-            .formatted(
-                field.getOriginalFieldName(), parameter.getParameterName(), field.getJavaDoc()));
+        new JavadocDto(
+                "Sets the value for <code>%s</code> by executing the provided consumer."
+                    .formatted(field.getOriginalFieldName()))
+            .addParam(
+                parameter.getParameterName(),
+                "consumer providing an instance of " + fieldJavadocDesc)
+            .addReturn("current instance of builder"));
 
     return methodDto;
   }

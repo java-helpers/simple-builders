@@ -29,6 +29,7 @@ import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
 import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
 import org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
+import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
@@ -135,14 +136,12 @@ public class ConditionalEnhancer implements BuilderEnhancer {
         """);
 
     method.setJavadoc(
-        """
-        Conditionally applies builder modifications based on a condition evaluation.
-
-        @param condition the condition to evaluate
-        @param trueCase the consumer to apply if condition is true
-        @param falseCase the consumer to apply if condition is false (can be null)
-        @return this builder instance
-        """);
+        new JavadocDto(
+                "Conditionally applies builder modifications based on a condition evaluation.")
+            .addParam("condition", "the condition to evaluate")
+            .addParam("trueCase", "the consumer to apply if condition is true")
+            .addParam("falseCase", "the consumer to apply if condition is false (can be null)")
+            .addReturn("this builder instance"));
 
     return method;
   }
@@ -161,13 +160,10 @@ public class ConditionalEnhancer implements BuilderEnhancer {
     method.setCode("return conditional(condition, yesCondition, null);");
 
     method.setJavadoc(
-        """
-        Conditionally applies builder modifications if the condition is true.
-
-        @param condition the condition to evaluate
-        @param yesCondition the consumer to apply if condition is true
-        @return this builder instance
-        """);
+        new JavadocDto("Conditionally applies builder modifications if the condition is true.")
+            .addParam("condition", "the condition to evaluate")
+            .addParam("yesCondition", "the consumer to apply if condition is true")
+            .addReturn("this builder instance"));
 
     return method;
   }

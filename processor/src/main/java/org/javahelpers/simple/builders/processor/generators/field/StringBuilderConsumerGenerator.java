@@ -31,6 +31,7 @@ import static org.javahelpers.simple.builders.processor.generators.util.MethodGe
 import java.util.List;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
@@ -112,7 +113,7 @@ public class StringBuilderConsumerGenerator implements MethodGenerator {
         createStringBuilderConsumer(
             field.getOriginalFieldName(),
             field.getFieldNameInBuilder(),
-            field.getJavaDoc(),
+            field.getJavaDoc() != null ? field.getJavaDoc().getDescription() : null,
             transform,
             builderType,
             context);
@@ -148,13 +149,12 @@ public class StringBuilderConsumerGenerator implements MethodGenerator {
     methodDto.setReturnType(builderType);
     methodDto.setPriority(MethodDto.PRIORITY_LOW);
     methodDto.setJavadoc(
-        """
-        Sets the value for <code>%s</code> by executing the provided consumer.
-
-        @param %s consumer providing an instance of %s
-        @return current instance of builder
-        """
-            .formatted(fieldName, parameter.getParameterName(), fieldJavadoc));
+        new JavadocDto(
+                "Sets the value for <code>%s</code> by executing the provided consumer."
+                    .formatted(fieldName))
+            .addParam(
+                parameter.getParameterName(), "consumer providing an instance of " + fieldJavadoc)
+            .addReturn("current instance of builder"));
     return methodDto;
   }
 }

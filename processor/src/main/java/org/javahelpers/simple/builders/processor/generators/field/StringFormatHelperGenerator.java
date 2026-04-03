@@ -35,6 +35,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
@@ -189,15 +190,14 @@ public class StringFormatHelperGenerator implements MethodGenerator {
     methodDto.addArgument("builderFieldWrapper", TRACKED_VALUE_TYPE);
     methodDto.setPriority(MethodDto.PRIORITY_HIGH);
     methodDto.setJavadoc(
-        """
-        Sets the String value for <code>%s</code> by using String.format(format, args).
-        See {@link String#format(String, Object...)} for details.
-
-        @param %s A format string
-        @param %s Arguments referenced by the format specifiers in the format string.
-        @return current instance of builder
-        """
-            .formatted(fieldName, formatParam.getParameterName(), argsParam.getParameterName()));
+        new JavadocDto(
+                "Sets the String value for <code>%s</code> by using String.format(format, args).\nSee {@link String#format(String, Object...)} for details."
+                    .formatted(fieldName))
+            .addParam(formatParam.getParameterName(), "A format string")
+            .addParam(
+                argsParam.getParameterName(),
+                "Arguments referenced by the format specifiers in the format string.")
+            .addReturn("current instance of builder"));
     return methodDto;
   }
 }

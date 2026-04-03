@@ -48,6 +48,7 @@ import org.javahelpers.simple.builders.processor.generators.util.MethodGenerator
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
@@ -448,7 +449,7 @@ public class BuilderDefinitionCreator {
         fieldNameInBuilder); // Use renamed field name for builder field storage
     field.setOriginalFieldName(fieldName);
     field.setFieldType(fieldType);
-    field.setJavaDoc(javaDoc);
+    field.setJavaDoc(javaDoc != null ? new JavadocDto(javaDoc) : null);
 
     // Note: setterName will be set explicitly by the caller before field renaming
 

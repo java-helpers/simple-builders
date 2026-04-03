@@ -29,6 +29,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
@@ -81,10 +82,9 @@ public class StringValidationGenerator implements MethodGenerator {
         MethodDto validationMethod = new MethodDto(methodName, builderType);
         validationMethod.setCode(methodBody);
         validationMethod.setJavadoc(
-            "Validates that the " + fieldInDto + " field is not null or empty.\n" +
-            "\n" +
-            "@return this builder instance for chaining\n" +
-            "@throws IllegalArgumentException if " + fieldInDto + " is null or empty"
+            new JavadocDto("Validates that the " + fieldInDto + " field is not null or empty.")
+                .addReturn("this builder instance for chaining")
+                .addThrows("IllegalArgumentException", "if " + fieldInDto + " is null or empty")
         );
 
         return List.of(validationMethod);

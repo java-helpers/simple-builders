@@ -56,7 +56,6 @@ import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.integration.JacksonModuleDefinitionDto;
 import org.javahelpers.simple.builders.processor.model.integration.JacksonModuleEntryDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
-import org.javahelpers.simple.builders.processor.model.javadoc.JavadocParser;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocTagDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodCodePlaceholder;
 import org.javahelpers.simple.builders.processor.model.method.MethodCodeTypePlaceholder;
@@ -214,7 +213,10 @@ public class RoasterCodeGenerator {
         "Tracked value for <code>%s</code>: %s."
             .formatted(
                 fieldDto.getFieldNameInBuilder(),
-                StringUtils.defaultString(JavadocParser.toString(fieldDto.getJavaDoc()))));
+                StringUtils.defaultString(
+                    fieldDto.getJavaDoc() != null
+                        ? fieldDto.getJavaDoc().getDescription()
+                        : null)));
   }
 
   private void appendConstructors(JavaClassSource source, BuilderDefinitionDto builderDef) {
@@ -237,7 +239,9 @@ public class RoasterCodeGenerator {
     constructor.setBody("");
     applyJavadoc(
         constructor,
-        JavadocParser.parse("Empty constructor of builder for {@code %s}.".formatted(dtoClass.getFullQualifiedName())));
+        new JavadocDto(
+            "Empty constructor of builder for {@code %s}."
+                .formatted(dtoClass.getFullQualifiedName())));
   }
 
   private void appendConstructorWithInstance(
@@ -252,12 +256,10 @@ public class RoasterCodeGenerator {
     constructor.setBody(buildConstructorBody(fields));
     applyJavadoc(
         constructor,
-        JavadocParser.parse("""
-            Initialisation of builder for {@code %s} by a instance.
-
-            @param instance object instance for initialisiation
-            """
-            .formatted(dtoBaseClass.getFullQualifiedName())));
+        new JavadocDto(
+                "Initialisation of builder for {@code %s} by a instance."
+                    .formatted(dtoBaseClass.getFullQualifiedName()))
+            .addParam("instance", "object instance for initialisiation"));
   }
 
   private String buildConstructorBody(List<FieldDto> fields) {
@@ -497,12 +499,12 @@ public class RoasterCodeGenerator {
     if (javadoc == null || !javadoc.hasContent()) {
       return;
     }
-    
+
     // Set description text
     if (StringUtils.isNotBlank(javadoc.getDescription())) {
       source.getJavaDoc().setText(javadoc.getDescription());
     }
-    
+
     // Remove existing tags and add new ones
     source.getJavaDoc().removeAllTags();
     for (JavadocTagDto tag : javadoc.getTags()) {
@@ -513,7 +515,6 @@ public class RoasterCodeGenerator {
       }
     }
   }
-
 
   private void applyAnnotations(
       org.jboss.forge.roaster.model.source.AnnotationTargetSource<?, ?> source,
