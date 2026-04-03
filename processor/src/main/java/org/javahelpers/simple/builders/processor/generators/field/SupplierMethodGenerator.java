@@ -146,9 +146,8 @@ public class SupplierMethodGenerator implements MethodGenerator {
 
     methodDto.setJavadoc(
         new JavadocDto(
-                "Sets the value for <code>%s</code> by invoking the provided supplier."
-                    .formatted(fieldName))
-            .addParam(parameterName, "supplier for " + fieldJavaDoc)
+                "Sets the value for <code>%s</code> by invoking the provided supplier.", fieldName)
+            .addParam(parameterName, "supplier for %s", fieldJavaDoc)
             .addReturn("current instance of builder"));
 
     return methodDto;

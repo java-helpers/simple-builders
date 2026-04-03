@@ -76,6 +76,24 @@ public class JavadocDto {
   }
 
   /**
+   * Constructor with formatted description text.
+   *
+   * <p>Allows using String.format-style formatting directly in the constructor.
+   *
+   * <p>Example:
+   *
+   * <pre>{@code
+   * new JavadocDto("Sets the value for <code>%s</code>.", fieldName)
+   * }</pre>
+   *
+   * @param format the format string (using String.format syntax)
+   * @param args the arguments referenced by the format specifiers
+   */
+  public JavadocDto(String format, Object... args) {
+    this.description = String.format(format, args);
+  }
+
+  /**
    * Constructor with description and tags.
    *
    * @param description the main description text
@@ -139,24 +157,48 @@ public class JavadocDto {
   }
 
   /**
-   * Adds a @param tag.
+   * Adds a @param tag with optional formatted description.
+   *
+   * <p>Supports String.format-style formatting when args are provided.
+   *
+   * <p>Examples:
+   *
+   * <pre>{@code
+   * addParam("value", "the value to set")              // No formatting
+   * addParam("value", "the %s to set", fieldName)      // With formatting
+   * }</pre>
    *
    * @param paramName the parameter name
-   * @param description the parameter description
+   * @param descriptionFormat the format string for the parameter description
+   * @param args optional arguments referenced by format specifiers in the description
    * @return this JavadocDto for fluent chaining
    */
-  public JavadocDto addParam(String paramName, String description) {
+  public JavadocDto addParam(String paramName, String descriptionFormat, Object... args) {
+    String description =
+        args.length > 0 ? String.format(descriptionFormat, args) : descriptionFormat;
     addTag("param", paramName + " " + description);
     return this;
   }
 
   /**
-   * Adds a @return tag.
+   * Adds a @return tag with optional formatted description.
    *
-   * @param description the return description
+   * <p>Supports String.format-style formatting when args are provided.
+   *
+   * <p>Examples:
+   *
+   * <pre>{@code
+   * addReturn("current instance of builder")           // No formatting
+   * addReturn("builder for {@code %s}", className)     // With formatting
+   * }</pre>
+   *
+   * @param descriptionFormat the format string for the return description
+   * @param args optional arguments referenced by format specifiers in the description
    * @return this JavadocDto for fluent chaining
    */
-  public JavadocDto addReturn(String description) {
+  public JavadocDto addReturn(String descriptionFormat, Object... args) {
+    String description =
+        args.length > 0 ? String.format(descriptionFormat, args) : descriptionFormat;
     addTag("return", description);
     return this;
   }

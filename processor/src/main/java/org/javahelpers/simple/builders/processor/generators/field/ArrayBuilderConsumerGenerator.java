@@ -147,9 +147,8 @@ public class ArrayBuilderConsumerGenerator implements MethodGenerator {
     methodDto.setPriority(MethodDto.PRIORITY_MEDIUM);
     methodDto.setJavadoc(
         new JavadocDto(
-                "Sets the value for <code>%s</code> using the fluent builder consumer."
-                    .formatted(fieldName))
-            .addParam(parameter.getParameterName(), "consumer for %s".formatted(fieldName))
+                "Sets the value for <code>%s</code> using the fluent builder consumer.", fieldName)
+            .addParam(parameter.getParameterName(), "consumer for %s", fieldName)
             .addReturn("current instance of builder"));
     return methodDto;
   }

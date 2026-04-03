@@ -150,10 +150,9 @@ public class StringBuilderConsumerGenerator implements MethodGenerator {
     methodDto.setPriority(MethodDto.PRIORITY_LOW);
     methodDto.setJavadoc(
         new JavadocDto(
-                "Sets the value for <code>%s</code> by executing the provided consumer."
-                    .formatted(fieldName))
+                "Sets the value for <code>%s</code> by executing the provided consumer.", fieldName)
             .addParam(
-                parameter.getParameterName(), "consumer providing an instance of " + fieldJavadoc)
+                parameter.getParameterName(), "consumer providing an instance of %s", fieldJavadoc)
             .addReturn("current instance of builder"));
     return methodDto;
   }

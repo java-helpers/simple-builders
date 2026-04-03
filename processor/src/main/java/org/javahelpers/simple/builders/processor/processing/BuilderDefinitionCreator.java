@@ -304,10 +304,11 @@ public class BuilderDefinitionCreator {
 
     // Extract only the @param Javadoc for the single setter parameter (if present)
     String fullJavaDoc = context.getDocComment(mth);
-    String javaDoc = JavaLangAnalyser.extractParamJavaDoc(fullJavaDoc, fieldParameter);
-    if (javaDoc == null) {
-      javaDoc = fieldName;
+    String javaDocStr = JavaLangAnalyser.extractParamJavaDoc(fullJavaDoc, fieldParameter);
+    if (javaDocStr == null) {
+      javaDocStr = fieldName;
     }
+    JavadocDto javaDoc = new JavadocDto(javaDocStr);
 
     // Check for field name conflicts and rename if necessary
     String finalFieldName =
@@ -337,11 +338,12 @@ public class BuilderDefinitionCreator {
       Map<String, FieldDto> fieldNameRegistry) {
     String fieldName = param.getSimpleName().toString();
     // Set javadoc (default to field name if no javadoc found)
-    String javaDoc =
+    String javaDocStr =
         JavaLangAnalyser.extractParamJavaDoc(context.getDocComment(annotatedType), param);
-    if (javaDoc == null) {
-      javaDoc = fieldName;
+    if (javaDocStr == null) {
+      javaDocStr = fieldName;
     }
+    JavadocDto javaDoc = new JavadocDto(javaDocStr);
 
     // Convert TypeElement to TypeName once
     TypeName dtoType = JavaLangMapper.map2TypeName(annotatedType, context);
@@ -431,7 +433,7 @@ public class BuilderDefinitionCreator {
   private static Optional<FieldDto> createFieldDto(
       String fieldName,
       String fieldNameInBuilder,
-      String javaDoc,
+      JavadocDto javaDoc,
       VariableElement param,
       TypeName dtoType,
       TypeName builderType,
@@ -449,7 +451,7 @@ public class BuilderDefinitionCreator {
         fieldNameInBuilder); // Use renamed field name for builder field storage
     field.setOriginalFieldName(fieldName);
     field.setFieldType(fieldType);
-    field.setJavaDoc(javaDoc != null ? new JavadocDto(javaDoc) : null);
+    field.setJavaDoc(javaDoc);
 
     // Note: setterName will be set explicitly by the caller before field renaming
 

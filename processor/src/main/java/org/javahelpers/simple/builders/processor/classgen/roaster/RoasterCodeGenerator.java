@@ -240,8 +240,7 @@ public class RoasterCodeGenerator {
     applyJavadoc(
         constructor,
         new JavadocDto(
-            "Empty constructor of builder for {@code %s}."
-                .formatted(dtoClass.getFullQualifiedName())));
+            "Empty constructor of builder for {@code %s}.", dtoClass.getFullQualifiedName()));
   }
 
   private void appendConstructorWithInstance(
@@ -257,8 +256,8 @@ public class RoasterCodeGenerator {
     applyJavadoc(
         constructor,
         new JavadocDto(
-                "Initialisation of builder for {@code %s} by a instance."
-                    .formatted(dtoBaseClass.getFullQualifiedName()))
+                "Initialisation of builder for {@code %s} by a instance.",
+                dtoBaseClass.getFullQualifiedName())
             .addParam("instance", "object instance for initialisiation"));
   }
 

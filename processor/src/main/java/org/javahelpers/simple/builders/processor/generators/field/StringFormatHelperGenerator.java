@@ -191,8 +191,8 @@ public class StringFormatHelperGenerator implements MethodGenerator {
     methodDto.setPriority(MethodDto.PRIORITY_HIGH);
     methodDto.setJavadoc(
         new JavadocDto(
-                "Sets the String value for <code>%s</code> by using String.format(format, args).\nSee {@link String#format(String, Object...)} for details."
-                    .formatted(fieldName))
+                "Sets the String value for <code>%s</code> by using String.format(format, args).\nSee {@link String#format(String, Object...)} for details.",
+                fieldName)
             .addParam(formatParam.getParameterName(), "A format string")
             .addParam(
                 argsParam.getParameterName(),

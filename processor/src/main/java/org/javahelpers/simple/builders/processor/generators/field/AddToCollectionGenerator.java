@@ -179,7 +179,7 @@ public class AddToCollectionGenerator implements MethodGenerator {
     methodDto.setPriority(MethodDto.PRIORITY_MEDIUM);
 
     methodDto.setJavadoc(
-        new JavadocDto("Adds a single element to <code>%s</code>.".formatted(originalFieldName))
+        new JavadocDto("Adds a single element to <code>%s</code>.", originalFieldName)
             .addParam("element", "the element to add")
             .addReturn("current instance of builder"));
 

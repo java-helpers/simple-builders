@@ -190,8 +190,7 @@ public final class MethodGeneratorUtil {
     String fieldJavadocDesc =
         field.getJavaDoc() != null ? field.getJavaDoc().getDescription() : null;
     methodDto.setJavadoc(
-        new JavadocDto(
-                "Sets the value for <code>%s</code>.".formatted(field.getOriginalFieldName()))
+        new JavadocDto("Sets the value for <code>%s</code>.", field.getOriginalFieldName())
             .addParam(parameter.getParameterName(), fieldJavadocDesc)
             .addReturn("current instance of builder"));
 
@@ -249,11 +248,12 @@ public final class MethodGeneratorUtil {
         field.getJavaDoc() != null ? field.getJavaDoc().getDescription() : null;
     methodDto.setJavadoc(
         new JavadocDto(
-                "Sets the value for <code>%s</code> using a builder consumer that produces the value."
-                    .formatted(field.getFieldNameInBuilder()))
+                "Sets the value for <code>%s</code> using a builder consumer that produces the value.",
+                field.getFieldNameInBuilder())
             .addParam(
                 parameter.getParameterName(),
-                "consumer providing an instance of a builder for " + fieldJavadocDesc)
+                "consumer providing an instance of a builder for %s",
+                fieldJavadocDesc)
             .addReturn("current instance of builder"));
 
     return methodDto;
@@ -380,11 +380,12 @@ public final class MethodGeneratorUtil {
         field.getJavaDoc() != null ? field.getJavaDoc().getDescription() : null;
     methodDto.setJavadoc(
         new JavadocDto(
-                "Sets the value for <code>%s</code> by executing the provided consumer."
-                    .formatted(field.getOriginalFieldName()))
+                "Sets the value for <code>%s</code> by executing the provided consumer.",
+                field.getOriginalFieldName())
             .addParam(
                 parameter.getParameterName(),
-                "consumer providing an instance of " + fieldJavadocDesc)
+                "consumer providing an instance of %s",
+                fieldJavadocDesc)
             .addReturn("current instance of builder"));
 
     return methodDto;

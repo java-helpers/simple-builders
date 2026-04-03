@@ -227,8 +227,8 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
     String targetFullName = builderDto.getBuildingTargetTypeName().getFullQualifiedName();
 
     method.setJavadoc(
-        new JavadocDto("Creating a new builder for {@code %s}.".formatted(targetFullName))
-            .addReturn("builder for {@code %s}".formatted(targetFullName)));
+        new JavadocDto("Creating a new builder for {@code %s}.", targetFullName)
+            .addReturn("builder for {@code %s}", targetFullName));
 
     return method;
   }
