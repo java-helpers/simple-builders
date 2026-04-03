@@ -174,8 +174,7 @@ public class JavadocDto {
    * @return this JavadocDto for fluent chaining
    */
   public JavadocDto addParam(String paramName, String descriptionFormat, Object... args) {
-    String description =
-        args.length > 0 ? String.format(descriptionFormat, args) : descriptionFormat;
+    String description = String.format(descriptionFormat, args);
     addTag("param", paramName + " " + description);
     return this;
   }
@@ -197,31 +196,52 @@ public class JavadocDto {
    * @return this JavadocDto for fluent chaining
    */
   public JavadocDto addReturn(String descriptionFormat, Object... args) {
-    String description =
-        args.length > 0 ? String.format(descriptionFormat, args) : descriptionFormat;
+    String description = String.format(descriptionFormat, args);
     addTag("return", description);
     return this;
   }
 
   /**
-   * Adds a @throws tag.
+   * Adds a @throws tag with optional formatted description.
+   *
+   * <p>Supports String.format-style formatting when args are provided.
+   *
+   * <p>Examples:
+   *
+   * <pre>{@code
+   * addThrows("IllegalArgumentException", "if name is null")
+   * addThrows("IllegalStateException", "if %s is invalid", fieldName)
+   * }</pre>
    *
    * @param exceptionName the exception name
-   * @param description the exception description
+   * @param descriptionFormat the format string for the exception description
+   * @param args optional arguments referenced by format specifiers in the description
    * @return this JavadocDto for fluent chaining
    */
-  public JavadocDto addThrows(String exceptionName, String description) {
+  public JavadocDto addThrows(String exceptionName, String descriptionFormat, Object... args) {
+    String description = String.format(descriptionFormat, args);
     addTag("throws", exceptionName + " " + description);
     return this;
   }
 
   /**
-   * Adds a @see tag.
+   * Adds a @see tag with optional formatted reference.
    *
-   * @param reference the reference description
+   * <p>Supports String.format-style formatting when args are provided.
+   *
+   * <p>Examples:
+   *
+   * <pre>{@code
+   * addSee("PersonDto")
+   * addSee("%s#%s", className, methodName)
+   * }</pre>
+   *
+   * @param referenceFormat the format string for the reference
+   * @param args optional arguments referenced by format specifiers in the reference
    * @return this JavadocDto for fluent chaining
    */
-  public JavadocDto addSee(String reference) {
+  public JavadocDto addSee(String referenceFormat, Object... args) {
+    String reference = String.format(referenceFormat, args);
     addTag("see", reference);
     return this;
   }

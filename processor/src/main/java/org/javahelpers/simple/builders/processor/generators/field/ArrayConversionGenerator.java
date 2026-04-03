@@ -129,8 +129,7 @@ public class ArrayConversionGenerator implements MethodGenerator {
     methodDto.addArgument("builderFieldWrapper", TRACKED_VALUE_TYPE);
     methodDto.addArgument("elementType", elementType);
     methodDto.setPriority(MethodDto.PRIORITY_HIGH);
-    String fieldJavadocDesc =
-        field.getJavaDoc() != null ? field.getJavaDoc().getDescription() : null;
+    String fieldJavadocDesc = field.getJavaDocDescriptionOrFieldName();
     methodDto.setJavadoc(
         new JavadocDto("Sets the value for <code>%s</code>.", fieldName)
             .addParam(parameter.getParameterName(), fieldJavadocDesc)

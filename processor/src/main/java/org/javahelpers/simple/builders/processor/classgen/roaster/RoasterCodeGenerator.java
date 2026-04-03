@@ -209,14 +209,10 @@ public class RoasterCodeGenerator {
   }
 
   private void applyJavaDocToField(JavaDocSource<?> javaDoc, FieldDto fieldDto) {
-    javaDoc.setText(
-        "Tracked value for <code>%s</code>: %s."
-            .formatted(
-                fieldDto.getFieldNameInBuilder(),
-                StringUtils.defaultString(
-                    fieldDto.getJavaDoc() != null
-                        ? fieldDto.getJavaDoc().getDescription()
-                        : null)));
+    JavadocDto trackedValueJavadoc = fieldDto.getJavaDoc();
+    if (trackedValueJavadoc != null) {
+      javaDoc.setText(trackedValueJavadoc.getDescription());
+    }
   }
 
   private void appendConstructors(JavaClassSource source, BuilderDefinitionDto builderDef) {
@@ -498,6 +494,10 @@ public class RoasterCodeGenerator {
     if (javadoc == null || !javadoc.hasContent()) {
       return;
     }
+
+    // Note: source.getJavaDoc() never returns null - Roaster creates the JavaDoc if it doesn't
+    // exist
+    // The early return above ensures we only create JavaDoc when there's actual content to set
 
     // Set description text
     if (StringUtils.isNotBlank(javadoc.getDescription())) {

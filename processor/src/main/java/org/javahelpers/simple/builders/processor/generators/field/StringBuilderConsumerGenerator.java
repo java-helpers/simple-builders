@@ -113,7 +113,7 @@ public class StringBuilderConsumerGenerator implements MethodGenerator {
         createStringBuilderConsumer(
             field.getOriginalFieldName(),
             field.getFieldNameInBuilder(),
-            field.getJavaDoc() != null ? field.getJavaDoc().getDescription() : null,
+            field.getJavaDocDescriptionOrFieldName(),
             transform,
             builderType,
             context);

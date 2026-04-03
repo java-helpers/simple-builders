@@ -187,8 +187,7 @@ public final class MethodGeneratorUtil {
 
     methodDto.setPriority(transform == null ? MethodDto.PRIORITY_HIGHEST : MethodDto.PRIORITY_HIGH);
 
-    String fieldJavadocDesc =
-        field.getJavaDoc() != null ? field.getJavaDoc().getDescription() : null;
+    String fieldJavadocDesc = field.getJavaDocDescriptionOrFieldName();
     methodDto.setJavadoc(
         new JavadocDto("Sets the value for <code>%s</code>.", field.getOriginalFieldName())
             .addParam(parameter.getParameterName(), fieldJavadocDesc)
@@ -244,8 +243,7 @@ public final class MethodGeneratorUtil {
     additionalTemplateArguments.forEach(methodDto::addArgument);
     methodDto.addArgument("builderFieldWrapper", TRACKED_VALUE_TYPE);
     methodDto.setPriority(MethodDto.PRIORITY_MEDIUM);
-    String fieldJavadocDesc =
-        field.getJavaDoc() != null ? field.getJavaDoc().getDescription() : null;
+    String fieldJavadocDesc = field.getJavaDocDescriptionOrFieldName();
     methodDto.setJavadoc(
         new JavadocDto(
                 "Sets the value for <code>%s</code> using a builder consumer that produces the value.",
@@ -376,8 +374,7 @@ public final class MethodGeneratorUtil {
     methodDto.addArgument("builderFieldWrapper", TRACKED_VALUE_TYPE);
     methodDto.setPriority(MethodDto.PRIORITY_MEDIUM);
 
-    String fieldJavadocDesc =
-        field.getJavaDoc() != null ? field.getJavaDoc().getDescription() : null;
+    String fieldJavadocDesc = field.getJavaDocDescriptionOrFieldName();
     methodDto.setJavadoc(
         new JavadocDto(
                 "Sets the value for <code>%s</code> by executing the provided consumer.",

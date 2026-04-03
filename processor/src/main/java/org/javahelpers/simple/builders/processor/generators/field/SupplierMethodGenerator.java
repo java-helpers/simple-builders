@@ -96,7 +96,7 @@ public class SupplierMethodGenerator implements MethodGenerator {
         createFieldSupplier(
             field.getOriginalFieldName(),
             field.getFieldNameInBuilder(),
-            field.getJavaDoc() != null ? field.getJavaDoc().getDescription() : null,
+            field.getJavaDocDescriptionOrFieldName(),
             field.getFieldType(),
             builderType,
             context);

@@ -51,7 +51,13 @@ public class FieldDto {
   /** List of all methods in builder, which provide helpers to change the field. */
   private final List<MethodDto> fieldSetterMethodsList = new ArrayList<>();
 
-  /** Optional Javadoc of the field extracted from setter or constructor. */
+  /**
+   * Original javadoc description extracted from setter or constructor parameter. This is used when
+   * generating javadoc for builder methods that reference this field.
+   */
+  private String originalJavaDocDescription;
+
+  /** Javadoc for the tracked value field in the builder. */
   private JavadocDto javaDoc;
 
   /** Method-level generics declared on the setter, to be reused in builder methods. */
@@ -162,7 +168,37 @@ public class FieldDto {
   }
 
   /**
-   * Getting extracted Javadoc.
+   * Gets the original javadoc description extracted from the DTO.
+   *
+   * @return the original javadoc description, or null if none present
+   */
+  public String getOriginalJavaDocDescription() {
+    return originalJavaDocDescription;
+  }
+
+  /**
+   * Sets the original javadoc description extracted from the DTO.
+   *
+   * @param originalJavaDocDescription the original javadoc description
+   */
+  public void setOriginalJavaDocDescription(String originalJavaDocDescription) {
+    this.originalJavaDocDescription = originalJavaDocDescription;
+  }
+
+  /**
+   * Gets the original javadoc description if available, otherwise returns the original field name.
+   *
+   * <p>This is useful when generating javadoc for builder methods that reference the field, as it
+   * provides a meaningful description even when no explicit javadoc was provided.
+   *
+   * @return the javadoc description if available, otherwise the original field name
+   */
+  public String getJavaDocDescriptionOrFieldName() {
+    return originalJavaDocDescription != null ? originalJavaDocDescription : originalFieldName;
+  }
+
+  /**
+   * Getting Javadoc for the tracked value field in the builder.
    *
    * @return Javadoc or null if none present
    */
@@ -171,7 +207,7 @@ public class FieldDto {
   }
 
   /**
-   * Setting extracted Javadoc.
+   * Setting Javadoc for the tracked value field in the builder.
    *
    * @param javaDoc Javadoc
    */
