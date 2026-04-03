@@ -191,7 +191,7 @@ public final class MethodGeneratorUtil {
     methodDto.setJavadoc(
         new JavadocDto("Sets the value for <code>%s</code>.", field.getOriginalFieldName())
             .addParam(parameter.getParameterName(), fieldJavadocDesc)
-            .addReturn("current instance of builder"));
+            .addReturn(JavadocConstants.RETURN_BUILDER_INSTANCE));
 
     return methodDto;
   }
@@ -252,7 +252,7 @@ public final class MethodGeneratorUtil {
                 parameter.getParameterName(),
                 "consumer providing an instance of a builder for %s",
                 fieldJavadocDesc)
-            .addReturn("current instance of builder"));
+            .addReturn(JavadocConstants.RETURN_BUILDER_INSTANCE));
 
     return methodDto;
   }
@@ -383,7 +383,7 @@ public final class MethodGeneratorUtil {
                 parameter.getParameterName(),
                 "consumer providing an instance of %s",
                 fieldJavadocDesc)
-            .addReturn("current instance of builder"));
+            .addReturn(JavadocConstants.RETURN_BUILDER_INSTANCE));
 
     return methodDto;
   }

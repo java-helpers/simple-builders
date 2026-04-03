@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.collections4.CollectionUtils;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
+import org.javahelpers.simple.builders.processor.generators.util.JavadocConstants;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
@@ -197,7 +198,7 @@ public class StringFormatHelperGenerator implements MethodGenerator {
             .addParam(
                 argsParam.getParameterName(),
                 "Arguments referenced by the format specifiers in the format string.")
-            .addReturn("current instance of builder"));
+            .addReturn(JavadocConstants.RETURN_BUILDER_INSTANCE));
     return methodDto;
   }
 }

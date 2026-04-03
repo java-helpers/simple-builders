@@ -174,8 +174,8 @@ public class JavadocDto {
    * @return this JavadocDto for fluent chaining
    */
   public JavadocDto addParam(String paramName, String descriptionFormat, Object... args) {
-    String description = String.format(descriptionFormat, args);
-    addTag("param", paramName + " " + description);
+    String paramDescription = String.format(descriptionFormat, args);
+    addTag("param", paramName + " " + paramDescription);
     return this;
   }
 
@@ -196,8 +196,8 @@ public class JavadocDto {
    * @return this JavadocDto for fluent chaining
    */
   public JavadocDto addReturn(String descriptionFormat, Object... args) {
-    String description = String.format(descriptionFormat, args);
-    addTag("return", description);
+    String returnDescription = String.format(descriptionFormat, args);
+    addTag("return", returnDescription);
     return this;
   }
 
@@ -219,8 +219,8 @@ public class JavadocDto {
    * @return this JavadocDto for fluent chaining
    */
   public JavadocDto addThrows(String exceptionName, String descriptionFormat, Object... args) {
-    String description = String.format(descriptionFormat, args);
-    addTag("throws", exceptionName + " " + description);
+    String throwsDescription = String.format(descriptionFormat, args);
+    addTag("throws", exceptionName + " " + throwsDescription);
     return this;
   }
 
@@ -241,13 +241,13 @@ public class JavadocDto {
    * @return this JavadocDto for fluent chaining
    */
   public JavadocDto addSee(String referenceFormat, Object... args) {
-    String reference = String.format(referenceFormat, args);
-    addTag("see", reference);
+    String seeReference = String.format(referenceFormat, args);
+    addTag("see", seeReference);
     return this;
   }
 
   /**
-   * Adds a @deprecated tag.
+   * Adds a deprecated tag.
    *
    * @return this JavadocDto for fluent chaining
    */

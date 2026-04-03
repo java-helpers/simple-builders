@@ -31,6 +31,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
+import org.javahelpers.simple.builders.processor.generators.util.JavadocConstants;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
@@ -148,7 +149,7 @@ public class SupplierMethodGenerator implements MethodGenerator {
         new JavadocDto(
                 "Sets the value for <code>%s</code> by invoking the provided supplier.", fieldName)
             .addParam(parameterName, "supplier for %s", fieldJavaDoc)
-            .addReturn("current instance of builder"));
+            .addReturn(JavadocConstants.RETURN_BUILDER_INSTANCE));
 
     return methodDto;
   }

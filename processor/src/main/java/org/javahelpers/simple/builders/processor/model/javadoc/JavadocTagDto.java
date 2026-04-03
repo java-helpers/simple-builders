@@ -31,7 +31,7 @@ public record JavadocTagDto(String tagName, String tagValue) {
    * Creates a new Javadoc tag.
    *
    * @param tagName the tag name without @ prefix (e.g., "param", "return", "throws", "see")
-   * @param tagValue the tag value/content (may be empty for tags without content like @deprecated)
+   * @param tagValue the tag value/content (may be empty for tags without content like deprecated)
    */
   public JavadocTagDto {
     if (tagName != null && tagName.startsWith("@")) {

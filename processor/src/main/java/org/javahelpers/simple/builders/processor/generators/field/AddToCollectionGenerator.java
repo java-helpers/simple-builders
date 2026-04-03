@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
+import org.javahelpers.simple.builders.processor.generators.util.JavadocConstants;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
@@ -181,7 +182,7 @@ public class AddToCollectionGenerator implements MethodGenerator {
     methodDto.setJavadoc(
         new JavadocDto("Adds a single element to <code>%s</code>.", originalFieldName)
             .addParam("element", "the element to add")
-            .addReturn("current instance of builder"));
+            .addReturn(JavadocConstants.RETURN_BUILDER_INSTANCE));
 
     return methodDto;
   }

@@ -29,6 +29,7 @@ import static org.javahelpers.simple.builders.processor.generators.util.MethodGe
 
 import java.util.List;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
+import org.javahelpers.simple.builders.processor.generators.util.JavadocConstants;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
@@ -133,7 +134,7 @@ public class ArrayConversionGenerator implements MethodGenerator {
     methodDto.setJavadoc(
         new JavadocDto("Sets the value for <code>%s</code>.", fieldName)
             .addParam(parameter.getParameterName(), fieldJavadocDesc)
-            .addReturn("current instance of builder"));
+            .addReturn(JavadocConstants.RETURN_BUILDER_INSTANCE));
     return methodDto;
   }
 }
