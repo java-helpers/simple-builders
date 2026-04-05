@@ -1135,6 +1135,93 @@ class BuilderProcessorTest {
   }
 
   @Test
+  void shouldValidateNonNullFieldsInFromInstanceConstructor() {
+    // Given
+    String className = "NonNullValidation";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject notNullAnnotation =
+        ProcessorTestUtils.forSource(
+            """
+                package jakarta.validation.constraints;
+                import java.lang.annotation.*;
+                @Retention(RetentionPolicy.RUNTIME)
+                @Target({ElementType.FIELD, ElementType.PARAMETER})
+                public @interface NotNull {
+                  String message() default "";
+                }
+            """);
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+            import jakarta.validation.constraints.NotNull;
+
+            @SimpleBuilder
+            public class NonNullValidation {
+                private String requiredField;
+                private String optionalField;
+                private int primitiveField;
+
+                public String getRequiredField() { return requiredField; }
+                public void setRequiredField(@NotNull String requiredField) {
+                this.requiredField = requiredField;
+                }
+
+                public String getOptionalField() { return optionalField; }
+                public void setOptionalField(String optionalField) {
+                this.optionalField = optionalField;
+                }
+
+                public int getPrimitiveField() { return primitiveField; }
+                public void setPrimitiveField(int primitiveField) {
+                this.primitiveField = primitiveField;
+                }
+            }
+            """);
+
+    // When
+    Compilation compilation = compile(notNullAnnotation, sourceFile);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    // Verify from-instance constructor validates @NotNull fields but not nullable/primitive fields
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        """
+        public NonNullValidationBuilder(NonNullValidation instance) {
+            this.optionalField = initialValue(instance.getOptionalField());
+            this.primitiveField = initialValue(instance.getPrimitiveField());
+            if (instance.getRequiredField() == null) {
+                throw new IllegalArgumentException(
+                    "Field 'requiredField' is non-null but instance.getRequiredField() returned null");
+            }
+            this.requiredField = initialValue(instance.getRequiredField());
+        }
+        """);
+
+    // Verify build() method has validation for @NotNull field
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        """
+        public NonNullValidation build() {
+            if (this.requiredField.isSet() && this.requiredField.value() == null) {
+                throw new IllegalStateException("Field 'requiredField' is marked as non-null but null value was provided");
+            }
+            NonNullValidation result = new NonNullValidation();
+            this.optionalField.ifSet(result::setOptionalField);
+            this.primitiveField.ifSet(result::setPrimitiveField);
+            this.requiredField.ifSet(result::setRequiredField);
+            return result;
+        }
+        """);
+  }
+
+  @Test
   void shouldGenerateMethodJavadocsForAllMethodTypes() {
     // Given
     String packageName = "test";

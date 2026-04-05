@@ -50,10 +50,6 @@ public class JacksonIntegrationDtoBuilder implements IBuilderBase<JacksonIntegra
   public JacksonIntegrationDtoBuilder(JacksonIntegrationDto instance) {
     this.name = initialValue(instance.name());
     this.age = initialValue(instance.age());
-    if (this.age.value() == null) {
-      throw new IllegalArgumentException(
-          "Cannot initialize builder from instance: field 'age' is marked as non-null but source object has null value");
-    }
   }
 
   /**
