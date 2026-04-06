@@ -230,7 +230,9 @@ public final class MethodGeneratorUtil {
 
     methodDto.setCode(
         """
-        $helperType:T builder = this.$fieldName:N.isSet() ? new $helperType:T(%s) : new $helperType:T(%s);
+        $helperType:T builder = this.$fieldName:N.isSet()
+          ? new $helperType:T(%s)
+          : new $helperType:T(%s);
         $dtoMethodParam:N.accept(builder);
         this.$fieldName:N = $builderFieldWrapper:T.changedValue($buildExpression:N);
         return this;
@@ -363,7 +365,9 @@ public final class MethodGeneratorUtil {
 
     methodDto.setCode(
         """
-        $helperType:T consumer = this.$fieldName:N.isSet() ? this.$fieldName:N.value() : new $helperType:T();
+        $helperType:T consumer = this.$fieldName:N.isSet()
+          ? this.$fieldName:N.value()
+          : new $helperType:T();
         $dtoMethodParam:N.accept(consumer);
         this.$fieldName:N = $builderFieldWrapper:T.changedValue(consumer);
         return this;

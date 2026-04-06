@@ -31,7 +31,6 @@ import static org.javahelpers.simple.builders.processor.classgen.roaster.Roaster
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Writer;
-import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -47,9 +46,7 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.annotation.InterfaceName;
-import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.model.core.ClassFieldDto;
-import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.core.GenerationTargetClassDto;
 import org.javahelpers.simple.builders.processor.model.integration.JacksonModuleDefinitionDto;
 import org.javahelpers.simple.builders.processor.model.integration.JacksonModuleEntryDto;
@@ -158,10 +155,10 @@ public class RoasterCodeGenerator {
     source.setName(classDef.getTypeName().getClassName());
     addGenericDeclarations(source, classDef.getGenerics());
     addTrackedValueStaticImports(source);
-    
+
     // Collect and add imports early (before elements are added)
     collectImports(classDef).stream().sorted().forEach(source::addImport);
-    
+
     logger.debug("JavaClassSource created");
     return source;
   }
@@ -171,9 +168,7 @@ public class RoasterCodeGenerator {
     applyJavadoc(source, classDef.getClassJavadoc());
 
     // Set class access level
-    if (classDef.getClassAccessModifier() != null) {
-      applyVisibility(source, classDef.getClassAccessModifier());
-    }
+    applyVisibility(source, classDef.getClassAccessModifier());
 
     // Add superclass if specified
     if (classDef.getSuperType() != null) {
@@ -245,48 +240,28 @@ public class RoasterCodeGenerator {
   }
 
   private void appendMethods(JavaClassSource source, GenerationTargetClassDto classDef) {
-    logger.debugStartOperation("Generating %d methods", classDef.getMethods().size());
+    logger.debugStartOperation("Generating %d method candidates", classDef.getMethods().size());
 
-    for (MethodDto methodDto : classDef.getMethods()) {
+    // Resolve method conflicts by signature and priority
+    List<MethodDto> resolvedMethods = resolveMethodConflicts(classDef.getMethods());
+    logger.debug("Resolved to %d methods after conflict resolution", resolvedMethods.size());
+
+    for (MethodDto methodDto : resolvedMethods) {
       appendMethod(source, methodDto, false, false);
     }
 
-    logger.debugEndOperation("Methods added: %d", classDef.getMethods().size());
+    logger.debugEndOperation("Methods added: %d", resolvedMethods.size());
   }
 
-  private Map<MethodDto, FieldDto> collectAllMethods(BuilderDefinitionDto builderDef) {
-    Map<MethodDto, FieldDto> allMethods = new HashMap<>();
-
-    for (FieldDto fieldDto : builderDef.getConstructorFieldsForBuilder()) {
-      for (MethodDto method : fieldDto.getMethods()) {
-        allMethods.put(method, fieldDto);
-      }
-    }
-    for (FieldDto fieldDto : builderDef.getSetterFieldsForBuilder()) {
-      for (MethodDto method : fieldDto.getMethods()) {
-        allMethods.put(method, fieldDto);
-      }
-    }
-    for (MethodDto coreMethod : builderDef.getCoreMethods()) {
-      allMethods.put(coreMethod, null);
-    }
-
-    return allMethods;
-  }
-
-  private List<MethodDto> resolveMethodConflicts(Map<MethodDto, FieldDto> methodToField) {
+  private List<MethodDto> resolveMethodConflicts(List<MethodDto> methods) {
     MethodDto.MethodComparator comparator = new MethodDto.MethodComparator();
 
-    List<Map.Entry<MethodDto, FieldDto>> sortedEntries =
-        methodToField.entrySet().stream()
-            .sorted((e1, e2) -> comparator.compare(e1.getKey(), e2.getKey()))
-            .toList();
+    // Sort methods by comparator for consistent ordering
+    List<MethodDto> sortedMethods = methods.stream().sorted(comparator).toList();
 
     Map<String, MethodDto> signatureToMethod = new java.util.LinkedHashMap<>();
 
-    for (Map.Entry<MethodDto, FieldDto> entry : sortedEntries) {
-      MethodDto method = entry.getKey();
-      FieldDto field = entry.getValue();
+    for (MethodDto method : sortedMethods) {
       String signature = method.getSignatureKey();
 
       MethodDto existing = signatureToMethod.get(signature);
@@ -294,8 +269,13 @@ public class RoasterCodeGenerator {
         signatureToMethod.put(signature, method);
       } else {
         String existingSource =
-            createSourceDescriptionForLogging(existing, methodToField.get(existing));
-        String newSource = createSourceDescriptionForLogging(method, field);
+            existing.getSourceDescription() != null
+                ? existing.getSourceDescription()
+                : "unknown source";
+        String newSource =
+            method.getSourceDescription() != null
+                ? method.getSourceDescription()
+                : "unknown source";
 
         if (method.getPriority() > existing.getPriority()) {
           signatureToMethod.put(signature, method);
@@ -314,21 +294,8 @@ public class RoasterCodeGenerator {
       }
     }
 
-    return new java.util.ArrayList<>(signatureToMethod.values());
-  }
-
-  /**
-   * Creates a description string for method source identification.
-   *
-   * @param method method to describe
-   * @param field associated field (may be null)
-   * @return description string for logging/debugging
-   */
-  public static String createSourceDescriptionForLogging(MethodDto method, FieldDto field) {
-    if (field == null) {
-      return "core method '" + method.getMethodName() + "'";
-    }
-    return "field '" + field.getFieldNameInBuilder() + "'";
+    // Sort the final result for reproducible output
+    return signatureToMethod.values().stream().sorted(comparator).toList();
   }
 
   private void appendMethod(
@@ -605,14 +572,6 @@ public class RoasterCodeGenerator {
                     .forEach(method -> addMethodImports(imports, currentPackage, method)));
 
     return imports;
-  }
-
-  private void addFieldImports(Set<String> imports, String currentPackage, FieldDto field) {
-    addTypeImports(imports, currentPackage, field.getFieldType());
-    field
-        .getParameterAnnotations()
-        .forEach(annotation -> addAnnotationImports(imports, currentPackage, annotation));
-    field.getMethods().forEach(method -> addMethodImports(imports, currentPackage, method));
   }
 
   private void addMethodImports(Set<String> imports, String currentPackage, MethodDto method) {

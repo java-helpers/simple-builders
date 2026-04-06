@@ -92,8 +92,8 @@ class BuilderProcessorTest {
         "[DEBUG] Starting BuilderProcessor...",
         "[DEBUG] Loaded global configuration from compiler arguments: BuilderConfiguration[]",
         "[DEBUG] Initializing generator registry",
-        "[DEBUG] ├─ Loaded 14 method generators and 8 builder enhancers total",
-        "[DEBUG] └─ Initialized GeneratorRegistry with 14 method generators and 8 builder",
+        "[DEBUG] ├─ Loaded 14 method generators and 9 builder enhancers total",
+        "[DEBUG] └─ Initialized GeneratorRegistry with 14 method generators and 9 builder",
         "simple-builders: PROCESSING ROUND START",
         "[DEBUG] simple-builders: Processing round started. Found 1 annotated elements.",
         "[DEBUG] Processing element: VerboseTest",
@@ -120,23 +120,27 @@ class BuilderProcessorTest {
         "[DEBUG] │  │  ├─ Applying: WithInterfaceEnhancer (priority: 95)",
         "[DEBUG] │  │  ├─ Applying: InterfaceEnhancer (priority: 90)",
         "[DEBUG] │  │  ├─ Applying: ConditionalEnhancer (priority: 80)",
-        "[DEBUG] │  │  └─ Applied 7 builder enhancers",
+        "[DEBUG] │  │  └─ Applied 8 builder enhancers",
+        "[DEBUG] │  ├─ Finalizing builder definition",
+        "[DEBUG] │  │  └─ Finalized: 1 class fields, 9 methods, 2 constructors",
+        "[DEBUG] │  ├─ Builder will be generated as: VerboseTestBuilder",
         "[DEBUG] │  └─ Builder definition extracted: VerboseTestBuilder",
-        "[DEBUG] ├─ Code generation for builder: VerboseTestBuilder",
-        "[DEBUG] │  ├─ Class builder created",
+        "[DEBUG] ├─ Code generation for class: VerboseTestBuilder",
+        "[DEBUG] │  ├─ JavaClassSource created",
         "[DEBUG] │  ├─ Class metadata added",
-        "[DEBUG] │  ├─ Generating 0 constructor fields and 1 setter fields",
+        "[DEBUG] │  ├─ Generating 1 fields",
         "[DEBUG] │  │  └─ Fields added: 1 fields",
-        "[DEBUG] │  ├─ Adding Methods for 9 candidates",
-        "[DEBUG] │  │  ├─ Resolved 9 methods after conflict resolution",
-        "[DEBUG] │  │  └─ 9 Methods added",
-        "[DEBUG] │  ├─ Constructors added",
+        "[DEBUG] │  ├─ Generating 2 constructors",
+        "[DEBUG] │  │  └─ Constructors added: 2",
+        "[DEBUG] │  ├─ Generating 9 method candidates",
+        "[DEBUG] │  │  ├─ Resolved to 9 methods after conflict resolution",
+        "[DEBUG] │  │  └─ Methods added: 9",
         "[DEBUG] │  ├─ Generating 1 nested type(s)",
         "[DEBUG] │  │  ├─ Generated nested type: With",
         "[DEBUG] │  │  └─ Nested types added",
         "[DEBUG] │  ├─ Class-level annotations added",
-        "[DEBUG] │  ├─ Writing builder class to file: test.VerboseTestBuilder",
-        "[DEBUG] │  └─ Successfully generated builder: VerboseTestBuilder",
+        "[DEBUG] │  ├─ Writing class to file: test.VerboseTestBuilder",
+        "[DEBUG] │  └─ Successfully generated class: VerboseTestBuilder",
         "[DEBUG] ├─ Jackson module entry added",
         "[DEBUG] └─ Generated builder with 1 fields and 5 methods for VerboseTestBuilder",
         "simple-builders: Successfully generated 1 builder(s) in this processing round",
@@ -1209,6 +1213,9 @@ class BuilderProcessorTest {
         generatedCode,
         """
         public NonNullValidation build() {
+            if (this.primitiveField.isSet() && this.primitiveField.value() == null) {
+                throw new IllegalStateException("Field 'primitiveField' is marked as non-null but null value was provided");
+            }
             if (this.requiredField.isSet() && this.requiredField.value() == null) {
                 throw new IllegalStateException("Field 'requiredField' is marked as non-null but null value was provided");
             }

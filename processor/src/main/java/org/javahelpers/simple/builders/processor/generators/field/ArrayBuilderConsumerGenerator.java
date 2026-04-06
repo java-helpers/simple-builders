@@ -135,7 +135,9 @@ public class ArrayBuilderConsumerGenerator implements MethodGenerator {
     setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
     methodDto.setCode(
         """
-        $helperType:T builder = this.$fieldName:N.isSet() ? new $helperType:T(java.util.List.of(this.$fieldName:N.value())) : new $helperType:T();
+        $helperType:T builder = this.$fieldName:N.isSet()
+          ? new $helperType:T(java.util.List.of(this.$fieldName:N.value()))
+          : new $helperType:T();
         $dtoMethodParam:N.accept(builder);
         this.$fieldName:N = $builderFieldWrapper:T.changedValue(builder.build().toArray(new $elementType:T[0]));
         return this;

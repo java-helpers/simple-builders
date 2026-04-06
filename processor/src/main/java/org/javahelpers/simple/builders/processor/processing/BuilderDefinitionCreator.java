@@ -47,11 +47,14 @@ import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 import org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
+import org.javahelpers.simple.builders.processor.model.core.ClassFieldDto;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
+import org.javahelpers.simple.builders.processor.model.type.TypeNamePrimitive;
 
 /** Class for creating a specific BuilderDefinitionDto for an annotated DTO class. */
 public class BuilderDefinitionCreator {
@@ -92,12 +95,127 @@ public class BuilderDefinitionCreator {
     // Apply builder enhancers (including With interface generation)
     context.getGeneratorRegistry().enhanceBuilder(result, result.getBuildingTargetTypeName());
 
+    // Finalize the definition - convert to generic class representation
+    finalizeDefinition(result, context);
+
     context.debug("Builder will be generated as: %s", result.getBuilderTypeName().getClassName());
 
     context.debugEndOperation(
         "Builder definition extracted: %s", result.getBuilderTypeName().getClassName());
 
     return result;
+  }
+
+  /**
+   * Finalizes the builder definition by converting builder-specific data into generic class
+   * generation data.
+   *
+   * <p>This step:
+   *
+   * <ul>
+   *   <li>Converts FieldDto instances to ClassFieldDto instances
+   *   <li>Collects all methods from fields and core methods
+   *   <li>Sets source descriptions on methods for conflict resolution logging
+   *   <li>Sets class access modifier
+   *   <li>Sets static imports for TrackedValue
+   * </ul>
+   *
+   * @param builderDto the builder definition to finalize
+   * @param context the processing context
+   */
+  private static void finalizeDefinition(
+      BuilderDefinitionDto builderDto, ProcessingContext context) {
+    context.debugStartOperation("Finalizing builder definition");
+
+    // 1. Convert FieldDto → ClassFieldDto
+    for (FieldDto field : builderDto.getAllFieldsForBuilder()) {
+      ClassFieldDto classField = convertToClassField(field);
+      builderDto.addClassField(classField);
+    }
+
+    // 2. Collect methods from fields and core methods, set source descriptions
+    for (FieldDto field : builderDto.getConstructorFieldsForBuilder()) {
+      for (MethodDto method : field.getMethods()) {
+        method.setSourceDescription("field '" + field.getFieldNameInBuilder() + "'");
+        builderDto.addMethod(method);
+      }
+    }
+
+    for (FieldDto field : builderDto.getSetterFieldsForBuilder()) {
+      for (MethodDto method : field.getMethods()) {
+        method.setSourceDescription("field '" + field.getFieldNameInBuilder() + "'");
+        builderDto.addMethod(method);
+      }
+    }
+
+    for (MethodDto method : builderDto.getCoreMethods()) {
+      method.setSourceDescription("core method '" + method.getMethodName() + "'");
+      builderDto.addMethod(method);
+    }
+
+    // 3. Set class access modifier
+    builderDto.setClassAccessModifier(
+        JavaLangMapper.mapAccessModifier(builderDto.getConfiguration().getBuilderAccess()));
+
+    // 4. Set static imports for TrackedValue
+    builderDto.addStaticImport(
+        "org.javahelpers.simple.builders.core.util.TrackedValue.changedValue");
+    builderDto.addStaticImport(
+        "org.javahelpers.simple.builders.core.util.TrackedValue.initialValue");
+    builderDto.addStaticImport("org.javahelpers.simple.builders.core.util.TrackedValue.unsetValue");
+
+    context.debugEndOperation(
+        "Finalized: %d class fields, %d methods, %d constructors",
+        builderDto.getClassFields().size(),
+        builderDto.getMethods().size(),
+        builderDto.getConstructors().size());
+  }
+
+  /**
+   * Converts a FieldDto to a ClassFieldDto for rendering.
+   *
+   * @param field the field DTO to convert
+   * @return the class field DTO
+   */
+  private static ClassFieldDto convertToClassField(FieldDto field) {
+    ClassFieldDto classField = new ClassFieldDto();
+    classField.setFieldName(field.getFieldNameInBuilder());
+
+    // Build the field type: TrackedValue<BoxedType>
+    TypeName trackedValueType =
+        new TypeName("org.javahelpers.simple.builders.core.util", "TrackedValue");
+    // Box primitive types (int -> Integer, etc.)
+    TypeName boxedType;
+    if (field.getFieldType() instanceof TypeNamePrimitive primitive) {
+      boxedType =
+          switch (primitive.getType()) {
+            case BOOLEAN -> new TypeName("java.lang", "Boolean");
+            case BYTE -> new TypeName("java.lang", "Byte");
+            case SHORT -> new TypeName("java.lang", "Short");
+            case INT -> new TypeName("java.lang", "Integer");
+            case LONG -> new TypeName("java.lang", "Long");
+            case CHAR -> new TypeName("java.lang", "Character");
+            case FLOAT -> new TypeName("java.lang", "Float");
+            case DOUBLE -> new TypeName("java.lang", "Double");
+            case VOID -> new TypeName("java.lang", "Void");
+          };
+    } else {
+      boxedType = field.getFieldType();
+    }
+    TypeName wrappedFieldType = new TypeNameGeneric(trackedValueType, List.of(boxedType));
+    classField.setFieldType(wrappedFieldType);
+
+    classField.setVisibility(Modifier.PRIVATE);
+    classField.setLiteralInitializer("unsetValue()");
+    classField.setJavadoc(field.getJavaDoc());
+
+    // Add field type imports
+    classField.addFieldTypeImport(
+        new TypeName("org.javahelpers.simple.builders.core.util", "TrackedValue"));
+    // Add the boxed field type for import (derived from original field type)
+    classField.addFieldTypeImport(boxedType);
+
+    return classField;
   }
 
   /** Initializes the builder definition with package, class name, and generics. */

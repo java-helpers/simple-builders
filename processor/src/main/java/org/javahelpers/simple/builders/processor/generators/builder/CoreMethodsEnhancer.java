@@ -36,7 +36,6 @@ import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 import org.javahelpers.simple.builders.processor.model.type.GenericParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.model.type.TypeNamePrimitive;
 import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
 /**
@@ -154,10 +153,11 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
     }
 
     // Add validation for non-nullable setter fields
+    // Note: Primitives are stored as boxed types in TrackedValue<Integer>, etc.
+    // They can be null via Supplier methods: builder.pages(() -> null)
+    // So we need null checks for ALL non-nullable fields, including primitives
     for (var field : builderDto.getSetterFieldsForBuilder()) {
-      if (field.isNonNullable() && !(field.getFieldType() instanceof TypeNamePrimitive)) {
-        // Non-nullable non-primitive field - validate not null
-        // Skip primitives as they can't be null (but they could be null if boxed)
+      if (field.isNonNullable()) {
         code.append("if (this.")
             .append(field.getFieldNameInBuilder())
             .append(".isSet() && this.")

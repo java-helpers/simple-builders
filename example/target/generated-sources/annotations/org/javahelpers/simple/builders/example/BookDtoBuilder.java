@@ -394,6 +394,30 @@ public class BookDtoBuilder {
    * Builds the configured DTO instance.
    */
   public BookDto build() {
+    if (this.available.isSet() && this.available.value() == null) {
+      throw new IllegalStateException("Field 'available' is marked as non-null but null value was provided");
+    }
+    if (this.category.isSet() && this.category.value() == null) {
+      throw new IllegalStateException("Field 'category' is marked as non-null but null value was provided");
+    }
+    if (this.discount.isSet() && this.discount.value() == null) {
+      throw new IllegalStateException("Field 'discount' is marked as non-null but null value was provided");
+    }
+    if (this.edition.isSet() && this.edition.value() == null) {
+      throw new IllegalStateException("Field 'edition' is marked as non-null but null value was provided");
+    }
+    if (this.pages.isSet() && this.pages.value() == null) {
+      throw new IllegalStateException("Field 'pages' is marked as non-null but null value was provided");
+    }
+    if (this.price.isSet() && this.price.value() == null) {
+      throw new IllegalStateException("Field 'price' is marked as non-null but null value was provided");
+    }
+    if (this.rating.isSet() && this.rating.value() == null) {
+      throw new IllegalStateException("Field 'rating' is marked as non-null but null value was provided");
+    }
+    if (this.salesCount.isSet() && this.salesCount.value() == null) {
+      throw new IllegalStateException("Field 'salesCount' is marked as non-null but null value was provided");
+    }
     BookDto result = new BookDto();
     this.author.ifSet(result::setAuthor);
     this.available.ifSet(result::setAvailable);
