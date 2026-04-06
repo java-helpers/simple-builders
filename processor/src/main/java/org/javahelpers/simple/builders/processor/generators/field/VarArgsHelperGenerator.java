@@ -151,7 +151,19 @@ public class VarArgsHelperGenerator implements MethodGenerator {
     }
     String transform = MethodGeneratorUtil.wrapConcreteCollectionType(fieldType, baseExpression);
 
-    return MethodGeneratorUtil.createBuilderMethodForFieldWithTransform(
-        field, transform, parameterType, builderType, context);
+    MethodDto method =
+        MethodGeneratorUtil.createBuilderMethodForFieldWithTransform(
+            field, transform, parameterType, builderType, context);
+
+    // Add code block imports for collection factory methods
+    if (fieldType instanceof TypeNameList) {
+      method.getMethodCodeDto().addCodeBlockImport(new TypeName("java.util", "List"));
+    } else if (fieldType instanceof TypeNameSet) {
+      method.getMethodCodeDto().addCodeBlockImport(new TypeName("java.util", "Set"));
+    } else if (fieldType instanceof TypeNameMap) {
+      method.getMethodCodeDto().addCodeBlockImport(new TypeName("java.util", "Map"));
+    }
+
+    return method;
   }
 }

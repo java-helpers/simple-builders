@@ -24,8 +24,10 @@
 
 package org.javahelpers.simple.builders.processor.model.type;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 
@@ -50,6 +52,9 @@ public class NestedTypeDto {
 
   /** Javadoc comment for this nested type. */
   private JavadocDto javadoc;
+
+  /** Type-level annotations for this nested type. */
+  private final List<AnnotationDto> annotations = new ArrayList<>();
 
   public enum NestedTypeKind {
     INTERFACE,
@@ -94,5 +99,13 @@ public class NestedTypeDto {
 
   public void setJavadoc(JavadocDto javadoc) {
     this.javadoc = javadoc;
+  }
+
+  public List<AnnotationDto> getAnnotations() {
+    return annotations;
+  }
+
+  public void addAnnotation(AnnotationDto annotation) {
+    this.annotations.add(annotation);
   }
 }

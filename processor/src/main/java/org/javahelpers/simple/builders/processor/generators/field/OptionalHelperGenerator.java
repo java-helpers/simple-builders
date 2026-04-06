@@ -105,6 +105,9 @@ public class OptionalHelperGenerator implements MethodGenerator {
         MethodGeneratorUtil.createBuilderMethodForFieldWithTransform(
             field, "Optional.ofNullable(%s)", innerType, builderType, context);
 
+    // Add code block import for Optional.ofNullable
+    method.getMethodCodeDto().addCodeBlockImport(new TypeName("java.util", "Optional"));
+
     return Collections.singletonList(method);
   }
 }

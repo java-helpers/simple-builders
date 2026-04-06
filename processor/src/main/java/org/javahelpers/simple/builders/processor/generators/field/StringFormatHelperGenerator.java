@@ -139,6 +139,10 @@ public class StringFormatHelperGenerator implements MethodGenerator {
                 field.getParameterAnnotations(),
                 builderType,
                 context);
+
+        // Add code block imports for Optional.of and String.format
+        method.getMethodCodeDto().addCodeBlockImport(new TypeName("java.util", "Optional"));
+
         methods.add(method);
       }
     }

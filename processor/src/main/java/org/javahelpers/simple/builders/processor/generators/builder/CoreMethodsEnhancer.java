@@ -36,6 +36,7 @@ import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 import org.javahelpers.simple.builders.processor.model.type.GenericParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.simple.builders.processor.model.type.TypeNamePrimitive;
 import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
 /**
@@ -154,7 +155,9 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
 
     // Add validation for non-nullable setter fields
     for (var field : builderDto.getSetterFieldsForBuilder()) {
-      if (field.isNonNullable()) {
+      if (field.isNonNullable() && !(field.getFieldType() instanceof TypeNamePrimitive)) {
+        // Non-nullable non-primitive field - validate not null
+        // Skip primitives as they can't be null (but they could be null if boxed)
         code.append("if (this.")
             .append(field.getFieldNameInBuilder())
             .append(".isSet() && this.")
@@ -193,6 +196,9 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
     method.setCode(code.toString());
     method.addArgument("dtoBaseType", builderDto.getBuildingTargetTypeName());
     method.addArgument("buildResultType", returnType);
+
+    // Add imports for types used in code block
+    method.addCodeBlockImport(new TypeName("java.lang", "IllegalStateException"));
 
     method.setJavadoc(new JavadocDto("Builds the configured DTO instance."));
 
@@ -250,11 +256,17 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
             + "\n        .toString();");
 
     // Add template arguments for code generation
-    method.addArgument(
-        "toStringBuilder", new TypeName("org.apache.commons.lang3.builder", "ToStringBuilder"));
-    method.addArgument(
-        "toStringStyle",
-        new TypeName("org.javahelpers.simple.builders.core.util", "BuilderToStringStyle"));
+    TypeName toStringBuilderType =
+        new TypeName("org.apache.commons.lang3.builder", "ToStringBuilder");
+    TypeName toStringStyleType =
+        new TypeName("org.javahelpers.simple.builders.core.util", "BuilderToStringStyle");
+
+    method.addArgument("toStringBuilder", toStringBuilderType);
+    method.addArgument("toStringStyle", toStringStyleType);
+
+    // Add imports for types used in code block
+    method.addCodeBlockImport(toStringBuilderType);
+    method.addCodeBlockImport(toStringStyleType);
 
     method.setJavadoc(
         new JavadocDto(

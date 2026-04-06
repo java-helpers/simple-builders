@@ -199,7 +199,7 @@ public class BuilderProcessor extends AbstractProcessor {
       throws BuilderException {
     context.initConfigurationForProcessingTarget(config);
     BuilderDefinitionDto builderDef = extractFromElement(annotatedElement, context);
-    codeGenerator.generateBuilder(builderDef);
+    codeGenerator.generateClass(builderDef);
 
     // Collect info for Jackson Module if enabled
     jacksonModuleGenerator.addEntry(builderDef, annotatedElement);

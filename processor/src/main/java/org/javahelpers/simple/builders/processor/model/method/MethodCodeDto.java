@@ -25,7 +25,9 @@
 package org.javahelpers.simple.builders.processor.model.method;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 
 /** DTO for holding information of code implementation. */
@@ -35,6 +37,9 @@ public class MethodCodeDto {
 
   /** List of placeholders in CodeFormat. Containing dynamic values too. */
   private final List<MethodCodePlaceholder<?>> codeArguments = new ArrayList<>();
+
+  /** Types used in the code body that aren't covered by arguments. */
+  private final Set<TypeName> codeBlockImports = new LinkedHashSet<>();
 
   /**
    * Setting format of code.
@@ -82,5 +87,23 @@ public class MethodCodeDto {
   @SuppressWarnings("java:S1452")
   public List<MethodCodePlaceholder<?>> getCodeArguments() {
     return codeArguments;
+  }
+
+  /**
+   * Getter for code block imports.
+   *
+   * @return types used in code body needing import
+   */
+  public Set<TypeName> getCodeBlockImports() {
+    return codeBlockImports;
+  }
+
+  /**
+   * Adding an import for a type used in the code block.
+   *
+   * @param typeName type to import
+   */
+  public void addCodeBlockImport(TypeName typeName) {
+    this.codeBlockImports.add(typeName);
   }
 }

@@ -24,7 +24,6 @@
 
 package org.javahelpers.simple.builders.processor.classgen.roaster;
 
-import static org.javahelpers.simple.builders.processor.classgen.roaster.RoasterMapper.mapBoxedType;
 import static org.javahelpers.simple.builders.processor.classgen.roaster.RoasterMapper.mapType;
 import static org.javahelpers.simple.builders.processor.classgen.roaster.RoasterMapper.packageNameOf;
 import static org.javahelpers.simple.builders.processor.classgen.roaster.RoasterMapper.resolveCodeTemplate;
@@ -38,8 +37,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
@@ -47,16 +44,18 @@ import javax.tools.JavaFileObject;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.util.TrackedValue;
-import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.annotation.InterfaceName;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
+import org.javahelpers.simple.builders.processor.model.core.ClassFieldDto;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+import org.javahelpers.simple.builders.processor.model.core.GenerationTargetClassDto;
 import org.javahelpers.simple.builders.processor.model.integration.JacksonModuleDefinitionDto;
 import org.javahelpers.simple.builders.processor.model.integration.JacksonModuleEntryDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocTagDto;
+import org.javahelpers.simple.builders.processor.model.method.ConstructorDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodCodePlaceholder;
 import org.javahelpers.simple.builders.processor.model.method.MethodCodeTypePlaceholder;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
@@ -72,7 +71,6 @@ import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster.model.source.AnnotationSource;
 import org.jboss.forge.roaster.model.source.FieldSource;
 import org.jboss.forge.roaster.model.source.JavaClassSource;
-import org.jboss.forge.roaster.model.source.JavaDocSource;
 import org.jboss.forge.roaster.model.source.JavaInterfaceSource;
 import org.jboss.forge.roaster.model.source.JavaSource;
 import org.jboss.forge.roaster.model.source.MethodSource;
@@ -105,72 +103,85 @@ public class RoasterCodeGenerator {
   }
 
   /**
-   * Generates a builder class from the given builder definition.
+   * Generates a class from the given class definition.
    *
-   * @param builderDef dto of all information to create the builder
+   * @param classDef DTO containing all information to create the class
    * @throws BuilderException if there is an error in source code generation
    */
-  public void generateBuilder(BuilderDefinitionDto builderDef) throws BuilderException {
+  public void generateClass(GenerationTargetClassDto classDef) throws BuilderException {
     logger.debugStartOperation(
-        "Code generation for builder: %s", builderDef.getBuilderTypeName().getClassName());
+        "Code generation for class: %s", classDef.getTypeName().getClassName());
 
-    String sourceCode = createBuilderSource(builderDef);
-    writeBuilderClassToFile(sourceCode, builderDef);
+    String sourceCode = createClassSource(classDef);
+    writeClassToFile(sourceCode, classDef);
 
     logger.debugEndOperation(
-        "Successfully generated builder: %s", builderDef.getBuilderTypeName().getClassName());
+        "Successfully generated class: %s", classDef.getTypeName().getClassName());
   }
 
-  private String createBuilderSource(BuilderDefinitionDto builderDef) {
-    JavaClassSource source = createClassSource(builderDef);
-    addClassMetadata(source, builderDef);
-    appendFields(source, builderDef);
-    appendConstructors(source, builderDef);
-    appendMethods(source, builderDef);
-    appendNestedTypes(source, builderDef);
-    applyClassAnnotations(source, builderDef);
+  private String createClassSource(GenerationTargetClassDto classDef) {
+    // Class generation - works for all GenerationTargetClassDto instances
+    JavaClassSource source = createJavaClassSource(classDef);
+    addClassMetadata(source, classDef);
+    appendFields(source, classDef);
+    appendConstructors(source, classDef);
+    appendMethods(source, classDef);
+    appendNestedTypes(source, classDef);
+
+    // Apply annotations first (Roaster will add imports)
+    applyClassAnnotations(source, classDef);
+
     return renderClassSource(source);
   }
 
-  private void applyClassAnnotations(JavaClassSource source, BuilderDefinitionDto builderDef) {
-    if (CollectionUtils.isEmpty(builderDef.getClassAnnotations())) {
+  private void applyClassAnnotations(JavaClassSource source, GenerationTargetClassDto classDef) {
+    if (CollectionUtils.isEmpty(classDef.getClassAnnotations())) {
       return;
     }
-    // Adding annotations from enhancers
-    applyAnnotations(source, builderDef.getClassAnnotations());
+    // Adding class annotations
+    applyAnnotations(source, classDef.getClassAnnotations());
     logger.debug("Class-level annotations added");
   }
 
-  private JavaClassSource createClassSource(BuilderDefinitionDto builderDef) {
-    if (CollectionUtils.isNotEmpty(builderDef.getGenerics())) {
-      logger.debug("Builder has %d generic type parameter(s)", builderDef.getGenerics().size());
+  private JavaClassSource createJavaClassSource(GenerationTargetClassDto classDef) {
+    if (CollectionUtils.isNotEmpty(classDef.getGenerics())) {
+      logger.debug("Class has %d generic type parameter(s)", classDef.getGenerics().size());
     }
 
     JavaClassSource source = Roaster.create(JavaClassSource.class);
-    String packageName = builderDef.getBuilderTypeName().getPackageName();
+    String packageName = classDef.getTypeName().getPackageName();
     if (StringUtils.isNotBlank(packageName)) {
       source.setPackage(packageName);
     } else {
       source.setDefaultPackage();
     }
-    source.setName(builderDef.getBuilderTypeName().getClassName());
-    addGenericDeclarations(source, builderDef.getGenerics());
+    source.setName(classDef.getTypeName().getClassName());
+    addGenericDeclarations(source, classDef.getGenerics());
     addTrackedValueStaticImports(source);
-    collectImports(builderDef).stream().sorted().forEach(source::addImport);
-    logger.debug("Class builder created");
+    
+    // Collect and add imports early (before elements are added)
+    collectImports(classDef).stream().sorted().forEach(source::addImport);
+    
+    logger.debug("JavaClassSource created");
     return source;
   }
 
-  private void addClassMetadata(JavaClassSource source, BuilderDefinitionDto builderDef) {
-    // Add class JavaDoc if provided by enhancer
-    applyJavadoc(source, builderDef.getClassJavadoc());
+  private void addClassMetadata(JavaClassSource source, GenerationTargetClassDto classDef) {
+    // Add class JavaDoc
+    applyJavadoc(source, classDef.getClassJavadoc());
 
-    // Set builder class access level
-    applyVisibility(
-        source, JavaLangMapper.mapAccessModifier(builderDef.getConfiguration().getBuilderAccess()));
+    // Set class access level
+    if (classDef.getClassAccessModifier() != null) {
+      applyVisibility(source, classDef.getClassAccessModifier());
+    }
 
-    // Adding interfaces from enhancers
-    for (InterfaceName interfaceName : builderDef.getInterfaces()) {
+    // Add superclass if specified
+    if (classDef.getSuperType() != null) {
+      source.setSuperType(mapType(classDef.getSuperType()));
+    }
+
+    // Add interfaces
+    for (InterfaceName interfaceName : classDef.getInterfaces()) {
       source.addInterface(RoasterMapper.mapInterfaceToTypeName(interfaceName));
     }
 
@@ -182,129 +193,65 @@ public class RoasterCodeGenerator {
     return formatSource(rendered);
   }
 
-  private void appendFields(JavaClassSource source, BuilderDefinitionDto builderDef) {
-    logger.debugStartOperation(
-        "Generating %d constructor fields and %d setter fields",
-        builderDef.getConstructorFieldsForBuilder().size(),
-        builderDef.getSetterFieldsForBuilder().size());
+  private void appendFields(JavaClassSource source, GenerationTargetClassDto classDef) {
+    logger.debugStartOperation("Generating %d fields", classDef.getClassFields().size());
 
-    for (FieldDto fieldDto : builderDef.getConstructorFieldsForBuilder()) {
-      appendField(source, fieldDto);
-    }
-    for (FieldDto fieldDto : builderDef.getSetterFieldsForBuilder()) {
+    for (ClassFieldDto fieldDto : classDef.getClassFields()) {
       appendField(source, fieldDto);
     }
 
-    logger.debugEndOperation("Fields added: %d fields", builderDef.getAllFieldsForBuilder().size());
+    logger.debugEndOperation("Fields added: %d fields", classDef.getClassFields().size());
   }
 
-  private void appendField(JavaClassSource source, FieldDto fieldDto) {
-    String boxedFieldType = mapBoxedType(fieldDto.getFieldType());
+  private void appendField(JavaClassSource source, ClassFieldDto fieldDto) {
     FieldSource<JavaClassSource> field = source.addField();
-    field.setName(fieldDto.getFieldNameInBuilder());
-    field.setType(TrackedValue.class.getSimpleName() + "<" + boxedFieldType + ">");
-    field.setPrivate();
-    field.setLiteralInitializer("unsetValue()");
-    applyJavaDocToField(field.getJavaDoc(), fieldDto);
+    field.setName(fieldDto.getFieldName());
+    field.setType(mapType(fieldDto.getFieldType()));
+    if (fieldDto.getVisibility() != null) {
+      applyVisibility(field, fieldDto.getVisibility());
+    }
+    if (fieldDto.getLiteralInitializer() != null) {
+      field.setLiteralInitializer(fieldDto.getLiteralInitializer());
+    }
+    applyJavadoc(field, fieldDto.getJavadoc());
   }
 
-  private void applyJavaDocToField(JavaDocSource<?> javaDoc, FieldDto fieldDto) {
-    JavadocDto trackedValueJavadoc = fieldDto.getJavaDoc();
-    if (trackedValueJavadoc != null) {
-      javaDoc.setText(trackedValueJavadoc.getDescription());
+  private void appendConstructors(JavaClassSource source, GenerationTargetClassDto classDef) {
+    logger.debugStartOperation("Generating %d constructors", classDef.getConstructors().size());
+
+    for (ConstructorDto constructor : classDef.getConstructors()) {
+      appendConstructor(source, constructor);
+    }
+
+    logger.debugEndOperation("Constructors added: %d", classDef.getConstructors().size());
+  }
+
+  private void appendConstructor(JavaClassSource source, ConstructorDto constructor) {
+    MethodSource<JavaClassSource> method = source.addMethod();
+    method.setConstructor(true);
+    if (constructor.getVisibility() != null) {
+      applyVisibility(method, constructor.getVisibility());
+    }
+    for (MethodParameterDto param : constructor.getParameters()) {
+      method.addParameter(mapType(param.getParameterType()), param.getParameterName());
+    }
+    applyJavadoc(method, constructor.getJavadoc());
+    // Use getMethodCodeDto for proper template resolution
+    // Note: empty string is a valid body (for empty constructors)
+    if (constructor.getMethodCodeDto() != null
+        && constructor.getMethodCodeDto().getCodeFormat() != null) {
+      method.setBody(resolveCodeTemplate(constructor.getMethodCodeDto()));
     }
   }
 
-  private void appendConstructors(JavaClassSource source, BuilderDefinitionDto builderDef) {
-    Modifier constructorAccessModifier =
-        JavaLangMapper.mapAccessModifier(
-            builderDef.getConfiguration().getBuilderConstructorAccess());
-    TypeName dtoBaseClass = builderDef.getBuildingTargetTypeName();
+  private void appendMethods(JavaClassSource source, GenerationTargetClassDto classDef) {
+    logger.debugStartOperation("Generating %d methods", classDef.getMethods().size());
 
-    appendEmptyConstructor(source, dtoBaseClass, constructorAccessModifier);
-    appendConstructorWithInstance(
-        source, dtoBaseClass, builderDef.getAllFieldsForBuilder(), constructorAccessModifier);
-    logger.debug("Constructors added");
-  }
-
-  private void appendEmptyConstructor(
-      JavaClassSource source, TypeName dtoClass, Modifier accessModifier) {
-    MethodSource<JavaClassSource> constructor = source.addMethod();
-    constructor.setConstructor(true);
-    applyVisibility(constructor, accessModifier);
-    constructor.setBody("");
-    applyJavadoc(
-        constructor,
-        new JavadocDto(
-            "Empty constructor of builder for {@code %s}.", dtoClass.getFullQualifiedName()));
-  }
-
-  private void appendConstructorWithInstance(
-      JavaClassSource source,
-      TypeName dtoBaseClass,
-      List<FieldDto> fields,
-      Modifier accessModifier) {
-    MethodSource<JavaClassSource> constructor = source.addMethod();
-    constructor.setConstructor(true);
-    applyVisibility(constructor, accessModifier);
-    constructor.addParameter(mapType(dtoBaseClass), "instance");
-    constructor.setBody(buildConstructorBody(fields));
-    applyJavadoc(
-        constructor,
-        new JavadocDto(
-                "Initialisation of builder for {@code %s} by a instance.",
-                dtoBaseClass.getFullQualifiedName())
-            .addParam("instance", "object instance for initialisiation"));
-  }
-
-  private String buildConstructorBody(List<FieldDto> fields) {
-    StringBuilder body = new StringBuilder();
-    for (FieldDto field : fields) {
-      field
-          .getGetterName()
-          .ifPresent(getter -> addFieldInitializationWithValidation(body, field, getter));
-    }
-    return body.toString();
-  }
-
-  private void addFieldInitializationWithValidation(
-      StringBuilder body, FieldDto field, String getter) {
-    String fieldInBuilder = field.getFieldNameInBuilder();
-
-    String initialisationCode =
-        """
-        this.%s = initialValue(instance.%s());
-        """
-            .formatted(fieldInBuilder, getter);
-
-    String validationCode = "";
-    if (field.isNonNullable()) {
-      validationCode =
-          """
-
-          if (this.%s.value() == null) {
-            throw new IllegalArgumentException("Cannot initialize builder from instance: field '%s' is marked as non-null but source object has null value");
-          }
-          """
-              .formatted(fieldInBuilder, fieldInBuilder);
-    }
-
-    body.append(initialisationCode).append(validationCode);
-  }
-
-  private void appendMethods(JavaClassSource source, BuilderDefinitionDto builderDef) {
-    Map<MethodDto, FieldDto> allMethods = collectAllMethods(builderDef);
-    logger.debugStartOperation("Adding Methods for %d candidates", allMethods.size());
-
-    List<MethodDto> resolvedMethods = resolveMethodConflicts(allMethods);
-    logger.debug("Resolved %d methods after conflict resolution", resolvedMethods.size());
-
-    int generatedCnt = 0;
-    for (MethodDto methodDto : resolvedMethods) {
+    for (MethodDto methodDto : classDef.getMethods()) {
       appendMethod(source, methodDto, false, false);
-      generatedCnt++;
     }
-    logger.debugEndOperation("%d Methods added", generatedCnt);
+
+    logger.debugEndOperation("Methods added: %d", classDef.getMethods().size());
   }
 
   private Map<MethodDto, FieldDto> collectAllMethods(BuilderDefinitionDto builderDef) {
@@ -399,12 +346,12 @@ public class RoasterCodeGenerator {
     method.setBody(body);
   }
 
-  private void appendNestedTypes(JavaClassSource source, BuilderDefinitionDto builderDef) {
-    if (CollectionUtils.isEmpty(builderDef.getNestedTypes())) {
+  private void appendNestedTypes(JavaClassSource source, GenerationTargetClassDto classDef) {
+    if (CollectionUtils.isEmpty(classDef.getNestedTypes())) {
       return;
     }
-    logger.debugStartOperation("Generating %d nested type(s)", builderDef.getNestedTypes().size());
-    for (NestedTypeDto nestedType : builderDef.getNestedTypes()) {
+    logger.debugStartOperation("Generating %d nested type(s)", classDef.getNestedTypes().size());
+    for (NestedTypeDto nestedType : classDef.getNestedTypes()) {
       appendNestedType(source, nestedType);
       logger.debug("Generated nested type: %s", nestedType.getTypeName());
     }
@@ -591,35 +538,65 @@ public class RoasterCodeGenerator {
     source.addImport(TrackedValue.class.getName() + ".unsetValue").setStatic(true);
   }
 
-  private Set<String> collectImports(BuilderDefinitionDto builderDef) {
+  private Set<String> collectImports(GenerationTargetClassDto classDef) {
     Set<String> imports = new LinkedHashSet<>();
-    String currentPackage = builderDef.getBuilderTypeName().getPackageName();
+    String currentPackage = classDef.getTypeName().getPackageName();
 
-    addImportIfNeeded(imports, currentPackage, TrackedValue.class.getName());
-    addImportIfNeeded(imports, currentPackage, Consumer.class.getName());
-    addImportIfNeeded(imports, currentPackage, Supplier.class.getName());
-    addTypeImports(imports, currentPackage, builderDef.getBuildingTargetTypeName());
-    addTypeImports(imports, currentPackage, builderDef.getBuilderTypeName());
-    builderDef
+    // Add superclass imports
+    if (classDef.getSuperType() != null) {
+      addTypeImports(imports, currentPackage, classDef.getSuperType());
+    }
+
+    // Add class type and generics
+    addTypeImports(imports, currentPackage, classDef.getTypeName());
+    classDef
         .getGenerics()
         .forEach(
             generic ->
                 generic
                     .getUpperBounds()
                     .forEach(type -> addTypeImports(imports, currentPackage, type)));
-    builderDef
+
+    // Add interface imports
+    classDef
         .getInterfaces()
         .forEach(interfaceName -> addInterfaceImports(imports, currentPackage, interfaceName));
-    builderDef
+
+    // Add class annotation imports
+    classDef
         .getClassAnnotations()
         .forEach(annotation -> addAnnotationImports(imports, currentPackage, annotation));
-    builderDef
-        .getAllFieldsForBuilder()
-        .forEach(field -> addFieldImports(imports, currentPackage, field));
-    builderDef
-        .getCoreMethods()
-        .forEach(method -> addMethodImports(imports, currentPackage, method));
-    builderDef
+
+    // Add field imports from ClassFieldDto
+    classDef
+        .getClassFields()
+        .forEach(
+            field -> {
+              addTypeImports(imports, currentPackage, field.getFieldType());
+              field
+                  .getFieldTypeImports()
+                  .forEach(typeName -> addTypeImports(imports, currentPackage, typeName));
+            });
+
+    // Add method imports
+    classDef.getMethods().forEach(method -> addMethodImports(imports, currentPackage, method));
+
+    // Add constructor imports
+    classDef
+        .getConstructors()
+        .forEach(
+            constructor -> {
+              constructor
+                  .getParameters()
+                  .forEach(
+                      param -> addTypeImports(imports, currentPackage, param.getParameterType()));
+              constructor
+                  .getCodeBlockImports()
+                  .forEach(typeName -> addTypeImports(imports, currentPackage, typeName));
+            });
+
+    // Add nested type imports
+    classDef
         .getNestedTypes()
         .forEach(
             nestedType ->
@@ -783,14 +760,13 @@ public class RoasterCodeGenerator {
     }
   }
 
-  private void writeBuilderClassToFile(String sourceCode, BuilderDefinitionDto builderDef)
+  private void writeClassToFile(String sourceCode, GenerationTargetClassDto classDef)
       throws BuilderException {
     logger.debug(
-        "Writing builder class to file: %s.%s",
-        builderDef.getBuilderTypeName().getPackageName(),
-        builderDef.getBuilderTypeName().getClassName());
+        "Writing class to file: %s.%s",
+        classDef.getTypeName().getPackageName(), classDef.getTypeName().getClassName());
 
-    String qualifiedName = builderDef.getBuilderTypeName().getFullQualifiedName();
+    String qualifiedName = classDef.getTypeName().getFullQualifiedName();
     if (builderClassAlreadyExists(qualifiedName)) {
       throw new BuilderException(
           null,

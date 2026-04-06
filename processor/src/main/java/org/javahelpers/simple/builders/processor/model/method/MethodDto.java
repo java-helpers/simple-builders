@@ -55,6 +55,9 @@ public class MethodDto {
   /** Ordering for method generation. Lower values appear first in generated class. */
   private int ordering = 1000; // Default high value for field-generated methods
 
+  /** Origin description for logging (e.g., "field 'name'", "core method 'build'"). */
+  private String sourceDescription;
+
   /** Name of method. */
   private String methodName;
 
@@ -143,6 +146,24 @@ public class MethodDto {
    */
   public int getOrdering() {
     return ordering;
+  }
+
+  /**
+   * Gets the source description for logging.
+   *
+   * @return the source description (e.g., "field 'name'", "core method 'build'")
+   */
+  public String getSourceDescription() {
+    return sourceDescription;
+  }
+
+  /**
+   * Sets the source description for logging.
+   *
+   * @param sourceDescription the source description
+   */
+  public void setSourceDescription(String sourceDescription) {
+    this.sourceDescription = sourceDescription;
   }
 
   /**
@@ -356,6 +377,16 @@ public class MethodDto {
    */
   public void addAnnotation(AnnotationDto annotation) {
     this.annotations.add(annotation);
+  }
+
+  /**
+   * Adds an import for a type used in the method's code block. This is a convenience method that
+   * delegates to the underlying MethodCodeDto.
+   *
+   * @param typeName the type to import
+   */
+  public void addCodeBlockImport(TypeName typeName) {
+    this.methodCodeDto.addCodeBlockImport(typeName);
   }
 
   /**

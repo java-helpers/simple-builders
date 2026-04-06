@@ -28,49 +28,52 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import javax.lang.model.element.Modifier;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.annotation.InterfaceName;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
+import org.javahelpers.simple.builders.processor.model.method.ConstructorDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 import org.javahelpers.simple.builders.processor.model.type.GenericParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.NestedTypeDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 
-/** BuilderDefinitionDto holds all information for generating a builder. */
-public class BuilderDefinitionDto {
-  /** Target type of result of building by builder. Containing package and name of DTO. */
-  private TypeName buildingTargetTypeName;
+/**
+ * Generic representation of a class to generate.
+ *
+ * <p>This base class contains all information needed by the code generator to render a class,
+ * independent of whether it's a builder, Jackson module, or other generated class type.
+ */
+public class GenerationTargetClassDto {
+  /** Generated class FQN. */
+  private TypeName typeName;
 
-  /** Type of builder. Containing package and name of DTO. */
-  private TypeName builderTypeName;
+  /** Class visibility. */
+  private Modifier classAccessModifier;
 
-  /**
-   * Fields in constructor. Containing all fields which need to be given for calling the
-   * constructor. Ordering in LinkedList is matching orderung of parameters in constructor call.
-   * Instances of fields are added in LinkedList of all fields too.
-   */
-  private final List<FieldDto> fieldsInConstructor = new LinkedList<>();
+  /** Superclass (e.g., SimpleModule), null if none. */
+  private TypeName superType;
+
+  /** Field declarations. */
+  private final List<ClassFieldDto> classFields = new LinkedList<>();
+
+  /** Constructor definitions. */
+  private final List<ConstructorDto> constructors = new LinkedList<>();
+
+  /** All methods (unresolved — conflict resolution in generator). */
+  private final List<MethodDto> methods = new LinkedList<>();
 
   /** Generic parameters declared on the target DTO (e.g., {@code <T extends Number, U>}). */
   private final List<GenericParameterDto> generics = new LinkedList<>();
 
-  /**
-   * List of all fields of target DTO which are supported by builder. A field could be supported by
-   * multiple functions in builder.
-   */
-  private final List<FieldDto> fields = new LinkedList<>();
+  /** Static import FQNs (e.g., TrackedValue.changedValue). */
+  private final Set<String> staticImports = new LinkedHashSet<>();
 
   /**
    * Nested types (interfaces or classes) to be generated inside the builder, such as the "With"
    * interface.
    */
   private final List<NestedTypeDto> nestedTypes = new LinkedList<>();
-
-  /**
-   * Core builder methods (build, create, conditional, toString, etc.) to be generated. These are
-   * added by BuilderEnhancers and have ordering for generation sequence.
-   */
-  private final List<MethodDto> coreMethods = new LinkedList<>();
 
   /**
    * Class-level annotations to be added to the generated builder class. These are added by
@@ -91,112 +94,60 @@ public class BuilderDefinitionDto {
   /** Class-level JavaDoc for the generated builder class. */
   private JavadocDto classJavadoc;
 
-  /** Configuration for builder generation. */
-  private BuilderConfiguration configuration;
-
-  /**
-   * Getting type of builder.
-   *
-   * @return {@code org.javahelpers.simple.builders.internal.dtos.Typename} package and name of
-   *     builder.
-   */
-  public TypeName getBuilderTypeName() {
-    return builderTypeName;
+  public TypeName getTypeName() {
+    return typeName;
   }
 
-  /**
-   * Setting type of builder.
-   *
-   * @param builderClassName type of builder
-   */
-  public void setBuilderTypeName(TypeName builderClassName) {
-    this.builderTypeName = builderClassName;
+  public void setTypeName(TypeName typeName) {
+    this.typeName = typeName;
   }
 
-  /**
-   * Getting target type of result of building by builder.
-   *
-   * @return {@code org.javahelpers.simple.builders.internal.dtos.Typename} package and name of type
-   *     of building result.
-   */
-  public TypeName getBuildingTargetTypeName() {
-    return buildingTargetTypeName;
+  public Modifier getClassAccessModifier() {
+    return classAccessModifier;
   }
 
-  /**
-   * Setting target type of result of building by builder.
-   *
-   * @param buildingTargetTypeName package and name of type of building result
-   */
-  public void setBuildingTargetTypeName(TypeName buildingTargetTypeName) {
-    this.buildingTargetTypeName = buildingTargetTypeName;
+  public void setClassAccessModifier(Modifier classAccessModifier) {
+    this.classAccessModifier = classAccessModifier;
   }
 
-  /**
-   * Adding a field-definition to builder defintion.
-   *
-   * @param field {@code org.javahelpers.simple.builders.internal.dtos.FieldDto} to be added
-   */
-  public void addField(FieldDto field) {
-    fields.add(field);
+  public TypeName getSuperType() {
+    return superType;
   }
 
-  /**
-   * Adds a field definition that will be provided via the DTO constructor.
-   *
-   * @param field the field to add to the constructor parameters
-   */
-  public void addFieldInConstructor(FieldDto field) {
-    fieldsInConstructor.add(field);
+  public void setSuperType(TypeName superType) {
+    this.superType = superType;
   }
 
-  /**
-   * Adds multiple field definitions to be provided via the DTO constructor.
-   *
-   * @param fields the list of fields to add to the constructor parameters
-   */
-  public void addAllFieldsInConstructor(List<FieldDto> fields) {
-    fieldsInConstructor.addAll(fields);
+  public List<ClassFieldDto> getClassFields() {
+    return classFields;
   }
 
-  /**
-   * Adds multiple field definitions to the builder.
-   *
-   * @param fields the list of fields to add
-   */
-  public void addAllFields(List<FieldDto> fields) {
-    this.fields.addAll(fields);
+  public void addClassField(ClassFieldDto classField) {
+    this.classFields.add(classField);
   }
 
-  /**
-   * Getting all definied fields in builder definition.
-   *
-   * @return list of fields with type {@code org.javahelpers.simple.builders.internal.dtos.FieldDto}
-   */
-  public List<FieldDto> getSetterFieldsForBuilder() {
-    return fields;
+  public List<ConstructorDto> getConstructors() {
+    return constructors;
   }
 
-  /**
-   * Returns the ordered list of fields to be passed to the DTO constructor.
-   *
-   * @return the ordered list of constructor parameter fields
-   */
-  public List<FieldDto> getConstructorFieldsForBuilder() {
-    return fieldsInConstructor;
+  public void addConstructor(ConstructorDto constructor) {
+    this.constructors.add(constructor);
   }
 
-  /**
-   * Returns all fields known to the builder in a single list. Constructor parameters appear first
-   * (in constructor order), followed by setter-derived fields.
-   *
-   * @return all fields in the builder (constructor fields first, then setter fields)
-   */
-  public List<FieldDto> getAllFieldsForBuilder() {
-    LinkedList<FieldDto> all = new LinkedList<>();
-    all.addAll(fieldsInConstructor);
-    all.addAll(fields);
-    return all;
+  public List<MethodDto> getMethods() {
+    return methods;
+  }
+
+  public void addMethod(MethodDto method) {
+    this.methods.add(method);
+  }
+
+  public Set<String> getStaticImports() {
+    return staticImports;
+  }
+
+  public void addStaticImport(String staticImport) {
+    this.staticImports.add(staticImport);
   }
 
   /**
@@ -236,24 +187,6 @@ public class BuilderDefinitionDto {
   }
 
   /**
-   * Returns the list of core builder methods.
-   *
-   * @return the list of core methods
-   */
-  public List<MethodDto> getCoreMethods() {
-    return coreMethods;
-  }
-
-  /**
-   * Adds a core method to be generated in the builder.
-   *
-   * @param method the core method to add
-   */
-  public void addCoreMethod(MethodDto method) {
-    this.coreMethods.add(method);
-  }
-
-  /**
    * Returns the set of class-level annotations.
    *
    * @return the set of class annotations (unique, no duplicates)
@@ -287,24 +220,6 @@ public class BuilderDefinitionDto {
    */
   public void addInterface(InterfaceName interfaceType) {
     this.interfaces.add(interfaceType);
-  }
-
-  /**
-   * Returns the configuration for builder generation.
-   *
-   * @return the builder configuration
-   */
-  public BuilderConfiguration getConfiguration() {
-    return configuration;
-  }
-
-  /**
-   * Sets the builder configuration.
-   *
-   * @param configuration the builder configuration
-   */
-  public void setConfiguration(BuilderConfiguration configuration) {
-    this.configuration = configuration;
   }
 
   /**

@@ -140,6 +140,10 @@ public class ArrayBuilderConsumerGenerator implements MethodGenerator {
         this.$fieldName:N = $builderFieldWrapper:T.changedValue(builder.build().toArray(new $elementType:T[0]));
         return this;
         """);
+
+    // Add code block import for java.util.List.of
+    methodDto.getMethodCodeDto().addCodeBlockImport(new TypeName("java.util", "List"));
+
     methodDto.addArgument("fieldName", fieldNameInBuilder);
     methodDto.addArgument("dtoMethodParam", parameter.getParameterName());
     methodDto.addArgument("helperType", builderTypeGeneric);
