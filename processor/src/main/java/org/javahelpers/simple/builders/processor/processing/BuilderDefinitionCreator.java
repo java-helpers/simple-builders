@@ -40,6 +40,7 @@ import javax.lang.model.type.TypeMirror;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.javahelpers.simple.builders.core.annotations.IgnoreInBuilder;
+import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.processor.analysis.FieldAnnotationExtractor;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyser;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
@@ -154,8 +155,7 @@ public class BuilderDefinitionCreator {
     }
 
     // 3. Set class access modifier
-    builderDto.setClassAccessModifier(
-        JavaLangMapper.mapAccessModifier(builderDto.getConfiguration().getBuilderAccess()));
+    builderDto.setClassAccessModifier(builderDto.getConfiguration().getBuilderAccess());
 
     // 4. Set static imports for TrackedValue
     builderDto.addStaticImport(
@@ -205,7 +205,7 @@ public class BuilderDefinitionCreator {
     TypeName wrappedFieldType = new TypeNameGeneric(trackedValueType, List.of(boxedType));
     classField.setFieldType(wrappedFieldType);
 
-    classField.setVisibility(Modifier.PRIVATE);
+    classField.setVisibility(AccessModifier.PRIVATE);
     classField.setLiteralInitializer("unsetValue()");
     classField.setJavadoc(field.getJavaDoc());
 

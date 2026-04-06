@@ -28,7 +28,7 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import javax.lang.model.element.Modifier;
+import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.annotation.InterfaceName;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
@@ -49,7 +49,7 @@ public class GenerationTargetClassDto {
   private TypeName typeName;
 
   /** Class visibility. */
-  private Modifier classAccessModifier;
+  private AccessModifier classAccessModifier;
 
   /** Superclass (e.g., SimpleModule), null if none. */
   private TypeName superType;
@@ -102,11 +102,11 @@ public class GenerationTargetClassDto {
     this.typeName = typeName;
   }
 
-  public Modifier getClassAccessModifier() {
+  public AccessModifier getClassAccessModifier() {
     return classAccessModifier;
   }
 
-  public void setClassAccessModifier(Modifier classAccessModifier) {
+  public void setClassAccessModifier(AccessModifier classAccessModifier) {
     this.classAccessModifier = classAccessModifier;
   }
 

@@ -24,7 +24,7 @@
 package org.javahelpers.simple.builders.processor.generators.builder;
 
 import java.util.function.BooleanSupplier;
-import javax.lang.model.element.Modifier;
+import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
 import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
 import org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil;
@@ -119,7 +119,7 @@ public class ConditionalEnhancer implements BuilderEnhancer {
     MethodDto method = new MethodDto("conditional", builderDto.getBuilderTypeName());
     method.setOrdering(ORDERING_CONDITIONAL);
     method.setPriority(MethodDto.PRIORITY_HIGHEST);
-    method.setModifier(Modifier.PUBLIC);
+    method.setModifier(AccessModifier.PUBLIC);
 
     // Add parameters
     addConditionalPositiveNegativeParameters(method, builderDto.getBuilderTypeName());
@@ -151,7 +151,7 @@ public class ConditionalEnhancer implements BuilderEnhancer {
     MethodDto method = new MethodDto("conditional", builderDto.getBuilderTypeName());
     method.setOrdering(ORDERING_CONDITIONAL_POSITIVE_ONLY);
     method.setPriority(MethodDto.PRIORITY_HIGHEST);
-    method.setModifier(Modifier.PUBLIC);
+    method.setModifier(AccessModifier.PUBLIC);
 
     // Add parameters
     addConditionalPositiveOnlyParameters(method, builderDto.getBuilderTypeName());

@@ -26,7 +26,7 @@ package org.javahelpers.simple.builders.processor.model.core;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
-import javax.lang.model.element.Modifier;
+import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 
@@ -44,7 +44,7 @@ public class ClassFieldDto {
   private TypeName fieldType;
 
   /** Field visibility (typically PRIVATE). */
-  private Modifier visibility;
+  private AccessModifier visibility;
 
   /** Literal initializer (e.g., "unsetValue()"). */
   private String literalInitializer;
@@ -71,11 +71,11 @@ public class ClassFieldDto {
     this.fieldType = fieldType;
   }
 
-  public Modifier getVisibility() {
+  public AccessModifier getVisibility() {
     return visibility;
   }
 
-  public void setVisibility(Modifier visibility) {
+  public void setVisibility(AccessModifier visibility) {
     this.visibility = visibility;
   }
 

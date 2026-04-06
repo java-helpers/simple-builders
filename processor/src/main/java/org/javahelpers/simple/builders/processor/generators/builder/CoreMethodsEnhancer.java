@@ -25,7 +25,7 @@ package org.javahelpers.simple.builders.processor.generators.builder;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.lang.model.element.Modifier;
+import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
 import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
 import org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil;
@@ -120,7 +120,7 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
     MethodDto method = new MethodDto("build", returnType);
     method.setOrdering(ORDERING_BUILD);
     method.setPriority(MethodDto.PRIORITY_HIGHEST);
-    method.setModifier(Modifier.PUBLIC);
+    method.setModifier(AccessModifier.PUBLIC);
 
     // Add @Override annotation only if implementing IBuilderBase interface
     if (builderDto.getConfiguration().shouldImplementBuilderBase()) {
@@ -213,7 +213,7 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
     MethodDto method = new MethodDto("create", returnType);
     method.setOrdering(ORDERING_CREATE);
     method.setPriority(MethodDto.PRIORITY_HIGHEST);
-    method.setModifier(Modifier.PUBLIC);
+    method.setModifier(AccessModifier.PUBLIC);
     method.setStatic(true);
 
     // Use appropriate code template based on whether we have generics
@@ -244,7 +244,7 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
     MethodDto method = new MethodDto("toString", new TypeName("java.lang", "String"));
     method.setOrdering(ORDERING_TO_STRING);
     method.setPriority(MethodDto.PRIORITY_HIGHEST);
-    method.setModifier(Modifier.PUBLIC);
+    method.setModifier(AccessModifier.PUBLIC);
     AnnotationDto overrideAnnotation = new AnnotationDto();
     overrideAnnotation.setAnnotationType(JavaLangMapper.map2TypeName(Override.class));
     method.addAnnotation(overrideAnnotation);

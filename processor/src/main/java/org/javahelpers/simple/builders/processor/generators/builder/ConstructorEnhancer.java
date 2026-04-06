@@ -25,7 +25,6 @@
 package org.javahelpers.simple.builders.processor.generators.builder;
 
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
 import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
@@ -78,9 +77,7 @@ public class ConstructorEnhancer implements BuilderEnhancer {
   /** Creates the empty constructor. */
   protected ConstructorDto createEmptyConstructor(BuilderDefinitionDto builderDto) {
     ConstructorDto constructor = new ConstructorDto();
-    constructor.setVisibility(
-        JavaLangMapper.mapAccessModifier(
-            builderDto.getConfiguration().getBuilderConstructorAccess()));
+    constructor.setVisibility(builderDto.getConfiguration().getBuilderConstructorAccess());
     constructor.setBody(""); // Empty body
 
     String targetFullName = builderDto.getBuildingTargetTypeName().getFullQualifiedName();
@@ -93,9 +90,7 @@ public class ConstructorEnhancer implements BuilderEnhancer {
   /** Creates the from-instance constructor. */
   protected ConstructorDto createFromInstanceConstructor(BuilderDefinitionDto builderDto) {
     ConstructorDto constructor = new ConstructorDto();
-    constructor.setVisibility(
-        JavaLangMapper.mapAccessModifier(
-            builderDto.getConfiguration().getBuilderConstructorAccess()));
+    constructor.setVisibility(builderDto.getConfiguration().getBuilderConstructorAccess());
 
     // Add parameter for the DTO instance
     MethodParameterDto instanceParam = new MethodParameterDto();

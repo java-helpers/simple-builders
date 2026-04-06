@@ -29,7 +29,7 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import javax.lang.model.element.Modifier;
+import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
@@ -47,7 +47,7 @@ public class ConstructorDto {
   private MethodCodeDto methodCodeDto = new MethodCodeDto();
 
   /** Constructor visibility. */
-  private Modifier visibility;
+  private AccessModifier visibility;
 
   /** Constructor javadoc. */
   private JavadocDto javadoc;
@@ -106,11 +106,11 @@ public class ConstructorDto {
     this.methodCodeDto.setCodeFormat(body);
   }
 
-  public Modifier getVisibility() {
+  public AccessModifier getVisibility() {
     return visibility;
   }
 
-  public void setVisibility(Modifier visibility) {
+  public void setVisibility(AccessModifier visibility) {
     this.visibility = visibility;
   }
 

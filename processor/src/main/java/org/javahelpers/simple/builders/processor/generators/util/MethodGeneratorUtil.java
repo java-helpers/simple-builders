@@ -27,8 +27,8 @@ package org.javahelpers.simple.builders.processor.generators.util;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
-import javax.lang.model.element.Modifier;
 import org.apache.commons.lang3.StringUtils;
+import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
@@ -90,13 +90,13 @@ public final class MethodGeneratorUtil {
   }
 
   /**
-   * Gets the method access modifier from the builder configuration.
+   * Gets the access modifier for methods from the processing context.
    *
    * @param context the processing context
-   * @return the Modifier for method access, or null for package-private
+   * @return the AccessModifier for method access, or null for package-private
    */
-  public static Modifier getMethodAccessModifier(ProcessingContext context) {
-    return JavaLangMapper.mapAccessModifier(context.getConfiguration().getMethodAccess());
+  public static AccessModifier getMethodAccessModifier(ProcessingContext context) {
+    return context.getConfiguration().getMethodAccess();
   }
 
   /**
@@ -105,7 +105,7 @@ public final class MethodGeneratorUtil {
    * @param method the MethodDto to update
    * @param modifier the access modifier to set, or null for package-private
    */
-  public static void setMethodAccessModifier(MethodDto method, Modifier modifier) {
+  public static void setMethodAccessModifier(MethodDto method, AccessModifier modifier) {
     if (modifier != null) {
       method.setModifier(modifier);
     }

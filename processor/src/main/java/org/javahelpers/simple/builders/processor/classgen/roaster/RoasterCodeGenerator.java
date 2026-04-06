@@ -37,11 +37,11 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.tools.JavaFileObject;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.core.util.TrackedValue;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
@@ -358,16 +358,17 @@ public class RoasterCodeGenerator {
   }
 
   private void applyVisibility(
-      org.jboss.forge.roaster.model.source.VisibilityScopedSource<?> source, Modifier modifier) {
+      org.jboss.forge.roaster.model.source.VisibilityScopedSource<?> source,
+      AccessModifier modifier) {
     if (modifier == null) {
       source.setPackagePrivate();
       return;
     }
     switch (modifier) {
       case PUBLIC -> source.setPublic();
-      case PROTECTED -> source.setProtected();
       case PRIVATE -> source.setPrivate();
-      default -> source.setPackagePrivate();
+      case PACKAGE_PRIVATE -> source.setPackagePrivate();
+      case DEFAULT -> source.setPackagePrivate(); // DEFAULT maps to PACKAGE_PRIVATE
     }
   }
 
