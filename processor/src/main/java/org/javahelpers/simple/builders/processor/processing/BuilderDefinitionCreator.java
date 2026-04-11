@@ -55,7 +55,6 @@ import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
-import org.javahelpers.simple.builders.processor.model.type.TypeNamePrimitive;
 
 /** Class for creating a specific BuilderDefinitionDto for an annotated DTO class. */
 public class BuilderDefinitionCreator {
@@ -181,28 +180,11 @@ public class BuilderDefinitionCreator {
     ClassFieldDto classField = new ClassFieldDto();
     classField.setFieldName(field.getFieldNameInBuilder());
 
-    // Build the field type: TrackedValue<BoxedType>
+    // Build the field type: TrackedValue<FieldType>
     TypeName trackedValueType =
         new TypeName("org.javahelpers.simple.builders.core.util", "TrackedValue");
-    // Box primitive types (int -> Integer, etc.)
-    TypeName boxedType;
-    if (field.getFieldType() instanceof TypeNamePrimitive primitive) {
-      boxedType =
-          switch (primitive.getType()) {
-            case BOOLEAN -> new TypeName("java.lang", "Boolean");
-            case BYTE -> new TypeName("java.lang", "Byte");
-            case SHORT -> new TypeName("java.lang", "Short");
-            case INT -> new TypeName("java.lang", "Integer");
-            case LONG -> new TypeName("java.lang", "Long");
-            case CHAR -> new TypeName("java.lang", "Character");
-            case FLOAT -> new TypeName("java.lang", "Float");
-            case DOUBLE -> new TypeName("java.lang", "Double");
-            case VOID -> new TypeName("java.lang", "Void");
-          };
-    } else {
-      boxedType = field.getFieldType();
-    }
-    TypeName wrappedFieldType = new TypeNameGeneric(trackedValueType, List.of(boxedType));
+    TypeName wrappedFieldType =
+        new TypeNameGeneric(trackedValueType, List.of(field.getFieldType()));
     classField.setFieldType(wrappedFieldType);
 
     classField.setVisibility(AccessModifier.PRIVATE);
@@ -212,8 +194,8 @@ public class BuilderDefinitionCreator {
     // Add field type imports
     classField.addFieldTypeImport(
         new TypeName("org.javahelpers.simple.builders.core.util", "TrackedValue"));
-    // Add the boxed field type for import (derived from original field type)
-    classField.addFieldTypeImport(boxedType);
+    // Add the field type for import
+    classField.addFieldTypeImport(field.getFieldType());
 
     return classField;
   }
