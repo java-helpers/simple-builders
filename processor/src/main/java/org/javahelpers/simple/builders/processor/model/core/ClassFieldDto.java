@@ -26,6 +26,8 @@ package org.javahelpers.simple.builders.processor.model.core;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
@@ -101,5 +103,18 @@ public class ClassFieldDto {
 
   public void addFieldTypeImport(TypeName typeName) {
     this.fieldTypeImports.add(typeName);
+  }
+
+  /**
+   * Returns a short string representation of this field using Apache Commons ToStringBuilder.
+   *
+   * @return concise string representation showing field name, type, and visibility
+   */
+  @Override
+  public String toString() {
+    return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
+        .append("name", fieldName)
+        .append("type", fieldType)
+        .toString();
   }
 }

@@ -29,6 +29,8 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
@@ -149,5 +151,22 @@ public class ConstructorDto {
       this.methodCodeDto = new MethodCodeDto();
     }
     this.methodCodeDto.addCodeBlockImport(typeName);
+  }
+
+  /**
+   * Returns a string representation of this constructor using Apache Commons ToStringBuilder.
+   *
+   * <p>This provides a comprehensive view of the constructor including visibility, parameters,
+   * annotations, javadoc, and code block information for debugging and logging purposes.
+   *
+   * @return detailed string representation of the constructor
+   */
+  @Override
+  public String toString() {
+    return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
+        .append("parameters", parameters)
+        .append("annotations", annotations)
+        .append("hasCodeBlock", methodCodeDto != null && methodCodeDto.getCodeFormat() != null)
+        .toString();
   }
 }
