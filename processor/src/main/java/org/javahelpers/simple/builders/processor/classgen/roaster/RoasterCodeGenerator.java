@@ -348,6 +348,7 @@ public class RoasterCodeGenerator {
     }
     switch (modifier) {
       case PUBLIC -> source.setPublic();
+      case PROTECTED -> source.setProtected();
       case PRIVATE -> source.setPrivate();
       case PACKAGE_PRIVATE -> source.setPackagePrivate();
       case DEFAULT -> source.setPackagePrivate(); // DEFAULT maps to PACKAGE_PRIVATE

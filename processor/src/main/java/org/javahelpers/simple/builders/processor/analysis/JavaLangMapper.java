@@ -93,6 +93,7 @@ public final class JavaLangMapper {
     }
     return switch (accessModifier) {
       case PUBLIC, DEFAULT -> Modifier.PUBLIC;
+      case PROTECTED -> Modifier.PROTECTED;
       case PRIVATE -> Modifier.PRIVATE;
       case PACKAGE_PRIVATE -> null; // Package-private has no explicit modifier
     };
