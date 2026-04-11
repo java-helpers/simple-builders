@@ -28,6 +28,7 @@ import static org.javahelpers.simple.builders.processor.analysis.TypeNameAnalyse
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import org.apache.commons.collections4.CollectionUtils;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil;
@@ -106,7 +107,7 @@ public class OptionalHelperGenerator implements MethodGenerator {
             field, "Optional.ofNullable(%s)", innerType, builderType, context);
 
     // Add code block import for Optional.ofNullable
-    method.getMethodCodeDto().addCodeBlockImport(new TypeName("java.util", "Optional"));
+    method.getMethodCodeDto().addCodeBlockImport(TypeName.of(Optional.class));
 
     return Collections.singletonList(method);
   }

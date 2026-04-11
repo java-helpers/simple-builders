@@ -26,6 +26,8 @@ package org.javahelpers.simple.builders.processor.generators.field;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
@@ -157,11 +159,11 @@ public class VarArgsHelperGenerator implements MethodGenerator {
 
     // Add code block imports for collection factory methods
     if (fieldType instanceof TypeNameList) {
-      method.getMethodCodeDto().addCodeBlockImport(new TypeName("java.util", "List"));
+      method.getMethodCodeDto().addCodeBlockImport(TypeName.of(List.class));
     } else if (fieldType instanceof TypeNameSet) {
-      method.getMethodCodeDto().addCodeBlockImport(new TypeName("java.util", "Set"));
+      method.getMethodCodeDto().addCodeBlockImport(TypeName.of(Set.class));
     } else if (fieldType instanceof TypeNameMap) {
-      method.getMethodCodeDto().addCodeBlockImport(new TypeName("java.util", "Map"));
+      method.getMethodCodeDto().addCodeBlockImport(TypeName.of(Map.class));
     }
 
     return method;

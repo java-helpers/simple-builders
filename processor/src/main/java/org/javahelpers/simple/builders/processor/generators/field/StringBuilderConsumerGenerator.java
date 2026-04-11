@@ -29,6 +29,7 @@ import static org.javahelpers.simple.builders.processor.analysis.TypeNameAnalyse
 import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.*;
 
 import java.util.List;
+import java.util.Optional;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.generators.util.JavadocConstants;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
@@ -121,7 +122,7 @@ public class StringBuilderConsumerGenerator implements MethodGenerator {
 
     // Add code block import for Optional.of when used
     if (isOptionalString(field.getFieldType())) {
-      method.getMethodCodeDto().addCodeBlockImport(new TypeName("java.util", "Optional"));
+      method.getMethodCodeDto().addCodeBlockImport(TypeName.of(Optional.class));
     }
 
     return List.of(method);

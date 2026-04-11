@@ -196,7 +196,7 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
     method.setCode(code.toString());
     method.addArgument("dtoBaseType", builderDto.getBuildingTargetTypeName());
     method.addArgument("buildResultType", returnType);
-    method.addCodeBlockImport(new TypeName("java.lang", "IllegalStateException"));
+    method.addCodeBlockImport(TypeName.of(IllegalStateException.class));
     method.setJavadoc(new JavadocDto("Builds the configured DTO instance."));
 
     return method;
@@ -238,7 +238,7 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
 
   /** Creates the toString() method. */
   protected MethodDto createToStringMethod(BuilderDefinitionDto builderDto) {
-    MethodDto method = new MethodDto("toString", new TypeName("java.lang", "String"));
+    MethodDto method = new MethodDto("toString", TypeName.of(String.class));
     method.setOrdering(ORDERING_TO_STRING);
     method.setPriority(MethodDto.PRIORITY_HIGHEST);
     method.setModifier(AccessModifier.PUBLIC);

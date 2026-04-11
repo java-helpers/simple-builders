@@ -31,6 +31,7 @@ import static org.javahelpers.simple.builders.processor.generators.util.MethodGe
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.apache.commons.collections4.CollectionUtils;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.generators.util.JavadocConstants;
@@ -141,7 +142,7 @@ public class StringFormatHelperGenerator implements MethodGenerator {
                 context);
 
         // Add code block imports for Optional.of and String.format
-        method.getMethodCodeDto().addCodeBlockImport(new TypeName("java.util", "Optional"));
+        method.getMethodCodeDto().addCodeBlockImport(TypeName.of(Optional.class));
 
         methods.add(method);
       }

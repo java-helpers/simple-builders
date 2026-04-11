@@ -144,7 +144,7 @@ public class ArrayBuilderConsumerGenerator implements MethodGenerator {
         """);
 
     // Add code block import for java.util.List.of
-    methodDto.getMethodCodeDto().addCodeBlockImport(new TypeName("java.util", "List"));
+    methodDto.getMethodCodeDto().addCodeBlockImport(TypeName.of(List.class));
 
     methodDto.addArgument("fieldName", fieldNameInBuilder);
     methodDto.addArgument("dtoMethodParam", parameter.getParameterName());
