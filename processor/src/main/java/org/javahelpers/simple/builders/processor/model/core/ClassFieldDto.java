@@ -24,6 +24,8 @@
 
 package org.javahelpers.simple.builders.processor.model.core;
 
+import static org.javahelpers.simple.builders.core.enums.AccessModifier.PRIVATE;
+
 import java.util.LinkedHashSet;
 import java.util.Set;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -46,7 +48,7 @@ public class ClassFieldDto {
   private TypeName fieldType;
 
   /** Field visibility (typically PRIVATE). */
-  private AccessModifier visibility;
+  private AccessModifier visibility = PRIVATE;
 
   /** Literal initializer (e.g., "exampleValue" like in {@code String field="exampleValue";}). */
   private String literalInitializer;
