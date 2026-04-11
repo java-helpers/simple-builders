@@ -24,12 +24,12 @@
 
 package org.javahelpers.simple.builders.processor.generators.builder;
 
-import java.util.concurrent.atomic.AtomicBoolean;
 import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.ConstructorDto;
+import org.javahelpers.simple.builders.processor.model.method.MethodCodeDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNamePrimitive;
@@ -65,20 +65,14 @@ public class ConstructorEnhancer implements BuilderEnhancer {
 
   @Override
   public void enhanceBuilder(BuilderDefinitionDto builderDto, ProcessingContext context) {
-    // Add empty constructor
-    ConstructorDto emptyConstructor = createEmptyConstructor(builderDto);
-    builderDto.getConstructors().add(emptyConstructor);
-
-    // Add from-instance constructor
-    ConstructorDto fromInstanceConstructor = createFromInstanceConstructor(builderDto);
-    builderDto.getConstructors().add(fromInstanceConstructor);
+    builderDto.addConstructor(createEmptyConstructor(builderDto));
+    builderDto.addConstructor(createFromInstanceConstructor(builderDto));
   }
 
   /** Creates the empty constructor. */
   protected ConstructorDto createEmptyConstructor(BuilderDefinitionDto builderDto) {
     ConstructorDto constructor = new ConstructorDto();
     constructor.setVisibility(builderDto.getConfiguration().getBuilderConstructorAccess());
-    constructor.setBody(""); // Empty body
 
     String targetFullName = builderDto.getBuildingTargetTypeName().getFullQualifiedName();
     constructor.setJavadoc(
@@ -98,10 +92,9 @@ public class ConstructorEnhancer implements BuilderEnhancer {
     instanceParam.setParameterTypeName(builderDto.getBuildingTargetTypeName());
     constructor.addParameter(instanceParam);
 
-    // Build constructor body using text blocks
-    // The TrackedValue.* prefixes will be replaced by RoasterCodeGenerator
-    StringBuilder bodyCode = new StringBuilder();
-    AtomicBoolean hasNonNullChecks = new AtomicBoolean(false);
+    // Build constructor code body
+    MethodCodeDto codeDto = new MethodCodeDto();
+    constructor.setMethodCodeDto(codeDto);
 
     // Initialize fields from instance
     for (FieldDto field : builderDto.getAllFieldsForBuilder()) {
@@ -116,16 +109,16 @@ public class ConstructorEnhancer implements BuilderEnhancer {
                 if (field.isNonNullable() && !(field.getFieldType() instanceof TypeNamePrimitive)) {
                   // Non-nullable non-primitive field - validate not null
                   // Skip primitives as they can't be compared to null (compilation error)
-                  bodyCode.append(
+                  codeDto.append(
                       """
-                      if (instance.%s() == null) {
-                        throw new IllegalArgumentException("Field '%s' is non-null but instance.%s() returned null");
-                      }
-                      """
-                          .formatted(getterName, fieldName, getterName));
-                  hasNonNullChecks.set(true);
+                          if (instance.%s() == null) {
+                            throw new IllegalArgumentException("Field '%s' is non-null but instance.%s() returned null");
+                          }
+                          """,
+                      getterName, fieldName, getterName);
+                  codeDto.addCodeBlockImport(new TypeName("java.lang", "IllegalArgumentException"));
                 }
-                bodyCode.append(
+                codeDto.append(
                     """
                     this.%s = TrackedValue.initialValue(instance.%s());
                     """
@@ -133,14 +126,6 @@ public class ConstructorEnhancer implements BuilderEnhancer {
               });
       // If no getter available - cannot initialize this field
       // Leave it unset (will use unsetValue() from field initializer)
-    }
-
-    // Set the body as string (will be processed by RoasterCodeGenerator)
-    constructor.setBody(bodyCode.toString());
-
-    // Add IllegalArgumentException import only if we have non-null checks
-    if (hasNonNullChecks.get()) {
-      constructor.addCodeBlockImport(new TypeName("java.lang", "IllegalArgumentException"));
     }
 
     String targetFullName = builderDto.getBuildingTargetTypeName().getFullQualifiedName();

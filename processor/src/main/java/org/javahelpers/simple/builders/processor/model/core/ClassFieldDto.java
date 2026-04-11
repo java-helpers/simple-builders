@@ -40,13 +40,13 @@ public class ClassFieldDto {
   /** Field name in generated class. */
   private String fieldName;
 
-  /** Field type (e.g., TrackedValue<String> represented as TypeName). */
+  /** Field type (e.g., String represented as TypeName). */
   private TypeName fieldType;
 
   /** Field visibility (typically PRIVATE). */
   private AccessModifier visibility;
 
-  /** Literal initializer (e.g., "unsetValue()"). */
+  /** Literal initializer (e.g., "exampleValue" like in {@code String field="exampleValue";}). */
   private String literalInitializer;
 
   /** Field javadoc. */

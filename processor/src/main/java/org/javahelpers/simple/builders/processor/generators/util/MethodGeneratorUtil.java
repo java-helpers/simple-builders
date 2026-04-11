@@ -100,18 +100,6 @@ public final class MethodGeneratorUtil {
   }
 
   /**
-   * Sets the access modifier on a MethodDto if the modifier is not null.
-   *
-   * @param method the MethodDto to update
-   * @param modifier the access modifier to set, or null for package-private
-   */
-  public static void setMethodAccessModifier(MethodDto method, AccessModifier modifier) {
-    if (modifier != null) {
-      method.setModifier(modifier);
-    }
-  }
-
-  /**
    * Creates a generic TypeName from a base type and generic parameters.
    *
    * <p>If the generic parameters list is empty, returns the base type as-is. Otherwise creates a
@@ -167,7 +155,7 @@ public final class MethodGeneratorUtil {
         new MethodDto(
             generateBuilderMethodName(field.getOriginalFieldName(), context), builderType);
     methodDto.addParameter(parameter);
-    setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
+    methodDto.setModifier(getMethodAccessModifier(context));
 
     String params;
     if (StringUtils.isBlank(transform)) {
@@ -224,7 +212,7 @@ public final class MethodGeneratorUtil {
         new MethodDto(
             generateBuilderMethodName(field.getOriginalFieldName(), context), parentBuilderType);
     methodDto.addParameter(parameter);
-    setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
+    methodDto.setModifier(getMethodAccessModifier(context));
 
     String buildExpression = calculateBuildExpression(field.getFieldType());
 
@@ -361,7 +349,7 @@ public final class MethodGeneratorUtil {
         new MethodDto(
             generateBuilderMethodName(field.getOriginalFieldName(), context), builderType);
     methodDto.addParameter(parameter);
-    setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
+    methodDto.setModifier(getMethodAccessModifier(context));
 
     methodDto.setCode(
         """

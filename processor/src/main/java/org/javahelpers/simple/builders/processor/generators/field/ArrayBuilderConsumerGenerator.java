@@ -132,7 +132,7 @@ public class ArrayBuilderConsumerGenerator implements MethodGenerator {
     MethodDto methodDto =
         new MethodDto(generateBuilderMethodName(fieldName, context), returnBuilderType);
     methodDto.addParameter(parameter);
-    setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
+    methodDto.setModifier(getMethodAccessModifier(context));
     methodDto.setCode(
         """
         $helperType:T builder = this.$fieldName:N.isSet()

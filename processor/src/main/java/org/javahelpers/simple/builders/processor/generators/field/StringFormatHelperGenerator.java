@@ -184,7 +184,7 @@ public class StringFormatHelperGenerator implements MethodGenerator {
     MethodDto methodDto = new MethodDto(generateBuilderMethodName(fieldName, context), builderType);
     methodDto.addParameter(formatParam);
     methodDto.addParameter(argsParam);
-    setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
+    methodDto.setModifier(getMethodAccessModifier(context));
     methodDto.setCode(
         """
         this.$fieldName:N = $builderFieldWrapper:T.changedValue($transform:N);

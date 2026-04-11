@@ -146,7 +146,7 @@ public class AddToCollectionGenerator implements MethodGenerator {
     parameter.setParameterTypeName(elementType);
     methodDto.addParameter(parameter);
 
-    setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
+    methodDto.setModifier(getMethodAccessModifier(context));
 
     String collectionImpl;
     TypeName collectionVarType;
@@ -179,10 +179,7 @@ public class AddToCollectionGenerator implements MethodGenerator {
     methodDto.addArgument("fieldName", fieldNameInBuilder);
     methodDto.addArgument("elementType", elementType);
     methodDto.addArgument("builderFieldWrapper", TRACKED_VALUE_TYPE);
-
-    // Add imports for types used in code block
     methodDto.addCodeBlockImport(collectionImplType);
-
     methodDto.setPriority(MethodDto.PRIORITY_MEDIUM);
 
     methodDto.setJavadoc(

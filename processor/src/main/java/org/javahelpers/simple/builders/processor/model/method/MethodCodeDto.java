@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 
 /** DTO for holding information of code implementation. */
@@ -105,5 +106,28 @@ public class MethodCodeDto {
    */
   public void addCodeBlockImport(TypeName typeName) {
     this.codeBlockImports.add(typeName);
+  }
+
+  /**
+   * Appends additional code to the existing code format with string formatting support.
+   *
+   * <p>This method concatenates the provided formatted code string to the current code format,
+   * separated by a newline for proper formatting. This is useful for building up method bodies
+   * incrementally, especially when constructing complex code with multiple sections.
+   *
+   * <p>Supports the same formatting syntax as {@link String#format(String, Object...)}, allowing
+   * for dynamic value insertion using placeholders like %s, %d, etc.
+   *
+   * @param formatted the code fragment with format placeholders to append to the existing code
+   *     format
+   * @param args the arguments to be formatted into the string
+   */
+  public void append(String formatted, Object... args) {
+    String formattedCode = args.length > 0 ? String.format(formatted, args) : formatted;
+    if (StringUtils.isEmpty(codeFormat)) {
+      codeFormat = formattedCode;
+    } else {
+      codeFormat += "\n" + formattedCode;
+    }
   }
 }

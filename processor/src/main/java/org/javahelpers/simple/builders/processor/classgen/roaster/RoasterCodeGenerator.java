@@ -53,6 +53,7 @@ import org.javahelpers.simple.builders.processor.model.integration.JacksonModule
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocTagDto;
 import org.javahelpers.simple.builders.processor.model.method.ConstructorDto;
+import org.javahelpers.simple.builders.processor.model.method.MethodCodeDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodCodePlaceholder;
 import org.javahelpers.simple.builders.processor.model.method.MethodCodeTypePlaceholder;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
@@ -164,13 +165,8 @@ public class RoasterCodeGenerator {
   }
 
   private void addClassMetadata(JavaClassSource source, GenerationTargetClassDto classDef) {
-    // Add class JavaDoc
     applyJavadoc(source, classDef.getClassJavadoc());
-
-    // Set class access level
     applyVisibility(source, classDef.getClassAccessModifier());
-
-    // Add superclass if specified
     if (classDef.getSuperType() != null) {
       source.setSuperType(mapType(classDef.getSuperType()));
     }
@@ -195,16 +191,14 @@ public class RoasterCodeGenerator {
       appendField(source, fieldDto);
     }
 
-    logger.debugEndOperation("Fields added: %d fields", classDef.getClassFields().size());
+    logger.debugEndOperation("Fields added: %d fields", source.getFields().size());
   }
 
   private void appendField(JavaClassSource source, ClassFieldDto fieldDto) {
     FieldSource<JavaClassSource> field = source.addField();
     field.setName(fieldDto.getFieldName());
     field.setType(mapType(fieldDto.getFieldType()));
-    if (fieldDto.getVisibility() != null) {
-      applyVisibility(field, fieldDto.getVisibility());
-    }
+    applyVisibility(field, fieldDto.getVisibility());
     if (fieldDto.getLiteralInitializer() != null) {
       field.setLiteralInitializer(fieldDto.getLiteralInitializer());
     }
@@ -224,19 +218,12 @@ public class RoasterCodeGenerator {
   private void appendConstructor(JavaClassSource source, ConstructorDto constructor) {
     MethodSource<JavaClassSource> method = source.addMethod();
     method.setConstructor(true);
-    if (constructor.getVisibility() != null) {
-      applyVisibility(method, constructor.getVisibility());
-    }
+    applyVisibility(method, constructor.getVisibility());
     for (MethodParameterDto param : constructor.getParameters()) {
       method.addParameter(mapType(param.getParameterType()), param.getParameterName());
     }
     applyJavadoc(method, constructor.getJavadoc());
-    // Use getMethodCodeDto for proper template resolution
-    // Note: empty string is a valid body (for empty constructors)
-    if (constructor.getMethodCodeDto() != null
-        && constructor.getMethodCodeDto().getCodeFormat() != null) {
-      method.setBody(resolveCodeTemplate(constructor.getMethodCodeDto()));
-    }
+    applyCodeBlock(method, constructor.getMethodCodeDto());
   }
 
   private void appendMethods(JavaClassSource source, GenerationTargetClassDto classDef) {
@@ -305,12 +292,7 @@ public class RoasterCodeGenerator {
       boolean interfaceMethod) {
     MethodSource<JavaClassSource> method = source.addMethod();
     configureMethod(method, methodDto, nestedTypeMethod, interfaceMethod);
-    String body =
-        methodDto.getMethodCodeDto() != null
-                && StringUtils.isNotBlank(methodDto.getMethodCodeDto().getCodeFormat())
-            ? resolveCodeTemplate(methodDto.getMethodCodeDto())
-            : "";
-    method.setBody(body);
+    applyCodeBlock(method, methodDto.getMethodCodeDto());
   }
 
   private void appendNestedTypes(JavaClassSource source, GenerationTargetClassDto classDef) {
@@ -402,6 +384,15 @@ public class RoasterCodeGenerator {
             generic.getUpperBounds().stream().map(RoasterMapper::mapType).toArray(String[]::new));
       }
     }
+  }
+
+  private void applyCodeBlock(MethodSource<?> method, MethodCodeDto codeDto) {
+    if (codeDto == null || StringUtils.isBlank(codeDto.getCodeFormat())) {
+      // If implementation is missing, an empty body needs to be set
+      method.setBody("");
+      return;
+    }
+    method.setBody(resolveCodeTemplate(codeDto));
   }
 
   private void applyJavadoc(
