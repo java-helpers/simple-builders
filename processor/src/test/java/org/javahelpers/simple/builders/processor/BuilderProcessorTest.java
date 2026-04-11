@@ -1147,13 +1147,13 @@ class BuilderProcessorTest {
     JavaFileObject notNullAnnotation =
         ProcessorTestUtils.forSource(
             """
-                package jakarta.validation.constraints;
-                import java.lang.annotation.*;
-                @Retention(RetentionPolicy.RUNTIME)
-                @Target({ElementType.FIELD, ElementType.PARAMETER})
-                public @interface NotNull {
-                  String message() default "";
-                }
+            package jakarta.validation.constraints;
+            import java.lang.annotation.*;
+            @Retention(RetentionPolicy.RUNTIME)
+            @Target({ElementType.FIELD, ElementType.PARAMETER})
+            public @interface NotNull {
+              String message() default "";
+            }
             """);
 
     JavaFileObject sourceFile =
@@ -1165,24 +1165,24 @@ class BuilderProcessorTest {
 
             @SimpleBuilder
             public class NonNullValidation {
-                private String requiredField;
-                private String optionalField;
-                private int primitiveField;
+              private String requiredField;
+              private String optionalField;
+              private int primitiveField;
 
-                public String getRequiredField() { return requiredField; }
-                public void setRequiredField(@NotNull String requiredField) {
+              public String getRequiredField() { return requiredField; }
+              public void setRequiredField(@NotNull String requiredField) {
                 this.requiredField = requiredField;
-                }
+              }
 
-                public String getOptionalField() { return optionalField; }
-                public void setOptionalField(String optionalField) {
+              public String getOptionalField() { return optionalField; }
+              public void setOptionalField(String optionalField) {
                 this.optionalField = optionalField;
-                }
+              }
 
-                public int getPrimitiveField() { return primitiveField; }
-                public void setPrimitiveField(int primitiveField) {
+              public int getPrimitiveField() { return primitiveField; }
+              public void setPrimitiveField(int primitiveField) {
                 this.primitiveField = primitiveField;
-                }
+              }
             }
             """);
 

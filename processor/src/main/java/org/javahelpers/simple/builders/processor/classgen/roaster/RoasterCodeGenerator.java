@@ -167,9 +167,7 @@ public class RoasterCodeGenerator {
   private void addClassMetadata(JavaClassSource source, GenerationTargetClassDto classDef) {
     applyJavadoc(source, classDef.getClassJavadoc());
     applyVisibility(source, classDef.getClassAccessModifier());
-    if (classDef.getSuperType() != null) {
-      source.setSuperType(mapType(classDef.getSuperType()));
-    }
+    applySuperType(source, classDef.getSuperType());
 
     // Add interfaces
     for (InterfaceName interfaceName : classDef.getInterfaces()) {
@@ -352,6 +350,12 @@ public class RoasterCodeGenerator {
       case PRIVATE -> source.setPrivate();
       case PACKAGE_PRIVATE -> source.setPackagePrivate();
       case DEFAULT -> source.setPackagePrivate(); // DEFAULT maps to PACKAGE_PRIVATE
+    }
+  }
+
+  private void applySuperType(JavaClassSource source, TypeName superType) {
+    if (superType != null) {
+      source.setSuperType(mapType(superType));
     }
   }
 
