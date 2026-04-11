@@ -197,9 +197,7 @@ public class RoasterCodeGenerator {
     field.setName(fieldDto.getFieldName());
     field.setType(mapType(fieldDto.getFieldType()));
     applyVisibility(field, fieldDto.getVisibility());
-    if (fieldDto.getLiteralInitializer() != null) {
-      field.setLiteralInitializer(fieldDto.getLiteralInitializer());
-    }
+    applyLiteralInitializer(field, fieldDto.getLiteralInitializer());
     applyJavadoc(field, fieldDto.getJavadoc());
   }
 
@@ -356,6 +354,13 @@ public class RoasterCodeGenerator {
   private void applySuperType(JavaClassSource source, TypeName superType) {
     if (superType != null) {
       source.setSuperType(mapType(superType));
+    }
+  }
+
+  private void applyLiteralInitializer(
+      FieldSource<JavaClassSource> field, String literalInitializer) {
+    if (literalInitializer != null) {
+      field.setLiteralInitializer(literalInitializer);
     }
   }
 
