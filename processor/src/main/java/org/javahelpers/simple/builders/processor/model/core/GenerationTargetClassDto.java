@@ -31,6 +31,9 @@ import java.util.Set;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.annotation.InterfaceName;
+import org.javahelpers.simple.builders.processor.model.imports.ImportStatement;
+import org.javahelpers.simple.builders.processor.model.imports.RegularImport;
+import org.javahelpers.simple.builders.processor.model.imports.StaticImport;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.ConstructorDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
@@ -66,8 +69,8 @@ public class GenerationTargetClassDto {
   /** Generic parameters declared on the target DTO (e.g., {@code <T extends Number, U>}). */
   private final List<GenericParameterDto> generics = new LinkedList<>();
 
-  /** Static import FQNs (e.g., TrackedValue.changedValue). */
-  private final Set<String> staticImports = new LinkedHashSet<>();
+  /** Imports (both regular and static imports). */
+  private final Set<ImportStatement> imports = new LinkedHashSet<>();
 
   /**
    * Nested types (interfaces or classes) to be generated inside the builder, such as the "With"
@@ -142,12 +145,52 @@ public class GenerationTargetClassDto {
     this.methods.add(method);
   }
 
-  public Set<String> getStaticImports() {
-    return staticImports;
+  public Set<ImportStatement> getImports() {
+    return imports;
   }
 
-  public void addStaticImport(String staticImport) {
-    this.staticImports.add(staticImport);
+  public void addImport(ImportStatement importStatement) {
+    this.imports.add(importStatement);
+  }
+
+  // Convenience methods for adding imports without creating DTOs
+
+  /**
+   * Adds a regular import (convenience method accepting Class).
+   *
+   * @param clazz the class to import
+   */
+  public void addImport(Class<?> clazz) {
+    addImport(new RegularImport(TypeName.of(clazz)));
+  }
+
+  /**
+   * Adds a regular import (convenience method accepting TypeName).
+   *
+   * @param typeName the type to import
+   */
+  public void addImport(TypeName typeName) {
+    addImport(new RegularImport(typeName));
+  }
+
+  /**
+   * Adds a static import (convenience method accepting Class and member name).
+   *
+   * @param clazz the class containing the static member
+   * @param memberName the name of the static member
+   */
+  public void addStaticImport(Class<?> clazz, String memberName) {
+    addImport(new StaticImport(TypeName.of(clazz), memberName));
+  }
+
+  /**
+   * Adds a static import (convenience method accepting TypeName and member name).
+   *
+   * @param type the type containing the static member
+   * @param memberName the name of the static member
+   */
+  public void addStaticImport(TypeName type, String memberName) {
+    addImport(new StaticImport(type, memberName));
   }
 
   /**

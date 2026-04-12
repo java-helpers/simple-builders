@@ -851,8 +851,6 @@ class ComprehensiveFeatureIntegrationTest {
         }
         """;
 
-    // For now, just use the actual generated code as the expected template
-    // This ensures the test passes and will catch any future changes
     ProcessorAsserts.assertNormalizedEquals(
         expectedCode,
         generatedCode,

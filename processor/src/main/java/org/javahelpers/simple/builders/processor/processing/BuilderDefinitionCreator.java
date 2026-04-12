@@ -41,6 +41,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.javahelpers.simple.builders.core.annotations.IgnoreInBuilder;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
+import org.javahelpers.simple.builders.core.util.TrackedValue;
 import org.javahelpers.simple.builders.processor.analysis.FieldAnnotationExtractor;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyser;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
@@ -157,11 +158,9 @@ public class BuilderDefinitionCreator {
     builderDto.setClassAccessModifier(builderDto.getConfiguration().getBuilderAccess());
 
     // 4. Set static imports for TrackedValue
-    builderDto.addStaticImport(
-        "org.javahelpers.simple.builders.core.util.TrackedValue.changedValue");
-    builderDto.addStaticImport(
-        "org.javahelpers.simple.builders.core.util.TrackedValue.initialValue");
-    builderDto.addStaticImport("org.javahelpers.simple.builders.core.util.TrackedValue.unsetValue");
+    builderDto.addStaticImport(TrackedValue.class, "changedValue");
+    builderDto.addStaticImport(TrackedValue.class, "initialValue");
+    builderDto.addStaticImport(TrackedValue.class, "unsetValue");
 
     context.debugEndOperation(
         "Finalized: %d class fields, %d methods, %d constructors",

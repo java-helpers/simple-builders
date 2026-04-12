@@ -29,7 +29,11 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
+import org.javahelpers.simple.builders.processor.model.imports.ImportStatement;
+import org.javahelpers.simple.builders.processor.model.imports.RegularImport;
+import org.javahelpers.simple.builders.processor.model.imports.StaticImport;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
 
 /** DTO for holding information of code implementation. */
 public class MethodCodeDto {
@@ -40,7 +44,7 @@ public class MethodCodeDto {
   private final List<MethodCodePlaceholder<?>> codeArguments = new ArrayList<>();
 
   /** Types used in the code body that aren't covered by arguments. */
-  private final Set<TypeName> codeBlockImports = new LinkedHashSet<>();
+  private final Set<ImportStatement> codeBlockImports = new LinkedHashSet<>();
 
   /**
    * Setting format of code.
@@ -69,7 +73,7 @@ public class MethodCodeDto {
    */
   public void addArgument(String name, TypeName value) {
     codeArguments.add(new MethodCodeTypePlaceholder(name, value));
-    codeBlockImports.add(value);
+    codeBlockImports.add(new RegularImport(value));
   }
 
   /**
@@ -101,11 +105,11 @@ public class MethodCodeDto {
   }
 
   /**
-   * Returns the set of types used in the code body that aren't covered by arguments.
+   * Returns the set of imports used in the code body that aren't covered by arguments.
    *
-   * @return set of types used in code body needing import
+   * @return set of imports used in code body
    */
-  public Set<TypeName> getCodeBlockImports() {
+  public Set<ImportStatement> getCodeBlockImports() {
     return codeBlockImports;
   }
 
@@ -115,7 +119,45 @@ public class MethodCodeDto {
    * @param typeName type to import
    */
   public void addCodeBlockImport(TypeName typeName) {
-    this.codeBlockImports.add(typeName);
+    this.codeBlockImports.add(new RegularImport(typeName));
+  }
+
+  /**
+   * Adds a regular import for a type used in the code block (convenience method accepting Class).
+   *
+   * @param clazz the class to import
+   */
+  public void addImport(Class<?> clazz) {
+    addCodeBlockImport(TypeName.of(clazz));
+  }
+
+  /**
+   * Adds a static import for a method/field used in the code block (convenience method).
+   *
+   * @param clazz the class containing the static member
+   * @param memberName the name of the static member
+   */
+  public void addStaticImport(Class<?> clazz, String memberName) {
+    this.codeBlockImports.add(new StaticImport(TypeName.of(clazz), memberName));
+  }
+
+  /**
+   * Adds type imports for a TypeName and its generic type arguments (convenience method).
+   *
+   * @param type the type to add imports for
+   */
+  public void addTypeImports(TypeName type) {
+    if (type == null) {
+      return;
+    }
+
+    // Add the main type
+    addCodeBlockImport(type);
+
+    // Add generic type arguments recursively
+    if (type instanceof TypeNameGeneric genericType) {
+      genericType.getInnerTypeArguments().forEach(this::addTypeImports);
+    }
   }
 
   /**

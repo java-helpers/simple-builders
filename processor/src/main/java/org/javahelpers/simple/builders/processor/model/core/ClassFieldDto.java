@@ -31,6 +31,9 @@ import java.util.Set;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
+import org.javahelpers.simple.builders.processor.model.imports.ImportStatement;
+import org.javahelpers.simple.builders.processor.model.imports.RegularImport;
+import org.javahelpers.simple.builders.processor.model.imports.StaticImport;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 
@@ -57,7 +60,7 @@ public class ClassFieldDto {
   private JavadocDto javadoc;
 
   /** Types to import for this field (e.g., TrackedValue, the boxed inner type). */
-  private final Set<TypeName> fieldTypeImports = new LinkedHashSet<>();
+  private final Set<ImportStatement> fieldTypeImports = new LinkedHashSet<>();
 
   public String getFieldName() {
     return fieldName;
@@ -99,12 +102,52 @@ public class ClassFieldDto {
     this.javadoc = javadoc;
   }
 
-  public Set<TypeName> getFieldTypeImports() {
+  public Set<ImportStatement> getFieldTypeImports() {
     return fieldTypeImports;
   }
 
   public void addFieldTypeImport(TypeName typeName) {
-    this.fieldTypeImports.add(typeName);
+    this.fieldTypeImports.add(new RegularImport(typeName));
+  }
+
+  // Convenience methods for adding imports without creating DTOs
+
+  /**
+   * Adds a regular import for this field (convenience method accepting Class).
+   *
+   * @param clazz the class to import
+   */
+  public void addImport(Class<?> clazz) {
+    this.fieldTypeImports.add(new RegularImport(TypeName.of(clazz)));
+  }
+
+  /**
+   * Adds a regular import for this field (convenience method accepting TypeName).
+   *
+   * @param typeName the type to import
+   */
+  public void addImport(TypeName typeName) {
+    this.fieldTypeImports.add(new RegularImport(typeName));
+  }
+
+  /**
+   * Adds a static import for this field (convenience method accepting Class and member name).
+   *
+   * @param clazz the class containing the static member
+   * @param memberName the name of the static member
+   */
+  public void addStaticImport(Class<?> clazz, String memberName) {
+    this.fieldTypeImports.add(new StaticImport(TypeName.of(clazz), memberName));
+  }
+
+  /**
+   * Adds a static import for this field (convenience method accepting TypeName and member name).
+   *
+   * @param type the type containing the static member
+   * @param memberName the name of the static member
+   */
+  public void addStaticImport(TypeName type, String memberName) {
+    this.fieldTypeImports.add(new StaticImport(type, memberName));
   }
 
   /**

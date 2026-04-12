@@ -1,12 +1,17 @@
 package org.javahelpers.simple.builders.processor.util;
 
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.TreeSet;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.annotation.InterfaceName;
 import org.javahelpers.simple.builders.processor.model.core.GenerationTargetClassDto;
+import org.javahelpers.simple.builders.processor.model.imports.ImportStatement;
+import org.javahelpers.simple.builders.processor.model.imports.RegularImport;
+import org.javahelpers.simple.builders.processor.model.imports.StaticImport;
 import org.javahelpers.simple.builders.processor.model.method.MethodCodePlaceholder;
 import org.javahelpers.simple.builders.processor.model.method.MethodCodeTypePlaceholder;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
@@ -22,23 +27,35 @@ import org.javahelpers.simple.builders.processor.model.type.TypeNameVariable;
  *
  * <p>This class centralizes all import-related logic that was previously scattered throughout
  * RoasterCodeGenerator, providing a clean and consistent approach to import management.
+ *
+ * <p>Uses {@link ImportStatement} objects internally to represent both regular and static imports,
+ * providing type safety and eliminating string-based import handling.
  */
 public class ImportCollector {
 
-  private final Set<String> imports = new LinkedHashSet<>();
-  private final String currentPackage;
+  private final Set<ImportStatement> imports = new LinkedHashSet<>();
+  private final TypeName currentType;
 
   /**
-   * Creates a new ImportCollector for the specified package.
+   * Creates a new ImportCollector for the specified type.
    *
-   * @param currentPackage the package of the class being generated
+   * @param currentType the type of the class being generated
    */
-  public ImportCollector(String currentPackage) {
-    this.currentPackage = currentPackage;
+  public ImportCollector(TypeName currentType) {
+    this.currentType = currentType;
   }
 
   /**
-   * Adds all necessary imports for a type.
+   * Adds a regular import (convenience method accepting Class).
+   *
+   * @param clazz the class to import
+   */
+  public void addImport(Class<?> clazz) {
+    addImport(TypeName.of(clazz));
+  }
+
+  /**
+   * Adds imports for a type.
    *
    * @param type the type to add imports for
    */
@@ -57,8 +74,7 @@ public class ImportCollector {
 
     if (type instanceof TypeNameGeneric genericType) {
       // Add the raw generic type (without type parameters)
-      String rawType = genericType.getFullQualifiedName().replaceAll("<.*$", "");
-      addImport(rawType);
+      addImport(type);
 
       // Add inner type arguments
       genericType.getInnerTypeArguments().forEach(this::addTypeImports);
@@ -66,7 +82,7 @@ public class ImportCollector {
     }
 
     // Add the concrete type
-    addImport(type.getFullQualifiedName());
+    addImport(type);
   }
 
   /**
@@ -120,7 +136,7 @@ public class ImportCollector {
         .forEach(generic -> generic.getUpperBounds().forEach(this::addTypeImports));
 
     // Add code block imports
-    method.getMethodCodeDto().getCodeBlockImports().forEach(this::addTypeImports);
+    method.getMethodCodeDto().getCodeBlockImports().forEach(this::addImport);
 
     // Add annotation imports
     method.getAnnotations().forEach(this::addAnnotationImports);
@@ -138,6 +154,9 @@ public class ImportCollector {
    * @param classDef the class definition to extract imports from
    */
   public void collectImports(GenerationTargetClassDto classDef) {
+    // Add imports from the DTO (including static imports like TrackedValue)
+    classDef.getImports().forEach(this::addImport);
+
     // Add superclass imports
     if (classDef.getSuperType() != null) {
       addTypeImports(classDef.getSuperType());
@@ -161,7 +180,7 @@ public class ImportCollector {
         .forEach(
             field -> {
               addTypeImports(field.getFieldType());
-              field.getFieldTypeImports().forEach(this::addTypeImports);
+              field.getFieldTypeImports().forEach(this::addImport);
             });
 
     // Add constructor imports
@@ -170,18 +189,11 @@ public class ImportCollector {
         .forEach(
             constructor -> {
               constructor.getParameters().forEach(this::addParameterImports);
-              constructor.getMethodCodeDto().getCodeBlockImports().forEach(this::addTypeImports);
+              constructor.getMethodCodeDto().getCodeBlockImports().forEach(this::addImport);
             });
 
-    // Add nested type imports
-    classDef
-        .getNestedTypes()
-        .forEach(
-            nestedType -> {
-              addTypeImports(
-                  new TypeName(classDef.getTypeName().getPackageName(), nestedType.getTypeName()));
-              // NestedTypeDto doesn't have type parameters, so we skip that part
-            });
+    // Nested types are part of the same class and don't need imports
+    // (e.g., the "With" interface is nested within the builder class)
 
     // Add method imports
     classDef.getMethods().forEach(this::addMethodImports);
@@ -224,54 +236,113 @@ public class ImportCollector {
   }
 
   /**
-   * Adds an import if it's not in the current package and not already added.
+   * Adds an import statement if it should not be skipped.
    *
-   * @param fqn the fully qualified name to add
+   * <p>This method contains the business logic for filtering imports.
+   *
+   * @param importStatement the import statement to add
    */
-  private void addImport(String fqn) {
-    if (StringUtils.isBlank(fqn)) {
+  private void addImport(ImportStatement importStatement) {
+    if (importStatement == null || shouldSkipImport(importStatement)) {
       return;
     }
-
-    // Skip if it's in the exact same package (but not sub-packages)
-    // Extract the package from the FQN
-    int lastDot = fqn.lastIndexOf('.');
-    if (lastDot > 0) {
-      String fqnPackage = fqn.substring(0, lastDot);
-      if (fqnPackage.equals(currentPackage)) {
-        return;
-      }
-    }
-
-    // Skip java.lang package (auto-imported)
-    if (fqn.startsWith("java.lang.")) {
-      return;
-    }
-
-    imports.add(fqn);
+    imports.add(importStatement);
   }
 
   /**
-   * Returns the collected imports as a sorted set.
+   * Determines if an import should be skipped (business logic).
+   *
+   * @param importStatement the import to check
+   * @return true if the import should be skipped
+   */
+  private boolean shouldSkipImport(ImportStatement importStatement) {
+    String fqn = importStatement.getFullyQualifiedName();
+
+    if (StringUtils.isBlank(fqn)) {
+      return true;
+    }
+
+    // For regular imports, skip if in exact same package or java.lang (per Java rules)
+    if (!importStatement.isStatic()) {
+      // Skip if it's in the exact same package (but not sub-packages) - Java doesn't require
+      // imports for same-package classes
+      if (Strings.CI.equals(importStatement.getPackageName(), currentType.getPackageName())) {
+        return true;
+      }
+
+      // Skip java.lang package (auto-imported), but NOT subpackages like java.lang.annotation
+      if (Strings.CI.equals(importStatement.getPackageName(), "java.lang")) {
+        return true;
+      }
+    }
+
+    // Static imports are never skipped based on package
+    // (they're always needed to use the static member without qualification)
+    return false;
+  }
+
+  /**
+   * Adds a regular import for a type.
+   *
+   * @param type the type to import
+   */
+  private void addImport(TypeName type) {
+    if (type != null) {
+      addImport(new RegularImport(type));
+    }
+  }
+
+  /**
+   * Adds a static import.
+   *
+   * @param type the type containing the static member
+   * @param memberName the name of the static member
+   */
+  public void addStaticImport(TypeName type, String memberName) {
+    addImport(new StaticImport(type, memberName));
+  }
+
+  /**
+   * Adds a static import (convenience method accepting Class).
+   *
+   * @param clazz the class containing the static member
+   * @param memberName the name of the static member
+   */
+  public void addStaticImport(Class<?> clazz, String memberName) {
+    addStaticImport(TypeName.of(clazz), memberName);
+  }
+
+  /**
+   * Returns the collected import statements as a sorted set.
    *
    * <p>Use this method when you want imports in alphabetical order. The sorting is done here to
    * provide flexibility for the calling code.
    *
+   * <p>Static imports are placed before regular imports, following Java conventions. Within each
+   * group, imports are sorted alphabetically by fully qualified name.
+   *
    * @return sorted set of import statements
    */
-  public Set<String> getSortedImports() {
-    return new TreeSet<>(imports);
+  public Set<ImportStatement> getSortedImports() {
+    Comparator<ImportStatement> staticFirstComparator =
+        Comparator.comparing(ImportStatement::isStatic).reversed();
+    Comparator<ImportStatement> alphabeticalComparator =
+        Comparator.comparing(ImportStatement::getFullyQualifiedName);
+
+    return imports.stream()
+        .sorted(staticFirstComparator.thenComparing(alphabeticalComparator))
+        .collect(Collectors.toCollection(LinkedHashSet::new));
   }
 
   /**
-   * Returns the collected imports in insertion order.
+   * Returns the collected import statements in insertion order.
    *
    * <p>This preserves the order in which imports were added, which can be useful for maintaining a
    * specific import ordering strategy.
    *
    * @return set of import statements in insertion order
    */
-  public Set<String> getImports() {
+  public Set<ImportStatement> getImports() {
     return new LinkedHashSet<>(imports);
   }
 

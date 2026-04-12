@@ -31,7 +31,6 @@ import static org.javahelpers.simple.builders.processor.classgen.roaster.Roaster
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Writer;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -42,12 +41,12 @@ import javax.tools.JavaFileObject;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
-import org.javahelpers.simple.builders.core.util.TrackedValue;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.annotation.InterfaceName;
 import org.javahelpers.simple.builders.processor.model.core.ClassFieldDto;
 import org.javahelpers.simple.builders.processor.model.core.GenerationTargetClassDto;
+import org.javahelpers.simple.builders.processor.model.imports.ImportStatement;
 import org.javahelpers.simple.builders.processor.model.integration.JacksonModuleDefinitionDto;
 import org.javahelpers.simple.builders.processor.model.integration.JacksonModuleEntryDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
@@ -151,10 +150,15 @@ public class RoasterCodeGenerator {
     }
     source.setName(classDef.getTypeName().getClassName());
     addGenericDeclarations(source, classDef.getGenerics());
-    addTrackedValueStaticImports(source);
 
     // Collect and add imports early (before elements are added)
-    collectImports(classDef).stream().sorted().forEach(source::addImport);
+    for (ImportStatement importStmt : collectImports(classDef)) {
+      if (importStmt.isStatic()) {
+        source.addImport(importStmt.getFullyQualifiedName()).setStatic(true);
+      } else {
+        source.addImport(importStmt.getFullyQualifiedName());
+      }
+    }
 
     logger.debug("JavaClassSource created");
     return source;
@@ -497,17 +501,10 @@ public class RoasterCodeGenerator {
     applyAnnotations(parameter, paramDto.getAnnotations());
   }
 
-  private void addTrackedValueStaticImports(JavaClassSource source) {
-    source.addImport(TrackedValue.class.getName() + ".changedValue").setStatic(true);
-    source.addImport(TrackedValue.class.getName() + ".initialValue").setStatic(true);
-    source.addImport(TrackedValue.class.getName() + ".unsetValue").setStatic(true);
-  }
+  private Set<ImportStatement> collectImports(GenerationTargetClassDto classDef) {
+    ImportCollector collector = new ImportCollector(classDef.getTypeName());
 
-  private Set<String> collectImports(GenerationTargetClassDto classDef) {
-    String currentPackage = classDef.getTypeName().getPackageName();
-    ImportCollector collector = new ImportCollector(currentPackage);
-
-    // Let the ImportCollector handle all extraction logic
+    // ImportCollector handles all import extraction from the DTO
     collector.collectImports(classDef);
 
     return collector.getSortedImports();
@@ -623,23 +620,35 @@ public class RoasterCodeGenerator {
       moduleClass.setName(moduleClassName);
       moduleClass.setSuperType("SimpleModule");
 
-      // Collect imports in a list, sort them, then add to Roaster
-      Set<String> imports = new LinkedHashSet<>();
-      imports.add("com.fasterxml.jackson.databind.annotation.JsonDeserialize");
-      imports.add("com.fasterxml.jackson.databind.module.SimpleModule");
+      // Collect imports using ImportCollector
+      TypeName moduleType = new TypeName(packageName, moduleClassName);
+      ImportCollector collector = new ImportCollector(moduleType);
+
+      // Add Jackson-specific imports using convenience method with TypeName
+      collector.addTypeImports(
+          new org.javahelpers.simple.builders.processor.model.type.TypeName(
+              "com.fasterxml.jackson.databind.annotation", "JsonDeserialize"));
+      collector.addTypeImports(
+          new org.javahelpers.simple.builders.processor.model.type.TypeName(
+              "com.fasterxml.jackson.databind.module", "SimpleModule"));
 
       // Adding imports for DTO types
       moduleDef.getEntries().stream()
           .filter(e -> shouldAddImport(packageName, e.dtoType().getFullQualifiedName()))
-          .forEach(e -> imports.add(e.dtoType().getFullQualifiedName()));
+          .forEach(e -> collector.addTypeImports(e.dtoType()));
 
       // Adding imports for builder types
       moduleDef.getEntries().stream()
           .filter(e -> shouldAddImport(packageName, e.builderType().getFullQualifiedName()))
-          .forEach(e -> imports.add(e.builderType().getFullQualifiedName()));
+          .forEach(e -> collector.addTypeImports(e.builderType()));
 
-      // Sort imports and add to Roaster
-      imports.stream().sorted().forEach(moduleClass::addImport);
+      // Add sorted imports to Roaster
+      collector
+          .getSortedImports()
+          .forEach(
+              importStatement -> {
+                moduleClass.addImport(importStatement.getFullyQualifiedName());
+              });
 
       // Add mixin interfaces as nested interfaces
       for (JacksonModuleEntryDto entry : moduleDef.getEntries()) {
