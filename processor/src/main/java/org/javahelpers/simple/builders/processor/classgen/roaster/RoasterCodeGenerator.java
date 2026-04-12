@@ -397,7 +397,7 @@ public class RoasterCodeGenerator {
   }
 
   private void applyCodeBlock(MethodSource<?> method, MethodCodeDto codeDto) {
-    if (codeDto == null || StringUtils.isBlank(codeDto.getCodeFormat())) {
+    if (!codeDto.hasCode()) {
       // If implementation is missing, an empty body needs to be set
       method.setBody("");
       return;
@@ -560,6 +560,7 @@ public class RoasterCodeGenerator {
                   .forEach(
                       param -> addTypeImports(imports, currentPackage, param.getParameterType()));
               constructor
+                  .getMethodCodeDto()
                   .getCodeBlockImports()
                   .forEach(typeName -> addTypeImports(imports, currentPackage, typeName));
             });
@@ -587,6 +588,10 @@ public class RoasterCodeGenerator {
                 generic
                     .getUpperBounds()
                     .forEach(type -> addTypeImports(imports, currentPackage, type)));
+    method
+        .getMethodCodeDto()
+        .getCodeBlockImports()
+        .forEach(typeName -> addTypeImports(imports, currentPackage, typeName));
     method
         .getAnnotations()
         .forEach(annotation -> addAnnotationImports(imports, currentPackage, annotation));
@@ -665,8 +670,7 @@ public class RoasterCodeGenerator {
   }
 
   private void addBodyImports(Set<String> imports, String currentPackage, MethodDto method) {
-    if (method.getMethodCodeDto() == null
-        || StringUtils.isBlank(method.getMethodCodeDto().getCodeFormat())) {
+    if (!method.hasCode()) {
       return;
     }
     for (MethodCodePlaceholder<?> argument : method.getMethodCodeDto().getCodeArguments()) {

@@ -196,7 +196,7 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
     method.setCode(code.toString());
     method.addArgument("dtoBaseType", builderDto.getBuildingTargetTypeName());
     method.addArgument("buildResultType", returnType);
-    method.addCodeBlockImport(TypeName.of(IllegalStateException.class));
+    method.getMethodCodeDto().addCodeBlockImport(TypeName.of(IllegalStateException.class));
     method.setJavadoc(new JavadocDto("Builds the configured DTO instance."));
 
     return method;
@@ -260,8 +260,8 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
 
     method.addArgument("toStringBuilder", toStringBuilderType);
     method.addArgument("toStringStyle", toStringStyleType);
-    method.addCodeBlockImport(toStringBuilderType);
-    method.addCodeBlockImport(toStringStyleType);
+    method.getMethodCodeDto().addCodeBlockImport(toStringBuilderType);
+    method.getMethodCodeDto().addCodeBlockImport(toStringStyleType);
 
     method.setJavadoc(
         new JavadocDto(

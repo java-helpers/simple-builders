@@ -69,6 +69,7 @@ public class MethodCodeDto {
    */
   public void addArgument(String name, TypeName value) {
     codeArguments.add(new MethodCodeTypePlaceholder(name, value));
+    codeBlockImports.add(value);
   }
 
   /**
@@ -91,9 +92,18 @@ public class MethodCodeDto {
   }
 
   /**
-   * Getter for code block imports.
+   * Checks if this code DTO has code content.
    *
-   * @return types used in code body needing import
+   * @return true if code format is not null and not blank
+   */
+  public boolean hasCode() {
+    return !StringUtils.isBlank(codeFormat);
+  }
+
+  /**
+   * Returns the set of types used in the code body that aren't covered by arguments.
+   *
+   * @return set of types used in code body needing import
    */
   public Set<TypeName> getCodeBlockImports() {
     return codeBlockImports;

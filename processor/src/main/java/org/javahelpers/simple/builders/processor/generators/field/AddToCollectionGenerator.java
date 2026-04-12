@@ -179,7 +179,7 @@ public class AddToCollectionGenerator implements MethodGenerator {
     methodDto.addArgument("fieldName", fieldNameInBuilder);
     methodDto.addArgument("elementType", elementType);
     methodDto.addArgument("builderFieldWrapper", TRACKED_VALUE_TYPE);
-    methodDto.addCodeBlockImport(collectionImplType);
+    methodDto.getMethodCodeDto().addCodeBlockImport(collectionImplType);
     methodDto.setPriority(MethodDto.PRIORITY_MEDIUM);
 
     methodDto.setJavadoc(

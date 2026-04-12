@@ -206,6 +206,15 @@ public class MethodDto {
   }
 
   /**
+   * Checks if the constructor has a code block.
+   *
+   * @return true if the constructor has a code block, false otherwise
+   */
+  public boolean hasCode() {
+    return methodCodeDto.hasCode();
+  }
+  
+  /**
    * Getting name of method.
    *
    * @return name with type {@code java.lang.String}
@@ -376,16 +385,6 @@ public class MethodDto {
    */
   public void addAnnotation(AnnotationDto annotation) {
     this.annotations.add(annotation);
-  }
-
-  /**
-   * Adds an import for a type used in the method's code block. This is a convenience method that
-   * delegates to the underlying MethodCodeDto.
-   *
-   * @param typeName the type to import
-   */
-  public void addCodeBlockImport(TypeName typeName) {
-    this.methodCodeDto.addCodeBlockImport(typeName);
   }
 
   /**

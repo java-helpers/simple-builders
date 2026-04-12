@@ -84,6 +84,15 @@ public class ConstructorDto {
   }
 
   /**
+   * Checks if the constructor has a code block.
+   *
+   * @return true if the constructor has a code block, false otherwise
+   */
+  public boolean hasCode() {
+    return methodCodeDto.hasCode();
+  }
+
+  /**
    * Gets the constructor body as a plain string (for backward compatibility).
    *
    * @return the constructor body code
@@ -91,7 +100,7 @@ public class ConstructorDto {
    */
   @Deprecated
   public String getBody() {
-    return methodCodeDto != null ? methodCodeDto.getCodeFormat() : null;
+    return hasCode() ? methodCodeDto.getCodeFormat() : null;
   }
 
   /**
@@ -133,27 +142,6 @@ public class ConstructorDto {
   }
 
   /**
-   * Gets code block imports from the method code DTO.
-   *
-   * @return set of types used in code blocks
-   */
-  public Set<TypeName> getCodeBlockImports() {
-    return methodCodeDto != null ? methodCodeDto.getCodeBlockImports() : new LinkedHashSet<>();
-  }
-
-  /**
-   * Adds a code block import to the method code DTO.
-   *
-   * @param typeName the type to import
-   */
-  public void addCodeBlockImport(TypeName typeName) {
-    if (this.methodCodeDto == null) {
-      this.methodCodeDto = new MethodCodeDto();
-    }
-    this.methodCodeDto.addCodeBlockImport(typeName);
-  }
-
-  /**
    * Returns a string representation of this constructor using Apache Commons ToStringBuilder.
    *
    * <p>This provides a comprehensive view of the constructor including visibility, parameters,
@@ -166,7 +154,7 @@ public class ConstructorDto {
     return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
         .append("parameters", parameters)
         .append("annotations", annotations)
-        .append("hasCodeBlock", methodCodeDto != null && methodCodeDto.getCodeFormat() != null)
+        .append("hasCodeBlock", hasCode())
         .toString();
   }
 }
