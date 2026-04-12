@@ -233,9 +233,14 @@ public class ImportCollector {
       return;
     }
 
-    // Skip if it's in the current package
-    if (fqn.startsWith(currentPackage)) {
-      return;
+    // Skip if it's in the exact same package (but not sub-packages)
+    // Extract the package from the FQN
+    int lastDot = fqn.lastIndexOf('.');
+    if (lastDot > 0) {
+      String fqnPackage = fqn.substring(0, lastDot);
+      if (fqnPackage.equals(currentPackage)) {
+        return;
+      }
     }
 
     // Skip java.lang package (auto-imported)
