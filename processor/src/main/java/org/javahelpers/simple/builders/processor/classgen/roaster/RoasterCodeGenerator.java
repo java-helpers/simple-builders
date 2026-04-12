@@ -54,17 +54,13 @@ import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocTagDto;
 import org.javahelpers.simple.builders.processor.model.method.ConstructorDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodCodeDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodCodePlaceholder;
-import org.javahelpers.simple.builders.processor.model.method.MethodCodeTypePlaceholder;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.NestedTypeDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameArray;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
-import org.javahelpers.simple.builders.processor.model.type.TypeNamePrimitive;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameVariable;
 import org.javahelpers.simple.builders.processor.processing.ProcessingLogger;
+import org.javahelpers.simple.builders.processor.util.ImportCollector;
 import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster.model.source.AnnotationSource;
 import org.jboss.forge.roaster.model.source.FieldSource;
@@ -508,185 +504,13 @@ public class RoasterCodeGenerator {
   }
 
   private Set<String> collectImports(GenerationTargetClassDto classDef) {
-    Set<String> imports = new LinkedHashSet<>();
     String currentPackage = classDef.getTypeName().getPackageName();
+    ImportCollector collector = new ImportCollector(currentPackage);
 
-    // Add superclass imports
-    if (classDef.getSuperType() != null) {
-      addTypeImports(imports, currentPackage, classDef.getSuperType());
-    }
+    // Let the ImportCollector handle all extraction logic
+    collector.collectImports(classDef);
 
-    // Add class type and generics
-    addTypeImports(imports, currentPackage, classDef.getTypeName());
-    classDef
-        .getGenerics()
-        .forEach(
-            generic ->
-                generic
-                    .getUpperBounds()
-                    .forEach(type -> addTypeImports(imports, currentPackage, type)));
-
-    // Add interface imports
-    classDef
-        .getInterfaces()
-        .forEach(interfaceName -> addInterfaceImports(imports, currentPackage, interfaceName));
-
-    // Add class annotation imports
-    classDef
-        .getClassAnnotations()
-        .forEach(annotation -> addAnnotationImports(imports, currentPackage, annotation));
-
-    // Add field imports from ClassFieldDto
-    classDef
-        .getClassFields()
-        .forEach(
-            field -> {
-              addTypeImports(imports, currentPackage, field.getFieldType());
-              field
-                  .getFieldTypeImports()
-                  .forEach(typeName -> addTypeImports(imports, currentPackage, typeName));
-            });
-
-    // Add method imports
-    classDef.getMethods().forEach(method -> addMethodImports(imports, currentPackage, method));
-
-    // Add constructor imports
-    classDef
-        .getConstructors()
-        .forEach(
-            constructor -> {
-              constructor
-                  .getParameters()
-                  .forEach(
-                      param -> addTypeImports(imports, currentPackage, param.getParameterType()));
-              constructor
-                  .getMethodCodeDto()
-                  .getCodeBlockImports()
-                  .forEach(typeName -> addTypeImports(imports, currentPackage, typeName));
-            });
-
-    // Add nested type imports
-    classDef
-        .getNestedTypes()
-        .forEach(
-            nestedType ->
-                nestedType
-                    .getMethods()
-                    .forEach(method -> addMethodImports(imports, currentPackage, method)));
-
-    return imports;
-  }
-
-  private void addMethodImports(Set<String> imports, String currentPackage, MethodDto method) {
-    if (method.getReturnType() != null) {
-      addTypeImports(imports, currentPackage, method.getReturnType());
-    }
-    method
-        .getGenericParameters()
-        .forEach(
-            generic ->
-                generic
-                    .getUpperBounds()
-                    .forEach(type -> addTypeImports(imports, currentPackage, type)));
-    method
-        .getMethodCodeDto()
-        .getCodeBlockImports()
-        .forEach(typeName -> addTypeImports(imports, currentPackage, typeName));
-    method
-        .getAnnotations()
-        .forEach(annotation -> addAnnotationImports(imports, currentPackage, annotation));
-    method
-        .getParameters()
-        .forEach(parameter -> addParameterImports(imports, currentPackage, parameter));
-    addBodyImports(imports, currentPackage, method);
-  }
-
-  private void addParameterImports(
-      Set<String> imports, String currentPackage, MethodParameterDto parameter) {
-    addTypeImports(imports, currentPackage, parameter.getParameterType());
-    parameter
-        .getAnnotations()
-        .forEach(annotation -> addAnnotationImports(imports, currentPackage, annotation));
-  }
-
-  private void addInterfaceImports(
-      Set<String> imports,
-      String currentPackage,
-      org.javahelpers.simple.builders.processor.model.annotation.InterfaceName interfaceName) {
-    if (StringUtils.isNotBlank(interfaceName.getPackageName())) {
-      addImportIfNeeded(
-          imports,
-          currentPackage,
-          interfaceName.getPackageName() + "." + interfaceName.getSimpleName());
-    }
-    interfaceName
-        .getAnnotations()
-        .forEach(annotation -> addAnnotationImports(imports, currentPackage, annotation));
-    interfaceName
-        .getTypeParameters()
-        .forEach(type -> addTypeImports(imports, currentPackage, type));
-  }
-
-  private void addAnnotationImports(
-      Set<String> imports, String currentPackage, AnnotationDto annotation) {
-    if (annotation.getAnnotationType() != null) {
-      addTypeImports(imports, currentPackage, annotation.getAnnotationType());
-    }
-  }
-
-  private void addTypeImports(Set<String> imports, String currentPackage, TypeName type) {
-    if (type == null || type instanceof TypeNamePrimitive || type instanceof TypeNameVariable) {
-      return;
-    }
-
-    type.getAnnotations()
-        .forEach(annotation -> addAnnotationImports(imports, currentPackage, annotation));
-
-    if (type instanceof TypeNameArray arrayType) {
-      addTypeImports(imports, currentPackage, arrayType.getTypeOfArray());
-      return;
-    }
-
-    if (type instanceof TypeNameGeneric genericType) {
-      addImportIfNeeded(
-          imports, currentPackage, genericType.getFullQualifiedName().replaceAll("<.*$", ""));
-      genericType
-          .getInnerTypeArguments()
-          .forEach(inner -> addTypeImports(imports, currentPackage, inner));
-      return;
-    }
-
-    addImportIfNeeded(imports, currentPackage, type.getFullQualifiedName());
-  }
-
-  private void addImportIfNeeded(Set<String> imports, String currentPackage, String fqn) {
-    if (StringUtils.isBlank(fqn)
-        || !fqn.contains(".")
-        || fqn.startsWith("java.lang.")
-        || java.util.Objects.equals(packageNameOf(fqn), currentPackage)) {
-      return;
-    }
-    imports.add(fqn);
-  }
-
-  private void addBodyImports(Set<String> imports, String currentPackage, MethodDto method) {
-    if (!method.hasCode()) {
-      return;
-    }
-    for (MethodCodePlaceholder<?> argument : method.getMethodCodeDto().getCodeArguments()) {
-      if (argument instanceof MethodCodeTypePlaceholder typePlaceholder) {
-        addTypeImports(imports, currentPackage, typePlaceholder.getValue());
-      }
-    }
-    String code = method.getMethodCodeDto().getCodeFormat();
-    if (code.contains("List.of(")) {
-      imports.add(List.class.getName());
-    }
-    if (code.contains("Optional.of(")
-        || code.contains("Optional.empty(")
-        || code.contains("Optional.ofNullable(")) {
-      imports.add(java.util.Optional.class.getName());
-    }
+    return collector.getSortedImports();
   }
 
   private String formatSource(String rawSource) {

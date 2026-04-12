@@ -213,7 +213,7 @@ public class MethodDto {
   public boolean hasCode() {
     return methodCodeDto.hasCode();
   }
-  
+
   /**
    * Getting name of method.
    *
