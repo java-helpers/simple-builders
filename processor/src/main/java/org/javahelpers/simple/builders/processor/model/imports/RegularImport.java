@@ -29,6 +29,8 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.simple.builders.processor.model.type.TypeNameArray;
+import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
 
 /**
  * Represents a regular (non-static) import statement.
@@ -47,8 +49,13 @@ public class RegularImport implements ImportStatement {
   public RegularImport(TypeName type) {
     if (type == null) {
       throw new IllegalArgumentException("type cannot be null");
+    } else if (type instanceof TypeNameArray array) {
+      this.type = array.getTypeOfArray();
+    } else if (type instanceof TypeNameGeneric generic) {
+      this.type = generic.getRawType();
+    } else {
+      this.type = type;
     }
-    this.type = type;
   }
 
   /**

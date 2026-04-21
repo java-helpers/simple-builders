@@ -33,6 +33,7 @@ import org.javahelpers.simple.builders.processor.model.imports.ImportStatement;
 import org.javahelpers.simple.builders.processor.model.imports.RegularImport;
 import org.javahelpers.simple.builders.processor.model.imports.StaticImport;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.simple.builders.processor.model.type.TypeNameArray;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
 
 /** DTO for holding information of code implementation. */
@@ -73,7 +74,7 @@ public class MethodCodeDto {
    */
   public void addArgument(String name, TypeName value) {
     codeArguments.add(new MethodCodeTypePlaceholder(name, value));
-    codeBlockImports.add(new RegularImport(value));
+    addCodeBlockImport(value);
   }
 
   /**
@@ -119,7 +120,14 @@ public class MethodCodeDto {
    * @param typeName type to import
    */
   public void addCodeBlockImport(TypeName typeName) {
-    this.codeBlockImports.add(new RegularImport(typeName));
+    if (typeName instanceof TypeNameGeneric generic) {
+      addCodeBlockImport(generic.getRawType());
+      generic.getInnerTypeArguments().forEach(this::addCodeBlockImport);
+    } else if (typeName instanceof TypeNameArray array) {
+      addCodeBlockImport(array.getTypeOfArray());
+    } else {
+      this.codeBlockImports.add(new RegularImport(typeName));
+    }
   }
 
   /**

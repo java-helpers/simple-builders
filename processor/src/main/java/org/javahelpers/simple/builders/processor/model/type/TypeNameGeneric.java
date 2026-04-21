@@ -98,6 +98,15 @@ public class TypeNameGeneric extends TypeName {
   }
 
   /**
+   * Returns the raw type (without type parameters).
+   *
+   * @return the raw type
+   */
+  public TypeName getRawType() {
+    return new TypeName(getPackageName(), getClassName());
+  }
+
+  /**
    * Returns the list of inner generic type arguments.
    *
    * @return an unmodifiable list of inner type arguments

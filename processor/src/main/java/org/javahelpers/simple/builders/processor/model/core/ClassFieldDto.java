@@ -36,6 +36,8 @@ import org.javahelpers.simple.builders.processor.model.imports.RegularImport;
 import org.javahelpers.simple.builders.processor.model.imports.StaticImport;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.simple.builders.processor.model.type.TypeNameArray;
+import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
 
 /**
  * Represents a field declaration in the generated class.
@@ -106,10 +108,6 @@ public class ClassFieldDto {
     return fieldTypeImports;
   }
 
-  public void addFieldTypeImport(TypeName typeName) {
-    this.fieldTypeImports.add(new RegularImport(typeName));
-  }
-
   // Convenience methods for adding imports without creating DTOs
 
   /**
@@ -127,7 +125,14 @@ public class ClassFieldDto {
    * @param typeName the type to import
    */
   public void addImport(TypeName typeName) {
-    this.fieldTypeImports.add(new RegularImport(typeName));
+    if (typeName instanceof TypeNameGeneric generic) {
+      addImport(generic.getRawType());
+      generic.getInnerTypeArguments().forEach(this::addImport);
+    } else if (typeName instanceof TypeNameArray array) {
+      addImport(array.getTypeOfArray());
+    } else {
+      this.fieldTypeImports.add(new RegularImport(typeName));
+    }
   }
 
   /**
@@ -147,7 +152,8 @@ public class ClassFieldDto {
    * @param memberName the name of the static member
    */
   public void addStaticImport(TypeName type, String memberName) {
-    this.fieldTypeImports.add(new StaticImport(type, memberName));
+    TypeName typeRaw = new TypeName(type.getPackageName(), type.getClassName());
+    this.fieldTypeImports.add(new StaticImport(typeRaw, memberName));
   }
 
   /**

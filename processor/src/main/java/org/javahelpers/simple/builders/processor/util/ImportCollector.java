@@ -67,21 +67,7 @@ public class ImportCollector {
     // Add type annotation imports
     type.getAnnotations().forEach(this::addAnnotationImports);
 
-    if (type instanceof TypeNameArray arrayType) {
-      addTypeImports(arrayType.getTypeOfArray());
-      return;
-    }
-
-    if (type instanceof TypeNameGeneric genericType) {
-      // Add the raw generic type (without type parameters)
-      addImport(type);
-
-      // Add inner type arguments
-      genericType.getInnerTypeArguments().forEach(this::addTypeImports);
-      return;
-    }
-
-    // Add the concrete type
+    // Adding the type
     addImport(type);
   }
 
@@ -220,6 +206,7 @@ public class ImportCollector {
     extractTypeReferencesFromCode(code);
   }
 
+  // TODO Remove
   /**
    * Extracts type references from code format string.
    *
@@ -287,9 +274,26 @@ public class ImportCollector {
    * @param type the type to import
    */
   private void addImport(TypeName type) {
-    if (type != null) {
-      addImport(new RegularImport(type));
+    if (type == null) {
+      return;
     }
+
+    if (type instanceof TypeNameArray arrayType) {
+      addImport(arrayType.getTypeOfArray());
+      return;
+    }
+
+    if (type instanceof TypeNameGeneric genericType) {
+      // Add the raw generic type (without type parameters)
+      addImport(genericType.getRawType());
+
+      // Add inner type arguments
+      genericType.getInnerTypeArguments().forEach(this::addTypeImports);
+      return;
+    }
+
+    // Add the concrete type
+    addImport(new RegularImport(type));
   }
 
   /**
@@ -299,7 +303,8 @@ public class ImportCollector {
    * @param memberName the name of the static member
    */
   public void addStaticImport(TypeName type, String memberName) {
-    addImport(new StaticImport(type, memberName));
+    TypeName typeRaw = new TypeName(type.getPackageName(), type.getClassName());
+    addImport(new StaticImport(typeRaw, memberName));
   }
 
   /**

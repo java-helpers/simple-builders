@@ -40,6 +40,8 @@ import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 import org.javahelpers.simple.builders.processor.model.type.GenericParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.NestedTypeDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.simple.builders.processor.model.type.TypeNameArray;
+import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
 
 /**
  * Generic representation of a class to generate.
@@ -170,7 +172,14 @@ public class GenerationTargetClassDto {
    * @param typeName the type to import
    */
   public void addImport(TypeName typeName) {
-    addImport(new RegularImport(typeName));
+    if (typeName instanceof TypeNameGeneric generic) {
+      addImport(generic.getRawType());
+      generic.getInnerTypeArguments().forEach(this::addImport);
+    } else if (typeName instanceof TypeNameArray array) {
+      addImport(array.getTypeOfArray());
+    } else {
+      addImport(new RegularImport(typeName));
+    }
   }
 
   /**
@@ -190,7 +199,8 @@ public class GenerationTargetClassDto {
    * @param memberName the name of the static member
    */
   public void addStaticImport(TypeName type, String memberName) {
-    addImport(new StaticImport(type, memberName));
+    TypeName typeRaw = new TypeName(type.getPackageName(), type.getClassName());
+    addImport(new StaticImport(typeRaw, memberName));
   }
 
   /**

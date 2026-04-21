@@ -191,10 +191,9 @@ public class BuilderDefinitionCreator {
     classField.setJavadoc(field.getJavaDoc());
 
     // Add field type imports
-    classField.addFieldTypeImport(
-        new TypeName("org.javahelpers.simple.builders.core.util", "TrackedValue"));
+    classField.addImport(new TypeName("org.javahelpers.simple.builders.core.util", "TrackedValue"));
     // Add the field type for import
-    classField.addFieldTypeImport(field.getFieldType());
+    classField.addImport(field.getFieldType());
 
     return classField;
   }
