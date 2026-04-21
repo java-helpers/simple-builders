@@ -349,8 +349,8 @@ class ComprehensiveFeatureIntegrationTest {
            */
           public PersonDtoBuilder address(Consumer<AddressDtoBuilder> addressBuilderConsumer) {
             AddressDtoBuilder builder = this.address.isSet()
-              ? new AddressDtoBuilder(this.address.value())
-              : new AddressDtoBuilder();
+                ? new AddressDtoBuilder(this.address.value())
+                : new AddressDtoBuilder();
             addressBuilderConsumer.accept(builder);
             this.address = changedValue(builder.build());
             return this;
@@ -478,8 +478,8 @@ class ComprehensiveFeatureIntegrationTest {
            */
           public PersonDtoBuilder metadata(Consumer<HashMapBuilder<String, String>> metadataBuilderConsumer) {
             HashMapBuilder<String, String> builder = this.metadata.isSet()
-              ? new HashMapBuilder<String, String>(this.metadata.value())
-              : new HashMapBuilder<String, String>();
+                ? new HashMapBuilder<String, String>(this.metadata.value())
+                : new HashMapBuilder<String, String>();
             metadataBuilderConsumer.accept(builder);
             this.metadata = changedValue(builder.build());
             return this;
@@ -574,8 +574,8 @@ class ComprehensiveFeatureIntegrationTest {
            */
           public PersonDtoBuilder nicknames(Consumer<ArrayListBuilder<String>> nicknamesBuilderConsumer) {
             ArrayListBuilder<String> builder = this.nicknames.isSet()
-              ? new ArrayListBuilder<String>(this.nicknames.value())
-              : new ArrayListBuilder<String>();
+                ? new ArrayListBuilder<String>(this.nicknames.value())
+                : new ArrayListBuilder<String>();
             nicknamesBuilderConsumer.accept(builder);
             this.nicknames = changedValue(builder.build());
             return this;
@@ -622,8 +622,8 @@ class ComprehensiveFeatureIntegrationTest {
            */
           public PersonDtoBuilder phoneNumbers(Consumer<ArrayListBuilder<String>> phoneNumbersBuilderConsumer) {
             ArrayListBuilder<String> builder = this.phoneNumbers.isSet()
-              ? new ArrayListBuilder<String>(this.phoneNumbers.value())
-              : new ArrayListBuilder<String>();
+                ? new ArrayListBuilder<String>(this.phoneNumbers.value())
+                : new ArrayListBuilder<String>();
             phoneNumbersBuilderConsumer.accept(builder);
             this.phoneNumbers = changedValue(new LinkedList<>(builder.build()));
             return this;
@@ -720,8 +720,8 @@ class ComprehensiveFeatureIntegrationTest {
            */
           public PersonDtoBuilder tags(Consumer<HashSetBuilder<String>> tagsBuilderConsumer) {
             HashSetBuilder<String> builder = this.tags.isSet()
-              ? new HashSetBuilder<String>(this.tags.value())
-              : new HashSetBuilder<String>();
+                ? new HashSetBuilder<String>(this.tags.value())
+                : new HashSetBuilder<String>();
             tagsBuilderConsumer.accept(builder);
             this.tags = changedValue(builder.build());
             return this;
@@ -779,14 +779,14 @@ class ComprehensiveFeatureIntegrationTest {
               throw new IllegalStateException("Field 'age' is marked as non-null but null value was provided");
             }
             PersonDto result = new PersonDto(this.name.value(),
-              this.age.value(),
-              this.email.value(),
-              this.nicknames.value(),
-              this.tags.value(),
-              this.metadata.value(),
-              this.address.value(),
-              this.previousAddresses.value(),
-              this.phoneNumbers.value());
+                this.age.value(),
+                this.email.value(),
+                this.nicknames.value(),
+                this.tags.value(),
+                this.metadata.value(),
+                this.address.value(),
+                this.previousAddresses.value(),
+                this.phoneNumbers.value());
             return result;
           }
 
@@ -798,15 +798,15 @@ class ComprehensiveFeatureIntegrationTest {
           @Override
           public String toString() {
             return new ToStringBuilder(this, BuilderToStringStyle.INSTANCE).append("name", this.name)
-                    .append("age", this.age)
-                    .append("email", this.email)
-                    .append("nicknames", this.nicknames)
-                    .append("tags", this.tags)
-                    .append("metadata", this.metadata)
-                    .append("address", this.address)
-                    .append("previousAddresses", this.previousAddresses)
-                    .append("phoneNumbers", this.phoneNumbers)
-                    .toString();
+                .append("age", this.age)
+                .append("email", this.email)
+                .append("nicknames", this.nicknames)
+                .append("tags", this.tags)
+                .append("metadata", this.metadata)
+                .append("address", this.address)
+                .append("previousAddresses", this.previousAddresses)
+                .append("phoneNumbers", this.phoneNumbers)
+                .toString();
           }
 
           /**
