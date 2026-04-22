@@ -200,26 +200,6 @@ public class ImportCollector {
         addTypeImports(typePlaceholder.getValue());
       }
     }
-
-    // Extract type references from code format (simplified approach)
-    String code = method.getMethodCodeDto().getCodeFormat();
-    extractTypeReferencesFromCode(code);
-  }
-
-  // TODO Remove
-  /**
-   * Extracts type references from code format string.
-   *
-   * @param code the code to analyze
-   */
-  private void extractTypeReferencesFromCode(String code) {
-    if (StringUtils.isBlank(code)) {
-      return;
-    }
-
-    // Skip automatic extraction for now to avoid invalid identifiers
-    // The explicit imports from code arguments and code block imports should be sufficient
-    // This could be enhanced later with more sophisticated parsing
   }
 
   /**

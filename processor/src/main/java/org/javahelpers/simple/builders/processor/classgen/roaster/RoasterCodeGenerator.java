@@ -646,9 +646,7 @@ public class RoasterCodeGenerator {
       collector
           .getSortedImports()
           .forEach(
-              importStatement -> {
-                moduleClass.addImport(importStatement.getFullyQualifiedName());
-              });
+              importStatement -> moduleClass.addImport(importStatement.getFullyQualifiedName()));
 
       // Add mixin interfaces as nested interfaces
       for (JacksonModuleEntryDto entry : moduleDef.getEntries()) {

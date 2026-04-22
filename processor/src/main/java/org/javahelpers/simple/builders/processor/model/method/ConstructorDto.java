@@ -89,31 +89,6 @@ public class ConstructorDto {
     return methodCodeDto.hasCode();
   }
 
-  /**
-   * Gets the constructor body as a plain string (for backward compatibility).
-   *
-   * @return the constructor body code
-   * @deprecated Use {@link #getMethodCodeDto()} instead for proper type handling
-   */
-  @Deprecated
-  public String getBody() {
-    return hasCode() ? methodCodeDto.getCodeFormat() : null;
-  }
-
-  /**
-   * Sets the constructor body as a plain string (for backward compatibility).
-   *
-   * @param body the constructor body code
-   * @deprecated Use {@link #setMethodCodeDto(MethodCodeDto)} instead for proper type handling
-   */
-  @Deprecated
-  public void setBody(String body) {
-    if (this.methodCodeDto == null) {
-      this.methodCodeDto = new MethodCodeDto();
-    }
-    this.methodCodeDto.setCodeFormat(body);
-  }
-
   public AccessModifier getVisibility() {
     return visibility;
   }
