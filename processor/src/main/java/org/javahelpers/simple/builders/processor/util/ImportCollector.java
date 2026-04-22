@@ -11,7 +11,6 @@ import org.javahelpers.simple.builders.processor.model.annotation.InterfaceName;
 import org.javahelpers.simple.builders.processor.model.core.GenerationTargetClassDto;
 import org.javahelpers.simple.builders.processor.model.imports.ImportStatement;
 import org.javahelpers.simple.builders.processor.model.imports.RegularImport;
-import org.javahelpers.simple.builders.processor.model.imports.StaticImport;
 import org.javahelpers.simple.builders.processor.model.method.MethodCodePlaceholder;
 import org.javahelpers.simple.builders.processor.model.method.MethodCodeTypePlaceholder;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
@@ -43,15 +42,6 @@ public class ImportCollector {
    */
   public ImportCollector(TypeName currentType) {
     this.currentType = currentType;
-  }
-
-  /**
-   * Adds a regular import (convenience method accepting Class).
-   *
-   * @param clazz the class to import
-   */
-  public void addImport(Class<?> clazz) {
-    addImport(TypeName.of(clazz));
   }
 
   /**
@@ -276,27 +266,6 @@ public class ImportCollector {
   }
 
   /**
-   * Adds a static import.
-   *
-   * @param type the type containing the static member
-   * @param memberName the name of the static member
-   */
-  public void addStaticImport(TypeName type, String memberName) {
-    TypeName typeRaw = new TypeName(type.getPackageName(), type.getClassName());
-    addImport(new StaticImport(typeRaw, memberName));
-  }
-
-  /**
-   * Adds a static import (convenience method accepting Class).
-   *
-   * @param clazz the class containing the static member
-   * @param memberName the name of the static member
-   */
-  public void addStaticImport(Class<?> clazz, String memberName) {
-    addStaticImport(TypeName.of(clazz), memberName);
-  }
-
-  /**
    * Returns the collected import statements as a sorted set.
    *
    * <p>Use this method when you want imports in alphabetical order. The sorting is done here to
@@ -313,7 +282,7 @@ public class ImportCollector {
     Comparator<ImportStatement> alphabeticalComparator =
         Comparator.comparing(ImportStatement::getFullyQualifiedName);
 
-    return imports.stream()
+    return getImports().stream()
         .sorted(staticFirstComparator.thenComparing(alphabeticalComparator))
         .collect(Collectors.toCollection(LinkedHashSet::new));
   }
@@ -328,19 +297,5 @@ public class ImportCollector {
    */
   public Set<ImportStatement> getImports() {
     return new LinkedHashSet<>(imports);
-  }
-
-  /** Clears all collected imports. */
-  public void clear() {
-    imports.clear();
-  }
-
-  /**
-   * Returns the number of collected imports.
-   *
-   * @return the number of imports
-   */
-  public int size() {
-    return imports.size();
   }
 }
