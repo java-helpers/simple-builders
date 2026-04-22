@@ -251,28 +251,19 @@ public class RoasterCodeGenerator {
       if (existing == null) {
         signatureToMethod.put(signature, method);
       } else {
-        String existingSource =
-            existing.getSourceDescription() != null
-                ? existing.getSourceDescription()
-                : "unknown source";
-        String newSource =
-            method.getSourceDescription() != null
-                ? method.getSourceDescription()
-                : "unknown source";
-
         if (method.getPriority() > existing.getPriority()) {
           signatureToMethod.put(signature, method);
           logger.warning(
-              "  Method conflict: '%s' from %s (priority %d) dropped in favor of %s (priority %d)",
-              signature, existingSource, existing.getPriority(), newSource, method.getPriority());
+              "  Method conflict: '%s' (priority %d) dropped in favor of priority %d",
+              signature, existing.getPriority(), method.getPriority());
         } else if (method.getPriority() < existing.getPriority()) {
           logger.warning(
-              "  Method conflict: '%s' from %s (priority %d) dropped in favor of %s (priority %d)",
-              signature, newSource, method.getPriority(), existingSource, existing.getPriority());
+              "  Method conflict: '%s' (priority %d) dropped in favor of priority %d",
+              signature, method.getPriority(), existing.getPriority());
         } else {
           logger.warning(
-              "  Method conflict: '%s' from %s (priority %d) dropped in favor of %s (priority %d) - equal priority, keeping first",
-              signature, newSource, method.getPriority(), existingSource, existing.getPriority());
+              "  Method conflict: '%s' (priority %d) - equal priority, keeping first",
+              signature, method.getPriority());
         }
       }
     }

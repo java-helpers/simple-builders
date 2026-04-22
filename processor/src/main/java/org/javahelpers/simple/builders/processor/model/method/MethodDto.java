@@ -55,9 +55,6 @@ public class MethodDto {
   /** Ordering for method generation. Lower values appear first in generated class. */
   private int ordering = 1000; // Default high value for field-generated methods
 
-  /** Origin description for logging (e.g., "field 'name'"). */
-  private String sourceDescription;
-
   /** Name of method. */
   private String methodName;
 
@@ -146,24 +143,6 @@ public class MethodDto {
    */
   public int getOrdering() {
     return ordering;
-  }
-
-  /**
-   * Gets the source description for logging.
-   *
-   * @return the source description (e.g., "field 'name'")
-   */
-  public String getSourceDescription() {
-    return sourceDescription;
-  }
-
-  /**
-   * Sets the source description for logging.
-   *
-   * @param sourceDescription the source description
-   */
-  public void setSourceDescription(String sourceDescription) {
-    this.sourceDescription = sourceDescription;
   }
 
   /**

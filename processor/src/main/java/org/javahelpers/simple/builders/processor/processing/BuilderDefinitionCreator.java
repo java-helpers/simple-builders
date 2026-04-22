@@ -134,17 +134,15 @@ public class BuilderDefinitionCreator {
       builderDto.addClassField(classField);
     }
 
-    // 2. Collect methods from fields and core methods, set source descriptions
+    // 2. Collect methods from fields
     for (FieldDto field : builderDto.getConstructorFieldsForBuilder()) {
       for (MethodDto method : field.getMethods()) {
-        method.setSourceDescription("field '" + field.getFieldNameInBuilder() + "'");
         builderDto.addMethod(method);
       }
     }
 
     for (FieldDto field : builderDto.getSetterFieldsForBuilder()) {
       for (MethodDto method : field.getMethods()) {
-        method.setSourceDescription("field '" + field.getFieldNameInBuilder() + "'");
         builderDto.addMethod(method);
       }
     }

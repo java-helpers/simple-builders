@@ -390,7 +390,7 @@ class MethodConflictResolutionTest {
             .filter(
                 d ->
                     d.getMessage(null).contains("Method conflict")
-                        && d.getMessage(null).contains("dropped in favor of field"))
+                        && d.getMessage(null).contains("dropped in favor of"))
             .filter(d -> d.getMessage(null).contains("priority 80"))
             .filter(d -> d.getMessage(null).contains("priority 100"))
             .count();
