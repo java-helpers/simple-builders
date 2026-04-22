@@ -486,7 +486,7 @@ class CustomizingDocumentationTest {
                 public void enhanceBuilder(BuilderDefinitionDto builderDto, ProcessingContext context) {
                     // Add validation method to builder
                     MethodDto validateMethod = createValidateMethod();
-                    builderDto.addCoreMethod(validateMethod);
+                    builderDto.addMethod(validateMethod);
 
                     // Add @Valid annotation if available
                     if (isValidationAvailable(context)) {
@@ -665,7 +665,7 @@ class CustomizingDocumentationTest {
                     factoryMethod.setCode(String.format("return new %s();", builderType.getClassName()));
 
                     // Note: addStaticMethod is conceptual - shows the pattern
-                    builderDto.addCoreMethod(factoryMethod);
+                    builderDto.addMethod(factoryMethod);
 
                     context.debug("Added factory method to builder %s", builderType.getClassName());
                 }

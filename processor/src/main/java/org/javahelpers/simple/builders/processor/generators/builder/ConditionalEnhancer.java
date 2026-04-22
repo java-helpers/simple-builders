@@ -104,11 +104,11 @@ public class ConditionalEnhancer implements BuilderEnhancer {
   public void enhanceBuilder(BuilderDefinitionDto builderDto, ProcessingContext context) {
     // Add conditional(BooleanSupplier, Consumer, Consumer) method
     MethodDto conditionalMethod = createConditionalMethod(builderDto);
-    builderDto.addCoreMethod(conditionalMethod);
+    builderDto.addMethod(conditionalMethod);
 
     // Add conditional(BooleanSupplier, Consumer) method
     MethodDto conditionalPositiveMethod = createConditionalPositiveOnlyMethod(builderDto);
-    builderDto.addCoreMethod(conditionalPositiveMethod);
+    builderDto.addMethod(conditionalPositiveMethod);
 
     context.debug(
         "Added conditional methods to builder %s", builderDto.getBuilderTypeName().getClassName());

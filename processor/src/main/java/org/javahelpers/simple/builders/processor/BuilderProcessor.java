@@ -209,7 +209,7 @@ public class BuilderProcessor extends AbstractProcessor {
     context.debugEndOperation(
         "Generated builder with %d fields and %d methods for %s",
         builderDef.getAllFieldsForBuilder().size(),
-        builderDef.getCoreMethods().size(),
+        builderDef.getMethods().size(),
         builderDef.getBuilderTypeName().getClassName());
   }
 

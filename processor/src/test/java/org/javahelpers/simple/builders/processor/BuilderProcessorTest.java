@@ -142,7 +142,7 @@ class BuilderProcessorTest {
         "[DEBUG] │  ├─ Writing class to file: test.VerboseTestBuilder",
         "[DEBUG] │  └─ Successfully generated class: VerboseTestBuilder",
         "[DEBUG] ├─ Jackson module entry added",
-        "[DEBUG] └─ Generated builder with 1 fields and 5 methods for VerboseTestBuilder",
+        "[DEBUG] └─ Generated builder with 1 fields and 9 methods for VerboseTestBuilder",
         "simple-builders: Successfully generated 1 builder(s) in this processing round",
         "");
   }

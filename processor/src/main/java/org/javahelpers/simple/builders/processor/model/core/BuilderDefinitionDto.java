@@ -26,7 +26,6 @@ package org.javahelpers.simple.builders.processor.model.core;
 
 import java.util.LinkedList;
 import java.util.List;
-import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 
 /**
@@ -51,12 +50,6 @@ public class BuilderDefinitionDto extends GenerationTargetClassDto {
    * multiple functions in builder.
    */
   private final List<FieldDto> fields = new LinkedList<>();
-
-  /**
-   * Core builder methods (build, create, conditional, toString, etc.) to be generated. These are
-   * added by BuilderEnhancers and have ordering for generation sequence.
-   */
-  private final List<MethodDto> coreMethods = new LinkedList<>();
 
   /** Configuration for builder generation. */
   private BuilderConfiguration configuration;
@@ -162,24 +155,6 @@ public class BuilderDefinitionDto extends GenerationTargetClassDto {
     all.addAll(fieldsInConstructor);
     all.addAll(fields);
     return all;
-  }
-
-  /**
-   * Returns the list of core builder methods.
-   *
-   * @return the list of core methods
-   */
-  public List<MethodDto> getCoreMethods() {
-    return coreMethods;
-  }
-
-  /**
-   * Adds a core method to be generated in the builder.
-   *
-   * @param method the core method to add
-   */
-  public void addCoreMethod(MethodDto method) {
-    this.coreMethods.add(method);
   }
 
   /**

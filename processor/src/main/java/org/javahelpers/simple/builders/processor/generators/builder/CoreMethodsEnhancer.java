@@ -101,15 +101,15 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
   public void enhanceBuilder(BuilderDefinitionDto builderDto, ProcessingContext context) {
     // Add build() method
     MethodDto buildMethod = createBuildMethod(builderDto);
-    builderDto.addCoreMethod(buildMethod);
+    builderDto.addMethod(buildMethod);
 
     // Add static create() method
     MethodDto createMethod = createStaticCreateMethod(builderDto);
-    builderDto.addCoreMethod(createMethod);
+    builderDto.addMethod(createMethod);
 
     // Add toString() method
     MethodDto toStringMethod = createToStringMethod(builderDto);
-    builderDto.addCoreMethod(toStringMethod);
+    builderDto.addMethod(toStringMethod);
   }
 
   /** Creates the build() method. */

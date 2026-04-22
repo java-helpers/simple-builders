@@ -49,10 +49,10 @@ public class ClassFieldDto {
   /** Field name in generated class. */
   private String fieldName;
 
-  /** Field type (e.g., String represented as TypeName). */
+  /** Field type. */
   private TypeName fieldType;
 
-  /** Field visibility (typically PRIVATE). */
+  /** Field visibility. */
   private AccessModifier visibility = PRIVATE;
 
   /** Literal initializer (e.g., "exampleValue" like in {@code String field="exampleValue";}). */
@@ -72,6 +72,11 @@ public class ClassFieldDto {
     this.fieldName = fieldName;
   }
 
+  /**
+   * Returns the field type.
+   *
+   * @return the field type
+   */
   public TypeName getFieldType() {
     return fieldType;
   }

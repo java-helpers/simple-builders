@@ -149,11 +149,6 @@ public class BuilderDefinitionCreator {
       }
     }
 
-    for (MethodDto method : builderDto.getCoreMethods()) {
-      method.setSourceDescription("core method '" + method.getMethodName() + "'");
-      builderDto.addMethod(method);
-    }
-
     // 3. Set class access modifier
     builderDto.setClassAccessModifier(builderDto.getConfiguration().getBuilderAccess());
 
