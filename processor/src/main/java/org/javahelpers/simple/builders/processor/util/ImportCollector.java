@@ -161,13 +161,12 @@ public class ImportCollector {
     classDef.getClassAnnotations().forEach(this::addAnnotationImports);
 
     // Add field imports from ClassFieldDto
-    classDef
-        .getClassFields()
-        .forEach(
-            field -> {
-              addTypeImports(field.getFieldType());
-              field.getFieldTypeImports().forEach(this::addImport);
-            });
+    classDef.getClassFields().forEach(field -> addTypeImports(field.getFieldType()));
+
+    // Add all additional imports defined for that field
+    classDef.getClassFields().stream()
+        .flatMap(field -> field.getFieldTypeImports().stream())
+        .forEach(this::addImport);
 
     // Add constructor imports
     classDef
