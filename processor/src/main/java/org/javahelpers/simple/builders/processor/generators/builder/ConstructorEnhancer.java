@@ -116,7 +116,7 @@ public class ConstructorEnhancer implements BuilderEnhancer {
                           }
                           """,
                       getterName, fieldName, getterName);
-                  codeDto.addCodeBlockImport(TypeName.of(IllegalArgumentException.class));
+                  codeDto.addCodeBlockImport(IllegalArgumentException.class);
                 }
                 codeDto.append(
                     """

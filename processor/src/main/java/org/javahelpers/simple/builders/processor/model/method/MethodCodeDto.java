@@ -131,11 +131,11 @@ public class MethodCodeDto {
   }
 
   /**
-   * Adds a regular import for a type used in the code block (convenience method accepting Class).
+   * Adding an import for a type used in the code block (convenience overload accepting Class).
    *
    * @param clazz the class to import
    */
-  public void addImport(Class<?> clazz) {
+  public void addCodeBlockImport(Class<?> clazz) {
     addCodeBlockImport(TypeName.of(clazz));
   }
 

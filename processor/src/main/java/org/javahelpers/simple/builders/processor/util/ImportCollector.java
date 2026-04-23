@@ -49,9 +49,9 @@ public class ImportCollector {
    *
    * @param type the type to add imports for
    */
-  public void addTypeImports(TypeName type) {
+  public ImportCollector addTypeImports(TypeName type) {
     if (type == null || type instanceof TypeNamePrimitive || type instanceof TypeNameVariable) {
-      return;
+      return this;
     }
 
     // Add type annotation imports
@@ -59,6 +59,8 @@ public class ImportCollector {
 
     // Adding the type
     addImport(type);
+
+    return this;
   }
 
   /**
@@ -66,10 +68,11 @@ public class ImportCollector {
    *
    * @param annotation the annotation to add imports for
    */
-  public void addAnnotationImports(AnnotationDto annotation) {
+  public ImportCollector addAnnotationImports(AnnotationDto annotation) {
     if (annotation.getAnnotationType() != null) {
       addTypeImports(annotation.getAnnotationType());
     }
+    return this;
   }
 
   /**
@@ -77,9 +80,10 @@ public class ImportCollector {
    *
    * @param parameter the parameter to add imports for
    */
-  public void addParameterImports(MethodParameterDto parameter) {
+  public ImportCollector addParameterImports(MethodParameterDto parameter) {
     addTypeImports(parameter.getParameterType());
     parameter.getAnnotations().forEach(this::addAnnotationImports);
+    return this;
   }
 
   /**
@@ -87,13 +91,14 @@ public class ImportCollector {
    *
    * @param interfaceName the interface to add imports for
    */
-  public void addInterfaceImports(InterfaceName interfaceName) {
+  public ImportCollector addInterfaceImports(InterfaceName interfaceName) {
     // Create a TypeName from the interface's package and simple name
     TypeName interfaceType =
         new TypeName(interfaceName.getPackageName(), interfaceName.getSimpleName());
     addTypeImports(interfaceType);
     interfaceName.getAnnotations().forEach(this::addAnnotationImports);
     interfaceName.getTypeParameters().forEach(this::addTypeImports);
+    return this;
   }
 
   /**
@@ -101,7 +106,7 @@ public class ImportCollector {
    *
    * @param method the method to add imports for
    */
-  public void addMethodImports(MethodDto method) {
+  public ImportCollector addMethodImports(MethodDto method) {
     if (method.getReturnType() != null) {
       addTypeImports(method.getReturnType());
     }
@@ -122,6 +127,8 @@ public class ImportCollector {
 
     // Add body argument imports
     addBodyImports(method);
+
+    return this;
   }
 
   /**
@@ -129,7 +136,7 @@ public class ImportCollector {
    *
    * @param classDef the class definition to extract imports from
    */
-  public void collectImports(GenerationTargetClassDto classDef) {
+  public ImportCollector collectImports(GenerationTargetClassDto classDef) {
     // Add imports from the DTO (including static imports like TrackedValue)
     classDef.getImports().forEach(this::addImport);
 
@@ -180,6 +187,8 @@ public class ImportCollector {
 
     // Add method imports
     classDef.getMethods().forEach(this::addMethodImports);
+
+    return this;
   }
 
   /**
@@ -305,5 +314,15 @@ public class ImportCollector {
    */
   public Set<ImportStatement> getImports() {
     return new LinkedHashSet<>(imports);
+  }
+
+  /**
+   * Collects and sorts imports for a given class definition.
+   *
+   * @param classDef the class definition to collect imports from
+   * @return sorted set of import statements
+   */
+  public static Set<ImportStatement> collectAndSortImports(GenerationTargetClassDto classDef) {
+    return new ImportCollector(classDef.getTypeName()).collectImports(classDef).getSortedImports();
   }
 }

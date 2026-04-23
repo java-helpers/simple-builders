@@ -140,7 +140,6 @@ public class BuilderDefinitionCreator {
         builderDto.addMethod(method);
       }
     }
-
     for (FieldDto field : builderDto.getSetterFieldsForBuilder()) {
       for (MethodDto method : field.getMethods()) {
         builderDto.addMethod(method);

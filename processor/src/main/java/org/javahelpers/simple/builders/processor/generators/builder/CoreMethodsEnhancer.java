@@ -196,7 +196,7 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
     method.setCode(code.toString());
     method.addArgument("dtoBaseType", builderDto.getBuildingTargetTypeName());
     method.addArgument("buildResultType", returnType);
-    method.getMethodCodeDto().addCodeBlockImport(TypeName.of(IllegalStateException.class));
+    method.getMethodCodeDto().addCodeBlockImport(IllegalStateException.class);
     method.setJavadoc(new JavadocDto("Builds the configured DTO instance."));
 
     return method;

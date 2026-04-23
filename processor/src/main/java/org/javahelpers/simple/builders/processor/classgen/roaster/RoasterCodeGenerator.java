@@ -110,17 +110,13 @@ public class RoasterCodeGenerator {
   }
 
   private String createClassSource(GenerationTargetClassDto classDef) {
-    // Class generation - works for all GenerationTargetClassDto instances
     JavaClassSource source = createJavaClassSource(classDef);
     addClassMetadata(source, classDef);
     appendFields(source, classDef);
     appendConstructors(source, classDef);
     appendMethods(source, classDef);
     appendNestedTypes(source, classDef);
-
-    // Apply annotations first (Roaster will add imports)
     applyClassAnnotations(source, classDef);
-
     return renderClassSource(source);
   }
 
@@ -149,7 +145,8 @@ public class RoasterCodeGenerator {
     addGenericDeclarations(source, classDef.getGenerics());
 
     // Collect and add imports early (before elements are added)
-    for (ImportStatement importStmt : collectImports(classDef)) {
+    Set<ImportStatement> importStmts = ImportCollector.collectAndSortImports(classDef);
+    for (ImportStatement importStmt : importStmts) {
       if (importStmt.isStatic()) {
         source.addImport(importStmt.getFullyQualifiedName()).setStatic(true);
       } else {

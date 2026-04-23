@@ -122,7 +122,7 @@ public class StringBuilderConsumerGenerator implements MethodGenerator {
 
     // Add code block import for Optional.of when used
     if (isOptionalString(field.getFieldType())) {
-      method.getMethodCodeDto().addCodeBlockImport(TypeName.of(Optional.class));
+      method.getMethodCodeDto().addCodeBlockImport(Optional.class);
     }
 
     return List.of(method);

@@ -142,7 +142,7 @@ public class StringFormatHelperGenerator implements MethodGenerator {
                 context);
 
         // Add code block imports for Optional.of and String.format
-        method.getMethodCodeDto().addCodeBlockImport(TypeName.of(Optional.class));
+        method.getMethodCodeDto().addCodeBlockImport(Optional.class);
 
         methods.add(method);
       }

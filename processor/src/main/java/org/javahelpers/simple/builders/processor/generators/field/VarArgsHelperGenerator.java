@@ -159,11 +159,11 @@ public class VarArgsHelperGenerator implements MethodGenerator {
 
     // Add code block imports for collection factory methods
     if (fieldType instanceof TypeNameList) {
-      method.getMethodCodeDto().addCodeBlockImport(TypeName.of(List.class));
+      method.getMethodCodeDto().addCodeBlockImport(List.class);
     } else if (fieldType instanceof TypeNameSet) {
-      method.getMethodCodeDto().addCodeBlockImport(TypeName.of(Set.class));
+      method.getMethodCodeDto().addCodeBlockImport(Set.class);
     } else if (fieldType instanceof TypeNameMap) {
-      method.getMethodCodeDto().addCodeBlockImport(TypeName.of(Map.class));
+      method.getMethodCodeDto().addCodeBlockImport(Map.class);
     }
 
     return method;
