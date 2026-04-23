@@ -47,6 +47,7 @@ import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 import org.javahelpers.simple.builders.processor.generators.integration.JacksonModuleGenerator;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
+import org.javahelpers.simple.builders.processor.model.core.GenerationTargetClassDto;
 import org.javahelpers.simple.builders.processor.processing.BuilderConfigurationReader;
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsEnum;
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsReader;
@@ -107,9 +108,18 @@ public class BuilderProcessor extends AbstractProcessor {
 
     // Generate Jackson Module if processing is over and feature is enabled
     if (roundEnv.processingOver()) {
-      var modules = jacksonModuleGenerator.getModuleDefinitions();
-      for (var module : modules) {
-        codeGenerator.generateJacksonModule(module);
+      List<GenerationTargetClassDto> moduleClassDefs =
+          jacksonModuleGenerator.getModuleDefinitions();
+      for (GenerationTargetClassDto moduleClassDef : moduleClassDefs) {
+        String packageName = moduleClassDef.getTypeName().getPackageName();
+        context.info("Generating Jackson Module in package '%s'", packageName);
+        try {
+          codeGenerator.generateClass(moduleClassDef);
+        } catch (BuilderException e) {
+          context.warning(
+              "simple-builders: Error generating Jackson module for package %s: %s",
+              packageName, e.getMessage());
+        }
       }
       // Reset indentation after Jackson module generation as well
       context.resetIndentation();

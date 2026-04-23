@@ -25,7 +25,6 @@
 package org.javahelpers.simple.builders.processor.classgen.roaster;
 
 import static org.javahelpers.simple.builders.processor.classgen.roaster.RoasterMapper.mapType;
-import static org.javahelpers.simple.builders.processor.classgen.roaster.RoasterMapper.packageNameOf;
 import static org.javahelpers.simple.builders.processor.classgen.roaster.RoasterMapper.resolveCodeTemplate;
 
 import java.io.IOException;
@@ -47,8 +46,6 @@ import org.javahelpers.simple.builders.processor.model.annotation.InterfaceName;
 import org.javahelpers.simple.builders.processor.model.core.ClassFieldDto;
 import org.javahelpers.simple.builders.processor.model.core.GenerationTargetClassDto;
 import org.javahelpers.simple.builders.processor.model.imports.ImportStatement;
-import org.javahelpers.simple.builders.processor.model.integration.JacksonModuleDefinitionDto;
-import org.javahelpers.simple.builders.processor.model.integration.JacksonModuleEntryDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocTagDto;
 import org.javahelpers.simple.builders.processor.model.method.ConstructorDto;
@@ -587,124 +584,6 @@ public class RoasterCodeGenerator {
           "Error checking if builder class '%s' already exists: %s",
           qualifiedName, StringUtils.isNotBlank(e.getMessage()) ? e.getMessage() : "No message");
       return false;
-    }
-  }
-
-  /**
-   * Generates a Jackson SimpleModule based on the provided definition.
-   *
-   * @param moduleDef the definition of the Jackson module to generate
-   */
-  public void generateJacksonModule(JacksonModuleDefinitionDto moduleDef) {
-    String packageName = moduleDef.getTargetPackage();
-    String moduleClassName = "SimpleBuildersJacksonModule";
-
-    logger.info("Generating Jackson Module '%s' in package '%s'", moduleClassName, packageName);
-
-    try {
-      // Create the class using Roaster
-      JavaClassSource moduleClass = Roaster.create(JavaClassSource.class);
-      moduleClass.setPackage(packageName);
-      moduleClass.setName(moduleClassName);
-      moduleClass.setSuperType("SimpleModule");
-
-      // Collect imports using ImportCollector
-      TypeName moduleType = new TypeName(packageName, moduleClassName);
-      ImportCollector collector = new ImportCollector(moduleType);
-
-      // Add Jackson-specific imports using convenience method with TypeName
-      collector.addTypeImports(
-          new org.javahelpers.simple.builders.processor.model.type.TypeName(
-              "com.fasterxml.jackson.databind.annotation", "JsonDeserialize"));
-      collector.addTypeImports(
-          new org.javahelpers.simple.builders.processor.model.type.TypeName(
-              "com.fasterxml.jackson.databind.module", "SimpleModule"));
-
-      // Adding imports for DTO types
-      moduleDef.getEntries().stream()
-          .filter(e -> shouldAddImport(packageName, e.dtoType().getFullQualifiedName()))
-          .forEach(e -> collector.addTypeImports(e.dtoType()));
-
-      // Adding imports for builder types
-      moduleDef.getEntries().stream()
-          .filter(e -> shouldAddImport(packageName, e.builderType().getFullQualifiedName()))
-          .forEach(e -> collector.addTypeImports(e.builderType()));
-
-      // Add sorted imports to Roaster
-      collector
-          .getSortedImports()
-          .forEach(
-              importStatement -> moduleClass.addImport(importStatement.getFullyQualifiedName()));
-
-      // Add mixin interfaces as nested interfaces
-      for (JacksonModuleEntryDto entry : moduleDef.getEntries()) {
-        String mixinName = entry.dtoType().getClassName() + "Mixin";
-
-        // Create the nested interface
-        JavaInterfaceSource mixinInterface = Roaster.create(JavaInterfaceSource.class);
-        mixinInterface.setName(mixinName);
-        mixinInterface.setPrivate();
-
-        // Add the JsonDeserialize annotation
-        AnnotationSource<JavaInterfaceSource> annotation =
-            mixinInterface.addAnnotation("JsonDeserialize");
-        annotation.setLiteralValue("builder", entry.builderType().getClassName() + ".class");
-
-        // Add as nested type to the module class
-        moduleClass.addNestedType(mixinInterface);
-      }
-
-      // Add constructor
-      MethodSource<JavaClassSource> constructor = moduleClass.addMethod();
-      constructor.setConstructor(true);
-      constructor.setPublic();
-
-      // Build constructor body
-      StringBuilder constructorBody = new StringBuilder();
-      for (JacksonModuleEntryDto entry : moduleDef.getEntries()) {
-        String mixinName = entry.dtoType().getClassName() + "Mixin";
-        constructorBody.append(
-            "setMixInAnnotation(%s.class, %s.class);%n"
-                .formatted(entry.dtoType().getClassName(), mixinName));
-      }
-      constructor.setBody(constructorBody.toString());
-
-      // Write the generated class
-      String source = formatSource(moduleClass.toString());
-      writeSimpleClassToFile(packageName, moduleClassName, source);
-
-    } catch (BuilderException e) {
-      logger.warning(
-          "simple-builders: Error generating Jackson module for package %s: %s\n%s",
-          packageName, e.getMessage(), java.util.Arrays.toString(e.getStackTrace()));
-    }
-  }
-
-  private boolean shouldAddImport(String currentPackage, String fqn) {
-    return StringUtils.isNotBlank(fqn)
-        && fqn.contains(".")
-        && !fqn.startsWith("java.lang.")
-        && !currentPackage.equals(packageNameOf(fqn));
-  }
-
-  private void writeSimpleClassToFile(String packageName, String className, String sourceCode)
-      throws BuilderException {
-    try {
-      String qualifiedName =
-          StringUtils.isBlank(packageName) ? className : packageName + "." + className;
-      JavaFileObject file = processingEnv.getFiler().createSourceFile(qualifiedName);
-      try (Writer writer = file.openWriter()) {
-        writer.write(sourceCode);
-      }
-    } catch (IOException ex) {
-      String message = ex.getMessage();
-      String errorMessage =
-          """
-          Unable to create class: %s.
-          Check the build environment and ensure all necessary directories are accessible.
-          """
-              .formatted(StringUtils.isNotBlank(message) ? message : "Unknown error");
-      throw new BuilderException(null, errorMessage);
     }
   }
 }
