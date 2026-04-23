@@ -25,5 +25,6 @@ org.javahelpers.simple.builders.processor.generators.builder.JacksonAnnotationEn
 org.javahelpers.simple.builders.processor.generators.builder.InterfaceEnhancer
 org.javahelpers.simple.builders.processor.generators.builder.ClassJavaDocEnhancer
 org.javahelpers.simple.builders.processor.generators.builder.CoreMethodsEnhancer
+org.javahelpers.simple.builders.processor.generators.builder.ConstructorEnhancer
 org.javahelpers.simple.builders.processor.generators.builder.WithInterfaceEnhancer
 org.javahelpers.simple.builders.processor.generators.builder.ConditionalEnhancer

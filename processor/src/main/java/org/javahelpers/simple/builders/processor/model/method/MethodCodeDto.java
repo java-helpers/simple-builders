@@ -25,8 +25,16 @@
 package org.javahelpers.simple.builders.processor.model.method;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
+import org.apache.commons.lang3.StringUtils;
+import org.javahelpers.simple.builders.processor.model.imports.ImportStatement;
+import org.javahelpers.simple.builders.processor.model.imports.RegularImport;
+import org.javahelpers.simple.builders.processor.model.imports.StaticImport;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.simple.builders.processor.model.type.TypeNameArray;
+import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
 
 /** DTO for holding information of code implementation. */
 public class MethodCodeDto {
@@ -35,6 +43,9 @@ public class MethodCodeDto {
 
   /** List of placeholders in CodeFormat. Containing dynamic values too. */
   private final List<MethodCodePlaceholder<?>> codeArguments = new ArrayList<>();
+
+  /** Types used in the code body that aren't covered by arguments. */
+  private final Set<ImportStatement> codeBlockImports = new LinkedHashSet<>();
 
   /**
    * Setting format of code.
@@ -63,6 +74,7 @@ public class MethodCodeDto {
    */
   public void addArgument(String name, TypeName value) {
     codeArguments.add(new MethodCodeTypePlaceholder(name, value));
+    addCodeBlockImport(value);
   }
 
   /**
@@ -82,5 +94,100 @@ public class MethodCodeDto {
   @SuppressWarnings("java:S1452")
   public List<MethodCodePlaceholder<?>> getCodeArguments() {
     return codeArguments;
+  }
+
+  /**
+   * Checks if this code DTO has code content.
+   *
+   * @return true if code format is not null and not blank
+   */
+  public boolean hasCode() {
+    return !StringUtils.isBlank(codeFormat);
+  }
+
+  /**
+   * Returns the set of imports used in the code body that aren't covered by arguments.
+   *
+   * @return set of imports used in code body
+   */
+  public Set<ImportStatement> getCodeBlockImports() {
+    return codeBlockImports;
+  }
+
+  /**
+   * Adding an import for a type used in the code block.
+   *
+   * @param typeName type to import
+   */
+  public void addCodeBlockImport(TypeName typeName) {
+    if (typeName instanceof TypeNameGeneric generic) {
+      addCodeBlockImport(generic.getRawType());
+      generic.getInnerTypeArguments().forEach(this::addCodeBlockImport);
+    } else if (typeName instanceof TypeNameArray array) {
+      addCodeBlockImport(array.getTypeOfArray());
+    } else {
+      this.codeBlockImports.add(new RegularImport(typeName));
+    }
+  }
+
+  /**
+   * Adding an import for a type used in the code block (convenience overload accepting Class).
+   *
+   * @param clazz the class to import
+   */
+  public void addCodeBlockImport(Class<?> clazz) {
+    addCodeBlockImport(TypeName.of(clazz));
+  }
+
+  /**
+   * Adds a static import for a method/field used in the code block (convenience method).
+   *
+   * @param clazz the class containing the static member
+   * @param memberName the name of the static member
+   */
+  public void addStaticImport(Class<?> clazz, String memberName) {
+    this.codeBlockImports.add(new StaticImport(TypeName.of(clazz), memberName));
+  }
+
+  /**
+   * Adds type imports for a TypeName and its generic type arguments (convenience method).
+   *
+   * @param type the type to add imports for
+   */
+  public void addTypeImports(TypeName type) {
+    if (type == null) {
+      return;
+    }
+
+    // Add the main type
+    addCodeBlockImport(type);
+
+    // Add generic type arguments recursively
+    if (type instanceof TypeNameGeneric genericType) {
+      genericType.getInnerTypeArguments().forEach(this::addTypeImports);
+    }
+  }
+
+  /**
+   * Appends additional code to the existing code format with string formatting support.
+   *
+   * <p>This method concatenates the provided formatted code string to the current code format,
+   * separated by a newline for proper formatting. This is useful for building up method bodies
+   * incrementally, especially when constructing complex code with multiple sections.
+   *
+   * <p>Supports the same formatting syntax as {@link String#format(String, Object...)}, allowing
+   * for dynamic value insertion using placeholders like %s, %d, etc.
+   *
+   * @param formatted the code fragment with format placeholders to append to the existing code
+   *     format
+   * @param args the arguments to be formatted into the string
+   */
+  public void append(String formatted, Object... args) {
+    String formattedCode = args.length > 0 ? String.format(formatted, args) : formatted;
+    if (StringUtils.isEmpty(codeFormat)) {
+      codeFormat = formattedCode;
+    } else {
+      codeFormat += "\n" + formattedCode;
+    }
   }
 }

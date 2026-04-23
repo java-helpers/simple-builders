@@ -10,8 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.javahelpers.simple.builders.core.util.BuilderToStringStyle;
 import org.javahelpers.simple.builders.core.util.TrackedValue;
@@ -116,52 +114,20 @@ public class BookDtoBuilder {
   public BookDtoBuilder(BookDto instance) {
     this.author = initialValue(instance.getAuthor());
     this.available = initialValue(instance.isAvailable());
-    if (this.available.value() == null) {
-      throw new IllegalArgumentException(
-          "Cannot initialize builder from instance: field 'available' is marked as non-null but source object has null value");
-    }
     this.category = initialValue(instance.getCategory());
-    if (this.category.value() == null) {
-      throw new IllegalArgumentException(
-          "Cannot initialize builder from instance: field 'category' is marked as non-null but source object has null value");
-    }
     this.discount = initialValue(instance.getDiscount());
-    if (this.discount.value() == null) {
-      throw new IllegalArgumentException(
-          "Cannot initialize builder from instance: field 'discount' is marked as non-null but source object has null value");
-    }
     this.edition = initialValue(instance.getEdition());
-    if (this.edition.value() == null) {
-      throw new IllegalArgumentException(
-          "Cannot initialize builder from instance: field 'edition' is marked as non-null but source object has null value");
-    }
     this.exactPrice = initialValue(instance.getExactPrice());
     this.genres = initialValue(instance.getGenres());
     this.isbn = initialValue(instance.getIsbn());
     this.lastUpdated = initialValue(instance.getLastUpdated());
     this.metadata = initialValue(instance.getMetadata());
     this.pages = initialValue(instance.getPages());
-    if (this.pages.value() == null) {
-      throw new IllegalArgumentException(
-          "Cannot initialize builder from instance: field 'pages' is marked as non-null but source object has null value");
-    }
     this.price = initialValue(instance.getPrice());
-    if (this.price.value() == null) {
-      throw new IllegalArgumentException(
-          "Cannot initialize builder from instance: field 'price' is marked as non-null but source object has null value");
-    }
     this.publishDate = initialValue(instance.getPublishDate());
     this.publisher = initialValue(instance.getPublisher());
     this.rating = initialValue(instance.getRating());
-    if (this.rating.value() == null) {
-      throw new IllegalArgumentException(
-          "Cannot initialize builder from instance: field 'rating' is marked as non-null but source object has null value");
-    }
     this.salesCount = initialValue(instance.getSalesCount());
-    if (this.salesCount.value() == null) {
-      throw new IllegalArgumentException(
-          "Cannot initialize builder from instance: field 'salesCount' is marked as non-null but source object has null value");
-    }
     this.subtitle = initialValue(instance.getSubtitle());
     this.tags = initialValue(instance.getTags());
     this.title = initialValue(instance.getTitle());

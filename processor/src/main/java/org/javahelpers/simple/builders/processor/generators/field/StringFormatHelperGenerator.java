@@ -31,6 +31,7 @@ import static org.javahelpers.simple.builders.processor.generators.util.MethodGe
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.apache.commons.collections4.CollectionUtils;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.generators.util.JavadocConstants;
@@ -139,6 +140,10 @@ public class StringFormatHelperGenerator implements MethodGenerator {
                 field.getParameterAnnotations(),
                 builderType,
                 context);
+
+        // Add code block imports for Optional.of and String.format
+        method.getMethodCodeDto().addCodeBlockImport(Optional.class);
+
         methods.add(method);
       }
     }
@@ -180,7 +185,7 @@ public class StringFormatHelperGenerator implements MethodGenerator {
     MethodDto methodDto = new MethodDto(generateBuilderMethodName(fieldName, context), builderType);
     methodDto.addParameter(formatParam);
     methodDto.addParameter(argsParam);
-    setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
+    methodDto.setModifier(getMethodAccessModifier(context));
     methodDto.setCode(
         """
         this.$fieldName:N = $builderFieldWrapper:T.changedValue($transform:N);

@@ -24,8 +24,11 @@
 
 package org.javahelpers.simple.builders.processor.model.type;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import org.javahelpers.simple.builders.core.enums.AccessModifier;
+import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 
@@ -42,14 +45,17 @@ public class NestedTypeDto {
   /** The kind of nested type (INTERFACE or CLASS). */
   private NestedTypeKind kind;
 
-  /** Whether this nested type should be public. */
-  private boolean isPublic = true;
+  /** Visibility of this nested type. */
+  private AccessModifier visibility = AccessModifier.PUBLIC;
 
   /** Methods to be generated in this nested type. */
   private final List<MethodDto> methods = new LinkedList<>();
 
   /** Javadoc comment for this nested type. */
   private JavadocDto javadoc;
+
+  /** Type-level annotations for this nested type. */
+  private final List<AnnotationDto> annotations = new ArrayList<>();
 
   public enum NestedTypeKind {
     INTERFACE,
@@ -72,12 +78,12 @@ public class NestedTypeDto {
     this.kind = kind;
   }
 
-  public boolean isPublic() {
-    return isPublic;
+  public AccessModifier getVisibility() {
+    return visibility;
   }
 
-  public void setPublic(boolean isPublic) {
-    this.isPublic = isPublic;
+  public void setVisibility(AccessModifier visibility) {
+    this.visibility = visibility;
   }
 
   public List<MethodDto> getMethods() {
@@ -94,5 +100,13 @@ public class NestedTypeDto {
 
   public void setJavadoc(JavadocDto javadoc) {
     this.javadoc = javadoc;
+  }
+
+  public List<AnnotationDto> getAnnotations() {
+    return annotations;
+  }
+
+  public void addAnnotation(AnnotationDto annotation) {
+    this.annotations.add(annotation);
   }
 }

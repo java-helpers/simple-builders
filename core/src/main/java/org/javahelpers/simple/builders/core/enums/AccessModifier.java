@@ -41,6 +41,9 @@ public enum AccessModifier {
   /** Public access - accessible from anywhere */
   PUBLIC("public"),
 
+  /** Protected access - accessible from the same package and subclasses */
+  PROTECTED("protected"),
+
   /** Package-private access (default) - accessible only within the same package */
   PACKAGE_PRIVATE(""),
 

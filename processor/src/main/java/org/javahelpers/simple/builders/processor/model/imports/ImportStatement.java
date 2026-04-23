@@ -22,37 +22,40 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.model.integration;
-
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+package org.javahelpers.simple.builders.processor.model.imports;
 
 /**
- * Definition for generating a Jackson SimpleModule. Contains the target package and the entries to
- * be registered in the module.
+ * Represents an import statement in generated code.
+ *
+ * <p>This is the base interface for all import types (regular and static imports). This is a pure
+ * data holder - business logic for filtering imports belongs in ImportCollector.
  */
-public class JacksonModuleDefinitionDto {
-  private final String targetPackage;
-  private final Set<JacksonModuleEntryDto> entries = new HashSet<>();
+public interface ImportStatement {
 
-  public JacksonModuleDefinitionDto(String targetPackage) {
-    this.targetPackage = targetPackage;
-  }
+  /**
+   * Returns the fully qualified name for this import.
+   *
+   * <p>For regular imports: {@code com.example.MyClass}
+   *
+   * <p>For static imports: {@code com.example.MyClass.staticMethod}
+   *
+   * @return the fully qualified name
+   */
+  String getFullyQualifiedName();
 
-  public String getTargetPackage() {
-    return targetPackage;
-  }
+  /**
+   * Returns the package name for this import.
+   *
+   * <p>Extracted from the fully qualified name by taking everything before the last dot.
+   *
+   * @return the package name, or empty string if no package
+   */
+  String getPackageName();
 
-  public Set<JacksonModuleEntryDto> getEntries() {
-    return entries;
-  }
-
-  public void addEntry(JacksonModuleEntryDto entry) {
-    this.entries.add(entry);
-  }
-
-  public void addAllEntries(Collection<JacksonModuleEntryDto> entries) {
-    this.entries.addAll(entries);
-  }
+  /**
+   * Checks if this is a static import.
+   *
+   * @return true if this is a static import, false for regular imports
+   */
+  boolean isStatic();
 }

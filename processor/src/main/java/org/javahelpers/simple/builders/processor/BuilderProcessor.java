@@ -47,6 +47,7 @@ import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 import org.javahelpers.simple.builders.processor.generators.integration.JacksonModuleGenerator;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
+import org.javahelpers.simple.builders.processor.model.core.GenerationTargetClassDto;
 import org.javahelpers.simple.builders.processor.processing.BuilderConfigurationReader;
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsEnum;
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsReader;
@@ -107,9 +108,18 @@ public class BuilderProcessor extends AbstractProcessor {
 
     // Generate Jackson Module if processing is over and feature is enabled
     if (roundEnv.processingOver()) {
-      var modules = jacksonModuleGenerator.getModuleDefinitions();
-      for (var module : modules) {
-        codeGenerator.generateJacksonModule(module);
+      List<GenerationTargetClassDto> moduleClassDefs =
+          jacksonModuleGenerator.getModuleDefinitions();
+      for (GenerationTargetClassDto moduleClassDef : moduleClassDefs) {
+        String packageName = moduleClassDef.getTypeName().getPackageName();
+        context.info("Generating Jackson Module in package '%s'", packageName);
+        try {
+          codeGenerator.generateClass(moduleClassDef);
+        } catch (BuilderException e) {
+          context.warning(
+              "simple-builders: Error generating Jackson module for package %s: %s",
+              packageName, e.getMessage());
+        }
       }
       // Reset indentation after Jackson module generation as well
       context.resetIndentation();
@@ -199,7 +209,7 @@ public class BuilderProcessor extends AbstractProcessor {
       throws BuilderException {
     context.initConfigurationForProcessingTarget(config);
     BuilderDefinitionDto builderDef = extractFromElement(annotatedElement, context);
-    codeGenerator.generateBuilder(builderDef);
+    codeGenerator.generateClass(builderDef);
 
     // Collect info for Jackson Module if enabled
     jacksonModuleGenerator.addEntry(builderDef, annotatedElement);
@@ -209,7 +219,7 @@ public class BuilderProcessor extends AbstractProcessor {
     context.debugEndOperation(
         "Generated builder with %d fields and %d methods for %s",
         builderDef.getAllFieldsForBuilder().size(),
-        builderDef.getCoreMethods().size(),
+        builderDef.getMethods().size(),
         builderDef.getBuilderTypeName().getClassName());
   }
 

@@ -25,7 +25,7 @@ package org.javahelpers.simple.builders.processor.generators.builder;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.lang.model.element.Modifier;
+import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
 import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
 import org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil;
@@ -101,15 +101,15 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
   public void enhanceBuilder(BuilderDefinitionDto builderDto, ProcessingContext context) {
     // Add build() method
     MethodDto buildMethod = createBuildMethod(builderDto);
-    builderDto.addCoreMethod(buildMethod);
+    builderDto.addMethod(buildMethod);
 
     // Add static create() method
     MethodDto createMethod = createStaticCreateMethod(builderDto);
-    builderDto.addCoreMethod(createMethod);
+    builderDto.addMethod(createMethod);
 
     // Add toString() method
     MethodDto toStringMethod = createToStringMethod(builderDto);
-    builderDto.addCoreMethod(toStringMethod);
+    builderDto.addMethod(toStringMethod);
   }
 
   /** Creates the build() method. */
@@ -120,7 +120,7 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
     MethodDto method = new MethodDto("build", returnType);
     method.setOrdering(ORDERING_BUILD);
     method.setPriority(MethodDto.PRIORITY_HIGHEST);
-    method.setModifier(Modifier.PUBLIC);
+    method.setModifier(AccessModifier.PUBLIC);
 
     // Add @Override annotation only if implementing IBuilderBase interface
     if (builderDto.getConfiguration().shouldImplementBuilderBase()) {
@@ -153,6 +153,9 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
     }
 
     // Add validation for non-nullable setter fields
+    // Note: Primitives are stored as boxed types in TrackedValue<Integer>, etc.
+    // They can be null via Supplier methods: builder.pages(() -> null)
+    // So we need null checks for ALL non-nullable fields, including primitives
     for (var field : builderDto.getSetterFieldsForBuilder()) {
       if (field.isNonNullable()) {
         code.append("if (this.")
@@ -193,7 +196,7 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
     method.setCode(code.toString());
     method.addArgument("dtoBaseType", builderDto.getBuildingTargetTypeName());
     method.addArgument("buildResultType", returnType);
-
+    method.getMethodCodeDto().addCodeBlockImport(IllegalStateException.class);
     method.setJavadoc(new JavadocDto("Builds the configured DTO instance."));
 
     return method;
@@ -207,7 +210,7 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
     MethodDto method = new MethodDto("create", returnType);
     method.setOrdering(ORDERING_CREATE);
     method.setPriority(MethodDto.PRIORITY_HIGHEST);
-    method.setModifier(Modifier.PUBLIC);
+    method.setModifier(AccessModifier.PUBLIC);
     method.setStatic(true);
 
     // Use appropriate code template based on whether we have generics
@@ -235,10 +238,10 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
 
   /** Creates the toString() method. */
   protected MethodDto createToStringMethod(BuilderDefinitionDto builderDto) {
-    MethodDto method = new MethodDto("toString", new TypeName("java.lang", "String"));
+    MethodDto method = new MethodDto("toString", TypeName.of(String.class));
     method.setOrdering(ORDERING_TO_STRING);
     method.setPriority(MethodDto.PRIORITY_HIGHEST);
-    method.setModifier(Modifier.PUBLIC);
+    method.setModifier(AccessModifier.PUBLIC);
     AnnotationDto overrideAnnotation = new AnnotationDto();
     overrideAnnotation.setAnnotationType(JavaLangMapper.map2TypeName(Override.class));
     method.addAnnotation(overrideAnnotation);
@@ -250,11 +253,15 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
             + "\n        .toString();");
 
     // Add template arguments for code generation
-    method.addArgument(
-        "toStringBuilder", new TypeName("org.apache.commons.lang3.builder", "ToStringBuilder"));
-    method.addArgument(
-        "toStringStyle",
-        new TypeName("org.javahelpers.simple.builders.core.util", "BuilderToStringStyle"));
+    TypeName toStringBuilderType =
+        new TypeName("org.apache.commons.lang3.builder", "ToStringBuilder");
+    TypeName toStringStyleType =
+        new TypeName("org.javahelpers.simple.builders.core.util", "BuilderToStringStyle");
+
+    method.addArgument("toStringBuilder", toStringBuilderType);
+    method.addArgument("toStringStyle", toStringStyleType);
+    method.getMethodCodeDto().addCodeBlockImport(toStringBuilderType);
+    method.getMethodCodeDto().addCodeBlockImport(toStringStyleType);
 
     method.setJavadoc(
         new JavadocDto(

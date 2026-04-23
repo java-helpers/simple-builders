@@ -24,35 +24,26 @@
 
 package org.javahelpers.simple.builders.processor.model.core;
 
-import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
-import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
-import org.javahelpers.simple.builders.processor.model.annotation.InterfaceName;
-import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodDto;
-import org.javahelpers.simple.builders.processor.model.type.GenericParameterDto;
-import org.javahelpers.simple.builders.processor.model.type.NestedTypeDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 
-/** BuilderDefinitionDto holds all information for generating a builder. */
-public class BuilderDefinitionDto {
+/**
+ * Builder-specific extension of GenerationTargetClassDto.
+ *
+ * <p>This class holds all information for generating a builder, including builder-specific fields
+ * and methods that are not part of the generic class generation.
+ */
+public class BuilderDefinitionDto extends GenerationTargetClassDto {
   /** Target type of result of building by builder. Containing package and name of DTO. */
   private TypeName buildingTargetTypeName;
 
-  /** Type of builder. Containing package and name of DTO. */
-  private TypeName builderTypeName;
-
   /**
    * Fields in constructor. Containing all fields which need to be given for calling the
-   * constructor. Ordering in LinkedList is matching orderung of parameters in constructor call.
+   * constructor. Ordering in LinkedList is matching ordering of parameters in constructor call.
    * Instances of fields are added in LinkedList of all fields too.
    */
   private final List<FieldDto> fieldsInConstructor = new LinkedList<>();
-
-  /** Generic parameters declared on the target DTO (e.g., {@code <T extends Number, U>}). */
-  private final List<GenericParameterDto> generics = new LinkedList<>();
 
   /**
    * List of all fields of target DTO which are supported by builder. A field could be supported by
@@ -60,64 +51,31 @@ public class BuilderDefinitionDto {
    */
   private final List<FieldDto> fields = new LinkedList<>();
 
-  /**
-   * Nested types (interfaces or classes) to be generated inside the builder, such as the "With"
-   * interface.
-   */
-  private final List<NestedTypeDto> nestedTypes = new LinkedList<>();
-
-  /**
-   * Core builder methods (build, create, conditional, toString, etc.) to be generated. These are
-   * added by BuilderEnhancers and have ordering for generation sequence.
-   */
-  private final List<MethodDto> coreMethods = new LinkedList<>();
-
-  /**
-   * Class-level annotations to be added to the generated builder class. These are added by
-   * BuilderEnhancers and include annotations like @Generated, @BuilderImplementation, etc.
-   *
-   * <p>Uses a Set to ensure annotation uniqueness and prevent duplicates.
-   */
-  private final Set<AnnotationDto> classAnnotations = new LinkedHashSet<>();
-
-  /**
-   * Interfaces to be implemented by the generated builder class. These are added by
-   * BuilderEnhancers and include interfaces like IBuilderBase.
-   *
-   * <p>Uses a Set to ensure interface uniqueness and prevent duplicates.
-   */
-  private final Set<InterfaceName> interfaces = new LinkedHashSet<>();
-
-  /** Class-level JavaDoc for the generated builder class. */
-  private JavadocDto classJavadoc;
-
   /** Configuration for builder generation. */
   private BuilderConfiguration configuration;
 
   /**
-   * Getting type of builder.
+   * Getting type of builder. Delegates to base class typeName.
    *
-   * @return {@code org.javahelpers.simple.builders.internal.dtos.Typename} package and name of
-   *     builder.
+   * @return package and name of builder.
    */
   public TypeName getBuilderTypeName() {
-    return builderTypeName;
+    return getTypeName();
   }
 
   /**
-   * Setting type of builder.
+   * Setting type of builder. Delegates to base class typeName.
    *
    * @param builderClassName type of builder
    */
   public void setBuilderTypeName(TypeName builderClassName) {
-    this.builderTypeName = builderClassName;
+    setTypeName(builderClassName);
   }
 
   /**
    * Getting target type of result of building by builder.
    *
-   * @return {@code org.javahelpers.simple.builders.internal.dtos.Typename} package and name of type
-   *     of building result.
+   * @return package and name of type of building result.
    */
   public TypeName getBuildingTargetTypeName() {
     return buildingTargetTypeName;
@@ -133,9 +91,9 @@ public class BuilderDefinitionDto {
   }
 
   /**
-   * Adding a field-definition to builder defintion.
+   * Adding a field-definition to builder definition.
    *
-   * @param field {@code org.javahelpers.simple.builders.internal.dtos.FieldDto} to be added
+   * @param field to be added
    */
   public void addField(FieldDto field) {
     fields.add(field);
@@ -169,9 +127,9 @@ public class BuilderDefinitionDto {
   }
 
   /**
-   * Getting all definied fields in builder definition.
+   * Getting all defined fields in builder definition.
    *
-   * @return list of fields with type {@code org.javahelpers.simple.builders.internal.dtos.FieldDto}
+   * @return list of fields
    */
   public List<FieldDto> getSetterFieldsForBuilder() {
     return fields;
@@ -200,96 +158,6 @@ public class BuilderDefinitionDto {
   }
 
   /**
-   * Adds a generic parameter definition.
-   *
-   * @param generic the generic parameter to add
-   */
-  public void addGeneric(GenericParameterDto generic) {
-    generics.add(generic);
-  }
-
-  /**
-   * Returns the list of generic parameters of the target DTO, in declared order.
-   *
-   * @return the list of generic parameters
-   */
-  public List<GenericParameterDto> getGenerics() {
-    return generics;
-  }
-
-  /**
-   * Returns the list of nested types (interfaces or classes) to be generated inside the builder.
-   *
-   * @return the list of nested types
-   */
-  public List<NestedTypeDto> getNestedTypes() {
-    return nestedTypes;
-  }
-
-  /**
-   * Adds a nested type definition to the builder.
-   *
-   * @param nestedType the nested type to add
-   */
-  public void addNestedType(NestedTypeDto nestedType) {
-    this.nestedTypes.add(nestedType);
-  }
-
-  /**
-   * Returns the list of core builder methods.
-   *
-   * @return the list of core methods
-   */
-  public List<MethodDto> getCoreMethods() {
-    return coreMethods;
-  }
-
-  /**
-   * Adds a core method to be generated in the builder.
-   *
-   * @param method the core method to add
-   */
-  public void addCoreMethod(MethodDto method) {
-    this.coreMethods.add(method);
-  }
-
-  /**
-   * Returns the set of class-level annotations.
-   *
-   * @return the set of class annotations (unique, no duplicates)
-   */
-  public Set<AnnotationDto> getClassAnnotations() {
-    return classAnnotations;
-  }
-
-  /**
-   * Adds a class-level annotation to be generated in the builder.
-   *
-   * @param annotation the class annotation to add
-   */
-  public void addClassAnnotation(AnnotationDto annotation) {
-    this.classAnnotations.add(annotation);
-  }
-
-  /**
-   * Returns the set of interfaces to be implemented by the builder.
-   *
-   * @return the set of interfaces (unique, no duplicates)
-   */
-  public Set<InterfaceName> getInterfaces() {
-    return interfaces;
-  }
-
-  /**
-   * Adds an interface to be implemented by the builder.
-   *
-   * @param interfaceType the interface to add
-   */
-  public void addInterface(InterfaceName interfaceType) {
-    this.interfaces.add(interfaceType);
-  }
-
-  /**
    * Returns the configuration for builder generation.
    *
    * @return the builder configuration
@@ -305,23 +173,5 @@ public class BuilderDefinitionDto {
    */
   public void setConfiguration(BuilderConfiguration configuration) {
     this.configuration = configuration;
-  }
-
-  /**
-   * Returns the class-level JavaDoc for the generated builder.
-   *
-   * @return the class JavaDoc, or null if not set
-   */
-  public JavadocDto getClassJavadoc() {
-    return classJavadoc;
-  }
-
-  /**
-   * Sets the class-level JavaDoc for the generated builder.
-   *
-   * @param classJavadoc the class JavaDoc to set
-   */
-  public void setClassJavadoc(JavadocDto classJavadoc) {
-    this.classJavadoc = classJavadoc;
   }
 }

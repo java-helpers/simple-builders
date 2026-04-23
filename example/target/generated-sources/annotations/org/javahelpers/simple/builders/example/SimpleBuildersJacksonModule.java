@@ -5,11 +5,11 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 
 public class SimpleBuildersJacksonModule extends SimpleModule {
 
-  @JsonDeserialize(builder = JacksonIntegrationDtoBuilder.class)
-  private interface JacksonIntegrationDtoMixin {
-  }
-
   public SimpleBuildersJacksonModule() {
     setMixInAnnotation(JacksonIntegrationDto.class, JacksonIntegrationDtoMixin.class);
+  }
+
+  @JsonDeserialize(builder = JacksonIntegrationDtoBuilder.class)
+  private interface JacksonIntegrationDtoMixin {
   }
 }

@@ -23,6 +23,7 @@
  */
 package org.javahelpers.simple.builders.processor.generators.builder;
 
+import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
 import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
 import org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil;
@@ -113,7 +114,7 @@ public class WithInterfaceEnhancer implements BuilderEnhancer {
     NestedTypeDto withInterface = new NestedTypeDto();
     withInterface.setTypeName("With");
     withInterface.setKind(NestedTypeDto.NestedTypeKind.INTERFACE);
-    withInterface.setPublic(true);
+    withInterface.setVisibility(AccessModifier.PUBLIC);
     withInterface.setJavadoc(
         new JavadocDto(
             "Interface that can be implemented by the DTO to provide fluent modification methods."));

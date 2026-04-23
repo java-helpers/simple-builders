@@ -28,8 +28,8 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
-import javax.lang.model.element.Modifier;
 import org.apache.commons.lang3.StringUtils;
+import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.type.GenericParameterDto;
@@ -44,7 +44,7 @@ public class MethodDto {
   public static final int PRIORITY_LOW = 60; // Specialized consumers
 
   /** Access modifier for method. */
-  private Optional<Modifier> modifier = Optional.empty();
+  private Optional<AccessModifier> modifier = Optional.empty();
 
   /** Whether the method is static. */
   private boolean isStatic = false;
@@ -185,6 +185,15 @@ public class MethodDto {
   }
 
   /**
+   * Checks if the constructor has a code block.
+   *
+   * @return true if the constructor has a code block, false otherwise
+   */
+  public boolean hasCode() {
+    return methodCodeDto.hasCode();
+  }
+
+  /**
    * Getting name of method.
    *
    * @return name with type {@code java.lang.String}
@@ -252,19 +261,18 @@ public class MethodDto {
   /**
    * Getting the access modifier for method. Optional for usage in stream-notation.
    *
-   * @return modifier {@code java.util.Optional} access modifier of type {@code
-   *     javax.lang.model.element.Modifier}
+   * @return modifier {@code java.util.Optional} access modifier of type {@code AccessModifier}
    */
-  public Optional<Modifier> getModifier() {
+  public Optional<AccessModifier> getModifier() {
     return modifier;
   }
 
   /**
    * Sets the access modifier for method.
    *
-   * @param modifier access modifier of type {@code javax.lang.model.element.Modifier}
+   * @param modifier access modifier of type {@code AccessModifier}
    */
-  public void setModifier(Modifier modifier) {
+  public void setModifier(AccessModifier modifier) {
     this.modifier = Optional.ofNullable(modifier);
   }
 

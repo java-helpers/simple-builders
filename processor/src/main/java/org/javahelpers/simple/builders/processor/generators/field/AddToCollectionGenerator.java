@@ -146,7 +146,7 @@ public class AddToCollectionGenerator implements MethodGenerator {
     parameter.setParameterTypeName(elementType);
     methodDto.addParameter(parameter);
 
-    setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
+    methodDto.setModifier(getMethodAccessModifier(context));
 
     String collectionImpl;
     TypeName collectionVarType;
@@ -172,11 +172,14 @@ public class AddToCollectionGenerator implements MethodGenerator {
         this.$fieldName:N = $builderFieldWrapper:T.changedValue(newCollection);
         return this;
         """);
+    TypeName collectionImplType = new TypeName("java.util", collectionImpl);
+
     methodDto.addArgument("collectionVarType", collectionVarType);
-    methodDto.addArgument("collectionImpl", new TypeName("java.util", collectionImpl));
+    methodDto.addArgument("collectionImpl", collectionImplType);
     methodDto.addArgument("fieldName", fieldNameInBuilder);
     methodDto.addArgument("elementType", elementType);
     methodDto.addArgument("builderFieldWrapper", TRACKED_VALUE_TYPE);
+    methodDto.getMethodCodeDto().addCodeBlockImport(collectionImplType);
     methodDto.setPriority(MethodDto.PRIORITY_MEDIUM);
 
     methodDto.setJavadoc(

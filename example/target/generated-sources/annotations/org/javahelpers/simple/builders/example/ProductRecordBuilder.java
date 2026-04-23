@@ -51,10 +51,6 @@ public class ProductRecordBuilder implements IBuilderBase<ProductRecord> {
   public ProductRecordBuilder(ProductRecord instance) {
     this.name = initialValue(instance.name());
     this.price = initialValue(instance.price());
-    if (this.price.value() == null) {
-      throw new IllegalArgumentException(
-          "Cannot initialize builder from instance: field 'price' is marked as non-null but source object has null value");
-    }
     this.category = initialValue(instance.category());
   }
 

@@ -132,14 +132,20 @@ public class ArrayBuilderConsumerGenerator implements MethodGenerator {
     MethodDto methodDto =
         new MethodDto(generateBuilderMethodName(fieldName, context), returnBuilderType);
     methodDto.addParameter(parameter);
-    setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
+    methodDto.setModifier(getMethodAccessModifier(context));
     methodDto.setCode(
         """
-        $helperType:T builder = this.$fieldName:N.isSet() ? new $helperType:T(java.util.List.of(this.$fieldName:N.value())) : new $helperType:T();
+        $helperType:T builder = this.$fieldName:N.isSet()
+          ? new $helperType:T(java.util.List.of(this.$fieldName:N.value()))
+          : new $helperType:T();
         $dtoMethodParam:N.accept(builder);
         this.$fieldName:N = $builderFieldWrapper:T.changedValue(builder.build().toArray(new $elementType:T[0]));
         return this;
         """);
+
+    // Add code block import for java.util.List.of
+    methodDto.getMethodCodeDto().addCodeBlockImport(List.class);
+
     methodDto.addArgument("fieldName", fieldNameInBuilder);
     methodDto.addArgument("dtoMethodParam", parameter.getParameterName());
     methodDto.addArgument("helperType", builderTypeGeneric);

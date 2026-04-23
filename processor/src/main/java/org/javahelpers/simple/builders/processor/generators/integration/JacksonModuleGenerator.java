@@ -31,10 +31,16 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import org.apache.commons.collections4.SetValuedMap;
 import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
+import org.javahelpers.simple.builders.core.enums.AccessModifier;
+import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
-import org.javahelpers.simple.builders.processor.model.integration.JacksonModuleDefinitionDto;
+import org.javahelpers.simple.builders.processor.model.core.GenerationTargetClassDto;
 import org.javahelpers.simple.builders.processor.model.integration.JacksonModuleEntryDto;
+import org.javahelpers.simple.builders.processor.model.method.ConstructorDto;
+import org.javahelpers.simple.builders.processor.model.method.MethodCodeDto;
+import org.javahelpers.simple.builders.processor.model.type.NestedTypeDto;
+import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.ProcessingLogger;
 
 /**
@@ -44,6 +50,14 @@ import org.javahelpers.simple.builders.processor.processing.ProcessingLogger;
  * {@code @JsonDeserialize(builder = ...)}. One module is generated per target package.
  */
 public class JacksonModuleGenerator {
+
+  /** Simple name of the generated Jackson module class. */
+  public static final String MODULE_CLASS_NAME = "SimpleBuildersJacksonModule";
+
+  private static final TypeName SIMPLE_MODULE_TYPE =
+      new TypeName("com.fasterxml.jackson.databind.module", "SimpleModule");
+  private static final TypeName JSON_DESERIALIZE_TYPE =
+      new TypeName("com.fasterxml.jackson.databind.annotation", "JsonDeserialize");
 
   private final ProcessingEnvironment processingEnv;
   private final ProcessingLogger logger;
@@ -109,14 +123,17 @@ public class JacksonModuleGenerator {
   }
 
   /**
-   * Returns the definitions for the Jackson Modules to be generated.
+   * Returns the fully-built target class definitions for the Jackson Modules to be generated.
+   *
+   * <p>Collected entries are assembled into generic {@link GenerationTargetClassDto} instances
+   * ready to be rendered by the shared {@code RoasterCodeGenerator.generateClass} pipeline.
    *
    * <p>Logs status and clears state after retrieval.
    *
-   * @return list of JacksonModuleDefinitionDto
+   * @return list of target class definitions, one per package
    */
-  public List<JacksonModuleDefinitionDto> getModuleDefinitions() {
-    List<JacksonModuleDefinitionDto> definitions = new ArrayList<>();
+  public List<GenerationTargetClassDto> getModuleDefinitions() {
+    List<GenerationTargetClassDto> definitions = new ArrayList<>();
     if (!entriesByPackage.isEmpty()) {
       logger.info(
           "simple-builders: Processing OVER. JacksonModuleEnabled: true, Packages: %d",
@@ -124,13 +141,71 @@ public class JacksonModuleGenerator {
 
       for (String packageName : entriesByPackage.keySet()) {
         Set<JacksonModuleEntryDto> moduleEntries = entriesByPackage.get(packageName);
-        JacksonModuleDefinitionDto definition = new JacksonModuleDefinitionDto(packageName);
-        definition.addAllEntries(moduleEntries);
-        definitions.add(definition);
+        definitions.add(buildTargetClass(packageName, moduleEntries));
       }
     }
     clear();
     return definitions;
+  }
+
+  /**
+   * Builds a generic {@link GenerationTargetClassDto} for the Jackson module of the given package.
+   *
+   * @param packageName target package of the generated module class
+   * @param entries DTO/builder type pairs to register as mixins
+   * @return a fully populated class definition ready for code generation
+   */
+  private GenerationTargetClassDto buildTargetClass(
+      String packageName, Set<JacksonModuleEntryDto> entries) {
+    GenerationTargetClassDto classDef = new GenerationTargetClassDto();
+    classDef.setTypeName(new TypeName(packageName, MODULE_CLASS_NAME));
+    classDef.setClassAccessModifier(AccessModifier.PUBLIC);
+    classDef.setSuperType(SIMPLE_MODULE_TYPE);
+
+    // Each entry becomes a private nested mixin interface annotated with @JsonDeserialize.
+    for (JacksonModuleEntryDto entry : entries) {
+      classDef.addNestedType(createMixinInterface(entry));
+      // The builder type appears as a literal in the @JsonDeserialize(builder = ...) member
+      // and therefore must be imported explicitly.
+      classDef.addImport(entry.builderType());
+    }
+
+    classDef.addConstructor(createConstructor(entries));
+
+    return classDef;
+  }
+
+  private static NestedTypeDto createMixinInterface(JacksonModuleEntryDto entry) {
+    NestedTypeDto mixin = new NestedTypeDto();
+    mixin.setTypeName(entry.dtoType().getClassName() + "Mixin");
+    mixin.setKind(NestedTypeDto.NestedTypeKind.INTERFACE);
+    mixin.setVisibility(AccessModifier.PRIVATE);
+
+    AnnotationDto jsonDeserialize = new AnnotationDto();
+    jsonDeserialize.setAnnotationType(JSON_DESERIALIZE_TYPE);
+    jsonDeserialize.addMember("builder", entry.builderType().getClassName() + ".class");
+    mixin.addAnnotation(jsonDeserialize);
+
+    return mixin;
+  }
+
+  private static ConstructorDto createConstructor(Set<JacksonModuleEntryDto> entries) {
+    ConstructorDto constructor = new ConstructorDto();
+    constructor.setVisibility(AccessModifier.PUBLIC);
+
+    MethodCodeDto code = new MethodCodeDto();
+    int index = 0;
+    for (JacksonModuleEntryDto entry : entries) {
+      String dtoLabel = "dto" + index;
+      String mixinLabel = "mixin" + index;
+      code.addArgument(dtoLabel, entry.dtoType());
+      code.addArgument(mixinLabel, entry.dtoType().getClassName() + "Mixin");
+      code.append("setMixInAnnotation($%s:T.class, $%s:L.class);", dtoLabel, mixinLabel);
+      index++;
+    }
+
+    constructor.setMethodCodeDto(code);
+    return constructor;
   }
 
   private void clear() {

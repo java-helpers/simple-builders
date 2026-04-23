@@ -27,8 +27,8 @@ package org.javahelpers.simple.builders.processor.generators.util;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
-import javax.lang.model.element.Modifier;
 import org.apache.commons.lang3.StringUtils;
+import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
@@ -90,25 +90,13 @@ public final class MethodGeneratorUtil {
   }
 
   /**
-   * Gets the method access modifier from the builder configuration.
+   * Gets the access modifier for methods from the processing context.
    *
    * @param context the processing context
-   * @return the Modifier for method access, or null for package-private
+   * @return the AccessModifier for method access, or null for package-private
    */
-  public static Modifier getMethodAccessModifier(ProcessingContext context) {
-    return JavaLangMapper.mapAccessModifier(context.getConfiguration().getMethodAccess());
-  }
-
-  /**
-   * Sets the access modifier on a MethodDto if the modifier is not null.
-   *
-   * @param method the MethodDto to update
-   * @param modifier the access modifier to set, or null for package-private
-   */
-  public static void setMethodAccessModifier(MethodDto method, Modifier modifier) {
-    if (modifier != null) {
-      method.setModifier(modifier);
-    }
+  public static AccessModifier getMethodAccessModifier(ProcessingContext context) {
+    return context.getConfiguration().getMethodAccess();
   }
 
   /**
@@ -167,7 +155,7 @@ public final class MethodGeneratorUtil {
         new MethodDto(
             generateBuilderMethodName(field.getOriginalFieldName(), context), builderType);
     methodDto.addParameter(parameter);
-    setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
+    methodDto.setModifier(getMethodAccessModifier(context));
 
     String params;
     if (StringUtils.isBlank(transform)) {
@@ -224,13 +212,15 @@ public final class MethodGeneratorUtil {
         new MethodDto(
             generateBuilderMethodName(field.getOriginalFieldName(), context), parentBuilderType);
     methodDto.addParameter(parameter);
-    setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
+    methodDto.setModifier(getMethodAccessModifier(context));
 
     String buildExpression = calculateBuildExpression(field.getFieldType());
 
     methodDto.setCode(
         """
-        $helperType:T builder = this.$fieldName:N.isSet() ? new $helperType:T(%s) : new $helperType:T(%s);
+        $helperType:T builder = this.$fieldName:N.isSet()
+          ? new $helperType:T(%s)
+          : new $helperType:T(%s);
         $dtoMethodParam:N.accept(builder);
         this.$fieldName:N = $builderFieldWrapper:T.changedValue($buildExpression:N);
         return this;
@@ -359,11 +349,13 @@ public final class MethodGeneratorUtil {
         new MethodDto(
             generateBuilderMethodName(field.getOriginalFieldName(), context), builderType);
     methodDto.addParameter(parameter);
-    setMethodAccessModifier(methodDto, getMethodAccessModifier(context));
+    methodDto.setModifier(getMethodAccessModifier(context));
 
     methodDto.setCode(
         """
-        $helperType:T consumer = this.$fieldName:N.isSet() ? this.$fieldName:N.value() : new $helperType:T();
+        $helperType:T consumer = this.$fieldName:N.isSet()
+          ? this.$fieldName:N.value()
+          : new $helperType:T();
         $dtoMethodParam:N.accept(consumer);
         this.$fieldName:N = $builderFieldWrapper:T.changedValue(consumer);
         return this;

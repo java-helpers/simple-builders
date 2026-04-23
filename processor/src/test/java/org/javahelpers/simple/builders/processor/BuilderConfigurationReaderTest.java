@@ -463,8 +463,6 @@ class BuilderConfigurationReaderTest {
         import static org.javahelpers.simple.builders.core.util.TrackedValue.unsetValue;
 
         import java.util.List;
-        import java.util.function.Consumer;
-        import java.util.function.Supplier;
         import org.apache.commons.lang3.builder.ToStringBuilder;
         import org.javahelpers.simple.builders.core.interfaces.IBuilderBase;
         import org.javahelpers.simple.builders.core.util.BuilderToStringStyle;
