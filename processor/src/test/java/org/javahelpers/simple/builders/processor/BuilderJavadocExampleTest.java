@@ -1,0 +1,461 @@
+/*
+ * MIT License
+ *
+ * Copyright (c) 2026 Andreas Igel
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.javahelpers.simple.builders.processor;
+
+import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.assertGenerationSucceeded;
+import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils.loadGeneratedSource;
+
+import com.google.testing.compile.Compilation;
+import javax.tools.JavaFileObject;
+import org.javahelpers.simple.builders.processor.testing.ProcessorAsserts;
+import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
+import org.junit.jupiter.api.Test;
+
+/**
+ * Tests that verify the field-specific code examples added to the generated builder javadoc.
+ *
+ * <p>Two levels are covered:
+ *
+ * <ul>
+ *   <li>Class-level javadoc: a single "kitchen-sink" chain that invokes every generated method
+ *       (basic setter + supplier + collection helpers + list consumer + ...) on sample values so
+ *       users see the full feature catalogue at a glance.
+ *   <li>Method-level javadoc: each generated method has its own, method-specific example block
+ *       showing exactly how to invoke that single method.
+ * </ul>
+ *
+ * <p>Assertions use exact javadoc text blocks (whitespace-normalized) so both the presence and the
+ * relative ordering of lines is verified in a single substring match.
+ */
+class BuilderJavadocExampleTest {
+
+  protected Compilation compile(JavaFileObject... sourceFiles) {
+    return ProcessorTestUtils.createCompiler().compile(sourceFiles);
+  }
+
+  @Test
+  void shouldGenerateClassJavadocExampleWithKitchenSinkChain() {
+    // Given: a DTO with fields covering basic setter, supplier and list helpers
+    String packageName = "test";
+    String className = "BookDto";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject dto =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private String title;
+                private int pages;
+                private java.util.List<String> tags;
+
+                public String getTitle() { return title; }
+                public void setTitle(String title) { this.title = title; }
+                public int getPages() { return pages; }
+                public void setPages(int pages) { this.pages = pages; }
+                public java.util.List<String> getTags() { return tags; }
+                public void setTags(java.util.List<String> tags) { this.tags = tags; }
+            """);
+
+    // When
+    Compilation compilation = compile(dto);
+
+    // Then
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    // The generated class javadoc must contain the full kitchen-sink chain,
+    // with fields in DTO declaration order (title, pages, tags) and within each
+    // field the generator lines in priority order (BasicSetter=100, Supplier=60,
+    // ListConsumer=53, AddToCollection=30).
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        """
+        * <h4>Example:</h4>
+        * <pre>{@code
+        * BookDto result = BookDtoBuilder.create()
+        *     .title("example value")
+        *     .titleSupplier(() -> "example value")
+        *     .pages(42)
+        *     .pagesSupplier(() -> 42)
+        *     .tags(List.of("example value"))
+        *     .tagsSupplier(() -> List.of("example value"))
+        *     .tags(t -> t.add("example value"))
+        *     .add2Tags("example value")
+        *     .build();
+        * }</pre>
+        """);
+  }
+
+  @Test
+  void shouldGenerateMethodJavadocExampleForBasicStringSetter() {
+    String packageName = "test";
+    String className = "Person";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject dto =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private String teamname;
+                public String getTeamname() { return teamname; }
+                public void setTeamname(String teamname) { this.teamname = teamname; }
+            """);
+
+    Compilation compilation = compile(dto);
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    // Expected method javadoc for the basic setter (description + example + tags)
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        """
+        * Sets the value for <code>teamname</code>.
+        * <h4>Example:</h4>
+        * <pre>{@code
+        * builder.teamname("example value");
+        * }</pre>
+        * @param teamname teamname
+        * @return current instance of builder
+        */
+        public PersonBuilder teamname(String teamname)
+        """);
+  }
+
+  @Test
+  void shouldGenerateMethodJavadocExampleForPrimitiveSetter() {
+    String packageName = "test";
+    String className = "Counter";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject dto =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private int amount;
+                public int getAmount() { return amount; }
+                public void setAmount(int amount) { this.amount = amount; }
+            """);
+
+    Compilation compilation = compile(dto);
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        """
+        * Sets the value for <code>amount</code>.
+        * <h4>Example:</h4>
+        * <pre>{@code
+        * builder.amount(42);
+        * }</pre>
+        * @param amount amount
+        * @return current instance of builder
+        */
+        public CounterBuilder amount(int amount)
+        """);
+  }
+
+  @Test
+  void shouldGenerateMethodJavadocExampleForSupplier() {
+    String packageName = "test";
+    String className = "SupplierDto";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject dto =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private String title;
+                public String getTitle() { return title; }
+                public void setTitle(String title) { this.title = title; }
+            """);
+
+    Compilation compilation = compile(dto);
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        """
+        * <h4>Example:</h4>
+        * <pre>{@code
+        * builder.titleSupplier(() -> "example value");
+        * }</pre>
+        """);
+  }
+
+  @Test
+  void shouldGenerateMethodJavadocExampleForAddToCollection() {
+    String packageName = "test";
+    String className = "TagsDto";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject dto =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private java.util.List<String> tags;
+                public java.util.List<String> getTags() { return tags; }
+                public void setTags(java.util.List<String> tags) { this.tags = tags; }
+            """);
+
+    Compilation compilation = compile(dto);
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        """
+        * Adds a single element to <code>tags</code>.
+        * <h4>Example:</h4>
+        * <pre>{@code
+        * builder.add2Tags("example value");
+        * }</pre>
+        * @param element the element to add
+        * @return current instance of builder
+        */
+        public TagsDtoBuilder add2Tags(String element)
+        """);
+  }
+
+  @Test
+  void shouldGenerateMethodJavadocExampleForListConsumer() {
+    String packageName = "test";
+    String className = "ListDto";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject dto =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private java.util.List<String> tags;
+                public java.util.List<String> getTags() { return tags; }
+                public void setTags(java.util.List<String> tags) { this.tags = tags; }
+            """);
+
+    Compilation compilation = compile(dto);
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        """
+        * <h4>Example:</h4>
+        * <pre>{@code
+        * builder.tags(t -> t.add("example value"));
+        * }</pre>
+        """);
+  }
+
+  @Test
+  void shouldGenerateMethodJavadocExampleForCreate() {
+    String packageName = "test";
+    String className = "CreateDto";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject dto =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private String name;
+                public String getName() { return name; }
+                public void setName(String name) { this.name = name; }
+            """);
+
+    Compilation compilation = compile(dto);
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        """
+        * <h4>Example:</h4>
+        * <pre>{@code
+        * CreateDtoBuilder builder = CreateDtoBuilder.create();
+        * }</pre>
+        """);
+  }
+
+  @Test
+  void shouldGenerateMethodJavadocExampleForBuild() {
+    String packageName = "test";
+    String className = "BuildDto";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject dto =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private String name;
+                public String getName() { return name; }
+                public void setName(String name) { this.name = name; }
+            """);
+
+    Compilation compilation = compile(dto);
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        """
+        * <h4>Example:</h4>
+        * <pre>{@code
+        * BuildDto result = builder.build();
+        * }</pre>
+        """);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Negative cases: no example emitted when placeholder value is unresolvable
+  // and empty code blocks must not be rendered at all.
+  // ---------------------------------------------------------------------------
+
+  @Test
+  void shouldOmitExampleBlockWhenFieldTypeHasNoDefaultValue() {
+    // Given: field with a reference type that has no entry in JavadocExampleValues
+    // and no @SimpleBuilder on the helper type -> no example value available.
+    String packageName = "test";
+    String className = "UnknownTypeDto";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject dto =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private HelperPlain helper;
+                public HelperPlain getHelper() { return helper; }
+                public void setHelper(HelperPlain helper) { this.helper = helper; }
+            """);
+
+    JavaFileObject helper =
+        ProcessorTestUtils.forSource(
+            """
+                package test;
+                public class HelperPlain { public HelperPlain() {} }
+            """);
+
+    Compilation compilation = compile(dto, helper);
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    // The basic setter must still be generated,
+    // but the method javadoc must NOT contain any example block:
+    // neither a bogus "builder.helper(null)" line
+    // nor an empty "<pre>{@code ... }</pre>" block.
+    ProcessorAsserts.assertContaining(generatedCode, "public UnknownTypeDtoBuilder helper(");
+    ProcessorAsserts.assertNotContaining(
+        generatedCode,
+        // no example line falling back to `null`
+        "builder.helper(null)",
+        // no empty example block either
+        "<pre>{@code\n}</pre>",
+        "<pre>{@code }</pre>",
+        "<pre>{@code}</pre>");
+  }
+
+  @Test
+  void shouldOmitClassExampleLineForUnresolvableField() {
+    // Given: a DTO with both a resolvable field and an unresolvable field.
+    // The class-level kitchen-sink chain must include ONLY the resolvable field.
+    String packageName = "test";
+    String className = "MixedDto";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject dto =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private String title;
+                private HelperPlain helper;
+                public String getTitle() { return title; }
+                public void setTitle(String title) { this.title = title; }
+                public HelperPlain getHelper() { return helper; }
+                public void setHelper(HelperPlain helper) { this.helper = helper; }
+            """);
+
+    JavaFileObject helper =
+        ProcessorTestUtils.forSource(
+            """
+                package test;
+                public class HelperPlain { public HelperPlain() {} }
+            """);
+
+    Compilation compilation = compile(dto, helper);
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    // Class-level example contains ONLY the resolvable field's lines
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        """
+        * <h4>Example:</h4>
+        * <pre>{@code
+        * MixedDto result = MixedDtoBuilder.create()
+        *     .title("example value")
+        *     .titleSupplier(() -> "example value")
+        *     .build();
+        * }</pre>
+        """);
+
+    // ...but NO `.helper(...)` line in the class example chain
+    ProcessorAsserts.assertNotContaining(generatedCode, ".helper(null)", ".helper(\"");
+  }
+
+  @Test
+  void shouldNotRenderEmptyJavadocExampleBlocks() {
+    // Sanity guard: no generated method should ever contain an empty example block.
+    String packageName = "test";
+    String className = "NoEmptyDto";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject dto =
+        ProcessorTestUtils.simpleBuilderClass(
+            packageName,
+            className,
+            """
+                private String name;
+                public String getName() { return name; }
+                public void setName(String name) { this.name = name; }
+            """);
+
+    Compilation compilation = compile(dto);
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    // Degenerate empty blocks must never appear.
+    ProcessorAsserts.assertNotContaining(
+        generatedCode, "<pre>{@code\n}</pre>", "<pre>{@code }</pre>", "<pre>{@code}</pre>");
+  }
+}
