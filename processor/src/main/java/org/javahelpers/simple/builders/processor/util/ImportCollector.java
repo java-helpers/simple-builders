@@ -158,17 +158,25 @@ public class ImportCollector {
         .flatMap(field -> field.getFieldTypeImports().stream())
         .forEach(this::addImport);
 
-    // Add constructor imports
-    classDef
-        .getConstructors()
-        .forEach(
-            constructor -> {
-              constructor.getParameters().forEach(this::addParameterImports);
-              constructor.getMethodCodeDto().getCodeBlockImports().forEach(this::addImport);
-            });
+    // Add constructor parameter imports
+    classDef.getConstructors().stream()
+        .flatMap(constructor -> constructor.getParameters().stream())
+        .forEach(this::addParameterImports);
 
-    // Nested types are part of the same class and don't need imports
-    // (e.g., the "With" interface is nested within the builder class)
+    // Add constructor code block imports
+    classDef.getConstructors().stream()
+        .flatMap(constructor -> constructor.getMethodCodeDto().getCodeBlockImports().stream())
+        .forEach(this::addImport);
+
+    // Add nested-type annotation imports
+    classDef.getNestedTypes().stream()
+        .flatMap(nested -> nested.getAnnotations().stream())
+        .forEach(this::addAnnotationImports);
+
+    // Add nested-type method imports
+    classDef.getNestedTypes().stream()
+        .flatMap(nested -> nested.getMethods().stream())
+        .forEach(this::addMethodImports);
 
     // Add method imports
     classDef.getMethods().forEach(this::addMethodImports);
