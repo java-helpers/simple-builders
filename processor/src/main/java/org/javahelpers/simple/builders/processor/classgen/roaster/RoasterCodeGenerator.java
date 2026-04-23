@@ -300,11 +300,8 @@ public class RoasterCodeGenerator {
             ? source.addNestedType(JavaInterfaceSource.class)
             : source.addNestedType(JavaClassSource.class);
     nestedSource.setName(nestedType.getTypeName());
-    if (nestedType.isPublic()) {
-      nestedSource.setPublic();
-    } else {
-      nestedSource.setPackagePrivate();
-    }
+    applyVisibility(nestedSource, nestedType.getVisibility());
+    applyAnnotations(nestedSource, nestedType.getAnnotations());
     applyJavadoc(nestedSource, nestedType.getJavadoc());
     boolean isInterface = nestedType.getKind() == NestedTypeDto.NestedTypeKind.INTERFACE;
     for (MethodDto methodDto : nestedType.getMethods()) {
