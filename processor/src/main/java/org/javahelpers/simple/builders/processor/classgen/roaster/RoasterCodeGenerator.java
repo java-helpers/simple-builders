@@ -483,15 +483,6 @@ public class RoasterCodeGenerator {
     applyAnnotations(parameter, paramDto.getAnnotations());
   }
 
-  private Set<ImportStatement> collectImports(GenerationTargetClassDto classDef) {
-    ImportCollector collector = new ImportCollector(classDef.getTypeName());
-
-    // ImportCollector handles all import extraction from the DTO
-    collector.collectImports(classDef);
-
-    return collector.getSortedImports();
-  }
-
   private String formatSource(String rawSource) {
     if (formatterProperties.isEmpty()) {
       return rawSource;
