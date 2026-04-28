@@ -94,16 +94,15 @@ class BuilderJavadocExampleTest {
         generatedCode,
         """
         * <h4>Example:</h4>
+        *
         * <pre>{@code
         * BookDto result = BookDtoBuilder.create()
-        *     .title("example value")
-        *     .titleSupplier(() -> "example value")
         *     .pages(42)
-        *     .pagesSupplier(() -> 42)
-        *     .tags(List.of("example value"))
-        *     .tagsSupplier(() -> List.of("example value"))
+        *     .pages(() -> 42)
         *     .tags(t -> t.add("example value"))
         *     .add2Tags("example value")
+        *     .title("example value")
+        *     .title(() -> "example value")
         *     .build();
         * }</pre>
         """);
@@ -134,10 +133,13 @@ class BuilderJavadocExampleTest {
         generatedCode,
         """
         * Sets the value for <code>teamname</code>.
+        *
         * <h4>Example:</h4>
+        *
         * <pre>{@code
         * builder.teamname("example value");
         * }</pre>
+        *
         * @param teamname teamname
         * @return current instance of builder
         */
@@ -169,10 +171,13 @@ class BuilderJavadocExampleTest {
         generatedCode,
         """
         * Sets the value for <code>amount</code>.
+        *
         * <h4>Example:</h4>
+        *
         * <pre>{@code
         * builder.amount(42);
         * }</pre>
+        *
         * @param amount amount
         * @return current instance of builder
         */
@@ -204,8 +209,9 @@ class BuilderJavadocExampleTest {
         generatedCode,
         """
         * <h4>Example:</h4>
+        *
         * <pre>{@code
-        * builder.titleSupplier(() -> "example value");
+        * builder.title(() -> "example value");
         * }</pre>
         """);
   }
@@ -234,10 +240,13 @@ class BuilderJavadocExampleTest {
         generatedCode,
         """
         * Adds a single element to <code>tags</code>.
+        *
         * <h4>Example:</h4>
+        *
         * <pre>{@code
         * builder.add2Tags("example value");
         * }</pre>
+        *
         * @param element the element to add
         * @return current instance of builder
         */
@@ -269,6 +278,7 @@ class BuilderJavadocExampleTest {
         generatedCode,
         """
         * <h4>Example:</h4>
+        *
         * <pre>{@code
         * builder.tags(t -> t.add("example value"));
         * }</pre>
@@ -299,6 +309,7 @@ class BuilderJavadocExampleTest {
         generatedCode,
         """
         * <h4>Example:</h4>
+        *
         * <pre>{@code
         * CreateDtoBuilder builder = CreateDtoBuilder.create();
         * }</pre>
@@ -329,6 +340,7 @@ class BuilderJavadocExampleTest {
         generatedCode,
         """
         * <h4>Example:</h4>
+        *
         * <pre>{@code
         * BuildDto result = builder.build();
         * }</pre>
@@ -416,20 +428,12 @@ class BuilderJavadocExampleTest {
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
 
-    // Class-level example contains ONLY the resolvable field's lines
     ProcessorAsserts.assertContaining(
         generatedCode,
-        """
-        * <h4>Example:</h4>
-        * <pre>{@code
-        * MixedDto result = MixedDtoBuilder.create()
-        *     .title("example value")
-        *     .titleSupplier(() -> "example value")
-        *     .build();
-        * }</pre>
-        """);
+        "MixedDto result = MixedDtoBuilder.create().title(\"example value\")"
+            + ".title(() -> \"example value\").build();");
 
-    // ...but NO `.helper(...)` line in the class example chain
+    // ...but NO `.helper(...)` call in the class example chain
     ProcessorAsserts.assertNotContaining(generatedCode, ".helper(null)", ".helper(\"");
   }
 

@@ -32,6 +32,7 @@ import org.javahelpers.simple.builders.processor.generators.util.MethodGenerator
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+import org.javahelpers.simple.builders.processor.model.javadoc.JavadocCodeBlockDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 import org.javahelpers.simple.builders.processor.model.type.GenericParameterDto;
@@ -197,7 +198,15 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
     method.addArgument("dtoBaseType", builderDto.getBuildingTargetTypeName());
     method.addArgument("buildResultType", returnType);
     method.getMethodCodeDto().addCodeBlockImport(IllegalStateException.class);
-    method.setJavadoc(new JavadocDto("Builds the configured DTO instance."));
+    JavadocDto javadoc = new JavadocDto("Builds the configured DTO instance.");
+
+    // Add example to build() method
+    JavadocCodeBlockDto exampleBlock = new JavadocCodeBlockDto();
+    String targetSimpleName = builderDto.getBuildingTargetTypeName().getClassName();
+    exampleBlock.setCodeFormat("%s result = builder.build();".formatted(targetSimpleName));
+    javadoc.addExample(exampleBlock);
+
+    method.setJavadoc(javadoc);
 
     return method;
   }
@@ -228,10 +237,19 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
     method.addArgument("builderType", builderDto.getBuilderTypeName());
 
     String targetFullName = builderDto.getBuildingTargetTypeName().getFullQualifiedName();
+    String builderSimpleName = builderDto.getBuilderTypeName().getClassName();
 
-    method.setJavadoc(
+    JavadocDto javadoc =
         new JavadocDto("Creating a new builder for {@code %s}.", targetFullName)
-            .addReturn("builder for {@code %s}", targetFullName));
+            .addReturn("builder for {@code %s}", targetFullName);
+
+    // Add example to create() method
+    JavadocCodeBlockDto exampleBlock = new JavadocCodeBlockDto();
+    exampleBlock.setCodeFormat(
+        "%s builder = %s.create();".formatted(builderSimpleName, builderSimpleName));
+    javadoc.addExample(exampleBlock);
+
+    method.setJavadoc(javadoc);
 
     return method;
   }

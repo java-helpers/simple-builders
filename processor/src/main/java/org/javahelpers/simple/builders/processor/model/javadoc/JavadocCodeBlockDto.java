@@ -22,9 +22,17 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.model.method;
+package org.javahelpers.simple.builders.processor.model.javadoc;
 
-/** DTO for holding information of code implementation. */
-public class MethodCodeDto extends CodeTemplateDto {
+import org.javahelpers.simple.builders.processor.model.method.CodeTemplateDto;
+
+/**
+ * DTO for holding code example blocks in Javadoc.
+ *
+ * <p>Extends {@link CodeTemplateDto} to reuse the placeholder resolution mechanism for code
+ * examples that appear in Javadoc comments. This allows generators to create code examples with
+ * placeholders that are resolved during code generation.
+ */
+public class JavadocCodeBlockDto extends CodeTemplateDto {
   // All functionality inherited from CodeTemplateDto
 }

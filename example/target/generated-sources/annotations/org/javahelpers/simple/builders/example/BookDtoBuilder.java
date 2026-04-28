@@ -20,6 +20,22 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  * This builder provides a fluent API for creating instances of org.javahelpers.simple.builders.example.BookDto with
  * method chaining and validation. Use the static {@code create()} method to obtain a new builder instance, configure
  * the desired properties using the setter methods, and then call {@code build()} to create the final DTO.
+ * 
+ * <h4>Example:</h4>
+ * 
+ * <pre>{@code
+ * BookDto result = BookDtoBuilder.create()
+ *     .author("example value")
+ *     .available(true)
+ *     .category('x')
+ *     .discount(3.14f)
+ *     .isbn("example value")
+ *     .pages(42)
+ *     .price(3.14)
+ *     .salesCount(42L)
+ *     .title("example value")
+ *     .build();
+ * }</pre>
  */
 public class BookDtoBuilder {
 
@@ -136,6 +152,12 @@ public class BookDtoBuilder {
   /**
    * Creating a new builder for {@code org.javahelpers.simple.builders.example.BookDto}.
    * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * BookDtoBuilder builder = BookDtoBuilder.create();
+   * }</pre>
+   * 
    * @return builder for {@code org.javahelpers.simple.builders.example.BookDto}
    */
   public static BookDtoBuilder create() {
@@ -144,6 +166,12 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>author</code>.
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.author("example value");
+   * }</pre>
    * 
    * @param author the book author to set
    * @return current instance of builder
@@ -156,6 +184,12 @@ public class BookDtoBuilder {
   /**
    * Sets the value for <code>available</code>.
    * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.available(true);
+   * }</pre>
+   * 
    * @param available true if available, false otherwise
    * @return current instance of builder
    */
@@ -167,6 +201,12 @@ public class BookDtoBuilder {
   /**
    * Sets the value for <code>category</code>.
    * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.category('x');
+   * }</pre>
+   * 
    * @param category the category code to set
    * @return current instance of builder
    */
@@ -177,6 +217,12 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>discount</code>.
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.discount(3.14f);
+   * }</pre>
    * 
    * @param discount the discount percentage to set
    * @return current instance of builder
@@ -222,6 +268,12 @@ public class BookDtoBuilder {
   /**
    * Sets the value for <code>isbn</code>.
    * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.isbn("example value");
+   * }</pre>
+   * 
    * @param isbn the ISBN to set
    * @return current instance of builder
    */
@@ -255,6 +307,12 @@ public class BookDtoBuilder {
   /**
    * Sets the value for <code>pages</code>.
    * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.pages(42);
+   * }</pre>
+   * 
    * @param pages the page count to set
    * @return current instance of builder
    */
@@ -265,6 +323,12 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>price</code>.
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.price(3.14);
+   * }</pre>
    * 
    * @param price the book price to set
    * @return current instance of builder
@@ -310,6 +374,12 @@ public class BookDtoBuilder {
   /**
    * Sets the value for <code>salesCount</code>.
    * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.salesCount(42L);
+   * }</pre>
+   * 
    * @param salesCount the sales count to set
    * @return current instance of builder
    */
@@ -342,6 +412,12 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>title</code>.
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.title("example value");
+   * }</pre>
    * 
    * @param title the book title to set
    * @return current instance of builder
@@ -392,6 +468,12 @@ public class BookDtoBuilder {
 
   /**
    * Builds the configured DTO instance.
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * BookDto result = builder.build();
+   * }</pre>
    */
   public BookDto build() {
     if (this.available.isSet() && this.available.value() == null) {

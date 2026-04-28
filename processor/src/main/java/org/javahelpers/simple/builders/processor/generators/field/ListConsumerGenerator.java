@@ -35,6 +35,7 @@ import org.javahelpers.simple.builders.core.builders.ArrayListBuilder;
 import org.javahelpers.simple.builders.core.builders.ArrayListBuilderWithElementBuilders;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+import org.javahelpers.simple.builders.processor.model.javadoc.JavadocCodeBlockDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
@@ -133,6 +134,10 @@ public class ListConsumerGenerator implements MethodGenerator {
       MethodDto method =
           createFieldConsumerWithElementBuilders(
               field, collectionBuilderType, elementBuilderType.get(), builderType, context);
+
+      // Add method-level example for list consumer
+      addExampleToListConsumer(method, field.getOriginalFieldName(), context);
+
       return List.of(method);
     } else if (context.getConfiguration().shouldUseArrayListBuilder()) {
       TypeName arrayListBuilderType = map2TypeName(ArrayListBuilder.class);
@@ -146,9 +151,38 @@ public class ListConsumerGenerator implements MethodGenerator {
               Map.of(),
               builderType,
               context);
+
+      // Add method-level example for list consumer
+      addExampleToListConsumer(method, field.getOriginalFieldName(), context);
+
       return List.of(method);
     }
 
     return Collections.emptyList();
+  }
+
+  /**
+   * Adds method-level example and contributes to class-level example for list consumer methods.
+   *
+   * @param method the method to add the example to
+   * @param fieldName the field name
+   * @param context the processing context
+   */
+  private void addExampleToListConsumer(
+      MethodDto method, String fieldName, ProcessingContext context) {
+    if (method.getJavadoc() != null) {
+      JavadocCodeBlockDto exampleBlock = new JavadocCodeBlockDto();
+      exampleBlock.setCodeFormat(
+          "builder.%s(t -> t.add(\"example value\"));".formatted(method.getMethodName()));
+      method.getJavadoc().addExample(exampleBlock);
+    }
+
+    // Contribute to class-level example
+    if (context.getCurrentBuilderDto() != null) {
+      context
+          .getCurrentBuilderDto()
+          .addClassExampleLine(
+              "    .%s(t -> t.add(\"example value\"))".formatted(method.getMethodName()));
+    }
   }
 }

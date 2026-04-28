@@ -53,6 +53,9 @@ public class JavadocDto {
   /** List of Javadoc tags in the order they appear. */
   private final List<JavadocTagDto> tags = new ArrayList<>();
 
+  /** List of code example blocks for this Javadoc. */
+  private final List<JavadocCodeBlockDto> codeBlocks = new ArrayList<>();
+
   /** Default constructor. */
   public JavadocDto() {
     // Default constructor
@@ -114,6 +117,37 @@ public class JavadocDto {
    */
   public List<JavadocTagDto> getTags() {
     return tags;
+  }
+
+  /**
+   * Gets the list of code example blocks.
+   *
+   * @return the list of code blocks
+   */
+  public List<JavadocCodeBlockDto> getCodeBlocks() {
+    return codeBlocks;
+  }
+
+  /**
+   * Adds a code block to this Javadoc.
+   *
+   * @param codeBlock the code block to add
+   */
+  public void addCodeBlock(JavadocCodeBlockDto codeBlock) {
+    if (codeBlock != null) {
+      codeBlocks.add(codeBlock);
+    }
+  }
+
+  /**
+   * Adds a code example block to this Javadoc.
+   *
+   * <p>This is a convenience method for adding code examples.
+   *
+   * @param codeBlock the code example block to add
+   */
+  public void addExample(JavadocCodeBlockDto codeBlock) {
+    addCodeBlock(codeBlock);
   }
 
   /**
@@ -208,12 +242,12 @@ public class JavadocDto {
   }
 
   /**
-   * Returns whether this Javadoc has any content (description or tags).
+   * Returns whether this Javadoc has any content (description, tags, or code blocks).
    *
-   * @return true if there is description text or at least one tag
+   * @return true if there is description text, at least one tag, or at least one code block
    */
   public boolean hasContent() {
-    return StringUtils.isNotBlank(description) || !tags.isEmpty();
+    return StringUtils.isNotBlank(description) || !tags.isEmpty() || !codeBlocks.isEmpty();
   }
 
   @Override

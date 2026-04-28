@@ -29,10 +29,13 @@ import static org.javahelpers.simple.builders.processor.generators.util.MethodGe
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Supplier;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.generators.util.JavadocConstants;
+import org.javahelpers.simple.builders.processor.generators.util.JavadocExampleValues;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+import org.javahelpers.simple.builders.processor.model.javadoc.JavadocCodeBlockDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
@@ -150,6 +153,23 @@ public class SupplierMethodGenerator implements MethodGenerator {
                 "Sets the value for <code>%s</code> by invoking the provided supplier.", fieldName)
             .addParam(parameterName, "supplier for %s", fieldJavaDoc)
             .addReturn(JavadocConstants.RETURN_BUILDER_INSTANCE));
+
+    // Add method-level example if we have an example value for the field type
+    Optional<String> exampleValue = JavadocExampleValues.getExampleValue(fieldType);
+    if (exampleValue.isPresent()) {
+      JavadocCodeBlockDto exampleBlock = new JavadocCodeBlockDto();
+      exampleBlock.setCodeFormat(
+          "builder.%s(() -> %s);".formatted(methodDto.getMethodName(), exampleValue.get()));
+      methodDto.getJavadoc().addExample(exampleBlock);
+    }
+
+    // Contribute to class-level example if we have an example value
+    if (exampleValue.isPresent() && context.getCurrentBuilderDto() != null) {
+      context
+          .getCurrentBuilderDto()
+          .addClassExampleLine(
+              "    .%s(() -> %s)".formatted(methodDto.getMethodName(), exampleValue.get()));
+    }
 
     return methodDto;
   }

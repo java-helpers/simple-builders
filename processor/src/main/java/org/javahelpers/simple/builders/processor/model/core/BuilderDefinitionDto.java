@@ -26,6 +26,7 @@ package org.javahelpers.simple.builders.processor.model.core;
 
 import java.util.LinkedList;
 import java.util.List;
+import org.javahelpers.simple.builders.processor.model.javadoc.JavadocCodeBlockDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 
 /**
@@ -53,6 +54,9 @@ public class BuilderDefinitionDto extends GenerationTargetClassDto {
 
   /** Configuration for builder generation. */
   private BuilderConfiguration configuration;
+
+  /** Code block for class-level Javadoc example. */
+  private JavadocCodeBlockDto classExampleBlock;
 
   /**
    * Getting type of builder. Delegates to base class typeName.
@@ -173,5 +177,38 @@ public class BuilderDefinitionDto extends GenerationTargetClassDto {
    */
   public void setConfiguration(BuilderConfiguration configuration) {
     this.configuration = configuration;
+  }
+
+  /**
+   * Gets the class-level Javadoc example code block.
+   *
+   * @return the class example block, or null if not set
+   */
+  public JavadocCodeBlockDto getClassExampleBlock() {
+    return classExampleBlock;
+  }
+
+  /**
+   * Sets the class-level Javadoc example code block.
+   *
+   * @param classExampleBlock the class example block
+   */
+  public void setClassExampleBlock(JavadocCodeBlockDto classExampleBlock) {
+    this.classExampleBlock = classExampleBlock;
+  }
+
+  /**
+   * Adds a line to the class-level Javadoc example code block.
+   *
+   * <p>If the class example block doesn't exist, it will be created. This method appends the line
+   * to the existing code format.
+   *
+   * @param line the line to add to the class example
+   */
+  public void addClassExampleLine(String line) {
+    if (classExampleBlock == null) {
+      classExampleBlock = new JavadocCodeBlockDto();
+    }
+    classExampleBlock.append(line);
   }
 }

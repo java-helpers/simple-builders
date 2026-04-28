@@ -71,7 +71,7 @@ import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
  */
 public class ClassJavaDocEnhancer implements BuilderEnhancer {
 
-  private static final int PRIORITY = 200;
+  private static final int PRIORITY = 10;
 
   @Override
   public int getPriority() {
@@ -88,6 +88,24 @@ public class ClassJavaDocEnhancer implements BuilderEnhancer {
   public void enhanceBuilder(BuilderDefinitionDto builderDto, ProcessingContext context) {
     TypeName targetType = builderDto.getBuildingTargetTypeName();
     JavadocDto javadoc = createClassJavadoc(targetType);
+
+    // Finalize class-level example if any lines were contributed
+    if (builderDto.getClassExampleBlock() != null && builderDto.getClassExampleBlock().hasCode()) {
+      // Prepend opening line
+      String builderTypeName = builderDto.getBuilderTypeName().getClassName();
+      String openingLine =
+          "%s result = %s.create()".formatted(targetType.getClassName(), builderTypeName);
+      builderDto
+          .getClassExampleBlock()
+          .setCodeFormat(openingLine + "\n" + builderDto.getClassExampleBlock().getCodeFormat());
+
+      // Append closing line
+      builderDto.getClassExampleBlock().append(".build();");
+
+      // Add the example block to the class Javadoc
+      javadoc.addExample(builderDto.getClassExampleBlock());
+    }
+
     builderDto.setClassJavadoc(javadoc);
   }
 
