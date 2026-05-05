@@ -157,13 +157,20 @@ public class VarArgsHelperGenerator implements MethodGenerator {
         MethodGeneratorUtil.createBuilderMethodForFieldWithTransform(
             field, transform, parameterType, builderType, context);
 
-    // Add code block imports for collection factory methods
-    if (fieldType instanceof TypeNameList) {
+    // Add code block imports and example fragments for collection factory methods
+    if (fieldType instanceof TypeNameList listType) {
       method.getMethodCodeDto().addCodeBlockImport(List.class);
-    } else if (fieldType instanceof TypeNameSet) {
+      MethodGeneratorUtil.addExampleChainFragment(method, listType.getElementType());
+    } else if (fieldType instanceof TypeNameSet setType) {
       method.getMethodCodeDto().addCodeBlockImport(Set.class);
-    } else if (fieldType instanceof TypeNameMap) {
+      MethodGeneratorUtil.addExampleChainFragment(method, setType.getElementType());
+    } else if (fieldType instanceof TypeNameMap mapType) {
       method.getMethodCodeDto().addCodeBlockImport(Map.class);
+      // For maps, only add example if key type is String
+      if (mapType.getKeyType().getClassName().equals("String")) {
+        MethodGeneratorUtil.addExampleChainFragmentTemplate(
+            method, "#{methodName}(Map.entry(\"key\", #{exampleValue}))", mapType.getValueType());
+      }
     }
 
     return method;

@@ -109,6 +109,9 @@ public class OptionalHelperGenerator implements MethodGenerator {
     // Add code block import for Optional.ofNullable
     method.getMethodCodeDto().addCodeBlockImport(Optional.class);
 
+    // Add example fragment for Optional helper method
+    MethodGeneratorUtil.addExampleChainFragment(method, innerType);
+
     return Collections.singletonList(method);
   }
 }

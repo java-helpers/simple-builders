@@ -135,6 +135,10 @@ public class ArrayConversionGenerator implements MethodGenerator {
         new JavadocDto("Sets the value for <code>%s</code>.", fieldName)
             .addParam(parameter.getParameterName(), fieldJavadocDesc)
             .addReturn(JavadocConstants.RETURN_BUILDER_INSTANCE));
+
+    // Add example fragment for array conversion method
+    addExampleChainFragment(methodDto, elementType);
+
     return methodDto;
   }
 }

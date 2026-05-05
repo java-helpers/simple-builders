@@ -25,7 +25,7 @@
 package org.javahelpers.simple.builders.processor.generators.field;
 
 import static org.javahelpers.simple.builders.processor.analysis.JavaLangMapper.map2TypeName;
-import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.addExampleChainFragmentCustom;
+import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.addExampleChainFragmentTemplate;
 import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.createFieldConsumerWithBuilder;
 import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.createFieldConsumerWithElementBuilders;
 
@@ -137,7 +137,7 @@ public class ListConsumerGenerator implements MethodGenerator {
               field, collectionBuilderType, elementBuilderType.get(), builderType, context);
 
       // Add method-level example for list consumer
-      addExampleToListConsumer(method, field.getOriginalFieldName(), context);
+      addExampleToListConsumer(method, elementType, context);
 
       return List.of(method);
     } else if (context.getConfiguration().shouldUseArrayListBuilder()) {
@@ -154,7 +154,7 @@ public class ListConsumerGenerator implements MethodGenerator {
               context);
 
       // Add method-level example for list consumer
-      addExampleToListConsumer(method, field.getOriginalFieldName(), context);
+      addExampleToListConsumer(method, elementType, context);
 
       return List.of(method);
     }
@@ -166,14 +166,11 @@ public class ListConsumerGenerator implements MethodGenerator {
    * Adds method-level example and contributes to class-level example for list consumer methods.
    *
    * @param method the method to add the example to
-   * @param fieldName the field name
+   * @param elementType the element type
    * @param context the processing context
    */
   private void addExampleToListConsumer(
-      MethodDto method, String fieldName, ProcessingContext context) {
-    // Store the fluent-chain fragment so the class-level enhancer can synthesise both the
-    // method-level example block and the class-level kitchen-sink chain from one source of truth.
-    addExampleChainFragmentCustom(
-        method, "%s(t -> t.add(\"example value\"))".formatted(method.getMethodName()));
+      MethodDto method, TypeName elementType, ProcessingContext context) {
+    addExampleChainFragmentTemplate(method, "#{methodName}(t -> t.add(#{exampleValue}))", elementType);
   }
 }

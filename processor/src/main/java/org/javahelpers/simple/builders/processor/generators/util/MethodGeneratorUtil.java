@@ -394,11 +394,7 @@ public final class MethodGeneratorUtil {
    * @param fieldType the field type to get an example value for
    */
   public static void addExampleChainFragment(MethodDto methodDto, TypeName fieldType) {
-    JavadocExampleValues.getExampleValue(fieldType)
-        .ifPresent(
-            example ->
-                methodDto.setExampleChainFragment(
-                    "%s(%s)".formatted(methodDto.getMethodName(), example)));
+    addExampleChainFragmentTemplate(methodDto, "#{methodName}(#{exampleValue})", fieldType);
   }
 
   /**
@@ -414,12 +410,9 @@ public final class MethodGeneratorUtil {
    * @param methodDto the method DTO to add the fragment to
    * @param fieldType the field type to get an example value for
    */
-  public static void addExampleChainFragmentWithSupplier(MethodDto methodDto, TypeName fieldType) {
-    JavadocExampleValues.getExampleValue(fieldType)
-        .ifPresent(
-            example ->
-                methodDto.setExampleChainFragment(
-                    "%s(() -> %s)".formatted(methodDto.getMethodName(), example)));
+  public static void addExampleChainFragmentWithSupplier(
+      MethodDto methodDto, TypeName fieldType) {
+    addExampleChainFragmentTemplate(methodDto, "#{methodName}(() -> #{exampleValue})", fieldType);
   }
 
   /**
@@ -437,23 +430,56 @@ public final class MethodGeneratorUtil {
    */
   public static void addExampleChainFragmentWithHardcodedValue(
       MethodDto methodDto, String exampleValue) {
-    methodDto.setExampleChainFragment("%s(%s)".formatted(methodDto.getMethodName(), exampleValue));
+    addExampleChainFragmentTemplate(
+        methodDto, "#{methodName}(%s)".formatted(exampleValue));
   }
 
   /**
-   * Adds the fluent-chain fragment for Javadoc examples to a method with a custom fragment format.
+   * Adds the fluent-chain fragment for Javadoc examples to a method using a template string.
    *
-   * <p>This helper method allows generators to specify a completely custom fragment format for
-   * special cases (e.g., lambda expressions). The fragment is stored on the MethodDto for later use
-   * by the ClassJavaDocEnhancer to synthesize both method-level and class-level Javadoc examples.
+   * <p>This helper method replaces placeholders in the template string with actual values:
+   * <ul>
+   *   <li>{@code #{methodName}} - replaced with the method name</li>
+   *   <li>{@code #{exampleValue}} - replaced with an example value for the given field type (if fieldType is provided)</li>
+   * </ul>
    *
-   * <p>This is useful for generators with unique fragment patterns that don't fit the standard
-   * value or supplier patterns.
+   * <p>The fragment is stored on the MethodDto for later use by the ClassJavaDocEnhancer to synthesize
+   * both method-level and class-level Javadoc examples.
    *
    * @param methodDto the method DTO to add the fragment to
-   * @param fragment the custom fragment to add (e.g., {@code methodName(t -> t.add("value"))})
+   * @param template the template string with placeholders (e.g., {@code #{methodName}(#{exampleValue})})
+   * @param fieldType the field type to get an example value for (can be {@code null})
    */
-  public static void addExampleChainFragmentCustom(MethodDto methodDto, String fragment) {
+  public static void addExampleChainFragmentTemplate(
+      MethodDto methodDto, String template, TypeName fieldType) {
+    String fragment = template.replace("#{methodName}", methodDto.getMethodName());
+    
+    if (fieldType != null) {
+      String exampleValue =
+          JavadocExampleValues.getExampleValue(fieldType).orElse(null);
+      if (exampleValue != null) {
+        fragment = fragment.replace("#{exampleValue}", exampleValue);
+        methodDto.setExampleChainFragment(fragment);
+      }
+    }
+  }
+
+  /**
+   * Adds the fluent-chain fragment for Javadoc examples to a method using a template string.
+   *
+   * <p>This helper method replaces placeholders in the template string with actual values:
+   * <ul>
+   *   <li>{@code #{methodName}} - replaced with the method name</li>
+   * </ul>
+   *
+   * <p>The fragment is stored on the MethodDto for later use by the ClassJavaDocEnhancer to synthesize
+   * both method-level and class-level Javadoc examples.
+   *
+   * @param methodDto the method DTO to add the fragment to
+   * @param template the template string with placeholders (e.g., {@code #{methodName}(sb -> sb.append("text"))})
+   */
+  public static void addExampleChainFragmentTemplate(MethodDto methodDto, String template) {
+    String fragment = template.replace("#{methodName}", methodDto.getMethodName());
     methodDto.setExampleChainFragment(fragment);
   }
 }

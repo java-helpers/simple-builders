@@ -204,6 +204,10 @@ public class StringFormatHelperGenerator implements MethodGenerator {
                 argsParam.getParameterName(),
                 "Arguments referenced by the format specifiers in the format string.")
             .addReturn(JavadocConstants.RETURN_BUILDER_INSTANCE));
+
+    // Add example fragment for String format method
+    addExampleChainFragmentTemplate(methodDto, "#{methodName}(\"Hello %s\", \"World\")");
+
     return methodDto;
   }
 }
