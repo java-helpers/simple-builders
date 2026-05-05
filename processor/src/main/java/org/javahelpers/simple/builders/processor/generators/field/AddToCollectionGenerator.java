@@ -32,7 +32,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.generators.util.JavadocConstants;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
-import org.javahelpers.simple.builders.processor.model.javadoc.JavadocCodeBlockDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
@@ -188,20 +187,10 @@ public class AddToCollectionGenerator implements MethodGenerator {
             .addParam("element", "the element to add")
             .addReturn(JavadocConstants.RETURN_BUILDER_INSTANCE));
 
-    // Add method-level example for add-to-collection method
-    if (methodDto.getJavadoc() != null) {
-      JavadocCodeBlockDto exampleBlock = new JavadocCodeBlockDto();
-      exampleBlock.setCodeFormat(
-          "builder.%s(\"example value\");".formatted(methodDto.getMethodName()));
-      methodDto.getJavadoc().addExample(exampleBlock);
-    }
-
-    // Contribute to class-level example
-    if (context.getCurrentBuilderDto() != null) {
-      context
-          .getCurrentBuilderDto()
-          .addClassExampleLine("    .%s(\"example value\")".formatted(methodDto.getMethodName()));
-    }
+    // Store the fluent-chain fragment so the class-level enhancer can synthesise both the
+    // method-level example block and the class-level kitchen-sink chain from one source of truth.
+    methodDto.setExampleChainFragment(
+        ".%s(\"example value\")".formatted(methodDto.getMethodName()));
 
     return methodDto;
   }

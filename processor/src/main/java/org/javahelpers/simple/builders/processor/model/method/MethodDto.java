@@ -76,6 +76,14 @@ public class MethodDto {
   /** Definition of inner implementation for method. */
   private final MethodCodeDto methodCodeDto = new MethodCodeDto();
 
+  /**
+   * Fluent-chain fragment describing how this method is invoked in Javadoc examples (e.g., {@code
+   * .title("example value")}). When present, downstream enhancers use it to synthesise the
+   * method-level example block (as {@code builder<fragment>;}) and to aggregate the class-level
+   * kitchen-sink chain. A {@code null} value means the method should not appear in either example.
+   */
+  private String exampleChainFragment;
+
   /** Default constructor. */
   public MethodDto() {
     // Default constructor
@@ -182,6 +190,29 @@ public class MethodDto {
    */
   public MethodCodeDto getMethodCodeDto() {
     return methodCodeDto;
+  }
+
+  /**
+   * Returns the fluent-chain fragment for Javadoc examples (e.g. {@code .title("example value")})
+   * or {@code null} if this method should not participate in example generation.
+   *
+   * @return the fragment or {@code null}
+   */
+  public String getExampleChainFragment() {
+    return exampleChainFragment;
+  }
+
+  /**
+   * Stores the fluent-chain fragment describing how this method is invoked in examples.
+   *
+   * <p>The fragment must start with {@code .} and contain just the method invocation, e.g. {@code
+   * .title("example value")}. Downstream enhancers synthesise the method-level example block (as
+   * {@code builder<fragment>;}) and the class-level kitchen-sink chain from it.
+   *
+   * @param exampleChainFragment the fragment or {@code null} to clear
+   */
+  public void setExampleChainFragment(String exampleChainFragment) {
+    this.exampleChainFragment = exampleChainFragment;
   }
 
   /**

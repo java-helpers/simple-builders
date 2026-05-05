@@ -26,7 +26,9 @@ package org.javahelpers.simple.builders.processor.generators.builder;
 
 import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
+import org.javahelpers.simple.builders.processor.model.javadoc.JavadocCodeBlockDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
+import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
@@ -88,22 +90,39 @@ public class ClassJavaDocEnhancer implements BuilderEnhancer {
   public void enhanceBuilder(BuilderDefinitionDto builderDto, ProcessingContext context) {
     TypeName targetType = builderDto.getBuildingTargetTypeName();
     JavadocDto javadoc = createClassJavadoc(targetType);
+    String indentionString = "    ";
 
-    // Finalize class-level example if any lines were contributed
-    if (builderDto.getClassExampleBlock() != null && builderDto.getClassExampleBlock().hasCode()) {
-      // Prepend opening line
+    // Synthesise example blocks from the fluent-chain fragments stored on methods. This keeps the
+    // per-method "builder.field(value);" example and the class-level kitchen-sink chain in sync
+    // with a single source of truth (the fragment on the MethodDto).
+    // Note: Methods are stored in FieldDto objects at this point (before finalizeDefinition).
+    JavadocCodeBlockDto classExampleBlock = new JavadocCodeBlockDto();
+    for (org.javahelpers.simple.builders.processor.model.core.FieldDto field :
+        builderDto.getAllFieldsForBuilder()) {
+      for (MethodDto method : field.getMethods()) {
+        String fragment = method.getExampleChainFragment();
+        if (fragment == null) {
+          continue;
+        }
+        // Method-level example: wrap fragment as "builder<fragment>;"
+        JavadocCodeBlockDto methodExample = new JavadocCodeBlockDto();
+        methodExample.setCodeFormat("builder%s;".formatted(fragment));
+        if (method.getJavadoc() != null) {
+          method.getJavadoc().addExample(methodExample);
+        }
+
+        // Class-level aggregation: indent and collect all fragments
+        classExampleBlock.append("%s%s", indentionString, fragment);
+      }
+    }
+
+    if (classExampleBlock.hasCode()) {
       String builderTypeName = builderDto.getBuilderTypeName().getClassName();
       String openingLine =
           "%s result = %s.create()".formatted(targetType.getClassName(), builderTypeName);
-      builderDto
-          .getClassExampleBlock()
-          .setCodeFormat(openingLine + "\n" + builderDto.getClassExampleBlock().getCodeFormat());
-
-      // Append closing line
-      builderDto.getClassExampleBlock().append(".build();");
-
-      // Add the example block to the class Javadoc
-      javadoc.addExample(builderDto.getClassExampleBlock());
+      classExampleBlock.setCodeFormat(openingLine + "\n" + classExampleBlock.getCodeFormat());
+      classExampleBlock.append("%s.build();", indentionString);
+      javadoc.addExample(classExampleBlock);
     }
 
     builderDto.setClassJavadoc(javadoc);

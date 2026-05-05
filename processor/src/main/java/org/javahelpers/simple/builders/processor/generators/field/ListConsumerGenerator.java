@@ -35,7 +35,6 @@ import org.javahelpers.simple.builders.core.builders.ArrayListBuilder;
 import org.javahelpers.simple.builders.core.builders.ArrayListBuilderWithElementBuilders;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
-import org.javahelpers.simple.builders.processor.model.javadoc.JavadocCodeBlockDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
@@ -170,19 +169,9 @@ public class ListConsumerGenerator implements MethodGenerator {
    */
   private void addExampleToListConsumer(
       MethodDto method, String fieldName, ProcessingContext context) {
-    if (method.getJavadoc() != null) {
-      JavadocCodeBlockDto exampleBlock = new JavadocCodeBlockDto();
-      exampleBlock.setCodeFormat(
-          "builder.%s(t -> t.add(\"example value\"));".formatted(method.getMethodName()));
-      method.getJavadoc().addExample(exampleBlock);
-    }
-
-    // Contribute to class-level example
-    if (context.getCurrentBuilderDto() != null) {
-      context
-          .getCurrentBuilderDto()
-          .addClassExampleLine(
-              "    .%s(t -> t.add(\"example value\"))".formatted(method.getMethodName()));
-    }
+    // Store the fluent-chain fragment so the class-level enhancer can synthesise both the
+    // method-level example block and the class-level kitchen-sink chain from one source of truth.
+    method.setExampleChainFragment(
+        ".%s(t -> t.add(\"example value\"))".formatted(method.getMethodName()));
   }
 }
