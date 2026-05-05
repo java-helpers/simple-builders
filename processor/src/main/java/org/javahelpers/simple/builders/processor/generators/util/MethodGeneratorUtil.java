@@ -379,4 +379,81 @@ public final class MethodGeneratorUtil {
 
     return methodDto;
   }
+
+  /**
+   * Adds the fluent-chain fragment for Javadoc examples to a method.
+   *
+   * <p>This helper method retrieves an example value for the given field type and formats it as a
+   * fluent-chain fragment (e.g., {@code methodName(exampleValue)}). The fragment is stored on the
+   * MethodDto for later use by the ClassJavaDocEnhancer to synthesize both method-level and
+   * class-level Javadoc examples.
+   *
+   * <p>If no example value is available for the field type, the fragment is not added.
+   *
+   * @param methodDto the method DTO to add the fragment to
+   * @param fieldType the field type to get an example value for
+   */
+  public static void addExampleChainFragment(MethodDto methodDto, TypeName fieldType) {
+    JavadocExampleValues.getExampleValue(fieldType)
+        .ifPresent(
+            example ->
+                methodDto.setExampleChainFragment(
+                    "%s(%s)".formatted(methodDto.getMethodName(), example)));
+  }
+
+  /**
+   * Adds the fluent-chain fragment for Javadoc examples to a method using a supplier pattern.
+   *
+   * <p>This helper method retrieves an example value for the given field type and formats it as a
+   * fluent-chain fragment with a supplier (e.g., {@code methodName(() -> exampleValue)}). The
+   * fragment is stored on the MethodDto for later use by the ClassJavaDocEnhancer to synthesize
+   * both method-level and class-level Javadoc examples.
+   *
+   * <p>If no example value is available for the field type, the fragment is not added.
+   *
+   * @param methodDto the method DTO to add the fragment to
+   * @param fieldType the field type to get an example value for
+   */
+  public static void addExampleChainFragmentWithSupplier(MethodDto methodDto, TypeName fieldType) {
+    JavadocExampleValues.getExampleValue(fieldType)
+        .ifPresent(
+            example ->
+                methodDto.setExampleChainFragment(
+                    "%s(() -> %s)".formatted(methodDto.getMethodName(), example)));
+  }
+
+  /**
+   * Adds the fluent-chain fragment for Javadoc examples to a method with a hardcoded example value.
+   *
+   * <p>This helper method formats a hardcoded example value as a fluent-chain fragment (e.g.,
+   * {@code methodName("example value")}). The fragment is stored on the MethodDto for later use by
+   * the ClassJavaDocEnhancer to synthesize both method-level and class-level Javadoc examples.
+   *
+   * <p>This is useful for generators that use a fixed example value rather than deriving it from
+   * the field type.
+   *
+   * @param methodDto the method DTO to add the fragment to
+   * @param exampleValue the hardcoded example value to use
+   */
+  public static void addExampleChainFragmentWithHardcodedValue(
+      MethodDto methodDto, String exampleValue) {
+    methodDto.setExampleChainFragment("%s(%s)".formatted(methodDto.getMethodName(), exampleValue));
+  }
+
+  /**
+   * Adds the fluent-chain fragment for Javadoc examples to a method with a custom fragment format.
+   *
+   * <p>This helper method allows generators to specify a completely custom fragment format for
+   * special cases (e.g., lambda expressions). The fragment is stored on the MethodDto for later use
+   * by the ClassJavaDocEnhancer to synthesize both method-level and class-level Javadoc examples.
+   *
+   * <p>This is useful for generators with unique fragment patterns that don't fit the standard
+   * value or supplier patterns.
+   *
+   * @param methodDto the method DTO to add the fragment to
+   * @param fragment the custom fragment to add (e.g., {@code methodName(t -> t.add("value"))})
+   */
+  public static void addExampleChainFragmentCustom(MethodDto methodDto, String fragment) {
+    methodDto.setExampleChainFragment(fragment);
+  }
 }

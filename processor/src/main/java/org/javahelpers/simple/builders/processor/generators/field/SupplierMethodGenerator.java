@@ -25,14 +25,17 @@
 package org.javahelpers.simple.builders.processor.generators.field;
 
 import static org.javahelpers.simple.builders.processor.analysis.JavaLangMapper.map2TypeName;
-import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.*;
+import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.SUFFIX_SUPPLIER;
+import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.TRACKED_VALUE_TYPE;
+import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.addExampleChainFragmentWithSupplier;
+import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.generateBuilderMethodName;
+import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.getMethodAccessModifier;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.generators.util.JavadocConstants;
-import org.javahelpers.simple.builders.processor.generators.util.JavadocExampleValues;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
@@ -152,13 +155,7 @@ public class SupplierMethodGenerator implements MethodGenerator {
             .addParam(parameterName, "supplier for %s", fieldJavaDoc)
             .addReturn(JavadocConstants.RETURN_BUILDER_INSTANCE));
 
-    // Store the fluent-chain fragment so the class-level enhancer can synthesise both the
-    // method-level example block and the class-level kitchen-sink chain from one source of truth.
-    JavadocExampleValues.getExampleValue(fieldType)
-        .ifPresent(
-            example ->
-                methodDto.setExampleChainFragment(
-                    ".%s(() -> %s)".formatted(methodDto.getMethodName(), example)));
+    addExampleChainFragmentWithSupplier(methodDto, fieldType);
 
     return methodDto;
   }

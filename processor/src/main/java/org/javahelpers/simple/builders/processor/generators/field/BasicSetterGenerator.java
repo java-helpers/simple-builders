@@ -24,12 +24,10 @@
 
 package org.javahelpers.simple.builders.processor.generators.field;
 
-import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.*;
-
 import java.util.Collections;
 import java.util.List;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
-import org.javahelpers.simple.builders.processor.generators.util.JavadocExampleValues;
+import org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
@@ -89,16 +87,12 @@ public class BasicSetterGenerator implements MethodGenerator {
       FieldDto field, TypeName builderType, ProcessingContext context) {
 
     MethodDto setterMethod =
-        createBuilderMethodForFieldWithTransform(
+        MethodGeneratorUtil.createBuilderMethodForFieldWithTransform(
             field, null, field.getFieldType(), builderType, context);
 
     // Store the fluent-chain fragment so the class-level enhancer can synthesise both the
     // method-level example block and the class-level kitchen-sink chain from one source of truth.
-    JavadocExampleValues.getExampleValue(field.getFieldType())
-        .ifPresent(
-            example ->
-                setterMethod.setExampleChainFragment(
-                    ".%s(%s)".formatted(setterMethod.getMethodName(), example)));
+    MethodGeneratorUtil.addExampleChainFragment(setterMethod, field.getFieldType());
 
     return Collections.singletonList(setterMethod);
   }

@@ -24,7 +24,9 @@
 
 package org.javahelpers.simple.builders.processor.generators.field;
 
-import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.*;
+import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.TRACKED_VALUE_TYPE;
+import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.addExampleChainFragmentWithHardcodedValue;
+import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.getMethodAccessModifier;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -189,8 +191,7 @@ public class AddToCollectionGenerator implements MethodGenerator {
 
     // Store the fluent-chain fragment so the class-level enhancer can synthesise both the
     // method-level example block and the class-level kitchen-sink chain from one source of truth.
-    methodDto.setExampleChainFragment(
-        ".%s(\"example value\")".formatted(methodDto.getMethodName()));
+    addExampleChainFragmentWithHardcodedValue(methodDto, "\"example value\"");
 
     return methodDto;
   }

@@ -25,7 +25,9 @@
 package org.javahelpers.simple.builders.processor.generators.field;
 
 import static org.javahelpers.simple.builders.processor.analysis.JavaLangMapper.map2TypeName;
-import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.*;
+import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.addExampleChainFragmentCustom;
+import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.createFieldConsumerWithBuilder;
+import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.createFieldConsumerWithElementBuilders;
 
 import java.util.Collections;
 import java.util.List;
@@ -171,7 +173,7 @@ public class ListConsumerGenerator implements MethodGenerator {
       MethodDto method, String fieldName, ProcessingContext context) {
     // Store the fluent-chain fragment so the class-level enhancer can synthesise both the
     // method-level example block and the class-level kitchen-sink chain from one source of truth.
-    method.setExampleChainFragment(
-        ".%s(t -> t.add(\"example value\"))".formatted(method.getMethodName()));
+    addExampleChainFragmentCustom(
+        method, "%s(t -> t.add(\"example value\"))".formatted(method.getMethodName()));
   }
 }

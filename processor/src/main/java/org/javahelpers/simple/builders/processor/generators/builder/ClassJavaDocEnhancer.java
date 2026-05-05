@@ -104,15 +104,8 @@ public class ClassJavaDocEnhancer implements BuilderEnhancer {
         if (fragment == null) {
           continue;
         }
-        // Method-level example: wrap fragment as "builder<fragment>;"
-        JavadocCodeBlockDto methodExample = new JavadocCodeBlockDto();
-        methodExample.setCodeFormat("builder%s;".formatted(fragment));
-        if (method.getJavadoc() != null) {
-          method.getJavadoc().addExample(methodExample);
-        }
-
         // Class-level aggregation: indent and collect all fragments
-        classExampleBlock.append("%s%s", indentionString, fragment);
+        classExampleBlock.append("%s.%s".formatted(indentionString, fragment));
       }
     }
 

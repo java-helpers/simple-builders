@@ -205,14 +205,24 @@ public class MethodDto {
   /**
    * Stores the fluent-chain fragment describing how this method is invoked in examples.
    *
-   * <p>The fragment must start with {@code .} and contain just the method invocation, e.g. {@code
-   * .title("example value")}. Downstream enhancers synthesise the method-level example block (as
-   * {@code builder<fragment>;}) and the class-level kitchen-sink chain from it.
+   * <p>The fragment contains just the method invocation, e.g. {@code title("example value")}.
+   * Downstream enhancers synthesise the method-level example block (as {@code builder.<fragment>;})
+   * and the class-level kitchen-sink chain from it.
+   *
+   * <p>Automatically adds a method-level example to the javadoc if javadoc exists and has no
+   * existing examples (to avoid overriding manually set examples).
    *
    * @param exampleChainFragment the fragment or {@code null} to clear
    */
   public void setExampleChainFragment(String exampleChainFragment) {
     this.exampleChainFragment = exampleChainFragment;
+    // Automatically add method-level example to javadoc if javadoc exists and has no examples
+    if (exampleChainFragment != null && javadoc != null && javadoc.getCodeBlocks().isEmpty()) {
+      org.javahelpers.simple.builders.processor.model.javadoc.JavadocCodeBlockDto methodExample =
+          new org.javahelpers.simple.builders.processor.model.javadoc.JavadocCodeBlockDto();
+      methodExample.setCodeFormat("builder.%s;".formatted(exampleChainFragment));
+      javadoc.addExample(methodExample);
+    }
   }
 
   /**
