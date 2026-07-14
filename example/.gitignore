@@ -1,3 +1,4 @@
-# Include generated sources (they're ignored by main .gitignore)
-!/target/generated-sources/
-!/target/generated-test-sources/
+# Generated example builders are intentionally tracked under
+# generated-sources/ (configured via maven-compiler-plugin in pom.xml) so they
+# survive `mvn clean`, can be browsed/reviewed, and drift is caught in CI.
+# target/ itself remains ignored by the repository-root .gitignore.
