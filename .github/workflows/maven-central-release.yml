@@ -1,6 +1,7 @@
-# GitHub Action workflow for releasing artifacts to Maven Central
-# This workflow is triggered manually or on tag creation and handles:
-# - Version management from git tags
+# GitHub Action workflow for releasing artifacts to Maven Central.
+# Triggered manually via workflow_dispatch with an explicit release_version
+# input (there is no tag trigger). It handles:
+# - Version management from the release_version input (not from git tags)
 # - GPG signing of artifacts
 # - Deployment to Maven Central via Sonatype
 
