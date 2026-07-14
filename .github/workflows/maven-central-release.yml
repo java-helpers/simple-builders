@@ -19,6 +19,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      # Needed to open the version-bump pull request instead of pushing to main.
+      pull-requests: write
       
     steps:
       - name: Checkout code
@@ -61,16 +63,24 @@ jobs:
         id: commit
         run: |
           VERSION=${{ steps.version.outputs.VERSION }}
+          BRANCH="release/v$VERSION"
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
+
+          # Commit the version bump on a dedicated release branch so the
+          # update to main goes through a reviewed pull request instead of a
+          # direct push that bypasses branch protection.
+          git checkout -B "$BRANCH"
           git add pom.xml core/pom.xml processor/pom.xml
-          
-          # Only commit if there are changes
+          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+
+          # Only commit if there are changes. Note: no "[skip ci]" so the
+          # release branch / PR is validated by CI.
           if git diff --staged --quiet; then
             echo "No version changes detected - version already set to $VERSION"
             echo "has_changes=false" >> $GITHUB_OUTPUT
           else
-            git commit -m "chore: release version $VERSION [skip ci]"
+            git commit -m "chore: release version $VERSION"
             echo "has_changes=true" >> $GITHUB_OUTPUT
           fi
           
@@ -100,21 +110,42 @@ jobs:
         run: |
           mvn -B deploy -Prelease -pl core,processor -DskipTests=true -Dcentral.autoPublish=true
           
-      - name: Push changes to repository
+      - name: Push release branch and tag
         if: success()
         run: |
           VERSION=${{ steps.version.outputs.VERSION }}
-          
-          # Push commit if there were changes
+          BRANCH="${{ steps.commit.outputs.branch }}"
+
+          # Push the release branch (never push directly to main).
           if [ "${{ steps.commit.outputs.has_changes }}" = "true" ]; then
-            git push origin main
+            git push origin "$BRANCH"
           fi
-          
+
           # Push tag if it was newly created (check if tag exists remotely)
           if ! git ls-remote --tags origin | grep -q "refs/tags/v$VERSION"; then
             git push origin "v$VERSION"
           else
             echo "Tag v$VERSION already exists remotely"
+          fi
+
+      - name: Open version bump pull request
+        if: success() && steps.commit.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+          BRANCH="${{ steps.commit.outputs.branch }}"
+
+          # Open a reviewed PR to update main instead of pushing to it. This
+          # preserves branch protection and required reviews on main.
+          if gh pr view "$BRANCH" >/dev/null 2>&1; then
+            echo "Pull request for $BRANCH already exists"
+          else
+            gh pr create \
+              --base main \
+              --head "$BRANCH" \
+              --title "chore: release version $VERSION" \
+              --body "Automated version bump for release v$VERSION. Review and merge to update \`main\`; created via PR so branch protection is not bypassed."
           fi
           
       - name: Create GitHub Release
