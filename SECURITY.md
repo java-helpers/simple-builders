@@ -34,11 +34,18 @@ Security updates will be released as patch versions (e.g., 0.1.1) for the latest
 
 ## Dependencies
 
-We regularly update our dependencies to include security fixes. You can check for known vulnerabilities in our dependencies using:
+We keep dependencies patched and rely on GitHub's native supply-chain tooling
+rather than a stand-alone scanner:
 
-```bash
-mvn dependency-check:check
-```
+- **Dependabot** ([`.github/dependabot.yml`](.github/dependabot.yml)) opens
+  automated update PRs and, with Dependabot alerts enabled, continuously flags
+  known-vulnerable dependencies against the GitHub Advisory Database.
+- **Dependency Review** ([`.github/workflows/dependency-review.yml`](.github/workflows/dependency-review.yml))
+  runs on every pull request and **fails** it if it introduces a dependency with
+  a High (or greater) severity vulnerability or a disallowed license.
+
+Maintainers: ensure *Dependency graph*, *Dependabot alerts*, and *Dependabot
+security updates* are enabled under **Settings → Code security**.
 
 ## Best Practices
 
