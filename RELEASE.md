@@ -19,11 +19,13 @@ Configure these GitHub secrets in **Settings** → **Secrets and variables** →
 
 1. Updates POM versions to release version
 2. Commits changes and creates tag `v0.2.0`
-3. Builds and verifies project with `-Prelease`
+3. Builds and verifies project with `-Prelease` (reproducible builds via `project.build.outputTimestamp`)
 4. Signs artifacts with GPG
-5. Deploys and **auto-publishes** to Maven Central
-6. Pushes commit and tag to `main`
-7. Creates **draft** GitHub release (requires manual publish)
+5. Generates a CycloneDX **SBOM** (JSON + XML) for each published module
+6. Deploys and **auto-publishes** to Maven Central
+7. Creates a **build-provenance attestation** for the published jars
+8. Pushes commit and tag to `main`
+9. Creates **draft** GitHub release (jars, sources, javadoc **and SBOMs** attached; requires manual publish)
 
 ## After Release
 
@@ -59,6 +61,14 @@ mvn clean deploy -Prelease -Dcentral.autoPublish=true
 - **Auth errors**: Check `CENTRAL_TOKEN_USERNAME` and `CENTRAL_TOKEN_PASSWORD`
 - **Version conflicts**: Maven Central versions are immutable; increment and re-release
 - **Workflow fails on push**: Ensure GitHub Actions has write permissions (**Settings** → **Actions** → **General** → **Workflow permissions**)
+
+## Supply-chain artifacts
+
+Each release produces, in addition to the GPG-signed jars:
+
+- **SBOM** (CycloneDX `*-sbom.json` / `*-sbom.xml`) per module, attached to the GitHub release, so consumers can inventory/scan transitive dependencies.
+- **Build provenance** attestation (`actions/attest-build-provenance`) for the jars, verifiable with `gh attestation verify <jar> --repo java-helpers/simple-builders`.
+- **Reproducible builds**: `project.build.outputTimestamp` is set so archive entries are deterministic. For a meaningful per-release timestamp, override it with `-Dproject.build.outputTimestamp=<commit ISO-8601 date>`.
 
 ## Notes
 

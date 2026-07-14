@@ -19,6 +19,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      # Required to create build-provenance attestations for the released jars.
+      id-token: write
+      attestations: write
       
     steps:
       - name: Checkout code
@@ -91,6 +94,12 @@ jobs:
         env:
           MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_SIGNING_KEY_PASSWORD }}
         run: mvn -B clean verify -Prelease
+
+      - name: Generate SBOM (CycloneDX)
+        run: |
+          # Emit a CycloneDX SBOM (JSON + XML) for each published module.
+          mvn -B -Prelease -pl core,processor \
+            org.cyclonedx:cyclonedx-maven-plugin:makeBom -DskipTests
         
       - name: Deploy to Maven Central
         env:
@@ -99,6 +108,14 @@ jobs:
           MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_SIGNING_KEY_PASSWORD }}
         run: |
           mvn -B deploy -Prelease -pl core,processor -DskipTests=true -Dcentral.autoPublish=true
+
+      - name: Attest build provenance for published jars
+        if: success()
+        uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
+        with:
+          subject-path: |
+            core/target/simple-builders-core-*.jar
+            processor/target/simple-builders-processor-*.jar
           
       - name: Push changes to repository
         if: success()
@@ -151,9 +168,13 @@ jobs:
               core/target/simple-builders-core-${VERSION}.jar \
               core/target/simple-builders-core-${VERSION}-sources.jar \
               core/target/simple-builders-core-${VERSION}-javadoc.jar \
+              core/target/simple-builders-core-${VERSION}-sbom.json \
+              core/target/simple-builders-core-${VERSION}-sbom.xml \
               processor/target/simple-builders-processor-${VERSION}.jar \
               processor/target/simple-builders-processor-${VERSION}-sources.jar \
-              processor/target/simple-builders-processor-${VERSION}-javadoc.jar
+              processor/target/simple-builders-processor-${VERSION}-javadoc.jar \
+              processor/target/simple-builders-processor-${VERSION}-sbom.json \
+              processor/target/simple-builders-processor-${VERSION}-sbom.xml
             
             # Clean up
             rm -f release_notes.md
