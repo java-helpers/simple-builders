@@ -40,8 +40,10 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ~/.sonar/cache
-        key: ${{ runner.os }}-sonar
-        restore-keys: ${{ runner.os }}-sonar
+        # Content-addressed so the cache rotates when project config changes,
+        # with a prefix fallback for warm restores.
+        key: ${{ runner.os }}-sonar-${{ hashFiles('**/pom.xml') }}
+        restore-keys: ${{ runner.os }}-sonar-
         
     - name: Cache Maven packages
       uses: actions/cache@v4
