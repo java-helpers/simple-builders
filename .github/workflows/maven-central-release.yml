@@ -40,9 +40,21 @@ jobs:
           
       - name: Determine version
         id: version
+        env:
+          RELEASE_VERSION: ${{ github.event.inputs.release_version }}
         run: |
-          VERSION="${{ github.event.inputs.release_version }}"
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          # Do NOT interpolate the workflow input directly into the shell;
+          # read the untrusted input from an environment variable instead to
+          # avoid script injection.
+          VERSION="$RELEASE_VERSION"
+
+          # Validate against a strict semver pattern before using it anywhere.
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::Invalid release version '$VERSION'. Expected semver, e.g. 0.2.0 or 0.2.0-beta.1"
+            exit 1
+          fi
+
+          echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Releasing version: $VERSION"
           
       - name: Update POM versions
