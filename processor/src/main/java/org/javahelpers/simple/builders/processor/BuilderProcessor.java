@@ -67,6 +67,13 @@ public class BuilderProcessor extends AbstractProcessor {
   private JacksonModuleGenerator jacksonModuleGenerator;
   private boolean supportedJdk = true;
 
+  /**
+   * Opt-in strict/fail-fast mode. When enabled (via {@code -Asimplebuilder.strict=true}), builder
+   * generation failures are reported as compiler errors that fail the build. Defaults to {@code
+   * false} (warnings only, build does not fail).
+   */
+  private boolean strict = false;
+
   @Override
   public synchronized void init(ProcessingEnvironment processingEnv) {
     super.init(processingEnv);
@@ -77,6 +84,9 @@ public class BuilderProcessor extends AbstractProcessor {
     CompilerArgumentsReader reader = new CompilerArgumentsReader(processingEnv);
     BuilderConfiguration globalConfig = reader.readBuilderConfiguration();
     logger.debug("Loaded global configuration from compiler arguments: %s", globalConfig);
+
+    this.strict = reader.readBooleanValue(CompilerArgumentsEnum.STRICT);
+    logger.debug("Strict generation mode: %s", this.strict);
 
     this.context = new ProcessingContext(logger, globalConfig, processingEnv);
     this.codeGenerator = new RoasterCodeGenerator(processingEnv, logger);
@@ -169,10 +179,19 @@ public class BuilderProcessor extends AbstractProcessor {
         process(annotatedElement, config);
         successfulGenerations++;
       } catch (BuilderException ex) {
-        // All builder generation failures are warnings to allow other builders to be
-        // generated
-        context.warning(
-            annotatedElement, "simple-builders: Failed to generate builder - %s", ex.getMessage());
+        // By default builder generation failures are warnings so other builders are still
+        // generated. In opt-in strict mode they are promoted to errors that fail the build.
+        if (strict) {
+          context.error(
+              annotatedElement,
+              "simple-builders: Failed to generate builder - %s",
+              ex.getMessage());
+        } else {
+          context.warning(
+              annotatedElement,
+              "simple-builders: Failed to generate builder - %s",
+              ex.getMessage());
+        }
       } finally {
         context.debugEndOperation();
       }
