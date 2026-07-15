@@ -308,9 +308,9 @@ Or in Maven:
 
 #### Strict mode (fail the build on generation errors)
 
-By default, if a builder cannot be generated for an annotated type the processor emits a **compiler warning** and continues, so the build still succeeds. This keeps local/iterative development smooth.
+By default, if generation fails (for a builder or for a Jackson module) the processor emits a **compiler warning** and continues, so the build still succeeds. This keeps local/iterative development smooth.
 
-For high-reliability builds (e.g. CI/release pipelines) you can opt in to **strict mode**, which promotes builder-generation failures to **compiler errors** that fail the build:
+For high-reliability builds (e.g. CI/release pipelines) you can opt in to **strict mode**, which promotes generation failures — including Jackson module generation failures — to **compiler errors** that fail the build:
 
 ```bash
 javac -Asimplebuilder.strict=true YourClass.java

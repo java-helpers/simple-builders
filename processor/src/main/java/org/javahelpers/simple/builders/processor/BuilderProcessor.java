@@ -126,9 +126,17 @@ public class BuilderProcessor extends AbstractProcessor {
         try {
           codeGenerator.generateClass(moduleClassDef);
         } catch (BuilderException e) {
-          context.warning(
-              "simple-builders: Error generating Jackson module for package %s: %s",
-              packageName, e.getMessage());
+          // By default Jackson module generation failures are warnings. In opt-in strict mode
+          // they are promoted to errors that fail the build.
+          if (strict) {
+            context.error(
+                "simple-builders: Error generating Jackson module for package %s: %s",
+                packageName, e.getMessage());
+          } else {
+            context.warning(
+                "simple-builders: Error generating Jackson module for package %s: %s",
+                packageName, e.getMessage());
+          }
         }
       }
       // Reset indentation after Jackson module generation as well
