@@ -131,7 +131,15 @@ public enum CompilerArgumentsEnum {
 
   // === Logging ===
   /** Option for verbose logging output. */
-  VERBOSE("verbose");
+  VERBOSE("verbose"),
+
+  // === Error Handling ===
+  /**
+   * Option for strict/fail-fast generation mode. When enabled, builder (and Jackson module)
+   * generation failures are reported as compiler errors that fail the build instead of warnings.
+   * Defaults to disabled (warnings only, build does not fail).
+   */
+  STRICT("strict");
 
   /** Compiler option prefix for all simple-builders options. */
   private static final String OPTION_PREFIX = "simplebuilder.";

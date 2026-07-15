@@ -306,6 +306,24 @@ Or in Maven:
 
 📖 **For complete documentation, examples, and all available options, see the [Configuration Guide](docs/CONFIGURATION.md).**
 
+#### Strict mode (fail the build on generation errors)
+
+By default, if generation fails (for a builder or for a Jackson module) the processor emits a **compiler warning** and continues, so the build still succeeds. This keeps local/iterative development smooth.
+
+For high-reliability builds (e.g. CI/release pipelines) you can opt in to **strict mode**, which promotes generation failures — including Jackson module generation failures — to **compiler errors** that fail the build:
+
+```bash
+javac -Asimplebuilder.strict=true YourClass.java
+```
+
+```xml
+<compilerArgs>
+    <arg>-Asimplebuilder.strict=true</arg>
+</compilerArgs>
+```
+
+Strict mode is **disabled by default** (`false`); the default behavior (warnings only, build does not fail) is unchanged.
+
 ## Examples
 
 The `example` module contains real-world examples demonstrating various builder configurations and features. You can explore the source DTOs and their generated builders:
