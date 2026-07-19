@@ -355,6 +355,12 @@ requests from forks, so the secret-backed quality checks are handled specially:
   artifact; a follow-up workflow (`.github/workflows/fork-coverage.yml`) then
   uploads it to Codecov from the base-repo context. This is automatic and
   requires no action from contributors.
+- **SonarCloud**: a separate workflow (`.github/workflows/fork-sonar.yml`)
+  runs the analysis with the secret token, but it is gated by the `fork-ci`
+  GitHub Environment. A **maintainer must approve the run** (in the PR's
+  "Checks"/Environments prompt) before it executes — the analysis then runs on
+  the maintainer's behalf. Contributors cannot trigger it themselves, which
+  keeps the token from being exposed to untrusted code without review.
 
 ## Questions?
 
