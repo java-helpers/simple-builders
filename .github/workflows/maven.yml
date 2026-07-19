@@ -16,10 +16,16 @@ on:
     types: [opened, synchronize, reopened]
   workflow_dispatch:
 
+# Cancel superseded runs for the same ref to save runner minutes.
+concurrency:
+  group: maven-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
 
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       contents: read
       pull-requests: write
