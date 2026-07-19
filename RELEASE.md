@@ -22,17 +22,18 @@ Configure these GitHub secrets in **Settings** → **Secrets and variables** →
 3. Builds and verifies project with `-Prelease` (reproducible builds via `project.build.outputTimestamp`)
 4. Signs artifacts with GPG
 5. Generates a CycloneDX **SBOM** (JSON + XML) for each published module
-6. Deploys and **auto-publishes** to Maven Central
+6. Runs tests and **stages** the deployment to the Sonatype Central portal (does **not** auto-publish)
 7. Creates a **build-provenance attestation** for the published jars
 8. Pushes commit and tag to `main`
 9. Creates **draft** GitHub release (jars, sources, javadoc **and SBOMs** attached; requires manual publish)
 
 ## After Release
 
-1. **Publish GitHub Release**: Go to **Releases** → Edit draft → **Publish release**
-2. **Verify Maven Central**: Artifacts appear at https://central.sonatype.com/ (15-30 min delay)
+1. **Publish to Maven Central**: Go to the [Sonatype Central portal](https://central.sonatype.com/publishing/deployments), review the staged deployment, and **manually publish** it. Nothing is released to consumers until this step is performed.
+2. **Publish GitHub Release**: Go to **Releases** → Edit draft → **Publish release**
+3. **Verify Maven Central**: Artifacts appear at https://central.sonatype.com/ (15-30 min delay)
    - Search for: `io.github.java-helpers:simple-builders-core` or `simple-builders-processor`
-3. **Test the release**:
+4. **Test the release**:
    ```xml
    <dependency>
      <groupId>io.github.java-helpers</groupId>
@@ -74,6 +75,6 @@ Each release produces, in addition to the GPG-signed jars:
 
 - Project uses [Semantic Versioning](https://semver.org/) (MAJOR.MINOR.PATCH)
 - Versions with `-` (e.g., `0.2.0-beta`) are marked as pre-releases
-- Auto-publish is **only enabled in GitHub Actions** by default
+- Releases are **staged** to the Sonatype Central portal and require a **manual publish** step; nothing is auto-released
 - Both `core` and `processor` modules are published to Maven Central
 - The `example` module is excluded from releases

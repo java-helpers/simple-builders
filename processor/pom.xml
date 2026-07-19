@@ -57,12 +57,12 @@
     
     <!-- Dependency Versions -->
     <auto-service.version>1.1.1</auto-service.version>
-    <roaster.version>2.31.0.Final</roaster.version>
+    <roaster.version>2.31.1.Final</roaster.version>
     <commons-lang.version>3.20.0</commons-lang.version>
     <commons-collections.version>4.5.0</commons-collections.version>
-    <junit-jupiter.version>6.0.3</junit-jupiter.version>
+    <junit-jupiter.version>6.1.2</junit-jupiter.version>
     <google-compile-testing.version>0.23.0</google-compile-testing.version>
-    <jackson-databind.version>2.21.1</jackson-databind.version>
+    <jackson-databind.version>2.22.1</jackson-databind.version>
     
     <!-- Java and Compiler Properties -->
     <java.version>17</java.version>
@@ -74,7 +74,7 @@
     <central.autoPublish>false</central.autoPublish>
     
     <!-- Plugin Versions -->
-    <plugin.central.publishing.version>0.10.0</plugin.central.publishing.version>
+    <plugin.central.publishing.version>0.11.0</plugin.central.publishing.version>
     <plugin.cyclonedx.version>2.9.1</plugin.cyclonedx.version>
     <plugin.maven.compiler.version>3.15.0</plugin.maven.compiler.version>
     <plugin.maven.source.version>3.4.0</plugin.maven.source.version>
