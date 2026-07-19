@@ -351,16 +351,19 @@ mvn fmt:check
 GitHub does not expose repository secrets to workflows triggered by pull
 requests from forks, so the secret-backed quality checks are handled specially:
 
-- **Codecov**: the normal CI build publishes the coverage/test data as an
-  artifact; a follow-up workflow (`.github/workflows/fork-coverage.yml`) then
-  uploads it to Codecov from the base-repo context. This is automatic and
-  requires no action from contributors.
-- **SonarCloud**: a separate workflow (`.github/workflows/fork-sonar.yml`)
-  runs the analysis with the secret token, but it is gated by the `fork-ci`
-  GitHub Environment. A **maintainer must approve the run** (in the PR's
-  "Checks"/Environments prompt) before it executes — the analysis then runs on
-  the maintainer's behalf. Contributors cannot trigger it themselves, which
-  keeps the token from being exposed to untrusted code without review.
+- **Codecov**: the normal CI build performs the build, generated-source check,
+  and tests without secrets, then publishes coverage/test data as an artifact.
+  A follow-up workflow (`.github/workflows/fork-coverage.yml`) publishes the
+  test execution results and coverage to Codecov from the base-repo context.
+  This is automatic and requires no action from contributors. The upload can
+  still happen when tests fail so Codecov receives diagnostics; the CI result
+  remains failing and cannot satisfy a passing coverage gate.
+- **SonarCloud**: after the unprivileged CI build and tests succeed, a separate
+  workflow (`.github/workflows/fork-sonar.yml`) restores the compiled classes
+  and coverage reports and publishes the analysis with the secret token. It is
+  gated by the `fork-ci` GitHub Environment. A **maintainer must approve the
+  run** (in the Actions/Environments prompt) before it executes. It does not
+  rebuild or retest fork code with the token.
 
 ## Questions?
 

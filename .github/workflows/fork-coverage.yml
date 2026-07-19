@@ -55,7 +55,7 @@ jobs:
             echo "pr_head_ref=$pr_head_ref"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Upload test results to Codecov (processor)
+      - name: Publish fork PR test execution results to Codecov
         if: env.CODECOV_TOKEN != ''
         uses: codecov/test-results-action@47f89e9acb64b76debcd5ea40642d25a4adced9f # v1.1.1
         with:
@@ -67,7 +67,7 @@ jobs:
           fail_ci_if_error: true
           verbose: false
 
-      - name: Upload coverage to Codecov (processor)
+      - name: Publish fork PR test coverage to Codecov
         if: env.CODECOV_TOKEN != ''
         uses: codecov/codecov-action@015f24e6818733317a2da2edd6290ab26238649a # v5.0.7
         with:

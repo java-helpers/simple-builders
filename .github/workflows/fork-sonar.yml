@@ -1,49 +1,45 @@
 # SonarCloud analysis for pull requests from forks (manual maintainer gate).
 #
-# PRs from forks do not have access to repository secrets, so the SonarCloud
-# step in the main CI workflow is skipped for them (SONAR_TOKEN is empty).
-# This workflow runs on `pull_request_target` (i.e. in the base-repo context,
-# WITH secrets) but is protected by the `fork-ci` GitHub Environment, which is
-# configured with Required reviewers. A maintainer must click "Approve" before
-# the job runs, so it is the maintainer who starts the analysis on behalf of
-# the contributor and whose approval unlocks the token.
+# The unprivileged Java CI workflow performs the build, generated-source check,
+# and tests before this workflow can run. This workflow restores the resulting
+# analysis inputs and publishes them to SonarCloud; it does not rebuild or
+# retest fork code with the Sonar token.
 #
-# SECURITY: this workflow checks out and builds the untrusted fork code with
-# secrets in scope. That is only acceptable because the `fork-ci` environment
-# approval gate blocks execution until a maintainer has reviewed the PR diff.
-# Do NOT remove the `environment:` gate.
+# It runs on `workflow_run` in the base-repo context (with secrets), and is
+# protected by the `fork-ci` GitHub Environment with Required reviewers.
+# Do NOT remove that environment gate.
 name: Fork SonarCloud (manual approval)
 
 on:
-  pull_request_target:
-    branches: [ "main" ]
-    types: [opened, synchronize, reopened]
+  workflow_run:
+    workflows: ["Java CI with Maven"]
+    types: [completed]
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
-  group: fork-sonar-${{ github.event.pull_request.number }}
+  group: fork-sonar-${{ github.event.workflow_run.id }}
   cancel-in-progress: true
 
 jobs:
   sonar:
-    # Only for PRs that originate from a fork. Same-repo PRs already run Sonar
-    # in the main CI workflow (which has secrets), so skip them here.
-    if: github.event.pull_request.head.repo.full_name != github.repository
+    if: >
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_repository.full_name != github.event.workflow_run.repository.full_name &&
+      github.event.workflow_run.pull_requests[0].number != ''
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    # Manual maintainer approval gate: the run pauses here until a required
-    # reviewer of the `fork-ci` environment approves it.
     environment: fork-ci
     env:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     steps:
-      - name: Check out PR head (untrusted fork code)
+      - name: Check out successful fork PR source
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
-          # Explicitly analyse the fork PR's head commit, not the base branch.
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 0
 
       - name: Set up JDK 17
@@ -60,19 +56,33 @@ jobs:
           key: ${{ runner.os }}-sonar-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-sonar
 
-      - name: Build with Maven
-        run: mvn -B install -Pmetrics --file pom.xml
+      - name: Download successful fork PR analysis inputs
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: sonar-analysis-inputs
+          path: sonar-analysis-data
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
 
-      - name: SonarCloud Analysis
+      - name: Restore compiled classes and coverage reports
+        run: |
+          mkdir -p core/target/classes processor/target/classes
+          cp -a sonar-analysis-data/core-classes/. core/target/classes/ 2>/dev/null || true
+          cp -a sonar-analysis-data/processor-classes/. processor/target/classes/ 2>/dev/null || true
+          mkdir -p core/target/site/jacoco processor/target/site/jacoco
+          cp -a sonar-analysis-data/core-jacoco.xml core/target/site/jacoco/jacoco.xml 2>/dev/null || true
+          cp -a sonar-analysis-data/processor-jacoco.xml processor/target/site/jacoco/jacoco.xml 2>/dev/null || true
+
+      - name: Publish fork PR analysis to SonarCloud
         if: env.SONAR_TOKEN != ''
         env:
-          # Pass the (attacker-controlled) PR metadata via env, never inline.
-          PR_KEY: ${{ github.event.pull_request.number }}
-          PR_BRANCH: ${{ github.event.pull_request.head.ref }}
-          PR_BASE: ${{ github.event.pull_request.base.ref }}
+          PR_KEY: ${{ github.event.workflow_run.pull_requests[0].number }}
+          PR_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          PR_BASE: main
         run: |
           mvn -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
             --file pom.xml \
+            -DskipTests \
             -Dsonar.pullrequest.key="$PR_KEY" \
             -Dsonar.pullrequest.branch="$PR_BRANCH" \
             -Dsonar.pullrequest.base="$PR_BASE"

@@ -81,6 +81,23 @@ jobs:
           echo "✅ No uncommitted generated source changes found"
         fi
 
+    - name: Package Sonar analysis inputs (fork PRs)
+      if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository
+      run: |
+        mkdir -p sonar-analysis-data
+        cp -a core/target/classes sonar-analysis-data/core-classes 2>/dev/null || true
+        cp -a processor/target/classes sonar-analysis-data/processor-classes 2>/dev/null || true
+        cp -a core/target/site/jacoco/jacoco.xml sonar-analysis-data/core-jacoco.xml 2>/dev/null || true
+        cp -a processor/target/site/jacoco/jacoco.xml sonar-analysis-data/processor-jacoco.xml 2>/dev/null || true
+
+    - name: Upload Sonar analysis inputs (fork PRs)
+      if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      with:
+        name: sonar-analysis-inputs
+        path: sonar-analysis-data/
+        if-no-files-found: warn
+
     - name: SonarCloud Analysis
       # Skip when SONAR_TOKEN is unavailable (fork/Dependabot PRs).
       if: env.SONAR_TOKEN != ''
