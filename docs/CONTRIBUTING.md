@@ -355,9 +355,10 @@ requests from forks, so the secret-backed quality checks are handled specially:
   and tests without secrets, then publishes coverage/test data as an artifact.
   A follow-up workflow (`.github/workflows/fork-coverage.yml`) publishes the
   test execution results and coverage to Codecov from the base-repo context.
-  This is automatic and requires no action from contributors. The upload can
-  still happen when tests fail so Codecov receives diagnostics; the CI result
-  remains failing and cannot satisfy a passing coverage gate.
+  This is automatic and requires no action from contributors. Test execution
+  results are uploaded even when tests fail so Codecov receives diagnostics;
+  coverage is published only after a successful CI run. The CI result remains
+  authoritative and cannot be made passing by an upload.
 - **SonarCloud**: after the unprivileged CI build and tests succeed, a separate
   workflow (`.github/workflows/fork-sonar.yml`) restores the compiled classes
   and coverage reports and publishes the analysis with the secret token. It is

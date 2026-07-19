@@ -68,7 +68,7 @@ jobs:
           verbose: false
 
       - name: Publish fork PR test coverage to Codecov
-        if: env.CODECOV_TOKEN != ''
+        if: env.CODECOV_TOKEN != '' && github.event.workflow_run.conclusion == 'success'
         uses: codecov/codecov-action@015f24e6818733317a2da2edd6290ab26238649a # v5.0.7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
