@@ -20,15 +20,17 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      # Needed to open the version-bump pull request instead of pushing to main.
+      pull-requests: write
       
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-depth: 0
           
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4.8.0
         with:
           java-version: '17'
           distribution: 'zulu'
@@ -41,9 +43,21 @@ jobs:
           
       - name: Determine version
         id: version
+        env:
+          RELEASE_VERSION: ${{ github.event.inputs.release_version }}
         run: |
-          VERSION="${{ github.event.inputs.release_version }}"
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          # Do NOT interpolate the workflow input directly into the shell;
+          # read the untrusted input from an environment variable instead to
+          # avoid script injection.
+          VERSION="$RELEASE_VERSION"
+
+          # Validate against a strict semver pattern before using it anywhere.
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::Invalid release version '$VERSION'. Expected semver, e.g. 0.2.0 or 0.2.0-beta.1"
+            exit 1
+          fi
+
+          echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Releasing version: $VERSION"
           
       - name: Update POM versions
@@ -62,16 +76,24 @@ jobs:
         id: commit
         run: |
           VERSION=${{ steps.version.outputs.VERSION }}
+          BRANCH="release/v$VERSION"
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
+
+          # Commit the version bump on a dedicated release branch so the
+          # update to main goes through a reviewed pull request instead of a
+          # direct push that bypasses branch protection.
+          git checkout -B "$BRANCH"
           git add pom.xml core/pom.xml processor/pom.xml
-          
-          # Only commit if there are changes
+          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+
+          # Only commit if there are changes. Note: no "[skip ci]" so the
+          # release branch / PR is validated by CI.
           if git diff --staged --quiet; then
             echo "No version changes detected - version already set to $VERSION"
             echo "has_changes=false" >> $GITHUB_OUTPUT
           else
-            git commit -m "chore: release version $VERSION [skip ci]"
+            git commit -m "chore: release version $VERSION"
             echo "has_changes=true" >> $GITHUB_OUTPUT
           fi
           
@@ -93,29 +115,55 @@ jobs:
           MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_SIGNING_KEY_PASSWORD }}
         run: mvn -B clean verify -Prelease
         
-      - name: Deploy to Maven Central
+      - name: Deploy (stage) to Maven Central
         env:
           MAVEN_USERNAME: ${{ secrets.CENTRAL_TOKEN_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.CENTRAL_TOKEN_PASSWORD }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_SIGNING_KEY_PASSWORD }}
         run: |
-          mvn -B deploy -Prelease -pl core,processor -DskipTests=true -Dcentral.autoPublish=true
+          # Run tests against the artifacts being deployed (do NOT skip tests)
+          # and only STAGE the release to the Sonatype Central portal
+          # (autoPublish defaults to false). A maintainer must review and
+          # manually publish the staged deployment, so nothing is auto-released
+          # to Maven Central without human approval.
+          mvn -B deploy -Prelease -pl core,processor -Dcentral.autoPublish=false
           
-      - name: Push changes to repository
+      - name: Push release branch and tag
         if: success()
         run: |
           VERSION=${{ steps.version.outputs.VERSION }}
-          
-          # Push commit if there were changes
+          BRANCH="${{ steps.commit.outputs.branch }}"
+
+          # Push the release branch (never push directly to main).
           if [ "${{ steps.commit.outputs.has_changes }}" = "true" ]; then
-            git push origin main
+            git push origin "$BRANCH"
           fi
-          
+
           # Push tag if it was newly created (check if tag exists remotely)
           if ! git ls-remote --tags origin | grep -q "refs/tags/v$VERSION"; then
             git push origin "v$VERSION"
           else
             echo "Tag v$VERSION already exists remotely"
+          fi
+
+      - name: Open version bump pull request
+        if: success() && steps.commit.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+          BRANCH="${{ steps.commit.outputs.branch }}"
+
+          # Open a reviewed PR to update main instead of pushing to it. This
+          # preserves branch protection and required reviews on main.
+          if gh pr view "$BRANCH" >/dev/null 2>&1; then
+            echo "Pull request for $BRANCH already exists"
+          else
+            gh pr create \
+              --base main \
+              --head "$BRANCH" \
+              --title "chore: release version $VERSION" \
+              --body "Automated version bump for release v$VERSION. Review and merge to update \`main\`; created via PR so branch protection is not bypassed."
           fi
           
       - name: Create GitHub Release
