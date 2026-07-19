@@ -83,12 +83,25 @@ jobs:
 
     - name: Package Sonar analysis inputs (fork PRs)
       if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository
+      env:
+        # Pass PR metadata through the environment (never interpolate the
+        # attacker-controlled head ref/sha directly into the shell script).
+        PR_NUMBER: ${{ github.event.number }}
+        PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
       run: |
         mkdir -p sonar-analysis-data
         cp -a core/target/classes sonar-analysis-data/core-classes 2>/dev/null || true
         cp -a processor/target/classes sonar-analysis-data/processor-classes 2>/dev/null || true
         cp -a core/target/site/jacoco/jacoco.xml sonar-analysis-data/core-jacoco.xml 2>/dev/null || true
         cp -a processor/target/site/jacoco/jacoco.xml sonar-analysis-data/processor-jacoco.xml 2>/dev/null || true
+        {
+          printf 'pr_number=%s\n' "$PR_NUMBER"
+          printf 'pr_head_sha=%s\n' "$PR_HEAD_SHA"
+          printf 'pr_head_ref=%s\n' "$PR_HEAD_REF"
+          printf 'pr_base_ref=%s\n' "$PR_BASE_REF"
+        } > sonar-analysis-data/pr-event.env
 
     - name: Upload Sonar analysis inputs (fork PRs)
       if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository
