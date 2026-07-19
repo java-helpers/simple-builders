@@ -1,5 +1,20 @@
 version: 2
 updates:
+  # Keep the GitHub Actions used in the workflows up to date. This matters most
+  # once actions are SHA-pinned: a pinned SHA never gets security updates on its
+  # own, so Dependabot opens PRs that bump the pinned SHAs as new releases land.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+
   - package-ecosystem: "maven" # See documentation for possible values
     directories:
       - "/core"
