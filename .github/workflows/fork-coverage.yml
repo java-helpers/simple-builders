@@ -1,0 +1,82 @@
+# Uploads coverage/test results for PRs from forks to Codecov.
+#
+# PRs from forks do not have access to repository secrets, so the direct
+# Codecov steps in the main CI workflow are skipped for them. This workflow
+# runs on `workflow_run` (i.e. in the base-repo context, WITH secrets) after
+# the main CI completes, downloads ONLY the coverage data artifact that the CI
+# build produced, and uploads it to Codecov. It never checks out or executes
+# fork code, so there is no risk of leaking secrets to untrusted contributions.
+name: Fork coverage (Codecov)
+
+on:
+  workflow_run:
+    workflows: ["Java CI with Maven"]
+    types: [completed]
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  codecov:
+    # Only for PRs that originate from a fork (same-repo PRs upload directly in
+    # the main CI workflow, which has secrets).
+    if: >
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.head_repository.full_name != github.event.workflow_run.repository.full_name
+    runs-on: ubuntu-latest
+    env:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    steps:
+      - name: Download coverage payload from CI run
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: codecov-payload
+          path: codecov-payload
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+
+      - name: Read PR metadata
+        id: meta
+        # The payload file is produced by the untrusted fork build, so extract
+        # only the expected keys and validate their format before exposing them
+        # as step outputs (prevents $GITHUB_OUTPUT injection).
+        run: |
+          env_file=codecov-payload/pr-event.env
+          pr_number=$(grep -m1 '^pr_number=' "$env_file" | cut -d= -f2-)
+          pr_head_sha=$(grep -m1 '^pr_head_sha=' "$env_file" | cut -d= -f2-)
+          pr_head_ref=$(grep -m1 '^pr_head_ref=' "$env_file" | cut -d= -f2-)
+          [[ "$pr_number" =~ ^[0-9]+$ ]] || { echo "invalid pr_number"; exit 1; }
+          [[ "$pr_head_sha" =~ ^[0-9a-f]{40}$ ]] || { echo "invalid pr_head_sha"; exit 1; }
+          [[ "$pr_head_ref" =~ ^[A-Za-z0-9._/-]+$ ]] || { echo "invalid pr_head_ref"; exit 1; }
+          {
+            echo "pr_number=$pr_number"
+            echo "pr_head_sha=$pr_head_sha"
+            echo "pr_head_ref=$pr_head_ref"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Publish fork PR test execution results to Codecov
+        if: env.CODECOV_TOKEN != ''
+        uses: codecov/test-results-action@47f89e9acb64b76debcd5ea40642d25a4adced9f # v1.1.1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: codecov-payload/surefire/*.xml,codecov-payload/failsafe/*.xml
+          override_commit: ${{ steps.meta.outputs.pr_head_sha }}
+          override_pr: ${{ steps.meta.outputs.pr_number }}
+          override_branch: ${{ steps.meta.outputs.pr_head_ref }}
+          fail_ci_if_error: true
+          verbose: false
+
+      - name: Publish fork PR test coverage to Codecov
+        if: env.CODECOV_TOKEN != '' && github.event.workflow_run.conclusion == 'success'
+        uses: codecov/codecov-action@015f24e6818733317a2da2edd6290ab26238649a # v5.0.7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: codecov-payload/jacoco.xml
+          flags: processor
+          name: codecov-upload-fork
+          override_commit: ${{ steps.meta.outputs.pr_head_sha }}
+          override_pr: ${{ steps.meta.outputs.pr_number }}
+          override_branch: ${{ steps.meta.outputs.pr_head_ref }}
+          fail_ci_if_error: true
+          verbose: false
