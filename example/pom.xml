@@ -15,12 +15,12 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <code-format.version>2.25</code-format.version>
-    <commons-lang.version>3.18.0</commons-lang.version>
+    <commons-lang.version>3.20.0</commons-lang.version>
     <junit-jupiter.version>5.11.4</junit-jupiter.version>
-    <jackson-databind.version>2.21.1</jackson-databind.version>
+    <jackson-databind.version>2.22.1</jackson-databind.version>
 
-    <plugin.maven.compiler.version>3.13.0</plugin.maven.compiler.version>
-    <plugin.maven.deploy.version>3.1.1</plugin.maven.deploy.version>
+    <plugin.maven.compiler.version>3.15.0</plugin.maven.compiler.version>
+    <plugin.maven.deploy.version>3.1.4</plugin.maven.deploy.version>
 
     <maven.compiler.source>${java.version}</maven.compiler.source>
     <maven.compiler.target>${java.version}</maven.compiler.target>
