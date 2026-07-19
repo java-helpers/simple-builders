@@ -24,6 +24,13 @@ jobs:
       pull-requests: write
       checks: write
 
+    # Expose secret-backed tokens as env so steps can be gated on their
+    # availability. On fork/Dependabot PRs secrets are withheld and resolve to
+    # an empty string, so the dependent steps are skipped rather than failing.
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
     steps:
     - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       with:
@@ -74,11 +81,39 @@ jobs:
           echo "✅ No uncommitted generated source changes found"
         fi
 
-    - name: SonarCloud Analysis
-      # Skip for Dependabot PRs (no access to secrets)
-      if: github.actor != 'dependabot[bot]'
+    - name: Package Sonar analysis inputs (fork PRs)
+      if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository
       env:
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        # Pass PR metadata through the environment (never interpolate the
+        # attacker-controlled head ref/sha directly into the shell script).
+        PR_NUMBER: ${{ github.event.number }}
+        PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
+      run: |
+        mkdir -p sonar-analysis-data
+        cp -a core/target/classes sonar-analysis-data/core-classes 2>/dev/null || true
+        cp -a processor/target/classes sonar-analysis-data/processor-classes 2>/dev/null || true
+        cp -a core/target/site/jacoco/jacoco.xml sonar-analysis-data/core-jacoco.xml 2>/dev/null || true
+        cp -a processor/target/site/jacoco/jacoco.xml sonar-analysis-data/processor-jacoco.xml 2>/dev/null || true
+        {
+          printf 'pr_number=%s\n' "$PR_NUMBER"
+          printf 'pr_head_sha=%s\n' "$PR_HEAD_SHA"
+          printf 'pr_head_ref=%s\n' "$PR_HEAD_REF"
+          printf 'pr_base_ref=%s\n' "$PR_BASE_REF"
+        } > sonar-analysis-data/pr-event.env
+
+    - name: Upload Sonar analysis inputs (fork PRs)
+      if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      with:
+        name: sonar-analysis-inputs
+        path: sonar-analysis-data/
+        if-no-files-found: warn
+
+    - name: SonarCloud Analysis
+      # Skip when SONAR_TOKEN is unavailable (fork/Dependabot PRs).
+      if: env.SONAR_TOKEN != ''
       run: mvn -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar --file pom.xml
 
     - name: Upload JaCoCo HTML report (processor)
@@ -97,9 +132,41 @@ jobs:
         path: processor/target/site/jacoco/jacoco.xml
         if-no-files-found: warn
 
+    # For PRs from forks, secrets are withheld so the direct Codecov steps
+    # below are skipped. Instead publish the coverage data (plus the PR
+    # identity) as an artifact; the privileged fork-coverage.yml workflow
+    # (triggered on workflow_run, in the base-repo context) consumes it and
+    # uploads to Codecov without ever executing fork code.
+    - name: Assemble Codecov payload (fork PRs)
+      if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository
+      env:
+        # Pass PR metadata through the environment (never interpolate the
+        # attacker-controlled head ref/sha directly into the shell script).
+        PR_NUMBER: ${{ github.event.number }}
+        PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+      run: |
+        mkdir -p codecov-payload/surefire codecov-payload/failsafe
+        cp -f processor/target/site/jacoco/jacoco.xml codecov-payload/ 2>/dev/null || true
+        cp -f processor/target/surefire-reports/*.xml codecov-payload/surefire/ 2>/dev/null || true
+        cp -f processor/target/failsafe-reports/*.xml codecov-payload/failsafe/ 2>/dev/null || true
+        {
+          printf 'pr_number=%s\n' "$PR_NUMBER"
+          printf 'pr_head_sha=%s\n' "$PR_HEAD_SHA"
+          printf 'pr_head_ref=%s\n' "$PR_HEAD_REF"
+        } > codecov-payload/pr-event.env
+
+    - name: Upload Codecov payload artifact (fork PRs)
+      if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      with:
+        name: codecov-payload
+        path: codecov-payload/
+        if-no-files-found: warn
+
     - name: Upload test results to Codecov (processor)
-      # Skip for Dependabot PRs (no access to secrets)
-      if: always() && github.actor != 'dependabot[bot]'
+      # Skip when CODECOV_TOKEN is unavailable (fork/Dependabot PRs).
+      if: always() && env.CODECOV_TOKEN != ''
       uses: codecov/test-results-action@47f89e9acb64b76debcd5ea40642d25a4adced9f # v1.1.1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
@@ -110,8 +177,8 @@ jobs:
         verbose: false
 
     - name: Upload coverage to Codecov (processor)
-      # Skip for Dependabot PRs (no access to secrets)
-      if: always() && github.actor != 'dependabot[bot]'
+      # Skip when CODECOV_TOKEN is unavailable (fork/Dependabot PRs).
+      if: always() && env.CODECOV_TOKEN != ''
       uses: codecov/codecov-action@015f24e6818733317a2da2edd6290ab26238649a # v5.0.7
       with:
         fail_ci_if_error: true
