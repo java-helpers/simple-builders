@@ -346,6 +346,16 @@ mvn fmt:check
 - **Include tests**: Add tests for new functionality
 - **Update docs**: Update README.md or other docs if needed
 
+### CI for pull requests from forks
+
+GitHub does not expose repository secrets to workflows triggered by pull
+requests from forks, so the secret-backed quality checks are handled specially:
+
+- **Codecov**: the normal CI build publishes the coverage/test data as an
+  artifact; a follow-up workflow (`.github/workflows/fork-coverage.yml`) then
+  uploads it to Codecov from the base-repo context. This is automatic and
+  requires no action from contributors.
+
 ## Questions?
 
 If you have questions or need help:
