@@ -29,7 +29,7 @@ jobs:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     steps:
       - name: Download coverage payload from CI run
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: codecov-payload
           path: codecov-payload
@@ -57,7 +57,7 @@ jobs:
 
       - name: Publish fork PR test execution results to Codecov
         if: env.CODECOV_TOKEN != ''
-        uses: codecov/test-results-action@47f89e9acb64b76debcd5ea40642d25a4adced9f # v1.1.1
+        uses: codecov/test-results-action@0fa95f0e1eeaafde2c782583b36b28ad0d8c77d3 # v1.2.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: codecov-payload/surefire/*.xml,codecov-payload/failsafe/*.xml
@@ -69,7 +69,7 @@ jobs:
 
       - name: Publish fork PR test coverage to Codecov
         if: env.CODECOV_TOKEN != '' && github.event.workflow_run.conclusion == 'success'
-        uses: codecov/codecov-action@015f24e6818733317a2da2edd6290ab26238649a # v5.0.7
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: codecov-payload/jacoco.xml
