@@ -9,26 +9,30 @@
 # Public documentation: https://docs.github.com/en/code-security/supply-chain-security/understanding-your-software-supply-chain/about-dependency-review#dependency-review-enforcement
 name: 'Dependency review'
 on:
-  pull_request:
+  # Use pull_request_target so the review also works for PRs opened from forks.
+  # A plain `pull_request` run from a fork receives a read-only GITHUB_TOKEN, so
+  # `comment-summary-in-pr` cannot post its summary ("Unable to write summary to
+  # pull-request. Make sure you are giving this workflow the permission
+  # 'pull-requests: write'"). pull_request_target runs in the base-repo context
+  # with a read/write token, so the summary is posted on fork PRs too.
+  #
+  # This is safe here because dependency-review-action never checks out or executes
+  # PR-supplied code: it only compares the PR's base/head via the GitHub
+  # dependency-graph/advisory API. No checkout step is used, so untrusted code is
+  # never run with the elevated token.
+  pull_request_target:
     branches: [ "main" ]
 
-# If using a dependency submission action in this workflow this permission will need to be set to:
-#
-# permissions:
-#   contents: write
-#
-# https://docs.github.com/en/enterprise-cloud@latest/code-security/supply-chain-security/understanding-your-software-supply-chain/using-the-dependency-submission-api
 permissions:
   contents: read
-  # Write permissions for pull-requests are required for using the `comment-summary-in-pr` option, comment out if you aren't using this option
+  # Required so `comment-summary-in-pr` can post the review summary (works for
+  # fork PRs only because of the pull_request_target trigger above).
   pull-requests: write
 
 jobs:
   dependency-review:
     runs-on: ubuntu-latest
     steps:
-      - name: 'Checkout repository'
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - name: 'Dependency Review'
         uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0
         # Commonly enabled options, see https://github.com/actions/dependency-review-action#configuration-options for all available options.
