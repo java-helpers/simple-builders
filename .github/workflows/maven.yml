@@ -19,11 +19,9 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-    # Least privilege: the build job only reads the repo and writes check
-    # output. No step uses the workflow token to write to pull requests, and
-    # SonarCloud/Codecov PR decoration is done server-side using tokens
-    # configured in their project settings (not the workflow GITHUB_TOKEN).
-    # This permission predates those integrations and is unused, so drop it.
+    # Least privilege: read the repository (checkout + build) and write
+    # check-run output (test/analysis results). No step uses the workflow
+    # token to write to pull requests.
     permissions:
       contents: read
       checks: write
