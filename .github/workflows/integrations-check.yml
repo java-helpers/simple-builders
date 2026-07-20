@@ -1,0 +1,80 @@
+name: 'Integration connectivity check'
+
+# Maintainer-only diagnostic: verify the 3rd-party integration secrets and their
+# endpoints are usable, without building or running any project/PR code.
+#
+# workflow_dispatch can only be started by users with write access, from the
+# default branch, so it is inherently maintainer-gated and never runs for fork
+# PRs. It performs authenticated HTTP checks only; token values are never
+# printed. This is a diagnostic and does not replace the fork-ci environment
+# approval that gates the actual Sonar publish.
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Which integration(s) to check'
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - sonarcloud
+          - codecov
+
+permissions:
+  contents: read
+
+concurrency:
+  group: integrations-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      TARGET: ${{ github.event.inputs.target }}
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    steps:
+      - name: Check SonarCloud token and connectivity
+        if: env.TARGET == 'all' || env.TARGET == 'sonarcloud'
+        run: |
+          set -euo pipefail
+          if [ -z "${SONAR_TOKEN:-}" ]; then
+            echo "::error::SONAR_TOKEN secret is empty or not configured."
+            exit 1
+          fi
+          # Validate the token via SonarCloud's authentication endpoint. The token
+          # is sent as HTTP basic-auth username; its value is never printed.
+          http_code="$(curl -sS -o /tmp/sonar.json -w '%{http_code}' \
+            -u "$SONAR_TOKEN:" https://sonarcloud.io/api/authentication/validate || true)"
+          echo "sonarcloud.io/api/authentication/validate -> HTTP $http_code"
+          if [ "$http_code" != "200" ]; then
+            echo "::error::SonarCloud returned HTTP $http_code (token likely invalid/expired, or the API is unreachable)."
+            exit 1
+          fi
+          if ! grep -q '"valid":true' /tmp/sonar.json; then
+            echo "::error::SonarCloud reports the token as NOT valid."
+            cat /tmp/sonar.json
+            exit 1
+          fi
+          echo "OK: SONAR_TOKEN is valid and SonarCloud is reachable."
+
+      - name: Check Codecov token and connectivity
+        if: env.TARGET == 'all' || env.TARGET == 'codecov'
+        run: |
+          set -euo pipefail
+          if [ -z "${CODECOV_TOKEN:-}" ]; then
+            echo "::error::CODECOV_TOKEN secret is empty or not configured."
+            exit 1
+          fi
+          # Codecov upload tokens have no public "validate" endpoint, so this is a
+          # presence + reachability check against the Codecov API (stated honestly).
+          http_code="$(curl -sS -o /dev/null -w '%{http_code}' https://api.codecov.io/health || true)"
+          echo "api.codecov.io/health -> HTTP $http_code"
+          if [ "$http_code" != "200" ]; then
+            echo "::error::Codecov API not reachable (HTTP $http_code)."
+            exit 1
+          fi
+          echo "OK: CODECOV_TOKEN is present and the Codecov API is reachable (upload-token validity is not publicly verifiable)."
