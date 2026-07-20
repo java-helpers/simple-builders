@@ -51,6 +51,9 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <!-- Reproducible builds: fixed timestamp for archive entries. Updated automatically by the
+         release workflow; may be overridden per build with -Dproject.build.outputTimestamp. -->
+    <project.build.outputTimestamp>2025-01-01T00:00:00Z</project.build.outputTimestamp>
     
     <!-- Dependency Versions -->
     <auto-service.version>1.1.1</auto-service.version>
@@ -72,6 +75,7 @@
     
     <!-- Plugin Versions -->
     <plugin.central.publishing.version>0.11.0</plugin.central.publishing.version>
+    <plugin.cyclonedx.version>2.9.1</plugin.cyclonedx.version>
     <plugin.maven.compiler.version>3.15.0</plugin.maven.compiler.version>
     <plugin.maven.source.version>3.4.0</plugin.maven.source.version>
     <plugin.maven.javadoc.version>3.12.0</plugin.maven.javadoc.version>
@@ -249,6 +253,28 @@
             <configuration>
               <publishingServerId>central</publishingServerId>
               <autoPublish>${central.autoPublish}</autoPublish>
+            </configuration>
+          </plugin>
+          <!-- SBOM generation (CycloneDX) -->
+          <plugin>
+            <groupId>org.cyclonedx</groupId>
+            <artifactId>cyclonedx-maven-plugin</artifactId>
+            <version>${plugin.cyclonedx.version}</version>
+            <executions>
+              <execution>
+                <id>generate-sbom</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>makeBom</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <!-- Reuse the derived artifact file name so artifactId/version aren't duplicated here. -->
+              <outputName>${project.build.finalName}-sbom</outputName>
+              <outputFormat>all</outputFormat>
+              <projectType>library</projectType>
+              <skipNotDeployed>false</skipNotDeployed>
             </configuration>
           </plugin>
           <plugin>
