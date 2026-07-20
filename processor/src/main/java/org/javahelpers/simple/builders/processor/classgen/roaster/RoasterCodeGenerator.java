@@ -102,7 +102,15 @@ public class RoasterCodeGenerator {
     logger.debugStartOperation(
         "Code generation for class: %s", classDef.getTypeName().getClassName());
 
-    String sourceCode = createClassSource(classDef);
+    String sourceCode;
+    try {
+      sourceCode = createClassSource(classDef);
+    } catch (RuntimeException ex) {
+      // Rendering failures (e.g. RoasterMapperException) are RuntimeExceptions. Convert them into
+      // a BuilderException so callers can isolate the failure to this single class and keep
+      // generating the remaining builders instead of aborting the whole processing round.
+      throw new BuilderException(null, ex);
+    }
     writeClassToFile(sourceCode, classDef);
 
     logger.debugEndOperation(
