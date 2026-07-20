@@ -327,17 +327,6 @@ public final class ProcessingContext {
   }
 
   /**
-   * Reports an error at the location of the given element with a formatted message.
-   *
-   * @param element the element where the error occurred, used for location information
-   * @param format the format string
-   * @param args arguments referenced by the format specifiers in the format string
-   */
-  public void error(Element element, String format, Object... args) {
-    logger.error(element, format, args);
-  }
-
-  /**
    * Returns whether strict/fail-fast generation mode is enabled via the global compiler
    * configuration.
    *
@@ -348,14 +337,14 @@ public final class ProcessingContext {
   }
 
   /**
-   * Reports either an error or a warning depending on strict mode. In strict mode a build failure
-   * is emitted; otherwise a warning is logged so generation of remaining builders can continue.
+   * Reports an error or warning based on strict mode. In strict mode a build failure is emitted;
+   * otherwise a warning is logged so generation of remaining builders can continue.
    *
    * @param element the element associated with the problem, for compiler location information
    * @param format the format string
    * @param args arguments referenced by the format specifiers
    */
-  public void reportErrorOrWarning(Element element, String format, Object... args) {
+  public void reportBasedOnStrictMode(Element element, String format, Object... args) {
     if (isStrictModeEnabled()) {
       logger.error(element, format, args);
     } else {
@@ -364,12 +353,12 @@ public final class ProcessingContext {
   }
 
   /**
-   * Reports either an error or a warning depending on strict mode, without an element location.
+   * Reports an error or warning based on strict mode, without an element location.
    *
    * @param format the format string
    * @param args arguments referenced by the format specifiers
    */
-  public void reportErrorOrWarning(String format, Object... args) {
+  public void reportBasedOnStrictMode(String format, Object... args) {
     if (isStrictModeEnabled()) {
       logger.error(format, args);
     } else {

@@ -77,7 +77,6 @@ public class BuilderProcessor extends AbstractProcessor {
     CompilerArgumentsReader reader = new CompilerArgumentsReader(processingEnv);
     BuilderConfiguration globalConfig = reader.readBuilderConfiguration();
     logger.debug("Loaded global configuration from compiler arguments: %s", globalConfig);
-    logger.debug("Strict generation mode: %s", globalConfig.isStrictModeEnabled());
 
     this.context = new ProcessingContext(logger, globalConfig, processingEnv);
     this.codeGenerator = new RoasterCodeGenerator(processingEnv, logger);
@@ -119,7 +118,7 @@ public class BuilderProcessor extends AbstractProcessor {
         } catch (BuilderException e) {
           // By default Jackson module generation failures are warnings. In opt-in strict mode
           // they are promoted to errors that fail the build.
-          context.reportErrorOrWarning(
+          context.reportBasedOnStrictMode(
               "simple-builders: Error generating Jackson module for package %s: %s",
               packageName, e.getMessage());
         }
@@ -174,7 +173,7 @@ public class BuilderProcessor extends AbstractProcessor {
       } catch (BuilderException ex) {
         // By default builder generation failures are warnings so other builders are still
         // generated. In opt-in strict mode they are promoted to errors that fail the build.
-        context.reportErrorOrWarning(
+        context.reportBasedOnStrictMode(
             annotatedElement, "simple-builders: Failed to generate builder - %s", ex.getMessage());
       } finally {
         context.debugEndOperation();
