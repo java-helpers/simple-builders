@@ -73,6 +73,14 @@ jobs:
           # Update module POMs
           mvn versions:set -DnewVersion=$VERSION -DgenerateBackupPoms=false -pl core
           mvn versions:set -DnewVersion=$VERSION -DgenerateBackupPoms=false -pl processor
+
+      - name: Update reproducible build timestamp
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+          TIMESTAMP="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+          echo "Setting project.build.outputTimestamp to $TIMESTAMP for release $VERSION"
+          # Pin archive entry timestamps to the release moment for reproducible builds.
+          mvn versions:set-property -Dproperty=project.build.outputTimestamp -DnewVersion="$TIMESTAMP" -DgenerateBackupPoms=false -pl core,processor
           
       - name: Commit version changes
         id: commit
@@ -136,9 +144,13 @@ jobs:
           # to Maven Central without human approval.
           mvn -B deploy -Prelease -pl core,processor -Dcentral.autoPublish=false
 
+      # Generates a signed build-provenance attestation for the released JARs. This is
+      # GitHub's official attestation action; the resulting SLSA attestation is stored in
+      # the repository's Attestations page and can be verified by consumers with:
+      #   gh attestation verify <jar> --repo java-helpers/simple-builders
       - name: Attest build provenance for published jars
         if: success()
-        uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
+        uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1 (GitHub official)
         with:
           subject-path: |
             core/target/simple-builders-core-*.jar

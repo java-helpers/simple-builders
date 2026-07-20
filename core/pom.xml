@@ -54,8 +54,8 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <!-- Reproducible builds: fixed timestamp for archive entries. Override per
-         release with -Dproject.build.outputTimestamp=<commit ISO-8601 date>. -->
+    <!-- Reproducible builds: fixed timestamp for archive entries. Updated automatically by the
+         release workflow; may be overridden per build with -Dproject.build.outputTimestamp. -->
     <project.build.outputTimestamp>2025-01-01T00:00:00Z</project.build.outputTimestamp>
 
     <!-- Java and Compiler Properties -->
@@ -188,7 +188,8 @@
               </execution>
             </executions>
             <configuration>
-              <outputName>${project.artifactId}-${project.version}-sbom</outputName>
+              <!-- Reuse the derived artifact file name so artifactId/version aren't duplicated here. -->
+              <outputName>${project.build.finalName}-sbom</outputName>
               <outputFormat>all</outputFormat>
               <projectType>library</projectType>
               <skipNotDeployed>false</skipNotDeployed>

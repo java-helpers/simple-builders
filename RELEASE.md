@@ -69,7 +69,7 @@ Each release produces, in addition to the GPG-signed jars:
 
 - **SBOM** (CycloneDX `*-sbom.json` / `*-sbom.xml`) per module, attached to the GitHub release, so consumers can inventory/scan transitive dependencies.
 - **Build provenance** attestation (`actions/attest-build-provenance`) for the jars, verifiable with `gh attestation verify <jar> --repo java-helpers/simple-builders`.
-- **Reproducible builds**: `project.build.outputTimestamp` is set so archive entries are deterministic. For a meaningful per-release timestamp, override it with `-Dproject.build.outputTimestamp=<commit ISO-8601 date>`.
+- **Reproducible builds**: `project.build.outputTimestamp` is set so archive entries are deterministic. The release workflow updates it automatically; it can be overridden per build with `-Dproject.build.outputTimestamp=<commit ISO-8601 date>`.
 
 ## Notes
 
