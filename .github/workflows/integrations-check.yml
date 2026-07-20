@@ -29,16 +29,16 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  check:
+  # Independent jobs so the two checks run in parallel and a failing SonarCloud
+  # check never blocks the Codecov check (and vice versa).
+  sonarcloud:
+    if: ${{ github.event.inputs.target == 'all' || github.event.inputs.target == 'sonarcloud' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      TARGET: ${{ github.event.inputs.target }}
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     steps:
       - name: Check SonarCloud token and connectivity
-        if: env.TARGET == 'all' || env.TARGET == 'sonarcloud'
         run: |
           set -euo pipefail
           if [ -z "${SONAR_TOKEN:-}" ]; then
@@ -62,8 +62,14 @@ jobs:
           fi
           echo "OK: SONAR_TOKEN is valid and SonarCloud is reachable."
 
+  codecov:
+    if: ${{ github.event.inputs.target == 'all' || github.event.inputs.target == 'codecov' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    steps:
       - name: Check Codecov token and connectivity
-        if: env.TARGET == 'all' || env.TARGET == 'codecov'
         run: |
           set -euo pipefail
           if [ -z "${CODECOV_TOKEN:-}" ]; then
@@ -84,8 +90,10 @@ jobs:
             -d "{\"commitid\":\"$GITHUB_SHA\"}" "$url" || true)"
           echo "POST api.codecov.io/upload/github/.../commits -> HTTP $http_code"
           case "$http_code" in
-            200|201)
-              echo "OK: CODECOV_TOKEN authenticates against Codecov." ;;
+            200|201|202)
+              # 202 "Accepted" means Codecov queued the create-commit request,
+              # which requires a valid, authorized token -> the token works.
+              echo "OK: CODECOV_TOKEN authenticates against Codecov (HTTP $http_code)." ;;
             401|403)
               echo "::error::Codecov rejected the token (HTTP $http_code) - it is invalid, expired, or lacks access to this repo."
               exit 1 ;;
