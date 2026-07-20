@@ -367,6 +367,9 @@ Contributions are welcome! Please see [CONTRIBUTING.md](docs/CONTRIBUTING.md) fo
 
 For maintainers, see [RELEASE.md](RELEASE.md) for the release process.
 
+For maintenance guarantees, the project's bus-factor, and a vendoring/fork
+strategy for high-reliability adopters, see [GOVERNANCE.md](docs/GOVERNANCE.md).
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
