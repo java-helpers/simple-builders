@@ -76,6 +76,17 @@ public class ProcessingLogger {
   }
 
   /**
+   * Reports an error at the location of the given element with a formatted message.
+   *
+   * @param e the element where the error occurred, used for location information
+   * @param format the format string
+   * @param args arguments referenced by the format specifiers in the format string
+   */
+  public void error(Element e, String format, Object... args) {
+    messager.printMessage(Diagnostic.Kind.ERROR, String.format(format, args), e);
+  }
+
+  /**
    * Posts an info-level message (NOTE level in Maven). Used for important status information about
    * builder generation.
    *

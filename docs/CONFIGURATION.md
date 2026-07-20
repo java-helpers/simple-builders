@@ -18,6 +18,7 @@ Simple-builders supports fine-grained configuration through the `@SimpleBuilder.
   - [Collection Helpers](#collection-helpers)
   - [Component Filtering](#component-filtering)
   - [Integration](#integration)
+  - [Reliability](#reliability)
 - [Examples](#examples)
   - [Minimal Builder](#minimal-builder)
   - [Internal API Builder](#internal-api-builder)
@@ -846,6 +847,16 @@ public class PersonDto {
 // Generated method: withName(String name) instead of name(String name)
 ```
 
+### Reliability
+
+#### `strict`
+
+**Default**: `DISABLED` | **Compiler Option**: `-Asimplebuilder.strict=ENABLED|DISABLED`
+
+When enabled, builder and Jackson-module generation failures are promoted from compiler warnings
+to errors that fail the build. By default, strict mode is disabled and generation failures are
+reported as warnings so compilation can continue.
+
 ## Examples
 
 ### Minimal Builder
@@ -1231,6 +1242,9 @@ methodAccess = AccessModifier.PRIVATE
 # Naming
 -Asimplebuilder.builderSuffix=CustomSuffix
 -Asimplebuilder.setterSuffix=customPrefix
+
+# Reliability
+-Asimplebuilder.strict=ENABLED|DISABLED
 ```
 
 ### Complete Options Example
