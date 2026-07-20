@@ -20,14 +20,6 @@ on:
           - all
           - sonarcloud
           - codecov
-      codecov_token_type:
-        description: 'What kind of secret CODECOV_TOKEN holds'
-        required: true
-        default: upload
-        type: choice
-        options:
-          - upload
-          - api
 
 permissions:
   contents: read
@@ -42,7 +34,6 @@ jobs:
     timeout-minutes: 10
     env:
       TARGET: ${{ github.event.inputs.target }}
-      CODECOV_TOKEN_TYPE: ${{ github.event.inputs.codecov_token_type }}
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     steps:
@@ -82,25 +73,16 @@ jobs:
           owner="${GITHUB_REPOSITORY%/*}"
           repo="${GITHUB_REPOSITORY#*/}"
           body="$RUNNER_TEMP/codecov.json"
-          if [ "$CODECOV_TOKEN_TYPE" = "api" ]; then
-            # API access token: read the repo detail via API v2. The token is
-            # sent only in the auth header; its value is never printed.
-            url="https://api.codecov.io/api/v2/github/$owner/repos/$repo/"
-            http_code="$(curl -sS -o "$body" -w '%{http_code}' \
-              -H "Authorization: bearer $CODECOV_TOKEN" "$url" || true)"
-            echo "GET api.codecov.io/api/v2/github/.../repos/... -> HTTP $http_code"
-          else
-            # Upload token: exercise the first step of Codecov's upload handshake
-            # (create-commit) against the real HEAD commit. This is the same call
-            # the uploader makes, so a valid token accepts it; the token is sent
-            # only in the auth header.
-            url="https://api.codecov.io/upload/github/$owner::::$repo/commits"
-            http_code="$(curl -sS -o "$body" -w '%{http_code}' -X POST \
-              -H "Authorization: token $CODECOV_TOKEN" \
-              -H 'Content-Type: application/json' \
-              -d "{\"commitid\":\"$GITHUB_SHA\"}" "$url" || true)"
-            echo "POST api.codecov.io/upload/github/.../commits -> HTTP $http_code"
-          fi
+          # CODECOV_TOKEN is the repo upload token: exercise the first step of
+          # Codecov's upload handshake (create-commit) against the real HEAD
+          # commit. This is the same call the uploader makes, so a valid token
+          # accepts it; the token is sent only in the auth header (never printed).
+          url="https://api.codecov.io/upload/github/$owner::::$repo/commits"
+          http_code="$(curl -sS -o "$body" -w '%{http_code}' -X POST \
+            -H "Authorization: token $CODECOV_TOKEN" \
+            -H 'Content-Type: application/json' \
+            -d "{\"commitid\":\"$GITHUB_SHA\"}" "$url" || true)"
+          echo "POST api.codecov.io/upload/github/.../commits -> HTTP $http_code"
           case "$http_code" in
             200|201)
               echo "OK: CODECOV_TOKEN authenticates against Codecov." ;;
