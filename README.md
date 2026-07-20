@@ -316,24 +316,24 @@ A comprehensive example showcasing all fundamental Java property types with a mi
 
 - **Source DTO**: [`BookDto.java`](example/src/main/java/org/javahelpers/simple/builders/example/BookDto.java) - Demonstrates all primitive types, collections, Optional, BigDecimal, date/time types, and nested objects
 - **Custom Annotation**: [`@ElementaryBuilder`](example/src/main/java/org/javahelpers/simple/builders/example/ElementaryBuilder.java) - A template annotation that disables all advanced features (suppliers, consumers, collection builders, With interface, @Generated annotation)
-- **Generated Builder**: [`BookDtoBuilder.java`](example/target/generated-sources/annotations/org/javahelpers/simple/builders/example/BookDtoBuilder.java) - Clean, minimal builder with only setter methods
+- **Generated Builder**: [`BookDtoBuilder.java`](example/generated-example-builder/org/javahelpers/simple/builders/example/BookDtoBuilder.java) - Clean, minimal builder with only setter methods
 - **Tests**: [`BookDtoBuilderTest.java`](example/src/test/java/org/javahelpers/simple/builders/example/BookDtoBuilderTest.java) - Usage examples
 
 ### Full-Featured Examples
 
 Examples with all builder features enabled:
 
-- **Person DTO**: [`PersonDto.java`](example/src/main/java/org/javahelpers/simple/builders/example/PersonDto.java) and [`PersonDtoBuilder.java`](example/target/generated-sources/annotations/org/javahelpers/simple/builders/example/PersonDtoBuilder.java) - Demonstrates nested objects, collections, suppliers, conditional logic, and various setter patterns
+- **Person DTO**: [`PersonDto.java`](example/src/main/java/org/javahelpers/simple/builders/example/PersonDto.java) and [`PersonDtoBuilder.java`](example/generated-example-builder/org/javahelpers/simple/builders/example/PersonDtoBuilder.java) - Demonstrates nested objects, collections, suppliers, conditional logic, and various setter patterns
   - **Usage Examples**: [`PersonDtoBuilderTest.java`](example/src/test/java/org/javahelpers/simple/builders/example/PersonDtoBuilderTest.java) - Shows supplier methods, collection builders, nested builder consumers, and conditional logic
-- **Product Record**: [`ProductRecord.java`](example/src/main/java/org/javahelpers/simple/builders/example/ProductRecord.java) and [`ProductRecordBuilder.java`](example/target/generated-sources/annotations/org/javahelpers/simple/builders/example/ProductRecordBuilder.java) - Java Record support with full builder features and With interface pattern
+- **Product Record**: [`ProductRecord.java`](example/src/main/java/org/javahelpers/simple/builders/example/ProductRecord.java) and [`ProductRecordBuilder.java`](example/generated-example-builder/org/javahelpers/simple/builders/example/ProductRecordBuilder.java) - Java Record support with full builder features and With interface pattern
   - **Usage Examples**: [`ProductRecordTest.java`](example/src/test/java/org/javahelpers/simple/builders/example/ProductRecordTest.java) - Comprehensive tests demonstrating With interface for immutable Records, fluent modifications, and custom with methods
 
 ### Advanced Features
 
 Examples demonstrating special annotations and nested object relationships:
 
-- **Sponsor DTO**: [`SponsorDto.java`](example/src/main/java/org/javahelpers/simple/builders/example/SponsorDto.java) and [`SponsorDtoBuilder.java`](example/target/generated-sources/annotations/org/javahelpers/simple/builders/example/SponsorDtoBuilder.java) - Simple DTO used as nested object in other examples
-- **Mannschaft DTO**: [`MannschaftDto.java`](example/src/main/java/org/javahelpers/simple/builders/example/MannschaftDto.java) and [`MannschaftDtoBuilder.java`](example/target/generated-sources/annotations/org/javahelpers/simple/builders/example/MannschaftDtoBuilder.java) - Demonstrates `@IgnoreInBuilder` annotation to exclude specific setter methods from the generated builder, plus Set collections with nested objects
+- **Sponsor DTO**: [`SponsorDto.java`](example/src/main/java/org/javahelpers/simple/builders/example/SponsorDto.java) and [`SponsorDtoBuilder.java`](example/generated-example-builder/org/javahelpers/simple/builders/example/SponsorDtoBuilder.java) - Simple DTO used as nested object in other examples
+- **Mannschaft DTO**: [`MannschaftDto.java`](example/src/main/java/org/javahelpers/simple/builders/example/MannschaftDto.java) and [`MannschaftDtoBuilder.java`](example/generated-example-builder/org/javahelpers/simple/builders/example/MannschaftDtoBuilder.java) - Demonstrates `@IgnoreInBuilder` annotation to exclude specific setter methods from the generated builder, plus Set collections with nested objects
 
 These examples serve as both documentation and integration tests for the annotation processor.
 

@@ -71,26 +71,27 @@ jobs:
     - name: Build with Maven
       run: mvn -B install -Pmetrics --file pom.xml
 
-    - name: Check for uncommitted generated source changes
+    - name: Verify committed generated example builders
       if: github.event_name == 'pull_request'
       run: |
-        echo "Checking for uncommitted generated source changes..."
-        
-        # Check if there are any changes in generated-sources directories
-        if git diff --name-only HEAD | grep -E "target/generated-sources/"; then
-          echo "❌ ERROR: Found uncommitted generated source changes!"
-          echo ""
-          echo "The following generated files have changed:"
-          git diff --name-only HEAD | grep -E "target/generated-sources/" | sed 's/^/  /'
-          echo ""
-          echo "Please commit these changes to the repository:"
-          echo "  git add target/generated-sources/"
-          echo "  git commit -m \"Update generated sources\""
-          echo ""
+        # Regenerate the example builders from a clean slate into their tracked
+        # directory. Deleting first means a *missing* builder (generator
+        # regression) shows up as a git deletion, stale output as a
+        # modification, and a brand-new builder as an untracked file — so any
+        # drift fails the check. (Dependencies were installed by the build step
+        # above, so -pl example is sufficient here.)
+        rm -rf example/generated-example-builder
+        mvn -B -q -DskipTests -pl example clean compile
+
+        CHANGES="$(git status --porcelain -- example/generated-example-builder)"
+        if [ -n "$CHANGES" ]; then
+          echo "::error::Committed generated example builders are out of date or missing."
+          echo "Run 'mvn -pl example clean compile' and commit example/generated-example-builder/."
+          echo "$CHANGES"
+          git --no-pager diff -- example/generated-example-builder
           exit 1
-        else
-          echo "✅ No uncommitted generated source changes found"
         fi
+        echo "Committed generated example builders are up to date."
 
     - name: Package Sonar analysis inputs (fork PRs)
       if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository

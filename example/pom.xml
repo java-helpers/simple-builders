@@ -80,7 +80,10 @@
           <source>${java.version}</source>
           <target>${java.version}</target>
           <release>${java.version}</release>
-          <generatedSourcesDirectory>${project.build.directory}/generated-sources/annotations</generatedSourcesDirectory>
+          <!-- Emit generated builders into a tracked directory (outside target/)
+               so they survive `mvn clean`, can be browsed/reviewed, and drift is
+               detectable via `git diff` in CI. -->
+          <generatedSourcesDirectory>${project.basedir}/generated-example-builder</generatedSourcesDirectory>
         </configuration>
         <executions>
           <execution>
