@@ -327,12 +327,10 @@
                 </goals>
                 <configuration>
                   <excludes>
-                    <!-- Exclude mapper utilities from coverage -->
-                    <exclude>**/*Mapper*.class</exclude>
                     <!-- Exclude DTOs (model package) from coverage -->
                     <exclude>**/processor/model/**</exclude>
                     <!-- Exclude exception classes from coverage (simple constructors) -->
-                    <exclude>**/processor/exceptions/**</exclude>
+                    <exclude>**/exceptions/**</exclude>
                   </excludes>
                 </configuration>
               </execution>
