@@ -46,6 +46,7 @@ public final class ProcessingContext {
   private final Elements elementUtils;
   private final Types typeUtils;
   private final ProcessingLogger logger;
+  private final BuilderConfiguration globalConfiguration;
   private final BuilderConfigurationReader configurationReader;
   private final ProcessingEnvironment processingEnv;
   private GeneratorRegistry generatorRegistry;
@@ -65,6 +66,7 @@ public final class ProcessingContext {
     this.elementUtils = processingEnv.getElementUtils();
     this.typeUtils = processingEnv.getTypeUtils();
     this.logger = logger;
+    this.globalConfiguration = globalConfiguration;
     this.processingEnv = processingEnv;
     this.configurationReader =
         new BuilderConfigurationReader(globalConfiguration, logger, elementUtils);
@@ -333,5 +335,45 @@ public final class ProcessingContext {
    */
   public void error(Element element, String format, Object... args) {
     logger.error(element, format, args);
+  }
+
+  /**
+   * Returns whether strict/fail-fast generation mode is enabled via the global compiler
+   * configuration.
+   *
+   * @return true if {@code -Asimplebuilder.strict=true} was supplied, false otherwise
+   */
+  public boolean isStrictModeEnabled() {
+    return globalConfiguration.isStrictModeEnabled();
+  }
+
+  /**
+   * Reports either an error or a warning depending on strict mode. In strict mode a build failure
+   * is emitted; otherwise a warning is logged so generation of remaining builders can continue.
+   *
+   * @param element the element associated with the problem, for compiler location information
+   * @param format the format string
+   * @param args arguments referenced by the format specifiers
+   */
+  public void reportErrorOrWarning(Element element, String format, Object... args) {
+    if (isStrictModeEnabled()) {
+      logger.error(element, format, args);
+    } else {
+      logger.warning(element, format, args);
+    }
+  }
+
+  /**
+   * Reports either an error or a warning depending on strict mode, without an element location.
+   *
+   * @param format the format string
+   * @param args arguments referenced by the format specifiers
+   */
+  public void reportErrorOrWarning(String format, Object... args) {
+    if (isStrictModeEnabled()) {
+      logger.error(format, args);
+    } else {
+      logger.warning(format, args);
+    }
   }
 }

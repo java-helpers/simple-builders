@@ -67,13 +67,6 @@ public class BuilderProcessor extends AbstractProcessor {
   private JacksonModuleGenerator jacksonModuleGenerator;
   private boolean supportedJdk = true;
 
-  /**
-   * Opt-in strict/fail-fast mode. When enabled (via {@code -Asimplebuilder.strict=true}), builder
-   * generation failures are reported as compiler errors that fail the build. Defaults to {@code
-   * false} (warnings only, build does not fail).
-   */
-  private boolean strict = false;
-
   @Override
   public synchronized void init(ProcessingEnvironment processingEnv) {
     super.init(processingEnv);
@@ -84,9 +77,7 @@ public class BuilderProcessor extends AbstractProcessor {
     CompilerArgumentsReader reader = new CompilerArgumentsReader(processingEnv);
     BuilderConfiguration globalConfig = reader.readBuilderConfiguration();
     logger.debug("Loaded global configuration from compiler arguments: %s", globalConfig);
-
-    this.strict = reader.readBooleanValue(CompilerArgumentsEnum.STRICT);
-    logger.debug("Strict generation mode: %s", this.strict);
+    logger.debug("Strict generation mode: %s", globalConfig.isStrictModeEnabled());
 
     this.context = new ProcessingContext(logger, globalConfig, processingEnv);
     this.codeGenerator = new RoasterCodeGenerator(processingEnv, logger);
@@ -128,15 +119,9 @@ public class BuilderProcessor extends AbstractProcessor {
         } catch (BuilderException e) {
           // By default Jackson module generation failures are warnings. In opt-in strict mode
           // they are promoted to errors that fail the build.
-          if (strict) {
-            context.error(
-                "simple-builders: Error generating Jackson module for package %s: %s",
-                packageName, e.getMessage());
-          } else {
-            context.warning(
-                "simple-builders: Error generating Jackson module for package %s: %s",
-                packageName, e.getMessage());
-          }
+          context.reportErrorOrWarning(
+              "simple-builders: Error generating Jackson module for package %s: %s",
+              packageName, e.getMessage());
         }
       }
       // Reset indentation after Jackson module generation as well
@@ -189,17 +174,8 @@ public class BuilderProcessor extends AbstractProcessor {
       } catch (BuilderException ex) {
         // By default builder generation failures are warnings so other builders are still
         // generated. In opt-in strict mode they are promoted to errors that fail the build.
-        if (strict) {
-          context.error(
-              annotatedElement,
-              "simple-builders: Failed to generate builder - %s",
-              ex.getMessage());
-        } else {
-          context.warning(
-              annotatedElement,
-              "simple-builders: Failed to generate builder - %s",
-              ex.getMessage());
-        }
+        context.reportErrorOrWarning(
+            annotatedElement, "simple-builders: Failed to generate builder - %s", ex.getMessage());
       } finally {
         context.debugEndOperation();
       }
