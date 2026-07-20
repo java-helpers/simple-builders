@@ -26,9 +26,11 @@ jobs:
 
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    # Least privilege: read the repository (checkout + build) and write
+    # check-run output (test/analysis results). No step uses the workflow
+    # token to write to pull requests.
     permissions:
       contents: read
-      pull-requests: write
       checks: write
 
     # Expose secret-backed tokens as env so steps can be gated on their
