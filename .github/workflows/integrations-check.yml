@@ -47,16 +47,17 @@ jobs:
           fi
           # Validate the token via SonarCloud's authentication endpoint. The token
           # is sent as HTTP basic-auth username; its value is never printed.
-          http_code="$(curl -sS -o /tmp/sonar.json -w '%{http_code}' \
+          body="$RUNNER_TEMP/sonar-validate.json"
+          http_code="$(curl -sS -o "$body" -w '%{http_code}' \
             -u "$SONAR_TOKEN:" https://sonarcloud.io/api/authentication/validate || true)"
           echo "sonarcloud.io/api/authentication/validate -> HTTP $http_code"
           if [ "$http_code" != "200" ]; then
             echo "::error::SonarCloud returned HTTP $http_code (token likely invalid/expired, or the API is unreachable)."
             exit 1
           fi
-          if ! grep -q '"valid":true' /tmp/sonar.json; then
+          if ! grep -q '"valid":true' "$body"; then
             echo "::error::SonarCloud reports the token as NOT valid."
-            cat /tmp/sonar.json
+            cat "$body"
             exit 1
           fi
           echo "OK: SONAR_TOKEN is valid and SonarCloud is reachable."
@@ -69,12 +70,26 @@ jobs:
             echo "::error::CODECOV_TOKEN secret is empty or not configured."
             exit 1
           fi
-          # Codecov upload tokens have no public "validate" endpoint, so this is a
-          # presence + reachability check against the Codecov API (stated honestly).
-          http_code="$(curl -sS -o /dev/null -w '%{http_code}' https://api.codecov.io/health || true)"
-          echo "api.codecov.io/health -> HTTP $http_code"
-          if [ "$http_code" != "200" ]; then
-            echo "::error::Codecov API not reachable (HTTP $http_code)."
-            exit 1
-          fi
-          echo "OK: CODECOV_TOKEN is present and the Codecov API is reachable (upload-token validity is not publicly verifiable)."
+          # Exercise the token against a token-protected Codecov endpoint (the
+          # repo detail in API v2). A 200 means the token authenticates and can
+          # read this repo; 401/403 means the token is rejected; other codes are
+          # reachability/other errors. The token is sent only in the auth header.
+          body="$RUNNER_TEMP/codecov-repo.json"
+          url="https://api.codecov.io/api/v2/github/${GITHUB_REPOSITORY%/*}/repos/${GITHUB_REPOSITORY#*/}/"
+          http_code="$(curl -sS -o "$body" -w '%{http_code}' \
+            -H "Authorization: bearer $CODECOV_TOKEN" "$url" || true)"
+          echo "api.codecov.io/api/v2/github/.../repos/... -> HTTP $http_code"
+          case "$http_code" in
+            200)
+              echo "OK: CODECOV_TOKEN authenticates and can read this repo on Codecov." ;;
+            401|403)
+              echo "::error::Codecov rejected the token (HTTP $http_code) - it is invalid, expired, or lacks access to this repo."
+              exit 1 ;;
+            404)
+              echo "::error::Codecov returned 404 - the token authenticated but the repo is not set up on Codecov (or the token lacks visibility)."
+              exit 1 ;;
+            *)
+              echo "::error::Unexpected response from Codecov (HTTP $http_code) - likely a reachability/service issue."
+              cat "$body" || true
+              exit 1 ;;
+          esac
