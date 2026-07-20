@@ -78,15 +78,15 @@ jobs:
         # modification, and a brand-new builder as an untracked file — so any
         # drift fails the check. (Dependencies were installed by the build step
         # above, so -pl example is sufficient here.)
-        rm -rf example/generated-sources
+        rm -rf example/generated-example-builder
         mvn -B -q -DskipTests -pl example clean compile
 
-        CHANGES="$(git status --porcelain -- example/generated-sources)"
+        CHANGES="$(git status --porcelain -- example/generated-example-builder)"
         if [ -n "$CHANGES" ]; then
           echo "::error::Committed generated example builders are out of date or missing."
-          echo "Run 'mvn -pl example clean compile' and commit example/generated-sources/."
+          echo "Run 'mvn -pl example clean compile' and commit example/generated-example-builder/."
           echo "$CHANGES"
-          git --no-pager diff -- example/generated-sources
+          git --no-pager diff -- example/generated-example-builder
           exit 1
         fi
         echo "Committed generated example builders are up to date."

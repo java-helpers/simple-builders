@@ -83,7 +83,7 @@
           <!-- Emit generated builders into a tracked directory (outside target/)
                so they survive `mvn clean`, can be browsed/reviewed, and drift is
                detectable via `git diff` in CI. -->
-          <generatedSourcesDirectory>${project.basedir}/generated-sources/annotations</generatedSourcesDirectory>
+          <generatedSourcesDirectory>${project.basedir}/generated-example-builder</generatedSourcesDirectory>
         </configuration>
         <executions>
           <execution>
