@@ -90,7 +90,11 @@ jobs:
               echo "::error::Codecov rejected the token (HTTP $http_code) - it is invalid, expired, or lacks access to this repo."
               exit 1 ;;
             404)
-              echo "::error::Codecov returned 404 - the token authenticated but the repo is not set up on Codecov (or the token lacks visibility)."
+              # The upload endpoint returns 404 "Repository not found" both for an
+              # invalid/unauthorized upload token and for a repo not activated on
+              # Codecov (it does not disclose which, by design).
+              echo "::error::Codecov returned 404 'Repository not found' - the upload token is invalid/unauthorized, or the repo is not activated on Codecov."
+              cat "$body" || true
               exit 1 ;;
             *)
               echo "::error::Unexpected response from Codecov (HTTP $http_code) - likely a reachability/service issue."
