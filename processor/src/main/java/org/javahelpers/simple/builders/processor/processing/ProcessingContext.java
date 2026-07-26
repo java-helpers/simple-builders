@@ -46,7 +46,6 @@ public final class ProcessingContext {
   private final Elements elementUtils;
   private final Types typeUtils;
   private final ProcessingLogger logger;
-  private final BuilderConfiguration globalConfiguration;
   private final BuilderConfigurationReader configurationReader;
   private final ProcessingEnvironment processingEnv;
   private GeneratorRegistry generatorRegistry;
@@ -66,7 +65,6 @@ public final class ProcessingContext {
     this.elementUtils = processingEnv.getElementUtils();
     this.typeUtils = processingEnv.getTypeUtils();
     this.logger = logger;
-    this.globalConfiguration = globalConfiguration;
     this.processingEnv = processingEnv;
     this.configurationReader =
         new BuilderConfigurationReader(globalConfiguration, logger, elementUtils);
@@ -333,7 +331,7 @@ public final class ProcessingContext {
    * @return true if {@code -Asimplebuilder.strict=true} was supplied, false otherwise
    */
   public boolean isStrictModeEnabled() {
-    return globalConfiguration.isStrictModeEnabled();
+    return configurationReader.getGlobalConfiguration().isStrictModeEnabled();
   }
 
   /**

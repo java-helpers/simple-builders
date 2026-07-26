@@ -80,6 +80,15 @@ public class BuilderConfigurationReader {
   }
 
   /**
+   * Gets the global builder configuration read from compiler arguments.
+   *
+   * @return the global builder configuration
+   */
+  public BuilderConfiguration getGlobalConfiguration() {
+    return globalConfiguration;
+  }
+
+  /**
    * Reads builder configuration from {@code @SimpleBuilder(options = ...)} inline options.
    *
    * <p>Returns null if the element has no {@code @SimpleBuilder} annotation.
