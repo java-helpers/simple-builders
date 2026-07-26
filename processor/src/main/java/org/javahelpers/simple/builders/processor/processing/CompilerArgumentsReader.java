@@ -174,6 +174,7 @@ public class CompilerArgumentsReader {
         .jacksonModulePackage(readValue(CompilerArgumentsEnum.JACKSON_MODULE_PACKAGE))
         .builderSuffix(readValue(CompilerArgumentsEnum.BUILDER_SUFFIX))
         .setterSuffix(readValue(CompilerArgumentsEnum.SETTER_SUFFIX))
+        .strict(readOptionState(CompilerArgumentsEnum.STRICT))
         .build();
   }
 }

@@ -116,7 +116,9 @@ public class BuilderProcessor extends AbstractProcessor {
         try {
           codeGenerator.generateClass(moduleClassDef);
         } catch (BuilderException e) {
-          context.warning(
+          // By default Jackson module generation failures are warnings. In opt-in strict mode
+          // they are promoted to errors that fail the build.
+          context.reportBasedOnStrictMode(
               "simple-builders: Error generating Jackson module for package %s: %s",
               packageName, e.getMessage());
         }
@@ -169,9 +171,9 @@ public class BuilderProcessor extends AbstractProcessor {
         process(annotatedElement, config);
         successfulGenerations++;
       } catch (BuilderException ex) {
-        // All builder generation failures are warnings to allow other builders to be
-        // generated
-        context.warning(
+        // By default builder generation failures are warnings so other builders are still
+        // generated. In opt-in strict mode they are promoted to errors that fail the build.
+        context.reportBasedOnStrictMode(
             annotatedElement, "simple-builders: Failed to generate builder - %s", ex.getMessage());
       } finally {
         context.debugEndOperation();
