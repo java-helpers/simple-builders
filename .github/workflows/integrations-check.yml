@@ -8,6 +8,11 @@ name: 'Integration connectivity check'
 # PRs. It performs authenticated HTTP checks only; token values are never
 # printed. This is a diagnostic and does not replace the fork-ci environment
 # approval that gates the actual Sonar publish.
+#
+# It also runs on a nightly schedule so an expiring/revoked SONAR_TOKEN or
+# CODECOV_TOKEN surfaces as a failed run (and the usual GitHub failure
+# notification) before it silently breaks a real CI/release run. Scheduled runs
+# check all integrations.
 on:
   workflow_dispatch:
     inputs:
@@ -20,6 +25,9 @@ on:
           - all
           - sonarcloud
           - codecov
+  schedule:
+    # Nightly at 06:00 UTC. Scheduled runs only execute from the default branch.
+    - cron: '0 6 * * *'
 
 permissions:
   contents: read
@@ -32,7 +40,8 @@ jobs:
   # Independent jobs so the two checks run in parallel and a failing SonarCloud
   # check never blocks the Codecov check (and vice versa).
   sonarcloud:
-    if: ${{ github.event.inputs.target == 'all' || github.event.inputs.target == 'sonarcloud' }}
+    # Scheduled runs have no dispatch inputs, so always run both checks then.
+    if: ${{ github.event_name == 'schedule' || github.event.inputs.target == 'all' || github.event.inputs.target == 'sonarcloud' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
@@ -63,7 +72,8 @@ jobs:
           echo "OK: SONAR_TOKEN is valid and SonarCloud is reachable."
 
   codecov:
-    if: ${{ github.event.inputs.target == 'all' || github.event.inputs.target == 'codecov' }}
+    # Scheduled runs have no dispatch inputs, so always run both checks then.
+    if: ${{ github.event_name == 'schedule' || github.event.inputs.target == 'all' || github.event.inputs.target == 'codecov' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:

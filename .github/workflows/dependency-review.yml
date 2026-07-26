@@ -55,9 +55,9 @@ jobs:
           # "No snapshots were found for the head SHA" warning: for fork PRs
           # GitHub has only the manifest-derived dependency graph (no submitted
           # snapshot for the fork head, and one can't be produced without
-          # building untrusted fork code with a write token). The check still
-          # runs and still fails on real issues; the warning is only visible in
-          # the Actions run log.
+          # building untrusted fork code with a write token; dependency-submission.yml
+          # only submits snapshots for main). The check still runs and still fails
+          # on real issues; the warning is only visible in the Actions run log.
           comment-summary-in-pr: on-failure
           # Fail the PR when it introduces a vulnerability at or above this severity.
           fail-on-severity: high
