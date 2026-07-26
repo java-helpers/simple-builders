@@ -29,6 +29,9 @@ jobs:
       contents: write
       # Needed to open the version-bump pull request instead of pushing to main.
       pull-requests: write
+      # Required to create build-provenance attestations for the released jars.
+      id-token: write
+      attestations: write
       
     steps:
       - name: Checkout code
@@ -78,6 +81,14 @@ jobs:
           # Update module POMs
           mvn versions:set -DnewVersion=$VERSION -DgenerateBackupPoms=false -pl core
           mvn versions:set -DnewVersion=$VERSION -DgenerateBackupPoms=false -pl processor
+
+      - name: Update reproducible build timestamp
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+          TIMESTAMP="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+          echo "Setting project.build.outputTimestamp to $TIMESTAMP for release $VERSION"
+          # Pin archive entry timestamps to the release moment for reproducible builds.
+          mvn versions:set-property -Dproperty=project.build.outputTimestamp -DnewVersion="$TIMESTAMP" -DgenerateBackupPoms=false -pl core,processor
           
       - name: Commit version changes
         id: commit
@@ -121,6 +132,12 @@ jobs:
         env:
           MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_SIGNING_KEY_PASSWORD }}
         run: mvn -B clean verify -Prelease
+
+      - name: Generate SBOM (CycloneDX)
+        run: |
+          # Emit a CycloneDX SBOM (JSON + XML) for each published module.
+          mvn -B -Prelease -pl core,processor \
+            org.cyclonedx:cyclonedx-maven-plugin:makeBom -DskipTests
         
       - name: Deploy (stage) to Maven Central
         env:
@@ -134,6 +151,18 @@ jobs:
           # manually publish the staged deployment, so nothing is auto-released
           # to Maven Central without human approval.
           mvn -B deploy -Prelease -pl core,processor -Dcentral.autoPublish=false
+
+      # Generates a signed build-provenance attestation for the released JARs. This is
+      # GitHub's official attestation action; the resulting SLSA attestation is stored in
+      # the repository's Attestations page and can be verified by consumers with:
+      #   gh attestation verify <jar> --repo java-helpers/simple-builders
+      - name: Attest build provenance for published jars
+        if: success()
+        uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1 (GitHub official)
+        with:
+          subject-path: |
+            core/target/simple-builders-core-*.jar
+            processor/target/simple-builders-processor-*.jar
           
       - name: Push release branch and tag
         if: success()
@@ -207,9 +236,13 @@ jobs:
               core/target/simple-builders-core-${VERSION}.jar \
               core/target/simple-builders-core-${VERSION}-sources.jar \
               core/target/simple-builders-core-${VERSION}-javadoc.jar \
+              core/target/simple-builders-core-${VERSION}-sbom.json \
+              core/target/simple-builders-core-${VERSION}-sbom.xml \
               processor/target/simple-builders-processor-${VERSION}.jar \
               processor/target/simple-builders-processor-${VERSION}-sources.jar \
-              processor/target/simple-builders-processor-${VERSION}-javadoc.jar
+              processor/target/simple-builders-processor-${VERSION}-javadoc.jar \
+              processor/target/simple-builders-processor-${VERSION}-sbom.json \
+              processor/target/simple-builders-processor-${VERSION}-sbom.xml
             
             # Clean up
             rm -f release_notes.md

@@ -26,9 +26,11 @@ jobs:
 
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    # Least privilege: read the repository (checkout + build) and write
+    # check-run output (test/analysis results). No step uses the workflow
+    # token to write to pull requests.
     permissions:
       contents: read
-      pull-requests: write
       checks: write
 
     # Expose secret-backed tokens as env so steps can be gated on their
@@ -69,26 +71,27 @@ jobs:
     - name: Build with Maven
       run: mvn -B install -Pmetrics --file pom.xml
 
-    - name: Check for uncommitted generated source changes
+    - name: Verify committed generated example builders
       if: github.event_name == 'pull_request'
       run: |
-        echo "Checking for uncommitted generated source changes..."
-        
-        # Check if there are any changes in generated-sources directories
-        if git diff --name-only HEAD | grep -E "target/generated-sources/"; then
-          echo "❌ ERROR: Found uncommitted generated source changes!"
-          echo ""
-          echo "The following generated files have changed:"
-          git diff --name-only HEAD | grep -E "target/generated-sources/" | sed 's/^/  /'
-          echo ""
-          echo "Please commit these changes to the repository:"
-          echo "  git add target/generated-sources/"
-          echo "  git commit -m \"Update generated sources\""
-          echo ""
+        # Regenerate the example builders from a clean slate into their tracked
+        # directory. Deleting first means a *missing* builder (generator
+        # regression) shows up as a git deletion, stale output as a
+        # modification, and a brand-new builder as an untracked file — so any
+        # drift fails the check. (Dependencies were installed by the build step
+        # above, so -pl example is sufficient here.)
+        rm -rf example/generated-example-builder
+        mvn -B -q -DskipTests -pl example clean compile
+
+        CHANGES="$(git status --porcelain -- example/generated-example-builder)"
+        if [ -n "$CHANGES" ]; then
+          echo "::error::Committed generated example builders are out of date or missing."
+          echo "Run 'mvn -pl example clean compile' and commit example/generated-example-builder/."
+          echo "$CHANGES"
+          git --no-pager diff -- example/generated-example-builder
           exit 1
-        else
-          echo "✅ No uncommitted generated source changes found"
         fi
+        echo "Committed generated example builders are up to date."
 
     - name: Package Sonar analysis inputs (fork PRs)
       if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository
@@ -121,8 +124,11 @@ jobs:
         if-no-files-found: warn
 
     - name: SonarCloud Analysis
-      # Skip when SONAR_TOKEN is unavailable (fork/Dependabot PRs).
-      if: env.SONAR_TOKEN != ''
+      # Skip when SONAR_TOKEN is unavailable (fork PRs) and for any bot-authored
+      # PR (Dependabot, Renovate, ...). The bot check uses the PR author's
+      # account type rather than a hard-coded login, and is not defeated by a
+      # maintainer re-run (which would otherwise make the withheld token appear).
+      if: env.SONAR_TOKEN != '' && github.event.pull_request.user.type != 'Bot'
       run: mvn -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar --file pom.xml
 
     - name: Upload JaCoCo HTML report (processor)
@@ -174,8 +180,8 @@ jobs:
         if-no-files-found: warn
 
     - name: Upload test results to Codecov (processor)
-      # Skip when CODECOV_TOKEN is unavailable (fork/Dependabot PRs).
-      if: always() && env.CODECOV_TOKEN != ''
+      # Skip when CODECOV_TOKEN is unavailable (fork PRs) and for any bot-authored PR.
+      if: always() && env.CODECOV_TOKEN != '' && github.event.pull_request.user.type != 'Bot'
       uses: codecov/test-results-action@47f89e9acb64b76debcd5ea40642d25a4adced9f # v1.1.1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
@@ -186,8 +192,8 @@ jobs:
         verbose: false
 
     - name: Upload coverage to Codecov (processor)
-      # Skip when CODECOV_TOKEN is unavailable (fork/Dependabot PRs).
-      if: always() && env.CODECOV_TOKEN != ''
+      # Skip when CODECOV_TOKEN is unavailable (fork PRs) and for any bot-authored PR.
+      if: always() && env.CODECOV_TOKEN != '' && github.event.pull_request.user.type != 'Bot'
       uses: codecov/codecov-action@015f24e6818733317a2da2edd6290ab26238649a # v5.0.7
       with:
         fail_ci_if_error: true

@@ -1,5 +1,7 @@
 codecov:
-  require_ci_to_pass: false
+  # Only report a passing coverage status when the CI build/tests actually pass,
+  # so a green Codecov check can't green-light a merge whose tests never ran.
+  require_ci_to_pass: true
 
 coverage:
   status:
