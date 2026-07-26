@@ -49,11 +49,16 @@ jobs:
         uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0
         # Commonly enabled options, see https://github.com/actions/dependency-review-action#configuration-options for all available options.
         with:
-          comment-summary-in-pr: always
-          # Fork PR head SHAs may show "No snapshots were found for the head SHA" because
-          # submitting a snapshot would require building untrusted fork code with a write
-          # token. This is expected and benign: the check uses the manifest-derived graph
-          # and still passes. dependency-submission.yml provides snapshots for main.
+          # Only post/refresh the PR summary comment when the review actually
+          # fails (a vulnerability or denied license). This avoids spamming
+          # every PR with a comment whose only content is the benign
+          # "No snapshots were found for the head SHA" warning: for fork PRs
+          # GitHub has only the manifest-derived dependency graph (no submitted
+          # snapshot for the fork head, and one can't be produced without
+          # building untrusted fork code with a write token; dependency-submission.yml
+          # only submits snapshots for main). The check still runs and still fails
+          # on real issues; the warning is only visible in the Actions run log.
+          comment-summary-in-pr: on-failure
           # Fail the PR when it introduces a vulnerability at or above this severity.
           fail-on-severity: high
           # Block copyleft / incompatible licenses that conflict with this MIT project.
