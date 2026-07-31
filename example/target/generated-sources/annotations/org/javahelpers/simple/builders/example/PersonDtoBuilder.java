@@ -29,11 +29,19 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  * <pre>{@code
  * PersonDto result = PersonDtoBuilder.create()
  *     .name("example value")
+ *     .name("Hello %s", "World")
  *     .name(() -> "example value")
+ *     .name(sb -> sb.append("text"))
+ *     .birthdate(LocalDate.now())
+ *     .birthdate(() -> LocalDate.now())
+ *     .nickNames(List.of("example value"))
+ *     .nickNames(() -> List.of("example value"))
  *     .nickNames(t -> t.add("example value"))
+ *     .nickNames("example value", "example value")
  *     .add2NickNames("example value")
  *     .nickNames2("example value")
  *     .nickNames2(() -> "example value")
+ *     .nickNames2("example value")
  *     .build();
  * }</pre>
  */
@@ -122,6 +130,12 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
   /**
    * Sets the value for <code>birthdate</code>.
    * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.birthdate(LocalDate.now());
+   * }</pre>
+   * 
    * @param birthdate birthdate
    * @return current instance of builder
    */
@@ -132,6 +146,12 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
 
   /**
    * Sets the value for <code>birthdate</code> by invoking the provided supplier.
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.birthdate(() -> LocalDate.now());
+   * }</pre>
    * 
    * @param birthdateSupplier supplier for birthdate
    * @return current instance of builder
@@ -198,6 +218,12 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
   /**
    * Sets the value for <code>name</code> by executing the provided consumer.
    * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.name(sb -> sb.append("text"));
+   * }</pre>
+   * 
    * @param nameStringBuilderConsumer consumer providing an instance of name
    * @return current instance of builder
    */
@@ -229,6 +255,12 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
    * Sets the String value for <code>name</code> by using String.format(format, args). See
    * {@link String#format(String, Object...)} for details.
    * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.name("Hello %s", "World");
+   * }</pre>
+   * 
    * @param format A format string
    * @param args Arguments referenced by the format specifiers in the format string.
    * @return current instance of builder
@@ -241,6 +273,12 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
   /**
    * Sets the value for <code>nickNames</code>.
    * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.nickNames("example value", "example value");
+   * }</pre>
+   * 
    * @param nickNames nickNames
    * @return current instance of builder
    */
@@ -251,6 +289,12 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
 
   /**
    * Sets the value for <code>nickNames</code>.
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.nickNames(List.of("example value"));
+   * }</pre>
    * 
    * @param nickNames nickNames
    * @return current instance of builder
@@ -284,6 +328,12 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
   /**
    * Sets the value for <code>nickNames</code> by invoking the provided supplier.
    * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.nickNames(() -> List.of("example value"));
+   * }</pre>
+   * 
    * @param nickNamesSupplier supplier for nickNames
    * @return current instance of builder
    */
@@ -311,6 +361,12 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
 
   /**
    * Sets the value for <code>nickNames2</code>.
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.nickNames2("example value");
+   * }</pre>
    * 
    * @param nickNames2 nickNames2
    * @return current instance of builder

@@ -181,15 +181,30 @@ class ComprehensiveFeatureIntegrationTest {
          * <pre>{@code
          * PersonDto result = PersonDtoBuilder.create()
          *     .name("example value")
+         *     .name("Hello %s", "World")
          *     .name(() -> "example value")
+         *     .name(sb -> sb.append("text"))
          *     .age(42)
          *     .age(() -> 42)
+         *     .email("Hello %s", "World")
+         *     .email("example value")
+         *     .email(sb -> sb.append("text"))
+         *     .nicknames(List.of("example value"))
+         *     .nicknames(() -> List.of("example value"))
          *     .nicknames(t -> t.add("example value"))
+         *     .nicknames("example value", "example value")
          *     .add2Nicknames("example value")
+         *     .tags(Set.of("example value"))
+         *     .tags(() -> Set.of("example value"))
+         *     .tags("example value", "example value")
          *     .add2Tags("example value")
-         *     .previousAddresses(t -> t.add("example value"))
-         *     .add2PreviousAddresses("example value")
+         *     .metadata(Map.of("key", "example value"))
+         *     .metadata(() -> Map.of("key", "example value"))
+         *     .metadata(Map.entry("key", "example value"))
+         *     .phoneNumbers(List.of("example value"))
+         *     .phoneNumbers(() -> List.of("example value"))
          *     .phoneNumbers(t -> t.add("example value"))
+         *     .phoneNumbers("example value", "example value")
          *     .add2PhoneNumbers("example value")
          *     .build();
          * }</pre>
@@ -324,12 +339,6 @@ class ComprehensiveFeatureIntegrationTest {
           /**
            * Adds a single element to <code>previousAddresses</code>.
            *
-           * <h4>Example:</h4>
-           *
-           * <pre>{@code
-           * builder.add2PreviousAddresses("example value");
-           * }</pre>
-           *
            * @param element the element to add
            * @return current instance of builder
            */
@@ -443,6 +452,12 @@ class ComprehensiveFeatureIntegrationTest {
           /**
            * Sets the value for <code>email</code>.
            *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.email("example value");
+           * }</pre>
+           *
            * @param email email
            * @return current instance of builder
            */
@@ -464,6 +479,12 @@ class ComprehensiveFeatureIntegrationTest {
 
           /**
            * Sets the value for <code>email</code> by executing the provided consumer.
+           *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.email(sb -> sb.append("text"));
+           * }</pre>
            *
            * @param emailStringBuilderConsumer consumer providing an instance of email
            * @return current instance of builder
@@ -490,6 +511,12 @@ class ComprehensiveFeatureIntegrationTest {
            * Sets the String value for <code>email</code> by using String.format(format, args). See
            * {@link String#format(String, Object...)} for details.
            *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.email("Hello %s", "World");
+           * }</pre>
+           *
            * @param format A format string
            * @param args Arguments referenced by the format specifiers in the format string.
            * @return current instance of builder
@@ -502,6 +529,12 @@ class ComprehensiveFeatureIntegrationTest {
           /**
            * Sets the value for <code>metadata</code>.
            *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.metadata(Map.entry("key", "example value"));
+           * }</pre>
+           *
            * @param metadata metadata
            * @return current instance of builder
            */
@@ -512,6 +545,12 @@ class ComprehensiveFeatureIntegrationTest {
 
           /**
            * Sets the value for <code>metadata</code>.
+           *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.metadata(Map.of("key", "example value"));
+           * }</pre>
            *
            * @param metadata metadata
            * @return current instance of builder
@@ -538,6 +577,12 @@ class ComprehensiveFeatureIntegrationTest {
 
           /**
            * Sets the value for <code>metadata</code> by invoking the provided supplier.
+           *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.metadata(() -> Map.of("key", "example value"));
+           * }</pre>
            *
            * @param metadataSupplier supplier for metadata
            * @return current instance of builder
@@ -566,6 +611,12 @@ class ComprehensiveFeatureIntegrationTest {
 
           /**
            * Sets the value for <code>name</code> by executing the provided consumer.
+           *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.name(sb -> sb.append("text"));
+           * }</pre>
            *
            * @param nameStringBuilderConsumer consumer providing an instance of name
            * @return current instance of builder
@@ -598,6 +649,12 @@ class ComprehensiveFeatureIntegrationTest {
            * Sets the String value for <code>name</code> by using String.format(format, args). See
            * {@link String#format(String, Object...)} for details.
            *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.name("Hello %s", "World");
+           * }</pre>
+           *
            * @param format A format string
            * @param args Arguments referenced by the format specifiers in the format string.
            * @return current instance of builder
@@ -610,6 +667,12 @@ class ComprehensiveFeatureIntegrationTest {
           /**
            * Sets the value for <code>nicknames</code>.
            *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.nicknames("example value", "example value");
+           * }</pre>
+           *
            * @param nicknames nicknames
            * @return current instance of builder
            */
@@ -620,6 +683,12 @@ class ComprehensiveFeatureIntegrationTest {
 
           /**
            * Sets the value for <code>nicknames</code>.
+           *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.nicknames(List.of("example value"));
+           * }</pre>
            *
            * @param nicknames nicknames
            * @return current instance of builder
@@ -653,6 +722,12 @@ class ComprehensiveFeatureIntegrationTest {
           /**
            * Sets the value for <code>nicknames</code> by invoking the provided supplier.
            *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.nicknames(() -> List.of("example value"));
+           * }</pre>
+           *
            * @param nicknamesSupplier supplier for nicknames
            * @return current instance of builder
            */
@@ -664,6 +739,12 @@ class ComprehensiveFeatureIntegrationTest {
           /**
            * Sets the value for <code>phoneNumbers</code>.
            *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.phoneNumbers("example value", "example value");
+           * }</pre>
+           *
            * @param phoneNumbers phoneNumbers
            * @return current instance of builder
            */
@@ -674,6 +755,12 @@ class ComprehensiveFeatureIntegrationTest {
 
           /**
            * Sets the value for <code>phoneNumbers</code>.
+           *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.phoneNumbers(List.of("example value"));
+           * }</pre>
            *
            * @param phoneNumbers phoneNumbers
            * @return current instance of builder
@@ -706,6 +793,12 @@ class ComprehensiveFeatureIntegrationTest {
 
           /**
            * Sets the value for <code>phoneNumbers</code> by invoking the provided supplier.
+           *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.phoneNumbers(() -> List.of("example value"));
+           * }</pre>
            *
            * @param phoneNumbersSupplier supplier for phoneNumbers
            * @return current instance of builder
@@ -740,12 +833,6 @@ class ComprehensiveFeatureIntegrationTest {
           /**
            * Sets the value for <code>previousAddresses</code> using a builder consumer that produces the value.
            *
-           * <h4>Example:</h4>
-           *
-           * <pre>{@code
-           * builder.previousAddresses(t -> t.add("example value"));
-           * }</pre>
-           *
            * @param previousAddressesBuilderConsumer consumer providing an instance of a builder for previousAddresses
            * @return current instance of builder
            */
@@ -774,6 +861,12 @@ class ComprehensiveFeatureIntegrationTest {
           /**
            * Sets the value for <code>tags</code>.
            *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.tags("example value", "example value");
+           * }</pre>
+           *
            * @param tags tags
            * @return current instance of builder
            */
@@ -784,6 +877,12 @@ class ComprehensiveFeatureIntegrationTest {
 
           /**
            * Sets the value for <code>tags</code>.
+           *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.tags(Set.of("example value"));
+           * }</pre>
            *
            * @param tags tags
            * @return current instance of builder
@@ -810,6 +909,12 @@ class ComprehensiveFeatureIntegrationTest {
 
           /**
            * Sets the value for <code>tags</code> by invoking the provided supplier.
+           *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.tags(() -> Set.of("example value"));
+           * }</pre>
            *
            * @param tagsSupplier supplier for tags
            * @return current instance of builder

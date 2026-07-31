@@ -171,6 +171,7 @@ public class ListConsumerGenerator implements MethodGenerator {
    */
   private void addExampleToListConsumer(
       MethodDto method, TypeName elementType, ProcessingContext context) {
-    addExampleChainFragmentTemplate(method, "#{methodName}(t -> t.add(#{exampleValue}))", elementType);
+    addExampleChainFragmentTemplate(
+        method, "#{methodName}(t -> t.add(#{exampleValue}))", elementType);
   }
 }

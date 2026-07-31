@@ -87,22 +87,24 @@ class BuilderJavadocExampleTest {
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
 
     // The generated class javadoc must contain the full kitchen-sink chain,
-    // with fields in DTO declaration order (title, pages, tags) and within each
-    // field the generator lines in priority order (BasicSetter=100, Supplier=60,
-    // ListConsumer=53, AddToCollection=30).
+    // with fields in alphabetical order (pages, tags, title) and within each
+    // field the generator lines in priority order.
     ProcessorAsserts.assertContaining(
         generatedCode,
         """
-        * <h4>Example:</h4>
-        *
         * <pre>{@code
         * BookDto result = BookDtoBuilder.create()
         *     .pages(42)
         *     .pages(() -> 42)
+        *     .tags(List.of("example value"))
+        *     .tags(() -> List.of("example value"))
         *     .tags(t -> t.add("example value"))
+        *     .tags("example value", "example value")
         *     .add2Tags("example value")
         *     .title("example value")
+        *     .title("Hello %s", "World")
         *     .title(() -> "example value")
+        *     .title(sb -> sb.append("text"))
         *     .build();
         * }</pre>
         """);
@@ -428,13 +430,23 @@ class BuilderJavadocExampleTest {
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
 
+    // The class-level kitchen-sink chain includes ONLY the resolvable field (title).
+    // The helper field (HelperPlain) has no example value and must be omitted.
     ProcessorAsserts.assertContaining(
         generatedCode,
-        "MixedDto result = MixedDtoBuilder.create().title(\"example value\")"
-            + ".title(() -> \"example value\").build();");
+        """
+        * <pre>{@code
+        * MixedDto result = MixedDtoBuilder.create()
+        *     .title("example value")
+        *     .title("Hello %s", "World")
+        *     .title(() -> "example value")
+        *     .title(sb -> sb.append("text"))
+        *     .build();
+        * }</pre>
+        """);
 
-    // ...but NO `.helper(...)` call in the class example chain
-    ProcessorAsserts.assertNotContaining(generatedCode, ".helper(null)", ".helper(\"");
+    // No `.helper(...)` call in the class example chain
+    ProcessorAsserts.assertNotContaining(generatedCode, ".helper(");
   }
 
   @Test

@@ -29,10 +29,16 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  *     .available(true)
  *     .category('x')
  *     .discount(3.14f)
+ *     .exactPrice(BigDecimal.valueOf(3.14))
+ *     .genres(Set.of("example value"))
  *     .isbn("example value")
+ *     .lastUpdated(LocalDateTime.now())
+ *     .metadata(Map.of("key", "example value"))
  *     .pages(42)
  *     .price(3.14)
+ *     .publishDate(LocalDate.now())
  *     .salesCount(42L)
+ *     .tags(List.of("example value"))
  *     .title("example value")
  *     .build();
  * }</pre>
@@ -246,6 +252,12 @@ public class BookDtoBuilder {
   /**
    * Sets the value for <code>exactPrice</code>.
    * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.exactPrice(BigDecimal.valueOf(3.14));
+   * }</pre>
+   * 
    * @param exactPrice the exact book price to set
    * @return current instance of builder
    */
@@ -256,6 +268,12 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>genres</code>.
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.genres(Set.of("example value"));
+   * }</pre>
    * 
    * @param genres the set of genres to set
    * @return current instance of builder
@@ -285,6 +303,12 @@ public class BookDtoBuilder {
   /**
    * Sets the value for <code>lastUpdated</code>.
    * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.lastUpdated(LocalDateTime.now());
+   * }</pre>
+   * 
    * @param lastUpdated the last update timestamp to set
    * @return current instance of builder
    */
@@ -295,6 +319,12 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>metadata</code>.
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.metadata(Map.of("key", "example value"));
+   * }</pre>
    * 
    * @param metadata the metadata map to set
    * @return current instance of builder
@@ -340,6 +370,12 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>publishDate</code>.
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.publishDate(LocalDate.now());
+   * }</pre>
    * 
    * @param publishDate the publication date to set
    * @return current instance of builder
@@ -401,6 +437,12 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>tags</code>.
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.tags(List.of("example value"));
+   * }</pre>
    * 
    * @param tags the list of tags to set
    * @return current instance of builder

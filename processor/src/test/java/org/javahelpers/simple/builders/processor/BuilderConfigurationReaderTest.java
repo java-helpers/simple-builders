@@ -478,8 +478,11 @@ class BuilderConfigurationReaderTest {
          * <h4>Example:</h4>
          *
          * <pre>{@code
-         * PersonDto result = PersonDtoMinimalBuilder.create().withName("example value").build();
-         * }</pre>
+        * PersonDto result = PersonDtoMinimalBuilder.create()
+        *     .withName("example value")
+        *     .withTags(List.of("example value"))
+        *     .build();
+        * }</pre>
          */
         public class PersonDtoMinimalBuilder implements IBuilderBase<PersonDto> {
 
@@ -542,6 +545,12 @@ class BuilderConfigurationReaderTest {
 
           /**
            * Sets the value for <code>tags</code>.
+           *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.withTags(List.of("example value"));
+           * }</pre>
            *
            * @param tags tags
            * @return current instance of builder

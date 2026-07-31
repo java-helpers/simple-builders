@@ -164,8 +164,7 @@ public class StringBuilderConsumerGenerator implements MethodGenerator {
             .addReturn(JavadocConstants.RETURN_BUILDER_INSTANCE));
 
     // Add example fragment for StringBuilder consumer method
-    addExampleChainFragmentTemplate(
-        methodDto, "#{methodName}(sb -> sb.append(#{exampleValue}))", TypeName.of(String.class));
+    addExampleChainFragmentTemplate(methodDto, "#{methodName}(sb -> sb.append(\"text\"))");
 
     return methodDto;
   }

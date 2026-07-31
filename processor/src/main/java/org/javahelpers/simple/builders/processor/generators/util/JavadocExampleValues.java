@@ -27,8 +27,11 @@ package org.javahelpers.simple.builders.processor.generators.util;
 import java.util.Map;
 import java.util.Optional;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.simple.builders.processor.model.type.TypeNameList;
+import org.javahelpers.simple.builders.processor.model.type.TypeNameMap;
 import org.javahelpers.simple.builders.processor.model.type.TypeNamePrimitive;
 import org.javahelpers.simple.builders.processor.model.type.TypeNamePrimitive.PrimitiveTypeEnum;
+import org.javahelpers.simple.builders.processor.model.type.TypeNameSet;
 
 /**
  * Provides default example values for Javadoc code examples.
@@ -46,6 +49,12 @@ public final class JavadocExampleValues {
   private static final String FLOAT_EXAMPLE = "3.14f";
   private static final String BOOLEAN_EXAMPLE = "true";
   private static final String CHAR_EXAMPLE = "'x'";
+  private static final String BIGINTEGER_EXAMPLE = "BigInteger.valueOf(42)";
+  private static final String BIGDECIMAL_EXAMPLE = "BigDecimal.valueOf(3.14)";
+  private static final String UUID_EXAMPLE = "UUID.randomUUID()";
+  private static final String LOCALDATE_EXAMPLE = "LocalDate.now()";
+  private static final String LOCALTIME_EXAMPLE = "LocalTime.now()";
+  private static final String LOCALDATETIME_EXAMPLE = "LocalDateTime.now()";
 
   /** Map of primitive type enums to their example values. */
   private static final Map<PrimitiveTypeEnum, String> PRIMITIVE_EXAMPLES =
@@ -56,6 +65,24 @@ public final class JavadocExampleValues {
           PrimitiveTypeEnum.FLOAT, FLOAT_EXAMPLE,
           PrimitiveTypeEnum.BOOLEAN, BOOLEAN_EXAMPLE,
           PrimitiveTypeEnum.CHAR, CHAR_EXAMPLE);
+
+  /** Map of wrapper and common JDK type FQNs to their example values. */
+  private static final Map<String, String> COMMON_TYPE_EXAMPLES =
+      Map.ofEntries(
+          // Wrapper types (mirror primitives)
+          Map.entry("java.lang.Integer", INT_EXAMPLE),
+          Map.entry("java.lang.Long", LONG_EXAMPLE),
+          Map.entry("java.lang.Double", DOUBLE_EXAMPLE),
+          Map.entry("java.lang.Float", FLOAT_EXAMPLE),
+          Map.entry("java.lang.Boolean", BOOLEAN_EXAMPLE),
+          Map.entry("java.lang.Character", CHAR_EXAMPLE),
+          // Common JDK types
+          Map.entry("java.math.BigInteger", BIGINTEGER_EXAMPLE),
+          Map.entry("java.math.BigDecimal", BIGDECIMAL_EXAMPLE),
+          Map.entry("java.util.UUID", UUID_EXAMPLE),
+          Map.entry("java.time.LocalDate", LOCALDATE_EXAMPLE),
+          Map.entry("java.time.LocalTime", LOCALTIME_EXAMPLE),
+          Map.entry("java.time.LocalDateTime", LOCALDATETIME_EXAMPLE));
 
   private JavadocExampleValues() {
     // Utility class - prevent instantiation
@@ -69,16 +96,65 @@ public final class JavadocExampleValues {
    * <ul>
    *   <li>Primitive types (int, long, double, float, boolean, char)
    *   <li>String type (returns {@value STRING_EXAMPLE})
+   *   <li>Wrapper types (Integer, Long, Double, Float, Boolean, Character)
+   *   <li>Common JDK types (BigInteger, BigDecimal, UUID, LocalDate, LocalTime, LocalDateTime)
+   *   <li>Collection types (List, Set) of any supported element type (e.g., {@code List.of("example
+   *       value")}, {@code Set.of(42)})
+   *   <li>Map types where the key type is String and the value type is supported (e.g., {@code
+   *       Map.of("key", "example value")})
    * </ul>
    *
    * @param typeName the type name to get an example value for
    * @return an Optional containing the example value, or empty if no example is available
    */
   public static Optional<String> getExampleValue(TypeName typeName) {
+    return resolvePrimitive(typeName)
+        .or(() -> resolveCollection(typeName))
+        .or(() -> resolveCommonType(typeName))
+        .or(() -> resolveString(typeName));
+  }
+
+  private static Optional<String> resolvePrimitive(TypeName typeName) {
     if (typeName instanceof TypeNamePrimitive primitive) {
       return Optional.ofNullable(PRIMITIVE_EXAMPLES.get(primitive.getType()));
     }
-    // Check for String type
+    return Optional.empty();
+  }
+
+  private static Optional<String> resolveCollection(TypeName typeName) {
+    if (typeName instanceof TypeNameList listType && listType.isParameterized()) {
+      return getExampleValue(listType.getElementType())
+          .map(elementExample -> "List.of(" + elementExample + ")");
+    }
+    if (typeName instanceof TypeNameSet setType && setType.isParameterized()) {
+      return getExampleValue(setType.getElementType())
+          .map(elementExample -> "Set.of(" + elementExample + ")");
+    }
+    if (typeName instanceof TypeNameMap mapType && mapType.isParameterized()) {
+      return resolveMap(mapType);
+    }
+    return Optional.empty();
+  }
+
+  private static Optional<String> resolveMap(TypeNameMap mapType) {
+    TypeName keyType = mapType.getKeyType();
+    if ("java.lang.String".equals(keyType.getFullQualifiedName())
+        || "String".equals(keyType.getClassName())) {
+      return getExampleValue(mapType.getValueType())
+          .map(valueExample -> "Map.of(\"key\", " + valueExample + ")");
+    }
+    return Optional.empty();
+  }
+
+  private static Optional<String> resolveCommonType(TypeName typeName) {
+    String fqn = typeName.getFullQualifiedName();
+    if (fqn != null && COMMON_TYPE_EXAMPLES.containsKey(fqn)) {
+      return Optional.of(COMMON_TYPE_EXAMPLES.get(fqn));
+    }
+    return Optional.empty();
+  }
+
+  private static Optional<String> resolveString(TypeName typeName) {
     if ("java.lang.String".equals(typeName.getFullQualifiedName())
         || "String".equals(typeName.getClassName())) {
       return Optional.of(STRING_EXAMPLE);

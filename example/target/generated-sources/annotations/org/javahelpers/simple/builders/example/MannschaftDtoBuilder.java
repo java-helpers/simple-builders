@@ -28,8 +28,9 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  * <pre>{@code
  * MannschaftDto result = MannschaftDtoBuilder.create()
  *     .name("example value")
+ *     .name("Hello %s", "World")
  *     .name(() -> "example value")
- *     .add2Sponsoren("example value")
+ *     .name(sb -> sb.append("text"))
  *     .build();
  * }</pre>
  */
@@ -80,12 +81,6 @@ public class MannschaftDtoBuilder implements IBuilderBase<MannschaftDto> {
   /**
    * Adds a single element to <code>sponsoren</code>.
    * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.add2Sponsoren("example value");
-   * }</pre>
-   * 
    * @param element the element to add
    * @return current instance of builder
    */
@@ -121,6 +116,12 @@ public class MannschaftDtoBuilder implements IBuilderBase<MannschaftDto> {
   /**
    * Sets the value for <code>name</code> by executing the provided consumer.
    * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.name(sb -> sb.append("text"));
+   * }</pre>
+   * 
    * @param nameStringBuilderConsumer consumer providing an instance of name
    * @return current instance of builder
    */
@@ -151,6 +152,12 @@ public class MannschaftDtoBuilder implements IBuilderBase<MannschaftDto> {
   /**
    * Sets the String value for <code>name</code> by using String.format(format, args). See
    * {@link String#format(String, Object...)} for details.
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.name("Hello %s", "World");
+   * }</pre>
    * 
    * @param format A format string
    * @param args Arguments referenced by the format specifiers in the format string.

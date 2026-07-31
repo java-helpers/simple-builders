@@ -25,11 +25,15 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  * <pre>{@code
  * ProductRecord result = ProductRecordBuilder.create()
  *     .name("example value")
+ *     .name("Hello %s", "World")
  *     .name(() -> "example value")
+ *     .name(sb -> sb.append("text"))
  *     .price(3.14)
  *     .price(() -> 3.14)
  *     .category("example value")
+ *     .category("Hello %s", "World")
  *     .category(() -> "example value")
+ *     .category(sb -> sb.append("text"))
  *     .build();
  * }</pre>
  */
@@ -102,6 +106,12 @@ public class ProductRecordBuilder implements IBuilderBase<ProductRecord> {
   /**
    * Sets the value for <code>category</code> by executing the provided consumer.
    * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.category(sb -> sb.append("text"));
+   * }</pre>
+   * 
    * @param categoryStringBuilderConsumer consumer providing an instance of category
    * @return current instance of builder
    */
@@ -133,6 +143,12 @@ public class ProductRecordBuilder implements IBuilderBase<ProductRecord> {
    * Sets the String value for <code>category</code> by using String.format(format, args). See
    * {@link String#format(String, Object...)} for details.
    * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.category("Hello %s", "World");
+   * }</pre>
+   * 
    * @param format A format string
    * @param args Arguments referenced by the format specifiers in the format string.
    * @return current instance of builder
@@ -161,6 +177,12 @@ public class ProductRecordBuilder implements IBuilderBase<ProductRecord> {
 
   /**
    * Sets the value for <code>name</code> by executing the provided consumer.
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.name(sb -> sb.append("text"));
+   * }</pre>
    * 
    * @param nameStringBuilderConsumer consumer providing an instance of name
    * @return current instance of builder
@@ -192,6 +214,12 @@ public class ProductRecordBuilder implements IBuilderBase<ProductRecord> {
   /**
    * Sets the String value for <code>name</code> by using String.format(format, args). See
    * {@link String#format(String, Object...)} for details.
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.name("Hello %s", "World");
+   * }</pre>
    * 
    * @param format A format string
    * @param args Arguments referenced by the format specifiers in the format string.
