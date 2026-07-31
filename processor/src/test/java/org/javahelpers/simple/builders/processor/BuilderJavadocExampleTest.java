@@ -423,7 +423,7 @@ class BuilderJavadocExampleTest {
         ProcessorTestUtils.forSource(
             """
                 package test;
-                public class HelperPlain { public HelperPlain() {} }
+                public class HelperPlain { public HelperPlain(String arg) {} }
             """);
 
     Compilation compilation = compile(dto, helper);
@@ -432,6 +432,7 @@ class BuilderJavadocExampleTest {
 
     // The class-level kitchen-sink chain includes ONLY the resolvable field (title).
     // The helper field (HelperPlain) has no example value and must be omitted.
+    // HelperPlain has only a parameterized constructor (no empty constructor) and no builder.
     ProcessorAsserts.assertContaining(
         generatedCode,
         """

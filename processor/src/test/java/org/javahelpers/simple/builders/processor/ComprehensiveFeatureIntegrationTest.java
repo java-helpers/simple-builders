@@ -196,11 +196,16 @@ class ComprehensiveFeatureIntegrationTest {
          *     .add2Nicknames("example value")
          *     .tags(Set.of("example value"))
          *     .tags(() -> Set.of("example value"))
+         *     .tags(t -> t.add("example value"))
          *     .tags("example value", "example value")
          *     .add2Tags("example value")
          *     .metadata(Map.of("key", "example value"))
          *     .metadata(() -> Map.of("key", "example value"))
          *     .metadata(Map.entry("key", "example value"))
+         *     .address(AddressDtoBuilder.create().build())
+         *     .address(() -> AddressDtoBuilder.create().build())
+         *     .address(addressDtoBuilder -> addressDtoBuilder)
+         *     .previousAddresses(t -> t.add(addressDtoBuilder -> addressDtoBuilder))
          *     .phoneNumbers(List.of("example value"))
          *     .phoneNumbers(() -> List.of("example value"))
          *     .phoneNumbers(t -> t.add("example value"))
@@ -381,6 +386,12 @@ class ComprehensiveFeatureIntegrationTest {
           /**
            * Sets the value for <code>address</code>.
            *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.address(AddressDtoBuilder.create().build());
+           * }</pre>
+           *
            * @param address address
            * @return current instance of builder
            */
@@ -391,6 +402,12 @@ class ComprehensiveFeatureIntegrationTest {
 
           /**
            * Sets the value for <code>address</code> using a builder consumer that produces the value.
+           *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.address(addressDtoBuilder -> addressDtoBuilder);
+           * }</pre>
            *
            * @param addressBuilderConsumer consumer providing an instance of a builder for address
            * @return current instance of builder
@@ -406,6 +423,12 @@ class ComprehensiveFeatureIntegrationTest {
 
           /**
            * Sets the value for <code>address</code> by invoking the provided supplier.
+           *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.address(() -> AddressDtoBuilder.create().build());
+           * }</pre>
            *
            * @param addressSupplier supplier for address
            * @return current instance of builder
@@ -833,6 +856,12 @@ class ComprehensiveFeatureIntegrationTest {
           /**
            * Sets the value for <code>previousAddresses</code> using a builder consumer that produces the value.
            *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.previousAddresses(t -> t.add(addressDtoBuilder -> addressDtoBuilder));
+           * }</pre>
+           *
            * @param previousAddressesBuilderConsumer consumer providing an instance of a builder for previousAddresses
            * @return current instance of builder
            */
@@ -894,6 +923,12 @@ class ComprehensiveFeatureIntegrationTest {
 
           /**
            * Sets the value for <code>tags</code> using a builder consumer that produces the value.
+           *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.tags(t -> t.add("example value"));
+           * }</pre>
            *
            * @param tagsBuilderConsumer consumer providing an instance of a builder for tags
            * @return current instance of builder

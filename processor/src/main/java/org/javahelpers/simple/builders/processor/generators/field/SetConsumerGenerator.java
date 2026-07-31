@@ -31,6 +31,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.builders.HashSetBuilder;
 import org.javahelpers.simple.builders.core.builders.HashSetBuilderWithElementBuilders;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
@@ -131,6 +132,7 @@ public class SetConsumerGenerator implements MethodGenerator {
       MethodDto method =
           createFieldConsumerWithElementBuilders(
               field, collectionBuilderType, elementBuilderType.get(), builderType, context);
+      addExampleToSetConsumerWithBuilder(method, elementBuilderType.get());
       return List.of(method);
     } else if (context.getConfiguration().shouldUseHashSetBuilder()) {
       TypeName hashSetBuilderType = map2TypeName(HashSetBuilder.class);
@@ -144,9 +146,33 @@ public class SetConsumerGenerator implements MethodGenerator {
               Map.of(),
               builderType,
               context);
+      addExampleToSetConsumerWithSimpleValue(method, elementType);
       return List.of(method);
     }
 
     return Collections.emptyList();
+  }
+
+  /**
+   * Adds example for set consumer methods where the element type has its own builder.
+   *
+   * @param method the method to add the example to
+   * @param elementBuilderType the element builder type
+   */
+  private void addExampleToSetConsumerWithBuilder(MethodDto method, TypeName elementBuilderType) {
+    String builderVar = StringUtils.uncapitalize(elementBuilderType.getClassName());
+    addExampleChainFragmentTemplate(
+        method, "#{methodName}(t -> t.add(" + builderVar + " -> " + builderVar + "))");
+  }
+
+  /**
+   * Adds example for set consumer methods where the element type is a simple value.
+   *
+   * @param method the method to add the example to
+   * @param elementType the element type
+   */
+  private void addExampleToSetConsumerWithSimpleValue(MethodDto method, TypeName elementType) {
+    addExampleChainFragmentTemplate(
+        method, "#{methodName}(t -> t.add(#{exampleValue}))", elementType);
   }
 }

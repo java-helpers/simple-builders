@@ -102,6 +102,9 @@ public final class JavadocExampleValues {
    *       value")}, {@code Set.of(42)})
    *   <li>Map types where the key type is String and the value type is supported (e.g., {@code
    *       Map.of("key", "example value")})
+   *   <li>Types with an empty constructor (e.g., {@code new AddressDto()})
+   *   <li>Types with a {@code @SimpleBuilder} annotation but no empty constructor (e.g., {@code
+   *       AddressDtoBuilder.create().build()})
    * </ul>
    *
    * @param typeName the type name to get an example value for
@@ -111,7 +114,9 @@ public final class JavadocExampleValues {
     return resolvePrimitive(typeName)
         .or(() -> resolveCollection(typeName))
         .or(() -> resolveCommonType(typeName))
-        .or(() -> resolveString(typeName));
+        .or(() -> resolveString(typeName))
+        .or(() -> resolveEmptyConstructor(typeName))
+        .or(() -> resolveBuilderType(typeName));
   }
 
   private static Optional<String> resolvePrimitive(TypeName typeName) {
@@ -160,5 +165,18 @@ public final class JavadocExampleValues {
       return Optional.of(STRING_EXAMPLE);
     }
     return Optional.empty();
+  }
+
+  private static Optional<String> resolveEmptyConstructor(TypeName typeName) {
+    if (typeName.hasEmptyConstructor()) {
+      return Optional.of("new " + typeName.getClassName() + "()");
+    }
+    return Optional.empty();
+  }
+
+  private static Optional<String> resolveBuilderType(TypeName typeName) {
+    return typeName
+        .getBuilderType()
+        .map(builderType -> builderType.getClassName() + ".create().build()");
   }
 }

@@ -34,6 +34,9 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  *     .name(sb -> sb.append("text"))
  *     .birthdate(LocalDate.now())
  *     .birthdate(() -> LocalDate.now())
+ *     .mannschaft(new MannschaftDto())
+ *     .mannschaft(MannschaftDto::new)
+ *     .mannschaft(mannschaftDtoBuilder -> mannschaftDtoBuilder)
  *     .nickNames(List.of("example value"))
  *     .nickNames(() -> List.of("example value"))
  *     .nickNames(t -> t.add("example value"))
@@ -164,6 +167,12 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
   /**
    * Sets the value for <code>mannschaft</code>.
    * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.mannschaft(new MannschaftDto());
+   * }</pre>
+   * 
    * @param mannschaft mannschaft
    * @return current instance of builder
    */
@@ -174,6 +183,12 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
 
   /**
    * Sets the value for <code>mannschaft</code> using a builder consumer that produces the value.
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.mannschaft(mannschaftDtoBuilder -> mannschaftDtoBuilder);
+   * }</pre>
    * 
    * @param mannschaftBuilderConsumer consumer providing an instance of a builder for mannschaft
    * @return current instance of builder
@@ -189,6 +204,12 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
 
   /**
    * Sets the value for <code>mannschaft</code> by invoking the provided supplier.
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.mannschaft(MannschaftDto::new);
+   * }</pre>
    * 
    * @param mannschaftSupplier supplier for mannschaft
    * @return current instance of builder

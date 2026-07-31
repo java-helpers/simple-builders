@@ -30,6 +30,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
@@ -112,6 +113,12 @@ public class NestedBuilderConsumerGenerator implements MethodGenerator {
             Map.of(),
             builderType,
             context);
+
+    // Add example fragment showing the consumer lambda pattern
+    String builderVar = StringUtils.uncapitalize(fieldBuilderType.getClassName());
+    addExampleChainFragmentTemplate(
+        method, "#{methodName}(" + builderVar + " -> " + builderVar + ")");
+
     return List.of(method);
   }
 }

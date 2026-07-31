@@ -33,6 +33,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.builders.ArrayListBuilder;
 import org.javahelpers.simple.builders.core.builders.ArrayListBuilderWithElementBuilders;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
@@ -137,7 +138,7 @@ public class ListConsumerGenerator implements MethodGenerator {
               field, collectionBuilderType, elementBuilderType.get(), builderType, context);
 
       // Add method-level example for list consumer
-      addExampleToListConsumer(method, elementType, context);
+      addExampleToListConsumerWithBuilder(method, elementBuilderType.get());
 
       return List.of(method);
     } else if (context.getConfiguration().shouldUseArrayListBuilder()) {
@@ -154,7 +155,7 @@ public class ListConsumerGenerator implements MethodGenerator {
               context);
 
       // Add method-level example for list consumer
-      addExampleToListConsumer(method, elementType, context);
+      addExampleToListConsumerWithSimpleValue(method, elementType);
 
       return List.of(method);
     }
@@ -163,14 +164,24 @@ public class ListConsumerGenerator implements MethodGenerator {
   }
 
   /**
-   * Adds method-level example and contributes to class-level example for list consumer methods.
+   * Adds example for list consumer methods where the element type has its own builder.
+   *
+   * @param method the method to add the example to
+   * @param elementBuilderType the element builder type
+   */
+  private void addExampleToListConsumerWithBuilder(MethodDto method, TypeName elementBuilderType) {
+    String builderVar = StringUtils.uncapitalize(elementBuilderType.getClassName());
+    addExampleChainFragmentTemplate(
+        method, "#{methodName}(t -> t.add(" + builderVar + " -> " + builderVar + "))");
+  }
+
+  /**
+   * Adds example for list consumer methods where the element type is a simple value.
    *
    * @param method the method to add the example to
    * @param elementType the element type
-   * @param context the processing context
    */
-  private void addExampleToListConsumer(
-      MethodDto method, TypeName elementType, ProcessingContext context) {
+  private void addExampleToListConsumerWithSimpleValue(MethodDto method, TypeName elementType) {
     addExampleChainFragmentTemplate(
         method, "#{methodName}(t -> t.add(#{exampleValue}))", elementType);
   }

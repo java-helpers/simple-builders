@@ -420,9 +420,10 @@ public final class MethodGeneratorUtil {
    * Adds the fluent-chain fragment for Javadoc examples to a method using a supplier pattern.
    *
    * <p>This helper method retrieves an example value for the given field type and formats it as a
-   * fluent-chain fragment with a supplier (e.g., {@code methodName(() -> exampleValue)}). The
-   * fragment is stored on the MethodDto for later use by the ClassJavaDocEnhancer to synthesize
-   * both method-level and class-level Javadoc examples.
+   * fluent-chain fragment with a supplier. For types with an empty constructor, a method reference
+   * is used (e.g., {@code methodName(Type::new)}); otherwise a lambda is used (e.g., {@code
+   * methodName(() -> exampleValue)}). The fragment is stored on the MethodDto for later use by the
+   * ClassJavaDocEnhancer to synthesize both method-level and class-level Javadoc examples.
    *
    * <p>If no example value is available for the field type, the fragment is not added.
    *
@@ -430,7 +431,12 @@ public final class MethodGeneratorUtil {
    * @param fieldType the field type to get an example value for
    */
   public static void addExampleChainFragmentWithSupplier(MethodDto methodDto, TypeName fieldType) {
-    addExampleChainFragmentTemplate(methodDto, "#{methodName}(() -> #{exampleValue})", fieldType);
+    if (fieldType.hasEmptyConstructor()) {
+      addExampleChainFragmentTemplate(
+          methodDto, "#{methodName}(" + fieldType.getClassName() + "::new)");
+    } else {
+      addExampleChainFragmentTemplate(methodDto, "#{methodName}(() -> #{exampleValue})", fieldType);
+    }
   }
 
   /**

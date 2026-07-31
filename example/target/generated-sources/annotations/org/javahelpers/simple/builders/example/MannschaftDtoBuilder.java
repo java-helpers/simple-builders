@@ -31,6 +31,7 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  *     .name("Hello %s", "World")
  *     .name(() -> "example value")
  *     .name(sb -> sb.append("text"))
+ *     .sponsoren(t -> t.add(sponsorDtoBuilder -> sponsorDtoBuilder))
  *     .build();
  * }</pre>
  */
@@ -192,6 +193,12 @@ public class MannschaftDtoBuilder implements IBuilderBase<MannschaftDto> {
 
   /**
    * Sets the value for <code>sponsoren</code> using a builder consumer that produces the value.
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.sponsoren(t -> t.add(sponsorDtoBuilder -> sponsorDtoBuilder));
+   * }</pre>
    * 
    * @param sponsorenBuilderConsumer consumer providing an instance of a builder for sponsoren
    * @return current instance of builder

@@ -37,6 +37,7 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  *     .pages(42)
  *     .price(3.14)
  *     .publishDate(LocalDate.now())
+ *     .publisher(PersonDtoBuilder.create().build())
  *     .salesCount(42L)
  *     .tags(List.of("example value"))
  *     .title("example value")
@@ -387,6 +388,12 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>publisher</code>.
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.publisher(PersonDtoBuilder.create().build());
+   * }</pre>
    * 
    * @param publisher the publisher to set
    * @return current instance of builder
