@@ -46,6 +46,7 @@ import org.javahelpers.simple.builders.processor.model.annotation.InterfaceName;
 import org.javahelpers.simple.builders.processor.model.core.ClassFieldDto;
 import org.javahelpers.simple.builders.processor.model.core.GenerationTargetClassDto;
 import org.javahelpers.simple.builders.processor.model.imports.ImportStatement;
+import org.javahelpers.simple.builders.processor.model.javadoc.JavadocCodeBlockDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocTagDto;
 import org.javahelpers.simple.builders.processor.model.method.ConstructorDto;
@@ -409,6 +410,28 @@ public class RoasterCodeGenerator {
         source.getJavaDoc().addTagValue(tag.getFullTagName(), tag.tagValue());
       } else {
         source.getJavaDoc().addTagValue(tag.getFullTagName(), "");
+      }
+    }
+
+    // Render code example blocks
+    for (JavadocCodeBlockDto codeBlock : javadoc.getCodeBlocks()) {
+      if (codeBlock != null && codeBlock.hasCode()) {
+        // Resolve placeholders in the code block
+        String resolvedCode = resolveCodeTemplate(codeBlock);
+        // Pre-prefix every line of the code body with " * " so it survives Roaster's
+        // preformatted-block handling (Roaster does not auto-add asterisk prefix inside <pre>).
+        String prefixedCode =
+            java.util.Arrays.stream(resolvedCode.split("\n", -1))
+                .map(line -> " * " + line)
+                .collect(java.util.stream.Collectors.joining("\n"));
+        // Add the code example to the Javadoc with a blank line separator before <h4>.
+        String currentText = source.getJavaDoc().getText();
+        String exampleText = "<h4>Example:</h4><pre>{@code\n" + prefixedCode + "\n * }</pre>";
+        if (StringUtils.isNotBlank(currentText)) {
+          source.getJavaDoc().setText(currentText + "\n\n" + exampleText);
+        } else {
+          source.getJavaDoc().setText(exampleText);
+        }
       }
     }
   }
