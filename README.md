@@ -202,7 +202,8 @@ For non-nullable constructor fields, `build()` requires the builder value to be 
 For non-nullable setter fields, the field remains optional, but a value supplied to the builder must
 be non-null. Violations throw `IllegalStateException`.
 
-For example, the primitive `price` below is required and cannot be null:
+For example, both the primitive `price` and the `@NotNull` `name` below are required — omitting
+either makes `build()` fail:
 
 ```java
 @SimpleBuilder
@@ -211,6 +212,10 @@ public record Product(@NotNull String name, double price) {}
 ProductBuilder.create()
     .name("Keyboard")
     .build(); // throws IllegalStateException: price must be set
+
+ProductBuilder.create()
+    .price(99.0)
+    .build(); // throws IllegalStateException: name must be set
 ```
 
 The `NotNull`/`NonNull` simple-name check is framework-agnostic; use the annotation type already
