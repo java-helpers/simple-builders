@@ -11,7 +11,7 @@
   <packaging>jar</packaging>
 
   <name>Simple Builders - Core</name>
-  <description>API components for result Simple Builders, needs to be a dependency of using project to have access to annotations and default builders.</description>
+  <description>Core API components for Simple Builders, including annotations and runtime support used by generated builders.</description>
   <url>https://github.com/java-helpers/simple-builders/</url>
   <inceptionYear>2025</inceptionYear>
 

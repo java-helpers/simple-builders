@@ -8,7 +8,7 @@
   <packaging>jar</packaging>
   
   <name>Simple Builders - Processor</name>
-  <description>Java annotation processor designed to generate type-safe and high-performance builders for Java classes.</description>
+  <description>Compile-time annotation processor that generates type-safe, fluent builders for Java classes and records, with Jackson support and no runtime reflection.</description>
   <url>https://github.com/java-helpers/simple-builders</url>
   <inceptionYear>2025</inceptionYear>
   

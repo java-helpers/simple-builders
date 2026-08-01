@@ -10,7 +10,7 @@
   <packaging>pom</packaging>
 
   <name>Simple Builders</name>
-  <description>Simple Builder is a utility package for generating builders for dtos in maven generate-sources phase.</description>
+  <description>Compile-time Java annotation processor that generates type-safe, fluent builders for classes and records — no runtime reflection. Supports Jackson, immutable copy-on-write updates, conditional logic, and collection helpers.</description>
   <url>https://github.com/java-helpers/simple-builders</url>
   
   <licenses>

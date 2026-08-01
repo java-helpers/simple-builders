@@ -1,4 +1,6 @@
-# Simple Builders - Java Builder Generation at Compile Time
+# Simple Builders — Type-safe, fluent builders for Java classes & records, generated at compile time
+
+A zero-reflection Java annotation processor that generates fluent, type-safe builders for **classes and records** — with **Jackson** support, immutable **copy-on-write `with`**, conditional logic, and collection helpers. A lightweight **Lombok alternative**.
 
 [![License](https://img.shields.io/badge/License-MIT%202.0-yellowgreen.svg)](https://github.com/java-helpers/simple-builders/blob/main/LICENSE)
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.java-helpers/simple-builders-core.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:io.github.java-helpers%20AND%20a:simple-builders-core)
@@ -10,6 +12,7 @@
 
 ## Table of Contents
 - [What is Simple Builders?](#what-is-simple-builders)
+- [How Simple Builders compares](#how-simple-builders-compares)
 - [Features](#features)
 - [Requirements](#requirements)
 - [Installation](#installation)
@@ -32,7 +35,17 @@
 
 ## What is Simple Builders?
 
-Simple Builders is a Java [annotation processor](https://docs.oracle.com/en/java/javase/17/docs/specs/man/javac.html#annotation-processing) designed to generate type-safe and high-performance builders for Java classes. It generates builder code at compile-time, ensuring type safety without any runtime reflection overhead.
+Simple Builders is a Java [annotation processor](https://docs.oracle.com/en/java/javase/17/docs/specs/man/javac.html#annotation-processing) that generates type-safe, fluent builders for existing Java classes and records at compile time. It supports Jackson integration, immutable copy-with updates, conditional logic, and collection helpers, with no runtime reflection.
+
+## How Simple Builders compares
+
+Simple Builders generates fluent, type-safe builders for your **existing** classes and records using standard [JSR-269 annotation processing](https://docs.oracle.com/en/java/javase/17/docs/specs/man/javac.html#annotation-processing) — it adds separate, readable generated source and never modifies your types. The main alternatives solve overlapping but different problems, and each is the better choice in its own niche:
+
+- **Lombok** — the closest "add a builder to my existing class" tool, but it works very differently: rather than generating separate source, it mutates your class at compile time through the compiler's internal, non-public AST APIs. That steps outside the standard model (a normal annotation processor may only add new files, not alter existing ones), so it needs an IDE plugin, hides the generated code behind `delombok`, and — because it depends on internal compiler APIs — generally needs a Lombok update for each new JDK before your project compiles (e.g. JDK 16's strong encapsulation, [JEP 396](https://openjdk.org/jeps/396), broke it until [v1.18.20](https://projectlombok.org/changelog), a pattern that recurs for JDK 17, 21, and 23). Lombok is also a broad toolkit (`@Data`, `@Value`, `@SneakyThrows`, `@Delegate`, `val`, and more) whose implicit behavior can be misused by less-experienced developers — e.g. `@Data`/`@EqualsAndHashCode` on JPA entities (broken equality, lazy-loading pitfalls) or `@SneakyThrows` bypassing checked exceptions. Choose Lombok if you're already invested in it for broad boilerplate reduction; choose Simple Builders for one focused capability with explicit, readable source.
+- **Immutables / Google AutoValue / FreeBuilder** — value-type generators: you declare an abstract class or interface and they generate an immutable implementation plus a builder. Great when you want to define new immutable value types; less suited when you just want a builder for classes or records you already have and don't want to restructure your model.
+- **RecordBuilder** — focused, excellent builders and `with` methods for records. Choose it if you use records exclusively.
+
+Use Simple Builders when you want fluent, type-safe builders for the classes and records you already have, generated as plain readable source, with no bytecode manipulation and no IDE plugin — and no lock-in: because the builders are ordinary generated Java, you can drop the dependency at any time by copying the generated builder classes into your own sources, and they keep working.
 
 ## Features
 
