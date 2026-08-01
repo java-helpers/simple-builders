@@ -56,7 +56,6 @@ Use Simple Builders when you want fluent, type-safe builders for the classes and
 - **Copy / `with` / `toBuilder`:** The generated `With` interface provides `instance.with(b -> ...)` for copy-and-modify and `instance.with()` for a builder pre-populated from the instance ([`generateWithInterface`](docs/CONFIGURATION.md#generatewithinterface)).
 - **Collection immutability:** The target type owns the collection contract. Simple Builders passes through what the type stores; use defensive copying such as `List.copyOf(...)` in the type when the result must be immutable ([configuration details](#collection-immutability)).
 - **Incremental / singular collection API:** `add2X` helpers, `ArrayList`/`HashSet`/`HashMap` collection builders, and varargs helpers cover incremental collection construction ([collection helper options](docs/CONFIGURATION.md#collection-helpers)).
-- **Default values:** Classes can use field initializers; records can establish defaults in their canonical or compact constructor, or behind a static factory ([configuration options](docs/CONFIGURATION.md#configuration-options)).
 - **Inheritance:** Inherited setters are discovered, and constructors exposed by the annotated subclass are used. A final superclass field not exposed by that constructor is intentionally not bypassed ([configuration options](docs/CONFIGURATION.md#configuration-options)).
 
 Value semantics (`equals`, `hashCode`, `toString`) and generating brand-new immutable value types are deliberate out-of-scope paradigm choices, not missing builder features.
@@ -212,11 +211,6 @@ public record Product(@NotNull String name, double price) {}
 ProductBuilder.create()
     .name("Keyboard")
     .build(); // throws IllegalStateException: price must be set
-
-ProductBuilder.create()
-    .name(null)
-    .price(99.0)
-    .build(); // throws IllegalStateException: name cannot be null
 ```
 
 The `NotNull`/`NonNull` simple-name check is framework-agnostic; use the annotation type already
