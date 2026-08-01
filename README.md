@@ -41,7 +41,7 @@ Simple Builders is a Java [annotation processor](https://docs.oracle.com/en/java
 
 | Library | Plain classes | Records | Mechanism | Runtime reflection / deps | Notable extras |
 |---|---|---|---|---|---|
-| Lombok | Yes | Limited | Compile-time bytecode manipulation via agent/plugin | No runtime dependency | Broad annotation-based code generation |
+| Lombok | Yes | Yes | Compile-time bytecode manipulation via agent/plugin | No runtime dependency | Broad annotation-based code generation |
 | Immutables | No — abstract types/interfaces | No | Compile-time source generation | No runtime reflection | Immutable value types and builders |
 | Google AutoValue | No — abstract classes | No | Compile-time source generation | No runtime reflection | Generated value classes with `@AutoValue.Builder` |
 | FreeBuilder | No — abstract classes/interfaces | No | Compile-time source generation | No runtime reflection | Partial objects and incremental construction |
