@@ -1,6 +1,6 @@
 # Simple Builders — Type-safe, fluent builders for Java classes & records, generated at compile time
 
-A zero-reflection Java annotation processor that generates fluent, type-safe builders for **classes and records** — with **Jackson** support, immutable **copy-on-write `with`**, conditional logic, and collection helpers. A lightweight **Lombok / RecordBuilder alternative**.
+A zero-reflection Java annotation processor that generates fluent, type-safe builders for **classes and records** — with **Jackson** support, immutable **copy-on-write `with`**, conditional logic, and collection helpers. A lightweight **Lombok alternative**.
 
 [![License](https://img.shields.io/badge/License-MIT%202.0-yellowgreen.svg)](https://github.com/java-helpers/simple-builders/blob/main/LICENSE)
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.java-helpers/simple-builders-core.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:io.github.java-helpers%20AND%20a:simple-builders-core)
@@ -12,7 +12,7 @@ A zero-reflection Java annotation processor that generates fluent, type-safe bui
 
 ## Table of Contents
 - [What is Simple Builders?](#what-is-simple-builders)
-- [Comparison](#comparison)
+- [How Simple Builders compares](#how-simple-builders-compares)
 - [Features](#features)
 - [Requirements](#requirements)
 - [Installation](#installation)
@@ -37,16 +37,15 @@ A zero-reflection Java annotation processor that generates fluent, type-safe bui
 
 Simple Builders is a Java [annotation processor](https://docs.oracle.com/en/java/javase/17/docs/specs/man/javac.html#annotation-processing) that generates type-safe, fluent builders for existing Java classes and records at compile time. It supports Jackson integration, immutable copy-with updates, conditional logic, and collection helpers, with no runtime reflection.
 
-## Comparison
+## How Simple Builders compares
 
-| Library | Plain classes | Records | Mechanism | Runtime reflection / deps | Notable extras |
-|---|---|---|---|---|---|
-| Lombok | Yes | Yes | Compile-time bytecode manipulation via agent/plugin | No runtime dependency | Broad annotation-based code generation |
-| Immutables | No — abstract types/interfaces | No | Compile-time source generation | No runtime reflection | Immutable value types and builders |
-| Google AutoValue | No — abstract classes | No | Compile-time source generation | No runtime reflection | Generated value classes with `@AutoValue.Builder` |
-| FreeBuilder | No — abstract classes/interfaces | No | Compile-time source generation | No runtime reflection | Partial objects and incremental construction |
-| RecordBuilder | No | Yes | Compile-time annotation processing | No runtime reflection | Record-focused builders and `with` methods |
-| Simple Builders | Yes | Yes | Standard compile-time annotation processing | No runtime reflection; minimal runtime deps | Jackson, copy-with, conditional logic, and collection helpers |
+Simple Builders generates fluent, type-safe builders for your **existing** classes and records using standard [JSR-269 annotation processing](https://docs.oracle.com/en/java/javase/17/docs/specs/man/javac.html#annotation-processing) — it adds separate, readable generated source and never modifies your types. The main alternatives solve overlapping but different problems, and each is the better choice in its own niche:
+
+- **Lombok** — the closest "add a builder to my existing class" tool. The key difference is mechanism: instead of generating separate source, Lombok modifies your class during compilation by mutating the compiler's internal, non-public AST APIs. A standard annotation processor may only add new files, never alter existing ones, so this steps outside the normal model — it typically requires an IDE plugin to resolve the injected members, the generated code isn't visible as source (you run `delombok` to see it), and relying on internal compiler APIs makes it sensitive to new JDK releases. It has no runtime dependency and is widely used — choose Lombok if you're already invested in it for broader boilerplate reduction.
+- **Immutables / Google AutoValue / FreeBuilder** — value-type generators: you declare an abstract class or interface and they generate an immutable implementation plus a builder. Great when you want to define new immutable value types; less suited when you just want a builder for classes or records you already have and don't want to restructure your model.
+- **RecordBuilder** — focused, excellent builders and `with` methods for records. Choose it if you use records exclusively.
+
+Use Simple Builders when you want fluent, type-safe builders for the classes and records you already have, generated as plain readable source, with no bytecode manipulation and no IDE plugin.
 
 ## Features
 
