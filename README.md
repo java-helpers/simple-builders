@@ -13,14 +13,17 @@ A zero-reflection Java annotation processor that generates fluent, type-safe bui
 ## Table of Contents
 - [What is Simple Builders?](#what-is-simple-builders)
 - [How Simple Builders compares](#how-simple-builders-compares)
+  - [Doing what other builders advertise — the Simple Builders way](#doing-what-other-builders-advertise-the-simple-builders-way)
 - [Features](#features)
 - [Requirements](#requirements)
 - [Installation](#installation)
 - [Usage](#usage)
   - [Basic Usage](#basic-usage)
     - [Validation Annotations](#validation-annotations)
+    - [Required Fields and Null-Safety](#required-fields-and-null-safety)
     - [Conditional Builder Logic](#conditional-builder-logic)
   - [Collections and Nested Objects](#collections-and-nested-objects)
+    - [Collection Immutability](#collection-immutability)
   - [With Interface Pattern](#with-interface-pattern)
   - [Builder Configuration](#builder-configuration)
     - [Compiler Arguments](#compiler-arguments)
@@ -46,6 +49,16 @@ Simple Builders generates fluent, type-safe builders for your **existing** class
 - **RecordBuilder** — focused, excellent builders and `with` methods for records. Choose it if you use records exclusively.
 
 Use Simple Builders when you want fluent, type-safe builders for the classes and records you already have, generated as plain readable source, with no bytecode manipulation and no IDE plugin — and no lock-in: because the builders are ordinary generated Java, you can drop the dependency at any time by copying the generated builder classes into your own sources, and they keep working.
+
+### Doing what other builders advertise — the Simple Builders way
+
+- **Required fields:** Primitive fields and fields annotated with an annotation named `NotNull` or `NonNull` are non-nullable; constructor parameters are builder inputs. `build()` enforces the required/non-null contract with `IllegalStateException` ([configuration details](#required-fields-and-null-safety)).
+- **Copy / `with` / `toBuilder`:** The generated `With` interface provides `instance.with(b -> ...)` for copy-and-modify and `instance.with()` for a builder pre-populated from the instance ([`generateWithInterface`](docs/CONFIGURATION.md#generatewithinterface)).
+- **Collection immutability:** The target type owns the collection contract. Simple Builders passes through what the type stores; use defensive copying such as `List.copyOf(...)` in the type when the result must be immutable ([configuration details](#collection-immutability)).
+- **Incremental / singular collection API:** `add2X` helpers, `ArrayList`/`HashSet`/`HashMap` collection builders, and varargs helpers cover incremental collection construction ([collection helper options](docs/CONFIGURATION.md#collection-helpers)).
+- **Inheritance:** Inherited setters are discovered, and constructors exposed by the annotated subclass are used. A final superclass field not exposed by that constructor is intentionally not bypassed ([configuration options](docs/CONFIGURATION.md#configuration-options)).
+
+Value semantics (`equals`, `hashCode`, `toString`) and generating brand-new immutable value types are deliberate out-of-scope paradigm choices, not missing builder features.
 
 ## Features
 
@@ -179,6 +192,35 @@ User user = UserBuilder.create()
 
 This ensures validation frameworks work seamlessly with builder-generated objects.
 
+#### Required Fields and Null-Safety
+
+Simple Builders treats a field as non-nullable when its type is primitive or its parameter carries
+an annotation whose simple name is `NotNull` or `NonNull`, regardless of the annotation package.
+The name is matched without requiring a particular validation framework.
+
+For non-nullable constructor fields, `build()` requires the builder value to be set and non-null.
+For non-nullable setter fields, the field remains optional, but a value supplied to the builder must
+be non-null. Violations throw `IllegalStateException`.
+
+For example, both the primitive `price` and the `@NotNull` `name` below are required — omitting
+either makes `build()` fail:
+
+```java
+@SimpleBuilder
+public record Product(@NotNull String name, double price) {}
+
+ProductBuilder.create()
+    .name("Keyboard")
+    .build(); // throws IllegalStateException: price must be set
+
+ProductBuilder.create()
+    .price(99.0)
+    .build(); // throws IllegalStateException: name must be set
+```
+
+The `NotNull`/`NonNull` simple-name check is framework-agnostic; use the annotation type already
+used by your project.
+
 #### Conditional Builder Logic
 
 Apply builder modifications conditionally using the `conditional()` method:
@@ -254,6 +296,25 @@ Project project = ProjectBuilder.create()
         .put("owner", "dev-team"))
     .build();
 ```
+
+#### Collection Immutability
+
+Immutability of collections in the built object is the target type's responsibility. Simple
+Builders stores exactly what the target type stores and does not silently wrap collections, so the
+target type's collection contract remains intact. For a record, enforce that contract in its
+canonical or compact constructor:
+
+```java
+@SimpleBuilder
+public record Basket(List<String> items) {
+    public Basket {
+        items = List.copyOf(items);
+    }
+}
+```
+
+The builder passes its collection value to `Basket`; the record makes the stored collection
+unmodifiable.
 
 
 ### With Interface Pattern
