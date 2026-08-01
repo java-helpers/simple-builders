@@ -1,4 +1,6 @@
-# Simple Builders - Java Builder Generation at Compile Time
+# Simple Builders — Type-safe, fluent builders for Java classes & records, generated at compile time
+
+A zero-reflection Java annotation processor that generates fluent, type-safe builders for **classes and records** — with **Jackson** support, immutable **copy-on-write `with`**, conditional logic, and collection helpers. A lightweight **Lombok / RecordBuilder alternative**.
 
 [![License](https://img.shields.io/badge/License-MIT%202.0-yellowgreen.svg)](https://github.com/java-helpers/simple-builders/blob/main/LICENSE)
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.java-helpers/simple-builders-core.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:io.github.java-helpers%20AND%20a:simple-builders-core)
@@ -10,6 +12,7 @@
 
 ## Table of Contents
 - [What is Simple Builders?](#what-is-simple-builders)
+- [Comparison](#comparison)
 - [Features](#features)
 - [Requirements](#requirements)
 - [Installation](#installation)
@@ -32,7 +35,18 @@
 
 ## What is Simple Builders?
 
-Simple Builders is a Java [annotation processor](https://docs.oracle.com/en/java/javase/17/docs/specs/man/javac.html#annotation-processing) designed to generate type-safe and high-performance builders for Java classes. It generates builder code at compile-time, ensuring type safety without any runtime reflection overhead.
+Simple Builders is a Java [annotation processor](https://docs.oracle.com/en/java/javase/17/docs/specs/man/javac.html#annotation-processing) that generates type-safe, fluent builders for existing Java classes and records at compile time. It supports Jackson integration, immutable copy-with updates, conditional logic, and collection helpers, with no runtime reflection.
+
+## Comparison
+
+| Library | Plain classes | Records | Mechanism | Runtime reflection / deps | Notable extras |
+|---|---|---|---|---|---|
+| Lombok | Yes | Limited | Compile-time bytecode manipulation via agent/plugin | No runtime dependency | Broad annotation-based code generation |
+| Immutables | No — abstract types/interfaces | No | Compile-time source generation | No runtime reflection | Immutable value types and builders |
+| Google AutoValue | No — abstract classes | No | Compile-time source generation | No runtime reflection | Generated value classes with `@AutoValue.Builder` |
+| FreeBuilder | No — abstract classes/interfaces | No | Compile-time source generation | No runtime reflection | Partial objects and incremental construction |
+| RecordBuilder | No | Yes | Compile-time annotation processing | No runtime reflection | Record-focused builders and `with` methods |
+| Simple Builders | Yes | Yes | Standard compile-time annotation processing | No runtime reflection; minimal runtime deps | Jackson, copy-with, conditional logic, and collection helpers |
 
 ## Features
 
