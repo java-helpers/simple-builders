@@ -13,6 +13,7 @@ A zero-reflection Java annotation processor that generates fluent, type-safe bui
 ## Table of Contents
 - [What is Simple Builders?](#what-is-simple-builders)
 - [How Simple Builders compares](#how-simple-builders-compares)
+  - [Doing what other builders advertise — the Simple Builders way](#doing-what-other-builders-advertise-the-simple-builders-way)
 - [Features](#features)
 - [Requirements](#requirements)
 - [Installation](#installation)
@@ -46,6 +47,17 @@ Simple Builders generates fluent, type-safe builders for your **existing** class
 - **RecordBuilder** — focused, excellent builders and `with` methods for records. Choose it if you use records exclusively.
 
 Use Simple Builders when you want fluent, type-safe builders for the classes and records you already have, generated as plain readable source, with no bytecode manipulation and no IDE plugin — and no lock-in: because the builders are ordinary generated Java, you can drop the dependency at any time by copying the generated builder classes into your own sources, and they keep working.
+
+### Doing what other builders advertise — the Simple Builders way
+
+- **Required fields:** Primitive fields and fields annotated with an annotation named `NotNull` or `NonNull` are non-nullable; constructor parameters are builder inputs. `build()` enforces the required/non-null contract with `IllegalStateException` ([configuration details](docs/CONFIGURATION.md#required-fields-and-null-safety)).
+- **Copy / `with` / `toBuilder`:** The generated `With` interface provides `instance.with(b -> ...)` for copy-and-modify and `instance.with()` for a builder pre-populated from the instance ([`generateWithInterface`](docs/CONFIGURATION.md#generatewithinterface)).
+- **Collection immutability:** The target type owns the collection contract. Simple Builders passes through what the type stores; use defensive copying such as `List.copyOf(...)` in the type when the result must be immutable ([configuration details](docs/CONFIGURATION.md#collection-immutability)).
+- **Incremental / singular collection API:** `add2X` helpers, `ArrayList`/`HashSet`/`HashMap` collection builders, and varargs helpers cover incremental collection construction ([collection helper options](docs/CONFIGURATION.md#collection-helpers)).
+- **Default values:** Classes can use field initializers; records can establish defaults in their canonical or compact constructor, or behind a static factory ([configuration options](docs/CONFIGURATION.md#configuration-options)).
+- **Inheritance:** Inherited setters are discovered, and constructors exposed by the annotated subclass are used. A final superclass field not exposed by that constructor is intentionally not bypassed ([configuration options](docs/CONFIGURATION.md#configuration-options)).
+
+Value semantics (`equals`, `hashCode`, `toString`) and generating brand-new immutable value types are deliberate out-of-scope paradigm choices, not missing builder features.
 
 ## Features
 

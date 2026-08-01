@@ -15,7 +15,9 @@ Simple-builders supports fine-grained configuration through the `@SimpleBuilder.
   - [Field Setter Generation](#field-setter-generation)
   - [Conditional Logic](#conditional-logic)
   - [Access Control](#access-control)
+  - [Required Fields and Null-Safety](#required-fields-and-null-safety)
   - [Collection Helpers](#collection-helpers)
+    - [Collection Immutability](#collection-immutability)
   - [Component Filtering](#component-filtering)
   - [Integration](#integration)
   - [Reliability](#reliability)
@@ -498,6 +500,38 @@ public Builder items(List<@NotNull String> items) { ... }
 
 ---
 
+### Required Fields and Null-Safety
+
+Simple Builders treats constructor parameters as inputs to the selected target constructor. A field
+is non-nullable when its type is primitive or its parameter carries an annotation whose simple name
+is `NotNull` or `NonNull`, regardless of the annotation package. The annotation name is matched
+without requiring a particular validation framework.
+
+For non-nullable constructor fields, `build()` requires the builder value to be set and non-null.
+For non-nullable setter fields, the field remains optional, but a value supplied to the builder must
+be non-null. Violations throw `IllegalStateException`.
+
+For example, the primitive `price` below is required and cannot be null:
+
+```java
+@SimpleBuilder
+public record Product(@NotNull String name, double price) {}
+
+ProductBuilder.create()
+    .name("Keyboard")
+    .build(); // throws IllegalStateException: price must be set
+
+ProductBuilder.create()
+    .name(null)
+    .price(99.0)
+    .build(); // throws IllegalStateException: name cannot be null
+```
+
+The `NotNull`/`NonNull` simple-name check is framework-agnostic; use the annotation type already
+used by your project.
+
+---
+
 ### Collection Helpers
 
 #### `usingArrayListBuilder`
@@ -605,6 +639,27 @@ public TeamDtoBuilder uniqueMembers(Consumer<HashSetBuilderWithElementBuilders<P
 **Default**: `ENABLED` | **Compiler Option**: `-Asimplebuilder.usingHashMapBuilder=ENABLED|DISABLED`
 
 Generates methods using `HashMapBuilder` for fluent Map construction.
+
+---
+
+#### Collection Immutability
+
+Immutability of collections in the built object is the target type's responsibility. Simple
+Builders stores exactly what the target type stores and does not silently wrap collections, so the
+target type's collection contract remains intact. For a record, enforce that contract in its
+canonical or compact constructor:
+
+```java
+@SimpleBuilder
+public record Basket(List<String> items) {
+    public Basket {
+        items = List.copyOf(items);
+    }
+}
+```
+
+The builder passes its collection value to `Basket`; the record makes the stored collection
+unmodifiable.
 
 ---
 
