@@ -91,7 +91,7 @@ public class TypeName {
    * @return simple name with generics, e.g. {@code String} or {@code List<String>}
    */
   public String getSimpleNameWithGenerics() {
-    return className;
+    return getClassName();
   }
 
   /**

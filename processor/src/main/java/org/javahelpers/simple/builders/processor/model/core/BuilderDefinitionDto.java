@@ -137,11 +137,11 @@ public class BuilderDefinitionDto {
   }
 
   public TypeName getTypeName() {
-    return typeName;
+    return getBuilderTypeName();
   }
 
   public void setTypeName(TypeName typeName) {
-    this.typeName = typeName;
+    setBuilderTypeName(typeName);
   }
 
   public AccessModifier getClassAccessModifier() {

@@ -28,10 +28,14 @@ import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts
 import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils.loadGeneratedSource;
 
 import com.google.testing.compile.Compilation;
+import java.util.stream.Stream;
 import javax.tools.JavaFileObject;
 import org.javahelpers.simple.builders.processor.testing.ProcessorAsserts;
 import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 /**
  * Tests that verify the field-specific code examples added to the generated builder javadoc.
@@ -110,249 +114,153 @@ class BuilderJavadocExampleTest {
         """);
   }
 
-  @Test
-  void shouldGenerateMethodJavadocExampleForBasicStringSetter() {
-    String packageName = "test";
-    String className = "Person";
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("methodJavadocExampleCases")
+  void shouldGenerateMethodJavadocExample(
+      String testName, String className, String source, String expectedJavadoc) {
     String builderClassName = className + "Builder";
+    JavaFileObject dto = ProcessorTestUtils.simpleBuilderClass("test", className, source);
 
-    JavaFileObject dto =
-        ProcessorTestUtils.simpleBuilderClass(
-            packageName,
-            className,
+    Compilation compilation = compile(dto);
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+    ProcessorAsserts.assertContaining(generatedCode, expectedJavadoc);
+  }
+
+  private static Stream<Arguments> methodJavadocExampleCases() {
+    return Stream.of(
+        Arguments.of(
+            "basic string setter",
+            "Person",
             """
                 private String teamname;
                 public String getTeamname() { return teamname; }
                 public void setTeamname(String teamname) { this.teamname = teamname; }
-            """);
-
-    Compilation compilation = compile(dto);
-    String generatedCode = loadGeneratedSource(compilation, builderClassName);
-    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-
-    // Expected method javadoc for the basic setter (description + field origin + example + tags)
-    ProcessorAsserts.assertContaining(
-        generatedCode,
-        """
-        * Sets the value for <code>teamname</code>.
-        * <p>
-        * Generated from setter {@link Person#setTeamname(String) setTeamname(String teamname)}
-        *
-        * <h4>Example:</h4>
-        *
-        * <pre>{@code
-        * builder.teamname("example value");
-        * }</pre>
-        *
-        * @param teamname teamname
-        * @return current instance of builder
-        */
-        public PersonBuilder teamname(String teamname)
-        """);
-  }
-
-  @Test
-  void shouldGenerateMethodJavadocExampleForPrimitiveSetter() {
-    String packageName = "test";
-    String className = "Counter";
-    String builderClassName = className + "Builder";
-
-    JavaFileObject dto =
-        ProcessorTestUtils.simpleBuilderClass(
-            packageName,
-            className,
+            """,
+            """
+            * Sets the value for <code>teamname</code>.
+            * <p>
+            * Generated from setter {@link Person#setTeamname(String) setTeamname(String teamname)}
+            *
+            * <h4>Example:</h4>
+            *
+            * <pre>{@code
+            * builder.teamname("example value");
+            * }</pre>
+            *
+            * @param teamname teamname
+            * @return current instance of builder
+            */
+            public PersonBuilder teamname(String teamname)
+            """),
+        Arguments.of(
+            "primitive setter",
+            "Counter",
             """
                 private int amount;
                 public int getAmount() { return amount; }
                 public void setAmount(int amount) { this.amount = amount; }
-            """);
-
-    Compilation compilation = compile(dto);
-    String generatedCode = loadGeneratedSource(compilation, builderClassName);
-    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-
-    ProcessorAsserts.assertContaining(
-        generatedCode,
-        """
-        * Sets the value for <code>amount</code>.
-        * <p>
-        * Generated from setter {@link Counter#setAmount(int) setAmount(int amount)}
-        *
-        * <h4>Example:</h4>
-        *
-        * <pre>{@code
-        * builder.amount(42);
-        * }</pre>
-        *
-        * @param amount amount
-        * @return current instance of builder
-        */
-        public CounterBuilder amount(int amount)
-        """);
-  }
-
-  @Test
-  void shouldGenerateMethodJavadocExampleForSupplier() {
-    String packageName = "test";
-    String className = "SupplierDto";
-    String builderClassName = className + "Builder";
-
-    JavaFileObject dto =
-        ProcessorTestUtils.simpleBuilderClass(
-            packageName,
-            className,
+            """,
+            """
+            * Sets the value for <code>amount</code>.
+            * <p>
+            * Generated from setter {@link Counter#setAmount(int) setAmount(int amount)}
+            *
+            * <h4>Example:</h4>
+            *
+            * <pre>{@code
+            * builder.amount(42);
+            * }</pre>
+            *
+            * @param amount amount
+            * @return current instance of builder
+            */
+            public CounterBuilder amount(int amount)
+            """),
+        Arguments.of(
+            "supplier",
+            "SupplierDto",
             """
                 private String title;
                 public String getTitle() { return title; }
                 public void setTitle(String title) { this.title = title; }
-            """);
-
-    Compilation compilation = compile(dto);
-    String generatedCode = loadGeneratedSource(compilation, builderClassName);
-    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-
-    ProcessorAsserts.assertContaining(
-        generatedCode,
-        """
-        * <h4>Example:</h4>
-        *
-        * <pre>{@code
-        * builder.title(() -> "example value");
-        * }</pre>
-        """);
-  }
-
-  @Test
-  void shouldGenerateMethodJavadocExampleForAddToCollection() {
-    String packageName = "test";
-    String className = "TagsDto";
-    String builderClassName = className + "Builder";
-
-    JavaFileObject dto =
-        ProcessorTestUtils.simpleBuilderClass(
-            packageName,
-            className,
+            """,
+            """
+            * <h4>Example:</h4>
+            *
+            * <pre>{@code
+            * builder.title(() -> "example value");
+            * }</pre>
+            """),
+        Arguments.of(
+            "add to collection",
+            "TagsDto",
             """
                 private java.util.List<String> tags;
                 public java.util.List<String> getTags() { return tags; }
                 public void setTags(java.util.List<String> tags) { this.tags = tags; }
-            """);
-
-    Compilation compilation = compile(dto);
-    String generatedCode = loadGeneratedSource(compilation, builderClassName);
-    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-
-    ProcessorAsserts.assertContaining(
-        generatedCode,
-        """
-        * Adds a single element to <code>tags</code>.
-        * <p>
-        * Generated from setter {@link TagsDto#setTags(List) setTags(List<String> tags)}
-        *
-        * <h4>Example:</h4>
-        *
-        * <pre>{@code
-        * builder.add2Tags("example value");
-        * }</pre>
-        *
-        * @param element the element to add
-        * @return current instance of builder
-        */
-        public TagsDtoBuilder add2Tags(String element)
-        """);
-  }
-
-  @Test
-  void shouldGenerateMethodJavadocExampleForListConsumer() {
-    String packageName = "test";
-    String className = "ListDto";
-    String builderClassName = className + "Builder";
-
-    JavaFileObject dto =
-        ProcessorTestUtils.simpleBuilderClass(
-            packageName,
-            className,
+            """,
+            """
+            * Adds a single element to <code>tags</code>.
+            * <p>
+            * Generated from setter {@link TagsDto#setTags(List) setTags(List<String> tags)}
+            *
+            * <h4>Example:</h4>
+            *
+            * <pre>{@code
+            * builder.add2Tags("example value");
+            * }</pre>
+            *
+            * @param element the element to add
+            * @return current instance of builder
+            */
+            public TagsDtoBuilder add2Tags(String element)
+            """),
+        Arguments.of(
+            "list consumer",
+            "ListDto",
             """
                 private java.util.List<String> tags;
                 public java.util.List<String> getTags() { return tags; }
                 public void setTags(java.util.List<String> tags) { this.tags = tags; }
-            """);
-
-    Compilation compilation = compile(dto);
-    String generatedCode = loadGeneratedSource(compilation, builderClassName);
-    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-
-    ProcessorAsserts.assertContaining(
-        generatedCode,
-        """
-        * <h4>Example:</h4>
-        *
-        * <pre>{@code
-        * builder.tags(t -> t.add("example value"));
-        * }</pre>
-        """);
-  }
-
-  @Test
-  void shouldGenerateMethodJavadocExampleForCreate() {
-    String packageName = "test";
-    String className = "CreateDto";
-    String builderClassName = className + "Builder";
-
-    JavaFileObject dto =
-        ProcessorTestUtils.simpleBuilderClass(
-            packageName,
-            className,
+            """,
+            """
+            * <h4>Example:</h4>
+            *
+            * <pre>{@code
+            * builder.tags(t -> t.add("example value"));
+            * }</pre>
+            """),
+        Arguments.of(
+            "create",
+            "CreateDto",
             """
                 private String name;
                 public String getName() { return name; }
                 public void setName(String name) { this.name = name; }
-            """);
-
-    Compilation compilation = compile(dto);
-    String generatedCode = loadGeneratedSource(compilation, builderClassName);
-    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-
-    ProcessorAsserts.assertContaining(
-        generatedCode,
-        """
-        * <h4>Example:</h4>
-        *
-        * <pre>{@code
-        * CreateDtoBuilder builder = CreateDtoBuilder.create();
-        * }</pre>
-        """);
-  }
-
-  @Test
-  void shouldGenerateMethodJavadocExampleForBuild() {
-    String packageName = "test";
-    String className = "BuildDto";
-    String builderClassName = className + "Builder";
-
-    JavaFileObject dto =
-        ProcessorTestUtils.simpleBuilderClass(
-            packageName,
-            className,
+            """,
+            """
+            * <h4>Example:</h4>
+            *
+            * <pre>{@code
+            * CreateDtoBuilder builder = CreateDtoBuilder.create();
+            * }</pre>
+            """),
+        Arguments.of(
+            "build",
+            "BuildDto",
             """
                 private String name;
                 public String getName() { return name; }
                 public void setName(String name) { this.name = name; }
-            """);
-
-    Compilation compilation = compile(dto);
-    String generatedCode = loadGeneratedSource(compilation, builderClassName);
-    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-
-    ProcessorAsserts.assertContaining(
-        generatedCode,
-        """
-        * <h4>Example:</h4>
-        *
-        * <pre>{@code
-        * BuildDto result = builder.build();
-        * }</pre>
-        """);
+            """,
+            """
+            * <h4>Example:</h4>
+            *
+            * <pre>{@code
+            * BuildDto result = builder.build();
+            * }</pre>
+            """));
   }
 
   // ---------------------------------------------------------------------------
