@@ -102,6 +102,7 @@ public final class JavadocExampleValues {
    *       value")}, {@code Set.of(42)})
    *   <li>Map types where the key type is String and the value type is supported (e.g., {@code
    *       Map.of("key", "example value")})
+   *   <li>Optional types with a supported inner type (e.g., {@code Optional.of("example value")})
    *   <li>Types with an empty constructor (e.g., {@code new AddressDto()})
    *   <li>Types with a {@code @SimpleBuilder} annotation but no empty constructor (e.g., {@code
    *       AddressDtoBuilder.create().build()})
@@ -113,6 +114,7 @@ public final class JavadocExampleValues {
   public static Optional<String> getExampleValue(TypeName typeName) {
     return resolvePrimitive(typeName)
         .or(() -> resolveCollection(typeName))
+        .or(() -> resolveOptional(typeName))
         .or(() -> resolveCommonType(typeName))
         .or(() -> resolveString(typeName))
         .or(() -> resolveEmptyConstructor(typeName))
@@ -147,6 +149,17 @@ public final class JavadocExampleValues {
         || "String".equals(keyType.getClassName())) {
       return getExampleValue(mapType.getValueType())
           .map(valueExample -> "Map.of(\"key\", " + valueExample + ")");
+    }
+    return Optional.empty();
+  }
+
+  private static Optional<String> resolveOptional(TypeName typeName) {
+    if ("java.util.Optional".equals(typeName.getFullQualifiedName())
+        || "Optional".equals(typeName.getClassName())) {
+      return typeName
+          .getInnerType()
+          .flatMap(JavadocExampleValues::getExampleValue)
+          .map(inner -> "Optional.of(" + inner + ")");
     }
     return Optional.empty();
   }

@@ -186,8 +186,10 @@ class ComprehensiveFeatureIntegrationTest {
          *     .name(sb -> sb.append("text"))
          *     .age(42)
          *     .age(() -> 42)
+         *     .email(Optional.of("example value"))
          *     .email("Hello %s", "World")
          *     .email("example value")
+         *     .email(() -> Optional.of("example value"))
          *     .email(sb -> sb.append("text"))
          *     .nicknames(List.of("example value"))
          *     .nicknames(() -> List.of("example value"))
@@ -547,6 +549,12 @@ class ComprehensiveFeatureIntegrationTest {
            * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
            * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
            *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.email(Optional.of("example value"));
+           * }</pre>
+           *
            * @param email email
            * @return current instance of builder
            */
@@ -586,6 +594,12 @@ class ComprehensiveFeatureIntegrationTest {
            * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
            * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
            * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
+           *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.email(() -> Optional.of("example value"));
+           * }</pre>
            *
            * @param emailSupplier supplier for email
            * @return current instance of builder

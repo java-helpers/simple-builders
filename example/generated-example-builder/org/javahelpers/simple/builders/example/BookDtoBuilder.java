@@ -39,6 +39,7 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  *     .publishDate(LocalDate.now())
  *     .publisher(PersonDtoBuilder.create().build())
  *     .salesCount(42L)
+ *     .subtitle(Optional.of("example value"))
  *     .tags(List.of("example value"))
  *     .title("example value")
  *     .build();
@@ -467,6 +468,12 @@ public class BookDtoBuilder {
    * Sets the value for <code>subtitle</code>.
    * <p>
    * Generated from setter {@link BookDto#setSubtitle(Optional) setSubtitle(Optional<String> subtitle)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.subtitle(Optional.of("example value"));
+   * }</pre>
    * 
    * @param subtitle an Optional containing the subtitle to set
    * @return current instance of builder

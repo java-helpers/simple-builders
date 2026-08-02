@@ -267,6 +267,20 @@ class BuilderJavadocExampleTest {
             * <pre>{@code
             * builder.values(Map.of("key", 42));
             * }</pre>
+            """),
+        Arguments.of(
+            Named.of("optional setter", "OptionalDto"),
+            """
+                private java.util.Optional<String> subtitle;
+                public java.util.Optional<String> getSubtitle() { return subtitle; }
+                public void setSubtitle(java.util.Optional<String> subtitle) { this.subtitle = subtitle; }
+            """,
+            """
+            * <h4>Example:</h4>
+            *
+            * <pre>{@code
+            * builder.subtitle(Optional.of("example value"));
+            * }</pre>
             """));
   }
 
