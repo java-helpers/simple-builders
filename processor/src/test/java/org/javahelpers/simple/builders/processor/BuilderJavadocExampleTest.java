@@ -260,6 +260,21 @@ class BuilderJavadocExampleTest {
             * <pre>{@code
             * BuildDto result = builder.build();
             * }</pre>
+            """),
+        Arguments.of(
+            "map setter",
+            "MapDto",
+            """
+                private java.util.Map<String, Integer> values;
+                public java.util.Map<String, Integer> getValues() { return values; }
+                public void setValues(java.util.Map<String, Integer> values) { this.values = values; }
+            """,
+            """
+            * <h4>Example:</h4>
+            *
+            * <pre>{@code
+            * builder.values(Map.of("key", 42));
+            * }</pre>
             """));
   }
 

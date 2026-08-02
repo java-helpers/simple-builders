@@ -455,24 +455,6 @@ public final class MethodGeneratorUtil {
   }
 
   /**
-   * Adds the fluent-chain fragment for Javadoc examples to a method with a hardcoded example value.
-   *
-   * <p>This helper method formats a hardcoded example value as a fluent-chain fragment (e.g.,
-   * {@code methodName("example value")}). The fragment is stored on the MethodDto for later use by
-   * the ClassJavaDocEnhancer to synthesize both method-level and class-level Javadoc examples.
-   *
-   * <p>This is useful for generators that use a fixed example value rather than deriving it from
-   * the field type.
-   *
-   * @param methodDto the method DTO to add the fragment to
-   * @param exampleValue the hardcoded example value to use
-   */
-  public static void addExampleChainFragmentWithHardcodedValue(
-      BuilderMethodDto methodDto, String exampleValue) {
-    addExampleChainFragmentTemplate(methodDto, "#{methodName}(%s)".formatted(exampleValue));
-  }
-
-  /**
    * Adds the fluent-chain fragment for Javadoc examples to a method using a template string.
    *
    * <p>This helper method replaces placeholders in the template string with actual values:
