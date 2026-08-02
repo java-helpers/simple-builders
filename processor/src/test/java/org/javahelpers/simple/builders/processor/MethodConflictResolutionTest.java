@@ -389,10 +389,10 @@ class MethodConflictResolutionTest {
             .filter(d -> d.getKind() == Diagnostic.Kind.WARNING)
             .filter(
                 d ->
-                    d.getMessage(null).contains("Method conflict")
-                        && d.getMessage(null).contains("dropped in favor of"))
-            .filter(d -> d.getMessage(null).contains("priority 80"))
-            .filter(d -> d.getMessage(null).contains("priority 100"))
+                    d.getMessage(null).contains("Method conflict resolved")
+                        && d.getMessage(null).contains("Dropped"))
+            .filter(d -> d.getMessage(null).contains("priority=80"))
+            .filter(d -> d.getMessage(null).contains("priority=100"))
             .count();
 
     assert lowerPriorityDroppedCount > 0

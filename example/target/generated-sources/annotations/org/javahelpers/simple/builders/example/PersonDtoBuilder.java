@@ -108,6 +108,8 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
 
   /**
    * Adds a single element to <code>nickNames</code>.
+   * <p>
+   * Generated from setter {@link PersonDto#setNickNames(List) setNickNames(List<String> nickNames)}
    * 
    * <h4>Example:</h4>
    * 
@@ -132,6 +134,8 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
 
   /**
    * Sets the value for <code>birthdate</code>.
+   * <p>
+   * Generated from setter {@link PersonDto#setBirthdate(LocalDate) setBirthdate(LocalDate birthdate)}
    * 
    * <h4>Example:</h4>
    * 
@@ -149,6 +153,8 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
 
   /**
    * Sets the value for <code>birthdate</code> by invoking the provided supplier.
+   * <p>
+   * Generated from setter {@link PersonDto#setBirthdate(LocalDate) setBirthdate(LocalDate birthdate)}
    * 
    * <h4>Example:</h4>
    * 
@@ -166,6 +172,8 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
 
   /**
    * Sets the value for <code>mannschaft</code>.
+   * <p>
+   * Generated from setter {@link PersonDto#setMannschaft(MannschaftDto) setMannschaft(MannschaftDto mannschaft)}
    * 
    * <h4>Example:</h4>
    * 
@@ -183,6 +191,8 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
 
   /**
    * Sets the value for <code>mannschaft</code> using a builder consumer that produces the value.
+   * <p>
+   * Generated from setter {@link PersonDto#setMannschaft(MannschaftDto) setMannschaft(MannschaftDto mannschaft)}
    * 
    * <h4>Example:</h4>
    * 
@@ -204,6 +214,8 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
 
   /**
    * Sets the value for <code>mannschaft</code> by invoking the provided supplier.
+   * <p>
+   * Generated from setter {@link PersonDto#setMannschaft(MannschaftDto) setMannschaft(MannschaftDto mannschaft)}
    * 
    * <h4>Example:</h4>
    * 
@@ -221,6 +233,8 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
 
   /**
    * Sets the value for <code>name</code>.
+   * <p>
+   * Generated from parameter in constructor {@link PersonDto#PersonDto(String) PersonDto(String name)}
    * 
    * <h4>Example:</h4>
    * 
@@ -238,6 +252,8 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
 
   /**
    * Sets the value for <code>name</code> by executing the provided consumer.
+   * <p>
+   * Generated from parameter in constructor {@link PersonDto#PersonDto(String) PersonDto(String name)}
    * 
    * <h4>Example:</h4>
    * 
@@ -257,6 +273,8 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
 
   /**
    * Sets the value for <code>name</code> by invoking the provided supplier.
+   * <p>
+   * Generated from parameter in constructor {@link PersonDto#PersonDto(String) PersonDto(String name)}
    * 
    * <h4>Example:</h4>
    * 
@@ -275,6 +293,8 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
   /**
    * Sets the String value for <code>name</code> by using String.format(format, args). See
    * {@link String#format(String, Object...)} for details.
+   * <p>
+   * Generated from parameter in constructor {@link PersonDto#PersonDto(String) PersonDto(String name)}
    * 
    * <h4>Example:</h4>
    * 
@@ -293,6 +313,8 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
 
   /**
    * Sets the value for <code>nickNames</code>.
+   * <p>
+   * Generated from setter {@link PersonDto#setNickNames(List) setNickNames(List<String> nickNames)}
    * 
    * <h4>Example:</h4>
    * 
@@ -310,6 +332,8 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
 
   /**
    * Sets the value for <code>nickNames</code>.
+   * <p>
+   * Generated from setter {@link PersonDto#setNickNames(List) setNickNames(List<String> nickNames)}
    * 
    * <h4>Example:</h4>
    * 
@@ -327,6 +351,8 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
 
   /**
    * Sets the value for <code>nickNames</code> using a builder consumer that produces the value.
+   * <p>
+   * Generated from setter {@link PersonDto#setNickNames(List) setNickNames(List<String> nickNames)}
    * 
    * <h4>Example:</h4>
    * 
@@ -348,6 +374,8 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
 
   /**
    * Sets the value for <code>nickNames</code> by invoking the provided supplier.
+   * <p>
+   * Generated from setter {@link PersonDto#setNickNames(List) setNickNames(List<String> nickNames)}
    * 
    * <h4>Example:</h4>
    * 
@@ -365,6 +393,8 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
 
   /**
    * Sets the value for <code>nickNames2</code>.
+   * <p>
+   * Generated from setter {@link PersonDto#setNickNames2(String) setNickNames2(String nickNames2)}
    * 
    * <h4>Example:</h4>
    * 
@@ -382,6 +412,8 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
 
   /**
    * Sets the value for <code>nickNames2</code>.
+   * <p>
+   * Generated from setter {@link PersonDto#setNickNames2(String) setNickNames2(String nickNames2)}
    * 
    * <h4>Example:</h4>
    * 
@@ -399,6 +431,8 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
 
   /**
    * Sets the value for <code>nickNames2</code> using the fluent builder consumer.
+   * <p>
+   * Generated from setter {@link PersonDto#setNickNames2(String) setNickNames2(String nickNames2)}
    * 
    * @param nickNames2BuilderConsumer consumer for nickNames2
    * @return current instance of builder
@@ -414,6 +448,8 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
 
   /**
    * Sets the value for <code>nickNames2</code> by invoking the provided supplier.
+   * <p>
+   * Generated from setter {@link PersonDto#setNickNames2(String) setNickNames2(String nickNames2)}
    * 
    * <h4>Example:</h4>
    * 
@@ -431,6 +467,8 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
 
   /**
    * Validates that the name field is not null or empty.
+   * <p>
+   * Generated from parameter in constructor {@link PersonDto#PersonDto(String) PersonDto(String name)}
    * 
    * @return this builder instance for chaining
    * @throws IllegalArgumentException if name is null or empty

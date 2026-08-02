@@ -72,6 +72,8 @@ public class SponsorDtoBuilder implements IBuilderBase<SponsorDto> {
 
   /**
    * Sets the value for <code>name</code>.
+   * <p>
+   * Generated from setter {@link SponsorDto#setName(String) setName(String name)}
    * 
    * <h4>Example:</h4>
    * 
@@ -89,6 +91,8 @@ public class SponsorDtoBuilder implements IBuilderBase<SponsorDto> {
 
   /**
    * Sets the value for <code>name</code> by executing the provided consumer.
+   * <p>
+   * Generated from setter {@link SponsorDto#setName(String) setName(String name)}
    * 
    * <h4>Example:</h4>
    * 
@@ -108,6 +112,8 @@ public class SponsorDtoBuilder implements IBuilderBase<SponsorDto> {
 
   /**
    * Sets the value for <code>name</code> by invoking the provided supplier.
+   * <p>
+   * Generated from setter {@link SponsorDto#setName(String) setName(String name)}
    * 
    * <h4>Example:</h4>
    * 
@@ -126,6 +132,8 @@ public class SponsorDtoBuilder implements IBuilderBase<SponsorDto> {
   /**
    * Sets the String value for <code>name</code> by using String.format(format, args). See
    * {@link String#format(String, Object...)} for details.
+   * <p>
+   * Generated from setter {@link SponsorDto#setName(String) setName(String name)}
    * 
    * <h4>Example:</h4>
    * 
@@ -144,6 +152,8 @@ public class SponsorDtoBuilder implements IBuilderBase<SponsorDto> {
 
   /**
    * Validates that the name field is not null or empty.
+   * <p>
+   * Generated from setter {@link SponsorDto#setName(String) setName(String name)}
    * 
    * @return this builder instance for chaining
    * @throws IllegalArgumentException if name is null or empty

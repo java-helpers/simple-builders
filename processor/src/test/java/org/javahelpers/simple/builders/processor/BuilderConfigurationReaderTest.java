@@ -528,6 +528,8 @@ class BuilderConfigurationReaderTest {
 
           /**
            * Sets the value for <code>name</code>.
+           * <p>
+           * Generated from setter {@link PersonDto#setName(String) setName(String name)}
            *
            * <h4>Example:</h4>
            *
@@ -545,6 +547,8 @@ class BuilderConfigurationReaderTest {
 
           /**
            * Sets the value for <code>tags</code>.
+           * <p>
+           * Generated from setter {@link PersonDto#setTags(List) setTags(List<String> tags)}
            *
            * <h4>Example:</h4>
            *

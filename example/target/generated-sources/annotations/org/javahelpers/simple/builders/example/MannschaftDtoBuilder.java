@@ -81,6 +81,8 @@ public class MannschaftDtoBuilder implements IBuilderBase<MannschaftDto> {
 
   /**
    * Adds a single element to <code>sponsoren</code>.
+   * <p>
+   * Generated from setter {@link MannschaftDto#setSponsoren(Set) setSponsoren(Set<SponsorDto> sponsoren)}
    * 
    * @param element the element to add
    * @return current instance of builder
@@ -99,6 +101,8 @@ public class MannschaftDtoBuilder implements IBuilderBase<MannschaftDto> {
 
   /**
    * Sets the value for <code>name</code>.
+   * <p>
+   * Generated from setter {@link MannschaftDto#setName(String) setName(String name)}
    * 
    * <h4>Example:</h4>
    * 
@@ -116,6 +120,8 @@ public class MannschaftDtoBuilder implements IBuilderBase<MannschaftDto> {
 
   /**
    * Sets the value for <code>name</code> by executing the provided consumer.
+   * <p>
+   * Generated from setter {@link MannschaftDto#setName(String) setName(String name)}
    * 
    * <h4>Example:</h4>
    * 
@@ -135,6 +141,8 @@ public class MannschaftDtoBuilder implements IBuilderBase<MannschaftDto> {
 
   /**
    * Sets the value for <code>name</code> by invoking the provided supplier.
+   * <p>
+   * Generated from setter {@link MannschaftDto#setName(String) setName(String name)}
    * 
    * <h4>Example:</h4>
    * 
@@ -153,6 +161,8 @@ public class MannschaftDtoBuilder implements IBuilderBase<MannschaftDto> {
   /**
    * Sets the String value for <code>name</code> by using String.format(format, args). See
    * {@link String#format(String, Object...)} for details.
+   * <p>
+   * Generated from setter {@link MannschaftDto#setName(String) setName(String name)}
    * 
    * <h4>Example:</h4>
    * 
@@ -171,6 +181,8 @@ public class MannschaftDtoBuilder implements IBuilderBase<MannschaftDto> {
 
   /**
    * Sets the value for <code>sponsoren</code>.
+   * <p>
+   * Generated from setter {@link MannschaftDto#setSponsoren(Set) setSponsoren(Set<SponsorDto> sponsoren)}
    * 
    * @param sponsoren sponsoren
    * @return current instance of builder
@@ -182,6 +194,8 @@ public class MannschaftDtoBuilder implements IBuilderBase<MannschaftDto> {
 
   /**
    * Sets the value for <code>sponsoren</code>.
+   * <p>
+   * Generated from setter {@link MannschaftDto#setSponsoren(Set) setSponsoren(Set<SponsorDto> sponsoren)}
    * 
    * @param sponsoren sponsoren
    * @return current instance of builder
@@ -193,6 +207,8 @@ public class MannschaftDtoBuilder implements IBuilderBase<MannschaftDto> {
 
   /**
    * Sets the value for <code>sponsoren</code> using a builder consumer that produces the value.
+   * <p>
+   * Generated from setter {@link MannschaftDto#setSponsoren(Set) setSponsoren(Set<SponsorDto> sponsoren)}
    * 
    * <h4>Example:</h4>
    * 
@@ -216,6 +232,8 @@ public class MannschaftDtoBuilder implements IBuilderBase<MannschaftDto> {
 
   /**
    * Sets the value for <code>sponsoren</code> by invoking the provided supplier.
+   * <p>
+   * Generated from setter {@link MannschaftDto#setSponsoren(Set) setSponsoren(Set<SponsorDto> sponsoren)}
    * 
    * @param sponsorenSupplier supplier for sponsoren
    * @return current instance of builder
@@ -227,6 +245,8 @@ public class MannschaftDtoBuilder implements IBuilderBase<MannschaftDto> {
 
   /**
    * Validates that the name field is not null or empty.
+   * <p>
+   * Generated from setter {@link MannschaftDto#setName(String) setName(String name)}
    * 
    * @return this builder instance for chaining
    * @throws IllegalArgumentException if name is null or empty

@@ -135,16 +135,62 @@ public class BuilderDefinitionCreator {
       builderDto.addClassField(classField);
     }
 
-    // 2. Set origin info on field-level BuilderMethodDto instances
+    // 2. Set origin info on FieldDto (primary source of truth), then propagate to methods
+    // For constructor parameters, build the full constructor signature once:
+    // Display: ClassName(type1 param1, type2 param2, ...)
+    // Link:    ClassName(Type1, Type2, ...)  (types only, raw erasure for {@link} target)
+    String constructorSignature = null;
+    String constructorLinkSignature = null;
+    if (!builderDto.getConstructorFieldsForBuilder().isEmpty()
+        && builderDto.getBuildingTargetTypeName() != null) {
+      StringBuilder displaySb = new StringBuilder();
+      StringBuilder linkSb = new StringBuilder();
+      displaySb.append(builderDto.getBuildingTargetTypeName().getClassName()).append("(");
+      linkSb.append(builderDto.getBuildingTargetTypeName().getClassName()).append("(");
+      boolean first = true;
+      for (FieldDto field : builderDto.getConstructorFieldsForBuilder()) {
+        if (!first) {
+          displaySb.append(", ");
+          linkSb.append(", ");
+        }
+        displaySb
+            .append(field.getFieldType().getSimpleNameWithGenerics())
+            .append(" ")
+            .append(field.getOriginalFieldName());
+        linkSb.append(field.getFieldType().getClassName());
+        first = false;
+      }
+      displaySb.append(")");
+      linkSb.append(")");
+      constructorSignature = displaySb.toString();
+      constructorLinkSignature = linkSb.toString();
+    }
     for (FieldDto field : builderDto.getConstructorFieldsForBuilder()) {
+      field.setSourceMethodSignature(constructorSignature);
+      field.setSourceMethodLinkSignature(constructorLinkSignature);
       for (BuilderMethodDto method : field.getMethods()) {
         method.setSourceFieldName(field.getOriginalFieldName());
+        method.setSourceMethodSignature(field.getSourceMethodSignature());
+        method.setSourceMethodLinkSignature(field.getSourceMethodLinkSignature());
         method.setConstructorField(true);
       }
     }
     for (FieldDto field : builderDto.getSetterFieldsForBuilder()) {
+      String displaySignature =
+          field.getSetterName()
+              + "("
+              + field.getFieldType().getSimpleNameWithGenerics()
+              + " "
+              + field.getOriginalFieldName()
+              + ")";
+      String linkSignature =
+          field.getSetterName() + "(" + field.getFieldType().getClassName() + ")";
+      field.setSourceMethodSignature(displaySignature);
+      field.setSourceMethodLinkSignature(linkSignature);
       for (BuilderMethodDto method : field.getMethods()) {
         method.setSourceFieldName(field.getOriginalFieldName());
+        method.setSourceMethodSignature(field.getSourceMethodSignature());
+        method.setSourceMethodLinkSignature(field.getSourceMethodLinkSignature());
         method.setConstructorField(false);
       }
     }

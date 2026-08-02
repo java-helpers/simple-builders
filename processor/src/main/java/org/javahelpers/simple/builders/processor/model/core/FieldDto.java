@@ -83,6 +83,20 @@ public class FieldDto {
   private final List<AnnotationDto> parameterAnnotations = new ArrayList<>();
 
   /**
+   * Source method signature for javadoc enrichment, e.g. {@code setTeamname(String teamName)} for
+   * setter fields or {@code PersonDto(String name, int age, ...)} for constructor parameters. This
+   * is the display label shown in the {@code {@link}} tag. {@code null} if not yet computed.
+   */
+  private String sourceMethodSignature;
+
+  /**
+   * Types-only signature for the {@code {@link}} target, e.g. {@code setTeamname(String)} or {@code
+   * PersonDto(String, int)}. Uses raw types (no generics) per Javadoc spec. {@code null} if not yet
+   * computed.
+   */
+  private String sourceMethodLinkSignature;
+
+  /**
    * Gets the original field name from the DTO. This name is used for generating method names,
    * parameter names, and setter method names (e.g., "userName" becomes "setUserName").
    *
@@ -290,6 +304,42 @@ public class FieldDto {
     if (annotations != null) {
       this.parameterAnnotations.addAll(annotations);
     }
+  }
+
+  /**
+   * Returns the source method signature for javadoc enrichment (display label).
+   *
+   * @return the source method signature, or {@code null} if not yet computed
+   */
+  public String getSourceMethodSignature() {
+    return sourceMethodSignature;
+  }
+
+  /**
+   * Sets the source method signature for javadoc enrichment (display label).
+   *
+   * @param sourceMethodSignature the display signature, e.g. {@code setTeamname(String teamName)}
+   */
+  public void setSourceMethodSignature(String sourceMethodSignature) {
+    this.sourceMethodSignature = sourceMethodSignature;
+  }
+
+  /**
+   * Returns the types-only link signature for the {@code {@link}} target.
+   *
+   * @return the link signature, or {@code null} if not yet computed
+   */
+  public String getSourceMethodLinkSignature() {
+    return sourceMethodLinkSignature;
+  }
+
+  /**
+   * Sets the types-only link signature for the {@code {@link}} target.
+   *
+   * @param sourceMethodLinkSignature the link signature, e.g. {@code setTeamname(String)}
+   */
+  public void setSourceMethodLinkSignature(String sourceMethodLinkSignature) {
+    this.sourceMethodLinkSignature = sourceMethodLinkSignature;
   }
 
   /**

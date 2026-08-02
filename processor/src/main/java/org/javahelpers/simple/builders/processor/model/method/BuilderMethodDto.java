@@ -96,6 +96,20 @@ public class BuilderMethodDto {
   /** Name of the source field this method was generated for. {@code null} for enhancer methods. */
   private String sourceFieldName;
 
+  /**
+   * Source method signature for javadoc enrichment, e.g. {@code setTeamname(String teamName)} for
+   * setter fields or {@code PersonDto(String name, int age, ...)} for constructor parameters.
+   * {@code null} for enhancer methods.
+   */
+  private String sourceMethodSignature;
+
+  /**
+   * Types-only signature for the {@code {@link}} target, e.g. {@code setTeamname(String)} or {@code
+   * PersonDto(String, int)}. Uses raw types (no generics) per Javadoc spec. {@code null} for
+   * enhancer methods.
+   */
+  private String sourceMethodLinkSignature;
+
   /** Whether this method was generated for a constructor field (vs a setter field). */
   private boolean constructorField;
 
@@ -428,6 +442,45 @@ public class BuilderMethodDto {
    */
   public void setSourceFieldName(String sourceFieldName) {
     this.sourceFieldName = sourceFieldName;
+  }
+
+  /**
+   * Returns the source method signature for javadoc enrichment.
+   *
+   * @return the source method signature, or {@code null} for enhancer-generated methods
+   */
+  public String getSourceMethodSignature() {
+    return sourceMethodSignature;
+  }
+
+  /**
+   * Sets the source method signature for javadoc enrichment.
+   *
+   * @param sourceMethodSignature the source method signature, e.g. {@code setTeamname(String
+   *     teamName)} for setters or {@code PersonDto(String name, int age, ...)} for constructor
+   *     parameters
+   */
+  public void setSourceMethodSignature(String sourceMethodSignature) {
+    this.sourceMethodSignature = sourceMethodSignature;
+  }
+
+  /**
+   * Returns the types-only link signature for the {@code {@link}} target.
+   *
+   * @return the link signature, or {@code null} for enhancer-generated methods
+   */
+  public String getSourceMethodLinkSignature() {
+    return sourceMethodLinkSignature;
+  }
+
+  /**
+   * Sets the types-only link signature for the {@code {@link}} target.
+   *
+   * @param sourceMethodLinkSignature the link signature, e.g. {@code setTeamname(String)} or {@code
+   *     PersonDto(String, int)}
+   */
+  public void setSourceMethodLinkSignature(String sourceMethodLinkSignature) {
+    this.sourceMethodLinkSignature = sourceMethodLinkSignature;
   }
 
   /**

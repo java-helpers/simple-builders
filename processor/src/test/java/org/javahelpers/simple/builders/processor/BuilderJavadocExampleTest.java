@@ -130,11 +130,13 @@ class BuilderJavadocExampleTest {
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
 
-    // Expected method javadoc for the basic setter (description + example + tags)
+    // Expected method javadoc for the basic setter (description + field origin + example + tags)
     ProcessorAsserts.assertContaining(
         generatedCode,
         """
         * Sets the value for <code>teamname</code>.
+        * <p>
+        * Generated from setter {@link Person#setTeamname(String) setTeamname(String teamname)}
         *
         * <h4>Example:</h4>
         *
@@ -173,6 +175,8 @@ class BuilderJavadocExampleTest {
         generatedCode,
         """
         * Sets the value for <code>amount</code>.
+        * <p>
+        * Generated from setter {@link Counter#setAmount(int) setAmount(int amount)}
         *
         * <h4>Example:</h4>
         *
@@ -242,6 +246,8 @@ class BuilderJavadocExampleTest {
         generatedCode,
         """
         * Adds a single element to <code>tags</code>.
+        * <p>
+        * Generated from setter {@link TagsDto#setTags(List) setTags(List<String> tags)}
         *
         * <h4>Example:</h4>
         *

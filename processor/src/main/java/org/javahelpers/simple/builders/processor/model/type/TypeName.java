@@ -82,6 +82,19 @@ public class TypeName {
   }
 
   /**
+   * Returns the simple name with generic type arguments (if any), without package prefixes.
+   *
+   * <p>For a plain {@code TypeName} this is equivalent to {@link #getClassName()}. Subclasses like
+   * {@link TypeNameGeneric} override this to include generic parameters, e.g. {@code List<String>}
+   * instead of just {@code List}.
+   *
+   * @return simple name with generics, e.g. {@code String} or {@code List<String>}
+   */
+  public String getSimpleNameWithGenerics() {
+    return className;
+  }
+
+  /**
    * Returns the full qualified name (package + class name).
    *
    * @return full qualified name of type {@code java.lang.String}

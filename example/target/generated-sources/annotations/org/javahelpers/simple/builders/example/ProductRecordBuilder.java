@@ -88,6 +88,9 @@ public class ProductRecordBuilder implements IBuilderBase<ProductRecord> {
 
   /**
    * Sets the value for <code>category</code>.
+   * <p>
+   * Generated from parameter in constructor {@link ProductRecord#ProductRecord(String, double, String)
+   * ProductRecord(String name, double price, String category)}
    * 
    * <h4>Example:</h4>
    * 
@@ -105,6 +108,9 @@ public class ProductRecordBuilder implements IBuilderBase<ProductRecord> {
 
   /**
    * Sets the value for <code>category</code> by executing the provided consumer.
+   * <p>
+   * Generated from parameter in constructor {@link ProductRecord#ProductRecord(String, double, String)
+   * ProductRecord(String name, double price, String category)}
    * 
    * <h4>Example:</h4>
    * 
@@ -124,6 +130,9 @@ public class ProductRecordBuilder implements IBuilderBase<ProductRecord> {
 
   /**
    * Sets the value for <code>category</code> by invoking the provided supplier.
+   * <p>
+   * Generated from parameter in constructor {@link ProductRecord#ProductRecord(String, double, String)
+   * ProductRecord(String name, double price, String category)}
    * 
    * <h4>Example:</h4>
    * 
@@ -142,6 +151,9 @@ public class ProductRecordBuilder implements IBuilderBase<ProductRecord> {
   /**
    * Sets the String value for <code>category</code> by using String.format(format, args). See
    * {@link String#format(String, Object...)} for details.
+   * <p>
+   * Generated from parameter in constructor {@link ProductRecord#ProductRecord(String, double, String)
+   * ProductRecord(String name, double price, String category)}
    * 
    * <h4>Example:</h4>
    * 
@@ -160,6 +172,9 @@ public class ProductRecordBuilder implements IBuilderBase<ProductRecord> {
 
   /**
    * Sets the value for <code>name</code>.
+   * <p>
+   * Generated from parameter in constructor {@link ProductRecord#ProductRecord(String, double, String)
+   * ProductRecord(String name, double price, String category)}
    * 
    * <h4>Example:</h4>
    * 
@@ -177,6 +192,9 @@ public class ProductRecordBuilder implements IBuilderBase<ProductRecord> {
 
   /**
    * Sets the value for <code>name</code> by executing the provided consumer.
+   * <p>
+   * Generated from parameter in constructor {@link ProductRecord#ProductRecord(String, double, String)
+   * ProductRecord(String name, double price, String category)}
    * 
    * <h4>Example:</h4>
    * 
@@ -196,6 +214,9 @@ public class ProductRecordBuilder implements IBuilderBase<ProductRecord> {
 
   /**
    * Sets the value for <code>name</code> by invoking the provided supplier.
+   * <p>
+   * Generated from parameter in constructor {@link ProductRecord#ProductRecord(String, double, String)
+   * ProductRecord(String name, double price, String category)}
    * 
    * <h4>Example:</h4>
    * 
@@ -214,6 +235,9 @@ public class ProductRecordBuilder implements IBuilderBase<ProductRecord> {
   /**
    * Sets the String value for <code>name</code> by using String.format(format, args). See
    * {@link String#format(String, Object...)} for details.
+   * <p>
+   * Generated from parameter in constructor {@link ProductRecord#ProductRecord(String, double, String)
+   * ProductRecord(String name, double price, String category)}
    * 
    * <h4>Example:</h4>
    * 
@@ -232,6 +256,9 @@ public class ProductRecordBuilder implements IBuilderBase<ProductRecord> {
 
   /**
    * Sets the value for <code>price</code>.
+   * <p>
+   * Generated from parameter in constructor {@link ProductRecord#ProductRecord(String, double, String)
+   * ProductRecord(String name, double price, String category)}
    * 
    * <h4>Example:</h4>
    * 
@@ -249,6 +276,9 @@ public class ProductRecordBuilder implements IBuilderBase<ProductRecord> {
 
   /**
    * Sets the value for <code>price</code> by invoking the provided supplier.
+   * <p>
+   * Generated from parameter in constructor {@link ProductRecord#ProductRecord(String, double, String)
+   * ProductRecord(String name, double price, String category)}
    * 
    * <h4>Example:</h4>
    * 
@@ -266,6 +296,9 @@ public class ProductRecordBuilder implements IBuilderBase<ProductRecord> {
 
   /**
    * Validates that the category field is not null or empty.
+   * <p>
+   * Generated from parameter in constructor {@link ProductRecord#ProductRecord(String, double, String)
+   * ProductRecord(String name, double price, String category)}
    * 
    * @return this builder instance for chaining
    * @throws IllegalArgumentException if category is null or empty
@@ -279,6 +312,9 @@ public class ProductRecordBuilder implements IBuilderBase<ProductRecord> {
 
   /**
    * Validates that the name field is not null or empty.
+   * <p>
+   * Generated from parameter in constructor {@link ProductRecord#ProductRecord(String, double, String)
+   * ProductRecord(String name, double price, String category)}
    * 
    * @return this builder instance for chaining
    * @throws IllegalArgumentException if name is null or empty

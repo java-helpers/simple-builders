@@ -173,6 +173,8 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>author</code>.
+   * <p>
+   * Generated from setter {@link BookDto#setAuthor(String) setAuthor(String author)}
    * 
    * <h4>Example:</h4>
    * 
@@ -190,6 +192,8 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>available</code>.
+   * <p>
+   * Generated from setter {@link BookDto#setAvailable(boolean) setAvailable(boolean available)}
    * 
    * <h4>Example:</h4>
    * 
@@ -207,6 +211,8 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>category</code>.
+   * <p>
+   * Generated from setter {@link BookDto#setCategory(char) setCategory(char category)}
    * 
    * <h4>Example:</h4>
    * 
@@ -224,6 +230,8 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>discount</code>.
+   * <p>
+   * Generated from setter {@link BookDto#setDiscount(float) setDiscount(float discount)}
    * 
    * <h4>Example:</h4>
    * 
@@ -241,6 +249,8 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>edition</code>.
+   * <p>
+   * Generated from setter {@link BookDto#setEdition(short) setEdition(short edition)}
    * 
    * @param edition the edition number to set
    * @return current instance of builder
@@ -252,6 +262,8 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>exactPrice</code>.
+   * <p>
+   * Generated from setter {@link BookDto#setExactPrice(BigDecimal) setExactPrice(BigDecimal exactPrice)}
    * 
    * <h4>Example:</h4>
    * 
@@ -269,6 +281,8 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>genres</code>.
+   * <p>
+   * Generated from setter {@link BookDto#setGenres(Set) setGenres(Set<String> genres)}
    * 
    * <h4>Example:</h4>
    * 
@@ -286,6 +300,8 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>isbn</code>.
+   * <p>
+   * Generated from setter {@link BookDto#setIsbn(String) setIsbn(String isbn)}
    * 
    * <h4>Example:</h4>
    * 
@@ -303,6 +319,8 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>lastUpdated</code>.
+   * <p>
+   * Generated from setter {@link BookDto#setLastUpdated(LocalDateTime) setLastUpdated(LocalDateTime lastUpdated)}
    * 
    * <h4>Example:</h4>
    * 
@@ -320,6 +338,8 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>metadata</code>.
+   * <p>
+   * Generated from setter {@link BookDto#setMetadata(Map) setMetadata(Map<String, String> metadata)}
    * 
    * <h4>Example:</h4>
    * 
@@ -337,6 +357,8 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>pages</code>.
+   * <p>
+   * Generated from setter {@link BookDto#setPages(int) setPages(int pages)}
    * 
    * <h4>Example:</h4>
    * 
@@ -354,6 +376,8 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>price</code>.
+   * <p>
+   * Generated from setter {@link BookDto#setPrice(double) setPrice(double price)}
    * 
    * <h4>Example:</h4>
    * 
@@ -371,6 +395,8 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>publishDate</code>.
+   * <p>
+   * Generated from setter {@link BookDto#setPublishDate(LocalDate) setPublishDate(LocalDate publishDate)}
    * 
    * <h4>Example:</h4>
    * 
@@ -388,6 +414,8 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>publisher</code>.
+   * <p>
+   * Generated from setter {@link BookDto#setPublisher(PersonDto) setPublisher(PersonDto publisher)}
    * 
    * <h4>Example:</h4>
    * 
@@ -405,6 +433,8 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>rating</code>.
+   * <p>
+   * Generated from setter {@link BookDto#setRating(byte) setRating(byte rating)}
    * 
    * @param rating the book rating to set
    * @return current instance of builder
@@ -416,6 +446,8 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>salesCount</code>.
+   * <p>
+   * Generated from setter {@link BookDto#setSalesCount(long) setSalesCount(long salesCount)}
    * 
    * <h4>Example:</h4>
    * 
@@ -433,6 +465,8 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>subtitle</code>.
+   * <p>
+   * Generated from setter {@link BookDto#setSubtitle(Optional) setSubtitle(Optional<String> subtitle)}
    * 
    * @param subtitle an Optional containing the subtitle to set
    * @return current instance of builder
@@ -444,6 +478,8 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>tags</code>.
+   * <p>
+   * Generated from setter {@link BookDto#setTags(List) setTags(List<String> tags)}
    * 
    * <h4>Example:</h4>
    * 
@@ -461,6 +497,8 @@ public class BookDtoBuilder {
 
   /**
    * Sets the value for <code>title</code>.
+   * <p>
+   * Generated from setter {@link BookDto#setTitle(String) setTitle(String title)}
    * 
    * <h4>Example:</h4>
    * 
@@ -478,6 +516,8 @@ public class BookDtoBuilder {
 
   /**
    * Validates that the author field is not null or empty.
+   * <p>
+   * Generated from setter {@link BookDto#setAuthor(String) setAuthor(String author)}
    * 
    * @return this builder instance for chaining
    * @throws IllegalArgumentException if author is null or empty
@@ -491,6 +531,8 @@ public class BookDtoBuilder {
 
   /**
    * Validates that the isbn field is not null or empty.
+   * <p>
+   * Generated from setter {@link BookDto#setIsbn(String) setIsbn(String isbn)}
    * 
    * @return this builder instance for chaining
    * @throws IllegalArgumentException if isbn is null or empty
@@ -504,6 +546,8 @@ public class BookDtoBuilder {
 
   /**
    * Validates that the title field is not null or empty.
+   * <p>
+   * Generated from setter {@link BookDto#setTitle(String) setTitle(String title)}
    * 
    * @return this builder instance for chaining
    * @throws IllegalArgumentException if title is null or empty

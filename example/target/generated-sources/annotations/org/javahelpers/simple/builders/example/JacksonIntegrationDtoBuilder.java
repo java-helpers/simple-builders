@@ -82,6 +82,9 @@ public class JacksonIntegrationDtoBuilder implements IBuilderBase<JacksonIntegra
 
   /**
    * Sets the value for <code>age</code>.
+   * <p>
+   * Generated from parameter in constructor {@link JacksonIntegrationDto#JacksonIntegrationDto(String, int)
+   * JacksonIntegrationDto(String name, int age)}
    * 
    * <h4>Example:</h4>
    * 
@@ -99,6 +102,9 @@ public class JacksonIntegrationDtoBuilder implements IBuilderBase<JacksonIntegra
 
   /**
    * Sets the value for <code>age</code> by invoking the provided supplier.
+   * <p>
+   * Generated from parameter in constructor {@link JacksonIntegrationDto#JacksonIntegrationDto(String, int)
+   * JacksonIntegrationDto(String name, int age)}
    * 
    * <h4>Example:</h4>
    * 
@@ -116,6 +122,9 @@ public class JacksonIntegrationDtoBuilder implements IBuilderBase<JacksonIntegra
 
   /**
    * Sets the value for <code>name</code>.
+   * <p>
+   * Generated from parameter in constructor {@link JacksonIntegrationDto#JacksonIntegrationDto(String, int)
+   * JacksonIntegrationDto(String name, int age)}
    * 
    * <h4>Example:</h4>
    * 
@@ -133,6 +142,9 @@ public class JacksonIntegrationDtoBuilder implements IBuilderBase<JacksonIntegra
 
   /**
    * Sets the value for <code>name</code> by executing the provided consumer.
+   * <p>
+   * Generated from parameter in constructor {@link JacksonIntegrationDto#JacksonIntegrationDto(String, int)
+   * JacksonIntegrationDto(String name, int age)}
    * 
    * <h4>Example:</h4>
    * 
@@ -152,6 +164,9 @@ public class JacksonIntegrationDtoBuilder implements IBuilderBase<JacksonIntegra
 
   /**
    * Sets the value for <code>name</code> by invoking the provided supplier.
+   * <p>
+   * Generated from parameter in constructor {@link JacksonIntegrationDto#JacksonIntegrationDto(String, int)
+   * JacksonIntegrationDto(String name, int age)}
    * 
    * <h4>Example:</h4>
    * 
@@ -170,6 +185,9 @@ public class JacksonIntegrationDtoBuilder implements IBuilderBase<JacksonIntegra
   /**
    * Sets the String value for <code>name</code> by using String.format(format, args). See
    * {@link String#format(String, Object...)} for details.
+   * <p>
+   * Generated from parameter in constructor {@link JacksonIntegrationDto#JacksonIntegrationDto(String, int)
+   * JacksonIntegrationDto(String name, int age)}
    * 
    * <h4>Example:</h4>
    * 
@@ -188,6 +206,9 @@ public class JacksonIntegrationDtoBuilder implements IBuilderBase<JacksonIntegra
 
   /**
    * Validates that the name field is not null or empty.
+   * <p>
+   * Generated from parameter in constructor {@link JacksonIntegrationDto#JacksonIntegrationDto(String, int)
+   * JacksonIntegrationDto(String name, int age)}
    * 
    * @return this builder instance for chaining
    * @throws IllegalArgumentException if name is null or empty
