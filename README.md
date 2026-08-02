@@ -69,6 +69,7 @@ Value semantics (`equals`, `hashCode`, `toString`) and generating brand-new immu
 - **Annotation Preservation**: Validation annotations are automatically copied to builder methods
 - **With Interface Pattern**: Type-safe object modifications using generated With interfaces
 - **Jackson Support**: Supporting Jackson deserialization via `@JsonPOJOBuilder` and optional generation of `SimpleModule`s (one per package) (both need to be enabled)
+- **JavaDoc Usage Examples**: Generated builder methods include auto-generated usage examples in their JavaDoc (per-method fluent snippets plus a class-level example), so IDE tooltips show exactly how to use each builder
 
 ## Requirements
 
