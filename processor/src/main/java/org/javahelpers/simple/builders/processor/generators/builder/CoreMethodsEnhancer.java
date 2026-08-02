@@ -204,7 +204,7 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
     JavadocCodeBlockDto exampleBlock = new JavadocCodeBlockDto();
     String targetSimpleName = builderDto.getBuildingTargetTypeName().getClassName();
     exampleBlock.setCodeFormat("%s result = builder.build();".formatted(targetSimpleName));
-    javadoc.addExample(exampleBlock);
+    javadoc.setExampleUsageCodeBlock(exampleBlock);
 
     method.setJavadoc(javadoc);
 
@@ -247,7 +247,7 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
     JavadocCodeBlockDto exampleBlock = new JavadocCodeBlockDto();
     exampleBlock.setCodeFormat(
         "%s builder = %s.create();".formatted(builderSimpleName, builderSimpleName));
-    javadoc.addExample(exampleBlock);
+    javadoc.setExampleUsageCodeBlock(exampleBlock);
 
     method.setJavadoc(javadoc);
 

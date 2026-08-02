@@ -115,7 +115,7 @@ public class ClassJavaDocEnhancer implements BuilderEnhancer {
           "%s result = %s.create()".formatted(targetType.getClassName(), builderTypeName);
       classExampleBlock.setCodeFormat(openingLine + "\n" + classExampleBlock.getCodeFormat());
       classExampleBlock.append("%s.build();", indentionString);
-      javadoc.addExample(classExampleBlock);
+      javadoc.setExampleUsageCodeBlock(classExampleBlock);
     }
 
     builderDto.setClassJavadoc(javadoc);

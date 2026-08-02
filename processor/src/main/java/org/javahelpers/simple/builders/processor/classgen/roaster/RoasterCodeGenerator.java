@@ -425,25 +425,24 @@ public class RoasterCodeGenerator {
       }
     }
 
-    // Render code example blocks
-    for (JavadocCodeBlockDto codeBlock : javadoc.getCodeBlocks()) {
-      if (codeBlock != null && codeBlock.hasCode()) {
-        // Resolve placeholders in the code block
-        String resolvedCode = resolveCodeTemplate(codeBlock);
-        // Pre-prefix every line of the code body with " * " so it survives Roaster's
-        // preformatted-block handling (Roaster does not auto-add asterisk prefix inside <pre>).
-        String prefixedCode =
-            Arrays.stream(resolvedCode.split("\n", -1))
-                .map(line -> " * " + line)
-                .collect(Collectors.joining("\n"));
-        // Add the code example to the Javadoc with a blank line separator before <h4>.
-        String currentText = source.getJavaDoc().getText();
-        String exampleText = "<h4>Example:</h4><pre>{@code\n" + prefixedCode + "\n * }</pre>";
-        if (StringUtils.isNotBlank(currentText)) {
-          source.getJavaDoc().setText(currentText + "\n\n" + exampleText);
-        } else {
-          source.getJavaDoc().setText(exampleText);
-        }
+    // Render the code example block
+    JavadocCodeBlockDto codeBlock = javadoc.getExampleUsageCodeBlock();
+    if (codeBlock != null && codeBlock.hasCode()) {
+      // Resolve placeholders in the code block
+      String resolvedCode = resolveCodeTemplate(codeBlock);
+      // Pre-prefix every line of the code body with " * " so it survives Roaster's
+      // preformatted-block handling (Roaster does not auto-add asterisk prefix inside <pre>).
+      String prefixedCode =
+          Arrays.stream(resolvedCode.split("\n", -1))
+              .map(line -> " * " + line)
+              .collect(Collectors.joining("\n"));
+      // Add the code example to the Javadoc with a blank line separator before <h4>.
+      String currentText = source.getJavaDoc().getText();
+      String exampleText = "<h4>Example:</h4><pre>{@code\n" + prefixedCode + "\n * }</pre>";
+      if (StringUtils.isNotBlank(currentText)) {
+        source.getJavaDoc().setText(currentText + "\n\n" + exampleText);
+      } else {
+        source.getJavaDoc().setText(exampleText);
       }
     }
   }

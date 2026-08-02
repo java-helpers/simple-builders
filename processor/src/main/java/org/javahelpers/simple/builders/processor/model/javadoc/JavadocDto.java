@@ -53,8 +53,8 @@ public class JavadocDto {
   /** List of Javadoc tags in the order they appear. */
   private final List<JavadocTagDto> tags = new ArrayList<>();
 
-  /** List of code example blocks for this Javadoc. */
-  private final List<JavadocCodeBlockDto> codeBlocks = new ArrayList<>();
+  /** The single usage-example code block for this Javadoc, if present. */
+  private JavadocCodeBlockDto exampleUsageCodeBlock;
 
   /** Default constructor. */
   public JavadocDto() {
@@ -120,34 +120,21 @@ public class JavadocDto {
   }
 
   /**
-   * Gets the list of code example blocks.
+   * Gets the usage-example code block.
    *
-   * @return the list of code blocks
+   * @return the usage-example code block, or {@code null} if none is present
    */
-  public List<JavadocCodeBlockDto> getCodeBlocks() {
-    return codeBlocks;
+  public JavadocCodeBlockDto getExampleUsageCodeBlock() {
+    return exampleUsageCodeBlock;
   }
 
   /**
-   * Adds a code block to this Javadoc.
+   * Sets the usage-example code block.
    *
-   * @param codeBlock the code block to add
+   * @param codeBlock the usage-example code block, or {@code null} to clear it
    */
-  public void addCodeBlock(JavadocCodeBlockDto codeBlock) {
-    if (codeBlock != null) {
-      codeBlocks.add(codeBlock);
-    }
-  }
-
-  /**
-   * Adds a code example block to this Javadoc.
-   *
-   * <p>This is a convenience method for adding code examples.
-   *
-   * @param codeBlock the code example block to add
-   */
-  public void addExample(JavadocCodeBlockDto codeBlock) {
-    addCodeBlock(codeBlock);
+  public void setExampleUsageCodeBlock(JavadocCodeBlockDto codeBlock) {
+    this.exampleUsageCodeBlock = codeBlock;
   }
 
   /**
@@ -276,12 +263,12 @@ public class JavadocDto {
   }
 
   /**
-   * Returns whether this Javadoc has any content (description, tags, or code blocks).
+   * Returns whether this Javadoc has any content (description, tags, or an example code block).
    *
-   * @return true if there is description text, at least one tag, or at least one code block
+   * @return true if there is description text, at least one tag, or an example code block
    */
   public boolean hasContent() {
-    return StringUtils.isNotBlank(description) || !tags.isEmpty() || !codeBlocks.isEmpty();
+    return StringUtils.isNotBlank(description) || !tags.isEmpty() || exampleUsageCodeBlock != null;
   }
 
   @Override

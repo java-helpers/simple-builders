@@ -239,10 +239,12 @@ public class BuilderMethodDto {
   public void setExampleChainFragment(String exampleChainFragment) {
     this.exampleChainFragment = exampleChainFragment;
     // Automatically add method-level example to javadoc if javadoc exists and has no examples
-    if (exampleChainFragment != null && javadoc != null && javadoc.getCodeBlocks().isEmpty()) {
+    if (exampleChainFragment != null
+        && javadoc != null
+        && javadoc.getExampleUsageCodeBlock() == null) {
       JavadocCodeBlockDto methodExample = new JavadocCodeBlockDto();
       methodExample.setCodeFormat("builder.%s;".formatted(exampleChainFragment));
-      javadoc.addExample(methodExample);
+      javadoc.setExampleUsageCodeBlock(methodExample);
     }
   }
 
