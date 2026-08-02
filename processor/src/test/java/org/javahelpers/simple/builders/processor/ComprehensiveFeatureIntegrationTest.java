@@ -201,8 +201,8 @@ class ComprehensiveFeatureIntegrationTest {
          *     .tags(t -> t.add("example value"))
          *     .tags("example value", "example value")
          *     .add2Tags("example value")
-         *     .metadata(Map.of("key", "example value"))
-         *     .metadata(() -> Map.of("key", "example value"))
+         *     .metadata(Map.of("example value", "example value"))
+         *     .metadata(() -> Map.of("example value", "example value"))
          *     .metadata(Map.entry("key", "example value"))
          *     .address(AddressDtoBuilder.create().build())
          *     .address(() -> AddressDtoBuilder.create().build())
@@ -666,7 +666,7 @@ class ComprehensiveFeatureIntegrationTest {
            * <h4>Example:</h4>
            *
            * <pre>{@code
-           * builder.metadata(Map.of("key", "example value"));
+           * builder.metadata(Map.of("example value", "example value"));
            * }</pre>
            *
            * @param metadata metadata
@@ -708,7 +708,7 @@ class ComprehensiveFeatureIntegrationTest {
            * <h4>Example:</h4>
            *
            * <pre>{@code
-           * builder.metadata(() -> Map.of("key", "example value"));
+           * builder.metadata(() -> Map.of("example value", "example value"));
            * }</pre>
            *
            * @param metadataSupplier supplier for metadata

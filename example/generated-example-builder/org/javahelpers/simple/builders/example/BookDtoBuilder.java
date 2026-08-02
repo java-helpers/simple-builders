@@ -33,7 +33,7 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  *     .genres(Set.of("example value"))
  *     .isbn("example value")
  *     .lastUpdated(LocalDateTime.now())
- *     .metadata(Map.of("key", "example value"))
+ *     .metadata(Map.of("example value", "example value"))
  *     .pages(42)
  *     .price(3.14)
  *     .publishDate(LocalDate.now())
@@ -345,7 +345,7 @@ public class BookDtoBuilder {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.metadata(Map.of("key", "example value"));
+   * builder.metadata(Map.of("example value", "example value"));
    * }</pre>
    * 
    * @param metadata the metadata map to set

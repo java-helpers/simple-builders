@@ -265,7 +265,21 @@ class BuilderJavadocExampleTest {
             * <h4>Example:</h4>
             *
             * <pre>{@code
-            * builder.values(Map.of("key", 42));
+            * builder.values(Map.of("example value", 42));
+            * }</pre>
+            """),
+        Arguments.of(
+            Named.of("integer-key map setter", "IntegerKeyMapDto"),
+            """
+                private java.util.Map<Integer, String> values;
+                public java.util.Map<Integer, String> getValues() { return values; }
+                public void setValues(java.util.Map<Integer, String> values) { this.values = values; }
+            """,
+            """
+            * <h4>Example:</h4>
+            *
+            * <pre>{@code
+            * builder.values(Map.of(42, "example value"));
             * }</pre>
             """),
         Arguments.of(
