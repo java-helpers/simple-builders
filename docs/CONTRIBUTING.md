@@ -346,6 +346,26 @@ mvn fmt:check
 - **Include tests**: Add tests for new functionality
 - **Update docs**: Update README.md or other docs if needed
 
+### CI for pull requests from forks
+
+GitHub does not expose repository secrets to workflows triggered by pull
+requests from forks, so the secret-backed quality checks are handled specially:
+
+- **Codecov**: the normal CI build performs the build, generated-source check,
+  and tests without secrets, then publishes coverage/test data as an artifact.
+  A follow-up workflow (`.github/workflows/fork-coverage.yml`) publishes the
+  test execution results and coverage to Codecov from the base-repo context.
+  This is automatic and requires no action from contributors. Test execution
+  results are uploaded even when tests fail so Codecov receives diagnostics;
+  coverage is published only after a successful CI run. The CI result remains
+  authoritative and cannot be made passing by an upload.
+- **SonarCloud**: after the unprivileged CI build and tests succeed, a separate
+  workflow (`.github/workflows/fork-sonar.yml`) restores the compiled classes
+  and coverage reports and publishes the analysis with the secret token. It is
+  gated by the `fork-ci` GitHub Environment. A **maintainer must approve the
+  run** (in the Actions/Environments prompt) before it executes. It does not
+  rebuild or retest fork code with the token.
+
 ## Questions?
 
 If you have questions or need help:

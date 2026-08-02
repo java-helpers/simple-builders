@@ -19,18 +19,21 @@ Configure these GitHub secrets in **Settings** → **Secrets and variables** →
 
 1. Updates POM versions to release version
 2. Commits changes and creates tag `v0.2.0`
-3. Builds and verifies project with `-Prelease`
+3. Builds and verifies project with `-Prelease` (reproducible builds via `project.build.outputTimestamp`)
 4. Signs artifacts with GPG
-5. Deploys and **auto-publishes** to Maven Central
-6. Pushes commit and tag to `main`
-7. Creates **draft** GitHub release (requires manual publish)
+5. Generates a CycloneDX **SBOM** (JSON + XML) for each published module
+6. Runs tests and **stages** the deployment to the Sonatype Central portal (does **not** auto-publish)
+7. Creates a **build-provenance attestation** for the published jars
+8. Pushes commit and tag to `main`
+9. Creates **draft** GitHub release (jars, sources, javadoc **and SBOMs** attached; requires manual publish)
 
 ## After Release
 
-1. **Publish GitHub Release**: Go to **Releases** → Edit draft → **Publish release**
-2. **Verify Maven Central**: Artifacts appear at https://central.sonatype.com/ (15-30 min delay)
+1. **Publish to Maven Central**: Go to the [Sonatype Central portal](https://central.sonatype.com/publishing/deployments), review the staged deployment, and **manually publish** it. Nothing is released to consumers until this step is performed.
+2. **Publish GitHub Release**: Go to **Releases** → Edit draft → **Publish release**
+3. **Verify Maven Central**: Artifacts appear at https://central.sonatype.com/ (15-30 min delay)
    - Search for: `io.github.java-helpers:simple-builders-core` or `simple-builders-processor`
-3. **Test the release**:
+4. **Test the release**:
    ```xml
    <dependency>
      <groupId>io.github.java-helpers</groupId>
@@ -60,10 +63,18 @@ mvn clean deploy -Prelease -Dcentral.autoPublish=true
 - **Version conflicts**: Maven Central versions are immutable; increment and re-release
 - **Workflow fails on push**: Ensure GitHub Actions has write permissions (**Settings** → **Actions** → **General** → **Workflow permissions**)
 
+## Supply-chain artifacts
+
+Each release produces, in addition to the GPG-signed jars:
+
+- **SBOM** (CycloneDX `*-sbom.json` / `*-sbom.xml`) per module, attached to the GitHub release, so consumers can inventory/scan transitive dependencies.
+- **Build provenance** attestation (`actions/attest-build-provenance`) for the jars, verifiable with `gh attestation verify <jar> --repo java-helpers/simple-builders`.
+- **Reproducible builds**: `project.build.outputTimestamp` is set so archive entries are deterministic. The release workflow updates it automatically; it can be overridden per build with `-Dproject.build.outputTimestamp=<commit ISO-8601 date>`.
+
 ## Notes
 
 - Project uses [Semantic Versioning](https://semver.org/) (MAJOR.MINOR.PATCH)
 - Versions with `-` (e.g., `0.2.0-beta`) are marked as pre-releases
-- Auto-publish is **only enabled in GitHub Actions** by default
+- Releases are **staged** to the Sonatype Central portal and require a **manual publish** step; nothing is auto-released
 - Both `core` and `processor` modules are published to Maven Central
 - The `example` module is excluded from releases
