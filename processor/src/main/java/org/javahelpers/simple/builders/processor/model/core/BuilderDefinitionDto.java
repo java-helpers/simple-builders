@@ -24,6 +24,8 @@
 
 package org.javahelpers.simple.builders.processor.model.core;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -358,7 +360,11 @@ public class BuilderDefinitionDto {
    * @return list of builder-level methods
    */
   public List<BuilderMethodDto> getMethods() {
-    return methods;
+    return Collections.unmodifiableList(methods);
+  }
+
+  public void removeMethods(Collection<BuilderMethodDto> toRemove) {
+    this.methods.removeAll(toRemove);
   }
 
   /**

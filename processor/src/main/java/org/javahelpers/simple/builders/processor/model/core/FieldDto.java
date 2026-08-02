@@ -25,6 +25,8 @@
 package org.javahelpers.simple.builders.processor.model.core;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
@@ -154,7 +156,11 @@ public class FieldDto {
    * @return list of methods with type {@code BuilderMethodDto}
    */
   public List<BuilderMethodDto> getMethods() {
-    return fieldSetterMethodsList;
+    return Collections.unmodifiableList(fieldSetterMethodsList);
+  }
+
+  public void removeMethods(Collection<BuilderMethodDto> toRemove) {
+    this.fieldSetterMethodsList.removeAll(toRemove);
   }
 
   /**

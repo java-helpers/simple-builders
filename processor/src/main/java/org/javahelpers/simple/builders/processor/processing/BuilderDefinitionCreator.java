@@ -375,12 +375,12 @@ public class BuilderDefinitionCreator {
   private static void removeMethodsFromBuilder(
       BuilderDefinitionDto builderDto, Set<BuilderMethodDto> methodsToRemove) {
     for (FieldDto field : builderDto.getConstructorFieldsForBuilder()) {
-      field.getMethods().removeAll(methodsToRemove);
+      field.removeMethods(methodsToRemove);
     }
     for (FieldDto field : builderDto.getSetterFieldsForBuilder()) {
-      field.getMethods().removeAll(methodsToRemove);
+      field.removeMethods(methodsToRemove);
     }
-    builderDto.getMethods().removeAll(methodsToRemove);
+    builderDto.removeMethods(methodsToRemove);
   }
 
   /**

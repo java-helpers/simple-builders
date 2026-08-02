@@ -77,7 +77,7 @@ class RoasterCodeGeneratorResilienceTest {
 
     MethodCodeDto code = new MethodCodeDto();
     code.setCodeFormat("return $value:X;");
-    code.getCodeArguments().add(new UnsupportedPlaceholder("value", "irrelevant"));
+    code.addCodeArgument(new UnsupportedPlaceholder("value", "irrelevant"));
 
     ConstructorDto constructor = new ConstructorDto();
     constructor.setVisibility(AccessModifier.PUBLIC);

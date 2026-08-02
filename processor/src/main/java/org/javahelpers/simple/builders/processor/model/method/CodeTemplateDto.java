@@ -25,6 +25,7 @@
 package org.javahelpers.simple.builders.processor.model.method;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -99,7 +100,11 @@ public class CodeTemplateDto {
    */
   @SuppressWarnings("java:S1452")
   public List<MethodCodePlaceholder<?>> getCodeArguments() {
-    return codeArguments;
+    return Collections.unmodifiableList(codeArguments);
+  }
+
+  public void addCodeArgument(MethodCodePlaceholder<?> placeholder) {
+    codeArguments.add(placeholder);
   }
 
   /**
