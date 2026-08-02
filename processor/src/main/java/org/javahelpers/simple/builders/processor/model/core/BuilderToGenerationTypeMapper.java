@@ -24,7 +24,6 @@
 
 package org.javahelpers.simple.builders.processor.model.core;
 
-import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
@@ -128,10 +127,10 @@ public class BuilderToGenerationTypeMapper {
 
     // Enrich javadoc with pre-built source description if source field is known
     JavadocDto javadoc = classMethod.getJavadoc();
-    if (javadoc == null && StringUtils.isNotBlank(classMethod.getSourceFieldName())) {
-      javadoc = new JavadocDto();
-    }
-    if (javadoc != null && StringUtils.isNotBlank(classMethod.getSourceFieldName())) {
+    if (StringUtils.isNotBlank(classMethod.getSourceFieldName())) {
+      if (javadoc == null) {
+        javadoc = new JavadocDto();
+      }
       String sourceDescription = classMethod.getSourceDescription();
       if (sourceDescription != null) {
         javadoc.appendDescriptionLine(sourceDescription);
@@ -155,16 +154,6 @@ public class BuilderToGenerationTypeMapper {
     }
 
     return method;
-  }
-
-  /**
-   * Maps a list of {@link BuilderMethodDto} to a list of {@link MethodDto}.
-   *
-   * @param methods the generation DTOs to map
-   * @return a list of new {@link MethodDto} instances
-   */
-  public static List<MethodDto> toMethodDtoList(List<BuilderMethodDto> methods) {
-    return methods.stream().map(BuilderToGenerationTypeMapper::toMethodDto).toList();
   }
 
   /**

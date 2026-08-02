@@ -26,6 +26,7 @@ package org.javahelpers.simple.builders.processor.generators.util;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
@@ -495,7 +496,7 @@ public final class MethodGeneratorUtil {
     String fragment = template.replace("#{methodName}", methodDto.getMethodName());
 
     if (fieldType != null) {
-      java.util.Optional<String> exampleValue = JavadocExampleValues.getExampleValue(fieldType);
+      Optional<String> exampleValue = JavadocExampleValues.getExampleValue(fieldType);
       if (exampleValue.isEmpty()) {
         return;
       }

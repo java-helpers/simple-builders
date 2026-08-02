@@ -29,12 +29,15 @@ import static org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyse
 import static org.javahelpers.simple.builders.processor.analysis.JavaLangMapper.map2MethodParameter;
 import static org.javahelpers.simple.builders.processor.processing.AnnotationValidator.validateAnnotatedElement;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.lang.model.element.*;
 import javax.lang.model.type.TypeMirror;
 import org.apache.commons.lang3.StringUtils;
@@ -226,11 +229,11 @@ public class BuilderDefinitionCreator {
                     "%s %s"
                         .formatted(
                             f.getFieldType().getSimpleNameWithGenerics(), f.getOriginalFieldName()))
-            .collect(java.util.stream.Collectors.joining(", "));
+            .collect(Collectors.joining(", "));
     String linkParams =
         builderDto.getConstructorFieldsForBuilder().stream()
             .map(f -> f.getFieldType().getClassName())
-            .collect(java.util.stream.Collectors.joining(", "));
+            .collect(Collectors.joining(", "));
     return "<p>Generated from parameter in constructor {@link %s#%s(%s) %s(%s)}"
         .formatted(className, className, linkParams, className, displayParams);
   }
@@ -284,13 +287,11 @@ public class BuilderDefinitionCreator {
     context.debugStartOperation("Resolving method conflicts");
 
     // Collect all BuilderMethodDto instances grouped by signature key
-    java.util.Map<String, List<BuilderMethodDto>> methodsBySignature =
-        collectMethodsBySignature(builderDto);
+    Map<String, List<BuilderMethodDto>> methodsBySignature = collectMethodsBySignature(builderDto);
 
     // Resolve conflicts: keep highest priority, remove losers
-    java.util.Set<BuilderMethodDto> methodsToRemove = new java.util.HashSet<>();
-    for (java.util.Map.Entry<String, List<BuilderMethodDto>> entry :
-        methodsBySignature.entrySet()) {
+    Set<BuilderMethodDto> methodsToRemove = new HashSet<>();
+    for (Map.Entry<String, List<BuilderMethodDto>> entry : methodsBySignature.entrySet()) {
       List<BuilderMethodDto> methodsWithSameSignature = entry.getValue();
       boolean isConflicting = methodsWithSameSignature.size() > 1;
       if (isConflicting) {
@@ -337,27 +338,27 @@ public class BuilderDefinitionCreator {
    * @param builderDto the builder definition containing all methods
    * @return map from signature key to list of methods with that signature
    */
-  private static java.util.Map<String, List<BuilderMethodDto>> collectMethodsBySignature(
+  private static Map<String, List<BuilderMethodDto>> collectMethodsBySignature(
       BuilderDefinitionDto builderDto) {
-    java.util.Map<String, List<BuilderMethodDto>> methodsBySignature = new HashMap<>();
+    Map<String, List<BuilderMethodDto>> methodsBySignature = new HashMap<>();
 
     for (FieldDto field : builderDto.getConstructorFieldsForBuilder()) {
       for (BuilderMethodDto method : field.getMethods()) {
         methodsBySignature
-            .computeIfAbsent(method.getSignatureKey(), k -> new java.util.ArrayList<>())
+            .computeIfAbsent(method.getSignatureKey(), k -> new ArrayList<>())
             .add(method);
       }
     }
     for (FieldDto field : builderDto.getSetterFieldsForBuilder()) {
       for (BuilderMethodDto method : field.getMethods()) {
         methodsBySignature
-            .computeIfAbsent(method.getSignatureKey(), k -> new java.util.ArrayList<>())
+            .computeIfAbsent(method.getSignatureKey(), k -> new ArrayList<>())
             .add(method);
       }
     }
     for (BuilderMethodDto classMethod : builderDto.getMethods()) {
       methodsBySignature
-          .computeIfAbsent(classMethod.getSignatureKey(), k -> new java.util.ArrayList<>())
+          .computeIfAbsent(classMethod.getSignatureKey(), k -> new ArrayList<>())
           .add(classMethod);
     }
 
@@ -372,7 +373,7 @@ public class BuilderDefinitionCreator {
    * @param methodsToRemove the set of methods to remove
    */
   private static void removeMethodsFromBuilder(
-      BuilderDefinitionDto builderDto, java.util.Set<BuilderMethodDto> methodsToRemove) {
+      BuilderDefinitionDto builderDto, Set<BuilderMethodDto> methodsToRemove) {
     for (FieldDto field : builderDto.getConstructorFieldsForBuilder()) {
       field.getMethods().removeAll(methodsToRemove);
     }

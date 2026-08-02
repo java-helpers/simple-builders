@@ -30,10 +30,12 @@ import static org.javahelpers.simple.builders.processor.classgen.roaster.Roaster
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Writer;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.TypeElement;
 import javax.tools.JavaFileObject;
@@ -423,9 +425,9 @@ public class RoasterCodeGenerator {
         // Pre-prefix every line of the code body with " * " so it survives Roaster's
         // preformatted-block handling (Roaster does not auto-add asterisk prefix inside <pre>).
         String prefixedCode =
-            java.util.Arrays.stream(resolvedCode.split("\n", -1))
+            Arrays.stream(resolvedCode.split("\n", -1))
                 .map(line -> " * " + line)
-                .collect(java.util.stream.Collectors.joining("\n"));
+                .collect(Collectors.joining("\n"));
         // Add the code example to the Javadoc with a blank line separator before <h4>.
         String currentText = source.getJavaDoc().getText();
         String exampleText = "<h4>Example:</h4><pre>{@code\n" + prefixedCode + "\n * }</pre>";
