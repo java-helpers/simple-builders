@@ -35,7 +35,7 @@ import org.javahelpers.simple.builders.processor.generators.Generator;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
@@ -90,9 +90,9 @@ public class GeneratorRegistry {
    * @param builderType the type of the builder being generated, should not be null
    * @return list of all generated methods from all applicable generators
    */
-  public List<MethodDto> generateAllMethods(
+  public List<BuilderMethodDto> generateAllMethods(
       FieldDto field, TypeName dtoType, TypeName builderType) {
-    List<MethodDto> allMethods = new ArrayList<>();
+    List<BuilderMethodDto> allMethods = new ArrayList<>();
 
     context.debugStartOperation("Processing method generators");
     for (MethodGenerator generator : methodGenerators) {
@@ -102,7 +102,8 @@ public class GeneratorRegistry {
               "Applying: %s (priority: %d)",
               generator.getClass().getSimpleName(), generator.getPriority());
 
-          List<MethodDto> generatedMethods = generator.generateMethods(field, builderType, context);
+          List<BuilderMethodDto> generatedMethods =
+              generator.generateMethods(field, builderType, context);
 
           if (CollectionUtils.isNotEmpty(generatedMethods)) {
             allMethods.addAll(generatedMethods);

@@ -30,7 +30,7 @@ import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
 import org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
@@ -103,11 +103,11 @@ public class ConditionalEnhancer implements BuilderEnhancer {
   @Override
   public void enhanceBuilder(BuilderDefinitionDto builderDto, ProcessingContext context) {
     // Add conditional(BooleanSupplier, Consumer, Consumer) method
-    MethodDto conditionalMethod = createConditionalMethod(builderDto);
+    BuilderMethodDto conditionalMethod = createConditionalMethod(builderDto);
     builderDto.addMethod(conditionalMethod);
 
     // Add conditional(BooleanSupplier, Consumer) method
-    MethodDto conditionalPositiveMethod = createConditionalPositiveOnlyMethod(builderDto);
+    BuilderMethodDto conditionalPositiveMethod = createConditionalPositiveOnlyMethod(builderDto);
     builderDto.addMethod(conditionalPositiveMethod);
 
     context.debug(
@@ -115,10 +115,10 @@ public class ConditionalEnhancer implements BuilderEnhancer {
   }
 
   /** Creates the conditional(BooleanSupplier, Consumer, Consumer) method. */
-  private MethodDto createConditionalMethod(BuilderDefinitionDto builderDto) {
-    MethodDto method = new MethodDto("conditional", builderDto.getBuilderTypeName());
+  private BuilderMethodDto createConditionalMethod(BuilderDefinitionDto builderDto) {
+    BuilderMethodDto method = new BuilderMethodDto("conditional", builderDto.getBuilderTypeName());
     method.setOrdering(ORDERING_CONDITIONAL);
-    method.setPriority(MethodDto.PRIORITY_HIGHEST);
+    method.setPriority(BuilderMethodDto.PRIORITY_HIGHEST);
     method.setModifier(AccessModifier.PUBLIC);
 
     // Add parameters
@@ -147,10 +147,10 @@ public class ConditionalEnhancer implements BuilderEnhancer {
   }
 
   /** Creates the conditional(BooleanSupplier, Consumer) method. */
-  private MethodDto createConditionalPositiveOnlyMethod(BuilderDefinitionDto builderDto) {
-    MethodDto method = new MethodDto("conditional", builderDto.getBuilderTypeName());
+  private BuilderMethodDto createConditionalPositiveOnlyMethod(BuilderDefinitionDto builderDto) {
+    BuilderMethodDto method = new BuilderMethodDto("conditional", builderDto.getBuilderTypeName());
     method.setOrdering(ORDERING_CONDITIONAL_POSITIVE_ONLY);
-    method.setPriority(MethodDto.PRIORITY_HIGHEST);
+    method.setPriority(BuilderMethodDto.PRIORITY_HIGHEST);
     method.setModifier(AccessModifier.PUBLIC);
 
     // Add parameters
@@ -169,7 +169,8 @@ public class ConditionalEnhancer implements BuilderEnhancer {
   }
 
   /** Adds parameters for the conditional(BooleanSupplier, Consumer, Consumer) method. */
-  private void addConditionalPositiveNegativeParameters(MethodDto method, TypeName builderType) {
+  private void addConditionalPositiveNegativeParameters(
+      BuilderMethodDto method, TypeName builderType) {
     // BooleanSupplier condition parameter
     addParameter(method, "condition", JavaLangMapper.map2TypeName(BooleanSupplier.class));
     // Consumer<BuilderType> trueCase parameter
@@ -179,7 +180,7 @@ public class ConditionalEnhancer implements BuilderEnhancer {
   }
 
   /** Adds parameters for the conditional(BooleanSupplier, Consumer) method. */
-  private void addConditionalPositiveOnlyParameters(MethodDto method, TypeName builderType) {
+  private void addConditionalPositiveOnlyParameters(BuilderMethodDto method, TypeName builderType) {
     // BooleanSupplier condition parameter
     addParameter(method, "condition", JavaLangMapper.map2TypeName(BooleanSupplier.class));
     // Consumer<BuilderType> yesCondition parameter
@@ -187,7 +188,7 @@ public class ConditionalEnhancer implements BuilderEnhancer {
   }
 
   /** Adds a parameter to the method. */
-  private void addParameter(MethodDto method, String name, TypeName type) {
+  private void addParameter(BuilderMethodDto method, String name, TypeName type) {
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName(name);
     parameter.setParameterTypeName(type);

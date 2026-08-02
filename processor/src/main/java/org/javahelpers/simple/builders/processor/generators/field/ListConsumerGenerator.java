@@ -38,7 +38,7 @@ import org.javahelpers.simple.builders.core.builders.ArrayListBuilder;
 import org.javahelpers.simple.builders.core.builders.ArrayListBuilderWithElementBuilders;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameList;
@@ -116,7 +116,7 @@ public class ListConsumerGenerator implements MethodGenerator {
   }
 
   @Override
-  public List<MethodDto> generateMethods(
+  public List<BuilderMethodDto> generateMethods(
       FieldDto field, TypeName builderType, ProcessingContext context) {
     if (!(field.getFieldType() instanceof TypeNameList fieldTypeGeneric
         && fieldTypeGeneric.isParameterized())) {
@@ -133,7 +133,7 @@ public class ListConsumerGenerator implements MethodGenerator {
               map2TypeName(ArrayListBuilderWithElementBuilders.class),
               elementType,
               elementBuilderType.get());
-      MethodDto method =
+      BuilderMethodDto method =
           createFieldConsumerWithElementBuilders(
               field, collectionBuilderType, elementBuilderType.get(), builderType, context);
 
@@ -144,7 +144,7 @@ public class ListConsumerGenerator implements MethodGenerator {
     } else if (context.getConfiguration().shouldUseArrayListBuilder()) {
       TypeName arrayListBuilderType = map2TypeName(ArrayListBuilder.class);
       TypeNameGeneric builderTypeGeneric = new TypeNameGeneric(arrayListBuilderType, elementType);
-      MethodDto method =
+      BuilderMethodDto method =
           createFieldConsumerWithBuilder(
               field,
               builderTypeGeneric,
@@ -169,7 +169,8 @@ public class ListConsumerGenerator implements MethodGenerator {
    * @param method the method to add the example to
    * @param elementBuilderType the element builder type
    */
-  private void addExampleToListConsumerWithBuilder(MethodDto method, TypeName elementBuilderType) {
+  private void addExampleToListConsumerWithBuilder(
+      BuilderMethodDto method, TypeName elementBuilderType) {
     String builderVar = StringUtils.uncapitalize(elementBuilderType.getClassName());
     addExampleChainFragmentTemplate(
         method, "#{methodName}(t -> t.add(" + builderVar + " -> " + builderVar + "))");
@@ -181,7 +182,8 @@ public class ListConsumerGenerator implements MethodGenerator {
    * @param method the method to add the example to
    * @param elementType the element type
    */
-  private void addExampleToListConsumerWithSimpleValue(MethodDto method, TypeName elementType) {
+  private void addExampleToListConsumerWithSimpleValue(
+      BuilderMethodDto method, TypeName elementType) {
     addExampleChainFragmentTemplate(
         method, "#{methodName}(t -> t.add(#{exampleValue}))", elementType);
   }

@@ -30,7 +30,7 @@ import java.util.Collections;
 import java.util.List;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameList;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameMap;
@@ -127,13 +127,14 @@ public class FieldInstanceConsumerGenerator implements MethodGenerator {
   }
 
   @Override
-  public List<MethodDto> generateMethods(
+  public List<BuilderMethodDto> generateMethods(
       FieldDto field, TypeName builderType, ProcessingContext context) {
     if (!field.getFieldType().hasEmptyConstructor()) {
       return Collections.emptyList();
     }
 
-    MethodDto method = createSimpleFieldConsumer(field, field.getFieldType(), builderType, context);
+    BuilderMethodDto method =
+        createSimpleFieldConsumer(field, field.getFieldType(), builderType, context);
     return Collections.singletonList(method);
   }
 }

@@ -52,7 +52,7 @@ import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto
 import org.javahelpers.simple.builders.processor.model.core.ClassFieldDto;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
@@ -115,8 +115,9 @@ public class BuilderDefinitionCreator {
    *
    * <ul>
    *   <li>Converts FieldDto instances to ClassFieldDto instances
-   *   <li>Collects all methods from fields and core methods
-   *   <li>Sets source descriptions on methods for conflict resolution logging
+   *   <li>Sets origin info (sourceFieldName, constructorField) on each BuilderMethodDto
+   *   <li>Maps all BuilderMethodDto to MethodDto via BuilderToGenerationTypeMapper
+   *   <li>Collects all mapped methods from fields and class-level enhancer methods
    *   <li>Sets class access modifier
    *   <li>Sets static imports for TrackedValue
    * </ul>
@@ -134,15 +135,17 @@ public class BuilderDefinitionCreator {
       builderDto.addClassField(classField);
     }
 
-    // 2. Collect methods from fields
+    // 2. Set origin info on field-level BuilderMethodDto instances
     for (FieldDto field : builderDto.getConstructorFieldsForBuilder()) {
-      for (MethodDto method : field.getMethods()) {
-        builderDto.addMethod(method);
+      for (BuilderMethodDto method : field.getMethods()) {
+        method.setSourceFieldName(field.getOriginalFieldName());
+        method.setConstructorField(true);
       }
     }
     for (FieldDto field : builderDto.getSetterFieldsForBuilder()) {
-      for (MethodDto method : field.getMethods()) {
-        builderDto.addMethod(method);
+      for (BuilderMethodDto method : field.getMethods()) {
+        method.setSourceFieldName(field.getOriginalFieldName());
+        method.setConstructorField(false);
       }
     }
 
@@ -155,7 +158,7 @@ public class BuilderDefinitionCreator {
     builderDto.addStaticImport(TrackedValue.class, "unsetValue");
 
     context.debugEndOperation(
-        "Finalized: %d class fields, %d methods, %d constructors",
+        "Finalized: %d class fields, %d builder-level methods, %d constructors",
         builderDto.getClassFields().size(),
         builderDto.getMethods().size(),
         builderDto.getConstructors().size());
@@ -579,7 +582,7 @@ public class BuilderDefinitionCreator {
     // Builder and constructor information is now set when TypeName is created in JavaLangMapper
 
     // Use GeneratorRegistry to generate all methods for this field
-    List<MethodDto> generatedMethods =
+    List<BuilderMethodDto> generatedMethods =
         context.getGeneratorRegistry().generateAllMethods(field, dtoType, builderType);
     generatedMethods.forEach(field::addMethod);
 

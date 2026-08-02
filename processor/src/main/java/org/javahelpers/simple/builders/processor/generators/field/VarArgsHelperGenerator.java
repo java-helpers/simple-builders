@@ -31,7 +31,7 @@ import java.util.Set;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameArray;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
@@ -98,7 +98,7 @@ public class VarArgsHelperGenerator implements MethodGenerator {
   }
 
   @Override
-  public List<MethodDto> generateMethods(
+  public List<BuilderMethodDto> generateMethods(
       FieldDto field, TypeName builderType, ProcessingContext context) {
 
     TypeName fieldType = field.getFieldType();
@@ -119,7 +119,7 @@ public class VarArgsHelperGenerator implements MethodGenerator {
       return Collections.emptyList();
     }
 
-    MethodDto varArgsMethod =
+    BuilderMethodDto varArgsMethod =
         createFieldSetterByVarArgs(field, parameterType, builderType, context);
     return Collections.singletonList(varArgsMethod);
   }
@@ -135,7 +135,7 @@ public class VarArgsHelperGenerator implements MethodGenerator {
    * @param context processing context
    * @return the method DTO for the setter
    */
-  private MethodDto createFieldSetterByVarArgs(
+  private BuilderMethodDto createFieldSetterByVarArgs(
       FieldDto field, TypeName parameterType, TypeName builderType, ProcessingContext context) {
     String baseExpression;
     TypeName fieldType = field.getFieldType();
@@ -153,7 +153,7 @@ public class VarArgsHelperGenerator implements MethodGenerator {
     }
     String transform = MethodGeneratorUtil.wrapConcreteCollectionType(fieldType, baseExpression);
 
-    MethodDto method =
+    BuilderMethodDto method =
         MethodGeneratorUtil.createBuilderMethodForFieldWithTransform(
             field, transform, parameterType, builderType, context);
 

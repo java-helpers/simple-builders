@@ -1,0 +1,176 @@
+/*
+ * MIT License
+ *
+ * Copyright (c) 2026 Andreas Igel
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.javahelpers.simple.builders.processor.model.core;
+
+import java.util.List;
+import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
+import org.javahelpers.simple.builders.processor.model.method.MethodCodePlaceholder;
+import org.javahelpers.simple.builders.processor.model.method.MethodCodeStringPlaceholder;
+import org.javahelpers.simple.builders.processor.model.method.MethodCodeTypePlaceholder;
+import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+import org.javahelpers.simple.builders.processor.model.type.BuilderNestedTypeDto;
+import org.javahelpers.simple.builders.processor.model.type.NestedTypeDto;
+
+/**
+ * Maps generation-side DTOs ({@link BuilderDefinitionDto}, {@link BuilderMethodDto}, {@link
+ * BuilderNestedTypeDto}) to rendering-side DTOs ({@link GenerationTargetClassDto}, {@link
+ * MethodDto}, {@link NestedTypeDto}).
+ *
+ * <p>This mapper copies all rendering-relevant fields from the generation DTOs to the rendering
+ * DTOs. Generation-only fields ({@code sourceFieldName}, {@code constructorField}, {@code
+ * exampleChainFragment}) are not mapped.
+ */
+public class BuilderToGenerationTypeMapper {
+
+  private BuilderToGenerationTypeMapper() {
+    // Utility class - prevent instantiation
+  }
+
+  /**
+   * Maps a {@link BuilderDefinitionDto} (generation DTO) to a {@link GenerationTargetClassDto}
+   * (rendering DTO) for code generation.
+   *
+   * <p>This maps all rendering-relevant fields, converting {@link BuilderMethodDto} to {@link
+   * MethodDto} and {@link BuilderNestedTypeDto} to {@link NestedTypeDto}.
+   *
+   * @param builderDto the generation DTO
+   * @return the rendering DTO for code generation
+   */
+  public static GenerationTargetClassDto toRenderingDto(BuilderDefinitionDto builderDto) {
+    GenerationTargetClassDto renderingDto = new GenerationTargetClassDto();
+    renderingDto.setTypeName(builderDto.getTypeName());
+    renderingDto.setClassAccessModifier(builderDto.getClassAccessModifier());
+    renderingDto.setSuperType(builderDto.getSuperType());
+    renderingDto.setClassJavadoc(builderDto.getClassJavadoc());
+
+    // Copy class fields
+    builderDto.getClassFields().forEach(renderingDto::addClassField);
+
+    // Copy constructors
+    builderDto.getConstructors().forEach(renderingDto::addConstructor);
+
+    // Copy generics
+    builderDto.getGenerics().forEach(renderingDto::addGeneric);
+
+    // Copy imports
+    builderDto.getImports().forEach(renderingDto::addImport);
+
+    // Copy class annotations
+    builderDto.getClassAnnotations().forEach(renderingDto::addClassAnnotation);
+
+    // Copy interfaces
+    builderDto.getInterfaces().forEach(renderingDto::addInterface);
+
+    // Map and copy methods from fields
+    for (FieldDto field : builderDto.getConstructorFieldsForBuilder()) {
+      for (BuilderMethodDto method : field.getMethods()) {
+        renderingDto.addMethod(toMethodDto(method));
+      }
+    }
+    for (FieldDto field : builderDto.getSetterFieldsForBuilder()) {
+      for (BuilderMethodDto method : field.getMethods()) {
+        renderingDto.addMethod(toMethodDto(method));
+      }
+    }
+
+    // Map and copy builder-level methods from enhancers
+    for (BuilderMethodDto classMethod : builderDto.getMethods()) {
+      renderingDto.addMethod(toMethodDto(classMethod));
+    }
+
+    // Map and copy nested types from enhancers
+    for (BuilderNestedTypeDto builderNestedType : builderDto.getNestedTypes()) {
+      renderingDto.addNestedType(toNestedTypeDto(builderNestedType));
+    }
+
+    return renderingDto;
+  }
+
+  /**
+   * Maps a {@link BuilderMethodDto} to a {@link MethodDto}.
+   *
+   * <p>All rendering-relevant fields are copied. The {@code MethodCodeDto} is shared by reference
+   * (not deep-copied), since the rendering phase only reads from it.
+   *
+   * @param classMethod the generation DTO to map
+   * @return a new {@link MethodDto} with all rendering fields copied
+   */
+  public static MethodDto toMethodDto(BuilderMethodDto classMethod) {
+    MethodDto method = new MethodDto(classMethod.getMethodName(), classMethod.getReturnType());
+    method.setModifier(classMethod.getModifier().orElse(null));
+    method.setStatic(classMethod.isStatic());
+    method.setPriority(classMethod.getPriority());
+    method.setOrdering(classMethod.getOrdering());
+    method.setJavadoc(classMethod.getJavadoc());
+    classMethod.getAnnotations().forEach(method::addAnnotation);
+    classMethod.getParameters().forEach(method::addParameter);
+    classMethod.getGenericParameters().forEach(method::addGenericParameter);
+
+    // Copy method code: set code format and copy all arguments
+    if (classMethod.hasCode()) {
+      method.setCode(classMethod.getMethodCodeDto().getCodeFormat());
+      for (MethodCodePlaceholder<?> argument : classMethod.getMethodCodeDto().getCodeArguments()) {
+        if (argument instanceof MethodCodeStringPlaceholder stringPlaceholder) {
+          method.addArgument(stringPlaceholder.getLabel(), stringPlaceholder.getValue());
+        } else if (argument instanceof MethodCodeTypePlaceholder typePlaceholder) {
+          method.addArgument(typePlaceholder.getLabel(), typePlaceholder.getValue());
+        }
+      }
+    }
+
+    return method;
+  }
+
+  /**
+   * Maps a list of {@link BuilderMethodDto} to a list of {@link MethodDto}.
+   *
+   * @param methods the generation DTOs to map
+   * @return a list of new {@link MethodDto} instances
+   */
+  public static List<MethodDto> toMethodDtoList(List<BuilderMethodDto> methods) {
+    return methods.stream().map(BuilderToGenerationTypeMapper::toMethodDto).toList();
+  }
+
+  /**
+   * Maps a {@link BuilderNestedTypeDto} (generation DTO) to a {@link NestedTypeDto} (rendering
+   * DTO).
+   *
+   * <p>All rendering-relevant fields are copied, including type name, kind, visibility, javadoc,
+   * annotations, and methods (mapped via {@link #toMethodDto}).
+   *
+   * @param builderNestedType the generation DTO to map
+   * @return a new {@link NestedTypeDto} with all rendering fields copied
+   */
+  public static NestedTypeDto toNestedTypeDto(BuilderNestedTypeDto builderNestedType) {
+    NestedTypeDto nestedType = new NestedTypeDto();
+    nestedType.setTypeName(builderNestedType.getTypeName());
+    nestedType.setKind(builderNestedType.getKind());
+    nestedType.setVisibility(builderNestedType.getVisibility());
+    nestedType.setJavadoc(builderNestedType.getJavadoc());
+    builderNestedType.getAnnotations().forEach(nestedType::addAnnotation);
+    builderNestedType.getMethods().forEach(method -> nestedType.addMethod(toMethodDto(method)));
+    return nestedType;
+  }
+}

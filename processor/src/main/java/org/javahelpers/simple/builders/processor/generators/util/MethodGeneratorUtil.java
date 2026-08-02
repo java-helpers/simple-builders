@@ -32,7 +32,7 @@ import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.GenericParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
@@ -100,6 +100,23 @@ public final class MethodGeneratorUtil {
   }
 
   /**
+   * Creates a {@link BuilderMethodDto} with the method name derived from the field name and
+   * configuration, and the access modifier set from the processing context.
+   *
+   * @param fieldName the field name to derive the method name from
+   * @param returnType the return type of the method
+   * @param context the processing context
+   * @return a new {@link BuilderMethodDto} with name and modifier set
+   */
+  public static BuilderMethodDto createBuilderMethod(
+      String fieldName, TypeName returnType, ProcessingContext context) {
+    BuilderMethodDto method =
+        new BuilderMethodDto(generateBuilderMethodName(fieldName, context), returnType);
+    method.setModifier(getMethodAccessModifier(context));
+    return method;
+  }
+
+  /**
    * Creates a generic TypeName from a base type and generic parameters.
    *
    * <p>If the generic parameters list is empty, returns the base type as-is. Otherwise creates a
@@ -136,7 +153,7 @@ public final class MethodGeneratorUtil {
    * @param context processing context
    * @return the method DTO for the setter
    */
-  public static MethodDto createBuilderMethodForFieldWithTransform(
+  public static BuilderMethodDto createBuilderMethodForFieldWithTransform(
       FieldDto field,
       String transform,
       TypeName parameterType,
@@ -151,11 +168,9 @@ public final class MethodGeneratorUtil {
       field.getParameterAnnotations().forEach(parameter::addAnnotation);
     }
 
-    MethodDto methodDto =
-        new MethodDto(
-            generateBuilderMethodName(field.getOriginalFieldName(), context), builderType);
+    BuilderMethodDto methodDto =
+        createBuilderMethod(field.getOriginalFieldName(), builderType, context);
     methodDto.addParameter(parameter);
-    methodDto.setModifier(getMethodAccessModifier(context));
 
     String params;
     if (StringUtils.isBlank(transform)) {
@@ -173,7 +188,8 @@ public final class MethodGeneratorUtil {
     methodDto.addArgument("dtoMethodParams", params);
     methodDto.addArgument("builderFieldWrapper", TRACKED_VALUE_TYPE);
 
-    methodDto.setPriority(transform == null ? MethodDto.PRIORITY_HIGHEST : MethodDto.PRIORITY_HIGH);
+    methodDto.setPriority(
+        transform == null ? BuilderMethodDto.PRIORITY_HIGHEST : BuilderMethodDto.PRIORITY_HIGH);
 
     String fieldJavadocDesc = field.getJavaDocDescriptionOrFieldName();
     methodDto.setJavadoc(
@@ -196,7 +212,7 @@ public final class MethodGeneratorUtil {
    * @param context the processing context
    * @return the method DTO for the consumer
    */
-  public static MethodDto createFieldConsumerWithBuilder(
+  public static BuilderMethodDto createFieldConsumerWithBuilder(
       FieldDto field,
       TypeName fieldBuilderType,
       String existingValueConstructorArgs,
@@ -208,11 +224,9 @@ public final class MethodGeneratorUtil {
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName(field.getFieldNameInBuilder() + BUILDER_SUFFIX + SUFFIX_CONSUMER);
     parameter.setParameterTypeName(consumerType);
-    MethodDto methodDto =
-        new MethodDto(
-            generateBuilderMethodName(field.getOriginalFieldName(), context), parentBuilderType);
+    BuilderMethodDto methodDto =
+        createBuilderMethod(field.getOriginalFieldName(), parentBuilderType, context);
     methodDto.addParameter(parameter);
-    methodDto.setModifier(getMethodAccessModifier(context));
 
     String buildExpression = calculateBuildExpression(field.getFieldType());
 
@@ -232,7 +246,7 @@ public final class MethodGeneratorUtil {
     methodDto.addArgument("buildExpression", buildExpression);
     additionalTemplateArguments.forEach(methodDto::addArgument);
     methodDto.addArgument("builderFieldWrapper", TRACKED_VALUE_TYPE);
-    methodDto.setPriority(MethodDto.PRIORITY_MEDIUM);
+    methodDto.setPriority(BuilderMethodDto.PRIORITY_MEDIUM);
     String fieldJavadocDesc = field.getJavaDocDescriptionOrFieldName();
     methodDto.setJavadoc(
         new JavadocDto(
@@ -310,7 +324,7 @@ public final class MethodGeneratorUtil {
    * @param context the processing context
    * @return the method DTO for the consumer
    */
-  public static MethodDto createFieldConsumerWithElementBuilders(
+  public static BuilderMethodDto createFieldConsumerWithElementBuilders(
       FieldDto field,
       TypeName collectionBuilderType,
       TypeName elementBuilderType,
@@ -338,18 +352,16 @@ public final class MethodGeneratorUtil {
    * @param context the processing context
    * @return the method DTO for the simple field consumer
    */
-  public static MethodDto createSimpleFieldConsumer(
+  public static BuilderMethodDto createSimpleFieldConsumer(
       FieldDto field, TypeName fieldType, TypeName builderType, ProcessingContext context) {
     TypeNameGeneric consumerType = createConsumerType(fieldType);
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName(field.getOriginalFieldName() + SUFFIX_CONSUMER);
     parameter.setParameterTypeName(consumerType);
 
-    MethodDto methodDto =
-        new MethodDto(
-            generateBuilderMethodName(field.getOriginalFieldName(), context), builderType);
+    BuilderMethodDto methodDto =
+        createBuilderMethod(field.getOriginalFieldName(), builderType, context);
     methodDto.addParameter(parameter);
-    methodDto.setModifier(getMethodAccessModifier(context));
 
     methodDto.setCode(
         """
@@ -364,7 +376,7 @@ public final class MethodGeneratorUtil {
     methodDto.addArgument("dtoMethodParam", parameter.getParameterName());
     methodDto.addArgument("helperType", fieldType);
     methodDto.addArgument("builderFieldWrapper", TRACKED_VALUE_TYPE);
-    methodDto.setPriority(MethodDto.PRIORITY_MEDIUM);
+    methodDto.setPriority(BuilderMethodDto.PRIORITY_MEDIUM);
 
     String fieldJavadocDesc = field.getJavaDocDescriptionOrFieldName();
     methodDto.setJavadoc(
@@ -393,7 +405,7 @@ public final class MethodGeneratorUtil {
    * @param methodDto the method DTO to add the fragment to
    * @param fieldType the field type to get an example value for
    */
-  public static void addExampleChainFragment(MethodDto methodDto, TypeName fieldType) {
+  public static void addExampleChainFragment(BuilderMethodDto methodDto, TypeName fieldType) {
     addExampleChainFragmentTemplate(methodDto, "#{methodName}(#{exampleValue})", fieldType);
   }
 
@@ -411,7 +423,8 @@ public final class MethodGeneratorUtil {
    * @param methodDto the method DTO to add the fragment to
    * @param elementType the element type to get an example value for
    */
-  public static void addExampleChainFragmentVarArgs(MethodDto methodDto, TypeName elementType) {
+  public static void addExampleChainFragmentVarArgs(
+      BuilderMethodDto methodDto, TypeName elementType) {
     addExampleChainFragmentTemplate(
         methodDto, "#{methodName}(#{exampleValue}, #{exampleValue})", elementType);
   }
@@ -430,7 +443,8 @@ public final class MethodGeneratorUtil {
    * @param methodDto the method DTO to add the fragment to
    * @param fieldType the field type to get an example value for
    */
-  public static void addExampleChainFragmentWithSupplier(MethodDto methodDto, TypeName fieldType) {
+  public static void addExampleChainFragmentWithSupplier(
+      BuilderMethodDto methodDto, TypeName fieldType) {
     if (fieldType.hasEmptyConstructor()) {
       addExampleChainFragmentTemplate(
           methodDto, "#{methodName}(" + fieldType.getClassName() + "::new)");
@@ -453,7 +467,7 @@ public final class MethodGeneratorUtil {
    * @param exampleValue the hardcoded example value to use
    */
   public static void addExampleChainFragmentWithHardcodedValue(
-      MethodDto methodDto, String exampleValue) {
+      BuilderMethodDto methodDto, String exampleValue) {
     addExampleChainFragmentTemplate(methodDto, "#{methodName}(%s)".formatted(exampleValue));
   }
 
@@ -477,7 +491,7 @@ public final class MethodGeneratorUtil {
    * @param fieldType the field type to get an example value for (can be {@code null})
    */
   public static void addExampleChainFragmentTemplate(
-      MethodDto methodDto, String template, TypeName fieldType) {
+      BuilderMethodDto methodDto, String template, TypeName fieldType) {
     String fragment = template.replace("#{methodName}", methodDto.getMethodName());
 
     if (fieldType != null) {
@@ -507,7 +521,7 @@ public final class MethodGeneratorUtil {
    * @param template the template string with placeholders (e.g., {@code #{methodName}(sb ->
    *     sb.append("text"))})
    */
-  public static void addExampleChainFragmentTemplate(MethodDto methodDto, String template) {
+  public static void addExampleChainFragmentTemplate(BuilderMethodDto methodDto, String template) {
     String fragment = template.replace("#{methodName}", methodDto.getMethodName());
     methodDto.setExampleChainFragment(fragment);
   }

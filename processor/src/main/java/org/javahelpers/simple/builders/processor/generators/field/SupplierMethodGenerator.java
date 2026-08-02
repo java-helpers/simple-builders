@@ -28,8 +28,7 @@ import static org.javahelpers.simple.builders.processor.analysis.JavaLangMapper.
 import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.SUFFIX_SUPPLIER;
 import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.TRACKED_VALUE_TYPE;
 import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.addExampleChainFragmentWithSupplier;
-import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.generateBuilderMethodName;
-import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.getMethodAccessModifier;
+import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.createBuilderMethod;
 
 import java.util.Collections;
 import java.util.List;
@@ -38,7 +37,7 @@ import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.generators.util.JavadocConstants;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
@@ -94,10 +93,10 @@ public class SupplierMethodGenerator implements MethodGenerator {
   }
 
   @Override
-  public List<MethodDto> generateMethods(
+  public List<BuilderMethodDto> generateMethods(
       FieldDto field, TypeName builderType, ProcessingContext context) {
 
-    MethodDto supplierMethod =
+    BuilderMethodDto supplierMethod =
         createFieldSupplier(
             field.getOriginalFieldName(),
             field.getFieldNameInBuilder(),
@@ -121,7 +120,7 @@ public class SupplierMethodGenerator implements MethodGenerator {
    * @param context processing context
    * @return the method DTO for the supplier
    */
-  private MethodDto createFieldSupplier(
+  private BuilderMethodDto createFieldSupplier(
       String fieldName,
       String fieldNameInBuilder,
       String fieldJavaDoc,
@@ -135,9 +134,8 @@ public class SupplierMethodGenerator implements MethodGenerator {
     parameter.setParameterName(parameterName);
     parameter.setParameterTypeName(supplierType);
 
-    MethodDto methodDto = new MethodDto(generateBuilderMethodName(fieldName, context), builderType);
+    BuilderMethodDto methodDto = createBuilderMethod(fieldName, builderType, context);
     methodDto.addParameter(parameter);
-    methodDto.setModifier(getMethodAccessModifier(context));
 
     methodDto.setCode(
         """
@@ -147,7 +145,7 @@ public class SupplierMethodGenerator implements MethodGenerator {
     methodDto.addArgument("fieldName", fieldNameInBuilder);
     methodDto.addArgument("dtoMethodParam", parameterName);
     methodDto.addArgument("builderFieldWrapper", TRACKED_VALUE_TYPE);
-    methodDto.setPriority(MethodDto.PRIORITY_HIGH);
+    methodDto.setPriority(BuilderMethodDto.PRIORITY_HIGH);
 
     methodDto.setJavadoc(
         new JavadocDto(

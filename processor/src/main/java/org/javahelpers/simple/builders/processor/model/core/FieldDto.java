@@ -30,7 +30,7 @@ import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.type.GenericParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 
@@ -49,7 +49,7 @@ public class FieldDto {
   private TypeName fieldType;
 
   /** List of all methods in builder, which provide helpers to change the field. */
-  private final List<MethodDto> fieldSetterMethodsList = new ArrayList<>();
+  private final List<BuilderMethodDto> fieldSetterMethodsList = new ArrayList<>();
 
   /**
    * Original javadoc description extracted from setter or constructor parameter. This is used when
@@ -151,10 +151,9 @@ public class FieldDto {
   /**
    * Getting list of methods to modify that field.
    *
-   * @return list of methods with type {@code
-   *     org.javahelpers.simple.builders.internal.dtos.MethodDto}
+   * @return list of methods with type {@code BuilderMethodDto}
    */
-  public List<MethodDto> getMethods() {
+  public List<BuilderMethodDto> getMethods() {
     return fieldSetterMethodsList;
   }
 
@@ -163,7 +162,7 @@ public class FieldDto {
    *
    * @param methodDto method definition
    */
-  public void addMethod(MethodDto methodDto) {
+  public void addMethod(BuilderMethodDto methodDto) {
     this.fieldSetterMethodsList.add(methodDto);
   }
 

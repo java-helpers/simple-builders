@@ -26,7 +26,7 @@ package org.javahelpers.simple.builders.processor.generators;
 
 import java.util.List;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
@@ -84,5 +84,6 @@ public non-sealed interface MethodGenerator extends Generator {
    * @param context the processing context containing configuration and utilities
    * @return list of generated methods (may be empty but should not be null)
    */
-  List<MethodDto> generateMethods(FieldDto field, TypeName builderType, ProcessingContext context);
+  List<BuilderMethodDto> generateMethods(
+      FieldDto field, TypeName builderType, ProcessingContext context);
 }

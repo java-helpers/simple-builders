@@ -29,8 +29,9 @@ import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
 import org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
+import org.javahelpers.simple.builders.processor.model.type.BuilderNestedTypeDto;
 import org.javahelpers.simple.builders.processor.model.type.NestedTypeDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
@@ -100,7 +101,7 @@ public class WithInterfaceEnhancer implements BuilderEnhancer {
 
   @Override
   public void enhanceBuilder(BuilderDefinitionDto builderDto, ProcessingContext context) {
-    NestedTypeDto withInterface = createWithInterface(builderDto);
+    BuilderNestedTypeDto withInterface = createWithInterface(builderDto);
     builderDto.addNestedType(withInterface);
   }
 
@@ -110,8 +111,8 @@ public class WithInterfaceEnhancer implements BuilderEnhancer {
    * @param builderDto the builder definition
    * @return the nested type DTO for the With interface
    */
-  private NestedTypeDto createWithInterface(BuilderDefinitionDto builderDto) {
-    NestedTypeDto withInterface = new NestedTypeDto();
+  private BuilderNestedTypeDto createWithInterface(BuilderDefinitionDto builderDto) {
+    BuilderNestedTypeDto withInterface = new BuilderNestedTypeDto();
     withInterface.setTypeName("With");
     withInterface.setKind(NestedTypeDto.NestedTypeKind.INTERFACE);
     withInterface.setVisibility(AccessModifier.PUBLIC);
@@ -120,11 +121,11 @@ public class WithInterfaceEnhancer implements BuilderEnhancer {
             "Interface that can be implemented by the DTO to provide fluent modification methods."));
 
     // Create the first method: DtoType with(Consumer<BuilderType> b)
-    MethodDto withConsumerMethod = createWithConsumerMethod(builderDto);
+    BuilderMethodDto withConsumerMethod = createWithConsumerMethod(builderDto);
     withInterface.addMethod(withConsumerMethod);
 
     // Create the second method: BuilderType with()
-    MethodDto withBuilderMethod = createWithBuilderMethod(builderDto);
+    BuilderMethodDto withBuilderMethod = createWithBuilderMethod(builderDto);
     withInterface.addMethod(withBuilderMethod);
 
     return withInterface;
@@ -136,10 +137,10 @@ public class WithInterfaceEnhancer implements BuilderEnhancer {
    * @param builderDef the builder definition
    * @return the method definition
    */
-  private MethodDto createWithConsumerMethod(BuilderDefinitionDto builderDef) {
+  private BuilderMethodDto createWithConsumerMethod(BuilderDefinitionDto builderDef) {
     // Return type is the DTO type
     TypeName dtoType = builderDef.getBuildingTargetTypeName();
-    MethodDto method = new MethodDto("with", dtoType);
+    BuilderMethodDto method = new BuilderMethodDto("with", dtoType);
 
     // Parameter: Consumer<BuilderType> b
     MethodParameterDto parameter = new MethodParameterDto();
@@ -183,9 +184,9 @@ public class WithInterfaceEnhancer implements BuilderEnhancer {
    * @param builderDef the builder definition
    * @return the method definition
    */
-  private MethodDto createWithBuilderMethod(BuilderDefinitionDto builderDef) {
+  private BuilderMethodDto createWithBuilderMethod(BuilderDefinitionDto builderDef) {
     // Return type is the Builder type
-    MethodDto method = new MethodDto("with", builderDef.getBuilderTypeName());
+    BuilderMethodDto method = new BuilderMethodDto("with", builderDef.getBuilderTypeName());
 
     // Add implementation with validation to catch wrong implementations
     method.setCode(

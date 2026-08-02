@@ -32,7 +32,7 @@ import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.generators.util.JavadocConstants;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameArray;
@@ -87,7 +87,7 @@ public class ArrayConversionGenerator implements MethodGenerator {
   }
 
   @Override
-  public List<MethodDto> generateMethods(
+  public List<BuilderMethodDto> generateMethods(
       FieldDto field, TypeName builderType, ProcessingContext context) {
 
     TypeName fieldType = field.getFieldType();
@@ -99,13 +99,13 @@ public class ArrayConversionGenerator implements MethodGenerator {
     TypeName elementType = arrayType.getTypeOfArray();
     TypeNameGeneric listType = new TypeNameGeneric(map2TypeName(List.class), elementType);
 
-    MethodDto method =
+    BuilderMethodDto method =
         createFieldSetterForArrayFromList(field, listType, elementType, builderType, context);
 
     return List.of(method);
   }
 
-  private MethodDto createFieldSetterForArrayFromList(
+  private BuilderMethodDto createFieldSetterForArrayFromList(
       FieldDto field,
       TypeName listType,
       TypeName elementType,
@@ -117,9 +117,8 @@ public class ArrayConversionGenerator implements MethodGenerator {
     parameter.setParameterName(fieldName);
     parameter.setParameterTypeName(listType);
 
-    MethodDto methodDto = new MethodDto(generateBuilderMethodName(fieldName, context), builderType);
+    BuilderMethodDto methodDto = createBuilderMethod(fieldName, builderType, context);
     methodDto.addParameter(parameter);
-    methodDto.setModifier(getMethodAccessModifier(context));
     methodDto.setCode(
         """
         this.$fieldName:N = $builderFieldWrapper:T.changedValue($dtoMethodParams:N.toArray(new $elementType:T[0]));
@@ -129,7 +128,7 @@ public class ArrayConversionGenerator implements MethodGenerator {
     methodDto.addArgument("dtoMethodParams", fieldName);
     methodDto.addArgument("builderFieldWrapper", TRACKED_VALUE_TYPE);
     methodDto.addArgument("elementType", elementType);
-    methodDto.setPriority(MethodDto.PRIORITY_HIGH);
+    methodDto.setPriority(BuilderMethodDto.PRIORITY_HIGH);
     String fieldJavadocDesc = field.getJavaDocDescriptionOrFieldName();
     methodDto.setJavadoc(
         new JavadocDto("Sets the value for <code>%s</code>.", fieldName)

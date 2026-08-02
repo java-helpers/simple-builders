@@ -34,7 +34,7 @@ import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocCodeBlockDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.type.GenericParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
@@ -101,26 +101,26 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
   @Override
   public void enhanceBuilder(BuilderDefinitionDto builderDto, ProcessingContext context) {
     // Add build() method
-    MethodDto buildMethod = createBuildMethod(builderDto);
+    BuilderMethodDto buildMethod = createBuildMethod(builderDto);
     builderDto.addMethod(buildMethod);
 
     // Add static create() method
-    MethodDto createMethod = createStaticCreateMethod(builderDto);
+    BuilderMethodDto createMethod = createStaticCreateMethod(builderDto);
     builderDto.addMethod(createMethod);
 
     // Add toString() method
-    MethodDto toStringMethod = createToStringMethod(builderDto);
+    BuilderMethodDto toStringMethod = createToStringMethod(builderDto);
     builderDto.addMethod(toStringMethod);
   }
 
   /** Creates the build() method. */
-  protected MethodDto createBuildMethod(BuilderDefinitionDto builderDto) {
+  protected BuilderMethodDto createBuildMethod(BuilderDefinitionDto builderDto) {
     TypeName returnType =
         MethodGeneratorUtil.createGenericTypeName(
             builderDto.getBuildingTargetTypeName(), builderDto.getGenerics());
-    MethodDto method = new MethodDto("build", returnType);
+    BuilderMethodDto method = new BuilderMethodDto("build", returnType);
     method.setOrdering(ORDERING_BUILD);
-    method.setPriority(MethodDto.PRIORITY_HIGHEST);
+    method.setPriority(BuilderMethodDto.PRIORITY_HIGHEST);
     method.setModifier(AccessModifier.PUBLIC);
 
     // Add @Override annotation only if implementing IBuilderBase interface
@@ -212,13 +212,13 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
   }
 
   /** Creates the static create() method. */
-  protected MethodDto createStaticCreateMethod(BuilderDefinitionDto builderDto) {
+  protected BuilderMethodDto createStaticCreateMethod(BuilderDefinitionDto builderDto) {
     TypeName returnType =
         MethodGeneratorUtil.createGenericTypeName(
             builderDto.getBuilderTypeName(), builderDto.getGenerics());
-    MethodDto method = new MethodDto("create", returnType);
+    BuilderMethodDto method = new BuilderMethodDto("create", returnType);
     method.setOrdering(ORDERING_CREATE);
-    method.setPriority(MethodDto.PRIORITY_HIGHEST);
+    method.setPriority(BuilderMethodDto.PRIORITY_HIGHEST);
     method.setModifier(AccessModifier.PUBLIC);
     method.setStatic(true);
 
@@ -255,10 +255,10 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
   }
 
   /** Creates the toString() method. */
-  protected MethodDto createToStringMethod(BuilderDefinitionDto builderDto) {
-    MethodDto method = new MethodDto("toString", TypeName.of(String.class));
+  protected BuilderMethodDto createToStringMethod(BuilderDefinitionDto builderDto) {
+    BuilderMethodDto method = new BuilderMethodDto("toString", TypeName.of(String.class));
     method.setOrdering(ORDERING_TO_STRING);
-    method.setPriority(MethodDto.PRIORITY_HIGHEST);
+    method.setPriority(BuilderMethodDto.PRIORITY_HIGHEST);
     method.setModifier(AccessModifier.PUBLIC);
     AnnotationDto overrideAnnotation = new AnnotationDto();
     overrideAnnotation.setAnnotationType(JavaLangMapper.map2TypeName(Override.class));

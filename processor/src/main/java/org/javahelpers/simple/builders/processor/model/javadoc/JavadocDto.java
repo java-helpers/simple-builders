@@ -242,6 +242,23 @@ public class JavadocDto {
   }
 
   /**
+   * Appends additional text to the existing description.
+   *
+   * <p>If the current description is blank, the additional text becomes the description. Otherwise,
+   * the additional text is appended with a space separator.
+   *
+   * @param additionalText the text to append to the description
+   * @return this JavadocDto for fluent chaining
+   */
+  public JavadocDto appendDescription(String additionalText) {
+    if (StringUtils.isNotBlank(additionalText)) {
+      this.description =
+          StringUtils.isBlank(description) ? additionalText : description + " " + additionalText;
+    }
+    return this;
+  }
+
+  /**
    * Returns whether this Javadoc has any content (description, tags, or code blocks).
    *
    * @return true if there is description text, at least one tag, or at least one code block
