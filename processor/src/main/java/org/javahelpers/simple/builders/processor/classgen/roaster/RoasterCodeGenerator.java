@@ -231,6 +231,19 @@ public class RoasterCodeGenerator {
     logger.debugEndOperation("Methods added: %d", resolvedMethods.size());
   }
 
+  /**
+   * Generic safety net for method conflict resolution, preventing the code generator from producing
+   * invalid output (duplicate method signatures).
+   *
+   * <p>This is a generation-level check that operates on {@link MethodDto} (rendering-side DTO)
+   * which no longer carries field-origin metadata. Builder-specific conflict resolution with
+   * field-origin logging is performed earlier in {@link
+   * org.javahelpers.simple.builders.processor.processing.BuilderDefinitionCreator#resolveMethodConflicts}.
+   *
+   * <p>Since conflicts should already be resolved by the builder-specific step, this safety net
+   * simply keeps the first occurrence for any remaining duplicate signatures and logs a generic
+   * warning.
+   */
   private List<MethodDto> resolveMethodConflicts(List<MethodDto> methods) {
     MethodDto.MethodComparator comparator = new MethodDto.MethodComparator();
 
@@ -246,20 +259,9 @@ public class RoasterCodeGenerator {
       if (existing == null) {
         signatureToMethod.put(signature, method);
       } else {
-        if (method.getPriority() > existing.getPriority()) {
-          signatureToMethod.put(signature, method);
-          logger.warning(
-              "  Method conflict: '%s' (priority %d) dropped in favor of priority %d",
-              signature, existing.getPriority(), method.getPriority());
-        } else if (method.getPriority() < existing.getPriority()) {
-          logger.warning(
-              "  Method conflict: '%s' (priority %d) dropped in favor of priority %d",
-              signature, method.getPriority(), existing.getPriority());
-        } else {
-          logger.warning(
-              "  Method conflict: '%s' (priority %d) - equal priority, keeping first",
-              signature, method.getPriority());
-        }
+        logger.warning(
+            "  Unexpected duplicate method signature: '%s' — keeping first occurrence (safety net)",
+            signature);
       }
     }
 

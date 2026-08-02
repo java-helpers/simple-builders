@@ -116,6 +116,7 @@ public class BuilderDefinitionCreator {
    * <ul>
    *   <li>Converts FieldDto instances to ClassFieldDto instances
    *   <li>Sets origin info (sourceFieldName, constructorField) on each BuilderMethodDto
+   *   <li>Performs pre-conflict resolution at BuilderMethodDto level with origin logging
    *   <li>Maps all BuilderMethodDto to MethodDto via BuilderToGenerationTypeMapper
    *   <li>Collects all mapped methods from fields and class-level enhancer methods
    *   <li>Sets class access modifier
@@ -135,70 +136,17 @@ public class BuilderDefinitionCreator {
       builderDto.addClassField(classField);
     }
 
-    // 2. Set origin info on FieldDto (primary source of truth), then propagate to methods
-    // For constructor parameters, build the full constructor signature once:
-    // Display: ClassName(type1 param1, type2 param2, ...)
-    // Link:    ClassName(Type1, Type2, ...)  (types only, raw erasure for {@link} target)
-    String constructorSignature = null;
-    String constructorLinkSignature = null;
-    if (!builderDto.getConstructorFieldsForBuilder().isEmpty()
-        && builderDto.getBuildingTargetTypeName() != null) {
-      StringBuilder displaySb = new StringBuilder();
-      StringBuilder linkSb = new StringBuilder();
-      displaySb.append(builderDto.getBuildingTargetTypeName().getClassName()).append("(");
-      linkSb.append(builderDto.getBuildingTargetTypeName().getClassName()).append("(");
-      boolean first = true;
-      for (FieldDto field : builderDto.getConstructorFieldsForBuilder()) {
-        if (!first) {
-          displaySb.append(", ");
-          linkSb.append(", ");
-        }
-        displaySb
-            .append(field.getFieldType().getSimpleNameWithGenerics())
-            .append(" ")
-            .append(field.getOriginalFieldName());
-        linkSb.append(field.getFieldType().getClassName());
-        first = false;
-      }
-      displaySb.append(")");
-      linkSb.append(")");
-      constructorSignature = displaySb.toString();
-      constructorLinkSignature = linkSb.toString();
-    }
-    for (FieldDto field : builderDto.getConstructorFieldsForBuilder()) {
-      field.setSourceMethodSignature(constructorSignature);
-      field.setSourceMethodLinkSignature(constructorLinkSignature);
-      for (BuilderMethodDto method : field.getMethods()) {
-        method.setSourceFieldName(field.getOriginalFieldName());
-        method.setSourceMethodSignature(field.getSourceMethodSignature());
-        method.setSourceMethodLinkSignature(field.getSourceMethodLinkSignature());
-        method.setConstructorField(true);
-      }
-    }
-    for (FieldDto field : builderDto.getSetterFieldsForBuilder()) {
-      String displaySignature =
-          field.getSetterName()
-              + "("
-              + field.getFieldType().getSimpleNameWithGenerics()
-              + " "
-              + field.getOriginalFieldName()
-              + ")";
-      String linkSignature =
-          field.getSetterName() + "(" + field.getFieldType().getClassName() + ")";
-      field.setSourceMethodSignature(displaySignature);
-      field.setSourceMethodLinkSignature(linkSignature);
-      for (BuilderMethodDto method : field.getMethods()) {
-        method.setSourceFieldName(field.getOriginalFieldName());
-        method.setSourceMethodSignature(field.getSourceMethodSignature());
-        method.setSourceMethodLinkSignature(field.getSourceMethodLinkSignature());
-        method.setConstructorField(false);
-      }
-    }
+    // 2. Set origin info on BuilderMethodDto for javadoc enrichment
+    setConstructorOriginInfo(builderDto);
+    addSetterOriginInfo(builderDto);
 
-    // 3. Set class access modifier
+    // 3. Builder-specific conflict resolution: resolve by priority, log with field origin
+    resolveMethodConflicts(builderDto, context);
+
+    // 4. Set class access modifier
     builderDto.setClassAccessModifier(builderDto.getConfiguration().getBuilderAccess());
 
-    // 4. Set static imports for TrackedValue
+    // 5. Set static imports for TrackedValue
     builderDto.addStaticImport(TrackedValue.class, "changedValue");
     builderDto.addStaticImport(TrackedValue.class, "initialValue");
     builderDto.addStaticImport(TrackedValue.class, "unsetValue");
@@ -208,6 +156,230 @@ public class BuilderDefinitionCreator {
         builderDto.getClassFields().size(),
         builderDto.getMethods().size(),
         builderDto.getConstructors().size());
+  }
+
+  /**
+   * Sets origin info (source field name, source description, constructor flag) on all {@link
+   * BuilderMethodDto}s associated with constructor fields.
+   *
+   * <p>For constructor parameters, the full constructor signature is built once and shared across
+   * all constructor-field methods. The origin line includes an {@code {@link}} tag with types-only
+   * link target and full display label.
+   *
+   * @param builderDto the builder definition containing constructor fields
+   */
+  private static void setConstructorOriginInfo(BuilderDefinitionDto builderDto) {
+    String sourceDescription = buildConstructorSourceDescription(builderDto);
+    for (FieldDto field : builderDto.getConstructorFieldsForBuilder()) {
+      for (BuilderMethodDto method : field.getMethods()) {
+        method.setSourceFieldName(field.getOriginalFieldName());
+        method.setSourceDescription(sourceDescription);
+        method.setConstructorField(true);
+      }
+    }
+  }
+
+  /**
+   * Sets origin info (source field name, source description, constructor flag) on all {@link
+   * BuilderMethodDto}s associated with setter fields.
+   *
+   * <p>For each setter field, the signature is built per-field and the origin line includes an
+   * {@code {@link}} tag with types-only link target and full display label.
+   *
+   * @param builderDto the builder definition containing setter fields
+   */
+  private static void addSetterOriginInfo(BuilderDefinitionDto builderDto) {
+    String sourceClassName =
+        builderDto.getBuildingTargetTypeName() != null
+            ? builderDto.getBuildingTargetTypeName().getClassName()
+            : null;
+    for (FieldDto field : builderDto.getSetterFieldsForBuilder()) {
+      String sourceDescription = buildSetterSourceDescription(field, sourceClassName);
+      for (BuilderMethodDto method : field.getMethods()) {
+        method.setSourceFieldName(field.getOriginalFieldName());
+        method.setSourceDescription(sourceDescription);
+        method.setConstructorField(false);
+      }
+    }
+  }
+
+  /**
+   * Builds the javadoc origin line for constructor-based methods.
+   *
+   * <p>The full constructor signature is built from all constructor fields, e.g. {@code
+   * <p>Generated from parameter in constructor {@link PersonDto#PersonDto(String, int)
+   * PersonDto(String name, int age)}}.
+   *
+   * @param builderDto the builder definition containing constructor fields and target type name
+   * @return the complete origin line, or {@code null} if no constructor fields or target type
+   */
+  private static String buildConstructorSourceDescription(BuilderDefinitionDto builderDto) {
+    if (builderDto.getConstructorFieldsForBuilder().isEmpty()
+        || builderDto.getBuildingTargetTypeName() == null) {
+      return null;
+    }
+    String className = builderDto.getBuildingTargetTypeName().getClassName();
+    String displayParams =
+        builderDto.getConstructorFieldsForBuilder().stream()
+            .map(
+                f ->
+                    "%s %s"
+                        .formatted(
+                            f.getFieldType().getSimpleNameWithGenerics(), f.getOriginalFieldName()))
+            .collect(java.util.stream.Collectors.joining(", "));
+    String linkParams =
+        builderDto.getConstructorFieldsForBuilder().stream()
+            .map(f -> f.getFieldType().getClassName())
+            .collect(java.util.stream.Collectors.joining(", "));
+    return "<p>Generated from parameter in constructor {@link %s#%s(%s) %s(%s)}"
+        .formatted(className, className, linkParams, className, displayParams);
+  }
+
+  /**
+   * Builds the javadoc origin line for setter-based methods.
+   *
+   * <p>The signature is built from the field's setter name and type, e.g. {@code <p>Generated from
+   * setter {@link PersonDto#setAuthor(String) setAuthor(String author)}}.
+   *
+   * @param field the setter field to build the description for
+   * @param sourceClassName the simple class name of the source DTO, or {@code null} if unknown
+   * @return the complete origin line
+   */
+  private static String buildSetterSourceDescription(FieldDto field, String sourceClassName) {
+    String displaySignature =
+        "%s(%s %s)"
+            .formatted(
+                field.getSetterName(),
+                field.getFieldType().getSimpleNameWithGenerics(),
+                field.getOriginalFieldName());
+    String linkSignature =
+        "%s(%s)".formatted(field.getSetterName(), field.getFieldType().getClassName());
+    if (sourceClassName != null) {
+      return "<p>Generated from setter {@link %s#%s %s}"
+          .formatted(sourceClassName, linkSignature, displaySignature);
+    } else {
+      return "<p>Generated from setter <code>%s</code>".formatted(displaySignature);
+    }
+  }
+
+  /**
+   * Builder-specific conflict resolution at the BuilderMethodDto level, using priority-based
+   * resolution with field-origin logging.
+   *
+   * <p>This is the primary place for conflict resolution because only here the field-origin
+   * metadata ({@code sourceFieldName}, {@code constructorField}) is available. Methods with the
+   * same signature key are resolved by keeping the highest-priority one; losers are removed from
+   * their field/class method lists so they are never mapped to the rendering DTO.
+   *
+   * <p>A generic safety net in {@link
+   * org.javahelpers.simple.builders.processor.classgen.roaster.RoasterCodeGenerator#resolveMethodConflicts}
+   * handles any remaining duplicates (e.g., from enhancer methods added after this step) by keeping
+   * the first occurrence.
+   *
+   * @param builderDto the builder definition containing all methods
+   * @param context the processing context for logging
+   */
+  private static void resolveMethodConflicts(
+      BuilderDefinitionDto builderDto, ProcessingContext context) {
+    context.debugStartOperation("Resolving method conflicts");
+
+    // Collect all BuilderMethodDto instances grouped by signature key
+    java.util.Map<String, List<BuilderMethodDto>> methodsBySignature =
+        collectMethodsBySignature(builderDto);
+
+    // Resolve conflicts: keep highest priority, remove losers
+    java.util.Set<BuilderMethodDto> methodsToRemove = new java.util.HashSet<>();
+    for (java.util.Map.Entry<String, List<BuilderMethodDto>> entry :
+        methodsBySignature.entrySet()) {
+      List<BuilderMethodDto> methodsWithSameSignature = entry.getValue();
+      boolean isConflicting = methodsWithSameSignature.size() > 1;
+      if (isConflicting) {
+        // Sort by priority (descending), then ordering, then name, etc. for deterministic winner
+        methodsWithSameSignature.sort(new BuilderMethodDto.BuilderMethodComparator());
+        BuilderMethodDto winner = methodsWithSameSignature.get(0);
+        context.warning(
+            "Method conflict resolved for signature '%s': %d methods found. "
+                + "Kept: priority=%d, sourceField='%s', constructorField=%b. "
+                + "Dropped: %s",
+            entry.getKey(),
+            methodsWithSameSignature.size(),
+            winner.getPriority(),
+            winner.getSourceFieldName(),
+            winner.isConstructorField(),
+            methodsWithSameSignature.stream()
+                .skip(1)
+                .map(
+                    m ->
+                        String.format(
+                            "[priority=%d, sourceField='%s', constructorField=%b]",
+                            m.getPriority(), m.getSourceFieldName(), m.isConstructorField()))
+                .toList());
+        // Mark losers for removal
+        methodsWithSameSignature.stream().skip(1).forEach(methodsToRemove::add);
+      }
+    }
+
+    // Remove losing methods from their field/class method lists
+    removeMethodsFromBuilder(builderDto, methodsToRemove);
+
+    context.debugEndOperation(
+        "Resolved: %d signatures, %d conflicts, %d methods removed",
+        methodsBySignature.size(),
+        methodsBySignature.values().stream().filter(l -> l.size() > 1).count(),
+        methodsToRemove.size());
+  }
+
+  /**
+   * Collects all {@link BuilderMethodDto} instances from the builder definition, grouped by their
+   * signature key. This includes methods from constructor fields, setter fields, and builder-level
+   * enhancer methods.
+   *
+   * @param builderDto the builder definition containing all methods
+   * @return map from signature key to list of methods with that signature
+   */
+  private static java.util.Map<String, List<BuilderMethodDto>> collectMethodsBySignature(
+      BuilderDefinitionDto builderDto) {
+    java.util.Map<String, List<BuilderMethodDto>> methodsBySignature = new HashMap<>();
+
+    for (FieldDto field : builderDto.getConstructorFieldsForBuilder()) {
+      for (BuilderMethodDto method : field.getMethods()) {
+        methodsBySignature
+            .computeIfAbsent(method.getSignatureKey(), k -> new java.util.ArrayList<>())
+            .add(method);
+      }
+    }
+    for (FieldDto field : builderDto.getSetterFieldsForBuilder()) {
+      for (BuilderMethodDto method : field.getMethods()) {
+        methodsBySignature
+            .computeIfAbsent(method.getSignatureKey(), k -> new java.util.ArrayList<>())
+            .add(method);
+      }
+    }
+    for (BuilderMethodDto classMethod : builderDto.getMethods()) {
+      methodsBySignature
+          .computeIfAbsent(classMethod.getSignatureKey(), k -> new java.util.ArrayList<>())
+          .add(classMethod);
+    }
+
+    return methodsBySignature;
+  }
+
+  /**
+   * Removes the given methods from all field method lists and builder-level methods in the builder
+   * definition.
+   *
+   * @param builderDto the builder definition containing all methods
+   * @param methodsToRemove the set of methods to remove
+   */
+  private static void removeMethodsFromBuilder(
+      BuilderDefinitionDto builderDto, java.util.Set<BuilderMethodDto> methodsToRemove) {
+    for (FieldDto field : builderDto.getConstructorFieldsForBuilder()) {
+      field.getMethods().removeAll(methodsToRemove);
+    }
+    for (FieldDto field : builderDto.getSetterFieldsForBuilder()) {
+      field.getMethods().removeAll(methodsToRemove);
+    }
+    builderDto.getMethods().removeAll(methodsToRemove);
   }
 
   /**

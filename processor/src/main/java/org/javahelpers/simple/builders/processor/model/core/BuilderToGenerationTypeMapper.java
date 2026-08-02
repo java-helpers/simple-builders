@@ -85,29 +85,21 @@ public class BuilderToGenerationTypeMapper {
     // Copy interfaces
     builderDto.getInterfaces().forEach(renderingDto::addInterface);
 
-    // Source class name for javadoc enrichment (e.g., "PersonDto")
-    // Simple class name is sufficient because the builder is always generated in the same
-    // package as the source DTO, so no import is needed for {@link} to resolve.
-    String sourceClassName =
-        builderDto.getBuildingTargetTypeName() != null
-            ? builderDto.getBuildingTargetTypeName().getClassName()
-            : null;
-
     // Map and copy methods from fields
     for (FieldDto field : builderDto.getConstructorFieldsForBuilder()) {
       for (BuilderMethodDto method : field.getMethods()) {
-        renderingDto.addMethod(toMethodDto(method, sourceClassName));
+        renderingDto.addMethod(toMethodDto(method));
       }
     }
     for (FieldDto field : builderDto.getSetterFieldsForBuilder()) {
       for (BuilderMethodDto method : field.getMethods()) {
-        renderingDto.addMethod(toMethodDto(method, sourceClassName));
+        renderingDto.addMethod(toMethodDto(method));
       }
     }
 
     // Map and copy builder-level methods from enhancers
     for (BuilderMethodDto classMethod : builderDto.getMethods()) {
-      renderingDto.addMethod(toMethodDto(classMethod, sourceClassName));
+      renderingDto.addMethod(toMethodDto(classMethod));
     }
 
     // Map and copy nested types from enhancers
@@ -119,7 +111,8 @@ public class BuilderToGenerationTypeMapper {
   }
 
   /**
-   * Maps a {@link BuilderMethodDto} to a {@link MethodDto}.
+   * Maps a {@link BuilderMethodDto} to a {@link MethodDto}, enriching the javadoc with the
+   * pre-built source description if available.
    *
    * <p>All rendering-relevant fields are copied. The {@code MethodCodeDto} is shared by reference
    * (not deep-copied), since the rendering phase only reads from it.
@@ -127,53 +120,22 @@ public class BuilderToGenerationTypeMapper {
    * @param classMethod the generation DTO to map
    * @return a new {@link MethodDto} with all rendering fields copied
    */
-  public static MethodDto toMethodDto(BuilderMethodDto classMethod) {
-    return toMethodDto(classMethod, null);
-  }
-
-  /**
-   * Maps a {@link BuilderMethodDto} to a {@link MethodDto}, enriching the javadoc with field-origin
-   * information including the source class name.
-   *
-   * <p>All rendering-relevant fields are copied. The {@code MethodCodeDto} is shared by reference
-   * (not deep-copied), since the rendering phase only reads from it.
-   *
-   * @param classMethod the generation DTO to map
-   * @param sourceClassName the simple class name of the source DTO (e.g., "PersonDto"), or null if
-   *     unknown
-   * @return a new {@link MethodDto} with all rendering fields copied
-   */
-  private static MethodDto toMethodDto(BuilderMethodDto classMethod, String sourceClassName) {
+  private static MethodDto toMethodDto(BuilderMethodDto classMethod) {
     MethodDto method = new MethodDto(classMethod.getMethodName(), classMethod.getReturnType());
     method.setModifier(classMethod.getModifier().orElse(null));
     method.setStatic(classMethod.isStatic());
-    method.setPriority(classMethod.getPriority());
     method.setOrdering(classMethod.getOrdering());
 
-    // Enrich javadoc with field-origin section if source field is known
+    // Enrich javadoc with pre-built source description if source field is known
     JavadocDto javadoc = classMethod.getJavadoc();
     if (javadoc == null && StringUtils.isNotBlank(classMethod.getSourceFieldName())) {
       javadoc = new JavadocDto();
     }
     if (javadoc != null && StringUtils.isNotBlank(classMethod.getSourceFieldName())) {
-      String originType = classMethod.isConstructorField() ? "parameter in constructor" : "setter";
-      String displaySignature = classMethod.getSourceMethodSignature();
-      String linkSignature = classMethod.getSourceMethodLinkSignature();
-      if (StringUtils.isBlank(displaySignature)) {
-        displaySignature = classMethod.getSourceFieldName();
+      String sourceDescription = classMethod.getSourceDescription();
+      if (sourceDescription != null) {
+        javadoc.appendDescriptionLine(sourceDescription);
       }
-      if (StringUtils.isBlank(linkSignature)) {
-        linkSignature = displaySignature;
-      }
-      String originLine;
-      if (StringUtils.isNotBlank(sourceClassName)) {
-        originLine =
-            "<p>Generated from %s {@link %s#%s %s}"
-                .formatted(originType, sourceClassName, linkSignature, displaySignature);
-      } else {
-        originLine = "<p>Generated from %s <code>%s</code>".formatted(originType, displaySignature);
-      }
-      javadoc.appendDescriptionLine(originLine);
     }
     method.setJavadoc(javadoc);
     classMethod.getAnnotations().forEach(method::addAnnotation);

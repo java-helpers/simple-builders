@@ -43,20 +43,11 @@ import org.javahelpers.simple.builders.processor.model.type.TypeName;
  * information.
  */
 public class MethodDto {
-  // Priority constants for method conflict resolution (higher values win)
-  public static final int PRIORITY_HIGHEST = 100;
-  public static final int PRIORITY_HIGH = 80;
-  public static final int PRIORITY_MEDIUM = 70;
-  public static final int PRIORITY_LOW = 60;
-
   /** Access modifier for method. */
   private Optional<AccessModifier> modifier = Optional.empty();
 
   /** Whether the method is static. */
   private boolean isStatic = false;
-
-  /** Priority for method conflict resolution. Higher wins. */
-  private int priority = 0;
 
   /** Ordering for method generation. Lower values appear first in generated class. */
   private int ordering = 1000;
@@ -96,34 +87,6 @@ public class MethodDto {
   public MethodDto(String methodName, TypeName returnType) {
     this.methodName = methodName;
     this.returnType = returnType;
-  }
-
-  /**
-   * Sets the priority for this method. Higher values win when signatures clash.
-   *
-   * <p>Priority levels:
-   *
-   * <ul>
-   *   <li>{@link #PRIORITY_HIGHEST} (100)
-   *   <li>{@link #PRIORITY_HIGH} (80)
-   *   <li>{@link #PRIORITY_MEDIUM} (70)
-   *   <li>{@link #PRIORITY_LOW} (60)
-   *   <li>0: Default (no priority set)
-   * </ul>
-   *
-   * @param priority the priority value (higher values take precedence in conflicts)
-   */
-  public void setPriority(int priority) {
-    this.priority = priority;
-  }
-
-  /**
-   * Returns the priority of this method for conflict resolution.
-   *
-   * @return the priority value
-   */
-  public int getPriority() {
-    return priority;
   }
 
   /**
@@ -368,7 +331,7 @@ public class MethodDto {
   /**
    * Comparator for sorting MethodDto instances with sophisticated ordering rules.
    *
-   * <p>Sorting order for methods with same priority and name:
+   * <p>Sorting order for methods with same ordering and name:
    *
    * <ol>
    *   <li>Methods with fewer parameters come first

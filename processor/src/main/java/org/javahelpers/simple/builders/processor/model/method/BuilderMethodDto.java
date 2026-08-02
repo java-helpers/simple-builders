@@ -97,18 +97,10 @@ public class BuilderMethodDto {
   private String sourceFieldName;
 
   /**
-   * Source method signature for javadoc enrichment, e.g. {@code setTeamname(String teamName)} for
-   * setter fields or {@code PersonDto(String name, int age, ...)} for constructor parameters.
-   * {@code null} for enhancer methods.
+   * Pre-built javadoc origin line for this method, e.g. {@code <p>Generated from setter {@link
+   * PersonDto#setAuthor(String) setAuthor(String author)}}. {@code null} for enhancer methods.
    */
-  private String sourceMethodSignature;
-
-  /**
-   * Types-only signature for the {@code {@link}} target, e.g. {@code setTeamname(String)} or {@code
-   * PersonDto(String, int)}. Uses raw types (no generics) per Javadoc spec. {@code null} for
-   * enhancer methods.
-   */
-  private String sourceMethodLinkSignature;
+  private String sourceDescription;
 
   /** Whether this method was generated for a constructor field (vs a setter field). */
   private boolean constructorField;
@@ -445,42 +437,22 @@ public class BuilderMethodDto {
   }
 
   /**
-   * Returns the source method signature for javadoc enrichment.
+   * Gets the pre-built javadoc origin line for this method.
    *
-   * @return the source method signature, or {@code null} for enhancer-generated methods
+   * @return the source description line, or {@code null} for enhancer-generated methods
    */
-  public String getSourceMethodSignature() {
-    return sourceMethodSignature;
+  public String getSourceDescription() {
+    return sourceDescription;
   }
 
   /**
-   * Sets the source method signature for javadoc enrichment.
+   * Sets the pre-built javadoc origin line for this method.
    *
-   * @param sourceMethodSignature the source method signature, e.g. {@code setTeamname(String
-   *     teamName)} for setters or {@code PersonDto(String name, int age, ...)} for constructor
-   *     parameters
+   * @param sourceDescription the full origin line, e.g. {@code <p>Generated from setter {@link
+   *     PersonDto#setAuthor(String) setAuthor(String author)}}
    */
-  public void setSourceMethodSignature(String sourceMethodSignature) {
-    this.sourceMethodSignature = sourceMethodSignature;
-  }
-
-  /**
-   * Returns the types-only link signature for the {@code {@link}} target.
-   *
-   * @return the link signature, or {@code null} for enhancer-generated methods
-   */
-  public String getSourceMethodLinkSignature() {
-    return sourceMethodLinkSignature;
-  }
-
-  /**
-   * Sets the types-only link signature for the {@code {@link}} target.
-   *
-   * @param sourceMethodLinkSignature the link signature, e.g. {@code setTeamname(String)} or {@code
-   *     PersonDto(String, int)}
-   */
-  public void setSourceMethodLinkSignature(String sourceMethodLinkSignature) {
-    this.sourceMethodLinkSignature = sourceMethodLinkSignature;
+  public void setSourceDescription(String sourceDescription) {
+    this.sourceDescription = sourceDescription;
   }
 
   /**
@@ -504,9 +476,12 @@ public class BuilderMethodDto {
   /**
    * Comparator for sorting BuilderMethodDto instances with sophisticated ordering rules.
    *
-   * <p>Sorting order for methods with same priority and name:
+   * <p>Sorting order:
    *
    * <ol>
+   *   <li>Priority (descending — higher priority first)
+   *   <li>Ordering value (ascending — lower ordering first)
+   *   <li>Method name
    *   <li>Methods with fewer parameters come first
    *   <li>Non-generic methods come before generic methods
    *   <li>Full method signature (name(paramType1,paramType2,...)) used for final ordering
@@ -516,25 +491,31 @@ public class BuilderMethodDto {
 
     @Override
     public int compare(BuilderMethodDto m1, BuilderMethodDto m2) {
-      // Primary sort: ordering value
+      // Primary sort: priority (descending — higher priority wins)
+      int priorityCompare = Integer.compare(m2.getPriority(), m1.getPriority());
+      if (priorityCompare != 0) {
+        return priorityCompare;
+      }
+
+      // Secondary sort: ordering value
       int orderingCompare = Integer.compare(m1.getOrdering(), m2.getOrdering());
       if (orderingCompare != 0) {
         return orderingCompare;
       }
 
-      // Secondary sort: method name
+      // Tertiary sort: method name
       int nameCompare = m1.getMethodName().compareTo(m2.getMethodName());
       if (nameCompare != 0) {
         return nameCompare;
       }
 
-      // Tertiary sort: parameter count (fewer parameters first)
+      // Quaternary sort: parameter count (fewer parameters first)
       int paramCountCompare = Integer.compare(m1.getParameters().size(), m2.getParameters().size());
       if (paramCountCompare != 0) {
         return paramCountCompare;
       }
 
-      // Quaternary sort: generic vs non-generic (non-generic first)
+      // Quinary sort: generic vs non-generic (non-generic first)
       boolean m1Generic = hasGenericParameters(m1);
       boolean m2Generic = hasGenericParameters(m2);
       if (m1Generic != m2Generic) {
