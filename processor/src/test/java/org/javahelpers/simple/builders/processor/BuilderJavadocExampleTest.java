@@ -32,6 +32,7 @@ import java.util.stream.Stream;
 import javax.tools.JavaFileObject;
 import org.javahelpers.simple.builders.processor.testing.ProcessorAsserts;
 import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
+import org.junit.jupiter.api.Named;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -116,8 +117,7 @@ class BuilderJavadocExampleTest {
 
   @ParameterizedTest(name = "{0}")
   @MethodSource("methodJavadocExampleCases")
-  void shouldGenerateMethodJavadocExample(
-      String testName, String className, String source, String expectedJavadoc) {
+  void shouldGenerateMethodJavadocExample(String className, String source, String expectedJavadoc) {
     String builderClassName = className + "Builder";
     JavaFileObject dto = ProcessorTestUtils.simpleBuilderClass("test", className, source);
 
@@ -130,8 +130,7 @@ class BuilderJavadocExampleTest {
   private static Stream<Arguments> methodJavadocExampleCases() {
     return Stream.of(
         Arguments.of(
-            "basic string setter",
-            "Person",
+            Named.of("basic string setter", "Person"),
             """
                 private String teamname;
                 public String getTeamname() { return teamname; }
@@ -154,8 +153,7 @@ class BuilderJavadocExampleTest {
             public PersonBuilder teamname(String teamname)
             """),
         Arguments.of(
-            "primitive setter",
-            "Counter",
+            Named.of("primitive setter", "Counter"),
             """
                 private int amount;
                 public int getAmount() { return amount; }
@@ -178,8 +176,7 @@ class BuilderJavadocExampleTest {
             public CounterBuilder amount(int amount)
             """),
         Arguments.of(
-            "supplier",
-            "SupplierDto",
+            Named.of("supplier", "SupplierDto"),
             """
                 private String title;
                 public String getTitle() { return title; }
@@ -193,8 +190,7 @@ class BuilderJavadocExampleTest {
             * }</pre>
             """),
         Arguments.of(
-            "add to collection",
-            "TagsDto",
+            Named.of("add to collection", "TagsDto"),
             """
                 private java.util.List<String> tags;
                 public java.util.List<String> getTags() { return tags; }
@@ -217,8 +213,7 @@ class BuilderJavadocExampleTest {
             public TagsDtoBuilder add2Tags(String element)
             """),
         Arguments.of(
-            "list consumer",
-            "ListDto",
+            Named.of("list consumer", "ListDto"),
             """
                 private java.util.List<String> tags;
                 public java.util.List<String> getTags() { return tags; }
@@ -232,8 +227,7 @@ class BuilderJavadocExampleTest {
             * }</pre>
             """),
         Arguments.of(
-            "create",
-            "CreateDto",
+            Named.of("create", "CreateDto"),
             """
                 private String name;
                 public String getName() { return name; }
@@ -247,8 +241,7 @@ class BuilderJavadocExampleTest {
             * }</pre>
             """),
         Arguments.of(
-            "build",
-            "BuildDto",
+            Named.of("build", "BuildDto"),
             """
                 private String name;
                 public String getName() { return name; }
@@ -262,8 +255,7 @@ class BuilderJavadocExampleTest {
             * }</pre>
             """),
         Arguments.of(
-            "map setter",
-            "MapDto",
+            Named.of("map setter", "MapDto"),
             """
                 private java.util.Map<String, Integer> values;
                 public java.util.Map<String, Integer> getValues() { return values; }
