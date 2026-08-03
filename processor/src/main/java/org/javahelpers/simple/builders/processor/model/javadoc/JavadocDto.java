@@ -53,6 +53,9 @@ public class JavadocDto {
   /** List of Javadoc tags in the order they appear. */
   private final List<JavadocTagDto> tags = new ArrayList<>();
 
+  /** The single usage-example code block for this Javadoc, if present. */
+  private JavadocCodeBlockDto exampleUsageCodeBlock;
+
   /** Default constructor. */
   public JavadocDto() {
     // Default constructor
@@ -114,6 +117,24 @@ public class JavadocDto {
    */
   public List<JavadocTagDto> getTags() {
     return tags;
+  }
+
+  /**
+   * Gets the usage-example code block.
+   *
+   * @return the usage-example code block, or {@code null} if none is present
+   */
+  public JavadocCodeBlockDto getExampleUsageCodeBlock() {
+    return exampleUsageCodeBlock;
+  }
+
+  /**
+   * Sets the usage-example code block.
+   *
+   * @param codeBlock the usage-example code block, or {@code null} to clear it
+   */
+  public void setExampleUsageCodeBlock(JavadocCodeBlockDto codeBlock) {
+    this.exampleUsageCodeBlock = codeBlock;
   }
 
   /**
@@ -208,12 +229,46 @@ public class JavadocDto {
   }
 
   /**
-   * Returns whether this Javadoc has any content (description or tags).
+   * Appends additional text to the existing description.
    *
-   * @return true if there is description text or at least one tag
+   * <p>If the current description is blank, the additional text becomes the description. Otherwise,
+   * the additional text is appended with a space separator.
+   *
+   * @param additionalText the text to append to the description
+   * @return this JavadocDto for fluent chaining
+   */
+  public JavadocDto appendDescription(String additionalText) {
+    if (StringUtils.isNotBlank(additionalText)) {
+      this.description =
+          StringUtils.isBlank(description) ? additionalText : description + " " + additionalText;
+    }
+    return this;
+  }
+
+  /**
+   * Appends additional text to the existing description on a new line.
+   *
+   * <p>If the current description is blank, the additional text becomes the description. Otherwise,
+   * the additional text is appended with a newline separator.
+   *
+   * @param additionalText the text to append on a new line
+   * @return this JavadocDto for fluent chaining
+   */
+  public JavadocDto appendDescriptionLine(String additionalText) {
+    if (StringUtils.isNotBlank(additionalText)) {
+      this.description =
+          StringUtils.isBlank(description) ? additionalText : description + "\n" + additionalText;
+    }
+    return this;
+  }
+
+  /**
+   * Returns whether this Javadoc has any content (description, tags, or an example code block).
+   *
+   * @return true if there is description text, at least one tag, or an example code block
    */
   public boolean hasContent() {
-    return StringUtils.isNotBlank(description) || !tags.isEmpty();
+    return StringUtils.isNotBlank(description) || !tags.isEmpty() || exampleUsageCodeBlock != null;
   }
 
   @Override

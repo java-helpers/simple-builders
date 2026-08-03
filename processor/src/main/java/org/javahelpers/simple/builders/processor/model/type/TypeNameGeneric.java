@@ -167,6 +167,22 @@ public class TypeNameGeneric extends TypeName {
   }
 
   @Override
+  public String getSimpleNameWithGenerics() {
+    String baseName = getClassName();
+    if (innerTypeArguments.isEmpty()) {
+      return baseName;
+    }
+
+    String typeArgs =
+        innerTypeArguments.stream()
+            .map(TypeName::getSimpleNameWithGenerics)
+            .reduce((a, b) -> a + ", " + b)
+            .orElse("");
+
+    return baseName + "<" + typeArgs + ">";
+  }
+
+  @Override
   public boolean equals(Object o) {
     if (this == o) {
       return true;

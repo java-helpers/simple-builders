@@ -31,9 +31,8 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 
 /**
- * DTO representing an annotation to be copied from the target class field to the builder class
- * field. Contains the annotation type and its members in a plain format suitable for code
- * generation.
+ * DTO representing an annotation to be generated in the output class. Contains the annotation type
+ * and its members in a plain format suitable for code generation.
  */
 public class AnnotationDto {
   /** The annotation type (fully qualified name). */

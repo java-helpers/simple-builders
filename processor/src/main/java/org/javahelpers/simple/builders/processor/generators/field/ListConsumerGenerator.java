@@ -25,17 +25,20 @@
 package org.javahelpers.simple.builders.processor.generators.field;
 
 import static org.javahelpers.simple.builders.processor.analysis.JavaLangMapper.map2TypeName;
-import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.*;
+import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.addExampleChainFragmentTemplate;
+import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.createFieldConsumerWithBuilder;
+import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.createFieldConsumerWithElementBuilders;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.builders.ArrayListBuilder;
 import org.javahelpers.simple.builders.core.builders.ArrayListBuilderWithElementBuilders;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameList;
@@ -113,7 +116,7 @@ public class ListConsumerGenerator implements MethodGenerator {
   }
 
   @Override
-  public List<MethodDto> generateMethods(
+  public List<BuilderMethodDto> generateMethods(
       FieldDto field, TypeName builderType, ProcessingContext context) {
     if (!(field.getFieldType() instanceof TypeNameList fieldTypeGeneric
         && fieldTypeGeneric.isParameterized())) {
@@ -130,14 +133,18 @@ public class ListConsumerGenerator implements MethodGenerator {
               map2TypeName(ArrayListBuilderWithElementBuilders.class),
               elementType,
               elementBuilderType.get());
-      MethodDto method =
+      BuilderMethodDto method =
           createFieldConsumerWithElementBuilders(
               field, collectionBuilderType, elementBuilderType.get(), builderType, context);
+
+      // Add method-level example for list consumer
+      addExampleToListConsumerWithBuilder(method, elementBuilderType.get());
+
       return List.of(method);
     } else if (context.getConfiguration().shouldUseArrayListBuilder()) {
       TypeName arrayListBuilderType = map2TypeName(ArrayListBuilder.class);
       TypeNameGeneric builderTypeGeneric = new TypeNameGeneric(arrayListBuilderType, elementType);
-      MethodDto method =
+      BuilderMethodDto method =
           createFieldConsumerWithBuilder(
               field,
               builderTypeGeneric,
@@ -146,9 +153,38 @@ public class ListConsumerGenerator implements MethodGenerator {
               Map.of(),
               builderType,
               context);
+
+      // Add method-level example for list consumer
+      addExampleToListConsumerWithSimpleValue(method, elementType);
+
       return List.of(method);
     }
 
     return Collections.emptyList();
+  }
+
+  /**
+   * Adds example for list consumer methods where the element type has its own builder.
+   *
+   * @param method the method to add the example to
+   * @param elementBuilderType the element builder type
+   */
+  private void addExampleToListConsumerWithBuilder(
+      BuilderMethodDto method, TypeName elementBuilderType) {
+    String builderVar = StringUtils.uncapitalize(elementBuilderType.getClassName());
+    addExampleChainFragmentTemplate(
+        method, "#{methodName}(t -> t.add(" + builderVar + " -> " + builderVar + "))");
+  }
+
+  /**
+   * Adds example for list consumer methods where the element type is a simple value.
+   *
+   * @param method the method to add the example to
+   * @param elementType the element type
+   */
+  private void addExampleToListConsumerWithSimpleValue(
+      BuilderMethodDto method, TypeName elementType) {
+    addExampleChainFragmentTemplate(
+        method, "#{methodName}(t -> t.add(#{exampleValue}))", elementType);
   }
 }

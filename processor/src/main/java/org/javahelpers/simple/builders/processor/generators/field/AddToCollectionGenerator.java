@@ -24,7 +24,9 @@
 
 package org.javahelpers.simple.builders.processor.generators.field;
 
-import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.*;
+import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.TRACKED_VALUE_TYPE;
+import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.addExampleChainFragment;
+import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.getMethodAccessModifier;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +35,7 @@ import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.generators.util.JavadocConstants;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameList;
@@ -100,14 +102,14 @@ public class AddToCollectionGenerator implements MethodGenerator {
   }
 
   @Override
-  public List<MethodDto> generateMethods(
+  public List<BuilderMethodDto> generateMethods(
       FieldDto field, TypeName builderType, ProcessingContext context) {
 
-    List<MethodDto> methods = new ArrayList<>();
+    List<BuilderMethodDto> methods = new ArrayList<>();
     TypeName fieldType = field.getFieldType();
 
     if (fieldType instanceof TypeNameList listType && listType.isParameterized()) {
-      MethodDto addMethod =
+      BuilderMethodDto addMethod =
           createAddToCollectionMethod(
               field.getOriginalFieldName(),
               field.getFieldNameInBuilder(),
@@ -117,7 +119,7 @@ public class AddToCollectionGenerator implements MethodGenerator {
               context);
       methods.add(addMethod);
     } else if (fieldType instanceof TypeNameSet setType && setType.isParameterized()) {
-      MethodDto addMethod =
+      BuilderMethodDto addMethod =
           createAddToCollectionMethod(
               field.getOriginalFieldName(),
               field.getFieldNameInBuilder(),
@@ -131,7 +133,7 @@ public class AddToCollectionGenerator implements MethodGenerator {
     return methods;
   }
 
-  private MethodDto createAddToCollectionMethod(
+  private BuilderMethodDto createAddToCollectionMethod(
       String originalFieldName,
       String fieldNameInBuilder,
       TypeName fieldType,
@@ -139,7 +141,7 @@ public class AddToCollectionGenerator implements MethodGenerator {
       TypeName builderType,
       ProcessingContext context) {
     String methodName = "add2" + StringUtils.capitalize(originalFieldName);
-    MethodDto methodDto = new MethodDto(methodName, builderType);
+    BuilderMethodDto methodDto = new BuilderMethodDto(methodName, builderType);
 
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName("element");
@@ -180,12 +182,16 @@ public class AddToCollectionGenerator implements MethodGenerator {
     methodDto.addArgument("elementType", elementType);
     methodDto.addArgument("builderFieldWrapper", TRACKED_VALUE_TYPE);
     methodDto.getMethodCodeDto().addCodeBlockImport(collectionImplType);
-    methodDto.setPriority(MethodDto.PRIORITY_MEDIUM);
+    methodDto.setPriority(BuilderMethodDto.PRIORITY_MEDIUM);
 
     methodDto.setJavadoc(
         new JavadocDto("Adds a single element to <code>%s</code>.", originalFieldName)
             .addParam("element", "the element to add")
             .addReturn(JavadocConstants.RETURN_BUILDER_INSTANCE));
+
+    // Store the fluent-chain fragment so the class-level enhancer can synthesise both the
+    // method-level example block and the class-level kitchen-sink chain from one source of truth.
+    addExampleChainFragment(methodDto, elementType);
 
     return methodDto;
   }

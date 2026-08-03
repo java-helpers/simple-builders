@@ -96,7 +96,7 @@ class CustomizingDocumentationTest {
 
             import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
             import org.javahelpers.simple.builders.processor.model.core.FieldDto;
-            import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+            import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
             import org.javahelpers.simple.builders.processor.model.type.TypeName;
             import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
             import java.util.List;
@@ -109,7 +109,7 @@ class CustomizingDocumentationTest {
                 }
 
                 @Override
-                public List<MethodDto> generateMethods(FieldDto field, TypeName builderType, ProcessingContext context) {
+                public List<BuilderMethodDto> generateMethods(FieldDto field, TypeName builderType, ProcessingContext context) {
                     return List.of();
                 }
 
@@ -181,7 +181,7 @@ class CustomizingDocumentationTest {
 
             import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
             import org.javahelpers.simple.builders.processor.model.core.FieldDto;
-            import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+            import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
             import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
             import org.javahelpers.simple.builders.processor.model.type.TypeName;
             import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
@@ -194,11 +194,11 @@ class CustomizingDocumentationTest {
                 }
 
                 @Override
-                public List<MethodDto> generateMethods(FieldDto field, TypeName builderType, ProcessingContext context) {
+                public List<BuilderMethodDto> generateMethods(FieldDto field, TypeName builderType, ProcessingContext context) {
                     String fieldName = field.getFieldNameInBuilder();
                     String methodName = "custom" + capitalize(fieldName);
 
-                    MethodDto method = new MethodDto(methodName, builderType);
+                    BuilderMethodDto method = new BuilderMethodDto(methodName, builderType);
 
                     MethodParameterDto parameter = new MethodParameterDto();
                     parameter.setParameterName("value");
@@ -242,7 +242,7 @@ class CustomizingDocumentationTest {
 
             import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
             import org.javahelpers.simple.builders.processor.model.core.FieldDto;
-            import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+            import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
             import org.javahelpers.simple.builders.processor.model.type.TypeName;
             import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
             import java.util.List;
@@ -254,7 +254,7 @@ class CustomizingDocumentationTest {
                 }
 
                 @Override
-                public List<MethodDto> generateMethods(FieldDto field, TypeName builderType, ProcessingContext context) {
+                public List<BuilderMethodDto> generateMethods(FieldDto field, TypeName builderType, ProcessingContext context) {
                     return List.of();
                 }
 
@@ -285,7 +285,7 @@ class CustomizingDocumentationTest {
 
             import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
             import org.javahelpers.simple.builders.processor.model.core.FieldDto;
-            import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+            import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
             import org.javahelpers.simple.builders.processor.model.type.TypeName;
             import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
             import java.util.List;
@@ -297,7 +297,7 @@ class CustomizingDocumentationTest {
                 }
 
                 @Override
-                public List<MethodDto> generateMethods(FieldDto field, TypeName builderType, ProcessingContext context) {
+                public List<BuilderMethodDto> generateMethods(FieldDto field, TypeName builderType, ProcessingContext context) {
                     try {
                         // Generation logic
                         return List.of();
@@ -334,7 +334,7 @@ class CustomizingDocumentationTest {
 
             import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
             import org.javahelpers.simple.builders.processor.model.core.FieldDto;
-            import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+            import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
             import org.javahelpers.simple.builders.processor.model.type.TypeName;
             import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
             import java.util.List;
@@ -352,7 +352,7 @@ class CustomizingDocumentationTest {
                 }
 
                 @Override
-                public List<MethodDto> generateMethods(FieldDto field, TypeName builderType, ProcessingContext context) {
+                public List<BuilderMethodDto> generateMethods(FieldDto field, TypeName builderType, ProcessingContext context) {
                     return List.of();
                 }
 
@@ -388,7 +388,7 @@ class CustomizingDocumentationTest {
 
             import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
             import org.javahelpers.simple.builders.processor.model.core.FieldDto;
-            import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+            import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
             import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
             import org.javahelpers.simple.builders.processor.model.type.TypeName;
             import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
@@ -407,11 +407,11 @@ class CustomizingDocumentationTest {
                 }
 
                 @Override
-                public List<MethodDto> generateMethods(FieldDto field, TypeName builderType, ProcessingContext context) {
+                public List<BuilderMethodDto> generateMethods(FieldDto field, TypeName builderType, ProcessingContext context) {
                     String fieldName = field.getFieldNameInBuilder();
                     String methodName = "validated" + capitalize(fieldName);
 
-                    MethodDto method = new MethodDto(methodName, builderType);
+                    BuilderMethodDto method = new BuilderMethodDto(methodName, builderType);
 
                     String parameterName = fieldName;
                     MethodParameterDto parameter = new MethodParameterDto();
@@ -464,7 +464,7 @@ class CustomizingDocumentationTest {
             import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
             import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
             import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
-            import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+            import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
             import org.javahelpers.simple.builders.processor.model.type.TypeName;
             import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
@@ -485,7 +485,7 @@ class CustomizingDocumentationTest {
                 @Override
                 public void enhanceBuilder(BuilderDefinitionDto builderDto, ProcessingContext context) {
                     // Add validation method to builder
-                    MethodDto validateMethod = createValidateMethod();
+                    BuilderMethodDto validateMethod = createValidateMethod();
                     builderDto.addMethod(validateMethod);
 
                     // Add @Valid annotation if available
@@ -504,9 +504,9 @@ class CustomizingDocumentationTest {
                     return 500;
                 }
 
-                private MethodDto createValidateMethod() {
+                private BuilderMethodDto createValidateMethod() {
                     TypeName returnType = new TypeName("java.lang", "Void");
-                    MethodDto method = new MethodDto("validate", returnType);
+                    BuilderMethodDto method = new BuilderMethodDto("validate", returnType);
                     method.setCode("// Validation logic here");
                     return method;
                 }
@@ -573,7 +573,7 @@ class CustomizingDocumentationTest {
 
             import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
             import org.javahelpers.simple.builders.processor.model.core.FieldDto;
-            import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+            import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
             import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
             import org.javahelpers.simple.builders.processor.model.type.TypeName;
             import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
@@ -588,11 +588,11 @@ class CustomizingDocumentationTest {
                 }
 
                 @Override
-                public List<MethodDto> generateMethods(FieldDto field, TypeName builderType, ProcessingContext context) {
+                public List<BuilderMethodDto> generateMethods(FieldDto field, TypeName builderType, ProcessingContext context) {
                     String fieldName = field.getFieldNameInBuilder();
                     String methodName = fieldName + "FromString";
 
-                    MethodDto method = new MethodDto(methodName, builderType);
+                    BuilderMethodDto method = new BuilderMethodDto(methodName, builderType);
 
                     String parameterName = fieldName + "String";
                     MethodParameterDto parameter = new MethodParameterDto();
@@ -637,7 +637,7 @@ class CustomizingDocumentationTest {
 
             import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
             import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
-            import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+            import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
             import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
             import org.javahelpers.simple.builders.processor.model.type.TypeName;
             import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
@@ -654,7 +654,7 @@ class CustomizingDocumentationTest {
                     TypeName builderType = builderDto.getBuilderTypeName();
 
                     // Add static factory method (conceptual - actual API may differ)
-                    MethodDto factoryMethod = new MethodDto("from", builderType);
+                    BuilderMethodDto factoryMethod = new BuilderMethodDto("from", builderType);
                     factoryMethod.setStatic(true);
 
                     MethodParameterDto parameter = new MethodParameterDto();

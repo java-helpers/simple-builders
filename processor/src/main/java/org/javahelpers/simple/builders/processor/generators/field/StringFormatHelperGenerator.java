@@ -38,7 +38,7 @@ import org.javahelpers.simple.builders.processor.generators.util.JavadocConstant
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameArray;
@@ -112,14 +112,14 @@ public class StringFormatHelperGenerator implements MethodGenerator {
   }
 
   @Override
-  public List<MethodDto> generateMethods(
+  public List<BuilderMethodDto> generateMethods(
       FieldDto field, TypeName builderType, ProcessingContext context) {
 
-    List<MethodDto> methods = new ArrayList<>();
+    List<BuilderMethodDto> methods = new ArrayList<>();
     TypeName fieldType = field.getFieldType();
 
     if (isString(fieldType) && !(fieldType instanceof TypeNameArray)) {
-      MethodDto method =
+      BuilderMethodDto method =
           createStringFormatMethodWithTransform(
               field.getOriginalFieldName(),
               field.getFieldNameInBuilder(),
@@ -132,7 +132,7 @@ public class StringFormatHelperGenerator implements MethodGenerator {
       TypeNameGeneric genericType = (TypeNameGeneric) fieldType;
       List<TypeName> innerTypes = genericType.getInnerTypeArguments();
       if (!innerTypes.isEmpty() && isString(innerTypes.get(0))) {
-        MethodDto method =
+        BuilderMethodDto method =
             createStringFormatMethodWithTransform(
                 field.getOriginalFieldName(),
                 field.getFieldNameInBuilder(),
@@ -162,7 +162,7 @@ public class StringFormatHelperGenerator implements MethodGenerator {
    * @param context processing context
    * @return the method DTO for the String.format helper
    */
-  private MethodDto createStringFormatMethodWithTransform(
+  private BuilderMethodDto createStringFormatMethodWithTransform(
       String fieldName,
       String fieldNameInBuilder,
       String transform,
@@ -182,10 +182,9 @@ public class StringFormatHelperGenerator implements MethodGenerator {
     argsParam.setParameterName("args");
     argsParam.setParameterTypeName(new TypeNameArray(TypeName.of(Object.class)));
 
-    MethodDto methodDto = new MethodDto(generateBuilderMethodName(fieldName, context), builderType);
+    BuilderMethodDto methodDto = createBuilderMethod(fieldName, builderType, context);
     methodDto.addParameter(formatParam);
     methodDto.addParameter(argsParam);
-    methodDto.setModifier(getMethodAccessModifier(context));
     methodDto.setCode(
         """
         this.$fieldName:N = $builderFieldWrapper:T.changedValue($transform:N);
@@ -194,7 +193,7 @@ public class StringFormatHelperGenerator implements MethodGenerator {
     methodDto.addArgument("fieldName", fieldNameInBuilder);
     methodDto.addArgument("transform", transform);
     methodDto.addArgument("builderFieldWrapper", TRACKED_VALUE_TYPE);
-    methodDto.setPriority(MethodDto.PRIORITY_HIGH);
+    methodDto.setPriority(BuilderMethodDto.PRIORITY_HIGH);
     methodDto.setJavadoc(
         new JavadocDto(
                 "Sets the String value for <code>%s</code> by using String.format(format, args).\nSee {@link String#format(String, Object...)} for details.",
@@ -204,6 +203,10 @@ public class StringFormatHelperGenerator implements MethodGenerator {
                 argsParam.getParameterName(),
                 "Arguments referenced by the format specifiers in the format string.")
             .addReturn(JavadocConstants.RETURN_BUILDER_INSTANCE));
+
+    // Add example fragment for String format method
+    addExampleChainFragmentTemplate(methodDto, "#{methodName}(\"Hello %s\", \"World\")");
+
     return methodDto;
   }
 }

@@ -30,7 +30,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.javahelpers.simple.builders.processor.classgen.roaster.exceptions.RoasterMapperException;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.annotation.InterfaceName;
-import org.javahelpers.simple.builders.processor.model.method.MethodCodeDto;
+import org.javahelpers.simple.builders.processor.model.method.CodeTemplateDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodCodePlaceholder;
 import org.javahelpers.simple.builders.processor.model.method.MethodCodeStringPlaceholder;
 import org.javahelpers.simple.builders.processor.model.method.MethodCodeTypePlaceholder;
@@ -164,12 +164,12 @@ public final class RoasterMapper {
   }
 
   /**
-   * Resolves the JavaPoet-style named template used in MethodCodeDto to plain Java source code.
+   * Resolves the JavaPoet-style named template used in CodeTemplateDto to plain Java source code.
    *
    * @param codeDto code template DTO
    * @return resolved Java source code
    */
-  public static String resolveCodeTemplate(MethodCodeDto codeDto) {
+  public static String resolveCodeTemplate(CodeTemplateDto codeDto) {
     String code = codeDto.getCodeFormat();
     for (MethodCodePlaceholder<?> placeHolderValue : codeDto.getCodeArguments()) {
       String label = placeHolderValue.getLabel();

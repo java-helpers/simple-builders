@@ -36,15 +36,15 @@ import org.javahelpers.simple.builders.processor.model.type.TypeName;
  * InterfaceName represents a Java interface type with package and class name information.
  *
  * <p>This type is specifically designed for interfaces and contains only interface-relevant
- * information. Unlike {@link TypeName}, it doesn't include class-specific concepts like builders,
- * constructors, or inner types.
+ * information. Unlike {@link TypeName}, it doesn't include class-specific concepts like
+ * constructors or inner types.
  *
  * <p>Typical usage includes:
  *
  * <ul>
- *   <li>IBuilderBase interface for builder contracts
- *   <li>Custom interfaces for builder extensions
- *   <li>Mixin interfaces for Jackson serialization
+ *   <li>Base interfaces for generated class contracts
+ *   <li>Custom interfaces for generated class extensions
+ *   <li>Mixin interfaces for serialization frameworks
  * </ul>
  */
 public class InterfaceName {

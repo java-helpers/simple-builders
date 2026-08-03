@@ -474,6 +474,15 @@ class BuilderConfigurationReaderTest {
          * This builder provides a fluent API for creating instances of test.PersonDto with method chaining and validation. Use
          * the static {@code create()} method to obtain a new builder instance, configure the desired properties using the
          * setter methods, and then call {@code build()} to create the final DTO.
+         *
+         * <h4>Example:</h4>
+         *
+         * <pre>{@code
+        * PersonDto result = PersonDtoMinimalBuilder.create()
+        *     .withName("example value")
+        *     .withTags(List.of("example value"))
+        *     .build();
+        * }</pre>
          */
         public class PersonDtoMinimalBuilder implements IBuilderBase<PersonDto> {
 
@@ -505,6 +514,12 @@ class BuilderConfigurationReaderTest {
           /**
            * Creating a new builder for {@code test.PersonDto}.
            *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * PersonDtoMinimalBuilder builder = PersonDtoMinimalBuilder.create();
+           * }</pre>
+           *
            * @return builder for {@code test.PersonDto}
            */
           public static PersonDtoMinimalBuilder create() {
@@ -513,6 +528,14 @@ class BuilderConfigurationReaderTest {
 
           /**
            * Sets the value for <code>name</code>.
+           * <p>
+           * Generated from setter {@link PersonDto#setName(String) setName(String name)}
+           *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.withName("example value");
+           * }</pre>
            *
            * @param name name
            * @return current instance of builder
@@ -524,6 +547,14 @@ class BuilderConfigurationReaderTest {
 
           /**
            * Sets the value for <code>tags</code>.
+           * <p>
+           * Generated from setter {@link PersonDto#setTags(List) setTags(List<String> tags)}
+           *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.withTags(List.of("example value"));
+           * }</pre>
            *
            * @param tags tags
            * @return current instance of builder
@@ -535,6 +566,12 @@ class BuilderConfigurationReaderTest {
 
           /**
            * Builds the configured DTO instance.
+           *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * PersonDto result = builder.build();
+           * }</pre>
            */
           @Override
           public PersonDto build() {

@@ -31,7 +31,7 @@ import java.util.Set;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameArray;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
@@ -98,7 +98,7 @@ public class VarArgsHelperGenerator implements MethodGenerator {
   }
 
   @Override
-  public List<MethodDto> generateMethods(
+  public List<BuilderMethodDto> generateMethods(
       FieldDto field, TypeName builderType, ProcessingContext context) {
 
     TypeName fieldType = field.getFieldType();
@@ -119,7 +119,7 @@ public class VarArgsHelperGenerator implements MethodGenerator {
       return Collections.emptyList();
     }
 
-    MethodDto varArgsMethod =
+    BuilderMethodDto varArgsMethod =
         createFieldSetterByVarArgs(field, parameterType, builderType, context);
     return Collections.singletonList(varArgsMethod);
   }
@@ -135,7 +135,7 @@ public class VarArgsHelperGenerator implements MethodGenerator {
    * @param context processing context
    * @return the method DTO for the setter
    */
-  private MethodDto createFieldSetterByVarArgs(
+  private BuilderMethodDto createFieldSetterByVarArgs(
       FieldDto field, TypeName parameterType, TypeName builderType, ProcessingContext context) {
     String baseExpression;
     TypeName fieldType = field.getFieldType();
@@ -153,17 +153,24 @@ public class VarArgsHelperGenerator implements MethodGenerator {
     }
     String transform = MethodGeneratorUtil.wrapConcreteCollectionType(fieldType, baseExpression);
 
-    MethodDto method =
+    BuilderMethodDto method =
         MethodGeneratorUtil.createBuilderMethodForFieldWithTransform(
             field, transform, parameterType, builderType, context);
 
-    // Add code block imports for collection factory methods
-    if (fieldType instanceof TypeNameList) {
+    // Add code block imports and example fragments for collection factory methods
+    if (fieldType instanceof TypeNameList listType) {
       method.getMethodCodeDto().addCodeBlockImport(List.class);
-    } else if (fieldType instanceof TypeNameSet) {
+      MethodGeneratorUtil.addExampleChainFragmentVarArgs(method, listType.getElementType());
+    } else if (fieldType instanceof TypeNameSet setType) {
       method.getMethodCodeDto().addCodeBlockImport(Set.class);
-    } else if (fieldType instanceof TypeNameMap) {
+      MethodGeneratorUtil.addExampleChainFragmentVarArgs(method, setType.getElementType());
+    } else if (fieldType instanceof TypeNameMap mapType) {
       method.getMethodCodeDto().addCodeBlockImport(Map.class);
+      // For maps, only add example if key type is String
+      if (mapType.getKeyType().getClassName().equals("String")) {
+        MethodGeneratorUtil.addExampleChainFragmentTemplate(
+            method, "#{methodName}(Map.entry(\"key\", #{exampleValue}))", mapType.getValueType());
+      }
     }
 
     return method;

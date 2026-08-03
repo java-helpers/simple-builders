@@ -32,26 +32,38 @@ import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
+import org.javahelpers.simple.builders.processor.model.javadoc.JavadocCodeBlockDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.type.GenericParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 
 /**
- * Rendering-side DTO containing all information to generate a method in a generated class.
+ * BuilderMethodDto containing all information for generating a method in the builder class,
+ * including field-origin metadata for pre-conflict-resolution logging and javadoc enrichment.
  *
- * <p>This DTO is consumed by the code generator. It is generation-specific in the sense that it
- * holds only rendering-relevant data — no field-origin metadata or other generation-phase-only
- * information.
+ * <p>This is the generation-side DTO. It is produced by generators and enhancers, and mapped to
+ * {@link MethodDto} (the rendering DTO) by {@link
+ * org.javahelpers.simple.builders.processor.model.core.BuilderToGenerationTypeMapper} before being
+ * added to {@code GenerationTargetClassDto}.
  */
-public class MethodDto {
+public class BuilderMethodDto {
+  // Priority constants for method conflict resolution (higher values win)
+  public static final int PRIORITY_HIGHEST = 100; // Direct setters, with() methods
+  public static final int PRIORITY_HIGH = 80; // Supplier, transform methods
+  public static final int PRIORITY_MEDIUM = 70; // Consumer, builder consumers
+  public static final int PRIORITY_LOW = 60; // Specialized consumers
+
   /** Access modifier for method. */
   private Optional<AccessModifier> modifier = Optional.empty();
 
   /** Whether the method is static. */
   private boolean isStatic = false;
 
+  /** Priority for method conflict resolution. Higher wins. */
+  private int priority = 0;
+
   /** Ordering for method generation. Lower values appear first in generated class. */
-  private int ordering = 1000;
+  private int ordering = 1000; // Default high value for field-generated methods
 
   /** Name of method. */
   private String methodName;
@@ -74,8 +86,28 @@ public class MethodDto {
   /** Definition of inner implementation for method. */
   private final MethodCodeDto methodCodeDto = new MethodCodeDto();
 
+  /**
+   * Fluent-chain fragment describing how this method is invoked in Javadoc examples (e.g., {@code
+   * .title("example value")}). When present, downstream enhancers use it to synthesise the
+   * method-level example block (as {@code builder<fragment>;}) and to aggregate the class-level
+   * kitchen-sink chain. A {@code null} value means the method should not appear in either example.
+   */
+  private String exampleChainFragment;
+
+  /** Name of the source field this method was generated for. {@code null} for enhancer methods. */
+  private String sourceFieldName;
+
+  /**
+   * Pre-built javadoc origin line for this method, e.g. {@code <p>Generated from setter {@link
+   * PersonDto#setAuthor(String) setAuthor(String author)}}. {@code null} for enhancer methods.
+   */
+  private String sourceDescription;
+
+  /** Whether this method was generated for a constructor field (vs a setter field). */
+  private boolean constructorField;
+
   /** Default constructor. */
-  public MethodDto() {
+  public BuilderMethodDto() {
     // Default constructor
   }
 
@@ -85,9 +117,35 @@ public class MethodDto {
    * @param methodName the name of the method
    * @param returnType the return type of the method
    */
-  public MethodDto(String methodName, TypeName returnType) {
+  public BuilderMethodDto(String methodName, TypeName returnType) {
     this.methodName = methodName;
     this.returnType = returnType;
+  }
+
+  /**
+   * Sets the priority for this method. Higher values win when signatures clash. Priority levels:
+   *
+   * <ul>
+   *   <li>{@link #PRIORITY_HIGHEST} (100): Direct setters, with() methods
+   *   <li>{@link #PRIORITY_HIGH} (80): Supplier methods, transform methods (e.g., format, toArray)
+   *   <li>{@link #PRIORITY_MEDIUM} (70): Consumer methods, builder consumers
+   *   <li>{@link #PRIORITY_LOW} (60): Specialized consumers (e.g., StringBuilder)
+   *   <li>0: Default (no priority set)
+   * </ul>
+   *
+   * @param priority the priority value (higher values take precedence in conflicts)
+   */
+  public void setPriority(int priority) {
+    this.priority = priority;
+  }
+
+  /**
+   * Returns the priority of this method for conflict resolution.
+   *
+   * @return the priority value
+   */
+  public int getPriority() {
+    return priority;
   }
 
   /**
@@ -157,6 +215,40 @@ public class MethodDto {
   }
 
   /**
+   * Returns the fluent-chain fragment for Javadoc examples (e.g. {@code .title("example value")})
+   * or {@code null} if this method should not participate in example generation.
+   *
+   * @return the fragment or {@code null}
+   */
+  public String getExampleChainFragment() {
+    return exampleChainFragment;
+  }
+
+  /**
+   * Stores the fluent-chain fragment describing how this method is invoked in examples.
+   *
+   * <p>The fragment contains just the method invocation, e.g. {@code title("example value")}.
+   * Downstream enhancers synthesise the method-level example block (as {@code builder.<fragment>;})
+   * and the class-level kitchen-sink chain from it.
+   *
+   * <p>Automatically adds a method-level example to the javadoc if javadoc exists and has no
+   * existing examples (to avoid overriding manually set examples).
+   *
+   * @param exampleChainFragment the fragment or {@code null} to clear
+   */
+  public void setExampleChainFragment(String exampleChainFragment) {
+    this.exampleChainFragment = exampleChainFragment;
+    // Automatically add method-level example to javadoc if javadoc exists and has no examples
+    if (exampleChainFragment != null
+        && javadoc != null
+        && javadoc.getExampleUsageCodeBlock() == null) {
+      JavadocCodeBlockDto methodExample = new JavadocCodeBlockDto();
+      methodExample.setCodeFormat("builder.%s;".formatted(exampleChainFragment));
+      javadoc.setExampleUsageCodeBlock(methodExample);
+    }
+  }
+
+  /**
    * Checks if the method has a code block.
    *
    * @return true if the method has a code block, false otherwise
@@ -187,7 +279,7 @@ public class MethodDto {
    * Adding a further parameter of method.
    *
    * @param paramDto parameter to be added of type {@code
-   *     rg.javahelpers.simple.builders.internal.dtos.MethodParameterDto}
+   *     org.javahelpers.simple.builders.internal.dtos.MethodParameterDto}
    */
   public void addParameter(MethodParameterDto paramDto) {
     this.parameters.add(paramDto);
@@ -197,7 +289,7 @@ public class MethodDto {
    * Getting a list of parameters of method.
    *
    * @return List of parameters of type {@code
-   *     rg.javahelpers.simple.builders.internal.dtos.MethodParameterDto}
+   *     org.javahelpers.simple.builders.internal.dtos.MethodParameterDto}
    */
   public List<MethodParameterDto> getParameters() {
     return parameters;
@@ -330,39 +422,103 @@ public class MethodDto {
   }
 
   /**
-   * Comparator for sorting MethodDto instances with sophisticated ordering rules.
+   * Returns the name of the source field this method was generated for.
    *
-   * <p>Sorting order for methods with same ordering and name:
+   * @return the source field name, or {@code null} for enhancer-generated methods
+   */
+  public String getSourceFieldName() {
+    return sourceFieldName;
+  }
+
+  /**
+   * Sets the name of the source field this method was generated for.
+   *
+   * @param sourceFieldName the source field name, or {@code null} for enhancer-generated methods
+   */
+  public void setSourceFieldName(String sourceFieldName) {
+    this.sourceFieldName = sourceFieldName;
+  }
+
+  /**
+   * Gets the pre-built javadoc origin line for this method.
+   *
+   * @return the source description line, or {@code null} for enhancer-generated methods
+   */
+  public String getSourceDescription() {
+    return sourceDescription;
+  }
+
+  /**
+   * Sets the pre-built javadoc origin line for this method.
+   *
+   * @param sourceDescription the full origin line, e.g. {@code <p>Generated from setter {@link
+   *     PersonDto#setAuthor(String) setAuthor(String author)}}
+   */
+  public void setSourceDescription(String sourceDescription) {
+    this.sourceDescription = sourceDescription;
+  }
+
+  /**
+   * Returns whether this method was generated for a constructor field.
+   *
+   * @return true if this method was generated for a constructor field, false otherwise
+   */
+  public boolean isConstructorField() {
+    return constructorField;
+  }
+
+  /**
+   * Sets whether this method was generated for a constructor field.
+   *
+   * @param constructorField true if this method was generated for a constructor field
+   */
+  public void setConstructorField(boolean constructorField) {
+    this.constructorField = constructorField;
+  }
+
+  /**
+   * Comparator for sorting BuilderMethodDto instances with sophisticated ordering rules.
+   *
+   * <p>Sorting order:
    *
    * <ol>
+   *   <li>Priority (descending — higher priority first)
+   *   <li>Ordering value (ascending — lower ordering first)
+   *   <li>Method name
    *   <li>Methods with fewer parameters come first
    *   <li>Non-generic methods come before generic methods
    *   <li>Full method signature (name(paramType1,paramType2,...)) used for final ordering
    * </ol>
    */
-  public static class MethodComparator implements java.util.Comparator<MethodDto> {
+  public static class BuilderMethodComparator implements java.util.Comparator<BuilderMethodDto> {
 
     @Override
-    public int compare(MethodDto m1, MethodDto m2) {
-      // Primary sort: ordering value
+    public int compare(BuilderMethodDto m1, BuilderMethodDto m2) {
+      // Primary sort: priority (descending — higher priority wins)
+      int priorityCompare = Integer.compare(m2.getPriority(), m1.getPriority());
+      if (priorityCompare != 0) {
+        return priorityCompare;
+      }
+
+      // Secondary sort: ordering value
       int orderingCompare = Integer.compare(m1.getOrdering(), m2.getOrdering());
       if (orderingCompare != 0) {
         return orderingCompare;
       }
 
-      // Secondary sort: method name
+      // Tertiary sort: method name
       int nameCompare = m1.getMethodName().compareTo(m2.getMethodName());
       if (nameCompare != 0) {
         return nameCompare;
       }
 
-      // Tertiary sort: parameter count (fewer parameters first)
+      // Quaternary sort: parameter count (fewer parameters first)
       int paramCountCompare = Integer.compare(m1.getParameters().size(), m2.getParameters().size());
       if (paramCountCompare != 0) {
         return paramCountCompare;
       }
 
-      // Quaternary sort: generic vs non-generic (non-generic first)
+      // Quinary sort: generic vs non-generic (non-generic first)
       boolean m1Generic = hasGenericParameters(m1);
       boolean m2Generic = hasGenericParameters(m2);
       if (m1Generic != m2Generic) {
@@ -394,7 +550,7 @@ public class MethodDto {
      * @param method the method to create signature for
      * @return signature string for comparison
      */
-    private String createMethodSignature(MethodDto method) {
+    private String createMethodSignature(BuilderMethodDto method) {
       StringBuilder signature = new StringBuilder(method.getMethodName());
       signature.append("(");
 
@@ -415,7 +571,7 @@ public class MethodDto {
      * @param method the method to check
      * @return true if any parameter is generic (contains type parameters)
      */
-    private boolean hasGenericParameters(MethodDto method) {
+    private boolean hasGenericParameters(BuilderMethodDto method) {
       return method.getParameters().stream()
           .anyMatch(param -> getQualifiedName(param.getParameterType()).contains("<"));
     }
@@ -427,9 +583,9 @@ public class MethodDto {
    * <p>Examples:
    *
    * <ul>
-   *   <li>{@code public GeneratedClass name(String)}
-   *   <li>{@code public GeneratedClass age(int)}
-   *   <li>{@code public GeneratedClass tags(Consumer<ListBuilder<String>>)}
+   *   <li>{@code public PersonBuilder name(String)}
+   *   <li>{@code public PersonBuilder age(int)}
+   *   <li>{@code public PersonBuilder tags(Consumer<ArrayListBuilder<String>>)}
    * </ul>
    *
    * @return method signature as a string

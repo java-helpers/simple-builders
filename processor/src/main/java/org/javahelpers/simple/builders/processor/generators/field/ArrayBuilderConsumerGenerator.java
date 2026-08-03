@@ -33,7 +33,7 @@ import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.generators.util.JavadocConstants;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameArray;
@@ -95,7 +95,7 @@ public class ArrayBuilderConsumerGenerator implements MethodGenerator {
   }
 
   @Override
-  public List<MethodDto> generateMethods(
+  public List<BuilderMethodDto> generateMethods(
       FieldDto field, TypeName builderType, ProcessingContext context) {
 
     TypeName fieldType = field.getFieldType();
@@ -107,14 +107,14 @@ public class ArrayBuilderConsumerGenerator implements MethodGenerator {
     TypeName elementType = arrayType.getTypeOfArray();
     TypeName collectionBuilderType = map2TypeName(ArrayListBuilder.class);
 
-    MethodDto method =
+    BuilderMethodDto method =
         createFieldConsumerWithArrayBuilder(
             field, collectionBuilderType, elementType, builderType, context);
 
     return List.of(method);
   }
 
-  private MethodDto createFieldConsumerWithArrayBuilder(
+  private BuilderMethodDto createFieldConsumerWithArrayBuilder(
       FieldDto field,
       TypeName collectionBuilderType,
       TypeName elementType,
@@ -129,10 +129,8 @@ public class ArrayBuilderConsumerGenerator implements MethodGenerator {
     parameter.setParameterName(fieldName + BUILDER_SUFFIX + SUFFIX_CONSUMER);
     parameter.setParameterTypeName(consumerType);
 
-    MethodDto methodDto =
-        new MethodDto(generateBuilderMethodName(fieldName, context), returnBuilderType);
+    BuilderMethodDto methodDto = createBuilderMethod(fieldName, returnBuilderType, context);
     methodDto.addParameter(parameter);
-    methodDto.setModifier(getMethodAccessModifier(context));
     methodDto.setCode(
         """
         $helperType:T builder = this.$fieldName:N.isSet()
@@ -151,7 +149,7 @@ public class ArrayBuilderConsumerGenerator implements MethodGenerator {
     methodDto.addArgument("helperType", builderTypeGeneric);
     methodDto.addArgument("builderFieldWrapper", TRACKED_VALUE_TYPE);
     methodDto.addArgument("elementType", elementType);
-    methodDto.setPriority(MethodDto.PRIORITY_MEDIUM);
+    methodDto.setPriority(BuilderMethodDto.PRIORITY_MEDIUM);
     methodDto.setJavadoc(
         new JavadocDto(
                 "Sets the value for <code>%s</code> using the fluent builder consumer.", fieldName)

@@ -33,7 +33,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
 import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
@@ -91,7 +91,7 @@ public class OptionalHelperGenerator implements MethodGenerator {
   }
 
   @Override
-  public List<MethodDto> generateMethods(
+  public List<BuilderMethodDto> generateMethods(
       FieldDto field, TypeName builderType, ProcessingContext context) {
 
     TypeNameGeneric genericType = (TypeNameGeneric) field.getFieldType();
@@ -102,12 +102,15 @@ public class OptionalHelperGenerator implements MethodGenerator {
     }
 
     TypeName innerType = innerTypes.get(0);
-    MethodDto method =
+    BuilderMethodDto method =
         MethodGeneratorUtil.createBuilderMethodForFieldWithTransform(
             field, "Optional.ofNullable(%s)", innerType, builderType, context);
 
     // Add code block import for Optional.ofNullable
     method.getMethodCodeDto().addCodeBlockImport(Optional.class);
+
+    // Add example fragment for Optional helper method
+    MethodGeneratorUtil.addExampleChainFragment(method, innerType);
 
     return Collections.singletonList(method);
   }

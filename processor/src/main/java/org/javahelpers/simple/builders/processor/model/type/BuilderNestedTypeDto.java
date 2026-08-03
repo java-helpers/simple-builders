@@ -30,41 +30,38 @@ import java.util.List;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 
 /**
- * Rendering-side DTO for a nested type (interface or class) to be generated inside a generated
- * class.
+ * Generation-side DTO for a nested type (interface or class) to be generated inside the builder.
  *
- * <p>It holds {@link MethodDto} instances (rendering-side method DTOs) and is consumed by the code
- * generator.
+ * <p>This is the generation-phase counterpart of {@link NestedTypeDto}. It holds {@link
+ * BuilderMethodDto} instances (generation-side method DTOs) and is produced by enhancers. During
+ * finalization in {@code BuilderDefinitionCreator}, it is mapped to {@link NestedTypeDto} (the
+ * rendering DTO) via {@link
+ * org.javahelpers.simple.builders.processor.model.core.BuilderToGenerationTypeMapper#toNestedTypeDto}.
  *
  * <p>For example, the "With" interface that allows DTOs to implement fluent modification methods.
  */
-public class NestedTypeDto {
+public class BuilderNestedTypeDto {
 
   /** The simple name of the nested type (e.g., "With"). */
   private String typeName;
 
   /** The kind of nested type (INTERFACE or CLASS). */
-  private NestedTypeKind kind;
+  private NestedTypeDto.NestedTypeKind kind;
 
   /** Visibility of this nested type. */
   private AccessModifier visibility = AccessModifier.PUBLIC;
 
-  /** Methods to be generated in this nested type. */
-  private final List<MethodDto> methods = new LinkedList<>();
+  /** Methods to be generated in this nested type (generation-side). */
+  private final List<BuilderMethodDto> methods = new LinkedList<>();
 
   /** Javadoc comment for this nested type. */
   private JavadocDto javadoc;
 
   /** Type-level annotations for this nested type. */
   private final List<AnnotationDto> annotations = new ArrayList<>();
-
-  public enum NestedTypeKind {
-    INTERFACE,
-    CLASS
-  }
 
   public String getTypeName() {
     return typeName;
@@ -74,11 +71,11 @@ public class NestedTypeDto {
     this.typeName = typeName;
   }
 
-  public NestedTypeKind getKind() {
+  public NestedTypeDto.NestedTypeKind getKind() {
     return kind;
   }
 
-  public void setKind(NestedTypeKind kind) {
+  public void setKind(NestedTypeDto.NestedTypeKind kind) {
     this.kind = kind;
   }
 
@@ -90,11 +87,11 @@ public class NestedTypeDto {
     this.visibility = visibility;
   }
 
-  public List<MethodDto> getMethods() {
+  public List<BuilderMethodDto> getMethods() {
     return methods;
   }
 
-  public void addMethod(MethodDto method) {
+  public void addMethod(BuilderMethodDto method) {
     this.methods.add(method);
   }
 

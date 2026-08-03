@@ -26,7 +26,10 @@ package org.javahelpers.simple.builders.processor.generators.builder;
 
 import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
+import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+import org.javahelpers.simple.builders.processor.model.javadoc.JavadocCodeBlockDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
+import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
@@ -71,7 +74,7 @@ import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
  */
 public class ClassJavaDocEnhancer implements BuilderEnhancer {
 
-  private static final int PRIORITY = 200;
+  private static final int PRIORITY = 10;
 
   @Override
   public int getPriority() {
@@ -88,6 +91,33 @@ public class ClassJavaDocEnhancer implements BuilderEnhancer {
   public void enhanceBuilder(BuilderDefinitionDto builderDto, ProcessingContext context) {
     TypeName targetType = builderDto.getBuildingTargetTypeName();
     JavadocDto javadoc = createClassJavadoc(targetType);
+    String indentionString = "    ";
+
+    // Synthesise example blocks from the fluent-chain fragments stored on methods. This keeps the
+    // per-method "builder.field(value);" example and the class-level kitchen-sink chain in sync
+    // with a single source of truth (the fragment on the BuilderMethodDto).
+    // Note: Methods are stored in FieldDto objects at this point (before finalizeDefinition).
+    JavadocCodeBlockDto classExampleBlock = new JavadocCodeBlockDto();
+    for (FieldDto field : builderDto.getAllFieldsForBuilder()) {
+      for (BuilderMethodDto method : field.getMethods()) {
+        String fragment = method.getExampleChainFragment();
+        if (fragment == null) {
+          continue;
+        }
+        // Class-level aggregation: indent and collect all fragments
+        classExampleBlock.append("%s.%s".formatted(indentionString, fragment));
+      }
+    }
+
+    if (classExampleBlock.hasCode()) {
+      String builderTypeName = builderDto.getBuilderTypeName().getClassName();
+      String openingLine =
+          "%s result = %s.create()".formatted(targetType.getClassName(), builderTypeName);
+      classExampleBlock.setCodeFormat(openingLine + "\n" + classExampleBlock.getCodeFormat());
+      classExampleBlock.append("%s.build();", indentionString);
+      javadoc.setExampleUsageCodeBlock(classExampleBlock);
+    }
+
     builderDto.setClassJavadoc(javadoc);
   }
 

@@ -42,8 +42,7 @@ import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
 /**
  * Represents a field declaration in the generated class.
  *
- * <p>This DTO contains only rendering information for a field. It is created from {@code FieldDto}
- * during finalization in {@code BuilderDefinitionCreator}.
+ * <p>This DTO contains only rendering information for a field, consumed by the code generator.
  */
 public class ClassFieldDto {
   /** Field name in generated class. */

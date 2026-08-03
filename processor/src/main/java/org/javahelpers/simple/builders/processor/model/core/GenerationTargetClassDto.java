@@ -74,29 +74,24 @@ public class GenerationTargetClassDto {
   /** Imports (both regular and static imports). */
   private final Set<ImportStatement> imports = new LinkedHashSet<>();
 
-  /**
-   * Nested types (interfaces or classes) to be generated inside the builder, such as the "With"
-   * interface.
-   */
+  /** Nested types (interfaces or classes) to be generated inside the generated class. */
   private final List<NestedTypeDto> nestedTypes = new LinkedList<>();
 
   /**
-   * Class-level annotations to be added to the generated builder class. These are added by
-   * BuilderEnhancers and include annotations like @Generated, @BuilderImplementation, etc.
+   * Class-level annotations to be added to the generated class.
    *
    * <p>Uses a Set to ensure annotation uniqueness and prevent duplicates.
    */
   private final Set<AnnotationDto> classAnnotations = new LinkedHashSet<>();
 
   /**
-   * Interfaces to be implemented by the generated builder class. These are added by
-   * BuilderEnhancers and include interfaces like IBuilderBase.
+   * Interfaces to be implemented by the generated class.
    *
    * <p>Uses a Set to ensure interface uniqueness and prevent duplicates.
    */
   private final Set<InterfaceName> interfaces = new LinkedHashSet<>();
 
-  /** Class-level JavaDoc for the generated builder class. */
+  /** Class-level JavaDoc for the generated class. */
   private JavadocDto classJavadoc;
 
   public TypeName getTypeName() {
@@ -222,7 +217,8 @@ public class GenerationTargetClassDto {
   }
 
   /**
-   * Returns the list of nested types (interfaces or classes) to be generated inside the builder.
+   * Returns the list of nested types (interfaces or classes) to be generated inside the generated
+   * class.
    *
    * @return the list of nested types
    */
@@ -231,7 +227,7 @@ public class GenerationTargetClassDto {
   }
 
   /**
-   * Adds a nested type definition to the builder.
+   * Adds a nested type definition to the generated class.
    *
    * @param nestedType the nested type to add
    */
@@ -249,7 +245,7 @@ public class GenerationTargetClassDto {
   }
 
   /**
-   * Adds a class-level annotation to be generated in the builder.
+   * Adds a class-level annotation to be generated in the generated class.
    *
    * @param annotation the class annotation to add
    */
@@ -258,7 +254,7 @@ public class GenerationTargetClassDto {
   }
 
   /**
-   * Returns the set of interfaces to be implemented by the builder.
+   * Returns the set of interfaces to be implemented by the generated class.
    *
    * @return the set of interfaces (unique, no duplicates)
    */
@@ -267,7 +263,7 @@ public class GenerationTargetClassDto {
   }
 
   /**
-   * Adds an interface to be implemented by the builder.
+   * Adds an interface to be implemented by the generated class.
    *
    * @param interfaceType the interface to add
    */
@@ -276,7 +272,7 @@ public class GenerationTargetClassDto {
   }
 
   /**
-   * Returns the class-level JavaDoc for the generated builder.
+   * Returns the class-level JavaDoc for the generated class.
    *
    * @return the class JavaDoc, or null if not set
    */
@@ -285,7 +281,7 @@ public class GenerationTargetClassDto {
   }
 
   /**
-   * Sets the class-level JavaDoc for the generated builder.
+   * Sets the class-level JavaDoc for the generated class.
    *
    * @param classJavadoc the class JavaDoc to set
    */

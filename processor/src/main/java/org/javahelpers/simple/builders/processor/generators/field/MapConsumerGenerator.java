@@ -34,7 +34,7 @@ import org.javahelpers.simple.builders.core.builders.HashMapBuilder;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameMap;
@@ -131,7 +131,7 @@ public class MapConsumerGenerator implements MethodGenerator {
    * @return list of generated methods
    */
   @Override
-  public List<MethodDto> generateMethods(
+  public List<BuilderMethodDto> generateMethods(
       final FieldDto field, final TypeName builderType, final ProcessingContext context) {
     if (!(field.getFieldType() instanceof TypeNameMap fieldTypeGeneric
         && fieldTypeGeneric.isParameterized())) {
@@ -143,7 +143,7 @@ public class MapConsumerGenerator implements MethodGenerator {
             map2TypeName(HashMapBuilder.class),
             fieldTypeGeneric.getKeyType(),
             fieldTypeGeneric.getValueType());
-    MethodDto mapConsumerWithBuilder =
+    BuilderMethodDto mapConsumerWithBuilder =
         createFieldConsumerWithBuilder(
             field,
             builderTargetTypeName,

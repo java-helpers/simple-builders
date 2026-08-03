@@ -30,10 +30,12 @@ import static org.javahelpers.simple.builders.processor.classgen.roaster.Roaster
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Writer;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.TypeElement;
 import javax.tools.JavaFileObject;
@@ -46,6 +48,7 @@ import org.javahelpers.simple.builders.processor.model.annotation.InterfaceName;
 import org.javahelpers.simple.builders.processor.model.core.ClassFieldDto;
 import org.javahelpers.simple.builders.processor.model.core.GenerationTargetClassDto;
 import org.javahelpers.simple.builders.processor.model.imports.ImportStatement;
+import org.javahelpers.simple.builders.processor.model.javadoc.JavadocCodeBlockDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocTagDto;
 import org.javahelpers.simple.builders.processor.model.method.ConstructorDto;
@@ -238,6 +241,19 @@ public class RoasterCodeGenerator {
     logger.debugEndOperation("Methods added: %d", resolvedMethods.size());
   }
 
+  /**
+   * Generic safety net for method conflict resolution, preventing the code generator from producing
+   * invalid output (duplicate method signatures).
+   *
+   * <p>This is a generation-level check that operates on {@link MethodDto} (rendering-side DTO)
+   * which no longer carries field-origin metadata. Builder-specific conflict resolution with
+   * field-origin logging is performed earlier in {@link
+   * org.javahelpers.simple.builders.processor.processing.BuilderDefinitionCreator#resolveMethodConflicts}.
+   *
+   * <p>Since conflicts should already be resolved by the builder-specific step, this safety net
+   * simply keeps the first occurrence for any remaining duplicate signatures and logs a generic
+   * warning.
+   */
   private List<MethodDto> resolveMethodConflicts(List<MethodDto> methods) {
     MethodDto.MethodComparator comparator = new MethodDto.MethodComparator();
 
@@ -253,20 +269,9 @@ public class RoasterCodeGenerator {
       if (existing == null) {
         signatureToMethod.put(signature, method);
       } else {
-        if (method.getPriority() > existing.getPriority()) {
-          signatureToMethod.put(signature, method);
-          logger.warning(
-              "  Method conflict: '%s' (priority %d) dropped in favor of priority %d",
-              signature, existing.getPriority(), method.getPriority());
-        } else if (method.getPriority() < existing.getPriority()) {
-          logger.warning(
-              "  Method conflict: '%s' (priority %d) dropped in favor of priority %d",
-              signature, method.getPriority(), existing.getPriority());
-        } else {
-          logger.warning(
-              "  Method conflict: '%s' (priority %d) - equal priority, keeping first",
-              signature, method.getPriority());
-        }
+        logger.warning(
+            "  Unexpected duplicate method signature: '%s' — keeping first occurrence (safety net)",
+            signature);
       }
     }
 
@@ -417,6 +422,27 @@ public class RoasterCodeGenerator {
         source.getJavaDoc().addTagValue(tag.getFullTagName(), tag.tagValue());
       } else {
         source.getJavaDoc().addTagValue(tag.getFullTagName(), "");
+      }
+    }
+
+    // Render the code example block
+    JavadocCodeBlockDto codeBlock = javadoc.getExampleUsageCodeBlock();
+    if (codeBlock != null && codeBlock.hasCode()) {
+      // Resolve placeholders in the code block
+      String resolvedCode = resolveCodeTemplate(codeBlock);
+      // Pre-prefix every line of the code body with " * " so it survives Roaster's
+      // preformatted-block handling (Roaster does not auto-add asterisk prefix inside <pre>).
+      String prefixedCode =
+          Arrays.stream(resolvedCode.split("\n", -1))
+              .map(line -> " * " + line)
+              .collect(Collectors.joining("\n"));
+      // Add the code example to the Javadoc with a blank line separator before <h4>.
+      String currentText = source.getJavaDoc().getText();
+      String exampleText = "<h4>Example:</h4><pre>{@code\n" + prefixedCode + "\n * }</pre>";
+      if (StringUtils.isNotBlank(currentText)) {
+        source.getJavaDoc().setText(currentText + "\n\n" + exampleText);
+      } else {
+        source.getJavaDoc().setText(exampleText);
       }
     }
   }

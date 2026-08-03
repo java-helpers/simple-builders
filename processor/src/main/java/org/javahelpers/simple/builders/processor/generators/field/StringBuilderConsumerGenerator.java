@@ -34,7 +34,7 @@ import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.generators.util.JavadocConstants;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameArray;
@@ -105,13 +105,13 @@ public class StringBuilderConsumerGenerator implements MethodGenerator {
   }
 
   @Override
-  public List<MethodDto> generateMethods(
+  public List<BuilderMethodDto> generateMethods(
       FieldDto field, TypeName builderType, ProcessingContext context) {
     String transform =
         isOptionalString(field.getFieldType())
             ? "Optional.of(builder.toString())"
             : "builder.toString()";
-    MethodDto method =
+    BuilderMethodDto method =
         createStringBuilderConsumer(
             field.getOriginalFieldName(),
             field.getFieldNameInBuilder(),
@@ -128,7 +128,7 @@ public class StringBuilderConsumerGenerator implements MethodGenerator {
     return List.of(method);
   }
 
-  private MethodDto createStringBuilderConsumer(
+  private BuilderMethodDto createStringBuilderConsumer(
       String fieldName,
       String fieldNameInBuilder,
       String fieldJavadoc,
@@ -140,9 +140,8 @@ public class StringBuilderConsumerGenerator implements MethodGenerator {
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName(fieldName + "StringBuilderConsumer");
     parameter.setParameterTypeName(consumerType);
-    MethodDto methodDto = new MethodDto(generateBuilderMethodName(fieldName, context), builderType);
+    BuilderMethodDto methodDto = createBuilderMethod(fieldName, builderType, context);
     methodDto.addParameter(parameter);
-    methodDto.setModifier(getMethodAccessModifier(context));
     methodDto.setCode(
         """
         StringBuilder builder = new StringBuilder();
@@ -155,13 +154,17 @@ public class StringBuilderConsumerGenerator implements MethodGenerator {
     methodDto.addArgument("transform", transform);
     methodDto.addArgument("builderFieldWrapper", TRACKED_VALUE_TYPE);
     methodDto.setReturnType(builderType);
-    methodDto.setPriority(MethodDto.PRIORITY_LOW);
+    methodDto.setPriority(BuilderMethodDto.PRIORITY_LOW);
     methodDto.setJavadoc(
         new JavadocDto(
                 "Sets the value for <code>%s</code> by executing the provided consumer.", fieldName)
             .addParam(
                 parameter.getParameterName(), "consumer providing an instance of %s", fieldJavadoc)
             .addReturn(JavadocConstants.RETURN_BUILDER_INSTANCE));
+
+    // Add example fragment for StringBuilder consumer method
+    addExampleChainFragmentTemplate(methodDto, "#{methodName}(sb -> sb.append(\"text\"))");
+
     return methodDto;
   }
 }

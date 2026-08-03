@@ -27,7 +27,7 @@ package org.javahelpers.simple.builders.example.custom;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
@@ -66,7 +66,7 @@ public class StringValidationGenerator implements MethodGenerator {
     }
 
     @Override
-    public List<MethodDto> generateMethods(FieldDto field, TypeName builderType, ProcessingContext context) {
+    public List<BuilderMethodDto> generateMethods(FieldDto field, TypeName builderType, ProcessingContext context) {
         String fieldInDto = field.getOriginalFieldName();
         String fieldInBuilder = field.getFieldNameInBuilder();
         String methodName = "validate" + StringUtils.capitalize(fieldInDto);
@@ -79,7 +79,7 @@ public class StringValidationGenerator implements MethodGenerator {
             fieldInBuilder, fieldInBuilder, StringUtils.capitalize(fieldInDto)
         );
 
-        MethodDto validationMethod = new MethodDto(methodName, builderType);
+        BuilderMethodDto validationMethod = new BuilderMethodDto(methodName, builderType);
         validationMethod.setCode(methodBody);
         validationMethod.setJavadoc(
             new JavadocDto("Validates that the " + fieldInDto + " field is not null or empty.")

@@ -31,11 +31,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.builders.HashSetBuilder;
 import org.javahelpers.simple.builders.core.builders.HashSetBuilderWithElementBuilders;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameSet;
@@ -111,7 +112,7 @@ public class SetConsumerGenerator implements MethodGenerator {
   }
 
   @Override
-  public List<MethodDto> generateMethods(
+  public List<BuilderMethodDto> generateMethods(
       FieldDto field, TypeName builderType, ProcessingContext context) {
     if (!(field.getFieldType() instanceof TypeNameSet fieldTypeGeneric
         && fieldTypeGeneric.isParameterized())) {
@@ -128,14 +129,15 @@ public class SetConsumerGenerator implements MethodGenerator {
               map2TypeName(HashSetBuilderWithElementBuilders.class),
               elementType,
               elementBuilderType.get());
-      MethodDto method =
+      BuilderMethodDto method =
           createFieldConsumerWithElementBuilders(
               field, collectionBuilderType, elementBuilderType.get(), builderType, context);
+      addExampleToSetConsumerWithBuilder(method, elementBuilderType.get());
       return List.of(method);
     } else if (context.getConfiguration().shouldUseHashSetBuilder()) {
       TypeName hashSetBuilderType = map2TypeName(HashSetBuilder.class);
       TypeNameGeneric builderTypeGeneric = new TypeNameGeneric(hashSetBuilderType, elementType);
-      MethodDto method =
+      BuilderMethodDto method =
           createFieldConsumerWithBuilder(
               field,
               builderTypeGeneric,
@@ -144,9 +146,35 @@ public class SetConsumerGenerator implements MethodGenerator {
               Map.of(),
               builderType,
               context);
+      addExampleToSetConsumerWithSimpleValue(method, elementType);
       return List.of(method);
     }
 
     return Collections.emptyList();
+  }
+
+  /**
+   * Adds example for set consumer methods where the element type has its own builder.
+   *
+   * @param method the method to add the example to
+   * @param elementBuilderType the element builder type
+   */
+  private void addExampleToSetConsumerWithBuilder(
+      BuilderMethodDto method, TypeName elementBuilderType) {
+    String builderVar = StringUtils.uncapitalize(elementBuilderType.getClassName());
+    addExampleChainFragmentTemplate(
+        method, "#{methodName}(t -> t.add(" + builderVar + " -> " + builderVar + "))");
+  }
+
+  /**
+   * Adds example for set consumer methods where the element type is a simple value.
+   *
+   * @param method the method to add the example to
+   * @param elementType the element type
+   */
+  private void addExampleToSetConsumerWithSimpleValue(
+      BuilderMethodDto method, TypeName elementType) {
+    addExampleChainFragmentTemplate(
+        method, "#{methodName}(t -> t.add(#{exampleValue}))", elementType);
   }
 }

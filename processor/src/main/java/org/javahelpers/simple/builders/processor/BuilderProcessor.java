@@ -24,6 +24,7 @@
 
 package org.javahelpers.simple.builders.processor;
 
+import static org.javahelpers.simple.builders.processor.model.core.BuilderToGenerationTypeMapper.toRenderingDto;
 import static org.javahelpers.simple.builders.processor.processing.BuilderDefinitionCreator.extractFromElement;
 
 import com.google.auto.service.AutoService;
@@ -211,7 +212,8 @@ public class BuilderProcessor extends AbstractProcessor {
       throws BuilderException {
     context.initConfigurationForProcessingTarget(config);
     BuilderDefinitionDto builderDef = extractFromElement(annotatedElement, context);
-    codeGenerator.generateClass(builderDef);
+    GenerationTargetClassDto renderingDto = toRenderingDto(builderDef);
+    codeGenerator.generateClass(renderingDto);
 
     // Collect info for Jackson Module if enabled
     jacksonModuleGenerator.addEntry(builderDef, annotatedElement);
@@ -221,7 +223,7 @@ public class BuilderProcessor extends AbstractProcessor {
     context.debugEndOperation(
         "Generated builder with %d fields and %d methods for %s",
         builderDef.getAllFieldsForBuilder().size(),
-        builderDef.getMethods().size(),
+        renderingDto.getMethods().size(),
         builderDef.getBuilderTypeName().getClassName());
   }
 
