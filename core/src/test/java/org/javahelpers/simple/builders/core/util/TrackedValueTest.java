@@ -207,4 +207,95 @@ class TrackedValueTest {
     assertTrue(intTracked.isSet());
     assertTrue(doubleTracked.isSet());
   }
+
+  @Test
+  void valueOr_returnsValueWhenSet() {
+    TrackedValue<String> tracked = TrackedValue.changedValue("actual");
+    assertEquals("actual", tracked.valueOr("default"));
+  }
+
+  @Test
+  void valueOr_returnsValueWhenInitial() {
+    TrackedValue<String> tracked = TrackedValue.initialValue("initial");
+    assertEquals("initial", tracked.valueOr("default"));
+  }
+
+  @Test
+  void valueOr_returnsDefaultWhenUnset() {
+    TrackedValue<String> tracked = TrackedValue.unsetValue();
+    assertEquals("default", tracked.valueOr("default"));
+  }
+
+  @Test
+  void valueOr_returnsNullDefaultWhenUnset() {
+    TrackedValue<String> tracked = TrackedValue.unsetValue();
+    assertNull(tracked.valueOr(null));
+  }
+
+  @Test
+  void valueOr_worksWithPrimitives() {
+    TrackedValue<Integer> tracked = TrackedValue.unsetValue();
+    assertEquals(42, tracked.valueOr(42));
+  }
+
+  @Test
+  void ifSet_orElse_appliesValueWhenChanged() {
+    TrackedValue<String> tracked = TrackedValue.changedValue("actual");
+    AtomicReference<String> received = new AtomicReference<>("unchanged");
+
+    tracked.ifSet(received::set).orElse("default");
+
+    assertEquals("actual", received.get());
+  }
+
+  @Test
+  void ifSet_orElse_appliesValueWhenInitial() {
+    TrackedValue<String> tracked = TrackedValue.initialValue("initial");
+    AtomicReference<String> received = new AtomicReference<>("unchanged");
+
+    tracked.ifSet(received::set).orElse("default");
+
+    assertEquals("initial", received.get());
+  }
+
+  @Test
+  void ifSet_orElse_appliesDefaultWhenUnset() {
+    TrackedValue<String> tracked = TrackedValue.unsetValue();
+    AtomicReference<String> received = new AtomicReference<>("unchanged");
+
+    tracked.ifSet(received::set).orElse("default");
+
+    assertEquals("default", received.get());
+  }
+
+  @Test
+  void ifSet_orElse_appliesNullDefaultWhenUnset() {
+    TrackedValue<String> tracked = TrackedValue.unsetValue();
+    AtomicReference<String> received = new AtomicReference<>("unchanged");
+
+    tracked.ifSet(received::set).orElse(null);
+
+    assertNull(received.get());
+  }
+
+  @Test
+  void ifSet_returnValueCanBeIgnored() {
+    TrackedValue<String> tracked = TrackedValue.changedValue("actual");
+    AtomicReference<String> received = new AtomicReference<>("unchanged");
+
+    // Simulate existing generated code that ignores the return value
+    tracked.ifSet(received::set);
+
+    assertEquals("actual", received.get());
+  }
+
+  @Test
+  void ifSet_orElse_appliesPrimitiveDefaultWhenUnset() {
+    TrackedValue<Integer> tracked = TrackedValue.unsetValue();
+    AtomicReference<Integer> received = new AtomicReference<>(0);
+
+    tracked.ifSet(received::set).orElse(42);
+
+    assertEquals(42, received.get());
+  }
 }

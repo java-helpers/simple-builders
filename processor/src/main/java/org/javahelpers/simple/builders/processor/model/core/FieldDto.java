@@ -83,6 +83,13 @@ public class FieldDto {
   private final List<AnnotationDto> parameterAnnotations = new ArrayList<>();
 
   /**
+   * Default value expression for this field, or {@code null} if no default is declared. The
+   * expression is pre-formatted as a Java code snippet (e.g. {@code "GENERAL"} for strings, {@code
+   * 0.0} for primitives, {@code List.of()} for complex types).
+   */
+  private String defaultValue;
+
+  /**
    * Gets the original field name from the DTO. This name is used for generating method names,
    * parameter names, and setter method names (e.g., "userName" becomes "setUserName").
    *
@@ -307,5 +314,37 @@ public class FieldDto {
             annotation ->
                 annotation.getAnnotationType() != null
                     && annotationFqn.equals(annotation.getAnnotationType().getFullQualifiedName()));
+  }
+
+  /**
+   * Gets the default value expression for this field, if one was declared via {@code @Default} or a
+   * compatible annotation.
+   *
+   * @return an {@link Optional} containing the formatted Java expression, or empty if no default
+   */
+  public Optional<String> getDefaultValue() {
+    return Optional.ofNullable(defaultValue);
+  }
+
+  /**
+   * Sets the default value expression for this field.
+   *
+   * @param defaultValue the formatted Java expression (e.g. {@code "GENERAL"}, {@code 0.0}, {@code
+   *     List.of()}), or {@code null} to clear
+   */
+  public void setDefaultValue(String defaultValue) {
+    this.defaultValue = defaultValue;
+  }
+
+  /**
+   * Whether this field is required to be set at build time.
+   *
+   * <p>A field is required if it is marked as non-nullable AND has no default value. A field with a
+   * default value is never required, even if annotated with {@code @NotNull}.
+   *
+   * @return {@code true} if the field must be explicitly set before {@code build()}
+   */
+  public boolean isRequired() {
+    return nonNullable && defaultValue == null;
   }
 }

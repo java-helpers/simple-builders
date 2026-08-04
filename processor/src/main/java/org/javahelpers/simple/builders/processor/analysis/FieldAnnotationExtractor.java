@@ -37,6 +37,7 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.simple.builders.processor.model.type.TypeNamePrimitive;
 import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
 /** Extractor for field annotations, converting them from Java model elements to DTOs. */
@@ -259,5 +260,103 @@ public final class FieldAnnotationExtractor {
    */
   private static boolean isNonNullAnnotation(String simpleName) {
     return "NotNull".equals(simpleName) || "NonNull".equals(simpleName);
+  }
+
+  /**
+   * Extracts a default value expression from annotations named {@code Default} or {@code
+   * DefaultValue} on the given parameter, regardless of package.
+   *
+   * <p>Detects annotations from any package (e.g. {@code
+   * org.javahelpers.simple.builders.core.annotations.Default}, {@code jakarta.ws.rs.DefaultValue})
+   * as long as they have a {@code String value()} member.
+   *
+   * @param param the parameter element to check
+   * @return an {@link Optional} containing the raw default value string, or empty if no default
+   *     annotation is present
+   */
+  public static Optional<String> extractDefaultValue(VariableElement param) {
+    return param.getAnnotationMirrors().stream()
+        .filter(FieldAnnotationExtractor::isDefaultAnnotation)
+        .map(FieldAnnotationExtractor::getValueMember)
+        .filter(Optional::isPresent)
+        .map(Optional::get)
+        .findFirst();
+  }
+
+  /**
+   * Checks if the given annotation mirror represents a default-value annotation (named {@code
+   * Default} or {@code DefaultValue} from any package).
+   *
+   * @param mirror the annotation mirror to check
+   * @return {@code true} if the annotation is a recognized default-value annotation
+   */
+  private static boolean isDefaultAnnotation(AnnotationMirror mirror) {
+    if (!(mirror.getAnnotationType().asElement() instanceof TypeElement type)) {
+      return false;
+    }
+    String name = type.getSimpleName().toString();
+    return "Default".equals(name) || "DefaultValue".equals(name);
+  }
+
+  /**
+   * Extracts the {@code value()} member from an annotation mirror as a string.
+   *
+   * @param mirror the annotation mirror to extract from
+   * @return an {@link Optional} containing the value string, or empty if no {@code value()} member
+   *     is present
+   */
+  private static Optional<String> getValueMember(AnnotationMirror mirror) {
+    return mirror.getElementValues().entrySet().stream()
+        .filter(e -> "value".equals(e.getKey().getSimpleName().toString()))
+        .map(e -> e.getValue().getValue().toString())
+        .findFirst();
+  }
+
+  /**
+   * Formats a raw string default value as a Java expression based on the field type.
+   *
+   * <p>Interpretation rules:
+   *
+   * <ul>
+   *   <li>{@code String} — wrapped in double quotes, e.g. {@code "GENERAL"}
+   *   <li>{@code char} — wrapped in single quotes, e.g. {@code 'A'}
+   *   <li>numeric/boolean primitives — used as-is, e.g. {@code 0.0}, {@code true}
+   *   <li>complex types (List, custom objects) — used as a raw Java expression, e.g. {@code
+   *       List.of()}
+   * </ul>
+   *
+   * @param rawValue the raw string from the annotation's {@code value()} member
+   * @param fieldType the {@link TypeName} of the target field
+   * @return a formatted Java expression string suitable for code generation
+   */
+  public static String formatDefaultExpression(String rawValue, TypeName fieldType) {
+    if (isStringType(fieldType)) {
+      return "\"%s\"".formatted(rawValue);
+    }
+    if (isCharType(fieldType)) {
+      return "'%s'".formatted(rawValue);
+    }
+    return rawValue;
+  }
+
+  /**
+   * Checks if the given type is {@code java.lang.String}.
+   *
+   * @param type the type to check
+   * @return {@code true} if the type is String
+   */
+  private static boolean isStringType(TypeName type) {
+    return "java.lang".equals(type.getPackageName()) && "String".equals(type.getClassName());
+  }
+
+  /**
+   * Checks if the given type is the {@code char} primitive.
+   *
+   * @param type the type to check
+   * @return {@code true} if the type is char
+   */
+  private static boolean isCharType(TypeName type) {
+    return type instanceof TypeNamePrimitive primitive
+        && primitive.getType() == TypeNamePrimitive.PrimitiveTypeEnum.CHAR;
   }
 }

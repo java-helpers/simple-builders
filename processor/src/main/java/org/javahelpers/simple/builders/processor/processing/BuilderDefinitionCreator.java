@@ -632,6 +632,22 @@ public class BuilderDefinitionCreator {
             builderType,
             context);
 
+    // If no default was found on the setter parameter, check the field element itself
+    // (annotations like @Default may be placed on the field rather than the setter param)
+    if (result.isPresent() && result.get().getDefaultValue().isEmpty()) {
+      findFieldElement(dtoTypeElement, fieldName)
+          .ifPresent(
+              fieldElement ->
+                  FieldAnnotationExtractor.extractDefaultValue(fieldElement)
+                      .ifPresent(
+                          rawDefault ->
+                              result
+                                  .get()
+                                  .setDefaultValue(
+                                      FieldAnnotationExtractor.formatDefaultExpression(
+                                          rawDefault, result.get().getFieldType()))));
+    }
+
     if (result.isPresent()) {
       fieldNameRegistry.put(finalFieldName, result.get());
     }
@@ -797,6 +813,13 @@ public class BuilderDefinitionCreator {
       field.setNonNullable(true);
     }
 
+    // Extract default value from @Default or @DefaultValue annotation (if present)
+    FieldAnnotationExtractor.extractDefaultValue(param)
+        .ifPresent(
+            rawDefault ->
+                field.setDefaultValue(
+                    FieldAnnotationExtractor.formatDefaultExpression(rawDefault, fieldType)));
+
     // Builder and constructor information is now set when TypeName is created in JavaLangMapper
 
     // Use GeneratorRegistry to generate all methods for this field
@@ -805,5 +828,21 @@ public class BuilderDefinitionCreator {
     generatedMethods.forEach(field::addMethod);
 
     return Optional.of(field);
+  }
+
+  /**
+   * Finds a field element by name in the given class element.
+   *
+   * @param classElement the class to search in
+   * @param fieldName the simple field name to look for
+   * @return an {@link Optional} containing the field element, or empty if not found
+   */
+  private static Optional<VariableElement> findFieldElement(
+      TypeElement classElement, String fieldName) {
+    return classElement.getEnclosedElements().stream()
+        .filter(e -> e.getKind() == ElementKind.FIELD)
+        .filter(e -> e.getSimpleName().contentEquals(fieldName))
+        .map(VariableElement.class::cast)
+        .findFirst();
   }
 }
