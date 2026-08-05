@@ -92,7 +92,10 @@ class ComprehensiveFeatureIntegrationTest {
             import java.util.Set;
             import java.util.Map;
             import java.util.Optional;
-            @org.javahelpers.simple.builders.core.annotations.SimpleBuilder
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+            import org.javahelpers.simple.builders.core.annotations.Default;
+
+            @SimpleBuilder
             public class PersonDto {
               private final String name;
               private final int age;
@@ -104,7 +107,8 @@ class ComprehensiveFeatureIntegrationTest {
               private final List<AddressDto> previousAddresses;
               private final LinkedList<String> phoneNumbers;
 
-              public PersonDto(String name, int age, Optional<String> email,
+              public PersonDto(String name, int age,
+                               @Default("Optional.empty()") Optional<String> email,
                                List<String> nicknames, Set<String> tags,
                                Map<String, String> metadata, AddressDto address,
                                List<AddressDto> previousAddresses,
@@ -1197,7 +1201,7 @@ class ComprehensiveFeatureIntegrationTest {
             }
             PersonDto result = new PersonDto(this.name.value(),
                 this.age.value(),
-                this.email.value(),
+                this.email.valueOr(Optional.empty()),
                 this.nicknames.value(),
                 this.tags.value(),
                 this.metadata.value(),
