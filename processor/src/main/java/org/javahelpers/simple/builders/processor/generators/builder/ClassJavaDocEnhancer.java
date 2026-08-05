@@ -26,6 +26,7 @@ package org.javahelpers.simple.builders.processor.generators.builder;
 
 import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
+import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocCodeBlockDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
@@ -97,8 +98,7 @@ public class ClassJavaDocEnhancer implements BuilderEnhancer {
     // with a single source of truth (the fragment on the BuilderMethodDto).
     // Note: Methods are stored in FieldDto objects at this point (before finalizeDefinition).
     JavadocCodeBlockDto classExampleBlock = new JavadocCodeBlockDto();
-    for (org.javahelpers.simple.builders.processor.model.core.FieldDto field :
-        builderDto.getAllFieldsForBuilder()) {
+    for (FieldDto field : builderDto.getAllFieldsForBuilder()) {
       for (BuilderMethodDto method : field.getMethods()) {
         String fragment = method.getExampleChainFragment();
         if (fragment == null) {
@@ -115,7 +115,7 @@ public class ClassJavaDocEnhancer implements BuilderEnhancer {
           "%s result = %s.create()".formatted(targetType.getClassName(), builderTypeName);
       classExampleBlock.setCodeFormat(openingLine + "\n" + classExampleBlock.getCodeFormat());
       classExampleBlock.append("%s.build();", indentionString);
-      javadoc.addExample(classExampleBlock);
+      javadoc.setExampleUsageCodeBlock(classExampleBlock);
     }
 
     builderDto.setClassJavadoc(javadoc);

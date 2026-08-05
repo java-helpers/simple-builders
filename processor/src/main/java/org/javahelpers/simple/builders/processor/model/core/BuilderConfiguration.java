@@ -64,6 +64,7 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
  * @param generateWithInterface Generate With interface
  * @param builderSuffix Suffix for builder class name
  * @param setterSuffix Suffix for setter method names
+ * @param strict Strict/fail-fast generation mode
  */
 public record BuilderConfiguration(
     OptionState generateFieldSupplier,
@@ -91,7 +92,8 @@ public record BuilderConfiguration(
     OptionState generateJacksonModule,
     String jacksonModulePackage,
     String builderSuffix,
-    String setterSuffix) {
+    String setterSuffix,
+    OptionState strict) {
 
   public static final BuilderConfiguration DEFAULT =
       builder()
@@ -121,6 +123,7 @@ public record BuilderConfiguration(
           .jacksonModulePackage(null)
           .builderSuffix("Builder")
           .setterSuffix("")
+          .strict(DISABLED)
           .build();
 
   // === Convenience accessors with 'is' prefix for boolean properties ===
@@ -229,6 +232,10 @@ public record BuilderConfiguration(
     return setterSuffix;
   }
 
+  public boolean isStrictModeEnabled() {
+    return strict == ENABLED;
+  }
+
   /**
    * Merges this configuration with another configuration.
    *
@@ -295,6 +302,7 @@ public record BuilderConfiguration(
         .jacksonModulePackage(mergeString(other.jacksonModulePackage, this.jacksonModulePackage))
         .builderSuffix(mergeString(other.builderSuffix, this.builderSuffix))
         .setterSuffix(mergeString(other.setterSuffix, this.setterSuffix))
+        .strict(mergeOptionState(other.strict, this.strict))
         .build();
   }
 
@@ -360,6 +368,7 @@ public record BuilderConfiguration(
         .appendIfNotEmpty("jacksonModulePackage", jacksonModulePackage)
         .appendIfNotEmpty("builderSuffix", builderSuffix)
         .appendIfNotEmpty("setterSuffix", setterSuffix)
+        .appendValueIfSet("strict", strict)
         .toString();
   }
 
@@ -439,6 +448,9 @@ public record BuilderConfiguration(
     // === Naming ===
     private String builderSuffix = null;
     private String setterSuffix = null;
+
+    // === Error Handling ===
+    private OptionState strict = OptionState.UNSET;
 
     // === Setters ===
     public Builder generateSupplier(OptionState value) {
@@ -686,6 +698,16 @@ public record BuilderConfiguration(
       return this;
     }
 
+    public Builder strict(OptionState value) {
+      this.strict = value;
+      return this;
+    }
+
+    public Builder strict(boolean value) {
+      this.strict = value ? ENABLED : DISABLED;
+      return this;
+    }
+
     public BuilderConfiguration build() {
       return new BuilderConfiguration(
           generateFieldSupplier,
@@ -713,7 +735,8 @@ public record BuilderConfiguration(
           generateJacksonModule,
           jacksonModulePackage,
           builderSuffix,
-          setterSuffix);
+          setterSuffix,
+          strict);
     }
   }
 

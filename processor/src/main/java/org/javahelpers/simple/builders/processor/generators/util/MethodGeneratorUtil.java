@@ -26,6 +26,7 @@ package org.javahelpers.simple.builders.processor.generators.util;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
@@ -397,7 +398,7 @@ public final class MethodGeneratorUtil {
    *
    * <p>This helper method retrieves an example value for the given field type and formats it as a
    * fluent-chain fragment (e.g., {@code methodName(exampleValue)}). The fragment is stored on the
-   * MethodDto for later use by the ClassJavaDocEnhancer to synthesize both method-level and
+   * BuilderMethodDto for later use by the ClassJavaDocEnhancer to synthesize both method-level and
    * class-level Javadoc examples.
    *
    * <p>If no example value is available for the field type, the fragment is not added.
@@ -414,7 +415,7 @@ public final class MethodGeneratorUtil {
    *
    * <p>This helper method retrieves an example value for the given element type and formats it as a
    * fluent-chain fragment showing two values (e.g., {@code methodName(value1, value2)}) to make it
-   * clear that the method accepts multiple arguments. The fragment is stored on the MethodDto for
+   * clear that the method accepts multiple arguments. The fragment is stored on the BuilderMethodDto for
    * later use by the ClassJavaDocEnhancer to synthesize both method-level and class-level Javadoc
    * examples.
    *
@@ -435,7 +436,7 @@ public final class MethodGeneratorUtil {
    * <p>This helper method retrieves an example value for the given field type and formats it as a
    * fluent-chain fragment with a supplier. For types with an empty constructor, a method reference
    * is used (e.g., {@code methodName(Type::new)}); otherwise a lambda is used (e.g., {@code
-   * methodName(() -> exampleValue)}). The fragment is stored on the MethodDto for later use by the
+   * methodName(() -> exampleValue)}). The fragment is stored on the BuilderMethodDto for later use by the
    * ClassJavaDocEnhancer to synthesize both method-level and class-level Javadoc examples.
    *
    * <p>If no example value is available for the field type, the fragment is not added.
@@ -454,24 +455,6 @@ public final class MethodGeneratorUtil {
   }
 
   /**
-   * Adds the fluent-chain fragment for Javadoc examples to a method with a hardcoded example value.
-   *
-   * <p>This helper method formats a hardcoded example value as a fluent-chain fragment (e.g.,
-   * {@code methodName("example value")}). The fragment is stored on the MethodDto for later use by
-   * the ClassJavaDocEnhancer to synthesize both method-level and class-level Javadoc examples.
-   *
-   * <p>This is useful for generators that use a fixed example value rather than deriving it from
-   * the field type.
-   *
-   * @param methodDto the method DTO to add the fragment to
-   * @param exampleValue the hardcoded example value to use
-   */
-  public static void addExampleChainFragmentWithHardcodedValue(
-      BuilderMethodDto methodDto, String exampleValue) {
-    addExampleChainFragmentTemplate(methodDto, "#{methodName}(%s)".formatted(exampleValue));
-  }
-
-  /**
    * Adds the fluent-chain fragment for Javadoc examples to a method using a template string.
    *
    * <p>This helper method replaces placeholders in the template string with actual values:
@@ -482,7 +465,7 @@ public final class MethodGeneratorUtil {
    *       fieldType is provided)
    * </ul>
    *
-   * <p>The fragment is stored on the MethodDto for later use by the ClassJavaDocEnhancer to
+   * <p>The fragment is stored on the BuilderMethodDto for later use by the ClassJavaDocEnhancer to
    * synthesize both method-level and class-level Javadoc examples.
    *
    * @param methodDto the method DTO to add the fragment to
@@ -495,7 +478,7 @@ public final class MethodGeneratorUtil {
     String fragment = template.replace("#{methodName}", methodDto.getMethodName());
 
     if (fieldType != null) {
-      java.util.Optional<String> exampleValue = JavadocExampleValues.getExampleValue(fieldType);
+      Optional<String> exampleValue = JavadocExampleValues.getExampleValue(fieldType);
       if (exampleValue.isEmpty()) {
         return;
       }
@@ -514,7 +497,7 @@ public final class MethodGeneratorUtil {
    *   <li>{@code #{methodName}} - replaced with the method name
    * </ul>
    *
-   * <p>The fragment is stored on the MethodDto for later use by the ClassJavaDocEnhancer to
+   * <p>The fragment is stored on the BuilderMethodDto for later use by the ClassJavaDocEnhancer to
    * synthesize both method-level and class-level Javadoc examples.
    *
    * @param methodDto the method DTO to add the fragment to

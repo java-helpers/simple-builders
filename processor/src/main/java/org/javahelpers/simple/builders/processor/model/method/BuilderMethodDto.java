@@ -27,6 +27,7 @@ package org.javahelpers.simple.builders.processor.model.method;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
@@ -238,10 +239,12 @@ public class BuilderMethodDto {
   public void setExampleChainFragment(String exampleChainFragment) {
     this.exampleChainFragment = exampleChainFragment;
     // Automatically add method-level example to javadoc if javadoc exists and has no examples
-    if (exampleChainFragment != null && javadoc != null && javadoc.getCodeBlocks().isEmpty()) {
+    if (exampleChainFragment != null
+        && javadoc != null
+        && javadoc.getExampleUsageCodeBlock() == null) {
       JavadocCodeBlockDto methodExample = new JavadocCodeBlockDto();
       methodExample.setCodeFormat("builder.%s;".formatted(exampleChainFragment));
-      javadoc.addExample(methodExample);
+      javadoc.setExampleUsageCodeBlock(methodExample);
     }
   }
 
@@ -592,7 +595,7 @@ public class BuilderMethodDto {
     StringBuilder sb = new StringBuilder();
 
     // Add modifier if present
-    modifier.ifPresent(m -> sb.append(m.toString().toLowerCase()).append(" "));
+    modifier.ifPresent(m -> sb.append(m.toString().toLowerCase(Locale.ROOT)).append(" "));
 
     // Add static if applicable
     if (isStatic) {

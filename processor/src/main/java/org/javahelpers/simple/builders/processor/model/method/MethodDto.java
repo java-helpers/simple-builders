@@ -27,6 +27,7 @@ package org.javahelpers.simple.builders.processor.model.method;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
@@ -438,7 +439,7 @@ public class MethodDto {
     StringBuilder sb = new StringBuilder();
 
     // Add modifier if present
-    modifier.ifPresent(m -> sb.append(m.toString().toLowerCase()).append(" "));
+    modifier.ifPresent(m -> sb.append(m.toString().toLowerCase(Locale.ROOT)).append(" "));
 
     // Add static if applicable
     if (isStatic) {

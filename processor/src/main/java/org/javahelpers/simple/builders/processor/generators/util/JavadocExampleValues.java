@@ -100,8 +100,9 @@ public final class JavadocExampleValues {
    *   <li>Common JDK types (BigInteger, BigDecimal, UUID, LocalDate, LocalTime, LocalDateTime)
    *   <li>Collection types (List, Set) of any supported element type (e.g., {@code List.of("example
    *       value")}, {@code Set.of(42)})
-   *   <li>Map types where the key type is String and the value type is supported (e.g., {@code
-   *       Map.of("key", "example value")})
+   *   <li>Map types where both key and value types have supported examples (e.g., {@code Map.of(42,
+   *       "example value")})
+   *   <li>Optional types with a supported inner type (e.g., {@code Optional.of("example value")})
    *   <li>Types with an empty constructor (e.g., {@code new AddressDto()})
    *   <li>Types with a {@code @SimpleBuilder} annotation but no empty constructor (e.g., {@code
    *       AddressDtoBuilder.create().build()})
@@ -113,6 +114,7 @@ public final class JavadocExampleValues {
   public static Optional<String> getExampleValue(TypeName typeName) {
     return resolvePrimitive(typeName)
         .or(() -> resolveCollection(typeName))
+        .or(() -> resolveOptional(typeName))
         .or(() -> resolveCommonType(typeName))
         .or(() -> resolveString(typeName))
         .or(() -> resolveEmptyConstructor(typeName))
@@ -142,11 +144,21 @@ public final class JavadocExampleValues {
   }
 
   private static Optional<String> resolveMap(TypeNameMap mapType) {
-    TypeName keyType = mapType.getKeyType();
-    if ("java.lang.String".equals(keyType.getFullQualifiedName())
-        || "String".equals(keyType.getClassName())) {
-      return getExampleValue(mapType.getValueType())
-          .map(valueExample -> "Map.of(\"key\", " + valueExample + ")");
+    Optional<String> keyExample = getExampleValue(mapType.getKeyType());
+    Optional<String> valueExample = getExampleValue(mapType.getValueType());
+    if (keyExample.isPresent() && valueExample.isPresent()) {
+      return Optional.of("Map.of(" + keyExample.get() + ", " + valueExample.get() + ")");
+    }
+    return Optional.empty();
+  }
+
+  private static Optional<String> resolveOptional(TypeName typeName) {
+    if ("java.util.Optional".equals(typeName.getFullQualifiedName())
+        || "Optional".equals(typeName.getClassName())) {
+      return typeName
+          .getInnerType()
+          .flatMap(JavadocExampleValues::getExampleValue)
+          .map(inner -> "Optional.of(" + inner + ")");
     }
     return Optional.empty();
   }

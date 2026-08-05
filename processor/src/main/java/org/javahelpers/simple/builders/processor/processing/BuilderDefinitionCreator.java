@@ -29,12 +29,15 @@ import static org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyse
 import static org.javahelpers.simple.builders.processor.analysis.JavaLangMapper.map2MethodParameter;
 import static org.javahelpers.simple.builders.processor.processing.AnnotationValidator.validateAnnotatedElement;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.lang.model.element.*;
 import javax.lang.model.type.TypeMirror;
 import org.apache.commons.lang3.StringUtils;
@@ -60,11 +63,7 @@ import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
 /** Class for creating a specific BuilderDefinitionDto for an annotated DTO class. */
 public class BuilderDefinitionCreator {
 
-  /**
-   * Annotation simple names that are recognized as default-value annotations, regardless of
-   * package. This includes our own {@code @Default} as well as third-party annotations like Jakarta
-   * REST's {@code @DefaultValue}.
-   */
+  /** Annotation simple names recognized as default-value annotations, regardless of package. */
   private static final Set<String> DEFAULT_ANNOTATION_NAMES = Set.of("Default", "DefaultValue");
 
   private BuilderDefinitionCreator() {
@@ -233,11 +232,11 @@ public class BuilderDefinitionCreator {
                     "%s %s"
                         .formatted(
                             f.getFieldType().getSimpleNameWithGenerics(), f.getOriginalFieldName()))
-            .collect(java.util.stream.Collectors.joining(", "));
+            .collect(Collectors.joining(", "));
     String linkParams =
         builderDto.getConstructorFieldsForBuilder().stream()
             .map(f -> f.getFieldType().getClassName())
-            .collect(java.util.stream.Collectors.joining(", "));
+            .collect(Collectors.joining(", "));
     return "<p>Generated from parameter in constructor {@link %s#%s(%s) %s(%s)}"
         .formatted(className, className, linkParams, className, displayParams);
   }
@@ -291,13 +290,11 @@ public class BuilderDefinitionCreator {
     context.debugStartOperation("Resolving method conflicts");
 
     // Collect all BuilderMethodDto instances grouped by signature key
-    java.util.Map<String, List<BuilderMethodDto>> methodsBySignature =
-        collectMethodsBySignature(builderDto);
+    Map<String, List<BuilderMethodDto>> methodsBySignature = collectMethodsBySignature(builderDto);
 
     // Resolve conflicts: keep highest priority, remove losers
-    java.util.Set<BuilderMethodDto> methodsToRemove = new java.util.HashSet<>();
-    for (java.util.Map.Entry<String, List<BuilderMethodDto>> entry :
-        methodsBySignature.entrySet()) {
+    Set<BuilderMethodDto> methodsToRemove = new HashSet<>();
+    for (Map.Entry<String, List<BuilderMethodDto>> entry : methodsBySignature.entrySet()) {
       List<BuilderMethodDto> methodsWithSameSignature = entry.getValue();
       boolean isConflicting = methodsWithSameSignature.size() > 1;
       if (isConflicting) {
@@ -344,27 +341,27 @@ public class BuilderDefinitionCreator {
    * @param builderDto the builder definition containing all methods
    * @return map from signature key to list of methods with that signature
    */
-  private static java.util.Map<String, List<BuilderMethodDto>> collectMethodsBySignature(
+  private static Map<String, List<BuilderMethodDto>> collectMethodsBySignature(
       BuilderDefinitionDto builderDto) {
-    java.util.Map<String, List<BuilderMethodDto>> methodsBySignature = new HashMap<>();
+    Map<String, List<BuilderMethodDto>> methodsBySignature = new HashMap<>();
 
     for (FieldDto field : builderDto.getConstructorFieldsForBuilder()) {
       for (BuilderMethodDto method : field.getMethods()) {
         methodsBySignature
-            .computeIfAbsent(method.getSignatureKey(), k -> new java.util.ArrayList<>())
+            .computeIfAbsent(method.getSignatureKey(), k -> new ArrayList<>())
             .add(method);
       }
     }
     for (FieldDto field : builderDto.getSetterFieldsForBuilder()) {
       for (BuilderMethodDto method : field.getMethods()) {
         methodsBySignature
-            .computeIfAbsent(method.getSignatureKey(), k -> new java.util.ArrayList<>())
+            .computeIfAbsent(method.getSignatureKey(), k -> new ArrayList<>())
             .add(method);
       }
     }
     for (BuilderMethodDto classMethod : builderDto.getMethods()) {
       methodsBySignature
-          .computeIfAbsent(classMethod.getSignatureKey(), k -> new java.util.ArrayList<>())
+          .computeIfAbsent(classMethod.getSignatureKey(), k -> new ArrayList<>())
           .add(classMethod);
     }
 
@@ -379,14 +376,14 @@ public class BuilderDefinitionCreator {
    * @param methodsToRemove the set of methods to remove
    */
   private static void removeMethodsFromBuilder(
-      BuilderDefinitionDto builderDto, java.util.Set<BuilderMethodDto> methodsToRemove) {
+      BuilderDefinitionDto builderDto, Set<BuilderMethodDto> methodsToRemove) {
     for (FieldDto field : builderDto.getConstructorFieldsForBuilder()) {
-      field.getMethods().removeAll(methodsToRemove);
+      field.removeMethods(methodsToRemove);
     }
     for (FieldDto field : builderDto.getSetterFieldsForBuilder()) {
-      field.getMethods().removeAll(methodsToRemove);
+      field.removeMethods(methodsToRemove);
     }
-    builderDto.getMethods().removeAll(methodsToRemove);
+    builderDto.removeMethods(methodsToRemove);
   }
 
   /**
@@ -642,7 +639,18 @@ public class BuilderDefinitionCreator {
     // If no default was found on the setter parameter, check the field element itself
     // (annotations like @Default may be placed on the field rather than the setter param)
     if (result.isPresent() && result.get().getDefaultValue().isEmpty()) {
-      tryApplyDefaultFromField(result.get(), dtoTypeElement, fieldName);
+      findFieldElement(dtoTypeElement, fieldName)
+          .ifPresent(
+              fieldElement ->
+                  FieldAnnotationExtractor.extractAnnotationValue(
+                          fieldElement, DEFAULT_ANNOTATION_NAMES)
+                      .ifPresent(
+                          rawDefault ->
+                              result
+                                  .get()
+                                  .setDefaultValue(
+                                      FieldAnnotationExtractor.formatDefaultExpression(
+                                          rawDefault, result.get().getFieldType()))));
     }
 
     if (result.isPresent()) {
@@ -825,31 +833,6 @@ public class BuilderDefinitionCreator {
     generatedMethods.forEach(field::addMethod);
 
     return Optional.of(field);
-  }
-
-  /**
-   * Extracts and applies a default value from the field declaration itself, if the field carries a
-   * recognized default annotation (e.g. {@code @Default}). This is used as a fallback when no
-   * default was found on the setter parameter.
-   *
-   * @param field the field DTO to update with a default value if one is found
-   * @param dtoTypeElement the enclosing class element to search for the field
-   * @param fieldName the simple field name to look for
-   */
-  private static void tryApplyDefaultFromField(
-      FieldDto field, TypeElement dtoTypeElement, String fieldName) {
-    Optional<VariableElement> fieldElement = findFieldElement(dtoTypeElement, fieldName);
-    if (fieldElement.isEmpty()) {
-      return;
-    }
-    Optional<String> rawDefault =
-        FieldAnnotationExtractor.extractAnnotationValue(
-            fieldElement.get(), DEFAULT_ANNOTATION_NAMES);
-    if (rawDefault.isEmpty()) {
-      return;
-    }
-    field.setDefaultValue(
-        FieldAnnotationExtractor.formatDefaultExpression(rawDefault.get(), field.getFieldType()));
   }
 
   /**

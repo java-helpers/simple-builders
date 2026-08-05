@@ -1,4 +1,6 @@
-# Simple Builders - Java Builder Generation at Compile Time
+# Simple Builders — Type-safe, fluent builders for Java classes & records, generated at compile time
+
+A zero-reflection Java annotation processor that generates fluent, type-safe builders for **classes and records** — with **Jackson** support, immutable **copy-on-write `with`**, conditional logic, and collection helpers. A lightweight **Lombok alternative**.
 
 [![License](https://img.shields.io/badge/License-MIT%202.0-yellowgreen.svg)](https://github.com/java-helpers/simple-builders/blob/main/LICENSE)
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.java-helpers/simple-builders-core.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:io.github.java-helpers%20AND%20a:simple-builders-core)
@@ -10,14 +12,18 @@
 
 ## Table of Contents
 - [What is Simple Builders?](#what-is-simple-builders)
+- [How Simple Builders compares](#how-simple-builders-compares)
+  - [Doing what other builders advertise — the Simple Builders way](#doing-what-other-builders-advertise-the-simple-builders-way)
 - [Features](#features)
 - [Requirements](#requirements)
 - [Installation](#installation)
 - [Usage](#usage)
   - [Basic Usage](#basic-usage)
     - [Validation Annotations](#validation-annotations)
+    - [Required Fields and Null-Safety](#required-fields-and-null-safety)
     - [Conditional Builder Logic](#conditional-builder-logic)
   - [Collections and Nested Objects](#collections-and-nested-objects)
+    - [Collection Immutability](#collection-immutability)
   - [With Interface Pattern](#with-interface-pattern)
   - [Builder Configuration](#builder-configuration)
     - [Compiler Arguments](#compiler-arguments)
@@ -32,7 +38,27 @@
 
 ## What is Simple Builders?
 
-Simple Builders is a Java [annotation processor](https://docs.oracle.com/en/java/javase/17/docs/specs/man/javac.html#annotation-processing) designed to generate type-safe and high-performance builders for Java classes. It generates builder code at compile-time, ensuring type safety without any runtime reflection overhead.
+Simple Builders is a Java [annotation processor](https://docs.oracle.com/en/java/javase/17/docs/specs/man/javac.html#annotation-processing) that generates type-safe, fluent builders for existing Java classes and records at compile time. It supports Jackson integration, immutable copy-with updates, conditional logic, and collection helpers, with no runtime reflection.
+
+## How Simple Builders compares
+
+Simple Builders generates fluent, type-safe builders for your **existing** classes and records using standard [JSR-269 annotation processing](https://docs.oracle.com/en/java/javase/17/docs/specs/man/javac.html#annotation-processing) — it adds separate, readable generated source and never modifies your types. The main alternatives solve overlapping but different problems, and each is the better choice in its own niche:
+
+- **Lombok** — the closest "add a builder to my existing class" tool, but it works very differently: rather than generating separate source, it mutates your class at compile time through the compiler's internal, non-public AST APIs. That steps outside the standard model (a normal annotation processor may only add new files, not alter existing ones), so it needs an IDE plugin, hides the generated code behind `delombok`, and — because it depends on internal compiler APIs — generally needs a Lombok update for each new JDK before your project compiles (e.g. JDK 16's strong encapsulation, [JEP 396](https://openjdk.org/jeps/396), broke it until [v1.18.20](https://projectlombok.org/changelog), a pattern that recurs for JDK 17, 21, and 23). Lombok is also a broad toolkit (`@Data`, `@Value`, `@SneakyThrows`, `@Delegate`, `val`, and more) whose implicit behavior can be misused by less-experienced developers — e.g. `@Data`/`@EqualsAndHashCode` on JPA entities (broken equality, lazy-loading pitfalls) or `@SneakyThrows` bypassing checked exceptions. Choose Lombok if you're already invested in it for broad boilerplate reduction; choose Simple Builders for one focused capability with explicit, readable source.
+- **Immutables / Google AutoValue / FreeBuilder** — value-type generators: you declare an abstract class or interface and they generate an immutable implementation plus a builder. Great when you want to define new immutable value types; less suited when you just want a builder for classes or records you already have and don't want to restructure your model.
+- **RecordBuilder** — focused, excellent builders and `with` methods for records. Choose it if you use records exclusively.
+
+Use Simple Builders when you want fluent, type-safe builders for the classes and records you already have, generated as plain readable source, with no bytecode manipulation and no IDE plugin — and no lock-in: because the builders are ordinary generated Java, you can drop the dependency at any time by copying the generated builder classes into your own sources, and they keep working.
+
+### Doing what other builders advertise — the Simple Builders way
+
+- **Required fields:** Primitive fields and fields annotated with an annotation named `NotNull` or `NonNull` are non-nullable; constructor parameters are builder inputs. `build()` enforces the required/non-null contract with `IllegalStateException` ([configuration details](#required-fields-and-null-safety)).
+- **Copy / `with` / `toBuilder`:** The generated `With` interface provides `instance.with(b -> ...)` for copy-and-modify and `instance.with()` for a builder pre-populated from the instance ([`generateWithInterface`](docs/CONFIGURATION.md#generatewithinterface)).
+- **Collection immutability:** The target type owns the collection contract. Simple Builders passes through what the type stores; use defensive copying such as `List.copyOf(...)` in the type when the result must be immutable ([configuration details](#collection-immutability)).
+- **Incremental / singular collection API:** `add2X` helpers, `ArrayList`/`HashSet`/`HashMap` collection builders, and varargs helpers cover incremental collection construction ([collection helper options](docs/CONFIGURATION.md#collection-helpers)).
+- **Inheritance:** Inherited setters are discovered, and constructors exposed by the annotated subclass are used. A final superclass field not exposed by that constructor is intentionally not bypassed ([configuration options](docs/CONFIGURATION.md#configuration-options)).
+
+Value semantics (`equals`, `hashCode`, `toString`) and generating brand-new immutable value types are deliberate out-of-scope paradigm choices, not missing builder features.
 
 ## Features
 
@@ -43,6 +69,7 @@ Simple Builders is a Java [annotation processor](https://docs.oracle.com/en/java
 - **Annotation Preservation**: Validation annotations are automatically copied to builder methods
 - **With Interface Pattern**: Type-safe object modifications using generated With interfaces
 - **Jackson Support**: Supporting Jackson deserialization via `@JsonPOJOBuilder` and optional generation of `SimpleModule`s (one per package) (both need to be enabled)
+- **JavaDoc Usage Examples**: Generated builder methods include auto-generated usage examples in their JavaDoc (per-method fluent snippets plus a class-level example), so IDE tooltips show exactly how to use each builder
 
 ## Requirements
 
@@ -166,6 +193,35 @@ User user = UserBuilder.create()
 
 This ensures validation frameworks work seamlessly with builder-generated objects.
 
+#### Required Fields and Null-Safety
+
+Simple Builders treats a field as non-nullable when its type is primitive or its parameter carries
+an annotation whose simple name is `NotNull` or `NonNull`, regardless of the annotation package.
+The name is matched without requiring a particular validation framework.
+
+For non-nullable constructor fields, `build()` requires the builder value to be set and non-null.
+For non-nullable setter fields, the field remains optional, but a value supplied to the builder must
+be non-null. Violations throw `IllegalStateException`.
+
+For example, both the primitive `price` and the `@NotNull` `name` below are required — omitting
+either makes `build()` fail:
+
+```java
+@SimpleBuilder
+public record Product(@NotNull String name, double price) {}
+
+ProductBuilder.create()
+    .name("Keyboard")
+    .build(); // throws IllegalStateException: price must be set
+
+ProductBuilder.create()
+    .price(99.0)
+    .build(); // throws IllegalStateException: name must be set
+```
+
+The `NotNull`/`NonNull` simple-name check is framework-agnostic; use the annotation type already
+used by your project.
+
 #### Default Values
 
 Specify default values for fields that are applied when not explicitly set before `build()`:
@@ -286,6 +342,25 @@ Project project = ProjectBuilder.create()
     .build();
 ```
 
+#### Collection Immutability
+
+Immutability of collections in the built object is the target type's responsibility. Simple
+Builders stores exactly what the target type stores and does not silently wrap collections, so the
+target type's collection contract remains intact. For a record, enforce that contract in its
+canonical or compact constructor:
+
+```java
+@SimpleBuilder
+public record Basket(List<String> items) {
+    public Basket {
+        items = List.copyOf(items);
+    }
+}
+```
+
+The builder passes its collection value to `Basket`; the record makes the stored collection
+unmodifiable.
+
 
 ### With Interface Pattern
 
@@ -360,24 +435,24 @@ A comprehensive example showcasing all fundamental Java property types with a mi
 
 - **Source DTO**: [`BookDto.java`](example/src/main/java/org/javahelpers/simple/builders/example/BookDto.java) - Demonstrates all primitive types, collections, Optional, BigDecimal, date/time types, and nested objects
 - **Custom Annotation**: [`@ElementaryBuilder`](example/src/main/java/org/javahelpers/simple/builders/example/ElementaryBuilder.java) - A template annotation that disables all advanced features (suppliers, consumers, collection builders, With interface, @Generated annotation)
-- **Generated Builder**: [`BookDtoBuilder.java`](example/target/generated-sources/annotations/org/javahelpers/simple/builders/example/BookDtoBuilder.java) - Clean, minimal builder with only setter methods
+- **Generated Builder**: [`BookDtoBuilder.java`](example/generated-example-builder/org/javahelpers/simple/builders/example/BookDtoBuilder.java) - Clean, minimal builder with only setter methods
 - **Tests**: [`BookDtoBuilderTest.java`](example/src/test/java/org/javahelpers/simple/builders/example/BookDtoBuilderTest.java) - Usage examples
 
 ### Full-Featured Examples
 
 Examples with all builder features enabled:
 
-- **Person DTO**: [`PersonDto.java`](example/src/main/java/org/javahelpers/simple/builders/example/PersonDto.java) and [`PersonDtoBuilder.java`](example/target/generated-sources/annotations/org/javahelpers/simple/builders/example/PersonDtoBuilder.java) - Demonstrates nested objects, collections, suppliers, conditional logic, and various setter patterns
+- **Person DTO**: [`PersonDto.java`](example/src/main/java/org/javahelpers/simple/builders/example/PersonDto.java) and [`PersonDtoBuilder.java`](example/generated-example-builder/org/javahelpers/simple/builders/example/PersonDtoBuilder.java) - Demonstrates nested objects, collections, suppliers, conditional logic, and various setter patterns
   - **Usage Examples**: [`PersonDtoBuilderTest.java`](example/src/test/java/org/javahelpers/simple/builders/example/PersonDtoBuilderTest.java) - Shows supplier methods, collection builders, nested builder consumers, and conditional logic
-- **Product Record**: [`ProductRecord.java`](example/src/main/java/org/javahelpers/simple/builders/example/ProductRecord.java) and [`ProductRecordBuilder.java`](example/target/generated-sources/annotations/org/javahelpers/simple/builders/example/ProductRecordBuilder.java) - Java Record support with full builder features and With interface pattern
+- **Product Record**: [`ProductRecord.java`](example/src/main/java/org/javahelpers/simple/builders/example/ProductRecord.java) and [`ProductRecordBuilder.java`](example/generated-example-builder/org/javahelpers/simple/builders/example/ProductRecordBuilder.java) - Java Record support with full builder features and With interface pattern
   - **Usage Examples**: [`ProductRecordTest.java`](example/src/test/java/org/javahelpers/simple/builders/example/ProductRecordTest.java) - Comprehensive tests demonstrating With interface for immutable Records, fluent modifications, and custom with methods
 
 ### Advanced Features
 
 Examples demonstrating special annotations and nested object relationships:
 
-- **Sponsor DTO**: [`SponsorDto.java`](example/src/main/java/org/javahelpers/simple/builders/example/SponsorDto.java) and [`SponsorDtoBuilder.java`](example/target/generated-sources/annotations/org/javahelpers/simple/builders/example/SponsorDtoBuilder.java) - Simple DTO used as nested object in other examples
-- **Mannschaft DTO**: [`MannschaftDto.java`](example/src/main/java/org/javahelpers/simple/builders/example/MannschaftDto.java) and [`MannschaftDtoBuilder.java`](example/target/generated-sources/annotations/org/javahelpers/simple/builders/example/MannschaftDtoBuilder.java) - Demonstrates `@IgnoreInBuilder` annotation to exclude specific setter methods from the generated builder, plus Set collections with nested objects
+- **Sponsor DTO**: [`SponsorDto.java`](example/src/main/java/org/javahelpers/simple/builders/example/SponsorDto.java) and [`SponsorDtoBuilder.java`](example/generated-example-builder/org/javahelpers/simple/builders/example/SponsorDtoBuilder.java) - Simple DTO used as nested object in other examples
+- **Mannschaft DTO**: [`MannschaftDto.java`](example/src/main/java/org/javahelpers/simple/builders/example/MannschaftDto.java) and [`MannschaftDtoBuilder.java`](example/generated-example-builder/org/javahelpers/simple/builders/example/MannschaftDtoBuilder.java) - Demonstrates `@IgnoreInBuilder` annotation to exclude specific setter methods from the generated builder, plus Set collections with nested objects
 - **Default Values**: [`ProductWithDefaults.java`](example/src/main/java/org/javahelpers/simple/builders/example/ProductWithDefaults.java) (record) and [`OrderWithDefaults.java`](example/src/main/java/org/javahelpers/simple/builders/example/OrderWithDefaults.java) (class) - Demonstrate `@Default` annotation for unset builder fields
 
 These examples serve as both documentation and integration tests for the annotation processor.
@@ -393,6 +468,9 @@ Contributions are welcome! Please see [CONTRIBUTING.md](docs/CONTRIBUTING.md) fo
 - Pull request process
 
 For maintainers, see [RELEASE.md](RELEASE.md) for the release process.
+
+For maintenance guarantees, the project's bus-factor, and a vendoring/fork
+strategy for high-reliability adopters, see [GOVERNANCE.md](docs/GOVERNANCE.md).
 
 ## License
 

@@ -33,12 +33,13 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  *     .genres(Set.of("example value"))
  *     .isbn("example value")
  *     .lastUpdated(LocalDateTime.now())
- *     .metadata(Map.of("key", "example value"))
+ *     .metadata(Map.of("example value", "example value"))
  *     .pages(42)
  *     .price(3.14)
  *     .publishDate(LocalDate.now())
  *     .publisher(PersonDtoBuilder.create().build())
  *     .salesCount(42L)
+ *     .subtitle(Optional.of("example value"))
  *     .tags(List.of("example value"))
  *     .title("example value")
  *     .build();
@@ -344,7 +345,7 @@ public class BookDtoBuilder {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.metadata(Map.of("key", "example value"));
+   * builder.metadata(Map.of("example value", "example value"));
    * }</pre>
    * 
    * @param metadata the metadata map to set
@@ -467,6 +468,12 @@ public class BookDtoBuilder {
    * Sets the value for <code>subtitle</code>.
    * <p>
    * Generated from setter {@link BookDto#setSubtitle(Optional) setSubtitle(Optional<String> subtitle)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.subtitle(Optional.of("example value"));
+   * }</pre>
    * 
    * @param subtitle an Optional containing the subtitle to set
    * @return current instance of builder

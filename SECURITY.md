@@ -12,7 +12,18 @@ If you discover a security vulnerability in Simple Builders, we appreciate your 
 
 ### How to Report
 
-Please report security issues by [opening a new issue](https://github.com/java-helpers/simple-builders/issues) on GitHub.
+**Please do not report security vulnerabilities through public GitHub issues.**
+Doing so discloses an unpatched issue to attackers before a fix is available.
+
+Instead, use GitHub's private vulnerability reporting:
+
+1. Open the repository's [**Security** tab](https://github.com/java-helpers/simple-builders/security).
+2. Click **Report a vulnerability** to file a private
+   [GitHub Security Advisory](https://docs.github.com/en/code-security/security-advisories/guidance-on-reporting-and-writing-information-about-vulnerabilities/privately-reporting-a-security-vulnerability)
+   visible only to you and the maintainers.
+
+> Maintainers: enable *Private vulnerability reporting* under
+> **Settings → Code security** so the button above is available to reporters.
 
 ### What to Include
 
@@ -34,11 +45,18 @@ Security updates will be released as patch versions (e.g., 0.1.1) for the latest
 
 ## Dependencies
 
-We regularly update our dependencies to include security fixes. You can check for known vulnerabilities in our dependencies using:
+We keep dependencies patched and rely on GitHub's native supply-chain tooling
+rather than a stand-alone scanner:
 
-```bash
-mvn dependency-check:check
-```
+- **Dependabot** ([`.github/dependabot.yml`](.github/dependabot.yml)) opens
+  automated update PRs and, with Dependabot alerts enabled, continuously flags
+  known-vulnerable dependencies against the GitHub Advisory Database.
+- **Dependency Review** ([`.github/workflows/dependency-review.yml`](.github/workflows/dependency-review.yml))
+  runs on every pull request and **fails** it if it introduces a dependency with
+  a High (or greater) severity vulnerability or a disallowed license.
+
+Maintainers: ensure *Dependency graph*, *Dependabot alerts*, and *Dependabot
+security updates* are enabled under **Settings → Code security**.
 
 ## Best Practices
 
