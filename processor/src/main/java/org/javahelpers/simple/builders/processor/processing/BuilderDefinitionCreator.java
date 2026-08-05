@@ -60,6 +60,13 @@ import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
 /** Class for creating a specific BuilderDefinitionDto for an annotated DTO class. */
 public class BuilderDefinitionCreator {
 
+  /**
+   * Annotation simple names that are recognized as default-value annotations, regardless of
+   * package. This includes our own {@code @Default} as well as third-party annotations like Jakarta
+   * REST's {@code @DefaultValue}.
+   */
+  private static final Set<String> DEFAULT_ANNOTATION_NAMES = Set.of("Default", "DefaultValue");
+
   private BuilderDefinitionCreator() {
     // Private constructor to prevent instantiation
   }
@@ -635,17 +642,7 @@ public class BuilderDefinitionCreator {
     // If no default was found on the setter parameter, check the field element itself
     // (annotations like @Default may be placed on the field rather than the setter param)
     if (result.isPresent() && result.get().getDefaultValue().isEmpty()) {
-      findFieldElement(dtoTypeElement, fieldName)
-          .ifPresent(
-              fieldElement ->
-                  FieldAnnotationExtractor.extractDefaultValue(fieldElement)
-                      .ifPresent(
-                          rawDefault ->
-                              result
-                                  .get()
-                                  .setDefaultValue(
-                                      FieldAnnotationExtractor.formatDefaultExpression(
-                                          rawDefault, result.get().getFieldType()))));
+      tryApplyDefaultFromField(result.get(), dtoTypeElement, fieldName);
     }
 
     if (result.isPresent()) {
@@ -814,7 +811,7 @@ public class BuilderDefinitionCreator {
     }
 
     // Extract default value from @Default or @DefaultValue annotation (if present)
-    FieldAnnotationExtractor.extractDefaultValue(param)
+    FieldAnnotationExtractor.extractAnnotationValue(param, DEFAULT_ANNOTATION_NAMES)
         .ifPresent(
             rawDefault ->
                 field.setDefaultValue(
@@ -828,6 +825,31 @@ public class BuilderDefinitionCreator {
     generatedMethods.forEach(field::addMethod);
 
     return Optional.of(field);
+  }
+
+  /**
+   * Extracts and applies a default value from the field declaration itself, if the field carries a
+   * recognized default annotation (e.g. {@code @Default}). This is used as a fallback when no
+   * default was found on the setter parameter.
+   *
+   * @param field the field DTO to update with a default value if one is found
+   * @param dtoTypeElement the enclosing class element to search for the field
+   * @param fieldName the simple field name to look for
+   */
+  private static void tryApplyDefaultFromField(
+      FieldDto field, TypeElement dtoTypeElement, String fieldName) {
+    Optional<VariableElement> fieldElement = findFieldElement(dtoTypeElement, fieldName);
+    if (fieldElement.isEmpty()) {
+      return;
+    }
+    Optional<String> rawDefault =
+        FieldAnnotationExtractor.extractAnnotationValue(
+            fieldElement.get(), DEFAULT_ANNOTATION_NAMES);
+    if (rawDefault.isEmpty()) {
+      return;
+    }
+    field.setDefaultValue(
+        FieldAnnotationExtractor.formatDefaultExpression(rawDefault.get(), field.getFieldType()));
   }
 
   /**

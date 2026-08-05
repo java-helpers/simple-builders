@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -263,20 +264,23 @@ public final class FieldAnnotationExtractor {
   }
 
   /**
-   * Extracts a default value expression from annotations named {@code Default} or {@code
-   * DefaultValue} on the given parameter, regardless of package.
+   * Extracts the {@code value()} member from any annotation on the given element whose simple name
+   * matches one of the provided names, regardless of package.
    *
-   * <p>Detects annotations from any package (e.g. {@code
+   * <p>For example, if {@code annotationNames} contains {@code "Default"} and {@code
+   * "DefaultValue"}, this will detect annotations from any package (e.g. {@code
    * org.javahelpers.simple.builders.core.annotations.Default}, {@code jakarta.ws.rs.DefaultValue})
    * as long as they have a {@code String value()} member.
    *
-   * @param param the parameter element to check
-   * @return an {@link Optional} containing the raw default value string, or empty if no default
-   *     annotation is present
+   * @param element the element to check for annotations
+   * @param annotationNames the set of annotation simple names to look for
+   * @return an {@link Optional} containing the raw value string, or empty if no matching annotation
+   *     with a {@code value()} member is present
    */
-  public static Optional<String> extractDefaultValue(VariableElement param) {
-    return param.getAnnotationMirrors().stream()
-        .filter(FieldAnnotationExtractor::isDefaultAnnotation)
+  public static Optional<String> extractAnnotationValue(
+      Element element, Set<String> annotationNames) {
+    return element.getAnnotationMirrors().stream()
+        .filter(mirror -> isAnnotationWithName(mirror, annotationNames))
         .map(FieldAnnotationExtractor::getValueMember)
         .filter(Optional::isPresent)
         .map(Optional::get)
@@ -284,18 +288,18 @@ public final class FieldAnnotationExtractor {
   }
 
   /**
-   * Checks if the given annotation mirror represents a default-value annotation (named {@code
-   * Default} or {@code DefaultValue} from any package).
+   * Checks if the given annotation mirror's simple name matches one of the provided names.
    *
    * @param mirror the annotation mirror to check
-   * @return {@code true} if the annotation is a recognized default-value annotation
+   * @param annotationNames the set of annotation simple names to match against
+   * @return {@code true} if the annotation's simple name is in the provided set
    */
-  private static boolean isDefaultAnnotation(AnnotationMirror mirror) {
+  private static boolean isAnnotationWithName(
+      AnnotationMirror mirror, Set<String> annotationNames) {
     if (!(mirror.getAnnotationType().asElement() instanceof TypeElement type)) {
       return false;
     }
-    String name = type.getSimpleName().toString();
-    return "Default".equals(name) || "DefaultValue".equals(name);
+    return annotationNames.contains(type.getSimpleName().toString());
   }
 
   /**
