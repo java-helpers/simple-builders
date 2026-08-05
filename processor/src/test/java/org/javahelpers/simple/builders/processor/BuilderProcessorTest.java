@@ -3626,4 +3626,50 @@ class BuilderProcessorTest {
         "public class OrderDtoFactory implements IBuilderBase<Order>",
         "@BuilderImplementation(forClass = Order.class)");
   }
+
+  /**
+   * Verifies that a setter with field-specific generics (e.g. {@code public <T> void setValue(T
+   * value)}) is skipped by {@code createFieldFromSetter} and does not produce a builder field,
+   * while normal setters in the same class are still processed.
+   */
+  @Test
+  void shouldSkipSetterWithFieldSpecificGenerics() {
+    String className = "GenericSetterDto";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+            @SimpleBuilder
+            public class GenericSetterDto {
+              private String name;
+              private Object value;
+
+              public String getName() { return name; }
+              public void setName(String name) { this.name = name; }
+
+              public Object getValue() { return value; }
+              public <T> void setValue(T value) { this.value = value; }
+            }
+            """);
+
+    Compilation compilation = compile(sourceFile);
+    assertThat(compilation).succeeded();
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+
+    // The normal setter for "name" must produce a builder method
+    ProcessorAsserts.assertContaining(
+        generatedCode, "public GenericSetterDtoBuilder name(String name)");
+
+    // The generic setter for "value" must NOT produce a builder method
+    ProcessorAsserts.assertNotContaining(generatedCode, "public GenericSetterDtoBuilder value(");
+
+    // Compilation should have a warning about the ignored generic setter
+    assertThat(compilation)
+        .hadWarningContaining("Field 'value' has field-specific generics, so it will be ignored");
+  }
 }

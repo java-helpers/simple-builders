@@ -222,6 +222,50 @@ ProductBuilder.create()
 The `NotNull`/`NonNull` simple-name check is framework-agnostic; use the annotation type already
 used by your project.
 
+#### Default Values
+
+Specify default values for fields that are applied when not explicitly set before `build()`:
+
+```java
+import org.javahelpers.simple.builders.core.annotations.Default;
+
+@SimpleBuilder
+public record Product(
+    String name,
+    double price,
+    @Default("GENERAL") String category,
+    @Default("true") boolean active
+) {}
+
+// category defaults to "GENERAL", active defaults to true
+Product product = ProductBuilder.create()
+    .name("Laptop")
+    .price(1500.0)
+    .build();
+// product.category() == "GENERAL"
+// product.active() == true
+
+// Explicit values override defaults
+Product custom = ProductBuilder.create()
+    .name("Widget")
+    .price(9.99)
+    .category("ACCESSORIES")
+    .active(false)
+    .build();
+// custom.category() == "ACCESSORIES"
+```
+
+The `@Default` annotation works on both **constructor parameters** (records) and **fields** (classes with setters). The `value()` is a string expression interpreted based on the field type:
+
+- **String** — wrapped in double quotes automatically (e.g. `@Default("GENERAL")` generates `"GENERAL"`)
+- **char** — wrapped in single quotes (e.g. `@Default("A")` generates `'A'`)
+- **numeric/boolean primitives** — used as-is (e.g. `@Default("0.0")` generates `0.0`)
+- **complex types** — used as a raw Java expression (e.g. `@Default("List.of()")` generates `List.of()`)
+
+**Framework-agnostic detection:** The processor also detects annotations named `Default` or `DefaultValue` from any package (e.g. Jakarta REST `@DefaultValue`) if they have a `String value()` member.
+
+**Interaction with non-null checks:** A field with a `@Default` is never considered "required" — even if annotated with `@NotNull`, no validation error is raised when the field is unset.
+
 #### Conditional Builder Logic
 
 Apply builder modifications conditionally using the `conditional()` method:
@@ -409,6 +453,7 @@ Examples demonstrating special annotations and nested object relationships:
 
 - **Sponsor DTO**: [`SponsorDto.java`](example/src/main/java/org/javahelpers/simple/builders/example/SponsorDto.java) and [`SponsorDtoBuilder.java`](example/generated-example-builder/org/javahelpers/simple/builders/example/SponsorDtoBuilder.java) - Simple DTO used as nested object in other examples
 - **Mannschaft DTO**: [`MannschaftDto.java`](example/src/main/java/org/javahelpers/simple/builders/example/MannschaftDto.java) and [`MannschaftDtoBuilder.java`](example/generated-example-builder/org/javahelpers/simple/builders/example/MannschaftDtoBuilder.java) - Demonstrates `@IgnoreInBuilder` annotation to exclude specific setter methods from the generated builder, plus Set collections with nested objects
+- **Default Values**: [`ProductWithDefaults.java`](example/src/main/java/org/javahelpers/simple/builders/example/ProductWithDefaults.java) (record) and [`OrderWithDefaults.java`](example/src/main/java/org/javahelpers/simple/builders/example/OrderWithDefaults.java) (class) - Demonstrate `@Default` annotation for unset builder fields
 
 These examples serve as both documentation and integration tests for the annotation processor.
 

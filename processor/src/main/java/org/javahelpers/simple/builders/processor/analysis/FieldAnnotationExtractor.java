@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -37,6 +38,7 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.simple.builders.processor.model.type.TypeNamePrimitive;
 import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
 /** Extractor for field annotations, converting them from Java model elements to DTOs. */
@@ -259,5 +261,85 @@ public final class FieldAnnotationExtractor {
    */
   private static boolean isNonNullAnnotation(String simpleName) {
     return "NotNull".equals(simpleName) || "NonNull".equals(simpleName);
+  }
+
+  /**
+   * Extracts the {@code value()} member from any annotation on the given element whose simple name
+   * matches one of the provided names, regardless of package.
+   *
+   * <p>For example, if {@code annotationNames} contains {@code "Default"} and {@code
+   * "DefaultValue"}, this will detect annotations from any package (e.g. {@code
+   * org.javahelpers.simple.builders.core.annotations.Default}, {@code jakarta.ws.rs.DefaultValue})
+   * as long as they have a {@code String value()} member.
+   *
+   * @param element the element to check for annotations
+   * @param annotationNames the set of annotation simple names to look for
+   * @return an {@link Optional} containing the raw value string, or empty if no matching annotation
+   *     with a {@code value()} member is present
+   */
+  public static Optional<String> extractAnnotationValue(
+      Element element, Set<String> annotationNames) {
+    return element.getAnnotationMirrors().stream()
+        .filter(mirror -> isAnnotationWithName(mirror, annotationNames))
+        .map(FieldAnnotationExtractor::getValueMember)
+        .filter(Optional::isPresent)
+        .map(Optional::get)
+        .findFirst();
+  }
+
+  /**
+   * Checks if the given annotation mirror's simple name matches one of the provided names.
+   *
+   * @param mirror the annotation mirror to check
+   * @param annotationNames the set of annotation simple names to match against
+   * @return {@code true} if the annotation's simple name is in the provided set
+   */
+  private static boolean isAnnotationWithName(
+      AnnotationMirror mirror, Set<String> annotationNames) {
+    if (!(mirror.getAnnotationType().asElement() instanceof TypeElement type)) {
+      return false;
+    }
+    return annotationNames.contains(type.getSimpleName().toString());
+  }
+
+  /**
+   * Extracts the {@code value()} member from an annotation mirror as a string.
+   *
+   * @param mirror the annotation mirror to extract from
+   * @return an {@link Optional} containing the value string, or empty if no {@code value()} member
+   *     is present
+   */
+  private static Optional<String> getValueMember(AnnotationMirror mirror) {
+    return mirror.getElementValues().entrySet().stream()
+        .filter(e -> "value".equals(e.getKey().getSimpleName().toString()))
+        .map(e -> e.getValue().getValue().toString())
+        .findFirst();
+  }
+
+  /**
+   * Formats a raw string default value as a Java expression based on the field type.
+   *
+   * <p>Interpretation rules:
+   *
+   * <ul>
+   *   <li>{@code String} — wrapped in double quotes, e.g. {@code "GENERAL"}
+   *   <li>{@code char} — wrapped in single quotes, e.g. {@code 'A'}
+   *   <li>numeric/boolean primitives — used as-is, e.g. {@code 0.0}, {@code true}
+   *   <li>complex types (List, custom objects) — used as a raw Java expression, e.g. {@code
+   *       List.of()}
+   * </ul>
+   *
+   * @param rawValue the raw string from the annotation's {@code value()} member
+   * @param fieldType the {@link TypeName} of the target field
+   * @return a formatted Java expression string suitable for code generation
+   */
+  public static String formatDefaultExpression(String rawValue, TypeName fieldType) {
+    if (fieldType.equals(TypeName.of(String.class))) {
+      return "\"%s\"".formatted(rawValue);
+    }
+    if (fieldType.equals(TypeNamePrimitive.CHAR)) {
+      return "'%s'".formatted(rawValue);
+    }
+    return rawValue;
   }
 }

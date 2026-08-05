@@ -57,14 +57,58 @@ public record TrackedValue<T>(T value, boolean isChanged, boolean isInitial) {
   }
 
   /**
+   * Returns the value if set, otherwise the given default.
+   *
+   * @param defaultValue the default to return if unset
+   * @return the value if set, otherwise the default
+   */
+  public T valueOr(T defaultValue) {
+    return isSet() ? value : defaultValue;
+  }
+
+  /**
    * Executes the provided {@link Consumer} only if this value has been set (initial value or
-   * changed).
+   * changed). Returns a {@link DefaultValueApplier} that can fluently provide a default via {@code
+   * .orElse(default)} if the value was unset.
+   *
+   * <p>Existing code that ignores the return value (e.g. {@code tracked.ifSet(consumer);})
+   * continues to work unchanged.
    *
    * @param consumer action to perform with the current {@link #value()}
+   * @return a {@link DefaultValueApplier} for fluent default handling
    */
-  public void ifSet(Consumer<T> consumer) {
+  public DefaultValueApplier<T> ifSet(Consumer<T> consumer) {
     if (isSet()) {
       consumer.accept(value);
+    }
+    return new DefaultValueApplier<>(isSet(), consumer);
+  }
+
+  /**
+   * Intermediate result returned by {@link #ifSet(Consumer)} to support fluent default-value
+   * application via {@code .orElse(default)}.
+   *
+   * <p>When {@link #ifSet(Consumer)} is called on a set {@link TrackedValue}, the consumer is
+   * invoked immediately and {@code alreadyApplied} is {@code true}, making the subsequent {@link
+   * #orElse(Object)} call a no-op. When called on an unset value, the consumer is not invoked and
+   * {@code alreadyApplied} is {@code false}, so {@link #orElse(Object)} applies the default value
+   * to the same consumer.
+   *
+   * @param <T> the value type
+   * @param alreadyApplied whether the consumer has already been invoked
+   * @param consumer the consumer to apply the default value to if not already applied
+   */
+  public record DefaultValueApplier<T>(boolean alreadyApplied, Consumer<T> consumer) {
+
+    /**
+     * Applies the given default value to the consumer if the original value was unset.
+     *
+     * @param defaultValue the default value to apply
+     */
+    public void orElse(T defaultValue) {
+      if (!alreadyApplied) {
+        consumer.accept(defaultValue);
+      }
     }
   }
 

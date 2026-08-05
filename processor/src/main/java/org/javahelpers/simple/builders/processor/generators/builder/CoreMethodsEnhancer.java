@@ -133,9 +133,9 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
     // Create method implementation with validation and setter application
     StringBuilder code = new StringBuilder();
 
-    // Add validation for non-nullable constructor fields
+    // Add validation for required constructor fields (non-nullable AND no default)
     for (var field : builderDto.getConstructorFieldsForBuilder()) {
-      if (field.isNonNullable()) {
+      if (field.isRequired()) {
         code.append("if (!this.")
             .append(field.getFieldNameInBuilder())
             .append(".isSet()) {\n")
@@ -153,12 +153,12 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
       }
     }
 
-    // Add validation for non-nullable setter fields
+    // Add validation for required setter fields (non-nullable AND no default)
     // Note: Primitives are stored as boxed types in TrackedValue<Integer>, etc.
     // They can be null via Supplier methods: builder.pages(() -> null)
-    // So we need null checks for ALL non-nullable fields, including primitives
+    // So we need null checks for ALL required fields, including primitives
     for (var field : builderDto.getSetterFieldsForBuilder()) {
-      if (field.isNonNullable()) {
+      if (field.isRequired()) {
         code.append("if (this.")
             .append(field.getFieldNameInBuilder())
             .append(".isSet() && this.")
@@ -183,13 +183,17 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
           .append(");\n");
     }
 
-    // Apply setter-based fields
+    // Apply setter-based fields, using default value if declared and field is unset
     for (var field : builderDto.getSetterFieldsForBuilder()) {
       code.append("this.")
           .append(field.getFieldNameInBuilder())
           .append(".ifSet(result::")
           .append(field.getSetterName())
-          .append(");\n");
+          .append(")");
+      field
+          .getDefaultValue()
+          .ifPresent(defaultValue -> code.append(".orElse(").append(defaultValue).append(")"));
+      code.append(";\n");
     }
 
     code.append("return result;");
@@ -292,7 +296,14 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
   /** Creates the constructor arguments string for the build() method. */
   private String createConstructorArgsString(BuilderDefinitionDto builderDto) {
     return builderDto.getConstructorFieldsForBuilder().stream()
-        .map(field -> "this." + field.getFieldNameInBuilder() + ".value()")
+        .map(
+            field -> {
+              String fieldRef = "this." + field.getFieldNameInBuilder();
+              return field
+                  .getDefaultValue()
+                  .map(defaultExpr -> fieldRef + ".valueOr(" + defaultExpr + ")")
+                  .orElseGet(() -> fieldRef + ".value()");
+            })
         .reduce((a, b) -> a + ", " + b)
         .orElse("");
   }
