@@ -334,33 +334,12 @@ public final class FieldAnnotationExtractor {
    * @return a formatted Java expression string suitable for code generation
    */
   public static String formatDefaultExpression(String rawValue, TypeName fieldType) {
-    if (isStringType(fieldType)) {
+    if (fieldType.equals(TypeName.of(String.class))) {
       return "\"%s\"".formatted(rawValue);
     }
-    if (isCharType(fieldType)) {
+    if (fieldType.equals(TypeNamePrimitive.CHAR)) {
       return "'%s'".formatted(rawValue);
     }
     return rawValue;
-  }
-
-  /**
-   * Checks if the given type is {@code java.lang.String}.
-   *
-   * @param type the type to check
-   * @return {@code true} if the type is String
-   */
-  private static boolean isStringType(TypeName type) {
-    return "java.lang".equals(type.getPackageName()) && "String".equals(type.getClassName());
-  }
-
-  /**
-   * Checks if the given type is the {@code char} primitive.
-   *
-   * @param type the type to check
-   * @return {@code true} if the type is char
-   */
-  private static boolean isCharType(TypeName type) {
-    return type instanceof TypeNamePrimitive primitive
-        && primitive.getType() == TypeNamePrimitive.PrimitiveTypeEnum.CHAR;
   }
 }
