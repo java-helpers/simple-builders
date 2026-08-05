@@ -415,9 +415,9 @@ public final class MethodGeneratorUtil {
    *
    * <p>This helper method retrieves an example value for the given element type and formats it as a
    * fluent-chain fragment showing two values (e.g., {@code methodName(value1, value2)}) to make it
-   * clear that the method accepts multiple arguments. The fragment is stored on the BuilderMethodDto for
-   * later use by the ClassJavaDocEnhancer to synthesize both method-level and class-level Javadoc
-   * examples.
+   * clear that the method accepts multiple arguments. The fragment is stored on the
+   * BuilderMethodDto for later use by the ClassJavaDocEnhancer to synthesize both method-level and
+   * class-level Javadoc examples.
    *
    * <p>If no example value is available for the element type, the fragment is not added.
    *
@@ -436,8 +436,8 @@ public final class MethodGeneratorUtil {
    * <p>This helper method retrieves an example value for the given field type and formats it as a
    * fluent-chain fragment with a supplier. For types with an empty constructor, a method reference
    * is used (e.g., {@code methodName(Type::new)}); otherwise a lambda is used (e.g., {@code
-   * methodName(() -> exampleValue)}). The fragment is stored on the BuilderMethodDto for later use by the
-   * ClassJavaDocEnhancer to synthesize both method-level and class-level Javadoc examples.
+   * methodName(() -> exampleValue)}). The fragment is stored on the BuilderMethodDto for later use
+   * by the ClassJavaDocEnhancer to synthesize both method-level and class-level Javadoc examples.
    *
    * <p>If no example value is available for the field type, the fragment is not added.
    *
