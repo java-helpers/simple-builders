@@ -28,10 +28,14 @@ import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts
 import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils.loadGeneratedSource;
 
 import com.google.testing.compile.Compilation;
+import java.util.stream.Stream;
 import javax.tools.JavaFileObject;
 import org.javahelpers.simple.builders.processor.testing.ProcessorAsserts;
 import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 /**
  * Tests for default value support via {@code @Default} and third-party {@code @DefaultValue}
@@ -43,21 +47,10 @@ class DefaultValueTest {
     return ProcessorTestUtils.createCompiler().compile(sourceFiles);
   }
 
-  /**
-   * Verifies that a {@code @Default} annotation on a record constructor parameter causes the
-   * generated {@code build()} method to use {@code valueOr("GENERAL")} instead of {@code value()},
-   * and that the field is not subject to required-field validation.
-   *
-   * <p>Also verifies the builder setter method for the defaulted field is still generated, so users
-   * can override the default with an explicit value.
-   */
-  @Test
-  void defaultAppliedWhenUnset_constructorField_record() {
-    String recordName = "ProductRecord";
-    String builderClassName = recordName + "Builder";
-
-    JavaFileObject sourceFile =
-        ProcessorTestUtils.forSource(
+  private static Stream<Arguments> constructorDefaultCases() {
+    return Stream.of(
+        Arguments.of(
+            "ProductRecord",
             """
             package test;
 
@@ -69,41 +62,21 @@ class DefaultValueTest {
                 String name,
                 double price,
                 @Default("GENERAL") String category) {}
-            """);
-
-    Compilation compilation = compile(sourceFile);
-    String generatedCode = loadGeneratedSource(compilation, builderClassName);
-    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-
-    // build() must use valueOr with the quoted String default for the category field
-    ProcessorAsserts.assertContaining(
-        generatedCode,
-        """
-    public ProductRecord build() {
-      if (!this.price.isSet()) {
-        throw new IllegalStateException("Required field 'price' must be set before calling build()");
-      }
-      if (this.price.value() == null) {
-        throw new IllegalStateException("Field 'price' is marked as non-null but null value was provided");
-      }
-      ProductRecord result = new ProductRecord(this.name.value(), this.price.value(), this.category.valueOr("GENERAL"));
-      return result;
-    }
-    """);
-  }
-
-  /**
-   * Verifies that {@code @Default} on primitive-typed record parameters ({@code double}, {@code
-   * int}) produces unquoted raw expressions in {@code valueOr()} calls, since primitives cannot be
-   * null and do not need string quoting.
-   */
-  @Test
-  void primitiveDefault_constructorField_record() {
-    String recordName = "MetricRecord";
-    String builderClassName = recordName + "Builder";
-
-    JavaFileObject sourceFile =
-        ProcessorTestUtils.forSource(
+            """,
+            """
+        public ProductRecord build() {
+          if (!this.price.isSet()) {
+            throw new IllegalStateException("Required field 'price' must be set before calling build()");
+          }
+          if (this.price.value() == null) {
+            throw new IllegalStateException("Field 'price' is marked as non-null but null value was provided");
+          }
+          ProductRecord result = new ProductRecord(this.name.value(), this.price.value(), this.category.valueOr("GENERAL"));
+          return result;
+        }
+        """),
+        Arguments.of(
+            "MetricRecord",
             """
             package test;
 
@@ -115,21 +88,40 @@ class DefaultValueTest {
                 String name,
                 @Default("0.0") double price,
                 @Default("0") int quantity) {}
-            """);
-
-    Compilation compilation = compile(sourceFile);
-    String generatedCode = loadGeneratedSource(compilation, builderClassName);
-    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-
-    // Primitives: raw expression (no quoting)
-    ProcessorAsserts.assertContaining(
-        generatedCode,
-        """
+            """,
+            """
          public MetricRecord build() {
            MetricRecord result = new MetricRecord(this.name.value(), this.price.valueOr(0.0), this.quantity.valueOr(0));
            return result;
          }
-        """);
+        """),
+        Arguments.of(
+            "PlainRecord",
+            """
+            package test;
+
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+            @SimpleBuilder
+            public record PlainRecord(String name, Integer age) {}
+            """,
+            """
+        public PlainRecord build() {
+          PlainRecord result = new PlainRecord(this.name.value(), this.age.value());
+          return result;
+        }
+        """));
+  }
+
+  @ParameterizedTest
+  @MethodSource("constructorDefaultCases")
+  void constructorDefaultCases_generateExpectedBuildMethod(
+      String recordName, String source, String expectedBuildMethod) {
+    String builderClassName = recordName + "Builder";
+    Compilation compilation = compile(ProcessorTestUtils.forSource(source));
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+    ProcessorAsserts.assertContaining(generatedCode, expectedBuildMethod);
   }
 
   /**
@@ -341,42 +333,6 @@ class DefaultValueTest {
         """
         public JakartaRecord build() {
           JakartaRecord result = new JakartaRecord(this.name.value(), this.category.valueOr("FALLBACK"));
-          return result;
-        }
-        """);
-  }
-
-  /**
-   * Verifies that a record <em>without</em> any {@code @Default} annotations generates {@code
-   * build()} code using plain {@code value()} calls, with no {@code valueOr()} anywhere. This is a
-   * regression guard to ensure the default-value feature does not change behavior when not used.
-   */
-  @Test
-  void noDefault_usesValueDirectly_constructorField() {
-    String recordName = "PlainRecord";
-    String builderClassName = recordName + "Builder";
-
-    JavaFileObject sourceFile =
-        ProcessorTestUtils.forSource(
-            """
-            package test;
-
-            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
-
-            @SimpleBuilder
-            public record PlainRecord(String name, Integer age) {}
-            """);
-
-    Compilation compilation = compile(sourceFile);
-    String generatedCode = loadGeneratedSource(compilation, builderClassName);
-    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-
-    // Without default, should use plain .value()
-    ProcessorAsserts.assertContaining(
-        generatedCode,
-        """
-        public PlainRecord build() {
-          PlainRecord result = new PlainRecord(this.name.value(), this.age.value());
           return result;
         }
         """);

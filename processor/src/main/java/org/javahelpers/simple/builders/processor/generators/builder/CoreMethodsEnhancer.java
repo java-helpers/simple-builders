@@ -190,9 +190,9 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
           .append(".ifSet(result::")
           .append(field.getSetterName())
           .append(")");
-      if (field.getDefaultValue().isPresent()) {
-        code.append(".orElse(").append(field.getDefaultValue().get()).append(")");
-      }
+      field
+          .getDefaultValue()
+          .ifPresent(defaultValue -> code.append(".orElse(").append(defaultValue).append(")"));
       code.append(";\n");
     }
 
