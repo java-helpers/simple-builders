@@ -693,7 +693,8 @@ public final class JavaLangMapper {
    * @return true if it's a concrete class
    */
   private static boolean isConcreteClass(TypeElement typeElement) {
-    return typeElement.getKind() == javax.lang.model.element.ElementKind.CLASS
+    return typeElement != null
+        && typeElement.getKind() == javax.lang.model.element.ElementKind.CLASS
         && !typeElement.getModifiers().contains(javax.lang.model.element.Modifier.ABSTRACT);
   }
 }
