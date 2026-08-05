@@ -636,15 +636,19 @@ public class BuilderDefinitionCreator {
             builderType,
             context);
 
-    // If no default was found on the setter parameter, check the field element itself
-    // (annotations like @Default may be placed on the field rather than the setter param)
-    if (result.isPresent() && result.get().getDefaultValue().isEmpty()) {
-      tryApplyDefaultFromField(result.get(), dtoTypeElement, fieldName);
+    if (result.isEmpty()) {
+      return result;
     }
 
-    if (result.isPresent()) {
-      fieldNameRegistry.put(finalFieldName, result.get());
+    FieldDto field = result.get();
+
+    // If no default was found on the setter parameter, check the field element itself
+    // (annotations like @Default may be placed on the field rather than the setter param)
+    if (field.getDefaultValue().isEmpty()) {
+      tryApplyDefaultFromField(field, dtoTypeElement, fieldName);
     }
+
+    fieldNameRegistry.put(finalFieldName, field);
 
     return result;
   }

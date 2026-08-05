@@ -96,6 +96,25 @@ class DefaultValueTest {
          }
         """),
         Arguments.of(
+            "CharRecord",
+            """
+            package test;
+
+            import org.javahelpers.simple.builders.core.annotations.Default;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+            @SimpleBuilder
+            public record CharRecord(
+                String name,
+                @Default("X") char grade) {}
+            """,
+            """
+        public CharRecord build() {
+          CharRecord result = new CharRecord(this.name.value(), this.grade.valueOr('X'));
+          return result;
+        }
+        """),
+        Arguments.of(
             "PlainRecord",
             """
             package test;
