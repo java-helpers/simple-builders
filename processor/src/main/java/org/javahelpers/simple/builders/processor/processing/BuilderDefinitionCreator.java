@@ -639,18 +639,7 @@ public class BuilderDefinitionCreator {
     // If no default was found on the setter parameter, check the field element itself
     // (annotations like @Default may be placed on the field rather than the setter param)
     if (result.isPresent() && result.get().getDefaultValue().isEmpty()) {
-      findFieldElement(dtoTypeElement, fieldName)
-          .ifPresent(
-              fieldElement ->
-                  FieldAnnotationExtractor.extractAnnotationValue(
-                          fieldElement, DEFAULT_ANNOTATION_NAMES)
-                      .ifPresent(
-                          rawDefault ->
-                              result
-                                  .get()
-                                  .setDefaultValue(
-                                      FieldAnnotationExtractor.formatDefaultExpression(
-                                          rawDefault, result.get().getFieldType()))));
+      tryApplyDefaultFromField(result.get(), dtoTypeElement, fieldName);
     }
 
     if (result.isPresent()) {
@@ -833,6 +822,31 @@ public class BuilderDefinitionCreator {
     generatedMethods.forEach(field::addMethod);
 
     return Optional.of(field);
+  }
+
+  /**
+   * Attempts to extract and apply a default value from the field declaration itself, if the field
+   * carries a recognized default annotation (e.g. {@code @Default}). Used as a fallback when no
+   * default was found on the setter parameter.
+   *
+   * @param field the field DTO to update with a default value if one is found
+   * @param dtoTypeElement the enclosing class element to search for the field
+   * @param fieldName the simple field name to look for
+   */
+  private static void tryApplyDefaultFromField(
+      FieldDto field, TypeElement dtoTypeElement, String fieldName) {
+    Optional<VariableElement> fieldElement = findFieldElement(dtoTypeElement, fieldName);
+    if (fieldElement.isEmpty()) {
+      return;
+    }
+    Optional<String> rawDefault =
+        FieldAnnotationExtractor.extractAnnotationValue(
+            fieldElement.get(), DEFAULT_ANNOTATION_NAMES);
+    if (rawDefault.isEmpty()) {
+      return;
+    }
+    field.setDefaultValue(
+        FieldAnnotationExtractor.formatDefaultExpression(rawDefault.get(), field.getFieldType()));
   }
 
   /**
