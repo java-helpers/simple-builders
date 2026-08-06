@@ -2,6 +2,7 @@ package org.javahelpers.simple.builders.processor.util;
 
 import java.util.Comparator;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
@@ -15,6 +16,7 @@ import org.javahelpers.simple.builders.processor.model.method.MethodCodePlacehol
 import org.javahelpers.simple.builders.processor.model.method.MethodCodeTypePlaceholder;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
+import org.javahelpers.simple.builders.processor.model.type.GenericParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameArray;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
@@ -147,9 +149,10 @@ public class ImportCollector {
 
     // Add class type and generics
     addTypeImports(classDef.getTypeName());
-    classDef
-        .getGenerics()
-        .forEach(generic -> generic.getUpperBounds().forEach(this::addTypeImports));
+    List<GenericParameterDto> generics = classDef.getGenerics();
+    if (generics != null) {
+      generics.forEach(generic -> generic.getUpperBounds().forEach(this::addTypeImports));
+    }
 
     // Add interface imports
     classDef.getInterfaces().forEach(this::addInterfaceImports);
