@@ -183,8 +183,6 @@ jobs:
           #   0.6.0 -> 0.7.0-SNAPSHOT
           MAJOR=$(echo "$VERSION" | cut -d. -f1)
           MINOR=$(echo "$VERSION" | cut -d. -f2)
-          # Strip any pre-release suffix from PATCH for the computation.
-          PATCH=$(echo "$VERSION" | cut -d. -f3 | cut -d- -f1)
           NEXT_MINOR=$((MINOR + 1))
           NEXT_VERSION="${MAJOR}.${NEXT_MINOR}.0-SNAPSHOT"
           echo "NEXT_VERSION=$NEXT_VERSION" >> "$GITHUB_OUTPUT"
