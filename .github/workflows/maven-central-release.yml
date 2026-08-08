@@ -1,19 +1,17 @@
 # GitHub Action workflow for releasing artifacts to Maven Central.
-# Triggered manually via workflow_dispatch with an explicit release_version
-# input (there is no tag trigger). It handles:
-# - Version management from the release_version input (not from git tags)
+# Triggered manually via workflow_dispatch (no inputs; there is no tag trigger).
+# The release version is derived from the current POM snapshot version by
+# stripping the -SNAPSHOT suffix, so main must always be on a -SNAPSHOT version.
+# It handles:
+# - Version derivation from the POM (not from a manual input or git tags)
 # - GPG signing of artifacts
 # - Deployment to Maven Central via Sonatype
+# - Next-snapshot version bump committed on the release branch
 
 name: Release to Maven Central
 
 on:
   workflow_dispatch:
-    inputs:
-      release_version:
-        description: 'Release version (e.g., 0.2.0)'
-        required: true
-        type: string
 
 # Serialize releases: never run two release jobs at once, and never cancel an
 # in-progress release (cancelling mid-deploy could leave a partial publish).
@@ -53,34 +51,43 @@ jobs:
           
       - name: Determine version
         id: version
-        env:
-          RELEASE_VERSION: ${{ github.event.inputs.release_version }}
         run: |
-          # Do NOT interpolate the workflow input directly into the shell;
-          # read the untrusted input from an environment variable instead to
-          # avoid script injection.
-          VERSION="$RELEASE_VERSION"
+          # Read the current version from the root POM. The POM must be on a
+          # -SNAPSHOT version; the release version is derived by stripping the
+          # suffix. This eliminates the risk of releasing the wrong version due
+          # to a manual input typo.
+          CURRENT_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+
+          if [[ "$CURRENT_VERSION" != *-SNAPSHOT ]]; then
+            echo "::error::Current POM version is '$CURRENT_VERSION', expected a -SNAPSHOT version. main must always be on a snapshot version."
+            exit 1
+          fi
+
+          # Strip the -SNAPSHOT suffix to derive the release version.
+          VERSION="${CURRENT_VERSION%-SNAPSHOT}"
 
           # Validate against a strict semver pattern before using it anywhere.
           if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$ ]]; then
-            echo "::error::Invalid release version '$VERSION'. Expected semver, e.g. 0.2.0 or 0.2.0-beta.1"
+            echo "::error::Derived release version '$VERSION' is not valid semver. Expected e.g. 0.2.0 or 0.2.0-beta.1"
             exit 1
           fi
 
           echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "Releasing version: $VERSION"
+          echo "Releasing version: $VERSION (derived from POM snapshot $CURRENT_VERSION)"
           
       - name: Update POM versions
         run: |
           VERSION=${{ steps.version.outputs.VERSION }}
           echo "Setting version to $VERSION"
-          
+
           # Update parent POM
           mvn versions:set -DnewVersion=$VERSION -DgenerateBackupPoms=false
-          
-          # Update module POMs
-          mvn versions:set -DnewVersion=$VERSION -DgenerateBackupPoms=false -pl core
-          mvn versions:set -DnewVersion=$VERSION -DgenerateBackupPoms=false -pl processor
+
+          # Update ALL module POMs. The modules have no <parent> element, so
+          # each must be set individually. Only core and processor are deployed
+          # to Maven Central, but all modules must share the same version for
+          # the reactor build to work correctly.
+          mvn versions:set -DnewVersion=$VERSION -DgenerateBackupPoms=false -pl core,processor,example,example-custom-generator
 
       - name: Update reproducible build timestamp
         run: |
@@ -102,7 +109,7 @@ jobs:
           # update to main goes through a reviewed pull request instead of a
           # direct push that bypasses branch protection.
           git checkout -B "$BRANCH"
-          git add pom.xml core/pom.xml processor/pom.xml
+          git add pom.xml core/pom.xml processor/pom.xml example/pom.xml example-custom-generator/pom.xml
           echo "branch=$BRANCH" >> $GITHUB_OUTPUT
 
           # Only commit if there are changes. Note: no "[skip ci]" so the
@@ -163,7 +170,35 @@ jobs:
           subject-path: |
             core/target/simple-builders-core-*.jar
             processor/target/simple-builders-processor-*.jar
-          
+
+      - name: Prepare next snapshot version
+        id: next_version
+        if: success() && steps.commit.outputs.has_changes == 'true'
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+
+          # Compute the next snapshot version by incrementing the minor version
+          # and resetting the patch to 0. For example:
+          #   0.5.0 -> 0.6.0-SNAPSHOT
+          #   0.6.0 -> 0.7.0-SNAPSHOT
+          MAJOR=$(echo "$VERSION" | cut -d. -f1)
+          MINOR=$(echo "$VERSION" | cut -d. -f2)
+          # Strip any pre-release suffix from PATCH for the computation.
+          PATCH=$(echo "$VERSION" | cut -d. -f3 | cut -d- -f1)
+          NEXT_MINOR=$((MINOR + 1))
+          NEXT_VERSION="${MAJOR}.${NEXT_MINOR}.0-SNAPSHOT"
+          echo "NEXT_VERSION=$NEXT_VERSION" >> "$GITHUB_OUTPUT"
+          echo "Next snapshot version: $NEXT_VERSION"
+
+          # Set all POMs to the next snapshot version.
+          mvn versions:set -DnewVersion=$NEXT_VERSION -DgenerateBackupPoms=false
+          mvn versions:set -DnewVersion=$NEXT_VERSION -DgenerateBackupPoms=false -pl core,processor,example,example-custom-generator
+
+          # Commit as a second commit on the release branch. The tag (already
+          # created on the first commit) is unaffected by this second commit.
+          git add pom.xml core/pom.xml processor/pom.xml example/pom.xml example-custom-generator/pom.xml
+          git commit -m "chore: prepare next version $NEXT_VERSION"
+
       - name: Push release branch and tag
         if: success()
         run: |
@@ -172,7 +207,7 @@ jobs:
 
           # Push the release branch (never push directly to main).
           if [ "${{ steps.commit.outputs.has_changes }}" = "true" ]; then
-            git push origin "$BRANCH"
+            git push origin "$BRANCH" --force-with-lease
           fi
 
           # Push tag if it was newly created (check if tag exists remotely)
@@ -188,6 +223,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           VERSION=${{ steps.version.outputs.VERSION }}
+          NEXT_VERSION="${{ steps.next_version.outputs.NEXT_VERSION }}"
           BRANCH="${{ steps.commit.outputs.branch }}"
 
           # Open a reviewed PR to update main instead of pushing to it. This
@@ -198,8 +234,8 @@ jobs:
             gh pr create \
               --base main \
               --head "$BRANCH" \
-              --title "chore: release version $VERSION" \
-              --body "Automated version bump for release v$VERSION. Review and merge to update \`main\`; created via PR so branch protection is not bypassed."
+              --title "chore: release $VERSION and prepare $NEXT_VERSION" \
+              --body "Automated release of v$VERSION plus next-snapshot bump to \`$NEXT_VERSION\`. Review and merge to update \`main\`; created via PR so branch protection is not bypassed."
           fi
           
       - name: Create GitHub Release

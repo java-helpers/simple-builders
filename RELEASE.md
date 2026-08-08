@@ -13,19 +13,24 @@ Configure these GitHub secrets in **Settings** → **Secrets and variables** →
 
 ## How to Release
 
-**Actions** → **Release to Maven Central** → **Run workflow** → Enter version (e.g., `0.2.0`)
+**Actions** → **Release to Maven Central** → **Run workflow**
+
+No version input is required. The workflow derives the release version from the current POM by stripping the `-SNAPSHOT` suffix (e.g., `0.5.0-SNAPSHOT` → release `0.5.0`). The `main` branch must always be on a `-SNAPSHOT` version.
 
 ### What the Workflow Does
 
-1. Updates POM versions to release version
-2. Commits changes and creates tag `v0.2.0`
-3. Builds and verifies project with `-Prelease` (reproducible builds via `project.build.outputTimestamp`)
-4. Signs artifacts with GPG
-5. Generates a CycloneDX **SBOM** (JSON + XML) for each published module
-6. Runs tests and **stages** the deployment to the Sonatype Central portal (does **not** auto-publish)
-7. Creates a **build-provenance attestation** for the published jars
-8. Pushes commit and tag to `main`
-9. Creates **draft** GitHub release (jars, sources, javadoc **and SBOMs** attached; requires manual publish)
+1. Derives the release version from the current POM snapshot version (strips `-SNAPSHOT`)
+2. Updates POM versions to the release version in **all** modules (core, processor, example, example-custom-generator)
+3. Commits the version bump on a dedicated `release/vX.Y.Z` branch and creates tag `vX.Y.Z`
+4. Builds and verifies the project with `-Prelease` (reproducible builds via `project.build.outputTimestamp`)
+5. Signs artifacts with GPG
+6. Generates a CycloneDX **SBOM** (JSON + XML) for each published module
+7. Runs tests and **stages** the deployment to the Sonatype Central portal (does **not** auto-publish)
+8. Creates a **build-provenance attestation** for the published jars
+9. Bumps all module versions to the next snapshot (e.g., `0.6.0-SNAPSHOT` after releasing `0.5.0`) and commits it as a second commit on the release branch
+10. Pushes the release branch and tag (never pushes directly to `main`)
+11. Opens a **pull request** against `main` containing both the release version commit and the next-snapshot bump
+12. Creates **draft** GitHub release (jars, sources, javadoc **and SBOMs** attached; requires manual publish)
 
 ## After Release
 
@@ -38,9 +43,10 @@ Configure these GitHub secrets in **Settings** → **Secrets and variables** →
    <dependency>
      <groupId>io.github.java-helpers</groupId>
      <artifactId>simple-builders-core</artifactId>
-     <version>0.2.0</version>
+     <version>0.5.0</version>
    </dependency>
    ```
+5. **Merge the version-bump pull request**: Review and merge the PR opened by the workflow. This updates `main` with both the release version commit (tagged `vX.Y.Z`) and the next-snapshot bump (e.g., `0.6.0-SNAPSHOT`), so development can continue.
 
 ## Local Release (Advanced)
 
@@ -74,7 +80,9 @@ Each release produces, in addition to the GPG-signed jars:
 ## Notes
 
 - Project uses [Semantic Versioning](https://semver.org/) (MAJOR.MINOR.PATCH)
+- The `main` branch must always be on a `-SNAPSHOT` version; the release version is derived automatically
+- After each release, all modules are bumped to the next minor snapshot (e.g., `0.5.0` → `0.6.0-SNAPSHOT`)
 - Versions with `-` (e.g., `0.2.0-beta`) are marked as pre-releases
 - Releases are **staged** to the Sonatype Central portal and require a **manual publish** step; nothing is auto-released
-- Both `core` and `processor` modules are published to Maven Central
-- The `example` module is excluded from releases
+- Only `core` and `processor` modules are published to Maven Central
+- The `example` and `example-custom-generator` modules are version-updated alongside the released modules but are **not** deployed to Maven Central
