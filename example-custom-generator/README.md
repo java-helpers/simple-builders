@@ -100,7 +100,7 @@ To use the custom generator in your project:
         <version>${project.version}</version>
     </path>
     <path>
-        <groupId>org.javahelpers.simple.builders.example</groupId>
+        <groupId>org.javahelpers.simple.builders</groupId>
         <artifactId>example-custom-generator</artifactId>
         <version>${project.version}</version>
     </path>
