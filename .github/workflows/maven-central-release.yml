@@ -123,7 +123,7 @@ jobs:
             echo "No version changes detected - version already set to $VERSION"
             echo "has_changes=false" >> "$GITHUB_OUTPUT"
           else
-            git commit -m "chore: release version $VERSION"
+            git commit -m "release: set version $VERSION"
             echo "has_changes=true" >> "$GITHUB_OUTPUT"
           fi
 
@@ -270,7 +270,7 @@ jobs:
           # Commit as a second commit on the release branch. The tag (already
           # created and pushed on the first commit) is unaffected by this commit.
           git add pom.xml core/pom.xml processor/pom.xml example/pom.xml example-custom-generator/pom.xml
-          git commit -m "chore: prepare next version $NEXT_VERSION"
+          git commit -m "release: prepare next version $NEXT_VERSION"
 
           # Force-push the updated branch so the remote has both commits.
           # --force-with-lease is safe: it only succeeds if the remote branch is
@@ -294,6 +294,6 @@ jobs:
             gh pr create \
               --base main \
               --head "$BRANCH" \
-              --title "chore: release $VERSION and prepare $NEXT_VERSION" \
+              --title "Finalization PR: release $VERSION and prepare $NEXT_VERSION" \
               --body "Automated release of v$VERSION plus next-snapshot bump to \`$NEXT_VERSION\`. Review and merge to update \`main\`; created via PR so branch protection is not bypassed."
           fi
