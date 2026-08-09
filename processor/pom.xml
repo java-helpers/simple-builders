@@ -4,7 +4,7 @@
   
   <groupId>io.github.java-helpers</groupId>
   <artifactId>simple-builders-processor</artifactId>
-  <version>0.5.0</version>
+  <version>0.6.0-SNAPSHOT</version>
   <packaging>jar</packaging>
   
   <name>Simple Builders - Processor</name>
@@ -53,7 +53,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <!-- Reproducible builds: fixed timestamp for archive entries. Updated automatically by the
          release workflow; may be overridden per build with -Dproject.build.outputTimestamp. -->
-    <project.build.outputTimestamp>2026-08-09T08:36:52Z</project.build.outputTimestamp>
+    <project.build.outputTimestamp>2026-08-09T08:38:55Z</project.build.outputTimestamp>
     
     <!-- Dependency Versions -->
     <auto-service.version>1.1.1</auto-service.version>
