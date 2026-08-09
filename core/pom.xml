@@ -6,7 +6,7 @@
 
   <groupId>io.github.java-helpers</groupId>
   <artifactId>simple-builders-core</artifactId>
-  <version>0.5.0-SNAPSHOT</version>
+  <version>0.6.0-SNAPSHOT</version>
 
   <packaging>jar</packaging>
 
@@ -56,7 +56,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <!-- Reproducible builds: fixed timestamp for archive entries. Updated automatically by the
          release workflow; may be overridden per build with -Dproject.build.outputTimestamp. -->
-    <project.build.outputTimestamp>2025-01-01T00:00:00Z</project.build.outputTimestamp>
+    <project.build.outputTimestamp>2026-08-09T08:38:55Z</project.build.outputTimestamp>
 
     <!-- Java and Compiler Properties -->
     <java.version>17</java.version>
