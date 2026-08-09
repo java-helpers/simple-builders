@@ -30,13 +30,13 @@ jobs:
       # Required to create build-provenance attestations for the released jars.
       id-token: write
       attestations: write
-      
+
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-          
+
       - name: Set up JDK 17
         uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
         with:
@@ -48,7 +48,7 @@ jobs:
           server-password: MAVEN_PASSWORD
           gpg-private-key: ${{ secrets.GPG_SIGNING_KEY }}
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
-          
+
       - name: Determine version
         id: version
         run: |
@@ -79,7 +79,7 @@ jobs:
 
           echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Releasing version: $VERSION (derived from POM snapshot $CURRENT_VERSION)"
-          
+
       - name: Update POM versions
         run: |
           VERSION=${{ steps.version.outputs.VERSION }}
@@ -101,7 +101,7 @@ jobs:
           echo "Setting project.build.outputTimestamp to $TIMESTAMP for release $VERSION"
           # Pin archive entry timestamps to the release moment for reproducible builds.
           mvn versions:set-property -Dproperty=project.build.outputTimestamp -DnewVersion="$TIMESTAMP" -DgenerateBackupPoms=false -pl core,processor
-          
+
       - name: Commit version changes
         id: commit
         run: |
@@ -126,20 +126,20 @@ jobs:
             git commit -m "chore: release version $VERSION"
             echo "has_changes=true" >> "$GITHUB_OUTPUT"
           fi
-          
+
       - name: Create Git tag
         run: |
           VERSION=${{ steps.version.outputs.VERSION }}
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-          
+
           # Only create tag if it doesn't exist
           if git rev-parse "v$VERSION" >/dev/null 2>&1; then
             echo "Tag v$VERSION already exists"
           else
             git tag -a "v$VERSION" -m "Release version $VERSION"
           fi
-          
+
       - name: Build and verify
         env:
           MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_SIGNING_KEY_PASSWORD }}
@@ -150,7 +150,7 @@ jobs:
           # Emit a CycloneDX SBOM (JSON + XML) for each published module.
           mvn -B -Prelease -pl core,processor \
             org.cyclonedx:cyclonedx-maven-plugin:makeBom -DskipTests
-        
+
       - name: Deploy (stage) to Maven Central
         env:
           MAVEN_USERNAME: ${{ secrets.CENTRAL_TOKEN_USERNAME }}
