@@ -46,6 +46,20 @@ class Ignore4BuilderGenerationTest {
   }
 
   /**
+   * Asserts that no generated source file for the given class builder exists.
+   *
+   * @param compilation the compilation result
+   * @param className the simple class name for which no builder should have been generated
+   * @param message the failure message
+   */
+  private void assertNoBuilderGenerated(Compilation compilation, String className, String message) {
+    Assertions.assertTrue(
+        compilation.generatedSourceFiles().stream()
+            .noneMatch(f -> f.getName().endsWith(className + "Builder.java")),
+        message);
+  }
+
+  /**
    * (a) A subclass that inherits a template annotation from its parent and is annotated with
    * {@code @Ignore4BuilderGeneration} must NOT get a builder, while the parent's builder is still
    * generated.
@@ -104,9 +118,9 @@ class Ignore4BuilderGenerationTest {
     assertGenerationSucceeded(compilation, "ParentDtoBuilder", parentBuilder);
     assertContaining(parentBuilder, "public ParentDtoBuilder name(String name)");
 
-    Assertions.assertTrue(
-        compilation.generatedSourceFiles().stream()
-            .noneMatch(f -> f.getName().endsWith("ChildDtoBuilder.java")),
+    assertNoBuilderGenerated(
+        compilation,
+        "ChildDto",
         "ChildDto builder should not have been generated due to @Ignore4BuilderGeneration");
   }
 
@@ -155,10 +169,8 @@ class Ignore4BuilderGenerationTest {
 
     assertThat(compilation).succeededWithoutWarnings();
 
-    Assertions.assertTrue(
-        compilation.generatedSourceFiles().stream()
-            .noneMatch(f -> f.getName().endsWith("IgnoredDtoBuilder.java")),
-        "IgnoredDto builder should not have been generated");
+    assertNoBuilderGenerated(
+        compilation, "IgnoredDto", "IgnoredDto builder should not have been generated");
 
     String containerBuilder = loadGeneratedSource(compilation, "ContainerDtoBuilder");
     assertGenerationSucceeded(compilation, "ContainerDtoBuilder", containerBuilder);
@@ -166,9 +178,7 @@ class Ignore4BuilderGenerationTest {
     ProcessorAsserts.assertingResult(
         containerBuilder,
         contains("public ContainerDtoBuilder ignored(IgnoredDto ignored)"),
-        notContains("IgnoredDtoBuilder"),
-        notContains("Consumer<IgnoredDtoBuilder>"),
-        notContains("Consumer<test.IgnoredDtoBuilder>"));
+        notContains("IgnoredDtoBuilder"));
   }
 
   /**
