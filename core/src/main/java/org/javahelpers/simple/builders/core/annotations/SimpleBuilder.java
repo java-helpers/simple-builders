@@ -60,7 +60,7 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
  * {@link Inherited} as well, so custom template annotations that are themselves {@code @Inherited}
  * propagate to subclasses in the same way. Note that configuration options declared on the parent's
  * {@code @SimpleBuilder(options = ...)} or template are not yet applied to inherited subclass
- * builders; subclasses currently use default options (see issue #245).
+ * builders; subclasses currently use default options (see issue #248).
  *
  * <p>Related annotations:
  *
