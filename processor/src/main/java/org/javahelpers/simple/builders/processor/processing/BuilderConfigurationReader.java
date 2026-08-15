@@ -24,7 +24,11 @@
 
 package org.javahelpers.simple.builders.processor.processing;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
@@ -91,19 +95,30 @@ public class BuilderConfigurationReader {
   /**
    * Reads builder configuration from {@code @SimpleBuilder(options = ...)} inline options.
    *
+   * <p>Directly declared options take precedence over inherited options from superclasses.
+   *
    * <p>Returns null if the element has no {@code @SimpleBuilder} annotation.
    *
    * @param element the annotated element to analyze
    * @return configuration from the inline options, or null if not present
    */
   public BuilderConfiguration readFromInlineOptions(Element element) {
+    BuilderConfiguration direct = readFromInlineOptions(element, AnnotationScope.DIRECT);
+    if (direct != null) {
+      return direct;
+    }
+    return readFromInlineOptions(element, AnnotationScope.INHERITED);
+  }
+
+  private BuilderConfiguration readFromInlineOptions(Element element, AnnotationScope scope) {
     AnnotationMirror simpleBuilderMirror =
-        extractAnnotationMirror(element, SIMPLE_BUILDER_ANNOTATION);
+        extractAnnotationMirror(element, SIMPLE_BUILDER_ANNOTATION, scope);
     return extractOptionsFromAnnotationMirror(simpleBuilderMirror);
   }
 
-  private AnnotationMirror extractAnnotationMirror(Element element, String annotationName) {
-    for (AnnotationMirror mirror : elementUtils.getAllAnnotationMirrors(element)) {
+  private AnnotationMirror extractAnnotationMirror(
+      Element element, String annotationName, AnnotationScope scope) {
+    for (AnnotationMirror mirror : getAnnotationMirrors(element, scope)) {
       if (mirror.getAnnotationType().toString().equals(annotationName)) {
         return mirror;
       }
@@ -227,9 +242,9 @@ public class BuilderConfigurationReader {
   /**
    * Reads builder configuration from a custom template annotation on the element.
    *
-   * <p>Only checks for custom template annotations if {@code @SimpleBuilder} is NOT present. Looks
-   * for any custom annotation on the element that is itself annotated with
-   * {@code @SimpleBuilder.Template}.
+   * <p>Directly declared template annotations take precedence over inherited template annotations.
+   * If a {@code @SimpleBuilder} annotation is present in the same scope, template annotations in
+   * that scope are ignored.
    *
    * <p>Returns null if no template annotation is found or if {@code @SimpleBuilder} is present.
    *
@@ -237,15 +252,25 @@ public class BuilderConfigurationReader {
    * @return configuration from the template annotation, or null if not present
    */
   public BuilderConfiguration readFromTemplate(Element element) {
-    // If @SimpleBuilder is present, ignore template annotations
-    if (hasSimpleBuilderAnnotation(element)) {
+    BuilderConfiguration direct = readFromTemplate(element, AnnotationScope.DIRECT);
+    if (direct != null) {
+      return direct;
+    }
+    return readFromTemplate(element, AnnotationScope.INHERITED);
+  }
+
+  private BuilderConfiguration readFromTemplate(Element element, AnnotationScope scope) {
+    List<? extends AnnotationMirror> mirrors = getAnnotationMirrors(element, scope);
+
+    // If @SimpleBuilder is present in this scope, ignore template annotations in the same scope
+    if (containsSimpleBuilder(mirrors)) {
       logger.debug(
-          "Template annotations ignored because @SimpleBuilder present", element.getSimpleName());
+          "Template annotations ignored because @SimpleBuilder is present in %s scope", scope);
       return null;
     }
 
-    // Check all annotations on the element to find one annotated with @SimpleBuilder.Template
-    for (AnnotationMirror mirror : elementUtils.getAllAnnotationMirrors(element)) {
+    // Check all annotations in this scope to find one annotated with @SimpleBuilder.Template
+    for (AnnotationMirror mirror : mirrors) {
       BuilderConfiguration templateConfig = checkForTemplateAnnotation(mirror, element);
       if (templateConfig != null) {
         logger.debug("Annotation based Configuration: %s", templateConfig.toString());
@@ -256,14 +281,33 @@ public class BuilderConfigurationReader {
     return null;
   }
 
-  /**
-   * Checks if the element has a direct @SimpleBuilder annotation.
-   *
-   * @param element the element to check
-   * @return true if @SimpleBuilder is present
-   */
-  private boolean hasSimpleBuilderAnnotation(Element element) {
+  private enum AnnotationScope {
+    DIRECT,
+    INHERITED
+  }
+
+  private List<? extends AnnotationMirror> getAnnotationMirrors(
+      Element element, AnnotationScope scope) {
+    if (scope == AnnotationScope.DIRECT) {
+      return element.getAnnotationMirrors();
+    }
+
+    Set<String> directAnnotationTypes = new HashSet<>();
+    for (AnnotationMirror mirror : element.getAnnotationMirrors()) {
+      directAnnotationTypes.add(mirror.getAnnotationType().toString());
+    }
+
+    List<AnnotationMirror> inheritedMirrors = new ArrayList<>();
     for (AnnotationMirror mirror : elementUtils.getAllAnnotationMirrors(element)) {
+      if (!directAnnotationTypes.contains(mirror.getAnnotationType().toString())) {
+        inheritedMirrors.add(mirror);
+      }
+    }
+    return inheritedMirrors;
+  }
+
+  private boolean containsSimpleBuilder(List<? extends AnnotationMirror> mirrors) {
+    for (AnnotationMirror mirror : mirrors) {
       if (isSimpleBuilderAnnotation(mirror)) {
         return true;
       }
@@ -345,15 +389,16 @@ public class BuilderConfigurationReader {
    * <p>Priority chain (highest to lowest):
    *
    * <ol>
-   *   <li>{@code @SimpleBuilder(options = ...)} inline options (highest priority)
-   *   <li>Custom template annotations (only if {@code @SimpleBuilder} not present)
+   *   <li>Directly declared {@code @SimpleBuilder(options = ...)} inline options (highest priority)
+   *   <li>Directly declared custom template annotations
+   *   <li>Inherited {@code @SimpleBuilder(options = ...)} inline options
+   *   <li>Inherited custom template annotations
    *   <li>Global compiler arguments
-   *   <li>Built-in defaults
+   *   <li>Built-in defaults (lowest priority)
    * </ol>
    *
-   * <p>Note: If {@code @SimpleBuilder} is present, custom template annotations are completely
-   * ignored. The merge chain ensures that for each field: inline options override compiler args,
-   * which override defaults.
+   * <p>Within each inheritance level, {@code @SimpleBuilder} options take precedence over template
+   * annotation options. Direct annotations always override inherited annotations.
    *
    * @param element the annotated element to resolve configuration for
    * @return the fully resolved configuration with all sources merged
@@ -362,14 +407,20 @@ public class BuilderConfigurationReader {
     String elementName = element.getSimpleName().toString();
     logger.debugStartOperation("Resolving configuration for element: %s", elementName);
 
-    BuilderConfiguration templateConfig = readFromTemplate(element);
-    BuilderConfiguration inlineConfig = readFromInlineOptions(element);
+    BuilderConfiguration inheritedTemplateConfig =
+        readFromTemplate(element, AnnotationScope.INHERITED);
+    BuilderConfiguration inheritedInlineConfig =
+        readFromInlineOptions(element, AnnotationScope.INHERITED);
+    BuilderConfiguration directTemplateConfig = readFromTemplate(element, AnnotationScope.DIRECT);
+    BuilderConfiguration directInlineConfig = readFromInlineOptions(element, AnnotationScope.DIRECT);
 
     BuilderConfiguration result =
         BuilderConfiguration.DEFAULT
             .merge(globalConfiguration)
-            .merge(templateConfig)
-            .merge(inlineConfig);
+            .merge(inheritedTemplateConfig)
+            .merge(inheritedInlineConfig)
+            .merge(directTemplateConfig)
+            .merge(directInlineConfig);
 
     // Validate access modifiers and warn about problematic configurations
     validateAccessModifiers(element, result);
