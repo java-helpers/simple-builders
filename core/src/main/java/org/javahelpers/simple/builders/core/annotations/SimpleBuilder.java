@@ -704,6 +704,12 @@ public @interface SimpleBuilder {
    * custom annotation itself will be treated as @SimpleBuilder by the processor and will
    * automatically apply the configured options.
    *
+   * <p>This meta-annotation is {@link Inherited}. Note that this only controls inheritance of the
+   * {@code @SimpleBuilder.Template} meta-annotation itself; for a custom template annotation to
+   * propagate to unannotated subclasses, the custom annotation must additionally be declared with
+   * {@code @Inherited}. Without {@code @Inherited} on the custom annotation, only the exact type
+   * carrying it gets a builder.
+   *
    * <p>Example:
    *
    * <pre>{@code
@@ -721,6 +727,23 @@ public @interface SimpleBuilder {
    * public class PersonDto {
    *     private String name;
    * }
+   * }</pre>
+   *
+   * <p>To make the template propagate to subclasses, add {@code @Inherited} to the custom
+   * annotation:
+   *
+   * <pre>{@code
+   * @SimpleBuilder.Template(options = @SimpleBuilder.Options(...))
+   * @Inherited
+   * @Retention(RetentionPolicy.CLASS)
+   * @Target(ElementType.TYPE)
+   * public @interface FullFeaturedBuilder {}
+   *
+   * @FullFeaturedBuilder
+   * public class ParentDto { ... }
+   *
+   * // ChildDto also gets a builder, because @FullFeaturedBuilder is @Inherited.
+   * public class ChildDto extends ParentDto { ... }
    * }</pre>
    *
    * <p>Related annotations:

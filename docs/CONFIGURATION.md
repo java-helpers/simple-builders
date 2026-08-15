@@ -118,6 +118,22 @@ public class PersonDto {
 }
 ```
 
+To make a template annotation propagate to unannotated subclasses, add `@Inherited` to it. `@SimpleBuilder` itself is `@Inherited`, and `@SimpleBuilder.Template` is `@Inherited` as well, but the custom annotation must also declare `@Inherited` for the processor to pick up subclasses:
+
+```java
+@SimpleBuilder.Template(options = @SimpleBuilder.Options(...))
+@Inherited
+@Retention(RetentionPolicy.CLASS)
+@Target(ElementType.TYPE)
+public @interface MinimalBuilder {}
+
+@MinimalBuilder
+public class ParentDto { ... }
+
+// ChildDto also gets a builder, because @MinimalBuilder is @Inherited.
+public class ChildDto extends ParentDto { ... }
+```
+
 ## Excluding Types from Builder Generation
 
 You can opt a whole DTO out of builder generation with `@Ignore4BuilderGeneration`. This is useful when a class inherits `@SimpleBuilder` (which is itself `@Inherited`) or an `@SimpleBuilder.Template`-based annotation from a parent and you do not want a builder for that specific subclass.
@@ -1132,6 +1148,7 @@ Or in compiler options:
 2. **Verify options parameter**: Template must specify `options = @SimpleBuilder.Options(...)`
 3. **Retention and Target**: Add `@Retention(RetentionPolicy.CLASS)` and `@Target(ElementType.TYPE)`
 4. **Don't combine**: Don't use `@SimpleBuilder` when using a template annotation
+5. **Subclasses not getting a builder**: Add `@Inherited` to the custom template annotation so it propagates to unannotated subclasses (see [Template Annotations](#template-annotations) above). Without `@Inherited`, only the exact type carrying the annotation gets a builder.
 
 ### Builder Not Generated - Access Modifier Errors
 
