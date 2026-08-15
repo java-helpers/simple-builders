@@ -33,10 +33,21 @@ import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.core.enums.OptionState;
 
 /**
- * Annotation to mark classes for builder generation.
+ * Annotation to mark classes and records for builder generation.
  *
- * <p>Triggers generation of a fluent builder class with support for various patterns and helper
- * methods. Can be used standalone or combined with {@link Options} for fine-grained control.
+ * <p>Place this annotation directly on a class or record to trigger generation of a fluent builder
+ * class with support for various patterns and helper methods. Can be used standalone or combined
+ * with {@link Options} for fine-grained control.
+ *
+ * <p><b>When to use {@code @SimpleBuilder} vs {@link Template}:</b>
+ *
+ * <ul>
+ *   <li>Use {@code @SimpleBuilder} directly on a class/record for one-off builder generation.
+ *   <li>Use {@link Template} on a <b>custom annotation declaration</b> to create a reusable
+ *       configuration preset that can be applied to many classes. {@code @SimpleBuilder.Template}
+ *       cannot be placed on a class or record directly; it is only valid on annotation types
+ *       ({@link ElementType#ANNOTATION_TYPE}).
+ * </ul>
  *
  * <p>Available configuration options:
  *
@@ -54,6 +65,14 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
  *
  * <p>Use {@link Template} to create reusable configuration presets.
  *
+ * <p>This annotation is {@link Inherited}: a subclass of an annotated type is treated as if it also
+ * carried {@code @SimpleBuilder} for the purpose of triggering builder generation, unless it is
+ * explicitly excluded via {@link Ignore4BuilderGeneration}. The {@link Template} meta-annotation is
+ * {@link Inherited} as well, so custom template annotations that are themselves {@code @Inherited}
+ * propagate to subclasses in the same way. Note that configuration options declared on the parent's
+ * {@code @SimpleBuilder(options = ...)} or template are not yet applied to inherited subclass
+ * builders; subclasses currently use default options (see issue #248).
+ *
  * <p>Related annotations:
  *
  * <ul>
@@ -70,6 +89,7 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.CLASS)
+@Inherited
 public @interface SimpleBuilder {
 
   /**
@@ -693,9 +713,23 @@ public @interface SimpleBuilder {
   /**
    * Meta-annotation for creating custom SimpleBuilder annotation templates.
    *
-   * <p>This allows you to create custom annotations that pre-configure SimpleBuilder options. The
-   * custom annotation itself will be treated as @SimpleBuilder by the processor and will
+   * <p>This meta-annotation is placed on a <b>custom annotation declaration</b> (i.e., an
+   * {@code @interface}) to pre-configure SimpleBuilder options. The custom annotation can then be
+   * applied to classes and records just like {@link SimpleBuilder}, and the processor will
    * automatically apply the configured options.
+   *
+   * <p>This annotation can <b>only</b> be placed on annotation types ({@link
+   * ElementType#ANNOTATION_TYPE}); it cannot be used directly on a class or record. Use {@link
+   * SimpleBuilder} for direct one-off annotation of classes, or use this meta-annotation to define
+   * a reusable custom annotation for a shared configuration across many classes.
+   *
+   * <p>This meta-annotation is {@link Inherited}. Note that this only controls inheritance of the
+   * {@code @SimpleBuilder.Template} meta-annotation itself; for a custom template annotation to
+   * propagate to unannotated subclasses, the custom annotation must additionally be declared with
+   * {@code @Inherited}. Without {@code @Inherited} on the custom annotation, only the exact type
+   * carrying it gets a builder. As with {@link SimpleBuilder}, configuration options declared on the
+   * template are not yet applied to inherited subclass builders; subclasses currently use default
+   * options (see issue #248).
    *
    * <p>Example:
    *
@@ -714,6 +748,23 @@ public @interface SimpleBuilder {
    * public class PersonDto {
    *     private String name;
    * }
+   * }</pre>
+   *
+   * <p>To make the template propagate to subclasses, add {@code @Inherited} to the custom
+   * annotation:
+   *
+   * <pre>{@code
+   * @SimpleBuilder.Template(options = @SimpleBuilder.Options(...))
+   * @Inherited
+   * @Retention(RetentionPolicy.CLASS)
+   * @Target(ElementType.TYPE)
+   * public @interface FullFeaturedBuilder {}
+   *
+   * @FullFeaturedBuilder
+   * public class ParentDto { ... }
+   *
+   * // ChildDto also gets a builder, because @FullFeaturedBuilder is @Inherited.
+   * public class ChildDto extends ParentDto { ... }
    * }</pre>
    *
    * <p>Related annotations:

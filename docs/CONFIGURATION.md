@@ -80,6 +80,13 @@ public class PersonDto {
 
 ## Template Annotations
 
+`@SimpleBuilder.Template` is a **meta-annotation**: it is placed on a custom annotation declaration (`@interface`), not directly on a class or record. Use it to create reusable configuration presets that can be applied to many classes with a single custom annotation. For one-off builder generation, use `@SimpleBuilder` directly on the class.
+
+| Need | Use |
+|------|-----|
+| Generate a builder for a single class/record | `@SimpleBuilder` on the class/record |
+| Share the same configuration across many classes | `@SimpleBuilder.Template` on a custom `@interface`, then the custom annotation on each class |
+
 Create reusable configuration presets with custom template annotations:
 
 ```java
@@ -118,9 +125,27 @@ public class PersonDto {
 }
 ```
 
+To make a template annotation propagate to unannotated subclasses, add `@Inherited` to it. `@SimpleBuilder` itself is `@Inherited`, and `@SimpleBuilder.Template` is `@Inherited` as well, but the custom annotation must also declare `@Inherited` for the processor to pick up subclasses:
+
+```java
+@SimpleBuilder.Template(options = @SimpleBuilder.Options(...))
+@Inherited
+@Retention(RetentionPolicy.CLASS)
+@Target(ElementType.TYPE)
+public @interface MinimalBuilder {}
+
+@MinimalBuilder
+public class ParentDto { ... }
+
+// ChildDto also gets a builder, because @MinimalBuilder is @Inherited.
+public class ChildDto extends ParentDto { ... }
+```
+
+> **Note:** Inherited subclasses currently get a builder with **default options**, not the options declared on the parent's `@SimpleBuilder(options = ...)` or template. Options inheritance is tracked separately (see #248).
+
 ## Excluding Types from Builder Generation
 
-You can opt a whole DTO out of builder generation with `@Ignore4BuilderGeneration`. This is useful when a class inherits `@SimpleBuilder` or an `@SimpleBuilder.Template` annotation from a parent and you do not want a builder for that specific subclass.
+You can opt a whole DTO out of builder generation with `@Ignore4BuilderGeneration`. This is useful when a class inherits `@SimpleBuilder` (which is itself `@Inherited`) or an `@SimpleBuilder.Template`-based annotation from a parent and you do not want a builder for that specific subclass.
 
 ```java
 import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration;
@@ -1132,6 +1157,8 @@ Or in compiler options:
 2. **Verify options parameter**: Template must specify `options = @SimpleBuilder.Options(...)`
 3. **Retention and Target**: Add `@Retention(RetentionPolicy.CLASS)` and `@Target(ElementType.TYPE)`
 4. **Don't combine**: Don't use `@SimpleBuilder` when using a template annotation
+5. **Subclasses not getting a builder**: Add `@Inherited` to the custom template annotation so it propagates to unannotated subclasses (see [Template Annotations](#template-annotations) above). Without `@Inherited`, only the exact type carrying the annotation gets a builder.
+6. **Subclass builder has wrong options**: Inherited subclass builders currently use default options, not the parent's `@SimpleBuilder.Options` or template options. This is a known limitation (see #248).
 
 ### Builder Not Generated - Access Modifier Errors
 
