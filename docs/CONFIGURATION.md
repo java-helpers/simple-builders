@@ -80,6 +80,13 @@ public class PersonDto {
 
 ## Template Annotations
 
+`@SimpleBuilder.Template` is a **meta-annotation**: it is placed on a custom annotation declaration (`@interface`), not directly on a class or record. Use it to create reusable configuration presets that can be applied to many classes with a single custom annotation. For one-off builder generation, use `@SimpleBuilder` directly on the class.
+
+| Need | Use |
+|------|-----|
+| Generate a builder for a single class/record | `@SimpleBuilder` on the class/record |
+| Share the same configuration across many classes | `@SimpleBuilder.Template` on a custom `@interface`, then the custom annotation on each class |
+
 Create reusable configuration presets with custom template annotations:
 
 ```java
@@ -1150,8 +1157,9 @@ Or in compiler options:
 2. **Verify options parameter**: Template must specify `options = @SimpleBuilder.Options(...)`
 3. **Retention and Target**: Add `@Retention(RetentionPolicy.CLASS)` and `@Target(ElementType.TYPE)`
 4. **Don't combine**: Don't use `@SimpleBuilder` when using a template annotation
-5. **Subclasses not getting a builder**: Add `@Inherited` to the custom template annotation so it propagates to unannotated subclasses (see [Template Annotations](#template-annotations) above). Without `@Inherited`, only the exact type carrying the annotation gets a builder.
-6. **Subclass builder has wrong options**: Inherited subclass builders currently use default options, not the parent's `@SimpleBuilder.Options` or template options. This is a known limitation (see #248).
+5. **Not a class annotation**: `@SimpleBuilder.Template` can only be placed on an annotation declaration (`@interface`), not directly on a class or record. Use `@SimpleBuilder` for direct class/record annotation, or create a custom annotation with `@SimpleBuilder.Template` and place that on the class.
+6. **Subclasses not getting a builder**: Add `@Inherited` to the custom template annotation so it propagates to unannotated subclasses (see [Template Annotations](#template-annotations) above). Without `@Inherited`, only the exact type carrying the annotation gets a builder.
+7. **Subclass builder has wrong options**: Inherited subclass builders currently use default options, not the parent's `@SimpleBuilder.Options` or template options. This is a known limitation (see #248).
 
 ### Builder Not Generated - Access Modifier Errors
 
