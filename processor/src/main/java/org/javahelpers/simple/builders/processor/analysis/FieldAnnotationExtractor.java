@@ -44,6 +44,9 @@ import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 /** Extractor for field annotations, converting them from Java model elements to DTOs. */
 public final class FieldAnnotationExtractor {
 
+  /** Fully qualified name of {@link Deprecated}. */
+  private static final String DEPRECATED_FQN = "java.lang.Deprecated";
+
   /**
    * List of predicates that determine which annotations should be skipped (not copied to the
    * builder). Each predicate receives the fully qualified annotation name and returns true if the
@@ -68,6 +71,36 @@ public final class FieldAnnotationExtractor {
 
   private FieldAnnotationExtractor() {
     // Private constructor to prevent instantiation
+  }
+
+  /**
+   * Extracts the {@code @Deprecated} annotation from the given element, preserving its members
+   * (e.g. {@code since} and {@code forRemoval}).
+   *
+   * <p>Unlike {@link #extractAnnotations(VariableElement, ProcessingContext)}, this method targets
+   * a single annotation and works on any {@link Element} (method, field, parameter, record
+   * component, type), not just {@link VariableElement}s.
+   *
+   * @param element the element to inspect, or {@code null}
+   * @param context processing context
+   * @return an {@link Optional} containing the {@code @Deprecated} annotation DTO, or empty if the
+   *     element is not deprecated
+   */
+  public static Optional<AnnotationDto> extractDeprecatedAnnotation(
+      Element element, ProcessingContext context) {
+    if (element == null) {
+      return Optional.empty();
+    }
+    for (AnnotationMirror mirror : element.getAnnotationMirrors()) {
+      Element annotationElement = mirror.getAnnotationType().asElement();
+      if (!(annotationElement instanceof TypeElement annotationType)) {
+        continue;
+      }
+      if (DEPRECATED_FQN.equals(annotationType.getQualifiedName().toString())) {
+        return extractAnnotation(mirror, context);
+      }
+    }
+    return Optional.empty();
   }
 
   /**

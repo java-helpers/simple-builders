@@ -331,8 +331,306 @@ class AnnotationCopyTest {
     ProcessorAsserts.assertingResult(
         generatedCode, contains("public ServiceBuilder name(@Deprecated String name)"));
 
-    // But @SuppressWarnings is NOT copied (compiler-only, not relevant for users)
+    // @Deprecated is also applied to the generated builder method itself (not just the parameter)
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains(
+            """
+            @Deprecated
+            public ServiceBuilder name(@Deprecated String name)"""));
+
+    // But @SuppressWarnings is NOT copied (compiler-only, not relevant for users). The build()
+    // method does not need suppression because only the parameter (not the setter method) is
+    // deprecated, which does not trigger a compiler warning when calling the setter.
     ProcessorAsserts.assertNotContaining(generatedCode, "@SuppressWarnings");
+  }
+
+  @Test
+  void annotations_deprecatedSetterMethod_methodLevelDeprecatedAndBuildSuppressed() {
+    String packageName = "test.deprecated.setter";
+
+    JavaFileObject service =
+        JavaFileObjects.forSourceString(
+            packageName + ".Service",
+            """
+            package test.deprecated.setter;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+            @SimpleBuilder
+            public class Service {
+              private String name;
+
+              public String getName() { return name; }
+
+              @Deprecated
+              public void setName(String name) {
+                this.name = name;
+              }
+            }
+            """);
+
+    Compilation compilation = compileSources(service);
+    String generatedCode = loadGeneratedSource(compilation, "ServiceBuilder");
+    ProcessorAsserts.assertGenerationSucceeded(compilation, "ServiceBuilder", generatedCode);
+
+    // The generated builder method is @Deprecated on the method itself
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains(
+            """
+            @Deprecated
+            public ServiceBuilder name(String name)"""));
+
+    // build() calls the deprecated setter via result::setName; the whole builder class carries a
+    // class-level @SuppressWarnings so all internal calls to deprecated members are silenced.
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains(
+            """
+            @SuppressWarnings({"deprecation", "removal"})
+            public class ServiceBuilder"""));
+  }
+
+  @Test
+  void annotations_deprecatedField_methodLevelDeprecated() {
+    String packageName = "test.deprecated.field";
+
+    JavaFileObject service =
+        JavaFileObjects.forSourceString(
+            packageName + ".Service",
+            """
+            package test.deprecated.field;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+            @SimpleBuilder
+            public class Service {
+              @Deprecated
+              private String name;
+
+              public String getName() { return name; }
+
+              public void setName(String name) {
+                this.name = name;
+              }
+            }
+            """);
+
+    Compilation compilation = compileSources(service);
+    String generatedCode = loadGeneratedSource(compilation, "ServiceBuilder");
+    ProcessorAsserts.assertGenerationSucceeded(compilation, "ServiceBuilder", generatedCode);
+
+    // The generated builder method is @Deprecated on the method itself (detected from the field)
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains(
+            """
+            @Deprecated
+            public ServiceBuilder name(String name)"""));
+
+    // No @SuppressWarnings needed: build() calls the setter method (not deprecated) and accesses
+    // the field only via the setter.
+    ProcessorAsserts.assertNotContaining(generatedCode, "@SuppressWarnings");
+  }
+
+  @Test
+  void annotations_deprecatedRecordComponent_methodLevelDeprecated() {
+    String packageName = "test.deprecated.record";
+
+    JavaFileObject book =
+        JavaFileObjects.forSourceString(
+            packageName + ".Book",
+            """
+            package test.deprecated.record;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+            @SimpleBuilder
+            public record Book(@Deprecated String title, int pages) {}
+            """);
+
+    Compilation compilation = compileSources(book);
+    String generatedCode = loadGeneratedSource(compilation, "BookBuilder");
+    ProcessorAsserts.assertGenerationSucceeded(compilation, "BookBuilder", generatedCode);
+
+    // The generated builder method for the deprecated record component is @Deprecated
+    ProcessorAsserts.assertContaining(generatedCode, "@Deprecated", "public BookBuilder title(");
+
+    // The non-deprecated field is not annotated
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains(
+            """
+            public BookBuilder pages(int pages)"""));
+  }
+
+  @Test
+  void annotations_deprecatedDtoClass_builderAndFactoryMethodsDeprecated() {
+    String packageName = "test.deprecated.dto";
+
+    JavaFileObject service =
+        JavaFileObjects.forSourceString(
+            packageName + ".Service",
+            """
+            package test.deprecated.dto;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+            @Deprecated
+            @SimpleBuilder
+            public class Service {
+              private String name;
+
+              public String getName() { return name; }
+
+              public void setName(String name) {
+                this.name = name;
+              }
+            }
+            """);
+
+    Compilation compilation = compileSources(service);
+    String generatedCode = loadGeneratedSource(compilation, "ServiceBuilder");
+    ProcessorAsserts.assertGenerationSucceeded(compilation, "ServiceBuilder", generatedCode);
+
+    // The builder class itself is @Deprecated
+    ProcessorAsserts.assertContaining(generatedCode, "@Deprecated", "public class ServiceBuilder");
+
+    // The static create() factory method is @Deprecated
+    ProcessorAsserts.assertContaining(
+        generatedCode, "@Deprecated", "public static ServiceBuilder create()");
+
+    // The whole builder class carries a class-level @SuppressWarnings because it internally
+    // calls the deprecated DTO constructor/setters and instantiates the deprecated builder.
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains(
+            """
+            @SuppressWarnings({"deprecation", "removal"})
+            public class ServiceBuilder"""));
+  }
+
+  @Test
+  void annotations_deprecatedJavadocText_propagatedToBuilderMethods() {
+    String packageName = "test.deprecated.javadoc";
+
+    JavaFileObject service =
+        JavaFileObjects.forSourceString(
+            packageName + ".Service",
+            """
+            package test.deprecated.javadoc;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+            @SimpleBuilder
+            public class Service {
+              private String name;
+
+              public String getName() { return name; }
+
+              /**
+               * Sets the name.
+               *
+               * @param name the name to set
+               * @deprecated use {@link #setLabel(String)} instead
+               */
+              @Deprecated
+              public void setName(String name) {
+                this.name = name;
+              }
+            }
+            """);
+
+    Compilation compilation = compileSources(service);
+    String generatedCode = loadGeneratedSource(compilation, "ServiceBuilder");
+    ProcessorAsserts.assertGenerationSucceeded(compilation, "ServiceBuilder", generatedCode);
+
+    // The @deprecated javadoc text is propagated to the generated builder method
+    ProcessorAsserts.assertingResult(
+        generatedCode, contains("@deprecated use {@link #setLabel(String)} instead"));
+
+    // The method itself is @Deprecated
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains(
+            """
+            @Deprecated
+            public ServiceBuilder name(String name)"""));
+  }
+
+  @Test
+  void annotations_deprecatedWithSinceAndForRemoval_attributesPreserved() {
+    String packageName = "test.deprecated.attrs";
+
+    JavaFileObject service =
+        JavaFileObjects.forSourceString(
+            packageName + ".Service",
+            """
+            package test.deprecated.attrs;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+            @SimpleBuilder
+            public class Service {
+              private String name;
+
+              public String getName() { return name; }
+
+              @Deprecated(since = "1.2", forRemoval = true)
+              public void setName(String name) {
+                this.name = name;
+              }
+            }
+            """);
+
+    Compilation compilation = compileSources(service);
+    String generatedCode = loadGeneratedSource(compilation, "ServiceBuilder");
+    ProcessorAsserts.assertGenerationSucceeded(compilation, "ServiceBuilder", generatedCode);
+
+    // The since and forRemoval attributes are preserved on the generated builder method
+    ProcessorAsserts.assertingResult(
+        generatedCode, contains("@Deprecated(since = \"1.2\", forRemoval = true)"));
+  }
+
+  @Test
+  void annotations_deprecatedGetter_fromInstanceConstructorSuppressed() {
+    String packageName = "test.deprecated.getter";
+
+    JavaFileObject service =
+        JavaFileObjects.forSourceString(
+            packageName + ".Service",
+            """
+            package test.deprecated.getter;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+            @SimpleBuilder
+            public class Service {
+              private String name;
+
+              @Deprecated
+              public String getName() { return name; }
+
+              public void setName(String name) {
+                this.name = name;
+              }
+            }
+            """);
+
+    Compilation compilation = compileSources(service);
+    String generatedCode = loadGeneratedSource(compilation, "ServiceBuilder");
+    ProcessorAsserts.assertGenerationSucceeded(compilation, "ServiceBuilder", generatedCode);
+
+    // The generated builder method is @Deprecated (detected from the deprecated getter)
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains(
+            """
+            @Deprecated
+            public ServiceBuilder name(String name)"""));
+
+    // The from-instance constructor calls the deprecated getter; the whole builder class carries
+    // a class-level @SuppressWarnings so all internal calls to deprecated members are silenced.
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains(
+            """
+            @SuppressWarnings({"deprecation", "removal"})
+            public class ServiceBuilder"""));
   }
 
   @Test

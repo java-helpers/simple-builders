@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Optional;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
@@ -48,6 +49,7 @@ import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 public final class JavaLangAnalyser {
 
   private static final String PARAM_TAG = "@param ";
+  private static final String DEPRECATED_TAG = "@deprecated";
 
   private JavaLangAnalyser() {}
 
@@ -288,6 +290,32 @@ public final class JavaLangAnalyser {
   }
 
   /**
+   * Extracts the text following the {@code @deprecated} Javadoc tag. Continuation lines are
+   * supported until the next Javadoc tag (starting with '@') or an empty line.
+   *
+   * <p>This is used to propagate the migration hint from a deprecated DTO member to the generated
+   * builder members.
+   *
+   * @param javaDoc the full raw Javadoc as returned by {@code Elements.getDocComment(...)} , or
+   *     {@code null}
+   * @return the extracted text or {@code null} if no {@code @deprecated} tag is present or the text
+   *     is empty
+   */
+  public static String extractDeprecatedJavaDoc(String javaDoc) {
+    if (javaDoc == null) {
+      return null;
+    }
+    String[] lines = javaDoc.split("\r?\n");
+
+    int indexOfDeprecatedTag = findTagLine(lines, DEPRECATED_TAG);
+    if (indexOfDeprecatedTag < 0) {
+      return null;
+    }
+
+    return extractTagText(lines, indexOfDeprecatedTag, DEPRECATED_TAG, false);
+  }
+
+  /**
    * Finds the line index containing @param tag for the given parameter name.
    *
    * @param lines the javadoc lines
@@ -310,6 +338,24 @@ public final class JavaLangAnalyser {
   }
 
   /**
+   * Finds the line index containing the given Javadoc tag (without a name argument, e.g. {@code
+   * @deprecated}).
+   *
+   * @param lines the javadoc lines
+   * @param tag the tag including the leading '@' (e.g. {@code "@deprecated"})
+   * @return the line index, or -1 if not found
+   */
+  private static int findTagLine(String[] lines, String tag) {
+    for (int i = 0; i < lines.length; i++) {
+      String cleanedLine = cleanJavadocLine(lines[i]);
+      if (cleanedLine.startsWith(tag)) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  /**
    * Removes leading asterisk and whitespace from a Javadoc line.
    *
    * @param rawLine the raw line from Javadoc
@@ -324,23 +370,38 @@ public final class JavaLangAnalyser {
   }
 
   /**
-   * Extracts the parameter documentation text starting from the @param line.
+   * Extracts the documentation text following a Javadoc tag. Continuation lines are appended until
+   * the next tag (starting with '@') or an empty line.
+   *
+   * <p>When {@code skipName} is {@code true}, the first word after the tag is treated as a name
+   * argument (e.g. the parameter name in {@code @param name the description}) and skipped. When
+   * {@code false}, the full text after the tag is returned (e.g. for {@code @deprecated use {@link
+   * #x()} instead}).
    *
    * @param lines the javadoc lines
-   * @param startIndex the index of the @param line
-   * @return the extracted documentation text or null if empty
+   * @param startIndex the index of the tag line
+   * @param tag the tag including the leading '@' (e.g. {@code "@param"}, {@code "@deprecated"})
+   * @param skipName whether to skip the first word after the tag (name argument)
+   * @return the extracted text or {@code null} if empty
    */
-  private static String extractParamText(String[] lines, int startIndex) {
+  private static String extractTagText(
+      String[] lines, int startIndex, String tag, boolean skipName) {
     StringBuilder sb = new StringBuilder();
 
-    // Extract initial text from the @param line
+    // Extract initial text from the tag line
     String firstLine = cleanJavadocLine(lines[startIndex]);
-    String rest = firstLine.substring(PARAM_TAG.length()).trim();
-    int spaceIndex = rest.indexOf(' ');
-    if (spaceIndex >= 0) {
-      String initialText = rest.substring(spaceIndex + 1).trim();
-      if (!initialText.isEmpty()) {
-        sb.append(initialText);
+    String rest = firstLine.substring(tag.length()).trim();
+    if (skipName) {
+      int spaceIndex = rest.indexOf(' ');
+      if (spaceIndex >= 0) {
+        String initialText = rest.substring(spaceIndex + 1).trim();
+        if (!initialText.isEmpty()) {
+          sb.append(initialText);
+        }
+      }
+    } else {
+      if (!rest.isEmpty()) {
+        sb.append(rest);
       }
     }
 
@@ -360,6 +421,19 @@ public final class JavaLangAnalyser {
 
     String result = sb.toString().trim();
     return result.isEmpty() ? null : result;
+  }
+
+  /**
+   * Extracts the parameter documentation text starting from the @param line. Delegates to {@link
+   * #extractTagText(String[], int, String, boolean)} with {@code skipName=true} to skip the
+   * parameter name.
+   *
+   * @param lines the javadoc lines
+   * @param startIndex the index of the @param line
+   * @return the extracted documentation text or null if empty
+   */
+  private static String extractParamText(String[] lines, int startIndex) {
+    return extractTagText(lines, startIndex, PARAM_TAG, true);
   }
 
   /**
@@ -391,6 +465,72 @@ public final class JavaLangAnalyser {
       if (Strings.CI.equalsAny(name, fieldName, "is" + fieldName, "get" + fieldName)
           && candidate.getParameters().isEmpty()
           && context.isSameType(candidate.getReturnType(), fieldTypeMirror)) {
+        return Optional.of(candidate);
+      }
+    }
+    return Optional.empty();
+  }
+
+  /**
+   * Finds a field element by name in the given class element.
+   *
+   * @param classElement the class to search in
+   * @param fieldName the simple field name to look for
+   * @return an {@link Optional} containing the field element, or empty if not found
+   */
+  public static Optional<VariableElement> findFieldElement(
+      TypeElement classElement, String fieldName) {
+    if (classElement == null || fieldName == null) {
+      return Optional.empty();
+    }
+    return classElement.getEnclosedElements().stream()
+        .filter(e -> e.getKind() == ElementKind.FIELD)
+        .filter(e -> e.getSimpleName().contentEquals(fieldName))
+        .map(VariableElement.class::cast)
+        .findFirst();
+  }
+
+  /**
+   * Finds a record component by name in the given type element.
+   *
+   * @param typeElement the type element to search in
+   * @param componentName the simple component name to look for
+   * @return an {@link Optional} containing the record component element, or empty if not found or
+   *     the type is not a record
+   */
+  public static Optional<javax.lang.model.element.RecordComponentElement> findRecordComponent(
+      TypeElement typeElement, String componentName) {
+    if (typeElement == null || componentName == null) {
+      return Optional.empty();
+    }
+    return typeElement.getRecordComponents().stream()
+        .filter(rc -> rc.getSimpleName().contentEquals(componentName))
+        .map(rc -> (javax.lang.model.element.RecordComponentElement) rc)
+        .findFirst();
+  }
+
+  /**
+   * Finds the setter method for a given field name on the specified DTO type.
+   *
+   * <p>The setter must follow JavaBean conventions ({@code setXxx} with exactly one parameter) and
+   * have a {@code void} return type.
+   *
+   * @param dtoType the enclosing DTO type element
+   * @param fieldName the field name (uncapitalized)
+   * @param context processing context
+   * @return Optional containing the setter ExecutableElement if found
+   */
+  public static Optional<ExecutableElement> findSetterForField(
+      TypeElement dtoType, String fieldName, ProcessingContext context) {
+    if (dtoType == null || fieldName == null) {
+      return Optional.empty();
+    }
+    String setterName = "set" + StringUtils.capitalize(fieldName);
+    List<ExecutableElement> methods = ElementFilter.methodsIn(context.getAllMembers(dtoType));
+    for (ExecutableElement candidate : methods) {
+      if (candidate.getSimpleName().contentEquals(setterName)
+          && candidate.getParameters().size() == 1
+          && candidate.getReturnType().getKind() == VOID) {
         return Optional.of(candidate);
       }
     }
