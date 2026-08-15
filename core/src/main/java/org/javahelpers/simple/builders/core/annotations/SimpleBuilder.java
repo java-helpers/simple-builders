@@ -55,10 +55,12 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
  * <p>Use {@link Template} to create reusable configuration presets.
  *
  * <p>This annotation is {@link Inherited}: a subclass of an annotated type is treated as if it also
- * carried {@code @SimpleBuilder}, unless it is explicitly excluded via {@link
- * Ignore4BuilderGeneration}. The {@link Template} meta-annotation is {@link Inherited} as well, so
- * custom template annotations that are themselves {@code @Inherited} propagate to subclasses in the
- * same way.
+ * carried {@code @SimpleBuilder} for the purpose of triggering builder generation, unless it is
+ * explicitly excluded via {@link Ignore4BuilderGeneration}. The {@link Template} meta-annotation is
+ * {@link Inherited} as well, so custom template annotations that are themselves {@code @Inherited}
+ * propagate to subclasses in the same way. Note that configuration options declared on the parent's
+ * {@code @SimpleBuilder(options = ...)} or template are not yet applied to inherited subclass
+ * builders; subclasses currently use default options (see issue #245).
  *
  * <p>Related annotations:
  *
