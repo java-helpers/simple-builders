@@ -54,6 +54,12 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
  *
  * <p>Use {@link Template} to create reusable configuration presets.
  *
+ * <p>This annotation is {@link Inherited}: a subclass of an annotated type is treated as if it also
+ * carried {@code @SimpleBuilder}, unless it is explicitly excluded via {@link
+ * Ignore4BuilderGeneration}. The {@link Template} meta-annotation is {@link Inherited} as well, so
+ * custom template annotations that are themselves {@code @Inherited} propagate to subclasses in the
+ * same way.
+ *
  * <p>Related annotations:
  *
  * <ul>
@@ -70,6 +76,7 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.CLASS)
+@Inherited
 public @interface SimpleBuilder {
 
   /**
