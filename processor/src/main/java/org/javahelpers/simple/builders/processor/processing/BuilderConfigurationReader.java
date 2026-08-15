@@ -103,7 +103,7 @@ public class BuilderConfigurationReader {
   }
 
   private AnnotationMirror extractAnnotationMirror(Element element, String annotationName) {
-    for (AnnotationMirror mirror : element.getAnnotationMirrors()) {
+    for (AnnotationMirror mirror : elementUtils.getAllAnnotationMirrors(element)) {
       if (mirror.getAnnotationType().toString().equals(annotationName)) {
         return mirror;
       }
@@ -245,7 +245,7 @@ public class BuilderConfigurationReader {
     }
 
     // Check all annotations on the element to find one annotated with @SimpleBuilder.Template
-    for (AnnotationMirror mirror : element.getAnnotationMirrors()) {
+    for (AnnotationMirror mirror : elementUtils.getAllAnnotationMirrors(element)) {
       BuilderConfiguration templateConfig = checkForTemplateAnnotation(mirror, element);
       if (templateConfig != null) {
         logger.debug("Annotation based Configuration: %s", templateConfig.toString());
@@ -263,7 +263,7 @@ public class BuilderConfigurationReader {
    * @return true if @SimpleBuilder is present
    */
   private boolean hasSimpleBuilderAnnotation(Element element) {
-    for (AnnotationMirror mirror : element.getAnnotationMirrors()) {
+    for (AnnotationMirror mirror : elementUtils.getAllAnnotationMirrors(element)) {
       if (isSimpleBuilderAnnotation(mirror)) {
         return true;
       }
