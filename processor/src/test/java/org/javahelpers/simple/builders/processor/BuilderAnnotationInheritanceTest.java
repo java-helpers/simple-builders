@@ -36,11 +36,15 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 /**
- * Tests for inheritance of {@code @SimpleBuilder}, which is meta-annotated with {@code @Inherited}
- * so that unannotated subclasses of an annotated parent also get a builder. See <a
+ * Tests for inheritance of builder-triggering annotations.
+ *
+ * <p>Both {@code @SimpleBuilder} and the {@code @SimpleBuilder.Template} meta-annotation are
+ * meta-annotated with {@code @Inherited}, so unannotated subclasses of an annotated parent also get
+ * a builder. Custom template annotations that are themselves {@code @Inherited} propagate to
+ * subclasses in the same way. See <a
  * href="https://github.com/java-helpers/simple-builders/issues/244">issue #244</a>.
  */
-class SimpleBuilderInheritanceTest {
+class BuilderAnnotationInheritanceTest {
 
   private Compilation compile(JavaFileObject... sourceFiles) {
     return ProcessorTestUtils.createCompiler().compile(sourceFiles);
@@ -97,6 +101,74 @@ class SimpleBuilderInheritanceTest {
             """);
 
     Compilation compilation = compile(parentSource, childSource);
+
+    assertThat(compilation).succeededWithoutWarnings();
+
+    String parentBuilder = loadGeneratedSource(compilation, "ParentDtoBuilder");
+    assertGenerationSucceeded(compilation, "ParentDtoBuilder", parentBuilder);
+    assertContaining(parentBuilder, "public ParentDtoBuilder name(String name)");
+
+    String childBuilder = loadGeneratedSource(compilation, "ChildDtoBuilder");
+    assertGenerationSucceeded(compilation, "ChildDtoBuilder", childBuilder);
+    // The child builder must expose setters for both the inherited field and its own field.
+    assertContaining(childBuilder, "public ChildDtoBuilder name(String name)");
+    assertContaining(childBuilder, "public ChildDtoBuilder age(int age)");
+  }
+
+  /**
+   * An unannotated subclass of a class carrying a custom {@code @Inherited} template annotation
+   * (meta-annotated with {@code @SimpleBuilder.Template}) must itself get a builder. The parent's
+   * builder is still generated as well, and the template's options apply to both.
+   */
+  @Test
+  void unannotatedSubclassGetsBuilderFromInheritedTemplate() {
+    JavaFileObject templateAnnotation =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+
+            import java.lang.annotation.ElementType;
+            import java.lang.annotation.Inherited;
+            import java.lang.annotation.Retention;
+            import java.lang.annotation.RetentionPolicy;
+            import java.lang.annotation.Target;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+            @SimpleBuilder.Template(options = @SimpleBuilder.Options())
+            @Inherited
+            @Retention(RetentionPolicy.CLASS)
+            @Target(ElementType.TYPE)
+            public @interface InheritedTemplate {}
+            """);
+
+    JavaFileObject parentSource =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+
+            @InheritedTemplate
+            public class ParentDto {
+                private String name;
+
+                public String getName() { return name; }
+                public void setName(String name) { this.name = name; }
+            }
+            """);
+
+    JavaFileObject childSource =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+
+            public class ChildDto extends ParentDto {
+                private int age;
+
+                public int getAge() { return age; }
+                public void setAge(int age) { this.age = age; }
+            }
+            """);
+
+    Compilation compilation = compile(templateAnnotation, parentSource, childSource);
 
     assertThat(compilation).succeededWithoutWarnings();
 
