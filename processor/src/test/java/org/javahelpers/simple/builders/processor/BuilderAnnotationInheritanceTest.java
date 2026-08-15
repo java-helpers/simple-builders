@@ -330,8 +330,8 @@ class BuilderAnnotationInheritanceTest {
   }
 
   /**
-   * An unannotated subclass must inherit the options declared on a parent's custom {@code @Inherited}
-   * template annotation as well, not just the default template options.
+   * An unannotated subclass must inherit the options declared on a parent's custom
+   * {@code @Inherited} template annotation as well, not just the default template options.
    */
   @Test
   void unannotatedSubclassInheritsTemplateOptions() {
@@ -487,8 +487,8 @@ class BuilderAnnotationInheritanceTest {
   }
 
   /**
-   * A subclass with its own inherited template annotation must use its own template's options,
-   * not the template inherited from the parent.
+   * A subclass with its own inherited template annotation must use its own template's options, not
+   * the template inherited from the parent.
    */
   @Test
   void subclassTemplateOverridesInheritedTemplate() {

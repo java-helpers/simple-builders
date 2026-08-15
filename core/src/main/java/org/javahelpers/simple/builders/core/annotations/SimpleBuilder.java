@@ -726,9 +726,9 @@ public @interface SimpleBuilder {
    * {@code @SimpleBuilder.Template} meta-annotation itself; for a custom template annotation to
    * propagate to unannotated subclasses, the custom annotation must additionally be declared with
    * {@code @Inherited}. Without {@code @Inherited} on the custom annotation, only the exact type
-   * carrying it gets a builder. As with {@link SimpleBuilder}, configuration options declared on the
-   * template are not yet applied to inherited subclass builders; subclasses currently use default
-   * options (see issue #248).
+   * carrying it gets a builder. As with {@link SimpleBuilder}, configuration options declared on
+   * the template are also applied to inherited subclass builders, as long as the custom template
+   * annotation is itself {@code @Inherited} and no direct annotation overrides it.
    *
    * <p>Example:
    *

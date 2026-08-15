@@ -412,7 +412,8 @@ public class BuilderConfigurationReader {
     BuilderConfiguration inheritedInlineConfig =
         readFromInlineOptions(element, AnnotationScope.INHERITED);
     BuilderConfiguration directTemplateConfig = readFromTemplate(element, AnnotationScope.DIRECT);
-    BuilderConfiguration directInlineConfig = readFromInlineOptions(element, AnnotationScope.DIRECT);
+    BuilderConfiguration directInlineConfig =
+        readFromInlineOptions(element, AnnotationScope.DIRECT);
 
     BuilderConfiguration result =
         BuilderConfiguration.DEFAULT
