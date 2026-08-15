@@ -120,6 +120,24 @@ public final class ProcessorAsserts {
   }
 
   /**
+   * Asserts that no generated source file for the given class' builder exists in the compilation.
+   *
+   * <p>The check is based on the simple class name: a file whose name ends with
+   * {@code <className>Builder.java} is considered the builder for {@code className}.
+   *
+   * @param compilation the compilation result
+   * @param className the simple class name for which no builder should have been generated
+   * @param message the failure message
+   */
+  public static void assertNoBuilderGenerated(
+      Compilation compilation, String className, String message) {
+    Assertions.assertTrue(
+        compilation.generatedSourceFiles().stream()
+            .noneMatch(f -> f.getName().endsWith(className + "Builder.java")),
+        message);
+  }
+
+  /**
    * Asserts that the expected and actual strings are equal after normalizing whitespace.
    *
    * @param expected the expected string

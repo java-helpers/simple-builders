@@ -27,12 +27,12 @@ package org.javahelpers.simple.builders.processor;
 import static com.google.testing.compile.CompilationSubject.assertThat;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.assertContaining;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.assertGenerationSucceeded;
+import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.assertNoBuilderGenerated;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils.loadGeneratedSource;
 
 import com.google.testing.compile.Compilation;
 import javax.tools.JavaFileObject;
 import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -48,20 +48,6 @@ class BuilderAnnotationInheritanceTest {
 
   private Compilation compile(JavaFileObject... sourceFiles) {
     return ProcessorTestUtils.createCompiler().compile(sourceFiles);
-  }
-
-  /**
-   * Asserts that no generated source file for the given class builder exists.
-   *
-   * @param compilation the compilation result
-   * @param className the simple class name for which no builder should have been generated
-   * @param message the failure message
-   */
-  private void assertNoBuilderGenerated(Compilation compilation, String className, String message) {
-    Assertions.assertTrue(
-        compilation.generatedSourceFiles().stream()
-            .noneMatch(f -> f.getName().endsWith(className + "Builder.java")),
-        message);
   }
 
   /**
