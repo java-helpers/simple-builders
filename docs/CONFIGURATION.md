@@ -141,7 +141,7 @@ public class ParentDto { ... }
 public class ChildDto extends ParentDto { ... }
 ```
 
-> **Note:** Inherited subclasses currently get a builder with **default options**, not the options declared on the parent's `@SimpleBuilder(options = ...)` or template. Options inheritance is tracked separately (see #248).
+> **Note:** Inherited subclasses get a builder that also uses the options declared on the parent's `@SimpleBuilder(options = ...)` or template. If the subclass declares its own `@SimpleBuilder` or template annotation, those options take precedence.
 
 ## Excluding Types from Builder Generation
 
@@ -1158,7 +1158,7 @@ Or in compiler options:
 3. **Retention and Target**: Add `@Retention(RetentionPolicy.CLASS)` and `@Target(ElementType.TYPE)`
 4. **Don't combine**: Don't use `@SimpleBuilder` when using a template annotation
 5. **Subclasses not getting a builder**: Add `@Inherited` to the custom template annotation so it propagates to unannotated subclasses (see [Template Annotations](#template-annotations) above). Without `@Inherited`, only the exact type carrying the annotation gets a builder.
-6. **Subclass builder has wrong options**: Inherited subclass builders currently use default options, not the parent's `@SimpleBuilder.Options` or template options. This is a known limitation (see #248).
+6. **Subclass builder has wrong options**: Ensure the custom template annotation is `@Inherited` and that the parent annotation declares the desired `@SimpleBuilder.Options`. Inherited options are applied to subclass builders; a subclass's own annotation overrides the inherited options.
 
 ### Builder Not Generated - Access Modifier Errors
 
