@@ -48,7 +48,6 @@ import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration;
-import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder.Template;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyser;
 import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterCodeGenerator;
@@ -145,20 +144,14 @@ public class BuilderProcessor extends AbstractProcessor {
 
     BuilderConfigurationReader reader = context.getConfigurationReader();
 
-    // Find all elements to process:
-    // 1. Elements annotated with @SimpleBuilder
-    // 2. Elements annotated with custom annotations that have @SimpleBuilder.Template
-    // Configuration is resolved per-element to handle priority correctly when both exist
+    // Find all elements to process: any element annotated with an annotation that is
+    // meta-annotated with @SimpleBuilder.Template. This includes @SimpleBuilder itself, which is
+    // a built-in template. Configuration is resolved per-element to handle priority correctly.
     Set<Element> elementsToProcess = new HashSet<>();
 
-    // Find all @SimpleBuilder annotations
-    TypeElement simpleBuilderAnnotation =
-        context.getTypeElement(SimpleBuilder.class.getCanonicalName());
-    if (simpleBuilderAnnotation != null) {
-      elementsToProcess.addAll(roundEnv.getElementsAnnotatedWith(simpleBuilderAnnotation));
-    }
-
-    // Find all Annotations with @SimpleBuilder.Template
+    // Find all annotations meta-annotated with @SimpleBuilder.Template (this includes
+    // @SimpleBuilder itself, which is now a built-in template). Each such annotation triggers
+    // builder generation for the elements it is applied to.
     List<TypeElement> annotationsWithTemplate = extractingAnnotationsWithTemplate(annotations);
     for (TypeElement annotation : annotationsWithTemplate) {
       elementsToProcess.addAll(roundEnv.getElementsAnnotatedWith(annotation));
@@ -325,15 +318,8 @@ public class BuilderProcessor extends AbstractProcessor {
   }
 
   private static boolean shouldSkipAnnotation(TypeElement annotation) {
-    // Only process real annotation specifications
-    if (annotation.getKind() != javax.lang.model.element.ElementKind.ANNOTATION_TYPE) {
-      return true;
-    }
-    // Skip @SimpleBuilder annotation because we only want to find annotations with
-    // @SimpleBuilder.Template
-    return annotation
-        .getQualifiedName()
-        .toString()
-        .equals(org.javahelpers.simple.builders.core.annotations.SimpleBuilder.class.getName());
+    // Only process real annotation specifications. @SimpleBuilder is now a built-in template, so
+    // it is processed through the same path as custom template annotations.
+    return annotation.getKind() != javax.lang.model.element.ElementKind.ANNOTATION_TYPE;
   }
 }

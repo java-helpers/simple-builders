@@ -80,7 +80,7 @@ public class PersonDto {
 
 ## Template Annotations
 
-`@SimpleBuilder.Template` is a **meta-annotation**: it is placed on a custom annotation declaration (`@interface`), not directly on a class or record. Use it to create reusable configuration presets that can be applied to many classes with a single custom annotation. For one-off builder generation, use `@SimpleBuilder` directly on the class.
+`@SimpleBuilder.Template` is a **meta-annotation**: it is placed on a custom annotation declaration (`@interface`), not directly on a class or record. Use it to create reusable configuration presets that can be applied to many classes with a single custom annotation. `@SimpleBuilder` itself is the built-in template: it is meta-annotated with `@SimpleBuilder.Template` and can be used directly on a class for one-off builder generation, or you can define your own custom template annotations.
 
 | Need | Use |
 |------|-----|
@@ -1154,9 +1154,9 @@ Or in compiler options:
 ### Template Annotations Not Working
 
 1. **Check @SimpleBuilder.Template**: Ensure template annotation has `@SimpleBuilder.Template`
-2. **Verify options parameter**: Template must specify `options = @SimpleBuilder.Options(...)`
+2. **Verify options parameter**: Template can specify `options = @SimpleBuilder.Options(...)` or rely on the built-in defaults (omitting it is equivalent to an empty `@Options()`)
 3. **Retention and Target**: Add `@Retention(RetentionPolicy.CLASS)` and `@Target(ElementType.TYPE)`
-4. **Don't combine**: Don't use `@SimpleBuilder` when using a template annotation
+4. **Combining with @SimpleBuilder**: `@SimpleBuilder` is itself a built-in template. If both `@SimpleBuilder` and a custom template are present on the same class, `@SimpleBuilder` takes precedence in that scope. To use a custom template, place only the custom annotation on the class.
 5. **Subclasses not getting a builder**: Add `@Inherited` to the custom template annotation so it propagates to unannotated subclasses (see [Template Annotations](#template-annotations) above). Without `@Inherited`, only the exact type carrying the annotation gets a builder.
 6. **Subclass builder has wrong options**: Ensure the custom template annotation is `@Inherited` and that the parent annotation declares the desired `@SimpleBuilder.Options`. Inherited options are applied to subclass builders; a subclass's own annotation overrides the inherited options.
 

@@ -117,12 +117,7 @@ public class RoasterCodeGenerator {
       String className = classDef.getTypeName().getClassName();
       performanceTracker.startPhase(PHASE_SOURCE_CONSTRUCTION, className);
       JavaClassSource source = buildClassSource(classDef);
-      performanceTracker.startPhase(PHASE_STRING_GENERATION, className);
-      String unformatted = source.toUnformattedString();
-      performanceTracker.endPhase(PHASE_STRING_GENERATION);
-      performanceTracker.startPhase(PHASE_FORMATTING, className);
-      sourceCode = formatSource(unformatted);
-      performanceTracker.endPhase(PHASE_FORMATTING);
+      sourceCode = renderClassSource(source, className);
       performanceTracker.endPhase(PHASE_SOURCE_CONSTRUCTION);
     } catch (RuntimeException ex) {
       // Rendering failures (e.g. RoasterMapperException) are RuntimeExceptions. Convert them into
@@ -208,6 +203,21 @@ public class RoasterCodeGenerator {
     performanceTracker.endPhase(PHASE_CLASS_METADATA);
   }
 
+  private String renderClassSource(JavaClassSource source, String className) {
+    performanceTracker.startPhase(PHASE_STRING_GENERATION, className);
+    String rendered = source.toUnformattedString();
+    performanceTracker.endPhase(PHASE_STRING_GENERATION);
+    performanceTracker.startPhase(PHASE_FORMATTING, className);
+    String formatted = formatSource(rendered);
+    // Roaster renders some java.lang annotations (e.g. @SuppressWarnings, @Deprecated with
+    // members) with their FQN (@java.lang.SuppressWarnings) even though java.lang types don't
+    // need qualification. Fix this by replacing @java.lang.Xxx with @Xxx for known annotations.
+    formatted = formatted.replace("@java.lang.SuppressWarnings", "@SuppressWarnings");
+    formatted = formatted.replace("@java.lang.Deprecated", "@Deprecated");
+    performanceTracker.endPhase(PHASE_FORMATTING);
+    return formatted;
+  }
+
   private void appendFields(JavaClassSource source, GenerationTargetClassDto classDef) {
     performanceTracker.startPhase(PHASE_FIELDS, classDef.getTypeName().getClassName());
     logger.debugStartOperation("Generating %d fields", classDef.getClassFields().size());
@@ -249,6 +259,7 @@ public class RoasterCodeGenerator {
       method.addParameter(mapType(param.getParameterType()), param.getParameterName());
     }
     applyJavadoc(method, constructor.getJavadoc());
+    applyAnnotations(method, constructor.getAnnotations());
     applyCodeBlock(method, constructor.getMethodCodeDto());
   }
 
@@ -482,8 +493,14 @@ public class RoasterCodeGenerator {
       return;
     }
     for (AnnotationDto annotationDto : annotations) {
-      AnnotationSource<?> annotation =
-          source.addAnnotation(annotationDto.getAnnotationType().getFullQualifiedName());
+      TypeName type = annotationDto.getAnnotationType();
+      // Use the simple name for java.lang annotations (e.g. @SuppressWarnings, @Deprecated) so
+      // Roaster renders them without the java.lang prefix. Other annotations use their FQN.
+      String annotationName =
+          "java.lang".equals(type.getPackageName())
+              ? type.getClassName()
+              : type.getFullQualifiedName();
+      AnnotationSource<?> annotation = source.addAnnotation(annotationName);
       for (Map.Entry<String, String> member : annotationDto.getMembers().entrySet()) {
         if ("value".equals(member.getKey())) {
           annotation.setLiteralValue(member.getValue());

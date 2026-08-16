@@ -34,13 +34,16 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Integration tests for {@link
- * org.javahelpers.simple.builders.processor.util.BuilderConfigurationReader}.
+ * org.javahelpers.simple.builders.processor.processing.BuilderConfigurationReader}.
  *
- * <p>Verifies configuration reading from various sources through end-to-end compilation:
+ * <p>Verifies configuration reading from various sources through end-to-end compilation. Both
+ * {@code @SimpleBuilder} (which is itself a built-in {@code @SimpleBuilder.Template}) and custom
+ * template annotations are discovered and resolved through the same path.
  *
  * <ul>
  *   <li>Direct {@code @SimpleBuilder.Options} annotations
- *   <li>Template annotations ({@code @SimpleBuilder.Template})
+ *   <li>Template annotations ({@code @SimpleBuilder.Template}), including the built-in
+ *       {@code @SimpleBuilder}
  *   <li>Configuration resolution with proper priority chain
  *   <li>Compiler arguments
  * </ul>
@@ -53,8 +56,8 @@ class BuilderConfigurationReaderTest {
   /**
    * Test: Builder respects configuration from @SimpleBuilder.Options annotation.
    *
-   * <p>Verifies BuilderConfigurationReader.readFromOptions() correctly reads and applies all
-   * options.
+   * <p>Verifies the built-in {@code @SimpleBuilder} template is resolved and its inline {@code
+   * options()} override the template defaults.
    */
   @Test
   void readFromOptions_WithOptionsAnnotation_AppliesAllOptions() {
@@ -134,10 +137,10 @@ class BuilderConfigurationReaderTest {
   }
 
   /**
-   * Test: Builder respects configuration from template annotation.
+   * Test: Builder respects configuration from a custom template annotation.
    *
-   * <p>Verifies BuilderConfigurationReader.readFromTemplate() correctly detects and applies
-   * template configuration.
+   * <p>Verifies a custom annotation meta-annotated with {@code @SimpleBuilder.Template} is resolved
+   * through the same path as the built-in {@code @SimpleBuilder}.
    */
   @Test
   void readFromTemplate_WithTemplateAnnotation_AppliesTemplateConfiguration() {
@@ -244,10 +247,11 @@ class BuilderConfigurationReaderTest {
   }
 
   /**
-   * Test: Options annotation overrides template annotation (proper priority).
+   * Test: Inline @SimpleBuilder options override a custom template annotation.
    *
-   * <p>Verifies BuilderConfigurationReader.resolveConfiguration() applies correct priority: Options
-   * > Template > Compiler args > Defaults
+   * <p>Verifies resolveConfiguration() applies correct priority when both the built-in
+   * {@code @SimpleBuilder} and a custom template are present: direct {@code @SimpleBuilder} options
+   * win over the custom template, which in turn wins over compiler arguments and defaults.
    */
   @Test
   void resolveConfiguration_OptionsOverridesTemplate_AppliesPriorityCorrectly() {
