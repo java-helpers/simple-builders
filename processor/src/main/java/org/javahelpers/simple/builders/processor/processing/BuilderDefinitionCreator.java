@@ -855,19 +855,21 @@ public class BuilderDefinitionCreator {
 
   /**
    * Detects {@code @Deprecated} on relevant property elements (constructor parameter, record
-   * component, backing field) and records the result as a {@link DeprecationInfoDto} on the {@link
+   * component, setter method) and records the result as a {@link DeprecationInfoDto} on the {@link
    * FieldDto}.
    *
-   * <p>The first element that carries {@code @Deprecated} (in the order: parameter, backing field,
-   * record component) provides the annotation DTO (preserving {@code since} and {@code forRemoval}
+   * <p>The first element that carries {@code @Deprecated} (in the order: parameter, record
+   * component, setter) provides the annotation DTO (preserving {@code since} and {@code forRemoval}
    * attributes). The {@code @deprecated} javadoc text is extracted from the enclosing executable
-   * (setter method or constructor) of the parameter, falling back to the backing field.
+   * (setter method or constructor) of the parameter, falling back to the record component.
    *
-   * <p>Note: getter methods are intentionally <em>not</em> propagation sources. A deprecated getter
-   * means "don't call this accessor directly anymore", but the builder does not expose a get-API —
-   * only the from-instance constructor calls the getter internally, which is covered by the
-   * class-level {@code @SuppressWarnings}. The setter, however, IS a propagation source because the
-   * builder's fluent methods replace the setter as the write API for the property.
+   * <p>Note: getter methods and backing fields are intentionally <em>not</em> propagation sources.
+   * A deprecated getter means "don't call this accessor directly anymore", but the builder does not
+   * expose a get-API — only the from-instance constructor calls the getter internally, which is
+   * covered by the class-level {@code @SuppressWarnings}. The backing field is not checked because
+   * it is uncommon to deprecate a field without also deprecating the setter or constructor
+   * parameter. The setter, however, IS a propagation source because the builder's fluent methods
+   * replace the setter as the write API for the property.
    *
    * @param field the field DTO to update
    * @param param the constructor or setter parameter element
@@ -890,23 +892,17 @@ public class BuilderDefinitionCreator {
 
     Optional<? extends Element> recordComponent =
         JavaLangAnalyser.findRecordComponent(dtoTypeElement, fieldName);
-    Optional<VariableElement> fieldElement =
-        JavaLangAnalyser.findFieldElement(dtoTypeElement, fieldName);
     Optional<ExecutableElement> setter =
         JavaLangAnalyser.findSetterForField(dtoTypeElement, fieldName, context);
 
-    // Order: parameter, backing field, record component, setter method
+    // Order: parameter, record component, setter method.
+    // Note: the backing field is intentionally NOT checked — it is uncommon to deprecate a
+    // field without also deprecating the setter or constructor parameter, and checking the
+    // field adds complexity without practical value.
     if (deprecatedAnnot.isEmpty()) {
       deprecatedAnnot = FieldAnnotationExtractor.extractDeprecatedAnnotation(param, context);
       if (deprecatedAnnot.isPresent()) {
         deprecatedSourceElement = param;
-      }
-    }
-    if (deprecatedAnnot.isEmpty() && fieldElement.isPresent()) {
-      deprecatedAnnot =
-          FieldAnnotationExtractor.extractDeprecatedAnnotation(fieldElement.get(), context);
-      if (deprecatedAnnot.isPresent()) {
-        deprecatedSourceElement = fieldElement.get();
       }
     }
     if (deprecatedAnnot.isEmpty() && recordComponent.isPresent()) {
@@ -928,8 +924,7 @@ public class BuilderDefinitionCreator {
     }
 
     // Extract the @deprecated javadoc text. Prefer the enclosing executable (setter/constructor)
-    // of the parameter, then the setter method, then fall back to the backing field or record
-    // component.
+    // of the parameter, then the setter method, then fall back to the record component.
     String deprecatedJavaDoc = null;
     Element enclosing = param.getEnclosingElement();
     if (enclosing != null) {
@@ -939,10 +934,6 @@ public class BuilderDefinitionCreator {
     if (deprecatedJavaDoc == null && setter.isPresent()) {
       deprecatedJavaDoc =
           JavaLangAnalyser.extractDeprecatedJavaDoc(context.getDocComment(setter.get()));
-    }
-    if (deprecatedJavaDoc == null && fieldElement.isPresent()) {
-      deprecatedJavaDoc =
-          JavaLangAnalyser.extractDeprecatedJavaDoc(context.getDocComment(fieldElement.get()));
     }
     if (deprecatedJavaDoc == null && recordComponent.isPresent()) {
       deprecatedJavaDoc =

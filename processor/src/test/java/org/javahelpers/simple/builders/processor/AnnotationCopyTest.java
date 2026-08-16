@@ -327,14 +327,14 @@ class AnnotationCopyTest {
     String generatedCode = loadGeneratedSource(compilation, "ServiceBuilder");
     ProcessorAsserts.assertGenerationSucceeded(compilation, "ServiceBuilder", generatedCode);
 
-    // Verify that @Deprecated IS copied to the parameter (developers need to know field is
-    // deprecated!) and is also applied to the generated builder method itself.
+    // @Deprecated is applied to the generated builder method itself (not the parameter —
+    // the parameter is a new declaration, the deprecation is about the property).
     ProcessorAsserts.assertingResult(
         generatedCode,
         contains(
             """
             @Deprecated
-            public ServiceBuilder name(@Deprecated String name) {"""));
+            public ServiceBuilder name(String name) {"""));
 
     // Class-level @SuppressWarnings is present because the deprecated builder method may be
     // called internally by other generated methods (varargs helpers, etc.).
@@ -394,53 +394,6 @@ class AnnotationCopyTest {
   }
 
   @Test
-  void annotations_deprecatedField_methodLevelDeprecated() {
-    String packageName = "test.deprecated.field";
-
-    JavaFileObject service =
-        JavaFileObjects.forSourceString(
-            packageName + ".Service",
-            """
-            package test.deprecated.field;
-            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
-
-            @SimpleBuilder
-            public class Service {
-              @Deprecated
-              private String name;
-
-              public String getName() { return name; }
-
-              public void setName(String name) {
-                this.name = name;
-              }
-            }
-            """);
-
-    Compilation compilation = compileSources(service);
-    String generatedCode = loadGeneratedSource(compilation, "ServiceBuilder");
-    ProcessorAsserts.assertGenerationSucceeded(compilation, "ServiceBuilder", generatedCode);
-
-    // The generated builder method is @Deprecated on the method itself (detected from the field)
-    ProcessorAsserts.assertingResult(
-        generatedCode,
-        contains(
-            """
-            @Deprecated
-            public ServiceBuilder name(String name) {"""));
-
-    // Class-level @SuppressWarnings is needed because other generated methods within the builder
-    // (varargs helpers, add-to-collection helpers, etc.) may call the deprecated builder method
-    // internally.
-    ProcessorAsserts.assertingResult(
-        generatedCode,
-        contains(
-            """
-            @SuppressWarnings({"deprecation", "removal"})
-            public class ServiceBuilder implements IBuilderBase<Service>"""));
-  }
-
-  @Test
   void annotations_deprecatedRecordComponent_methodLevelDeprecated() {
     String packageName = "test.deprecated.record";
 
@@ -459,14 +412,14 @@ class AnnotationCopyTest {
     String generatedCode = loadGeneratedSource(compilation, "BookBuilder");
     ProcessorAsserts.assertGenerationSucceeded(compilation, "BookBuilder", generatedCode);
 
-    // The generated builder method for the deprecated record component is @Deprecated (both
-    // the method and the parameter carry the annotation).
+    // The generated builder method for the deprecated record component is @Deprecated (on the
+    // method, not the parameter — the parameter is a new declaration).
     ProcessorAsserts.assertingResult(
         generatedCode,
         contains(
             """
             @Deprecated
-            public BookBuilder title(@Deprecated String title) {"""));
+            public BookBuilder title(String title) {"""));
 
     // The non-deprecated field is not annotated — include the preceding Javadoc closing so
     // that an @Deprecated annotation between them would break the match.
@@ -635,16 +588,16 @@ class AnnotationCopyTest {
 
             @SimpleBuilder
             public class Service {
-              /**
-               * The name field.
-               *
-               * @deprecated use {@link #label} instead
-               */
-              @Deprecated
               private String name;
 
               public String getName() { return name; }
 
+              /**
+               * Sets the name.
+               *
+               * @deprecated use {@link #label} instead
+               */
+              @Deprecated
               public void setName(String name) {
                 this.name = name;
               }
@@ -662,7 +615,7 @@ class AnnotationCopyTest {
             """
              * @deprecated use {@link #label} instead"""));
 
-    // The method itself is @Deprecated (detected from the deprecated field)
+    // The method itself is @Deprecated (detected from the deprecated setter)
     ProcessorAsserts.assertingResult(
         generatedCode,
         contains(

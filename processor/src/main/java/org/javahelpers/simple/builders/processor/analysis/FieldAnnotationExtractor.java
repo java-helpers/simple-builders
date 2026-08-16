@@ -63,6 +63,10 @@ public final class FieldAnnotationExtractor {
           name -> name.equals("javax.annotation.processing.Generated"),
           // Skip compiler-only annotations not relevant for builder parameters
           name -> name.equals("java.lang.SuppressWarnings"),
+          // Skip @Deprecated on parameters — deprecation is propagated to the builder method
+          // itself via DeprecationInfoDto, not to the builder method's parameter (which is a
+          // new declaration, not the original deprecated source parameter)
+          name -> name.equals(DEPRECATED_FQN),
           // Skip @Valid annotation for cascading validation (jakarta.validation.Valid /
           // javax.validation.Valid) - only meaningful on fields or method return types, not on
           // builder method parameters where individual values are set
@@ -97,7 +101,10 @@ public final class FieldAnnotationExtractor {
         continue;
       }
       if (DEPRECATED_FQN.equals(annotationType.getQualifiedName().toString())) {
-        return extractAnnotation(mirror, context);
+        // Extract the @Deprecated annotation directly, WITHOUT applying ANNOTATION_FILTERS.
+        // The filters are for annotations copied to builder parameters; deprecation detection
+        // must always see @Deprecated regardless of whether it is copied to parameters.
+        return extractAnnotationWithoutFiltering(mirror, context);
       }
     }
     return Optional.empty();
@@ -167,6 +174,25 @@ public final class FieldAnnotationExtractor {
       return Optional.empty();
     }
 
+    return extractAnnotationWithoutFiltering(mirror, context);
+  }
+
+  /**
+   * Extracts a single annotation from an AnnotationMirror without applying {@link
+   * #shouldSkipAnnotation} filters. Used by {@link #extractDeprecatedAnnotation} which needs to
+   * detect @Deprecated even though @Deprecated is filtered from parameter annotations.
+   *
+   * @param mirror the annotation mirror to process
+   * @param context processing context
+   * @return Optional containing the extracted annotation
+   */
+  private static Optional<AnnotationDto> extractAnnotationWithoutFiltering(
+      AnnotationMirror mirror, ProcessingContext context) {
+    Element annotationElement = mirror.getAnnotationType().asElement();
+    if (!(annotationElement instanceof TypeElement annotationType)) {
+      return Optional.empty();
+    }
+
     // Create AnnotationDto
     AnnotationDto annotationDto = new AnnotationDto();
 
@@ -185,7 +211,7 @@ public final class FieldAnnotationExtractor {
       annotationDto.addMember(memberName, memberValue);
     }
 
-    context.debug("    -> Added annotation: %s", annotationQualifiedName);
+    context.debug("    -> Added annotation: %s", annotationType.getQualifiedName());
     return Optional.of(annotationDto);
   }
 
