@@ -57,6 +57,7 @@ import org.javahelpers.simple.builders.processor.processing.BuilderConfiguration
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsEnum;
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsReader;
 import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
+import org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker;
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 
 /**
@@ -113,6 +114,10 @@ public class BuilderProcessor extends AbstractProcessor {
 
     // Generate Jackson Module if processing is over and feature is enabled
     if (roundEnv.processingOver()) {
+      // Generate performance report at the end of processing
+      PerformanceTracker tracker = context.getPerformanceTracker();
+      tracker.generateReport(context.getLogger());
+
       List<GenerationTargetClassDto> moduleClassDefs =
           jacksonModuleGenerator.getModuleDefinitions();
       for (GenerationTargetClassDto moduleClassDef : moduleClassDefs) {
@@ -182,13 +187,17 @@ public class BuilderProcessor extends AbstractProcessor {
             .sorted(Comparator.comparing(element -> element.getSimpleName().toString()))
             .toList();
 
+    PerformanceTracker tracker = context.getPerformanceTracker();
     int successfulGenerations = 0;
     for (Element annotatedElement : sortedElements) {
       context.debugStartOperation("Processing element: " + annotatedElement.getSimpleName());
+      String className = annotatedElement.getSimpleName().toString();
+      tracker.startClass(className);
       try {
-        // Resolve configuration per-element to handle all layers
-        // (defaults, global, template, inline)
+        // Track Configuration Resolution (actual work happens here)
+        tracker.startPhase("Configuration Resolution", className);
         BuilderConfiguration config = reader.resolveConfiguration(annotatedElement);
+        tracker.endPhase("Configuration Resolution");
         context.debug("Configuration resolved: %s", config);
         process(annotatedElement, config);
         successfulGenerations++;
@@ -232,13 +241,45 @@ public class BuilderProcessor extends AbstractProcessor {
   private void process(Element annotatedElement, BuilderConfiguration config)
       throws BuilderException {
     context.initConfigurationForProcessingTarget(config);
+    PerformanceTracker tracker = context.getPerformanceTracker();
+    String className = annotatedElement.getSimpleName().toString();
+
+    // Track Builder Definition Extraction
+    tracker.startPhase("Builder Definition Extraction", className);
     BuilderDefinitionDto builderDef = extractFromElement(annotatedElement, context);
+    tracker.endPhase("Builder Definition Extraction");
+
+    // Compute class-level metrics now that the definition is available
+    int fieldCount = builderDef.getAllFieldsForBuilder().size();
+    int collectionCount =
+        (int)
+            builderDef.getAllFieldsForBuilder().stream()
+                .filter(
+                    f -> {
+                      String typeName = f.getFieldType().getFullQualifiedName();
+                      return typeName.startsWith("java.util.List")
+                          || typeName.startsWith("java.util.Set")
+                          || typeName.startsWith("java.util.Map")
+                          || typeName.startsWith("java.util.Collection");
+                    })
+                .count();
+
+    // Track DTO Mapping
+    tracker.startPhase("DTO Mapping", className);
     GenerationTargetClassDto renderingDto = toRenderingDto(builderDef);
+    tracker.endPhase("DTO Mapping");
+
+    // Track Code Generation
+    tracker.startPhase("Code Generation (Roaster)", className);
     codeGenerator.generateClass(renderingDto);
+    tracker.endPhase("Code Generation (Roaster)");
 
     // Collect info for Jackson Module if enabled
     jacksonModuleGenerator.addEntry(builderDef, annotatedElement);
     context.debug("Jackson module entry added");
+
+    // End class-level timing (started in caller before config resolution)
+    tracker.endClass(fieldCount, collectionCount);
 
     // Add summary of what was generated
     context.debugEndOperation(
