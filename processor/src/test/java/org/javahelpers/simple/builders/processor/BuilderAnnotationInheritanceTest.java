@@ -592,4 +592,82 @@ class BuilderAnnotationInheritanceTest {
     assertNotContaining(childBuilder, "Supplier<");
     assertNotContaining(childBuilder, "Consumer<");
   }
+
+  /**
+   * A direct {@code @SimpleBuilder} on a subclass must override an inherited custom template
+   * annotation. This proves that {@code @SimpleBuilder} is handled through the same template
+   * discovery path as custom templates and wins within the same scope by precedence.
+   */
+  @Test
+  void directSimpleBuilderOverridesInheritedCustomTemplateOptions() {
+    JavaFileObject parentTemplate =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+
+            import java.lang.annotation.ElementType;
+            import java.lang.annotation.Inherited;
+            import java.lang.annotation.Retention;
+            import java.lang.annotation.RetentionPolicy;
+            import java.lang.annotation.Target;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+            import org.javahelpers.simple.builders.core.enums.OptionState;
+
+            @SimpleBuilder.Template(options = @SimpleBuilder.Options(
+                generateFieldSupplier = OptionState.DISABLED,
+                builderSuffix = "ParentBuilder"
+            ))
+            @Inherited
+            @Retention(RetentionPolicy.CLASS)
+            @Target(ElementType.TYPE)
+            public @interface ParentTemplate {}
+            """);
+
+    JavaFileObject parentSource =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+
+            @ParentTemplate
+            public class ParentDto {
+                private String name;
+
+                public String getName() { return name; }
+                public void setName(String name) { this.name = name; }
+            }
+            """);
+
+    JavaFileObject childSource =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+            @SimpleBuilder(options = @SimpleBuilder.Options(
+                builderSuffix = "ChildBuilder"
+            ))
+            public class ChildDto extends ParentDto {
+                private int age;
+
+                public int getAge() { return age; }
+                public void setAge(int age) { this.age = age; }
+            }
+            """);
+
+    Compilation compilation = compile(parentTemplate, parentSource, childSource);
+
+    assertThat(compilation).succeededWithoutWarnings();
+
+    String parentBuilder = loadGeneratedSource(compilation, "ParentDtoParentBuilder");
+    assertContaining(parentBuilder, "class ParentDtoParentBuilder");
+    assertContaining(parentBuilder, "public ParentDtoParentBuilder name(String name)");
+    assertNotContaining(parentBuilder, "Supplier<");
+
+    String childBuilder = loadGeneratedSource(compilation, "ChildDtoChildBuilder");
+    assertContaining(childBuilder, "class ChildDtoChildBuilder");
+    assertContaining(childBuilder, "public ChildDtoChildBuilder name(String name)");
+    assertContaining(childBuilder, "public ChildDtoChildBuilder age(int age)");
+    assertNotContaining(childBuilder, "Supplier<");
+  }
 }
