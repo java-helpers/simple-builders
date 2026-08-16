@@ -832,7 +832,8 @@ public class BuilderDefinitionCreator {
                     FieldAnnotationExtractor.formatDefaultExpression(rawDefault, fieldType)));
 
     // Detect @Deprecated on relevant property elements (constructor parameter, record
-    // component, backing field) and propagate it to all generated builder methods for this field.
+    // component, backing field, setter method) and propagate it to all generated builder methods
+    // for this field.
     detectAndApplyFieldDeprecation(field, param, dtoTypeElement, context);
 
     // Builder and constructor information is now set when TypeName is created in JavaLangMapper
@@ -862,11 +863,11 @@ public class BuilderDefinitionCreator {
    * attributes). The {@code @deprecated} javadoc text is extracted from the enclosing executable
    * (setter method or constructor) of the parameter, falling back to the backing field.
    *
-   * <p>Note: setter and getter methods are intentionally <em>not</em> propagation sources. A
-   * deprecated setter or getter means "don't call this accessor directly anymore", not "this
-   * property is deprecated". The suppression of compiler warnings from generated code that calls
-   * deprecated setters/getters is handled separately in {@code applyDeprecationSuppressions} by
-   * checking the source elements directly.
+   * <p>Note: getter methods are intentionally <em>not</em> propagation sources. A deprecated getter
+   * means "don't call this accessor directly anymore", but the builder does not expose a get-API —
+   * only the from-instance constructor calls the getter internally, which is covered by the
+   * class-level {@code @SuppressWarnings}. The setter, however, IS a propagation source because the
+   * builder's fluent methods replace the setter as the write API for the property.
    *
    * @param field the field DTO to update
    * @param param the constructor or setter parameter element
@@ -891,8 +892,10 @@ public class BuilderDefinitionCreator {
         JavaLangAnalyser.findRecordComponent(dtoTypeElement, fieldName);
     Optional<VariableElement> fieldElement =
         JavaLangAnalyser.findFieldElement(dtoTypeElement, fieldName);
+    Optional<ExecutableElement> setter =
+        JavaLangAnalyser.findSetterForField(dtoTypeElement, fieldName, context);
 
-    // Order: parameter, backing field, record component
+    // Order: parameter, backing field, record component, setter method
     if (deprecatedAnnot.isEmpty()) {
       deprecatedAnnot = FieldAnnotationExtractor.extractDeprecatedAnnotation(param, context);
       if (deprecatedAnnot.isPresent()) {
@@ -913,18 +916,29 @@ public class BuilderDefinitionCreator {
         deprecatedSourceElement = recordComponent.get();
       }
     }
+    if (deprecatedAnnot.isEmpty() && setter.isPresent()) {
+      deprecatedAnnot = FieldAnnotationExtractor.extractDeprecatedAnnotation(setter.get(), context);
+      if (deprecatedAnnot.isPresent()) {
+        deprecatedSourceElement = setter.get();
+      }
+    }
 
     if (deprecatedAnnot.isEmpty()) {
       return;
     }
 
     // Extract the @deprecated javadoc text. Prefer the enclosing executable (setter/constructor)
-    // of the parameter, then fall back to the backing field or record component.
+    // of the parameter, then the setter method, then fall back to the backing field or record
+    // component.
     String deprecatedJavaDoc = null;
     Element enclosing = param.getEnclosingElement();
     if (enclosing != null) {
       deprecatedJavaDoc =
           JavaLangAnalyser.extractDeprecatedJavaDoc(context.getDocComment(enclosing));
+    }
+    if (deprecatedJavaDoc == null && setter.isPresent()) {
+      deprecatedJavaDoc =
+          JavaLangAnalyser.extractDeprecatedJavaDoc(context.getDocComment(setter.get()));
     }
     if (deprecatedJavaDoc == null && fieldElement.isPresent()) {
       deprecatedJavaDoc =
@@ -1060,9 +1074,14 @@ public class BuilderDefinitionCreator {
       BuilderDefinitionDto builderDto, TypeElement annotatedType, ProcessingContext context) {
     boolean dtoDeprecated = annotatedType.getAnnotation(Deprecated.class) != null;
     boolean constructorDeprecated = isConstructorDeprecated(annotatedType, context);
+    // A deprecated field/param/record-component means the generated builder method is @Deprecated.
+    // Other generated methods within the builder (varargs helpers, add-to-collection helpers, etc.)
+    // may call the deprecated builder method internally, so class-level suppression is needed.
+    boolean anyFieldDeprecated =
+        builderDto.getSetterFieldsForBuilder().stream().anyMatch(FieldDto::isDeprecated);
     // Check setter/getter method deprecation directly from source elements (not stored on
-    // FieldDto) — a deprecated setter/getter is not a propagation source but still triggers
-    // compiler warnings in generated code (build() calls setters, from-instance ctor calls getters).
+    // FieldDto) — a deprecated setter/getter triggers compiler warnings in generated code
+    // (build() calls setters, from-instance ctor calls getters).
     boolean anySetterMethodDeprecated =
         builderDto.getSetterFieldsForBuilder().stream()
             .anyMatch(
@@ -1087,6 +1106,7 @@ public class BuilderDefinitionCreator {
     boolean needsSuppress =
         dtoDeprecated
             || constructorDeprecated
+            || anyFieldDeprecated
             || anySetterMethodDeprecated
             || anyGetterMethodDeprecated;
 
@@ -1098,9 +1118,10 @@ public class BuilderDefinitionCreator {
     builderDto.addClassAnnotation(suppressWarnings);
 
     context.debug(
-        "Added class-level @SuppressWarnings for deprecation (dtoDeprecated=%s, ctorDeprecated=%s, setterDeprecated=%s, getterDeprecated=%s)",
+        "Added class-level @SuppressWarnings for deprecation (dtoDeprecated=%s, ctorDeprecated=%s, fieldDeprecated=%s, setterDeprecated=%s, getterDeprecated=%s)",
         dtoDeprecated,
         constructorDeprecated,
+        anyFieldDeprecated,
         anySetterMethodDeprecated,
         anyGetterMethodDeprecated);
   }

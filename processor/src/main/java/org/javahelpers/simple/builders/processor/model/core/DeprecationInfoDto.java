@@ -33,9 +33,9 @@ import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
  * Encapsulates deprecation metadata detected from source DTO property elements.
  *
  * <p>This DTO is used during builder definition generation to carry deprecation information from
- * source elements (constructor parameter, record component, backing field) to the point where
- * generated builder methods are annotated. It is an analysis-side DTO and is not directly used for
- * class generation — the actual rendering uses the existing {@link
+ * source elements (constructor parameter, record component, backing field, setter method) to the
+ * point where generated builder methods are annotated. It is an analysis-side DTO and is not
+ * directly used for class generation — the actual rendering uses the existing {@link
  * org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto#getAnnotations()
  * annotations list} and {@link org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto
  * javadoc} on the rendering DTOs.
@@ -43,11 +43,11 @@ import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
  * <p>The {@link #deprecatedAnnotation} preserves {@code @Deprecated(since = ..., forRemoval = ...)}
  * attributes. The {@link #deprecatedJavaDoc} carries the {@code @deprecated} Javadoc tag text.
  *
- * <p>Note: deprecation of setter and getter methods is not stored here. A deprecated setter or
- * getter does not mean the property itself is deprecated, so it is not a propagation source. The
- * suppression of compiler warnings from generated code that calls deprecated setters/getters is
- * handled separately in {@code applyDeprecationSuppressions} by checking the source elements
- * directly.
+ * <p>Note: getter method deprecation is not stored here. A deprecated getter means "don't call this
+ * accessor directly anymore", but the builder does not expose a get-API — only the from-instance
+ * constructor calls the getter internally, which is covered by the class-level
+ * {@code @SuppressWarnings}. The setter, however, IS a propagation source because the builder's
+ * fluent methods replace the setter as the write API for the property.
  *
  * @param deprecatedAnnotation the {@code @Deprecated} annotation DTO preserving {@code since} and
  *     {@code forRemoval} attributes, or {@code null} if not deprecated
