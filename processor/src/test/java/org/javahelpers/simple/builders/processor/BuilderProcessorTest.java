@@ -98,7 +98,7 @@ class BuilderProcessorTest {
         "[DEBUG] simple-builders: Processing round started. Found 1 annotated elements.",
         "[DEBUG] Processing element: VerboseTest",
         "[DEBUG] ├─ Resolving configuration for element: VerboseTest",
-        "[DEBUG] │  ├─ Template annotations ignored because @SimpleBuilder present",
+        "[DEBUG] │  ├─ Template annotations ignored because @SimpleBuilder is present in DIRECT scope",
         "[DEBUG] │  └─ Resulting configuration resolved: BuilderConfiguration[",
         "[DEBUG] ├─ Extracting builder definition from: test.VerboseTest",
         "[DEBUG] │  ├─ Builder will be generated as: test.VerboseTestBuilder",

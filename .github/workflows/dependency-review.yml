@@ -42,6 +42,10 @@ permissions:
 
 jobs:
   dependency-review:
+    # Dependency review requires the dependency graph to be enabled, which is
+    # not the case for forks. Skipping it on fork repositories avoids failing
+    # checks on every fork PR (see #243).
+    if: github.event.repository.fork == false
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

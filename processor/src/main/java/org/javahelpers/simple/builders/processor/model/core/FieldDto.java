@@ -66,10 +66,11 @@ public class FieldDto {
   private final List<GenericParameterDto> fieldGenerics = new ArrayList<>();
 
   /**
-   * The name of the getter method to call, because in case of boolean it does not need to start
-   * with get (e.g., getName or isActive).
+   * Metadata about the getter method resolved for this field (name and deprecation status). The
+   * from-instance constructor calls the getter to initialise the builder. {@code null} when no
+   * getter was found.
    */
-  private String getterName;
+  private GetterInfoDto getterInfo;
 
   /**
    * Whether this field is marked as non-nullable via annotations like @NotNull, @NonNull, etc. For
@@ -90,6 +91,12 @@ public class FieldDto {
    * 0.0} for primitives, {@code List.of()} for complex types).
    */
   private String defaultValue;
+
+  /**
+   * Deprecation metadata for this field, detected from relevant property elements (constructor
+   * parameter, record component, backing field). {@code null} when the field is not deprecated.
+   */
+  private DeprecationInfoDto deprecationInfo;
 
   /**
    * Gets the original field name from the DTO. This name is used for generating method names,
@@ -249,21 +256,39 @@ public class FieldDto {
   }
 
   /**
+   * Returns the getter info for this field.
+   *
+   * @return the getter info, or {@code null} if no getter was resolved
+   */
+  public GetterInfoDto getGetterInfo() {
+    return getterInfo;
+  }
+
+  /**
+   * Sets the getter info for this field.
+   *
+   * @param getterInfo the getter info to set, or {@code null} to clear
+   */
+  public void setGetterInfo(GetterInfoDto getterInfo) {
+    this.getterInfo = getterInfo;
+  }
+
+  /**
    * Returns the getter method name to use (without parentheses).
    *
    * @return Optional containing the getter name, or empty if not set
    */
   public Optional<String> getGetterName() {
-    return Optional.ofNullable(getterName);
+    return Optional.ofNullable(getterInfo).map(GetterInfoDto::getGetterName);
   }
 
   /**
-   * Sets the getter method name to use (without parentheses).
+   * Checks if the getter method for this field is {@code @Deprecated}.
    *
-   * @param getterName the getter method name to set
+   * @return {@code true} if the getter is deprecated
    */
-  public void setGetterName(String getterName) {
-    this.getterName = getterName;
+  public boolean isGetterDeprecated() {
+    return getterInfo != null && getterInfo.deprecated();
   }
 
   /**
@@ -352,5 +377,32 @@ public class FieldDto {
    */
   public boolean isRequired() {
     return nonNullable && defaultValue == null;
+  }
+
+  /**
+   * Gets the deprecation metadata for this field.
+   *
+   * @return the deprecation info, or {@code null} if the field is not deprecated
+   */
+  public DeprecationInfoDto getDeprecationInfo() {
+    return deprecationInfo;
+  }
+
+  /**
+   * Sets the deprecation metadata for this field.
+   *
+   * @param deprecationInfo the deprecation info, or {@code null} if not deprecated
+   */
+  public void setDeprecationInfo(DeprecationInfoDto deprecationInfo) {
+    this.deprecationInfo = deprecationInfo;
+  }
+
+  /**
+   * Checks if this field is deprecated (a relevant element is marked {@code @Deprecated}).
+   *
+   * @return {@code true} if the field is deprecated
+   */
+  public boolean isDeprecated() {
+    return deprecationInfo != null && deprecationInfo.isDeprecated();
   }
 }
