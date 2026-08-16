@@ -26,6 +26,7 @@ package org.javahelpers.simple.builders.processor.classgen.roaster;
 
 import static org.javahelpers.simple.builders.processor.classgen.roaster.RoasterMapper.mapType;
 import static org.javahelpers.simple.builders.processor.classgen.roaster.RoasterMapper.resolveCodeTemplate;
+import static org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -58,6 +59,7 @@ import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto
 import org.javahelpers.simple.builders.processor.model.type.NestedTypeDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameArray;
+import org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker;
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 import org.javahelpers.simple.builders.processor.util.ImportCollector;
 import org.jboss.forge.roaster.Roaster;
@@ -81,6 +83,9 @@ public class RoasterCodeGenerator {
   /** Logger for debug output during code generation. */
   private final ProcessingLogger logger;
 
+  /** Performance tracker for sub-phase timing (Source Construction, File Writing). */
+  private final PerformanceTracker performanceTracker;
+
   private final Properties formatterProperties;
 
   /**
@@ -89,9 +94,11 @@ public class RoasterCodeGenerator {
    * @param processingEnv Processing environment for accessing filer and element utilities
    * @param logger Logger for debug output
    */
-  public RoasterCodeGenerator(ProcessingEnvironment processingEnv, ProcessingLogger logger) {
+  public RoasterCodeGenerator(
+      ProcessingEnvironment processingEnv, ProcessingLogger logger, PerformanceTracker tracker) {
     this.processingEnv = processingEnv;
     this.logger = logger;
+    this.performanceTracker = tracker;
     this.formatterProperties = loadFormatterProperties();
   }
 
@@ -107,20 +114,33 @@ public class RoasterCodeGenerator {
 
     String sourceCode;
     try {
-      sourceCode = createClassSource(classDef);
+      String className = classDef.getTypeName().getClassName();
+      performanceTracker.startPhase(PHASE_SOURCE_CONSTRUCTION, className);
+      JavaClassSource source = buildClassSource(classDef);
+      performanceTracker.startPhase(PHASE_STRING_GENERATION, className);
+      String unformatted = source.toUnformattedString();
+      performanceTracker.endPhase(PHASE_STRING_GENERATION);
+      performanceTracker.startPhase(PHASE_FORMATTING, className);
+      sourceCode = formatSource(unformatted);
+      performanceTracker.endPhase(PHASE_FORMATTING);
+      performanceTracker.endPhase(PHASE_SOURCE_CONSTRUCTION);
     } catch (RuntimeException ex) {
       // Rendering failures (e.g. RoasterMapperException) are RuntimeExceptions. Convert them into
       // a BuilderException so callers can isolate the failure to this single class and keep
       // generating the remaining builders instead of aborting the whole processing round.
       throw new BuilderException(null, ex);
     }
+    performanceTracker.startPhase(PHASE_FILE_WRITING, classDef.getTypeName().getClassName());
     writeClassToFile(sourceCode, classDef);
+    performanceTracker.endPhase(PHASE_FILE_WRITING);
 
     logger.debugEndOperation(
         "Successfully generated class: %s", classDef.getTypeName().getClassName());
   }
 
-  private String createClassSource(GenerationTargetClassDto classDef) {
+  private JavaClassSource buildClassSource(GenerationTargetClassDto classDef) {
+    String className = classDef.getTypeName().getClassName();
+    performanceTracker.startPhase(PHASE_ELEMENT_BUILDING, className);
     JavaClassSource source = createJavaClassSource(classDef);
     addClassMetadata(source, classDef);
     appendFields(source, classDef);
@@ -128,19 +148,22 @@ public class RoasterCodeGenerator {
     appendMethods(source, classDef);
     appendNestedTypes(source, classDef);
     applyClassAnnotations(source, classDef);
-    return renderClassSource(source);
+    performanceTracker.endPhase(PHASE_ELEMENT_BUILDING);
+    return source;
   }
 
   private void applyClassAnnotations(JavaClassSource source, GenerationTargetClassDto classDef) {
-    if (CollectionUtils.isEmpty(classDef.getClassAnnotations())) {
-      return;
+    performanceTracker.startPhase(PHASE_CLASS_ANNOTATIONS, classDef.getTypeName().getClassName());
+    if (CollectionUtils.isNotEmpty(classDef.getClassAnnotations())) {
+      // Adding class annotations
+      applyAnnotations(source, classDef.getClassAnnotations());
+      logger.debug("Class-level annotations added");
     }
-    // Adding class annotations
-    applyAnnotations(source, classDef.getClassAnnotations());
-    logger.debug("Class-level annotations added");
+    performanceTracker.endPhase(PHASE_CLASS_ANNOTATIONS);
   }
 
   private JavaClassSource createJavaClassSource(GenerationTargetClassDto classDef) {
+    performanceTracker.startPhase(PHASE_CLASS_CREATION, classDef.getTypeName().getClassName());
     if (CollectionUtils.isNotEmpty(classDef.getGenerics())) {
       logger.debug("Class has %d generic type parameter(s)", classDef.getGenerics().size());
     }
@@ -166,10 +189,12 @@ public class RoasterCodeGenerator {
     }
 
     logger.debug("JavaClassSource created");
+    performanceTracker.endPhase(PHASE_CLASS_CREATION);
     return source;
   }
 
   private void addClassMetadata(JavaClassSource source, GenerationTargetClassDto classDef) {
+    performanceTracker.startPhase(PHASE_CLASS_METADATA, classDef.getTypeName().getClassName());
     applyJavadoc(source, classDef.getClassJavadoc());
     applyVisibility(source, classDef.getClassAccessModifier());
     applySuperType(source, classDef.getSuperType());
@@ -180,14 +205,11 @@ public class RoasterCodeGenerator {
     }
 
     logger.debug("Class metadata added");
-  }
-
-  private String renderClassSource(JavaClassSource source) {
-    String rendered = source.toUnformattedString();
-    return formatSource(rendered);
+    performanceTracker.endPhase(PHASE_CLASS_METADATA);
   }
 
   private void appendFields(JavaClassSource source, GenerationTargetClassDto classDef) {
+    performanceTracker.startPhase(PHASE_FIELDS, classDef.getTypeName().getClassName());
     logger.debugStartOperation("Generating %d fields", classDef.getClassFields().size());
 
     for (ClassFieldDto fieldDto : classDef.getClassFields()) {
@@ -195,6 +217,7 @@ public class RoasterCodeGenerator {
     }
 
     logger.debugEndOperation("Fields added: %d fields", source.getFields().size());
+    performanceTracker.endPhase(PHASE_FIELDS);
   }
 
   private void appendField(JavaClassSource source, ClassFieldDto fieldDto) {
@@ -207,6 +230,7 @@ public class RoasterCodeGenerator {
   }
 
   private void appendConstructors(JavaClassSource source, GenerationTargetClassDto classDef) {
+    performanceTracker.startPhase(PHASE_CONSTRUCTORS, classDef.getTypeName().getClassName());
     logger.debugStartOperation("Generating %d constructors", classDef.getConstructors().size());
 
     for (ConstructorDto constructor : classDef.getConstructors()) {
@@ -214,6 +238,7 @@ public class RoasterCodeGenerator {
     }
 
     logger.debugEndOperation("Constructors added: %d", classDef.getConstructors().size());
+    performanceTracker.endPhase(PHASE_CONSTRUCTORS);
   }
 
   private void appendConstructor(JavaClassSource source, ConstructorDto constructor) {
@@ -228,6 +253,7 @@ public class RoasterCodeGenerator {
   }
 
   private void appendMethods(JavaClassSource source, GenerationTargetClassDto classDef) {
+    performanceTracker.startPhase(PHASE_METHODS, classDef.getTypeName().getClassName());
     logger.debugStartOperation("Generating %d method candidates", classDef.getMethods().size());
 
     // Resolve method conflicts by signature and priority
@@ -239,6 +265,7 @@ public class RoasterCodeGenerator {
     }
 
     logger.debugEndOperation("Methods added: %d", resolvedMethods.size());
+    performanceTracker.endPhase(PHASE_METHODS);
   }
 
   /**
@@ -290,15 +317,16 @@ public class RoasterCodeGenerator {
   }
 
   private void appendNestedTypes(JavaClassSource source, GenerationTargetClassDto classDef) {
-    if (CollectionUtils.isEmpty(classDef.getNestedTypes())) {
-      return;
+    performanceTracker.startPhase(PHASE_NESTED_TYPES, classDef.getTypeName().getClassName());
+    if (CollectionUtils.isNotEmpty(classDef.getNestedTypes())) {
+      logger.debugStartOperation("Generating %d nested type(s)", classDef.getNestedTypes().size());
+      for (NestedTypeDto nestedType : classDef.getNestedTypes()) {
+        appendNestedType(source, nestedType);
+        logger.debug("Generated nested type: %s", nestedType.getTypeName());
+      }
+      logger.debugEndOperation("Nested types added");
     }
-    logger.debugStartOperation("Generating %d nested type(s)", classDef.getNestedTypes().size());
-    for (NestedTypeDto nestedType : classDef.getNestedTypes()) {
-      appendNestedType(source, nestedType);
-      logger.debug("Generated nested type: %s", nestedType.getTypeName());
-    }
-    logger.debugEndOperation("Nested types added");
+    performanceTracker.endPhase(PHASE_NESTED_TYPES);
   }
 
   private void appendNestedType(JavaClassSource source, NestedTypeDto nestedType) {

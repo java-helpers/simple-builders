@@ -26,6 +26,10 @@ package org.javahelpers.simple.builders.processor;
 
 import static org.javahelpers.simple.builders.processor.model.core.BuilderToGenerationTypeMapper.toRenderingDto;
 import static org.javahelpers.simple.builders.processor.processing.BuilderDefinitionCreator.extractFromElement;
+import static org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker.PHASE_BUILDER_DEFINITION_EXTRACTION;
+import static org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker.PHASE_CODE_GENERATION;
+import static org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker.PHASE_CONFIGURATION_RESOLUTION;
+import static org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker.PHASE_DTO_MAPPING;
 
 import com.google.auto.service.AutoService;
 import java.util.ArrayList;
@@ -85,7 +89,8 @@ public class BuilderProcessor extends AbstractProcessor {
     logger.debug("Loaded global configuration from compiler arguments: %s", globalConfig);
 
     this.context = new ProcessingContext(logger, globalConfig, processingEnv);
-    this.codeGenerator = new RoasterCodeGenerator(processingEnv, logger);
+    this.codeGenerator =
+        new RoasterCodeGenerator(processingEnv, logger, context.getPerformanceTracker());
     this.jacksonModuleGenerator = new JacksonModuleGenerator(processingEnv, logger);
 
     // Initialize GeneratorRegistry once during processor initialization
@@ -195,9 +200,9 @@ public class BuilderProcessor extends AbstractProcessor {
       tracker.startClass(className);
       try {
         // Track Configuration Resolution (actual work happens here)
-        tracker.startPhase("Configuration Resolution", className);
+        tracker.startPhase(PHASE_CONFIGURATION_RESOLUTION, className);
         BuilderConfiguration config = reader.resolveConfiguration(annotatedElement);
-        tracker.endPhase("Configuration Resolution");
+        tracker.endPhase(PHASE_CONFIGURATION_RESOLUTION);
         context.debug("Configuration resolved: %s", config);
         process(annotatedElement, config);
         successfulGenerations++;
@@ -245,9 +250,9 @@ public class BuilderProcessor extends AbstractProcessor {
     String className = annotatedElement.getSimpleName().toString();
 
     // Track Builder Definition Extraction
-    tracker.startPhase("Builder Definition Extraction", className);
+    tracker.startPhase(PHASE_BUILDER_DEFINITION_EXTRACTION, className);
     BuilderDefinitionDto builderDef = extractFromElement(annotatedElement, context);
-    tracker.endPhase("Builder Definition Extraction");
+    tracker.endPhase(PHASE_BUILDER_DEFINITION_EXTRACTION);
 
     // Compute class-level metrics now that the definition is available
     int fieldCount = builderDef.getAllFieldsForBuilder().size();
@@ -265,14 +270,14 @@ public class BuilderProcessor extends AbstractProcessor {
                 .count();
 
     // Track DTO Mapping
-    tracker.startPhase("DTO Mapping", className);
+    tracker.startPhase(PHASE_DTO_MAPPING, className);
     GenerationTargetClassDto renderingDto = toRenderingDto(builderDef);
-    tracker.endPhase("DTO Mapping");
+    tracker.endPhase(PHASE_DTO_MAPPING);
 
-    // Track Code Generation
-    tracker.startPhase("Code Generation (Roaster)", className);
+    // Track Code Generation (parent phase; sub-phases tracked inside RoasterCodeGenerator)
+    tracker.startPhase(PHASE_CODE_GENERATION, className);
     codeGenerator.generateClass(renderingDto);
-    tracker.endPhase("Code Generation (Roaster)");
+    tracker.endPhase(PHASE_CODE_GENERATION);
 
     // Collect info for Jackson Module if enabled
     jacksonModuleGenerator.addEntry(builderDef, annotatedElement);

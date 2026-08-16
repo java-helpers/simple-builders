@@ -40,6 +40,30 @@ package org.javahelpers.simple.builders.processor.processing.logging;
  */
 public interface PerformanceTracker {
 
+  // Top-level phases
+  String PHASE_CONFIGURATION_RESOLUTION = "Configuration Resolution";
+  String PHASE_BUILDER_DEFINITION_EXTRACTION = "Builder Definition Extraction";
+  String PHASE_DTO_MAPPING = "DTO Mapping";
+  String PHASE_CODE_GENERATION = "Code Generation";
+
+  // Code Generation children
+  String PHASE_SOURCE_CONSTRUCTION = "Source Construction";
+  String PHASE_FILE_WRITING = "File Writing";
+
+  // Source Construction children
+  String PHASE_ELEMENT_BUILDING = "Element Building";
+  String PHASE_STRING_GENERATION = "String Generation";
+  String PHASE_FORMATTING = "Formatting";
+
+  // Element Building children
+  String PHASE_CLASS_CREATION = "Class Creation";
+  String PHASE_CLASS_METADATA = "Class Metadata";
+  String PHASE_FIELDS = "Fields";
+  String PHASE_CONSTRUCTORS = "Constructors";
+  String PHASE_METHODS = "Methods";
+  String PHASE_NESTED_TYPES = "Nested Types";
+  String PHASE_CLASS_ANNOTATIONS = "Class Annotations";
+
   /**
    * Starts tracking a processing phase for a specific class.
    *
