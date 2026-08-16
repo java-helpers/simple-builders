@@ -217,4 +217,82 @@ class JavaLangAnalyserTest {
   void findGetterForField_shouldReturnEmpty_whenFieldTypeMirrorIsNull() {
     assertTrue(JavaLangAnalyser.findGetterForField(null, "fieldName", null, null).isEmpty());
   }
+
+  @Test
+  void extractDeprecatedJavaDoc_shouldReturnNull_whenJavaDocHasNoDeprecatedTag() {
+    String javaDoc =
+        """
+        /**
+         * Some method description.
+         * @param name the name
+         * @return something
+         */
+        """;
+    assertNull(JavaLangAnalyser.extractDeprecatedJavaDoc(javaDoc));
+  }
+
+  @Test
+  void extractDeprecatedJavaDoc_shouldReturnNull_whenJavaDocIsNull() {
+    assertNull(JavaLangAnalyser.extractDeprecatedJavaDoc(null));
+  }
+
+  @Test
+  void extractDeprecatedJavaDoc_shouldExtractSingleLineDeprecatedText() {
+    String javaDoc =
+        """
+        /**
+         * Some method description.
+         * @deprecated use {@link #newMethod} instead
+         * @return something
+         */
+        """;
+    assertEquals(
+        "use {@link #newMethod} instead", JavaLangAnalyser.extractDeprecatedJavaDoc(javaDoc));
+  }
+
+  @Test
+  void extractDeprecatedJavaDoc_shouldExtractMultiLineDeprecatedText() {
+    String javaDoc =
+        """
+        /**
+         * Some method description.
+         * @deprecated use {@link #newMethod} instead
+         *         and migrate all callers
+         * @return something
+         */
+        """;
+    assertEquals(
+        "use {@link #newMethod} instead and migrate all callers",
+        JavaLangAnalyser.extractDeprecatedJavaDoc(javaDoc));
+  }
+
+  @Test
+  void findFieldElement_shouldReturnEmpty_whenClassElementIsNull() {
+    assertTrue(JavaLangAnalyser.findFieldElement(null, "fieldName").isEmpty());
+  }
+
+  @Test
+  void findFieldElement_shouldReturnEmpty_whenFieldNameIsNull() {
+    assertTrue(JavaLangAnalyser.findFieldElement(null, null).isEmpty());
+  }
+
+  @Test
+  void findRecordComponent_shouldReturnEmpty_whenTypeElementIsNull() {
+    assertTrue(JavaLangAnalyser.findRecordComponent(null, "componentName").isEmpty());
+  }
+
+  @Test
+  void findRecordComponent_shouldReturnEmpty_whenComponentNameIsNull() {
+    assertTrue(JavaLangAnalyser.findRecordComponent(null, null).isEmpty());
+  }
+
+  @Test
+  void findSetterForField_shouldReturnEmpty_whenDtoTypeIsNull() {
+    assertTrue(JavaLangAnalyser.findSetterForField(null, "fieldName", null).isEmpty());
+  }
+
+  @Test
+  void findSetterForField_shouldReturnEmpty_whenFieldNameIsNull() {
+    assertTrue(JavaLangAnalyser.findSetterForField(null, null, null).isEmpty());
+  }
 }

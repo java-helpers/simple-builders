@@ -524,24 +524,6 @@ public final class JavaLangAnalyser {
   }
 
   /**
-   * Finds a method by its simple name in the given type element. Returns the first match.
-   *
-   * @param typeElement the type element to search in
-   * @param methodName the simple method name to look for
-   * @param context processing context
-   * @return an {@link Optional} containing the method element, or empty if not found
-   */
-  public static Optional<ExecutableElement> findMethodByName(
-      TypeElement typeElement, String methodName, ProcessingContext context) {
-    if (typeElement == null || methodName == null) {
-      return Optional.empty();
-    }
-    return ElementFilter.methodsIn(context.getAllMembers(typeElement)).stream()
-        .filter(m -> m.getSimpleName().contentEquals(methodName))
-        .findFirst();
-  }
-
-  /**
    * Determines which constructor to use for builder initialization. Prioritizes constructors
    * annotated with {@link SimpleBuilderConstructor}. If none is annotated, selects the constructor
    * with the highest number of parameters. Returns empty if no constructor has parameters (i.e.,

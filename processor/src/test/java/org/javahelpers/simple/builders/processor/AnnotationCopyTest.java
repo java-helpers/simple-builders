@@ -576,6 +576,70 @@ class AnnotationCopyTest {
   }
 
   @Test
+  void annotations_deprecatedDtoClassWithJavadoc_deprecatedJavadocPropagatedToBuilderClass() {
+    String packageName = "test.deprecated.dto.javadoc";
+
+    // The DTO class is @Deprecated AND has an @deprecated javadoc tag. The @deprecated javadoc
+    // text must be propagated to the generated builder class javadoc, the create() factory method
+    // javadoc, and the constructor javadoc. This covers the case where addDeprecatedJavadoc is
+    // called with a non-null deprecatedJavaDoc and a potentially null pre-existing javadoc.
+    JavaFileObject myDto =
+        JavaFileObjects.forSourceString(
+            packageName + ".MyDto",
+            """
+            package test.deprecated.dto.javadoc;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+            import org.javahelpers.simple.builders.core.enums.OptionState;
+
+            /**
+             * A DTO that is now obsolete.
+             *
+             * @deprecated use {@link NewDto} instead
+             */
+            @Deprecated
+            @SimpleBuilder(options = @SimpleBuilder.Options(
+                generateFieldSupplier = OptionState.DISABLED,
+                generateFieldConsumer = OptionState.DISABLED,
+                generateBuilderConsumer = OptionState.DISABLED,
+                generateConditionalHelper = OptionState.DISABLED,
+                generateVarArgsHelpers = OptionState.DISABLED,
+                generateStringFormatHelpers = OptionState.DISABLED,
+                generateAddToCollectionHelpers = OptionState.DISABLED,
+                generateWithInterface = OptionState.DISABLED
+            ))
+            public class MyDto {
+              private String name;
+
+              public String getName() { return name; }
+
+              public void setName(String name) {
+                this.name = name;
+              }
+            }
+            """);
+
+    Compilation compilation = compileSources(myDto);
+    String generatedCode = loadGeneratedSource(compilation, "MyDtoBuilder");
+    ProcessorAsserts.assertGenerationSucceeded(compilation, "MyDtoBuilder", generatedCode);
+
+    // The @deprecated javadoc from the DTO class is propagated to the builder class
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains(
+            """
+             * @deprecated use {@link NewDto} instead"""));
+
+    // The builder class itself is @Deprecated (with @SuppressWarnings in between)
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains(
+            """
+            @Deprecated
+            @SuppressWarnings({"deprecation", "removal"})
+            public class MyDtoBuilder implements IBuilderBase<MyDto>"""));
+  }
+
+  @Test
   void annotations_deprecatedJavadocText_propagatedToBuilderMethods() {
     String packageName = "test.deprecated.javadoc";
 

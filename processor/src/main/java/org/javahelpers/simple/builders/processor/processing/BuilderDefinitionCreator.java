@@ -1000,15 +1000,7 @@ public class BuilderDefinitionCreator {
     deprecationInfo.getDeprecatedAnnotation().ifPresent(method::addAnnotation);
     deprecationInfo
         .getDeprecatedJavaDoc()
-        .ifPresent(
-            text -> {
-              JavadocDto javadoc = method.getJavadoc();
-              if (javadoc == null) {
-                javadoc = new JavadocDto();
-                method.setJavadoc(javadoc);
-              }
-              javadoc.addDeprecated(text);
-            });
+        .ifPresent(text -> method.getJavadoc().addDeprecated(text));
   }
 
   /**
@@ -1036,44 +1028,38 @@ public class BuilderDefinitionCreator {
 
     // Annotate the builder class
     builderDto.addClassAnnotation(deprecated);
-    addDeprecatedJavadoc(
-        builderDto.getClassJavadoc(), builderDto::setClassJavadoc, deprecatedJavaDoc);
+    addDeprecatedJavadoc(builderDto.getClassJavadoc(), deprecatedJavaDoc);
 
     // Annotate the static create() factory method
     for (BuilderMethodDto method : builderDto.getMethods()) {
       if (method.isStatic() && "create".equals(method.getMethodName())) {
         method.addAnnotation(deprecated);
-        addDeprecatedJavadoc(method.getJavadoc(), method::setJavadoc, deprecatedJavaDoc);
+        addDeprecatedJavadoc(method.getJavadoc(), deprecatedJavaDoc);
       }
     }
 
     // Annotate constructors (factory entry points)
     for (ConstructorDto constructor : builderDto.getConstructors()) {
       constructor.addAnnotation(deprecated);
-      addDeprecatedJavadoc(constructor.getJavadoc(), constructor::setJavadoc, deprecatedJavaDoc);
+      addDeprecatedJavadoc(constructor.getJavadoc(), deprecatedJavaDoc);
     }
 
     context.debug("DTO type is deprecated; builder class and factory methods annotated");
   }
 
   /**
-   * Adds the {@code @deprecated} javadoc tag to the given javadoc, creating a new {@link
-   * JavadocDto} if necessary.
+   * Adds the {@code @deprecated} javadoc tag to the given javadoc.
    *
-   * @param javadoc the existing javadoc, or {@code null}
-   * @param setter the setter to apply the (possibly new) javadoc back to the owning element
+   * <p>The javadoc is guaranteed to be non-null because this method is called after the generation
+   * pipeline has run, which always creates javadoc for the builder class, factory methods, and
+   * constructors.
+   *
+   * @param javadoc the existing javadoc (non-null)
    * @param deprecatedJavaDoc the deprecated text, or {@code null} to do nothing
    */
-  private static void addDeprecatedJavadoc(
-      JavadocDto javadoc,
-      java.util.function.Consumer<JavadocDto> setter,
-      String deprecatedJavaDoc) {
+  private static void addDeprecatedJavadoc(JavadocDto javadoc, String deprecatedJavaDoc) {
     if (deprecatedJavaDoc == null) {
       return;
-    }
-    if (javadoc == null) {
-      javadoc = new JavadocDto();
-      setter.accept(javadoc);
     }
     javadoc.addDeprecated(deprecatedJavaDoc);
   }
