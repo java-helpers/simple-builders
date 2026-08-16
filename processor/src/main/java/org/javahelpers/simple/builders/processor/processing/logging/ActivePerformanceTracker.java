@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -37,14 +38,60 @@ import java.util.Map;
  * <p>This tracker maintains:
  *
  * <ul>
- *   <li>Per-phase total time (Configuration Resolution, Builder Definition Extraction, DTO Mapping,
- *       Code Generation)
+ *   <li>Per-phase total time with a hardcoded hierarchy for display:
+ *       <pre>
+ *       Configuration Resolution
+ *       Builder Definition Extraction
+ *       DTO Mapping
+ *       Code Generation
+ *       ├─ Source Construction
+ *       │  ├─ Element Building
+ *       │  │  ├─ Class Creation
+ *       │  │  ├─ Class Metadata
+ *       │  │  ├─ Fields
+ *       │  │  ├─ Constructors
+ *       │  │  ├─ Methods
+ *       │  │  ├─ Nested Types
+ *       │  │  └─ Class Annotations
+ *       │  ├─ String Generation
+ *       │  └─ Formatting
+ *       └─ File Writing
+ *       </pre>
+ *       Percentages are calculated relative to the parent phase.
  *   <li>Per-generator total time and call count (for MethodGenerators)
  *   <li>Per-enhancer total time and call count (for BuilderEnhancers)
  *   <li>Per-class total time with field count and collection count
  * </ul>
  */
 public final class ActivePerformanceTracker implements PerformanceTracker {
+
+  /** Hardcoded phase hierarchy for report display. Order defines display order. */
+  private static final List<String> TOP_LEVEL_PHASES =
+      List.of(
+          PHASE_CONFIGURATION_RESOLUTION,
+          PHASE_BUILDER_DEFINITION_EXTRACTION,
+          PHASE_DTO_MAPPING,
+          PHASE_CODE_GENERATION);
+
+  private static final Map<String, List<String>> PHASE_CHILDREN = new LinkedHashMap<>();
+
+  static {
+    PHASE_CHILDREN.put(
+        PHASE_CODE_GENERATION, List.of(PHASE_SOURCE_CONSTRUCTION, PHASE_FILE_WRITING));
+    PHASE_CHILDREN.put(
+        PHASE_SOURCE_CONSTRUCTION,
+        List.of(PHASE_ELEMENT_BUILDING, PHASE_STRING_GENERATION, PHASE_FORMATTING));
+    PHASE_CHILDREN.put(
+        PHASE_ELEMENT_BUILDING,
+        List.of(
+            PHASE_CLASS_CREATION,
+            PHASE_CLASS_METADATA,
+            PHASE_FIELDS,
+            PHASE_CONSTRUCTORS,
+            PHASE_METHODS,
+            PHASE_NESTED_TYPES,
+            PHASE_CLASS_ANNOTATIONS));
+  }
 
   private final Map<String, Long> phaseTimes = new LinkedHashMap<>();
   private final Map<String, Long> generatorTimes = new LinkedHashMap<>();
@@ -145,41 +192,42 @@ public final class ActivePerformanceTracker implements PerformanceTracker {
     logger.info("simple-builders: PERFORMANCE REPORT");
     logger.info("================================");
     logger.info("Total classes processed: %d", totalClasses);
-    logger.info("Total processing time: %.1fs", totalSeconds);
+    logger.info(String.format(Locale.US, "Total processing time: %.1fs", totalSeconds));
     logger.info("");
 
-    // Phase breakdown
+    // Phase breakdown (hierarchical, using hardcoded hierarchy)
     logger.info("Phase breakdown:");
-    Map<String, Double> phaseSeconds = new LinkedHashMap<>();
-    for (Map.Entry<String, Long> entry : phaseTimes.entrySet()) {
-      phaseSeconds.put(entry.getKey(), entry.getValue() / 1_000_000_000.0);
-    }
-    for (Map.Entry<String, Double> entry : phaseSeconds.entrySet()) {
-      double phaseTime = entry.getValue();
-      double percentage = totalSeconds > 0 ? (phaseTime / totalSeconds) * 100 : 0;
-      logger.info("  %s: %.1fs (%.1f%%)", entry.getKey(), phaseTime, percentage);
+    for (int i = 0; i < TOP_LEVEL_PHASES.size(); i++) {
+      reportPhase(
+          logger, TOP_LEVEL_PHASES.get(i), totalSeconds, "", i == TOP_LEVEL_PHASES.size() - 1);
     }
     logger.info("");
 
     // Average per class
     if (totalClasses > 0) {
       double avgPerClass = (totalTime / 1_000_000.0) / totalClasses;
-      logger.info("Average per class: %.1fms", avgPerClass);
+      logger.info(String.format(Locale.US, "Average per class: %.1fms", avgPerClass));
       logger.info("");
     }
 
-    // Top 5 slowest classes
+    // Top 20 slowest classes
     List<ClassMetric> topClasses = new ArrayList<>(classMetrics);
     topClasses.sort(Comparator.comparingLong(ClassMetric::elapsedNanos).reversed());
-    int classLimit = Math.min(5, topClasses.size());
+    int classLimit = Math.min(20, topClasses.size());
     if (classLimit > 0) {
       logger.info("Top %d slowest classes:", classLimit);
       for (int i = 0; i < classLimit; i++) {
         ClassMetric cm = topClasses.get(i);
         double ms = cm.elapsedNanos() / 1_000_000.0;
         logger.info(
-            "  %d. %s - %.0fms (%d fields, %d collections)",
-            i + 1, cm.className(), ms, cm.fieldCount(), cm.collectionCount());
+            String.format(
+                Locale.US,
+                "  %d. %s - %.1fms (%d fields, %d collections)",
+                i + 1,
+                cm.className(),
+                ms,
+                cm.fieldCount(),
+                cm.collectionCount()));
       }
       logger.info("");
     }
@@ -196,8 +244,14 @@ public final class ActivePerformanceTracker implements PerformanceTracker {
         int calls = generatorCalls.getOrDefault(entry.getKey(), 0);
         double avgMs = calls > 0 ? (entry.getValue() / 1_000_000.0) / calls : 0;
         logger.info(
-            "  %d. %s - %.1fs (%d calls, %.2fms/call)",
-            i + 1, entry.getKey(), seconds, calls, avgMs);
+            String.format(
+                Locale.US,
+                "  %d. %s - %.1fs (%d calls, %.2fms/call)",
+                i + 1,
+                entry.getKey(),
+                seconds,
+                calls,
+                avgMs));
       }
       logger.info("");
     }
@@ -214,8 +268,14 @@ public final class ActivePerformanceTracker implements PerformanceTracker {
         int calls = enhancerCalls.getOrDefault(entry.getKey(), 0);
         double avgMs = calls > 0 ? (entry.getValue() / 1_000_000.0) / calls : 0;
         logger.info(
-            "  %d. %s - %.1fs (%d calls, %.2fms/call)",
-            i + 1, entry.getKey(), seconds, calls, avgMs);
+            String.format(
+                Locale.US,
+                "  %d. %s - %.1fs (%d calls, %.2fms/call)",
+                i + 1,
+                entry.getKey(),
+                seconds,
+                calls,
+                avgMs));
       }
     }
   }
@@ -223,4 +283,22 @@ public final class ActivePerformanceTracker implements PerformanceTracker {
   /** Record for per-class performance metrics. */
   private record ClassMetric(
       String className, long elapsedNanos, int fieldCount, int collectionCount) {}
+
+  private void reportPhase(
+      ProcessingLogger logger, String phase, double parentSeconds, String prefix, boolean isLast) {
+    long nanos = phaseTimes.getOrDefault(phase, 0L);
+    double seconds = nanos / 1_000_000_000.0;
+    double percentage = parentSeconds > 0 ? (seconds / parentSeconds) * 100 : 0;
+    String connector = isLast ? "└─ " : "├─ ";
+    logger.info(
+        String.format(
+            Locale.US, "%s%s%s: %.1fs (%.1f%%)", prefix, connector, phase, seconds, percentage));
+    List<String> children = PHASE_CHILDREN.get(phase);
+    if (children != null) {
+      String childPrefix = prefix + (isLast ? "   " : "│  ");
+      for (int i = 0; i < children.size(); i++) {
+        reportPhase(logger, children.get(i), seconds, childPrefix, i == children.size() - 1);
+      }
+    }
+  }
 }
