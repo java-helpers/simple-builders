@@ -80,6 +80,13 @@ public class PersonDto {
 
 ## Template Annotations
 
+`@SimpleBuilder.Template` is a **meta-annotation**: it is placed on a custom annotation declaration (`@interface`), not directly on a class or record. Use it to create reusable configuration presets that can be applied to many classes with a single custom annotation. For one-off builder generation, use `@SimpleBuilder` directly on the class.
+
+| Need | Use |
+|------|-----|
+| Generate a builder for a single class/record | `@SimpleBuilder` on the class/record |
+| Share the same configuration across many classes | `@SimpleBuilder.Template` on a custom `@interface`, then the custom annotation on each class |
+
 Create reusable configuration presets with custom template annotations:
 
 ```java
