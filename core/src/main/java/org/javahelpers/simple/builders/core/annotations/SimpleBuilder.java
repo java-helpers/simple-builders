@@ -69,9 +69,8 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
  * carried {@code @SimpleBuilder} for the purpose of triggering builder generation, unless it is
  * explicitly excluded via {@link Ignore4BuilderGeneration}. The {@link Template} meta-annotation is
  * {@link Inherited} as well, so custom template annotations that are themselves {@code @Inherited}
- * propagate to subclasses in the same way. Note that configuration options declared on the parent's
- * {@code @SimpleBuilder(options = ...)} or template are not yet applied to inherited subclass
- * builders; subclasses currently use default options (see issue #248).
+ * propagate to subclasses in the same way. Configuration options declared on the parent's
+ * {@code @SimpleBuilder(options = ...)} or template are also inherited by subclass builders.
  *
  * <p>Related annotations:
  *
@@ -727,9 +726,9 @@ public @interface SimpleBuilder {
    * {@code @SimpleBuilder.Template} meta-annotation itself; for a custom template annotation to
    * propagate to unannotated subclasses, the custom annotation must additionally be declared with
    * {@code @Inherited}. Without {@code @Inherited} on the custom annotation, only the exact type
-   * carrying it gets a builder. As with {@link SimpleBuilder}, configuration options declared on the
-   * template are not yet applied to inherited subclass builders; subclasses currently use default
-   * options (see issue #248).
+   * carrying it gets a builder. As with {@link SimpleBuilder}, configuration options declared on
+   * the template are also applied to inherited subclass builders, as long as the custom template
+   * annotation is itself {@code @Inherited} and no direct annotation overrides it.
    *
    * <p>Example:
    *
