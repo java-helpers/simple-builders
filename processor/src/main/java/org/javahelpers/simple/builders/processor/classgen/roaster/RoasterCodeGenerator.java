@@ -184,7 +184,13 @@ public class RoasterCodeGenerator {
 
   private String renderClassSource(JavaClassSource source) {
     String rendered = source.toUnformattedString();
-    return formatSource(rendered);
+    String formatted = formatSource(rendered);
+    // Roaster renders some java.lang annotations (e.g. @SuppressWarnings, @Deprecated with
+    // members) with their FQN (@java.lang.SuppressWarnings) even though java.lang types don't
+    // need qualification. Fix this by replacing @java.lang.Xxx with @Xxx for known annotations.
+    formatted = formatted.replace("@java.lang.SuppressWarnings", "@SuppressWarnings");
+    formatted = formatted.replace("@java.lang.Deprecated", "@Deprecated");
+    return formatted;
   }
 
   private void appendFields(JavaClassSource source, GenerationTargetClassDto classDef) {
@@ -224,6 +230,7 @@ public class RoasterCodeGenerator {
       method.addParameter(mapType(param.getParameterType()), param.getParameterName());
     }
     applyJavadoc(method, constructor.getJavadoc());
+    applyAnnotations(method, constructor.getAnnotations());
     applyCodeBlock(method, constructor.getMethodCodeDto());
   }
 
@@ -454,8 +461,14 @@ public class RoasterCodeGenerator {
       return;
     }
     for (AnnotationDto annotationDto : annotations) {
-      AnnotationSource<?> annotation =
-          source.addAnnotation(annotationDto.getAnnotationType().getFullQualifiedName());
+      TypeName type = annotationDto.getAnnotationType();
+      // Use the simple name for java.lang annotations (e.g. @SuppressWarnings, @Deprecated) so
+      // Roaster renders them without the java.lang prefix. Other annotations use their FQN.
+      String annotationName =
+          "java.lang".equals(type.getPackageName())
+              ? type.getClassName()
+              : type.getFullQualifiedName();
+      AnnotationSource<?> annotation = source.addAnnotation(annotationName);
       for (Map.Entry<String, String> member : annotationDto.getMembers().entrySet()) {
         if ("value".equals(member.getKey())) {
           annotation.setLiteralValue(member.getValue());
