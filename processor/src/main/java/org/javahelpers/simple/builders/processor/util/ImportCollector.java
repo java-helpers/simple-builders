@@ -68,23 +68,11 @@ public class ImportCollector {
   /**
    * Adds imports for an annotation.
    *
-   * <p>For annotations in {@code java.lang} (e.g. {@link java.lang.SuppressWarnings}), the import
-   * is added directly, bypassing the normal {@code java.lang} skip rule. Roaster requires these
-   * imports to render annotations with their simple name instead of the fully qualified name.
-   *
    * @param annotation the annotation to add imports for
    */
   public ImportCollector addAnnotationImports(AnnotationDto annotation) {
     if (annotation.getAnnotationType() != null) {
-      TypeName type = annotation.getAnnotationType();
-      // For java.lang annotations (e.g. @SuppressWarnings), force-add the import so Roaster
-      // renders the simple name instead of the FQN. @Deprecated works without an import, but
-      // @SuppressWarnings does not, so we add imports for all java.lang annotations uniformly.
-      if ("java.lang".equals(type.getPackageName())) {
-        imports.add(new RegularImport(type));
-      } else {
-        addTypeImports(type);
-      }
+      addTypeImports(annotation.getAnnotationType());
     }
     return this;
   }

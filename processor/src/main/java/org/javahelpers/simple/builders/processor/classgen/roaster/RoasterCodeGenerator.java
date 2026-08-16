@@ -462,8 +462,8 @@ public class RoasterCodeGenerator {
     }
     for (AnnotationDto annotationDto : annotations) {
       TypeName type = annotationDto.getAnnotationType();
-      // Roaster renders java.lang types with their FQN unless the simple name is used directly.
-      // Using the simple name for java.lang types avoids @java.lang.SuppressWarnings(...) output.
+      // Use the simple name for java.lang annotations (e.g. @SuppressWarnings, @Deprecated) so
+      // Roaster renders them without the java.lang prefix. Other annotations use their FQN.
       String annotationName =
           "java.lang".equals(type.getPackageName())
               ? type.getClassName()

@@ -33,47 +33,36 @@ import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
  * Encapsulates deprecation metadata detected from source DTO property elements.
  *
  * <p>This DTO is used during builder definition generation to carry deprecation information from
- * source elements (constructor parameter, record component, backing field, setter method, getter
- * method) to the point where generated builder methods are annotated. It is an analysis-side DTO
- * and is not directly used for class generation — the actual rendering uses the existing {@link
+ * source elements (constructor parameter, record component, backing field) to the point where
+ * generated builder methods are annotated. It is an analysis-side DTO and is not directly used for
+ * class generation — the actual rendering uses the existing {@link
  * org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto#getAnnotations()
  * annotations list} and {@link org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto
  * javadoc} on the rendering DTOs.
  *
  * <p>The {@link #deprecatedAnnotation} preserves {@code @Deprecated(since = ..., forRemoval = ...)}
- * attributes. The {@link #deprecatedJavaDoc} carries the {@code @deprecated} Javadoc tag text. The
- * {@link #setterMethodDeprecated} and {@link #getterMethodDeprecated} flags record whether the
- * setter/getter method <em>itself</em> (not just its parameter) is deprecated, which determines
- * whether the generated builder needs a class-level {@code @SuppressWarnings("deprecation")}
- * because {@code build()} calls the deprecated setter or the from-instance constructor calls the
- * deprecated getter.
+ * attributes. The {@link #deprecatedJavaDoc} carries the {@code @deprecated} Javadoc tag text.
  *
- * @param deprecated whether this field is deprecated on any relevant element
+ * <p>Note: deprecation of setter and getter methods is not stored here. A deprecated setter or
+ * getter does not mean the property itself is deprecated, so it is not a propagation source. The
+ * suppression of compiler warnings from generated code that calls deprecated setters/getters is
+ * handled separately in {@code applyDeprecationSuppressions} by checking the source elements
+ * directly.
+ *
  * @param deprecatedAnnotation the {@code @Deprecated} annotation DTO preserving {@code since} and
  *     {@code forRemoval} attributes, or {@code null} if not deprecated
  * @param deprecatedJavaDoc the {@code @deprecated} Javadoc text, or {@code null} if no explicit tag
  *     is present
- * @param setterMethodDeprecated whether the setter method element itself is {@code @Deprecated}
- * @param getterMethodDeprecated whether the getter method element is {@code @Deprecated}
  */
-public record DeprecationInfoDto(
-    boolean deprecated,
-    AnnotationDto deprecatedAnnotation,
-    String deprecatedJavaDoc,
-    boolean setterMethodDeprecated,
-    boolean getterMethodDeprecated) {
-
-  /** An empty (non-deprecated) instance for use as a default/null-object. */
-  public static final DeprecationInfoDto NONE =
-      new DeprecationInfoDto(false, null, null, false, false);
+public record DeprecationInfoDto(AnnotationDto deprecatedAnnotation, String deprecatedJavaDoc) {
 
   /**
-   * Returns whether this deprecation info indicates any deprecation at all.
+   * Returns whether this field is deprecated.
    *
-   * @return {@code true} if the field is deprecated or the setter/getter method is deprecated
+   * @return {@code true} if a {@code @Deprecated} annotation is present
    */
-  public boolean isAnyDeprecated() {
-    return deprecated || setterMethodDeprecated || getterMethodDeprecated;
+  public boolean isDeprecated() {
+    return deprecatedAnnotation != null;
   }
 
   /**
@@ -97,11 +86,8 @@ public record DeprecationInfoDto(
   @Override
   public String toString() {
     return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
-        .append("deprecated", deprecated)
         .append("deprecatedAnnotation", deprecatedAnnotation)
         .append("deprecatedJavaDoc", deprecatedJavaDoc)
-        .append("setterMethodDeprecated", setterMethodDeprecated)
-        .append("getterMethodDeprecated", getterMethodDeprecated)
         .toString();
   }
 }

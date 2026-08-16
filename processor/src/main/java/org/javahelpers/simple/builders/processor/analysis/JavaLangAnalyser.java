@@ -252,7 +252,7 @@ public final class JavaLangAnalyser {
       return true;
     }
     // Only interfaces can be functional interfaces
-    if (typeElement.getKind() != javax.lang.model.element.ElementKind.INTERFACE) {
+    if (typeElement.getKind() != ElementKind.INTERFACE) {
       return false;
     }
     // Heuristic: exactly one abstract method declared (ignores inherited ones for simplicity)
@@ -483,10 +483,8 @@ public final class JavaLangAnalyser {
     if (classElement == null || fieldName == null) {
       return Optional.empty();
     }
-    return classElement.getEnclosedElements().stream()
-        .filter(e -> e.getKind() == ElementKind.FIELD)
+    return ElementFilter.fieldsIn(classElement.getEnclosedElements()).stream()
         .filter(e -> e.getSimpleName().contentEquals(fieldName))
-        .map(VariableElement.class::cast)
         .findFirst();
   }
 
@@ -535,6 +533,24 @@ public final class JavaLangAnalyser {
       }
     }
     return Optional.empty();
+  }
+
+  /**
+   * Finds a method by its simple name in the given type element. Returns the first match.
+   *
+   * @param typeElement the type element to search in
+   * @param methodName the simple method name to look for
+   * @param context processing context
+   * @return an {@link Optional} containing the method element, or empty if not found
+   */
+  public static Optional<ExecutableElement> findMethodByName(
+      TypeElement typeElement, String methodName, ProcessingContext context) {
+    if (typeElement == null || methodName == null) {
+      return Optional.empty();
+    }
+    return ElementFilter.methodsIn(context.getAllMembers(typeElement)).stream()
+        .filter(m -> m.getSimpleName().contentEquals(methodName))
+        .findFirst();
   }
 
   /**

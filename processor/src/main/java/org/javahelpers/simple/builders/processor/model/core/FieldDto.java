@@ -92,11 +92,10 @@ public class FieldDto {
   private String defaultValue;
 
   /**
-   * Deprecation metadata for this field, detected from any relevant property element (constructor
-   * parameter, record component, backing field, setter method, getter method). Never {@code null} —
-   * defaults to {@link DeprecationInfoDto#NONE} when the field is not deprecated.
+   * Deprecation metadata for this field, detected from relevant property elements (constructor
+   * parameter, record component, backing field). {@code null} when the field is not deprecated.
    */
-  private DeprecationInfoDto deprecationInfo = DeprecationInfoDto.NONE;
+  private DeprecationInfoDto deprecationInfo;
 
   /**
    * Gets the original field name from the DTO. This name is used for generating method names,
@@ -364,8 +363,7 @@ public class FieldDto {
   /**
    * Gets the deprecation metadata for this field.
    *
-   * @return the deprecation info, never {@code null}; returns {@link DeprecationInfoDto#NONE} when
-   *     the field is not deprecated
+   * @return the deprecation info, or {@code null} if the field is not deprecated
    */
   public DeprecationInfoDto getDeprecationInfo() {
     return deprecationInfo;
@@ -374,37 +372,18 @@ public class FieldDto {
   /**
    * Sets the deprecation metadata for this field.
    *
-   * @param deprecationInfo the deprecation info, or {@code null} to reset to {@link
-   *     DeprecationInfoDto#NONE}
+   * @param deprecationInfo the deprecation info, or {@code null} if not deprecated
    */
   public void setDeprecationInfo(DeprecationInfoDto deprecationInfo) {
-    this.deprecationInfo = deprecationInfo != null ? deprecationInfo : DeprecationInfoDto.NONE;
+    this.deprecationInfo = deprecationInfo;
   }
 
   /**
-   * Checks if this field is deprecated (any relevant element is marked {@code @Deprecated}).
+   * Checks if this field is deprecated (a relevant element is marked {@code @Deprecated}).
    *
    * @return {@code true} if the field is deprecated
    */
   public boolean isDeprecated() {
-    return deprecationInfo.deprecated();
-  }
-
-  /**
-   * Checks if the setter method element itself is {@code @Deprecated}.
-   *
-   * @return {@code true} if the setter method is deprecated
-   */
-  public boolean isSetterMethodDeprecated() {
-    return deprecationInfo.setterMethodDeprecated();
-  }
-
-  /**
-   * Checks if the getter method element is {@code @Deprecated}.
-   *
-   * @return {@code true} if the getter method is deprecated
-   */
-  public boolean isGetterMethodDeprecated() {
-    return deprecationInfo.getterMethodDeprecated();
+    return deprecationInfo != null && deprecationInfo.isDeprecated();
   }
 }
