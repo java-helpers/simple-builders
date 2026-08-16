@@ -63,7 +63,15 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
  *   <li><b>Integration:</b> generateWithInterface (default: true)
  * </ul>
  *
- * <p>Use {@link Template} to create reusable configuration presets.
+ * <p>This annotation is itself a built-in {@link Template}: it is meta-annotated with
+ * {@code @SimpleBuilder.Template(options = @Options())}. When placed on a class or record, the
+ * processor treats it like any other template annotation. The optional {@link #options()} attribute
+ * on a concrete {@code @SimpleBuilder} usage overrides the template defaults.
+ *
+ * <p>Use {@link Template} to create reusable configuration presets for project- or layer-specific
+ * conventions. A custom template annotation is an annotation type that is itself meta-annotated
+ * with {@code @SimpleBuilder.Template(options = @SimpleBuilder.Options(...))} and then applied to
+ * classes and records.
  *
  * <p>This annotation is {@link Inherited}: a subclass of an annotated type is treated as if it also
  * carried {@code @SimpleBuilder} for the purpose of triggering builder generation, unless it is
@@ -89,6 +97,7 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.CLASS)
 @Inherited
+@SimpleBuilder.Template
 public @interface SimpleBuilder {
 
   /**
@@ -782,10 +791,11 @@ public @interface SimpleBuilder {
   @Inherited
   @interface Template {
     /**
-     * The options to apply when this template is used.
+     * The options to apply when this template is used. Defaults to an empty {@link Options}
+     * instance, so templates inherit the built-in defaults unless options are explicitly set.
      *
      * @return the builder configuration options
      */
-    Options options();
+    Options options() default @Options();
   }
 }
