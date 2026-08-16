@@ -28,6 +28,7 @@ import static com.google.testing.compile.CompilationSubject.assertThat;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.assertContaining;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.assertGenerationSucceeded;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.assertNoBuilderGenerated;
+import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.assertNotContaining;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils.loadGeneratedSource;
 
 import com.google.testing.compile.Compilation;
@@ -276,5 +277,319 @@ class BuilderAnnotationInheritanceTest {
         compilation, "MiddleDtoBuilder", loadGeneratedSource(compilation, "MiddleDtoBuilder"));
     assertGenerationSucceeded(
         compilation, "ChildDtoBuilder", loadGeneratedSource(compilation, "ChildDtoBuilder"));
+  }
+
+  /**
+   * An unannotated subclass must inherit not only the {@code @SimpleBuilder} trigger but also the
+   * configured {@code options} from the parent's annotation. If options are not inherited the child
+   * builder is generated with defaults instead.
+   */
+  @Test
+  void unannotatedSubclassInheritsSimpleBuilderOptions() {
+    JavaFileObject parentSource =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+            import org.javahelpers.simple.builders.core.enums.OptionState;
+
+            @SimpleBuilder(options = @SimpleBuilder.Options(
+                generateFieldSupplier = OptionState.DISABLED
+            ))
+            public class ParentDto {
+                private String name;
+
+                public String getName() { return name; }
+                public void setName(String name) { this.name = name; }
+            }
+            """);
+
+    JavaFileObject childSource =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+
+            public class ChildDto extends ParentDto {
+                private int age;
+
+                public int getAge() { return age; }
+                public void setAge(int age) { this.age = age; }
+            }
+            """);
+
+    Compilation compilation = compile(parentSource, childSource);
+
+    assertThat(compilation).succeededWithoutWarnings();
+
+    String childBuilder = loadGeneratedSource(compilation, "ChildDtoBuilder");
+    assertGenerationSucceeded(compilation, "ChildDtoBuilder", childBuilder);
+    assertContaining(childBuilder, "public ChildDtoBuilder name(String name)");
+    assertContaining(childBuilder, "public ChildDtoBuilder age(int age)");
+    assertNotContaining(childBuilder, "Supplier<");
+  }
+
+  /**
+   * An unannotated subclass must inherit the options declared on a parent's custom
+   * {@code @Inherited} template annotation as well, not just the default template options.
+   */
+  @Test
+  void unannotatedSubclassInheritsTemplateOptions() {
+    JavaFileObject templateAnnotation =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+
+            import java.lang.annotation.ElementType;
+            import java.lang.annotation.Inherited;
+            import java.lang.annotation.Retention;
+            import java.lang.annotation.RetentionPolicy;
+            import java.lang.annotation.Target;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+            import org.javahelpers.simple.builders.core.enums.OptionState;
+
+            @SimpleBuilder.Template(options = @SimpleBuilder.Options(
+                generateFieldSupplier = OptionState.DISABLED
+            ))
+            @Inherited
+            @Retention(RetentionPolicy.CLASS)
+            @Target(ElementType.TYPE)
+            public @interface NoSupplierTemplate {}
+            """);
+
+    JavaFileObject parentSource =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+
+            @NoSupplierTemplate
+            public class ParentDto {
+                private String name;
+
+                public String getName() { return name; }
+                public void setName(String name) { this.name = name; }
+            }
+            """);
+
+    JavaFileObject childSource =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+
+            public class ChildDto extends ParentDto {
+                private int age;
+
+                public int getAge() { return age; }
+                public void setAge(int age) { this.age = age; }
+            }
+            """);
+
+    Compilation compilation = compile(templateAnnotation, parentSource, childSource);
+
+    assertThat(compilation).succeededWithoutWarnings();
+
+    String childBuilder = loadGeneratedSource(compilation, "ChildDtoBuilder");
+    assertGenerationSucceeded(compilation, "ChildDtoBuilder", childBuilder);
+    assertContaining(childBuilder, "public ChildDtoBuilder name(String name)");
+    assertContaining(childBuilder, "public ChildDtoBuilder age(int age)");
+    assertNotContaining(childBuilder, "Supplier<");
+  }
+
+  /**
+   * A subclass with its own template annotation must use that template's options, not the
+   * {@code @SimpleBuilder(options = ...)} inherited from the parent.
+   */
+  @Test
+  void subclassTemplateOverridesInheritedSimpleBuilderOptions() {
+    JavaFileObject childTemplate =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+
+            import java.lang.annotation.ElementType;
+            import java.lang.annotation.Inherited;
+            import java.lang.annotation.Retention;
+            import java.lang.annotation.RetentionPolicy;
+            import java.lang.annotation.Target;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+            import org.javahelpers.simple.builders.core.enums.OptionState;
+
+            @SimpleBuilder.Template(options = @SimpleBuilder.Options(
+                generateFieldConsumer = OptionState.DISABLED,
+                generateBuilderConsumer = OptionState.DISABLED,
+                generateWithInterface = OptionState.DISABLED,
+                generateConditionalHelper = OptionState.DISABLED,
+                builderSuffix = "ChildBuilder"
+            ))
+            @Inherited
+            @Retention(RetentionPolicy.CLASS)
+            @Target(ElementType.TYPE)
+            @interface ChildOwnTemplate {}
+            """);
+
+    JavaFileObject parentSource =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+            import org.javahelpers.simple.builders.core.enums.OptionState;
+
+            @SimpleBuilder(options = @SimpleBuilder.Options(
+                generateFieldSupplier = OptionState.DISABLED,
+                builderSuffix = "ParentBuilder"
+            ))
+            public class ParentDto {
+                private String name;
+                private java.util.List<String> tags;
+
+                public String getName() { return name; }
+                public void setName(String name) { this.name = name; }
+                public java.util.List<String> getTags() { return tags; }
+                public void setTags(java.util.List<String> tags) { this.tags = tags; }
+            }
+            """);
+
+    JavaFileObject childSource =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+
+            @ChildOwnTemplate
+            public class ChildDto extends ParentDto {
+                private int age;
+
+                public int getAge() { return age; }
+                public void setAge(int age) { this.age = age; }
+            }
+            """);
+
+    Compilation compilation = compile(childTemplate, parentSource, childSource);
+
+    assertThat(compilation).succeededWithoutWarnings();
+
+    String parentBuilder = loadGeneratedSource(compilation, "ParentDtoParentBuilder");
+    assertContaining(parentBuilder, "class ParentDtoParentBuilder");
+    assertContaining(parentBuilder, "public ParentDto build()");
+    assertContaining(parentBuilder, "public static ParentDtoParentBuilder create()");
+    assertContaining(parentBuilder, "public ParentDtoParentBuilder name(String name)");
+    assertContaining(parentBuilder, "Consumer<");
+    assertNotContaining(parentBuilder, "Supplier<");
+
+    String childBuilder = loadGeneratedSource(compilation, "ChildDtoChildBuilder");
+    assertContaining(childBuilder, "class ChildDtoChildBuilder");
+    assertContaining(childBuilder, "public ChildDto build()");
+    assertContaining(childBuilder, "public static ChildDtoChildBuilder create()");
+    assertContaining(childBuilder, "public ChildDtoChildBuilder name(String name)");
+    assertContaining(childBuilder, "public ChildDtoChildBuilder age(int age)");
+    assertNotContaining(childBuilder, "Supplier<");
+    assertNotContaining(childBuilder, "Consumer<");
+  }
+
+  /**
+   * A subclass with its own inherited template annotation must use its own template's options, not
+   * the template inherited from the parent.
+   */
+  @Test
+  void subclassTemplateOverridesInheritedTemplate() {
+    JavaFileObject parentTemplate =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+
+            import java.lang.annotation.ElementType;
+            import java.lang.annotation.Inherited;
+            import java.lang.annotation.Retention;
+            import java.lang.annotation.RetentionPolicy;
+            import java.lang.annotation.Target;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+            import org.javahelpers.simple.builders.core.enums.OptionState;
+
+            @SimpleBuilder.Template(options = @SimpleBuilder.Options(
+                generateFieldSupplier = OptionState.DISABLED,
+                builderSuffix = "ParentBuilder"
+            ))
+            @Inherited
+            @Retention(RetentionPolicy.CLASS)
+            @Target(ElementType.TYPE)
+            @interface ParentOwnTemplate {}
+            """);
+
+    JavaFileObject childTemplate =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+
+            import java.lang.annotation.ElementType;
+            import java.lang.annotation.Inherited;
+            import java.lang.annotation.Retention;
+            import java.lang.annotation.RetentionPolicy;
+            import java.lang.annotation.Target;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+            import org.javahelpers.simple.builders.core.enums.OptionState;
+
+            @SimpleBuilder.Template(options = @SimpleBuilder.Options(
+                generateFieldConsumer = OptionState.DISABLED,
+                generateBuilderConsumer = OptionState.DISABLED,
+                generateWithInterface = OptionState.DISABLED,
+                generateConditionalHelper = OptionState.DISABLED,
+                builderSuffix = "ChildBuilder"
+            ))
+            @Inherited
+            @Retention(RetentionPolicy.CLASS)
+            @Target(ElementType.TYPE)
+            @interface ChildOwnTemplate {}
+            """);
+
+    JavaFileObject parentSource =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+
+            @ParentOwnTemplate
+            public class ParentDto {
+                private String name;
+                private java.util.List<String> tags;
+
+                public String getName() { return name; }
+                public void setName(String name) { this.name = name; }
+                public java.util.List<String> getTags() { return tags; }
+                public void setTags(java.util.List<String> tags) { this.tags = tags; }
+            }
+            """);
+
+    JavaFileObject childSource =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+
+            @ChildOwnTemplate
+            public class ChildDto extends ParentDto {
+                private int age;
+
+                public int getAge() { return age; }
+                public void setAge(int age) { this.age = age; }
+            }
+            """);
+
+    Compilation compilation = compile(parentTemplate, childTemplate, parentSource, childSource);
+
+    assertThat(compilation).succeededWithoutWarnings();
+
+    String parentBuilder = loadGeneratedSource(compilation, "ParentDtoParentBuilder");
+    assertContaining(parentBuilder, "class ParentDtoParentBuilder");
+    assertContaining(parentBuilder, "public ParentDto build()");
+    assertContaining(parentBuilder, "public static ParentDtoParentBuilder create()");
+    assertContaining(parentBuilder, "public ParentDtoParentBuilder name(String name)");
+    assertNotContaining(parentBuilder, "Supplier<");
+
+    String childBuilder = loadGeneratedSource(compilation, "ChildDtoChildBuilder");
+    assertContaining(childBuilder, "class ChildDtoChildBuilder");
+    assertContaining(childBuilder, "public ChildDto build()");
+    assertContaining(childBuilder, "public static ChildDtoChildBuilder create()");
+    assertContaining(childBuilder, "public ChildDtoChildBuilder name(String name)");
+    assertContaining(childBuilder, "public ChildDtoChildBuilder age(int age)");
+    assertNotContaining(childBuilder, "Supplier<");
+    assertNotContaining(childBuilder, "Consumer<");
   }
 }

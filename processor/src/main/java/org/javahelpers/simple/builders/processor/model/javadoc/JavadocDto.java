@@ -229,6 +229,28 @@ public class JavadocDto {
   }
 
   /**
+   * Adds a @deprecated tag with optional formatted description.
+   *
+   * <p>Supports String.format-style formatting when args are provided.
+   *
+   * <p>Examples:
+   *
+   * <pre>{@code
+   * addDeprecated("use {@link #setLabel(String)} instead")
+   * addDeprecated("use {%s} instead", replacement)
+   * }</pre>
+   *
+   * @param descriptionFormat the format string for the deprecation description
+   * @param args optional arguments referenced by format specifiers in the description
+   * @return this JavadocDto for fluent chaining
+   */
+  public JavadocDto addDeprecated(String descriptionFormat, Object... args) {
+    String deprecatedDescription = String.format(descriptionFormat, args);
+    addTag("deprecated", deprecatedDescription);
+    return this;
+  }
+
+  /**
    * Appends additional text to the existing description.
    *
    * <p>If the current description is blank, the additional text becomes the description. Otherwise,
