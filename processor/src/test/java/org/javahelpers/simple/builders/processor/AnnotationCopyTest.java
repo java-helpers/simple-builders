@@ -717,6 +717,137 @@ class AnnotationCopyTest {
   }
 
   @Test
+  void annotations_deprecatedFieldType_methodLevelDeprecatedAndClassSuppressed() {
+    String packageName = "test.deprecated.fieldtype";
+
+    // The field type itself is @Deprecated. The builder method for this field should be
+    // @Deprecated (consumers calling it would get deprecation warnings from the deprecated
+    // parameter type), and the class needs @SuppressWarnings because the builder internally
+    // uses the deprecated type.
+    JavaFileObject dto =
+        JavaFileObjects.forSourceString(
+            packageName + ".MyDto",
+            """
+            package test.deprecated.fieldtype;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+            @SimpleBuilder
+            public class MyDto {
+              private OldType value;
+
+              public OldType getValue() { return value; }
+
+              public void setValue(OldType value) {
+                this.value = value;
+              }
+            }
+            """);
+
+    JavaFileObject oldType =
+        JavaFileObjects.forSourceString(
+            packageName + ".OldType",
+            """
+            package test.deprecated.fieldtype;
+
+            @Deprecated
+            public class OldType {
+              private String data;
+
+              public OldType() {}
+
+              public String getData() { return data; }
+
+              public void setData(String data) {
+                this.data = data;
+              }
+            }
+            """);
+
+    Compilation compilation = compileSources(dto, oldType);
+    String generatedCode = loadGeneratedSource(compilation, "MyDtoBuilder");
+    ProcessorAsserts.assertGenerationSucceeded(compilation, "MyDtoBuilder", generatedCode);
+
+    // The builder method is @Deprecated because the field type is deprecated
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains(
+            """
+            @Deprecated
+            public MyDtoBuilder value(OldType value) {"""));
+
+    // Class-level @SuppressWarnings is present because the builder internally uses the
+    // deprecated type (e.g. TrackedValue<OldType>, from-instance constructor)
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains(
+            """
+            @SuppressWarnings({"deprecation", "removal"})
+            public class MyDtoBuilder implements IBuilderBase<MyDto>"""));
+  }
+
+  @Test
+  void annotations_deprecatedElementBuilder_classLevelSuppressed() {
+    String packageName = "test.deprecated.elementbuilder";
+
+    // The element type has its own @SimpleBuilder, and the element type is @Deprecated.
+    // The generated collection helper in MyDtoBuilder calls ItemForDeprecationBuilder.create()
+    // internally, which produces deprecation warnings — so MyDtoBuilder needs
+    // class-level @SuppressWarnings.
+    JavaFileObject dto =
+        JavaFileObjects.forSourceString(
+            packageName + ".MyDto",
+            """
+            package test.deprecated.elementbuilder;
+            import java.util.List;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+            @SimpleBuilder
+            public class MyDto {
+              private List<ItemForDeprecation> items;
+
+              public List<ItemForDeprecation> getItems() { return items; }
+
+              public void setItems(List<ItemForDeprecation> items) {
+                this.items = items;
+              }
+            }
+            """);
+
+    JavaFileObject itemDto =
+        JavaFileObjects.forSourceString(
+            packageName + ".ItemForDeprecation",
+            """
+            package test.deprecated.elementbuilder;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+            @Deprecated
+            @SimpleBuilder
+            public class ItemForDeprecation {
+              private String name;
+
+              public String getName() { return name; }
+
+              public void setName(String name) {
+                this.name = name;
+              }
+            }
+            """);
+
+    Compilation compilation = compileSources(dto, itemDto);
+    String generatedCode = loadGeneratedSource(compilation, "MyDtoBuilder");
+    ProcessorAsserts.assertGenerationSucceeded(compilation, "MyDtoBuilder", generatedCode);
+
+    // Class-level @SuppressWarnings is present because the builder internally calls
+    // ItemForDeprecationBuilder.create() which is @Deprecated
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains(
+            """
+            @SuppressWarnings({"deprecation", "removal"})
+            public class MyDtoBuilder implements IBuilderBase<MyDto>"""));
+  }
+
+  @Test
   void annotations_frameworkAnnotations_filtered() {
     String packageName = "test.framework";
 
