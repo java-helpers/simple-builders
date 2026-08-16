@@ -49,7 +49,7 @@ import org.javahelpers.simple.builders.processor.model.method.ConstructorDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodCodeDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodCodePlaceholder;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.processing.ProcessingLogger;
+import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 import org.junit.jupiter.api.Test;
 
 /**

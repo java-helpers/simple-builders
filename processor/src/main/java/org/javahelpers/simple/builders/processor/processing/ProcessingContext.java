@@ -35,6 +35,7 @@ import javax.lang.model.util.Types;
 import org.javahelpers.simple.builders.processor.generators.registry.GeneratorRegistry;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 
 /**
  * Context object that wraps Elements, Types, and logging utilities from annotation processing,
