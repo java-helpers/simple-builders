@@ -386,33 +386,21 @@ public final class JavaLangAnalyser {
    */
   private static String extractTagText(
       String[] lines, int startIndex, String tag, boolean skipName) {
-    StringBuilder sb = new StringBuilder();
-
-    // Extract initial text from the tag line
     String firstLine = cleanJavadocLine(lines[startIndex]);
     String rest = firstLine.substring(tag.length()).trim();
-    if (skipName) {
-      int spaceIndex = rest.indexOf(' ');
-      if (spaceIndex >= 0) {
-        String initialText = rest.substring(spaceIndex + 1).trim();
-        if (!initialText.isEmpty()) {
-          sb.append(initialText);
-        }
-      }
-    } else {
-      if (!rest.isEmpty()) {
-        sb.append(rest);
-      }
+    String initialText = skipName ? StringUtils.substringAfter(rest, " ").trim() : rest;
+
+    StringBuilder sb = new StringBuilder();
+    if (!initialText.isEmpty()) {
+      sb.append(initialText);
     }
 
     // Append continuation lines until next tag or empty line
     for (int i = startIndex + 1; i < lines.length; i++) {
       String cleanedLine = cleanJavadocLine(lines[i]);
-
       if (cleanedLine.isEmpty() || cleanedLine.startsWith("@")) {
         break;
       }
-
       if (!sb.isEmpty()) {
         sb.append(' ');
       }

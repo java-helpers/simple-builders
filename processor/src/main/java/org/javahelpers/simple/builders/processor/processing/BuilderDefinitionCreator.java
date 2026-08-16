@@ -39,6 +39,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.lang.model.element.*;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
@@ -901,83 +902,90 @@ public class BuilderDefinitionCreator {
     }
     String fieldName = field.getOriginalFieldName();
 
-    // Search the relevant elements in priority order for the @Deprecated annotation to propagate.
-    Optional<AnnotationDto> deprecatedAnnot = Optional.empty();
-    Element deprecatedSourceElement = null;
-
     Optional<? extends Element> recordComponent =
         JavaLangAnalyser.findRecordComponent(dtoTypeElement, fieldName);
     Optional<ExecutableElement> setter =
         JavaLangAnalyser.findSetterForField(dtoTypeElement, fieldName, context);
 
-    // Order: parameter, record component, setter method, field type.
+    // Search the relevant elements in priority order for the @Deprecated annotation to propagate.
     // Note: the backing field is intentionally NOT checked — it is uncommon to deprecate a
     // field without also deprecating the setter or constructor parameter, and checking the
     // field adds complexity without practical value.
-    if (deprecatedAnnot.isEmpty()) {
-      deprecatedAnnot = FieldAnnotationExtractor.extractDeprecatedAnnotation(param, context);
-      if (deprecatedAnnot.isPresent()) {
-        deprecatedSourceElement = param;
-      }
-    }
-    if (deprecatedAnnot.isEmpty() && recordComponent.isPresent()) {
-      deprecatedAnnot =
-          FieldAnnotationExtractor.extractDeprecatedAnnotation(recordComponent.get(), context);
-      if (deprecatedAnnot.isPresent()) {
-        deprecatedSourceElement = recordComponent.get();
-      }
-    }
-    if (deprecatedAnnot.isEmpty() && setter.isPresent()) {
-      deprecatedAnnot = FieldAnnotationExtractor.extractDeprecatedAnnotation(setter.get(), context);
-      if (deprecatedAnnot.isPresent()) {
-        deprecatedSourceElement = setter.get();
-      }
-    }
-    // Check if the field type itself is @Deprecated (e.g. using a deprecated class as a property
-    // type). The builder method exposes this type in its parameter, so consumers would get
-    // deprecation warnings — the builder method should be @Deprecated too.
-    if (deprecatedAnnot.isEmpty() && fieldTypeMirror instanceof DeclaredType declaredType) {
-      Element fieldTypeElement = declaredType.asElement();
-      if (fieldTypeElement instanceof TypeElement typeElement) {
-        deprecatedAnnot =
-            FieldAnnotationExtractor.extractDeprecatedAnnotation(typeElement, context);
-        if (deprecatedAnnot.isPresent()) {
-          deprecatedSourceElement = typeElement;
-        }
-      }
-    }
+    record DeprecationMatch(Element source, AnnotationDto annotation) {}
 
-    if (deprecatedAnnot.isEmpty()) {
+    Optional<DeprecationMatch> match =
+        presentElements(
+                Optional.of(param),
+                recordComponent,
+                setter,
+                resolveFieldTypeElement(fieldTypeMirror))
+            .map(
+                element ->
+                    FieldAnnotationExtractor.extractDeprecatedAnnotation(element, context)
+                        .map(annot -> new DeprecationMatch(element, annot)))
+            .flatMap(Optional::stream)
+            .findFirst();
+
+    if (match.isEmpty()) {
       return;
     }
+    DeprecationMatch deprecation = match.get();
 
     // Extract the @deprecated javadoc text. Prefer the enclosing executable (setter/constructor)
     // of the parameter, then the setter method, then the record component, then the field type.
-    String deprecatedJavaDoc = null;
     Element enclosing = param.getEnclosingElement();
-    if (enclosing != null) {
-      deprecatedJavaDoc =
-          JavaLangAnalyser.extractDeprecatedJavaDoc(context.getDocComment(enclosing));
-    }
-    if (deprecatedJavaDoc == null && setter.isPresent()) {
-      deprecatedJavaDoc =
-          JavaLangAnalyser.extractDeprecatedJavaDoc(context.getDocComment(setter.get()));
-    }
-    if (deprecatedJavaDoc == null && recordComponent.isPresent()) {
-      deprecatedJavaDoc =
-          JavaLangAnalyser.extractDeprecatedJavaDoc(context.getDocComment(recordComponent.get()));
-    }
-    if (deprecatedJavaDoc == null && deprecatedSourceElement instanceof TypeElement typeElement) {
-      deprecatedJavaDoc =
-          JavaLangAnalyser.extractDeprecatedJavaDoc(context.getDocComment(typeElement));
-    }
+    String deprecatedJavaDoc =
+        presentElements(
+                Optional.ofNullable(enclosing),
+                setter,
+                recordComponent,
+                asTypeElement(deprecation.source()))
+            .map(
+                element ->
+                    JavaLangAnalyser.extractDeprecatedJavaDoc(context.getDocComment(element)))
+            .filter(java.util.Objects::nonNull)
+            .findFirst()
+            .orElse(null);
 
-    field.setDeprecationInfo(new DeprecationInfoDto(deprecatedAnnot.get(), deprecatedJavaDoc));
+    field.setDeprecationInfo(new DeprecationInfoDto(deprecation.annotation(), deprecatedJavaDoc));
 
     context.debug(
-        "Field '%s' is deprecated (source: %s)",
-        fieldName,
-        deprecatedSourceElement != null ? deprecatedSourceElement.getSimpleName() : "unknown");
+        "Field '%s' is deprecated (source: %s)", fieldName, deprecation.source().getSimpleName());
+  }
+
+  /**
+   * Filters out empty optionals and returns a stream of present elements.
+   *
+   * @param optionals variable number of optional elements
+   * @return stream of elements that are present in their optionals
+   */
+  @SafeVarargs
+  private static Stream<Element> presentElements(Optional<? extends Element>... optionals) {
+    return Stream.of(optionals).flatMap(Optional::stream).map(e -> (Element) e);
+  }
+
+  /**
+   * Returns the element as an {@link Optional} if it is a {@link TypeElement}, otherwise empty.
+   *
+   * @param element the element to check
+   * @return optional containing the element if it is a TypeElement, otherwise empty
+   */
+  private static Optional<TypeElement> asTypeElement(Element element) {
+    return element instanceof TypeElement typeElement ? Optional.of(typeElement) : Optional.empty();
+  }
+
+  /**
+   * Resolves the {@link TypeElement} of a field type if it is a declared type.
+   *
+   * @param fieldTypeMirror the field type mirror
+   * @return optional containing the type element, or empty if not a declared type
+   */
+  private static Optional<TypeElement> resolveFieldTypeElement(TypeMirror fieldTypeMirror) {
+    if (fieldTypeMirror instanceof DeclaredType declaredType
+        && declaredType.asElement() instanceof TypeElement typeElement) {
+      return Optional.of(typeElement);
+    }
+    return Optional.empty();
   }
 
   /**
