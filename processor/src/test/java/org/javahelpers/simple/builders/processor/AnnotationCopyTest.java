@@ -304,13 +304,13 @@ class AnnotationCopyTest {
 
     JavaFileObject service =
         JavaFileObjects.forSourceString(
-            packageName + ".Service",
+            packageName + ".MyDto",
             """
             package test.javafilter;
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 
             @SimpleBuilder
-            public class Service {
+            public class MyDto {
               private String name;
 
               public String getName() { return name; }
@@ -324,8 +324,8 @@ class AnnotationCopyTest {
             """);
 
     Compilation compilation = compileSources(service);
-    String generatedCode = loadGeneratedSource(compilation, "ServiceBuilder");
-    ProcessorAsserts.assertGenerationSucceeded(compilation, "ServiceBuilder", generatedCode);
+    String generatedCode = loadGeneratedSource(compilation, "MyDtoBuilder");
+    ProcessorAsserts.assertGenerationSucceeded(compilation, "MyDtoBuilder", generatedCode);
 
     // @Deprecated is applied to the generated builder method itself (not the parameter —
     // the parameter is a new declaration, the deprecation is about the property).
@@ -334,7 +334,7 @@ class AnnotationCopyTest {
         contains(
             """
             @Deprecated
-            public ServiceBuilder name(String name) {"""));
+            public MyDtoBuilder name(String name) {"""));
 
     // Class-level @SuppressWarnings is present because the deprecated builder method may be
     // called internally by other generated methods (varargs helpers, etc.).
@@ -343,7 +343,7 @@ class AnnotationCopyTest {
         contains(
             """
             @SuppressWarnings({"deprecation", "removal"})
-            public class ServiceBuilder implements IBuilderBase<Service>"""));
+            public class MyDtoBuilder implements IBuilderBase<MyDto>"""));
   }
 
   @Test
@@ -352,13 +352,13 @@ class AnnotationCopyTest {
 
     JavaFileObject service =
         JavaFileObjects.forSourceString(
-            packageName + ".Service",
+            packageName + ".MyDto",
             """
             package test.deprecated.setter;
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 
             @SimpleBuilder
-            public class Service {
+            public class MyDto {
               private String name;
 
               public String getName() { return name; }
@@ -371,8 +371,8 @@ class AnnotationCopyTest {
             """);
 
     Compilation compilation = compileSources(service);
-    String generatedCode = loadGeneratedSource(compilation, "ServiceBuilder");
-    ProcessorAsserts.assertGenerationSucceeded(compilation, "ServiceBuilder", generatedCode);
+    String generatedCode = loadGeneratedSource(compilation, "MyDtoBuilder");
+    ProcessorAsserts.assertGenerationSucceeded(compilation, "MyDtoBuilder", generatedCode);
 
     // The generated builder method IS @Deprecated because the setter is the write API for the
     // property and the builder method replaces it — deprecation propagates.
@@ -381,7 +381,7 @@ class AnnotationCopyTest {
         contains(
             """
             @Deprecated
-            public ServiceBuilder name(String name) {"""));
+            public MyDtoBuilder name(String name) {"""));
 
     // build() calls the deprecated setter via result::setName; the whole builder class carries a
     // class-level @SuppressWarnings so all internal calls to deprecated members are silenced.
@@ -390,7 +390,7 @@ class AnnotationCopyTest {
         contains(
             """
             @SuppressWarnings({"deprecation", "removal"})
-            public class ServiceBuilder implements IBuilderBase<Service>"""));
+            public class MyDtoBuilder implements IBuilderBase<MyDto>"""));
   }
 
   @Test
@@ -444,7 +444,7 @@ class AnnotationCopyTest {
     // a single full text-block comparison.
     JavaFileObject service =
         JavaFileObjects.forSourceString(
-            packageName + ".Service",
+            packageName + ".MyDto",
             """
             package test.deprecated.dto;
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
@@ -461,7 +461,7 @@ class AnnotationCopyTest {
                 generateAddToCollectionHelpers = OptionState.DISABLED,
                 generateWithInterface = OptionState.DISABLED
             ))
-            public class Service {
+            public class MyDto {
               private String name;
 
               public String getName() { return name; }
@@ -473,8 +473,8 @@ class AnnotationCopyTest {
             """);
 
     Compilation compilation = compileSources(service);
-    String generatedCode = loadGeneratedSource(compilation, "ServiceBuilder");
-    ProcessorAsserts.assertGenerationSucceeded(compilation, "ServiceBuilder", generatedCode);
+    String generatedCode = loadGeneratedSource(compilation, "MyDtoBuilder");
+    ProcessorAsserts.assertGenerationSucceeded(compilation, "MyDtoBuilder", generatedCode);
 
     // Full text-block comparison of the generated builder class. With most options disabled,
     // the output is minimal enough to compare comprehensively. The text block includes the
@@ -484,10 +484,10 @@ class AnnotationCopyTest {
         generatedCode,
         """
         @Generated("Generated by org.javahelpers.simple.builders.processor.BuilderProcessor")
-        @BuilderImplementation(forClass = Service.class)
+        @BuilderImplementation(forClass = MyDto.class)
         @Deprecated
         @SuppressWarnings({"deprecation", "removal"})
-        public class ServiceBuilder implements IBuilderBase<Service> {
+        public class MyDtoBuilder implements IBuilderBase<MyDto> {
 
           /**
            * Tracked value for <code>name</code>: name.
@@ -495,42 +495,42 @@ class AnnotationCopyTest {
           private TrackedValue<String> name = unsetValue();
 
           /**
-           * Empty constructor of builder for {@code test.deprecated.dto.Service}.
+           * Empty constructor of builder for {@code test.deprecated.dto.MyDto}.
            */
           @Deprecated
-          public ServiceBuilder() {
+          public MyDtoBuilder() {
           }
 
           /**
-           * Initialisation of builder for {@code test.deprecated.dto.Service} by a instance.
+           * Initialisation of builder for {@code test.deprecated.dto.MyDto} by a instance.
            *
            * @param instance object instance for initialisiation
            */
           @Deprecated
-          public ServiceBuilder(Service instance) {
+          public MyDtoBuilder(MyDto instance) {
             this.name = initialValue(instance.getName());
           }
 
           /**
-           * Creating a new builder for {@code test.deprecated.dto.Service}.
+           * Creating a new builder for {@code test.deprecated.dto.MyDto}.
            *
            * <h4>Example:</h4>
            *
            * <pre>{@code
-           * ServiceBuilder builder = ServiceBuilder.create();
+           * MyDtoBuilder builder = MyDtoBuilder.create();
            * }</pre>
            *
-           * @return builder for {@code test.deprecated.dto.Service}
+           * @return builder for {@code test.deprecated.dto.MyDto}
            */
           @Deprecated
-          public static ServiceBuilder create() {
-            return new ServiceBuilder();
+          public static MyDtoBuilder create() {
+            return new MyDtoBuilder();
           }
 
           /**
            * Sets the value for <code>name</code>.
            * <p>
-           * Generated from setter {@link Service#setName(String) setName(String name)}
+           * Generated from setter {@link MyDto#setName(String) setName(String name)}
            *
            * <h4>Example:</h4>
            *
@@ -541,7 +541,7 @@ class AnnotationCopyTest {
            * @param name name
            * @return current instance of builder
            */
-          public ServiceBuilder name(String name) {
+          public MyDtoBuilder name(String name) {
             this.name = changedValue(name);
             return this;
           }
@@ -552,12 +552,12 @@ class AnnotationCopyTest {
            * <h4>Example:</h4>
            *
            * <pre>{@code
-           * Service result = builder.build();
+           * MyDto result = builder.build();
            * }</pre>
            */
           @Override
-          public Service build() {
-            Service result = new Service();
+          public MyDto build() {
+            MyDto result = new MyDto();
             this.name.ifSet(result::setName);
             return result;
           }
@@ -645,13 +645,13 @@ class AnnotationCopyTest {
 
     JavaFileObject service =
         JavaFileObjects.forSourceString(
-            packageName + ".Service",
+            packageName + ".MyDto",
             """
             package test.deprecated.javadoc;
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 
             @SimpleBuilder
-            public class Service {
+            public class MyDto {
               private String name;
 
               public String getName() { return name; }
@@ -669,8 +669,8 @@ class AnnotationCopyTest {
             """);
 
     Compilation compilation = compileSources(service);
-    String generatedCode = loadGeneratedSource(compilation, "ServiceBuilder");
-    ProcessorAsserts.assertGenerationSucceeded(compilation, "ServiceBuilder", generatedCode);
+    String generatedCode = loadGeneratedSource(compilation, "MyDtoBuilder");
+    ProcessorAsserts.assertGenerationSucceeded(compilation, "MyDtoBuilder", generatedCode);
 
     // The @deprecated javadoc text is propagated to the generated builder method
     ProcessorAsserts.assertingResult(
@@ -685,7 +685,7 @@ class AnnotationCopyTest {
         contains(
             """
             @Deprecated
-            public ServiceBuilder name(String name) {"""));
+            public MyDtoBuilder name(String name) {"""));
   }
 
   @Test
@@ -694,13 +694,13 @@ class AnnotationCopyTest {
 
     JavaFileObject service =
         JavaFileObjects.forSourceString(
-            packageName + ".Service",
+            packageName + ".MyDto",
             """
             package test.deprecated.attrs;
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 
             @SimpleBuilder
-            public class Service {
+            public class MyDto {
               private String name;
 
               public String getName() { return name; }
@@ -713,8 +713,8 @@ class AnnotationCopyTest {
             """);
 
     Compilation compilation = compileSources(service);
-    String generatedCode = loadGeneratedSource(compilation, "ServiceBuilder");
-    ProcessorAsserts.assertGenerationSucceeded(compilation, "ServiceBuilder", generatedCode);
+    String generatedCode = loadGeneratedSource(compilation, "MyDtoBuilder");
+    ProcessorAsserts.assertGenerationSucceeded(compilation, "MyDtoBuilder", generatedCode);
 
     // The since and forRemoval attributes are preserved on the generated builder method
     ProcessorAsserts.assertingResult(
@@ -722,7 +722,7 @@ class AnnotationCopyTest {
         contains(
             """
             @Deprecated(since = "1.2", forRemoval = true)
-            public ServiceBuilder name(String name) {"""));
+            public MyDtoBuilder name(String name) {"""));
   }
 
   @Test
@@ -731,13 +731,13 @@ class AnnotationCopyTest {
 
     JavaFileObject service =
         JavaFileObjects.forSourceString(
-            packageName + ".Service",
+            packageName + ".MyDto",
             """
             package test.deprecated.getter;
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 
             @SimpleBuilder
-            public class Service {
+            public class MyDto {
               private String name;
 
               @Deprecated
@@ -750,8 +750,8 @@ class AnnotationCopyTest {
             """);
 
     Compilation compilation = compileSources(service);
-    String generatedCode = loadGeneratedSource(compilation, "ServiceBuilder");
-    ProcessorAsserts.assertGenerationSucceeded(compilation, "ServiceBuilder", generatedCode);
+    String generatedCode = loadGeneratedSource(compilation, "MyDtoBuilder");
+    ProcessorAsserts.assertGenerationSucceeded(compilation, "MyDtoBuilder", generatedCode);
 
     // A deprecated getter does NOT propagate @Deprecated to the generated builder method
     // (deprecated getter != deprecated property). The class carries a class-level
@@ -764,18 +764,18 @@ class AnnotationCopyTest {
         contains(
             """
              */
-              public ServiceBuilder name(String name) {"""),
+              public MyDtoBuilder name(String name) {"""),
         // Class-level @SuppressWarnings is present
         contains(
             """
             @SuppressWarnings({"deprecation", "removal"})
-            public class ServiceBuilder implements IBuilderBase<Service>"""),
+            public class MyDtoBuilder implements IBuilderBase<MyDto>"""),
         // From-instance constructor: no own @SuppressWarnings (preceding Javadoc closing),
         // and the body calls the deprecated getter (instance.getName())
         contains(
             """
              */
-              public ServiceBuilder(Service instance) {
+              public MyDtoBuilder(MyDto instance) {
                 this.name = initialValue(instance.getName());
               }"""));
   }
