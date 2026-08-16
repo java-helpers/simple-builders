@@ -43,19 +43,23 @@ import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration
 /**
  * Reads builder configuration from annotated elements.
  *
- * <p>This class analyzes {@link SimpleBuilder.Options} and {@link SimpleBuilder.Template}
- * annotations on an element and extracts the raw configuration values without merging.
+ * <p>This class analyzes {@link SimpleBuilder.Options} and custom template annotations (annotations
+ * meta-annotated with {@link SimpleBuilder.Template}) on an element.
  *
- * <p>Priority order:
+ * <p>Priority order (highest to lowest):
  *
  * <ol>
- *   <li>{@code @SimpleBuilder(options = ...)} inline options (highest priority)
- *   <li>Custom template annotations (e.g., {@code @CustomBuilder})
+ *   <li>Directly declared {@code @SimpleBuilder(options = ...)} inline options
+ *   <li>Custom template annotations directly declared on the element
+ *   <li>Inherited {@code @SimpleBuilder(options = ...)} inline options
+ *   <li>Inherited custom template annotations
  *   <li>Global compiler arguments
- *   <li>Built-in defaults (lowest priority)
+ *   <li>Built-in defaults
  * </ol>
  *
- * <p>Note: If {@code @SimpleBuilder} is present, custom template annotations are ignored.
+ * <p>Custom template annotations are annotations that are themselves meta-annotated with
+ * {@code @SimpleBuilder.Template}; they are not placed directly on the class. Within each
+ * inheritance scope, {@code @SimpleBuilder} options take precedence over template options.
  */
 public class BuilderConfigurationReader {
   private static final String SIMPLE_BUILDER_ANNOTATION =
@@ -389,16 +393,19 @@ public class BuilderConfigurationReader {
    * <p>Priority chain (highest to lowest):
    *
    * <ol>
-   *   <li>Directly declared {@code @SimpleBuilder(options = ...)} inline options (highest priority)
-   *   <li>Directly declared custom template annotations
+   *   <li>Directly declared {@code @SimpleBuilder(options = ...)} inline options
+   *   <li>Custom template annotations directly declared on the element
    *   <li>Inherited {@code @SimpleBuilder(options = ...)} inline options
    *   <li>Inherited custom template annotations
    *   <li>Global compiler arguments
-   *   <li>Built-in defaults (lowest priority)
+   *   <li>Built-in defaults
    * </ol>
    *
-   * <p>Within each inheritance level, {@code @SimpleBuilder} options take precedence over template
-   * annotation options. Direct annotations always override inherited annotations.
+   * <p>Custom template annotations are annotations that are themselves meta-annotated with
+   * {@code @SimpleBuilder.Template} and are placed directly on the class; the
+   * {@code @SimpleBuilder.Template} meta-annotation is not placed on the class itself. Within each
+   * inheritance scope, {@code @SimpleBuilder} options take precedence over template options. Direct
+   * annotations always override inherited annotations.
    *
    * @param element the annotated element to resolve configuration for
    * @return the fully resolved configuration with all sources merged
