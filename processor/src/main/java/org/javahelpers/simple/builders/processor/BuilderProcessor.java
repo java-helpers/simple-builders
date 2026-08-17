@@ -164,6 +164,21 @@ public class BuilderProcessor extends AbstractProcessor {
           return false;
         });
 
+    // Filter out elements whose package is not in the configured builder generation scope.
+    // An empty scope means "unscoped" and keeps the current backward-compatible behavior.
+    BuilderConfiguration globalConfig = context.getConfigurationReader().getGlobalConfiguration();
+    elementsToProcess.removeIf(
+        element -> {
+          String packageName = context.getPackageName(element);
+          if (!globalConfig.isInGenerationScope(packageName)) {
+            context.debug(
+                "Skipping element '%s' because package '%s' is outside builderGenerationPackages.",
+                element.getSimpleName(), packageName);
+            return true;
+          }
+          return false;
+        });
+
     context.info("simple-builders: PROCESSING ROUND START");
     context.debug(
         "simple-builders: Processing round started. Found %d annotated elements.",

@@ -32,6 +32,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+import org.javahelpers.simple.builders.processor.analysis.BuilderScopeResolver;
 import org.javahelpers.simple.builders.processor.generators.registry.GeneratorRegistry;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
@@ -49,6 +50,7 @@ public final class ProcessingContext {
   private final BuilderConfigurationReader configurationReader;
   private final ProcessingEnvironment processingEnv;
   private GeneratorRegistry generatorRegistry;
+  private BuilderScopeResolver builderScopeResolver;
   private BuilderConfiguration configurationForProcessingTarget;
 
   /**
@@ -78,6 +80,8 @@ public final class ProcessingContext {
    */
   public void initConfigurationForProcessingTarget(BuilderConfiguration config) {
     this.configurationForProcessingTarget = config;
+    // Recompute scope resolver for the new target configuration
+    this.builderScopeResolver = null;
   }
 
   /**
@@ -111,6 +115,21 @@ public final class ProcessingContext {
       generatorRegistry = new GeneratorRegistry(this, processingEnv);
     }
     return generatorRegistry;
+  }
+
+  /**
+   * Get the builder scope resolver for the current target configuration.
+   *
+   * <p>The resolver is lazily initialized on first access and invalidated when the target
+   * configuration changes.
+   *
+   * @return the builder scope resolver
+   */
+  public BuilderScopeResolver getBuilderScopeResolver() {
+    if (builderScopeResolver == null) {
+      builderScopeResolver = new BuilderScopeResolver(this);
+    }
+    return builderScopeResolver;
   }
 
   /**
@@ -165,6 +184,17 @@ public final class ProcessingContext {
   @SuppressWarnings("java:S1452")
   public List<? extends Element> getAllMembers(TypeElement typeElement) {
     return elementUtils.getAllMembers(typeElement);
+  }
+
+  /**
+   * Get all annotation mirrors for the given type, including inherited ones.
+   *
+   * @param typeElement the type to inspect
+   * @return list of all annotation mirrors
+   */
+  public List<? extends javax.lang.model.element.AnnotationMirror> getAllAnnotationMirrors(
+      TypeElement typeElement) {
+    return elementUtils.getAllAnnotationMirrors(typeElement);
   }
 
   /**
