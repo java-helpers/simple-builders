@@ -52,7 +52,10 @@ public class BuilderScopeResolver {
    * <p>An empty generation scope means "unscoped" and returns {@code true} for every package.
    */
   public boolean isInGenerationScope(String packageName) {
-    return context.getConfiguration().isInGenerationScope(packageName);
+    return context
+        .getConfigurationReader()
+        .getGlobalConfiguration()
+        .isInGenerationScope(packageName);
   }
 
   /**
@@ -88,12 +91,24 @@ public class BuilderScopeResolver {
       return Optional.empty();
     }
 
-    BuilderConfiguration config = resolverContext.getConfiguration();
-    String packageName =
-        JavaLangMapper.extractPackageName(referencedType.getQualifiedName().toString());
     TypeName candidate = JavaLangMapper.createBuilderTypeName(referencedType, resolverContext);
 
-    Set<String> generationPackages = config.getBuilderGenerationPackagesSet();
+    // Trust builders that the current processing round will actually generate, regardless of
+    // package scoping. This must be the first decision so a filtered local type is never trusted.
+    if (resolverContext.isGeneratedType(referencedType)) {
+      return Optional.of(candidate);
+    }
+
+    String packageName =
+        JavaLangMapper.extractPackageName(referencedType.getQualifiedName().toString());
+
+    // For external/precompiled types, use the globally configured generation scope as the source
+    // of truth and the per-target usage scope for optional references.
+    BuilderConfiguration globalConfig =
+        resolverContext.getConfigurationReader().getGlobalConfiguration();
+    BuilderConfiguration config = resolverContext.getConfiguration();
+
+    Set<String> generationPackages = globalConfig.getBuilderGenerationPackagesSet();
     Set<String> usagePackages = config.getBuilderUsagePackagesSet();
 
     if (generationPackages.isEmpty() && usagePackages.isEmpty()) {

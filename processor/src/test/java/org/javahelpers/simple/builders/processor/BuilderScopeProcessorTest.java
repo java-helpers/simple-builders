@@ -313,6 +313,82 @@ class BuilderScopeProcessorTest {
         "new LibraryDtoBuilder(this.library.value())");
   }
 
+  /**
+   * Empty builderGenerationPackages with a non-empty builderUsagePackages must not block references
+   * to local nested builders that the processor will generate in the same round.
+   */
+  @Test
+  void builderUsagePackagesOnly_localNestedBuilderInOtherPackage_referenced() {
+    JavaFileObject nested =
+        ProcessorTestUtils.simpleBuilderClass("com.other", "NestedDto", NESTED_DTO_BODY);
+    JavaFileObject parent =
+        ProcessorTestUtils.forSource(
+            """
+            package com.example;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+            @SimpleBuilder
+            public class ParentDto {
+                private com.other.NestedDto nested;
+                public com.other.NestedDto getNested() { return nested; }
+                public void setNested(com.other.NestedDto nested) { this.nested = nested; }
+            }
+            """);
+
+    Compilation compilation =
+        compilerWithOptions("-Asimplebuilder.builderUsagePackages=com.other")
+            .compile(nested, parent);
+
+    assertThat(compilation).succeededWithoutWarnings();
+    String nestedCode = ProcessorTestUtils.loadGeneratedSource(compilation, "NestedDtoBuilder");
+    assertNotNull(nestedCode, "NestedDtoBuilder should be generated");
+    assertTrue(nestedCode.contains("class NestedDtoBuilder"));
+
+    String parentCode = ProcessorTestUtils.loadGeneratedSource(compilation, "ParentDtoBuilder");
+    ProcessorAsserts.assertContaining(
+        parentCode,
+        "public ParentDtoBuilder nested(Consumer<NestedDtoBuilder> nestedBuilderConsumer)",
+        "new NestedDtoBuilder(this.nested.value())");
+  }
+
+  /**
+   * A per-class builderGenerationPackages override must not cause references to builders that are
+   * not actually generated because the global generation scope excludes their package.
+   */
+  @Test
+  void perClassGenerationPackagesOverride_doesNotReferenceNonGeneratedBuilder() {
+    JavaFileObject nested =
+        ProcessorTestUtils.simpleBuilderClass("com.other", "NestedDto", NESTED_DTO_BODY);
+    JavaFileObject parent =
+        ProcessorTestUtils.forSource(
+            """
+            package com.example;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+            @SimpleBuilder(options = @SimpleBuilder.Options(
+                builderGenerationPackages = "com.other"
+            ))
+            public class ParentDto {
+                private com.other.NestedDto nested;
+                public com.other.NestedDto getNested() { return nested; }
+                public void setNested(com.other.NestedDto nested) { this.nested = nested; }
+            }
+            """);
+
+    Compilation compilation =
+        compilerWithOptions("-Asimplebuilder.builderGenerationPackages=com.example")
+            .compile(nested, parent);
+
+    assertThat(compilation).succeededWithoutWarnings();
+    ProcessorAsserts.assertNoBuilderGenerated(
+        compilation, "NestedDto", "NestedDtoBuilder should not be generated");
+    String parentCode = ProcessorTestUtils.loadGeneratedSource(compilation, "ParentDtoBuilder");
+    ProcessorAsserts.assertNotContaining(
+        parentCode, "Consumer<NestedDtoBuilder>", "new NestedDtoBuilder");
+    ProcessorAsserts.assertContaining(
+        parentCode, "public ParentDtoBuilder nested(NestedDto nested)");
+  }
+
   private static Compiler compilerWithOptions(String... options) {
     return ProcessorTestUtils.createCompiler().withOptions(options);
   }

@@ -179,6 +179,10 @@ public class BuilderProcessor extends AbstractProcessor {
           return false;
         });
 
+    // Register the types that will actually be generated so the builder scope resolver can trust
+    // in-compilation references without an expensive type-existence search.
+    context.setGeneratedTypeNames(elementsToProcess);
+
     context.info("simple-builders: PROCESSING ROUND START");
     context.debug(
         "simple-builders: Processing round started. Found %d annotated elements.",
