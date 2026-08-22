@@ -26,6 +26,10 @@ package org.javahelpers.simple.builders.processor;
 
 import static org.javahelpers.simple.builders.processor.model.core.BuilderToGenerationTypeMapper.toRenderingDto;
 import static org.javahelpers.simple.builders.processor.processing.BuilderDefinitionCreator.extractFromElement;
+import static org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker.PHASE_BUILDER_DEFINITION_EXTRACTION;
+import static org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker.PHASE_CODE_GENERATION;
+import static org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker.PHASE_CONFIGURATION_RESOLUTION;
+import static org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker.PHASE_DTO_MAPPING;
 
 import com.google.auto.service.AutoService;
 import java.util.ArrayList;
@@ -56,7 +60,8 @@ import org.javahelpers.simple.builders.processor.processing.BuilderConfiguration
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsEnum;
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsReader;
 import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
-import org.javahelpers.simple.builders.processor.processing.ProcessingLogger;
+import org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker;
+import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 
 /**
  * BuilderProcessor is an annotation processor for execution in generate-sources phase. The
@@ -83,7 +88,8 @@ public class BuilderProcessor extends AbstractProcessor {
     logger.debug("Loaded global configuration from compiler arguments: %s", globalConfig);
 
     this.context = new ProcessingContext(logger, globalConfig, processingEnv);
-    this.codeGenerator = new RoasterCodeGenerator(processingEnv, logger);
+    this.codeGenerator =
+        new RoasterCodeGenerator(processingEnv, logger, context.getPerformanceTracker());
     this.jacksonModuleGenerator = new JacksonModuleGenerator(processingEnv, logger);
 
     // Initialize GeneratorRegistry once during processor initialization
@@ -112,6 +118,10 @@ public class BuilderProcessor extends AbstractProcessor {
 
     // Generate Jackson Module if processing is over and feature is enabled
     if (roundEnv.processingOver()) {
+      // Generate performance report at the end of processing
+      PerformanceTracker tracker = context.getPerformanceTracker();
+      tracker.generateReport(context.getLogger());
+
       List<GenerationTargetClassDto> moduleClassDefs =
           jacksonModuleGenerator.getModuleDefinitions();
       for (GenerationTargetClassDto moduleClassDef : moduleClassDefs) {
@@ -175,13 +185,17 @@ public class BuilderProcessor extends AbstractProcessor {
             .sorted(Comparator.comparing(element -> element.getSimpleName().toString()))
             .toList();
 
+    PerformanceTracker tracker = context.getPerformanceTracker();
     int successfulGenerations = 0;
     for (Element annotatedElement : sortedElements) {
       context.debugStartOperation("Processing element: " + annotatedElement.getSimpleName());
+      String className = annotatedElement.getSimpleName().toString();
+      tracker.startClass(className);
       try {
-        // Resolve configuration per-element to handle all layers
-        // (defaults, global, template, inline)
+        // Track Configuration Resolution (actual work happens here)
+        tracker.startPhase(PHASE_CONFIGURATION_RESOLUTION, className);
         BuilderConfiguration config = reader.resolveConfiguration(annotatedElement);
+        tracker.endPhase(PHASE_CONFIGURATION_RESOLUTION);
         context.debug("Configuration resolved: %s", config);
         process(annotatedElement, config);
         successfulGenerations++;
@@ -225,13 +239,45 @@ public class BuilderProcessor extends AbstractProcessor {
   private void process(Element annotatedElement, BuilderConfiguration config)
       throws BuilderException {
     context.initConfigurationForProcessingTarget(config);
+    PerformanceTracker tracker = context.getPerformanceTracker();
+    String className = annotatedElement.getSimpleName().toString();
+
+    // Track Builder Definition Extraction
+    tracker.startPhase(PHASE_BUILDER_DEFINITION_EXTRACTION, className);
     BuilderDefinitionDto builderDef = extractFromElement(annotatedElement, context);
+    tracker.endPhase(PHASE_BUILDER_DEFINITION_EXTRACTION);
+
+    // Compute class-level metrics now that the definition is available
+    int fieldCount = builderDef.getAllFieldsForBuilder().size();
+    int collectionCount =
+        (int)
+            builderDef.getAllFieldsForBuilder().stream()
+                .filter(
+                    f -> {
+                      String typeName = f.getFieldType().getFullQualifiedName();
+                      return typeName.startsWith("java.util.List")
+                          || typeName.startsWith("java.util.Set")
+                          || typeName.startsWith("java.util.Map")
+                          || typeName.startsWith("java.util.Collection");
+                    })
+                .count();
+
+    // Track DTO Mapping
+    tracker.startPhase(PHASE_DTO_MAPPING, className);
     GenerationTargetClassDto renderingDto = toRenderingDto(builderDef);
+    tracker.endPhase(PHASE_DTO_MAPPING);
+
+    // Track Code Generation (parent phase; sub-phases tracked inside RoasterCodeGenerator)
+    tracker.startPhase(PHASE_CODE_GENERATION, className);
     codeGenerator.generateClass(renderingDto);
+    tracker.endPhase(PHASE_CODE_GENERATION);
 
     // Collect info for Jackson Module if enabled
     jacksonModuleGenerator.addEntry(builderDef, annotatedElement);
     context.debug("Jackson module entry added");
+
+    // End class-level timing (started in caller before config resolution)
+    tracker.endClass(fieldCount, collectionCount);
 
     // Add summary of what was generated
     context.debugEndOperation(
