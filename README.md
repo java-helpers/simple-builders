@@ -438,6 +438,13 @@ A comprehensive example showcasing all fundamental Java property types with a mi
 - **Generated Builder**: [`BookDtoBuilder.java`](example/generated-example-builder/org/javahelpers/simple/builders/example/BookDtoBuilder.java) - Clean, minimal builder with only setter methods
 - **Tests**: [`BookDtoBuilderTest.java`](example/src/test/java/org/javahelpers/simple/builders/example/BookDtoBuilderTest.java) - Usage examples
 
+### Built-in Minimal Builder Example
+
+A DTO annotated with the built-in `@SimpleMinimalBuilder` template to generate a minimal builder without optional features:
+
+- **Source DTO**: [`CustomerDto.java`](example/src/main/java/org/javahelpers/simple/builders/example/CustomerDto.java) - Uses `@SimpleMinimalBuilder` to generate a builder with only essential methods
+- **Generated Builder**: [`CustomerDtoBuilder.java`](example/generated-example-builder/org/javahelpers/simple/builders/example/CustomerDtoBuilder.java) - Minimal builder output with `create()`, field setters, validation helpers, and `build()`
+
 ### Full-Featured Examples
 
 Examples with all builder features enabled:

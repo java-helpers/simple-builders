@@ -85,9 +85,10 @@ public class PersonDto {
 | Need | Use |
 |------|-----|
 | Generate a builder for a single class/record | `@SimpleBuilder` on the class/record |
+| Generate a minimal builder (no optional features) | `@SimpleMinimalBuilder` on the class/record |
 | Share the same configuration across many classes | `@SimpleBuilder.Template` on a custom `@interface`, then the custom annotation on each class |
 
-Create reusable configuration presets with custom template annotations:
+Create reusable configuration presets with custom template annotations. The built-in `@SimpleMinimalBuilder` already disables every optional feature; use the following pattern only when you need a differently named or customized template:
 
 ```java
 @SimpleBuilder.Template(options = @SimpleBuilder.Options(
@@ -109,7 +110,8 @@ Create reusable configuration presets with custom template annotations:
     usingGeneratedAnnotation = OptionState.DISABLED,
     usingBuilderImplementationAnnotation = OptionState.DISABLED,
     implementsBuilderBase = OptionState.DISABLED,
-    usingJacksonDeserializerAnnotation = OptionState.DISABLED
+    usingJacksonDeserializerAnnotation = OptionState.DISABLED,
+    generateJacksonModule = OptionState.DISABLED
 ))
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.TYPE)
@@ -903,40 +905,25 @@ reported as warnings so compilation can continue.
 
 ### Minimal Builder
 
-Generate only essential builder methods:
+Use the built-in `@SimpleMinimalBuilder` template to generate only essential builder methods with a single annotation:
 
 ```java
-@SimpleBuilder(
-    options = @SimpleBuilder.Options(
-        generateFieldSupplier = OptionState.DISABLED,
-        generateFieldConsumer = OptionState.DISABLED,
-        generateBuilderConsumer = OptionState.DISABLED,
-        generateConditionalHelper = OptionState.DISABLED,
-        generateVarArgsHelpers = OptionState.DISABLED,
-        generateStringFormatHelpers = OptionState.DISABLED,
-        generateAddToCollectionHelpers = OptionState.DISABLED,
-        generateUnboxedOptional = OptionState.DISABLED,
-        copyTypeAnnotations = OptionState.DISABLED,
-        usingArrayListBuilder = OptionState.DISABLED,
-        usingArrayListBuilderWithElementBuilders = OptionState.DISABLED,
-        usingHashSetBuilder = OptionState.DISABLED,
-        usingHashSetBuilderWithElementBuilders = OptionState.DISABLED,
-        usingHashMapBuilder = OptionState.DISABLED,
-        generateWithInterface = OptionState.DISABLED,
-        usingGeneratedAnnotation = OptionState.DISABLED,
-        usingBuilderImplementationAnnotation = OptionState.DISABLED,
-        implementsBuilderBase = OptionState.DISABLED,
-        usingJacksonDeserializerAnnotation = OptionState.DISABLED
-)
+import org.javahelpers.simple.builders.core.annotations.SimpleMinimalBuilder;
+
+@SimpleMinimalBuilder
 public class MinimalDto {
     private String name;
-    
+
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
 }
 ```
 
-**Generated**: Only basic builder methods (`create()`, field setters, `build()`)
+**Generated**: Only basic builder methods (`create()`, field setters, `build()`).
+
+For a concrete generated example, see [`CustomerDtoBuilder.java`](../example/generated-example-builder/org/javahelpers/simple/builders/example/CustomerDtoBuilder.java) produced from [`CustomerDto.java`](../example/src/main/java/org/javahelpers/simple/builders/example/CustomerDto.java).
+
+If you need a different name or extra customization, you can still build a custom `@SimpleBuilder.Template` with all optional features disabled.
 
 ### Internal API Builder
 
@@ -993,7 +980,7 @@ TeamDto team = TeamDtoBuilder.create()
 
 ### Minimal Builder Template
 
-Create a reusable template for lightweight builders:
+The built-in `@SimpleMinimalBuilder` is the simplest way to get a lightweight builder. If you need a differently named template or want to build your own preset, create a custom annotation meta-annotated with `@SimpleBuilder.Template`:
 
 ```java
 @SimpleBuilder.Template(options = @SimpleBuilder.Options(
@@ -1015,7 +1002,8 @@ Create a reusable template for lightweight builders:
     usingGeneratedAnnotation = OptionState.DISABLED,
     usingBuilderImplementationAnnotation = OptionState.DISABLED,
     implementsBuilderBase = OptionState.DISABLED,
-    usingJacksonDeserializerAnnotation = OptionState.DISABLED
+    usingJacksonDeserializerAnnotation = OptionState.DISABLED,
+    generateJacksonModule = OptionState.DISABLED
 ))
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.TYPE)
