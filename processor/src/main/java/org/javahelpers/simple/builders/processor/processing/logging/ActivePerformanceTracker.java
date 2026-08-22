@@ -296,7 +296,7 @@ public final class ActivePerformanceTracker implements PerformanceTracker {
       try {
         writeJsonReport(totalTime);
         logger.info("Performance JSON report written to: %s", outputFilePath);
-      } catch (IOException e) {
+      } catch (IOException | java.nio.file.InvalidPathException | SecurityException e) {
         logger.warning("Failed to write performance JSON report: %s", e.getMessage());
       }
     }
@@ -544,7 +544,15 @@ public final class ActivePerformanceTracker implements PerformanceTracker {
         case '\n' -> escaped.append("\\n");
         case '\r' -> escaped.append("\\r");
         case '\t' -> escaped.append("\\t");
-        default -> escaped.append(c);
+        case '\b' -> escaped.append("\\b");
+        case '\f' -> escaped.append("\\f");
+        default -> {
+          if (c < 0x20) {
+            escaped.append(String.format("\\u%04x", (int) c));
+          } else {
+            escaped.append(c);
+          }
+        }
       }
     }
     escaped.append('"');
