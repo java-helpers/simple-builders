@@ -83,7 +83,7 @@ public class BuilderProcessor extends AbstractProcessor {
     logger.debug("Loaded global configuration from compiler arguments: %s", globalConfig);
 
     this.context = new ProcessingContext(logger, globalConfig, processingEnv);
-    this.codeGenerator = new RoasterCodeGenerator(processingEnv, logger);
+    this.codeGenerator = new RoasterCodeGenerator(processingEnv, logger, context);
     this.jacksonModuleGenerator = new JacksonModuleGenerator(processingEnv, logger);
 
     // Initialize GeneratorRegistry once during processor initialization
@@ -112,6 +112,11 @@ public class BuilderProcessor extends AbstractProcessor {
 
     // Generate Jackson Module if processing is over and feature is enabled
     if (roundEnv.processingOver()) {
+      // Jackson module generation uses the globally resolved configuration for Javadoc and other
+      // generation settings. Per-class overrides are intentionally ignored here.
+      context.initConfigurationForProcessingTarget(
+          BuilderConfiguration.DEFAULT.merge(
+              context.getConfigurationReader().getGlobalConfiguration()));
       List<GenerationTargetClassDto> moduleClassDefs =
           jacksonModuleGenerator.getModuleDefinitions();
       for (GenerationTargetClassDto moduleClassDef : moduleClassDefs) {

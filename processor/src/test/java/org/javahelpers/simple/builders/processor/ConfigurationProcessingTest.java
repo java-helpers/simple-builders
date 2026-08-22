@@ -81,6 +81,8 @@ class ConfigurationProcessingTest {
             .generateWithInterface(OptionState.ENABLED)
             .usingJacksonDeserializerAnnotation(OptionState.ENABLED)
             .generateJacksonModule(OptionState.ENABLED)
+            // Documentation
+            .generateJavaDoc(OptionState.ENABLED)
             // Naming
             .builderSuffix("Builder")
             .setterSuffix("")
@@ -110,6 +112,7 @@ class ConfigurationProcessingTest {
     assertEquals(OptionState.ENABLED, config.generateWithInterface());
     assertEquals(OptionState.ENABLED, config.usingJacksonDeserializerAnnotation());
     assertEquals(OptionState.ENABLED, config.generateJacksonModule());
+    assertEquals(OptionState.ENABLED, config.generateJavaDoc());
     assertEquals("Builder", config.getBuilderSuffix());
     assertEquals("", config.getSetterSuffix());
   }
@@ -215,6 +218,7 @@ class ConfigurationProcessingTest {
                 "-Asimplebuilder.implementsBuilderBase=false",
                 "-Asimplebuilder.generateWithInterface=false",
                 "-Asimplebuilder.usingJacksonDeserializerAnnotation=false",
+                "-Asimplebuilder.generateJavaDoc=false",
                 "-Asimplebuilder.builderSuffix=CustomBuilder",
                 "-Asimplebuilder.setterSuffix=with")
             .compile(nestedDto, addressDto, source);
@@ -293,6 +297,9 @@ class ConfigurationProcessingTest {
     // With usingJacksonDeserializerAnnotation=false, NO @JsonPOJOBuilder annotation should be used
     ProcessorAsserts.assertNotContaining(generatedCode, "@JsonPOJOBuilder");
 
+    // With generateJavaDoc=false, NO Javadoc comments should be generated
+    ProcessorAsserts.assertNotContaining(generatedCode, "/**");
+
     // With builderAccess=PACKAGE_PRIVATE, builder class should NOT have public modifier
     ProcessorAsserts.assertNotContaining(generatedCode, "public class MinimalDtoCustomBuilder");
 
@@ -344,6 +351,43 @@ class ConfigurationProcessingTest {
         "MinimalDtoCustomBuilder withAddress(Address address)",
         "MinimalDto build()",
         "static MinimalDtoCustomBuilder create()");
+  }
+
+  /**
+   * Inline annotation test: Disabling Javadoc via {@code @SimpleBuilder.Options} removes Javadoc
+   * blocks while keeping the builder API intact.
+   */
+  @Test
+  void inlineOptions_generateJavaDocDisabled_ShouldNotGenerateJavadoc() {
+    JavaFileObject source =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+            import org.javahelpers.simple.builders.core.enums.OptionState;
+
+            @SimpleBuilder(options = @SimpleBuilder.Options(generateJavaDoc = OptionState.DISABLED))
+            public class PersonDto {
+                private String name;
+
+                public String getName() { return name; }
+                public void setName(String name) { this.name = name; }
+            }
+            """);
+
+    Compilation compilation = ProcessorTestUtils.createCompiler().compile(source);
+
+    assertThat(compilation).succeeded();
+
+    String generatedCode = ProcessorTestUtils.loadGeneratedSource(compilation, "PersonDtoBuilder");
+
+    ProcessorAsserts.assertNotContaining(generatedCode, "/**");
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        "public PersonDtoBuilder name(String name)",
+        "public PersonDto build()",
+        "public static PersonDtoBuilder create()");
   }
 
   /**
