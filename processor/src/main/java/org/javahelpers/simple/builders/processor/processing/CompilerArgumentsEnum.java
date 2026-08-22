@@ -137,6 +137,9 @@ public enum CompilerArgumentsEnum {
   /** Option for performance tracking during annotation processing. */
   PERFORMANCE_TRACKING("performanceTracking"),
 
+  /** Option for performance report JSON output file path. */
+  PERFORMANCE_OUTPUT_FILE("performanceOutputFile"),
+
   // === Error Handling ===
   /**
    * Option for strict/fail-fast generation mode. When enabled, builder (and Jackson module)

@@ -77,8 +77,11 @@ public final class ProcessingContext {
     CompilerArgumentsReader argReader = new CompilerArgumentsReader(processingEnv);
     boolean perfTrackingEnabled =
         argReader.readBooleanValue(CompilerArgumentsEnum.PERFORMANCE_TRACKING);
+    String perfOutputFile = argReader.readValue(CompilerArgumentsEnum.PERFORMANCE_OUTPUT_FILE);
     this.performanceTracker =
-        perfTrackingEnabled ? new ActivePerformanceTracker() : new NoOpPerformanceTracker();
+        perfTrackingEnabled
+            ? new ActivePerformanceTracker(perfOutputFile)
+            : new NoOpPerformanceTracker();
     // GeneratorRegistry will be lazily initialized on first access
   }
 
