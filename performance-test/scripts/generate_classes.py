@@ -23,10 +23,9 @@ Usage:
 JSON schema (expected by this script):
   {
     "topic": "...",                       # ignored
-    "totalClasses": <int>,                # ignored (computed from packages)
+    "designNotes": "...",                 # ignored (human-readable documentation)
     "packages": {
       "<subPackage>": {                   # subPackage -> Java sub-package name
-        "intermediateClass": "<Name>",    # ignored if per-class "extends" is set
         "classes": [
           {
             "name": "<ClassName>",         # required, must be a valid Java identifier
@@ -371,7 +370,6 @@ def resolve_imports(
 
 def generate_class_source(
     class_entry: dict,
-    intermediate_class: str,
     sub_package: str,
     class_index: dict[str, str],
 ) -> str:
@@ -379,8 +377,7 @@ def generate_class_source(
     Generate the full Java source for a ``kind: "class"`` entry.
 
     The ``extends`` clause uses the per-class ``extends`` field from the JSON.
-    If it is null or absent, the class has no superclass. If it is set, that
-    value is used (typically the package's intermediate class).
+    If it is null or absent, the class has no superclass.
     """
     name = class_entry["name"]
     props = class_entry.get("properties", [])
@@ -496,7 +493,6 @@ def generate_record_source(
 
 def generate_source(
     class_entry: dict,
-    intermediate_class: str,
     sub_package: str,
     class_index: dict[str, str],
 ) -> str:
@@ -504,7 +500,7 @@ def generate_source(
     kind = class_entry.get("kind", "class")
     if kind == "record":
         return generate_record_source(class_entry, sub_package, class_index)
-    return generate_class_source(class_entry, intermediate_class, sub_package, class_index)
+    return generate_class_source(class_entry, sub_package, class_index)
 
 
 # ---------------------------------------------------------------------------
@@ -512,16 +508,15 @@ def generate_source(
 # ---------------------------------------------------------------------------
 
 
-def iter_classes(data: dict) -> Iterable[tuple[str, str, dict]]:
+def iter_classes(data: dict) -> Iterable[tuple[str, dict]]:
     """
-    Yield ``(sub_package, intermediate_class, class_entry)`` tuples in JSON
-    order: items, persons, organizations, locations, events, and within each
+    Yield ``(sub_package, class_entry)`` tuples in JSON order:
+    items, persons, organizations, locations, events, and within each
     package the classes in array order.
     """
     for pkg_name, pkg in data.get("packages", {}).items():
-        intermediate = pkg.get("intermediateClass", "")
         for cls in pkg.get("classes", []):
-            yield pkg_name, intermediate, cls
+            yield pkg_name, cls
 
 
 def atomic_write(path: Path, content: str) -> None:
@@ -627,7 +622,7 @@ def main(argv: list[str] | None = None) -> int:
     skipped = 0
     errors: list[str] = []
 
-    for idx, (sub_package, intermediate, cls) in enumerate(iter_classes(data)):
+    for idx, (sub_package, cls) in enumerate(iter_classes(data)):
         if limit is not None and idx >= limit:
             break
 
@@ -671,7 +666,7 @@ def main(argv: list[str] | None = None) -> int:
 
         # --- Generate source ---
         try:
-            source = generate_source(cls, intermediate, sub_package, class_index)
+            source = generate_source(cls, sub_package, class_index)
         except (KeyError, TypeError) as e:
             msg = f"failed to generate source for class {name!r}: {e}"
             errors.append(msg)
