@@ -58,6 +58,7 @@ import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto
 import org.javahelpers.simple.builders.processor.model.type.NestedTypeDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameArray;
+import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 import org.javahelpers.simple.builders.processor.processing.ProcessingLogger;
 import org.javahelpers.simple.builders.processor.util.ImportCollector;
 import org.jboss.forge.roaster.Roaster;
@@ -81,17 +82,35 @@ public class RoasterCodeGenerator {
   /** Logger for debug output during code generation. */
   private final ProcessingLogger logger;
 
+  /** Processing context holding the effective builder configuration. */
+  private final ProcessingContext context;
+
   private final Properties formatterProperties;
+
+  /**
+   * Constructor for RoasterCodeGenerator without processing context.
+   *
+   * <p>Intended for tests; Javadoc generation defaults to enabled.
+   *
+   * @param processingEnv Processing environment for accessing filer and element utilities
+   * @param logger Logger for debug output
+   */
+  public RoasterCodeGenerator(ProcessingEnvironment processingEnv, ProcessingLogger logger) {
+    this(processingEnv, logger, null);
+  }
 
   /**
    * Constructor for RoasterCodeGenerator.
    *
    * @param processingEnv Processing environment for accessing filer and element utilities
    * @param logger Logger for debug output
+   * @param context Processing context with the effective builder configuration
    */
-  public RoasterCodeGenerator(ProcessingEnvironment processingEnv, ProcessingLogger logger) {
+  public RoasterCodeGenerator(
+      ProcessingEnvironment processingEnv, ProcessingLogger logger, ProcessingContext context) {
     this.processingEnv = processingEnv;
     this.logger = logger;
+    this.context = context;
     this.formatterProperties = loadFormatterProperties();
   }
 
@@ -410,6 +429,12 @@ public class RoasterCodeGenerator {
   private void applyJavadoc(
       org.jboss.forge.roaster.model.source.JavaDocCapableSource<?> source, JavadocDto javadoc) {
     if (javadoc == null || !javadoc.hasContent()) {
+      return;
+    }
+
+    if (context != null
+        && context.getConfiguration() != null
+        && !context.getConfiguration().shouldGenerateJavaDoc()) {
       return;
     }
 
