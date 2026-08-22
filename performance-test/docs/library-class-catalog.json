@@ -7949,7 +7949,7 @@
             {"name": "testator", "type": "String"},
             {"name": "amount", "type": "BigDecimal"},
             {"name": "beneficiary", "type": "String"},
-            {"name": "executionDate", "type": "LocalDate"}
+            {"name": "fulfillmentDate", "type": "LocalDate"}
           ]
         },
         {
@@ -8145,11 +8145,11 @@
           ]
         },
         {
-          "name": "SyndicateRecord",
+          "name": "ConsortiumPartnerRecord",
           "kind": "record",
           "extends": null,
           "properties": [
-            {"name": "syndicateName", "type": "String"},
+            {"name": "consortiumPartnerName", "type": "String"},
             {"name": "memberCount", "type": "int"},
             {"name": "activity", "type": "String"},
             {"name": "foundedYear", "type": "int"},
@@ -8193,7 +8193,7 @@
           ]
         },
         {
-          "name": "InstituteRecord2",
+          "name": "ResearchInstituteRecord",
           "kind": "record",
           "extends": null,
           "properties": [
@@ -12219,7 +12219,7 @@
           ]
         },
         {
-          "name": "BlindDateWithBook",
+          "name": "MysteryDateWithBook",
           "kind": "class",
           "extends": "LibraryEvent",
           "properties": [
