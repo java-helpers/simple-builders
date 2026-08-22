@@ -24,6 +24,12 @@
 
 package org.javahelpers.simple.builders.processor.processing.logging;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -108,13 +114,19 @@ public final class ActivePerformanceTracker implements PerformanceTracker {
 
   private long totalStartTime;
   private int totalClasses = 0;
+  private final String outputFilePath;
 
   private String currentClassName;
   private long classStartTime;
 
-  /** Creates a new ActivePerformanceTracker and records the overall start time. */
-  public ActivePerformanceTracker() {
+  /**
+   * Creates a new ActivePerformanceTracker and records the overall start time.
+   *
+   * @param outputFilePath optional path for JSON report output; null or empty disables file output
+   */
+  public ActivePerformanceTracker(String outputFilePath) {
     this.totalStartTime = System.nanoTime();
+    this.outputFilePath = outputFilePath;
   }
 
   @Override
@@ -278,6 +290,16 @@ public final class ActivePerformanceTracker implements PerformanceTracker {
                 avgMs));
       }
     }
+
+    // Write JSON report if output file is configured
+    if (outputFilePath != null && !outputFilePath.isBlank()) {
+      try {
+        writeJsonReport(totalTime);
+        logger.info("Performance JSON report written to: %s", outputFilePath);
+      } catch (IOException e) {
+        logger.warning("Failed to write performance JSON report: %s", e.getMessage());
+      }
+    }
   }
 
   /** Record for per-class performance metrics. */
@@ -300,5 +322,232 @@ public final class ActivePerformanceTracker implements PerformanceTracker {
         reportPhase(logger, children.get(i), seconds, childPrefix, i == children.size() - 1);
       }
     }
+  }
+
+  /**
+   * Writes the performance report as structured JSON to the configured output file.
+   *
+   * @param totalNanos total processing time in nanoseconds
+   * @throws IOException if the file cannot be written
+   */
+  private void writeJsonReport(long totalNanos) throws IOException {
+    double totalSeconds = totalNanos / 1_000_000_000.0;
+    double avgPerClassMs = totalClasses > 0 ? (totalNanos / 1_000_000.0) / totalClasses : 0;
+
+    StringBuilder sb = new StringBuilder(4096);
+    String indent = "  ";
+    String indent2 = indent + indent;
+    String indent3 = indent + indent + indent;
+
+    sb.append("{\n");
+    sb.append(indent)
+        .append(jsonString("timestamp"))
+        .append(": ")
+        .append(jsonString(Instant.now().toString()))
+        .append(",\n");
+    sb.append(indent)
+        .append(jsonString("totalClasses"))
+        .append(": ")
+        .append(totalClasses)
+        .append(",\n");
+    sb.append(indent)
+        .append(jsonString("totalProcessingTimeNanos"))
+        .append(": ")
+        .append(totalNanos)
+        .append(",\n");
+    sb.append(indent)
+        .append(jsonString("totalProcessingTimeSeconds"))
+        .append(": ")
+        .append(String.format(Locale.US, "%.3f", totalSeconds))
+        .append(",\n");
+    sb.append(indent)
+        .append(jsonString("averagePerClassMs"))
+        .append(": ")
+        .append(String.format(Locale.US, "%.3f", avgPerClassMs))
+        .append(",\n");
+
+    // Phase breakdown
+    sb.append(indent).append(jsonString("phaseBreakdown")).append(": {\n");
+    for (int i = 0; i < TOP_LEVEL_PHASES.size(); i++) {
+      appendPhaseJson(
+          sb, TOP_LEVEL_PHASES.get(i), totalNanos, indent2, i == TOP_LEVEL_PHASES.size() - 1);
+    }
+    sb.append(indent).append("},\n");
+
+    // Class metrics (all, sorted by elapsed descending)
+    List<ClassMetric> sortedClasses = new ArrayList<>(classMetrics);
+    sortedClasses.sort(Comparator.comparingLong(ClassMetric::elapsedNanos).reversed());
+    sb.append(indent).append(jsonString("classMetrics")).append(": [\n");
+    for (int i = 0; i < sortedClasses.size(); i++) {
+      ClassMetric cm = sortedClasses.get(i);
+      double ms = cm.elapsedNanos() / 1_000_000.0;
+      sb.append(indent2).append("{\n");
+      sb.append(indent3)
+          .append(jsonString("className"))
+          .append(": ")
+          .append(jsonString(cm.className()))
+          .append(",\n");
+      sb.append(indent3)
+          .append(jsonString("elapsedNanos"))
+          .append(": ")
+          .append(cm.elapsedNanos())
+          .append(",\n");
+      sb.append(indent3)
+          .append(jsonString("elapsedMs"))
+          .append(": ")
+          .append(String.format(Locale.US, "%.3f", ms))
+          .append(",\n");
+      sb.append(indent3)
+          .append(jsonString("fieldCount"))
+          .append(": ")
+          .append(cm.fieldCount())
+          .append(",\n");
+      sb.append(indent3)
+          .append(jsonString("collectionCount"))
+          .append(": ")
+          .append(cm.collectionCount())
+          .append("\n");
+      sb.append(indent2).append(i < sortedClasses.size() - 1 ? "},\n" : "}\n");
+    }
+    sb.append(indent).append("],\n");
+
+    // Generator stats
+    List<Map.Entry<String, Long>> sortedGenerators = new ArrayList<>(generatorTimes.entrySet());
+    sortedGenerators.sort(Map.Entry.<String, Long>comparingByValue().reversed());
+    sb.append(indent).append(jsonString("generatorStats")).append(": [\n");
+    for (int i = 0; i < sortedGenerators.size(); i++) {
+      Map.Entry<String, Long> entry = sortedGenerators.get(i);
+      int calls = generatorCalls.getOrDefault(entry.getKey(), 0);
+      double avgMs = calls > 0 ? (entry.getValue() / 1_000_000.0) / calls : 0;
+      sb.append(indent2).append("{\n");
+      sb.append(indent3)
+          .append(jsonString("name"))
+          .append(": ")
+          .append(jsonString(entry.getKey()))
+          .append(",\n");
+      sb.append(indent3)
+          .append(jsonString("elapsedNanos"))
+          .append(": ")
+          .append(entry.getValue())
+          .append(",\n");
+      sb.append(indent3).append(jsonString("calls")).append(": ").append(calls).append(",\n");
+      sb.append(indent3)
+          .append(jsonString("avgMsPerCall"))
+          .append(": ")
+          .append(String.format(Locale.US, "%.3f", avgMs))
+          .append("\n");
+      sb.append(indent2).append(i < sortedGenerators.size() - 1 ? "},\n" : "}\n");
+    }
+    sb.append(indent).append("],\n");
+
+    // Enhancer stats
+    List<Map.Entry<String, Long>> sortedEnhancers = new ArrayList<>(enhancerTimes.entrySet());
+    sortedEnhancers.sort(Map.Entry.<String, Long>comparingByValue().reversed());
+    sb.append(indent).append(jsonString("enhancerStats")).append(": [\n");
+    for (int i = 0; i < sortedEnhancers.size(); i++) {
+      Map.Entry<String, Long> entry = sortedEnhancers.get(i);
+      int calls = enhancerCalls.getOrDefault(entry.getKey(), 0);
+      double avgMs = calls > 0 ? (entry.getValue() / 1_000_000.0) / calls : 0;
+      sb.append(indent2).append("{\n");
+      sb.append(indent3)
+          .append(jsonString("name"))
+          .append(": ")
+          .append(jsonString(entry.getKey()))
+          .append(",\n");
+      sb.append(indent3)
+          .append(jsonString("elapsedNanos"))
+          .append(": ")
+          .append(entry.getValue())
+          .append(",\n");
+      sb.append(indent3).append(jsonString("calls")).append(": ").append(calls).append(",\n");
+      sb.append(indent3)
+          .append(jsonString("avgMsPerCall"))
+          .append(": ")
+          .append(String.format(Locale.US, "%.3f", avgMs))
+          .append("\n");
+      sb.append(indent2).append(i < sortedEnhancers.size() - 1 ? "},\n" : "}\n");
+    }
+    sb.append(indent).append("]\n");
+
+    sb.append("}\n");
+
+    Path outPath = Paths.get(outputFilePath);
+    if (outPath.getParent() != null) {
+      Files.createDirectories(outPath.getParent());
+    }
+    Files.writeString(outPath, sb.toString(), StandardCharsets.UTF_8);
+  }
+
+  /**
+   * Appends a phase entry (with children) as JSON.
+   *
+   * @param sb the string builder to append to
+   * @param phase the phase name
+   * @param parentNanos the parent phase total in nanoseconds (for percentage calculation)
+   * @param indent the indentation string for this level
+   * @param isLast whether this is the last sibling at this level
+   */
+  private void appendPhaseJson(
+      StringBuilder sb, String phase, long parentNanos, String indent, boolean isLast) {
+    long nanos = phaseTimes.getOrDefault(phase, 0L);
+    double seconds = nanos / 1_000_000_000.0;
+    double percentage = parentNanos > 0 ? (nanos * 100.0 / parentNanos) : 0;
+    String childIndent = indent + "  ";
+
+    sb.append(indent).append(jsonString(phase)).append(": {\n");
+    sb.append(childIndent)
+        .append(jsonString("elapsedNanos"))
+        .append(": ")
+        .append(nanos)
+        .append(",\n");
+    sb.append(childIndent)
+        .append(jsonString("elapsedSeconds"))
+        .append(": ")
+        .append(String.format(Locale.US, "%.3f", seconds))
+        .append(",\n");
+    sb.append(childIndent)
+        .append(jsonString("percentage"))
+        .append(": ")
+        .append(String.format(Locale.US, "%.1f", percentage));
+
+    List<String> children = PHASE_CHILDREN.get(phase);
+    if (children != null && !children.isEmpty()) {
+      sb.append(",\n");
+      sb.append(childIndent).append(jsonString("children")).append(": {\n");
+      for (int i = 0; i < children.size(); i++) {
+        appendPhaseJson(sb, children.get(i), nanos, childIndent + "  ", i == children.size() - 1);
+      }
+      sb.append(childIndent).append("}\n");
+    } else {
+      sb.append("\n");
+    }
+    sb.append(indent).append(isLast ? "}\n" : "},\n");
+  }
+
+  /**
+   * Escapes a string value for JSON output.
+   *
+   * @param value the raw string
+   * @return the JSON-escaped string wrapped in double quotes
+   */
+  private static String jsonString(String value) {
+    if (value == null) {
+      return "null";
+    }
+    StringBuilder escaped = new StringBuilder(value.length() + 2);
+    escaped.append('"');
+    for (int i = 0; i < value.length(); i++) {
+      char c = value.charAt(i);
+      switch (c) {
+        case '"' -> escaped.append("\\\"");
+        case '\\' -> escaped.append("\\\\");
+        case '\n' -> escaped.append("\\n");
+        case '\r' -> escaped.append("\\r");
+        case '\t' -> escaped.append("\\t");
+        default -> escaped.append(c);
+      }
+    }
+    escaped.append('"');
+    return escaped.toString();
   }
 }
