@@ -921,6 +921,8 @@ public class MinimalDto {
 
 **Generated**: Only basic builder methods (`create()`, field setters, `build()`).
 
+For a concrete generated example, see [`CustomerDtoBuilder.java`](../example/generated-example-builder/org/javahelpers/simple/builders/example/CustomerDtoBuilder.java) produced from [`CustomerDto.java`](../example/src/main/java/org/javahelpers/simple/builders/example/CustomerDto.java).
+
 If you need a different name or extra customization, you can still build a custom `@SimpleBuilder.Template` with all optional features disabled.
 
 ### Internal API Builder
