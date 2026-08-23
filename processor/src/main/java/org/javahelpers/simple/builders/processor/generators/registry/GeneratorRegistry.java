@@ -106,7 +106,7 @@ public class GeneratorRegistry {
               generator.getClass().getSimpleName(), generator.getPriority());
 
           String genName = generator.getClass().getSimpleName();
-          performanceTracker.startGenerator(genName);
+          performanceTracker.startGenerator();
           List<BuilderMethodDto> generatedMethods =
               generator.generateMethods(field, builderType, context);
           performanceTracker.endGenerator(genName);
@@ -143,7 +143,7 @@ public class GeneratorRegistry {
               enhancer.getClass().getSimpleName(), enhancer.getPriority());
 
           String enhName = enhancer.getClass().getSimpleName();
-          performanceTracker.startEnhancer(enhName);
+          performanceTracker.startEnhancer();
           enhancer.enhanceBuilder(builderDto, context);
           performanceTracker.endEnhancer(enhName);
           appliedEnhancers++;

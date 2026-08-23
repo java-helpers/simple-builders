@@ -136,16 +136,16 @@ class ActivePerformanceTrackerTest {
   private JsonNode generateReportAndParseJson(String outputFile) throws IOException {
     ActivePerformanceTracker tracker = new ActivePerformanceTracker(outputFile);
     tracker.startClass("TestClassA");
-    tracker.startPhase(PerformanceTracker.PHASE_BUILDER_DEFINITION_EXTRACTION, "TestClassA");
+    tracker.startPhase();
     tracker.endPhase(PerformanceTracker.PHASE_BUILDER_DEFINITION_EXTRACTION);
-    tracker.startGenerator("FieldSupplierGenerator");
+    tracker.startGenerator();
     tracker.endGenerator("FieldSupplierGenerator");
-    tracker.startEnhancer("CoreMethodsEnhancer");
+    tracker.startEnhancer();
     tracker.endEnhancer("CoreMethodsEnhancer");
     tracker.endClass(5, 2);
 
     tracker.startClass("TestClassB");
-    tracker.startPhase(PerformanceTracker.PHASE_DTO_MAPPING, "TestClassB");
+    tracker.startPhase();
     tracker.endPhase(PerformanceTracker.PHASE_DTO_MAPPING);
     tracker.endClass(3, 1);
 
@@ -187,7 +187,7 @@ class ActivePerformanceTrackerTest {
   void generateReport_withGeneratorData_logsGeneratorStats() {
     ActivePerformanceTracker tracker = new ActivePerformanceTracker(null);
     tracker.startClass("MyClass");
-    tracker.startGenerator("MyGenerator");
+    tracker.startGenerator();
     tracker.endGenerator("MyGenerator");
     tracker.endClass(2, 0);
 
@@ -203,7 +203,7 @@ class ActivePerformanceTrackerTest {
   void generateReport_withEnhancerData_logsEnhancerStats() {
     ActivePerformanceTracker tracker = new ActivePerformanceTracker(null);
     tracker.startClass("MyClass");
-    tracker.startEnhancer("MyEnhancer");
+    tracker.startEnhancer();
     tracker.endEnhancer("MyEnhancer");
     tracker.endClass(2, 0);
 
@@ -218,9 +218,9 @@ class ActivePerformanceTrackerTest {
   @Test
   void generateReport_withPhaseData_logsPhaseBreakdown() {
     ActivePerformanceTracker tracker = new ActivePerformanceTracker(null);
-    tracker.startPhase(PerformanceTracker.PHASE_CONFIGURATION_RESOLUTION, "MyClass");
+    tracker.startPhase();
     tracker.endPhase(PerformanceTracker.PHASE_CONFIGURATION_RESOLUTION);
-    tracker.startPhase(PerformanceTracker.PHASE_CODE_GENERATION, "MyClass");
+    tracker.startPhase();
     tracker.endPhase(PerformanceTracker.PHASE_CODE_GENERATION);
 
     List<String> messages = new ArrayList<>();
@@ -453,11 +453,11 @@ class ActivePerformanceTrackerTest {
     Path jsonFile = tempDir.resolve("report-multi-gen.json");
     ActivePerformanceTracker tracker = new ActivePerformanceTracker(jsonFile.toString());
     tracker.startClass("MyClass");
-    tracker.startGenerator("GenA");
+    tracker.startGenerator();
     tracker.endGenerator("GenA");
-    tracker.startGenerator("GenA");
+    tracker.startGenerator();
     tracker.endGenerator("GenA");
-    tracker.startGenerator("GenB");
+    tracker.startGenerator();
     tracker.endGenerator("GenB");
     tracker.endClass(2, 0);
 
@@ -478,9 +478,9 @@ class ActivePerformanceTrackerTest {
   void multiplePhases_accumulateTime() throws IOException {
     Path jsonFile = tempDir.resolve("report-multi-phase.json");
     ActivePerformanceTracker tracker = new ActivePerformanceTracker(jsonFile.toString());
-    tracker.startPhase(PerformanceTracker.PHASE_CONFIGURATION_RESOLUTION, "ClassA");
+    tracker.startPhase();
     tracker.endPhase(PerformanceTracker.PHASE_CONFIGURATION_RESOLUTION);
-    tracker.startPhase(PerformanceTracker.PHASE_CONFIGURATION_RESOLUTION, "ClassB");
+    tracker.startPhase();
     tracker.endPhase(PerformanceTracker.PHASE_CONFIGURATION_RESOLUTION);
 
     List<String> messages = new ArrayList<>();
@@ -544,11 +544,11 @@ class ActivePerformanceTrackerTest {
     List<String> messages = new ArrayList<>();
     ProcessingLogger logger = createLogger(messages);
 
-    tracker.startPhase("Phase", "Class");
+    tracker.startPhase();
     tracker.endPhase("Phase");
-    tracker.startGenerator("Gen");
+    tracker.startGenerator();
     tracker.endGenerator("Gen");
-    tracker.startEnhancer("Enh");
+    tracker.startEnhancer();
     tracker.endEnhancer("Enh");
     tracker.startClass("Class");
     tracker.endClass(1, 0);
@@ -562,13 +562,13 @@ class ActivePerformanceTrackerTest {
     Path jsonFile = tempDir.resolve("report-sorted.json");
     ActivePerformanceTracker tracker = new ActivePerformanceTracker(jsonFile.toString());
     tracker.startClass("MyClass");
-    tracker.startGenerator("SlowGen");
+    tracker.startGenerator();
     tracker.endGenerator("SlowGen");
-    tracker.startGenerator("FastGen");
+    tracker.startGenerator();
     tracker.endGenerator("FastGen");
-    tracker.startEnhancer("SlowEnh");
+    tracker.startEnhancer();
     tracker.endEnhancer("SlowEnh");
-    tracker.startEnhancer("FastEnh");
+    tracker.startEnhancer();
     tracker.endEnhancer("FastEnh");
     tracker.endClass(2, 0);
 
@@ -592,7 +592,7 @@ class ActivePerformanceTrackerTest {
   void jsonReport_emptyClassMetrics_hasCorrectTrailingComma() throws IOException {
     Path jsonFile = tempDir.resolve("report-empty-classes.json");
     ActivePerformanceTracker tracker = new ActivePerformanceTracker(jsonFile.toString());
-    tracker.startGenerator("GenA");
+    tracker.startGenerator();
     tracker.endGenerator("GenA");
 
     List<String> messages = new ArrayList<>();
@@ -609,7 +609,7 @@ class ActivePerformanceTrackerTest {
   void jsonReport_onlyEnhancerStats_hasCorrectLastArrayFormat() throws IOException {
     Path jsonFile = tempDir.resolve("report-only-enhancers.json");
     ActivePerformanceTracker tracker = new ActivePerformanceTracker(jsonFile.toString());
-    tracker.startEnhancer("EnhA");
+    tracker.startEnhancer();
     tracker.endEnhancer("EnhA");
 
     List<String> messages = new ArrayList<>();

@@ -193,7 +193,7 @@ public class BuilderProcessor extends AbstractProcessor {
       tracker.startClass(className);
       try {
         // Track Configuration Resolution (actual work happens here)
-        tracker.startPhase(PHASE_CONFIGURATION_RESOLUTION, className);
+        tracker.startPhase();
         BuilderConfiguration config = reader.resolveConfiguration(annotatedElement);
         tracker.endPhase(PHASE_CONFIGURATION_RESOLUTION);
         context.debug("Configuration resolved: %s", config);
@@ -240,10 +240,8 @@ public class BuilderProcessor extends AbstractProcessor {
       throws BuilderException {
     context.initConfigurationForProcessingTarget(config);
     PerformanceTracker tracker = context.getPerformanceTracker();
-    String className = annotatedElement.getSimpleName().toString();
-
     // Track Builder Definition Extraction
-    tracker.startPhase(PHASE_BUILDER_DEFINITION_EXTRACTION, className);
+    tracker.startPhase();
     BuilderDefinitionDto builderDef = extractFromElement(annotatedElement, context);
     tracker.endPhase(PHASE_BUILDER_DEFINITION_EXTRACTION);
 
@@ -263,12 +261,12 @@ public class BuilderProcessor extends AbstractProcessor {
                 .count();
 
     // Track DTO Mapping
-    tracker.startPhase(PHASE_DTO_MAPPING, className);
+    tracker.startPhase();
     GenerationTargetClassDto renderingDto = toRenderingDto(builderDef);
     tracker.endPhase(PHASE_DTO_MAPPING);
 
     // Track Code Generation (parent phase; sub-phases tracked inside RoasterCodeGenerator)
-    tracker.startPhase(PHASE_CODE_GENERATION, className);
+    tracker.startPhase();
     codeGenerator.generateClass(renderingDto);
     tracker.endPhase(PHASE_CODE_GENERATION);
 

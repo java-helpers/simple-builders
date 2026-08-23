@@ -132,7 +132,7 @@ public final class ActivePerformanceTracker implements PerformanceTracker {
   }
 
   @Override
-  public void startPhase(String phase, String className) {
+  public void startPhase() {
     phaseStartStack.get().add(System.nanoTime());
   }
 
@@ -148,7 +148,7 @@ public final class ActivePerformanceTracker implements PerformanceTracker {
   }
 
   @Override
-  public void startGenerator(String generatorName) {
+  public void startGenerator() {
     generatorStartStack.get().add(System.nanoTime());
   }
 
@@ -165,7 +165,7 @@ public final class ActivePerformanceTracker implements PerformanceTracker {
   }
 
   @Override
-  public void startEnhancer(String enhancerName) {
+  public void startEnhancer() {
     enhancerStartStack.get().add(System.nanoTime());
   }
 

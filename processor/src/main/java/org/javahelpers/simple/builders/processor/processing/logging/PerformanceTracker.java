@@ -65,13 +65,12 @@ public interface PerformanceTracker {
   String PHASE_CLASS_ANNOTATIONS = "Class Annotations";
 
   /**
-   * Starts tracking a processing phase for a specific class.
+   * Starts tracking a processing phase.
    *
-   * @param phase the phase identifier (e.g., "Configuration Resolution", "Builder Definition
-   *     Extraction")
-   * @param className the simple name of the class being processed
+   * <p>The phase name is passed to {@link #endPhase(String)} for recording; this method only
+   * records the start timestamp.
    */
-  void startPhase(String phase, String className);
+  void startPhase();
 
   /**
    * Ends tracking a processing phase.
@@ -83,9 +82,10 @@ public interface PerformanceTracker {
   /**
    * Starts tracking an individual method generator invocation.
    *
-   * @param generatorName the simple class name of the method generator
+   * <p>The generator name is passed to {@link #endGenerator(String)} for recording; this method
+   * only records the start timestamp.
    */
-  void startGenerator(String generatorName);
+  void startGenerator();
 
   /**
    * Ends tracking an individual method generator invocation.
@@ -97,9 +97,10 @@ public interface PerformanceTracker {
   /**
    * Starts tracking an individual builder enhancer invocation.
    *
-   * @param enhancerName the simple class name of the builder enhancer
+   * <p>The enhancer name is passed to {@link #endEnhancer(String)} for recording; this method only
+   * records the start timestamp.
    */
-  void startEnhancer(String enhancerName);
+  void startEnhancer();
 
   /**
    * Ends tracking an individual builder enhancer invocation.

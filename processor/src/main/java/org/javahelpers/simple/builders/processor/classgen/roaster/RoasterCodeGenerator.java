@@ -114,13 +114,12 @@ public class RoasterCodeGenerator {
 
     String sourceCode;
     try {
-      String className = classDef.getTypeName().getClassName();
-      performanceTracker.startPhase(PHASE_SOURCE_CONSTRUCTION, className);
+      performanceTracker.startPhase();
       JavaClassSource source = buildClassSource(classDef);
-      performanceTracker.startPhase(PHASE_STRING_GENERATION, className);
+      performanceTracker.startPhase();
       String unformatted = source.toUnformattedString();
       performanceTracker.endPhase(PHASE_STRING_GENERATION);
-      performanceTracker.startPhase(PHASE_FORMATTING, className);
+      performanceTracker.startPhase();
       sourceCode = formatSource(unformatted);
       // Roaster renders some java.lang annotations (e.g. @SuppressWarnings, @Deprecated with
       // members) with their FQN (@java.lang.SuppressWarnings) even though java.lang types don't
@@ -135,7 +134,7 @@ public class RoasterCodeGenerator {
       // generating the remaining builders instead of aborting the whole processing round.
       throw new BuilderException(null, ex);
     }
-    performanceTracker.startPhase(PHASE_FILE_WRITING, classDef.getTypeName().getClassName());
+    performanceTracker.startPhase();
     writeClassToFile(sourceCode, classDef);
     performanceTracker.endPhase(PHASE_FILE_WRITING);
 
@@ -144,8 +143,7 @@ public class RoasterCodeGenerator {
   }
 
   private JavaClassSource buildClassSource(GenerationTargetClassDto classDef) {
-    String className = classDef.getTypeName().getClassName();
-    performanceTracker.startPhase(PHASE_ELEMENT_BUILDING, className);
+    performanceTracker.startPhase();
     JavaClassSource source = createJavaClassSource(classDef);
     addClassMetadata(source, classDef);
     appendFields(source, classDef);
@@ -158,7 +156,7 @@ public class RoasterCodeGenerator {
   }
 
   private void applyClassAnnotations(JavaClassSource source, GenerationTargetClassDto classDef) {
-    performanceTracker.startPhase(PHASE_CLASS_ANNOTATIONS, classDef.getTypeName().getClassName());
+    performanceTracker.startPhase();
     if (CollectionUtils.isNotEmpty(classDef.getClassAnnotations())) {
       // Adding class annotations
       applyAnnotations(source, classDef.getClassAnnotations());
@@ -168,7 +166,7 @@ public class RoasterCodeGenerator {
   }
 
   private JavaClassSource createJavaClassSource(GenerationTargetClassDto classDef) {
-    performanceTracker.startPhase(PHASE_CLASS_CREATION, classDef.getTypeName().getClassName());
+    performanceTracker.startPhase();
     if (CollectionUtils.isNotEmpty(classDef.getGenerics())) {
       logger.debug("Class has %d generic type parameter(s)", classDef.getGenerics().size());
     }
@@ -199,7 +197,7 @@ public class RoasterCodeGenerator {
   }
 
   private void addClassMetadata(JavaClassSource source, GenerationTargetClassDto classDef) {
-    performanceTracker.startPhase(PHASE_CLASS_METADATA, classDef.getTypeName().getClassName());
+    performanceTracker.startPhase();
     applyJavadoc(source, classDef.getClassJavadoc());
     applyVisibility(source, classDef.getClassAccessModifier());
     applySuperType(source, classDef.getSuperType());
@@ -214,7 +212,7 @@ public class RoasterCodeGenerator {
   }
 
   private void appendFields(JavaClassSource source, GenerationTargetClassDto classDef) {
-    performanceTracker.startPhase(PHASE_FIELDS, classDef.getTypeName().getClassName());
+    performanceTracker.startPhase();
     logger.debugStartOperation("Generating %d fields", classDef.getClassFields().size());
 
     for (ClassFieldDto fieldDto : classDef.getClassFields()) {
@@ -235,7 +233,7 @@ public class RoasterCodeGenerator {
   }
 
   private void appendConstructors(JavaClassSource source, GenerationTargetClassDto classDef) {
-    performanceTracker.startPhase(PHASE_CONSTRUCTORS, classDef.getTypeName().getClassName());
+    performanceTracker.startPhase();
     logger.debugStartOperation("Generating %d constructors", classDef.getConstructors().size());
 
     for (ConstructorDto constructor : classDef.getConstructors()) {
@@ -259,7 +257,7 @@ public class RoasterCodeGenerator {
   }
 
   private void appendMethods(JavaClassSource source, GenerationTargetClassDto classDef) {
-    performanceTracker.startPhase(PHASE_METHODS, classDef.getTypeName().getClassName());
+    performanceTracker.startPhase();
     logger.debugStartOperation("Generating %d method candidates", classDef.getMethods().size());
 
     // Resolve method conflicts by signature and priority
@@ -323,7 +321,7 @@ public class RoasterCodeGenerator {
   }
 
   private void appendNestedTypes(JavaClassSource source, GenerationTargetClassDto classDef) {
-    performanceTracker.startPhase(PHASE_NESTED_TYPES, classDef.getTypeName().getClassName());
+    performanceTracker.startPhase();
     if (CollectionUtils.isNotEmpty(classDef.getNestedTypes())) {
       logger.debugStartOperation("Generating %d nested type(s)", classDef.getNestedTypes().size());
       for (NestedTypeDto nestedType : classDef.getNestedTypes()) {

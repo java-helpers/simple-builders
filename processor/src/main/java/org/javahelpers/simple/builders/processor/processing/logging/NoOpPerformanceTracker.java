@@ -33,7 +33,7 @@ package org.javahelpers.simple.builders.processor.processing.logging;
 public final class NoOpPerformanceTracker implements PerformanceTracker {
 
   @Override
-  public void startPhase(String phase, String className) {
+  public void startPhase() {
     // No-op
   }
 
@@ -43,7 +43,7 @@ public final class NoOpPerformanceTracker implements PerformanceTracker {
   }
 
   @Override
-  public void startGenerator(String generatorName) {
+  public void startGenerator() {
     // No-op
   }
 
@@ -53,7 +53,7 @@ public final class NoOpPerformanceTracker implements PerformanceTracker {
   }
 
   @Override
-  public void startEnhancer(String enhancerName) {
+  public void startEnhancer() {
     // No-op
   }
 
