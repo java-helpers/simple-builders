@@ -368,6 +368,9 @@ public final class ActivePerformanceTracker implements PerformanceTracker {
   /**
    * Writes the performance report as structured JSON to the configured output file.
    *
+   * <p>Builds the report as a {@link Map}/{@link List} structure and serializes it with a simple
+   * recursive serializer, avoiding external JSON dependencies.
+   *
    * @param totalNanos total processing time in nanoseconds
    * @throws IOException if the file cannot be written
    */
@@ -375,198 +378,166 @@ public final class ActivePerformanceTracker implements PerformanceTracker {
     double totalSeconds = totalNanos / 1_000_000_000.0;
     double avgPerClassMs = totalClasses > 0 ? (totalNanos / 1_000_000.0) / totalClasses : 0;
 
-    StringBuilder sb = new StringBuilder(4096);
-    String indent = "  ";
-    String indent2 = indent + indent;
-    String indent3 = indent + indent + indent;
+    Map<String, Object> root = new LinkedHashMap<>();
+    root.put("timestamp", Instant.now().toString());
+    root.put("totalClasses", totalClasses);
+    root.put("totalProcessingTimeNanos", totalNanos);
+    root.put("totalProcessingTimeSeconds", totalSeconds);
+    root.put("averagePerClassMs", avgPerClassMs);
 
-    sb.append("{\n");
-    sb.append(indent)
-        .append(jsonString("timestamp"))
-        .append(": ")
-        .append(jsonString(Instant.now().toString()))
-        .append(",\n");
-    sb.append(indent)
-        .append(jsonString("totalClasses"))
-        .append(": ")
-        .append(totalClasses)
-        .append(",\n");
-    sb.append(indent)
-        .append(jsonString("totalProcessingTimeNanos"))
-        .append(": ")
-        .append(totalNanos)
-        .append(",\n");
-    sb.append(indent)
-        .append(jsonString("totalProcessingTimeSeconds"))
-        .append(": ")
-        .append(String.format(Locale.US, "%.3f", totalSeconds))
-        .append(",\n");
-    sb.append(indent)
-        .append(jsonString("averagePerClassMs"))
-        .append(": ")
-        .append(String.format(Locale.US, "%.3f", avgPerClassMs))
-        .append(",\n");
-
-    // Phase breakdown
-    sb.append(indent).append(jsonString("phaseBreakdown")).append(": {\n");
-    for (int i = 0; i < TOP_LEVEL_PHASES.size(); i++) {
-      appendPhaseJson(
-          sb, TOP_LEVEL_PHASES.get(i), totalNanos, indent2, i == TOP_LEVEL_PHASES.size() - 1);
+    // Phase breakdown (hierarchical)
+    Map<String, Object> phaseBreakdown = new LinkedHashMap<>();
+    for (String phase : TOP_LEVEL_PHASES) {
+      phaseBreakdown.put(phase, buildPhaseJson(phase, totalNanos));
     }
-    sb.append(indent).append("},\n");
+    root.put("phaseBreakdown", phaseBreakdown);
 
-    appendClassMetricsJson(sb, indent, indent2, indent3);
-    appendNamedStatsJson(sb, "generatorStats", generatorTimes, generatorCalls, indent, false);
-    appendNamedStatsJson(sb, "enhancerStats", enhancerTimes, enhancerCalls, indent, true);
+    // Class metrics (sorted by elapsed time descending)
+    List<ClassMetric> sortedClasses = new ArrayList<>(classMetrics);
+    sortedClasses.sort(Comparator.comparingLong(ClassMetric::elapsedNanos).reversed());
+    List<Map<String, Object>> classMetricsList = new ArrayList<>();
+    for (ClassMetric cm : sortedClasses) {
+      Map<String, Object> metric = new LinkedHashMap<>();
+      metric.put("className", cm.className());
+      metric.put(JSON_KEY_ELAPSED_NANOS, cm.elapsedNanos());
+      metric.put("elapsedMs", cm.elapsedNanos() / 1_000_000.0);
+      metric.put("fieldCount", cm.fieldCount());
+      metric.put("collectionCount", cm.collectionCount());
+      classMetricsList.add(metric);
+    }
+    root.put("classMetrics", classMetricsList);
 
-    sb.append("}\n");
+    // Generator and enhancer stats
+    root.put("generatorStats", buildNamedStatsJson(generatorTimes, generatorCalls));
+    root.put("enhancerStats", buildNamedStatsJson(enhancerTimes, enhancerCalls));
 
+    String json = toJsonString(root);
     Path outPath = Paths.get(outputFilePath);
     if (outPath.getParent() != null) {
       Files.createDirectories(outPath.getParent());
     }
-    Files.writeString(outPath, sb.toString(), StandardCharsets.UTF_8);
+    Files.writeString(outPath, json + "\n", StandardCharsets.UTF_8);
   }
 
   /**
-   * Appends class metrics as a JSON array to the string builder.
+   * Builds a phase entry as a JSON-compatible map, including children recursively.
    *
-   * @param sb the string builder to append to
-   * @param indent the base indentation level
-   * @param indent2 two-level indentation
-   * @param indent3 three-level indentation
-   */
-  private void appendClassMetricsJson(
-      StringBuilder sb, String indent, String indent2, String indent3) {
-    List<ClassMetric> sortedClasses = new ArrayList<>(classMetrics);
-    sortedClasses.sort(Comparator.comparingLong(ClassMetric::elapsedNanos).reversed());
-    sb.append(indent).append(jsonString("classMetrics")).append(": [\n");
-    for (int i = 0; i < sortedClasses.size(); i++) {
-      ClassMetric cm = sortedClasses.get(i);
-      double ms = cm.elapsedNanos() / 1_000_000.0;
-      sb.append(indent2).append("{\n");
-      sb.append(indent3)
-          .append(jsonString("className"))
-          .append(": ")
-          .append(jsonString(cm.className()))
-          .append(",\n");
-      sb.append(indent3)
-          .append(jsonString(JSON_KEY_ELAPSED_NANOS))
-          .append(": ")
-          .append(cm.elapsedNanos())
-          .append(",\n");
-      sb.append(indent3)
-          .append(jsonString("elapsedMs"))
-          .append(": ")
-          .append(String.format(Locale.US, "%.3f", ms))
-          .append(",\n");
-      sb.append(indent3)
-          .append(jsonString("fieldCount"))
-          .append(": ")
-          .append(cm.fieldCount())
-          .append(",\n");
-      sb.append(indent3)
-          .append(jsonString("collectionCount"))
-          .append(": ")
-          .append(cm.collectionCount())
-          .append("\n");
-      sb.append(indent2).append(i < sortedClasses.size() - 1 ? "},\n" : "}\n");
-    }
-    sb.append(indent).append("],\n");
-  }
-
-  /**
-   * Appends named statistics (generators or enhancers) as a JSON array.
-   *
-   * @param sb the string builder to append to
-   * @param statsKey the JSON key for this stats array (e.g., "generatorStats")
-   * @param timesMap map of names to elapsed nanoseconds
-   * @param callsMap map of names to call counts
-   * @param indent the base indentation level
-   * @param isLast whether this is the last array in the JSON object (controls trailing comma)
-   */
-  private void appendNamedStatsJson(
-      StringBuilder sb,
-      String statsKey,
-      Map<String, Long> timesMap,
-      Map<String, Integer> callsMap,
-      String indent,
-      boolean isLast) {
-    String indent2 = indent + "  ";
-    String indent3 = indent + "    ";
-    List<Map.Entry<String, Long>> sorted = new ArrayList<>(timesMap.entrySet());
-    sorted.sort(Map.Entry.<String, Long>comparingByValue().reversed());
-    sb.append(indent).append(jsonString(statsKey)).append(": [\n");
-    for (int i = 0; i < sorted.size(); i++) {
-      Map.Entry<String, Long> entry = sorted.get(i);
-      int calls = callsMap.getOrDefault(entry.getKey(), 0);
-      double avgMs = calls > 0 ? (entry.getValue() / 1_000_000.0) / calls : 0;
-      sb.append(indent2).append("{\n");
-      sb.append(indent3)
-          .append(jsonString("name"))
-          .append(": ")
-          .append(jsonString(entry.getKey()))
-          .append(",\n");
-      sb.append(indent3)
-          .append(jsonString(JSON_KEY_ELAPSED_NANOS))
-          .append(": ")
-          .append(entry.getValue())
-          .append(",\n");
-      sb.append(indent3).append(jsonString("calls")).append(": ").append(calls).append(",\n");
-      sb.append(indent3)
-          .append(jsonString("avgMsPerCall"))
-          .append(": ")
-          .append(String.format(Locale.US, "%.3f", avgMs))
-          .append("\n");
-      sb.append(indent2).append(i < sorted.size() - 1 ? "},\n" : "}\n");
-    }
-    sb.append(indent).append(isLast ? "]\n" : "],\n");
-  }
-
-  /**
-   * Appends a phase entry (with children) as JSON.
-   *
-   * @param sb the string builder to append to
    * @param phase the phase name
    * @param parentNanos the parent phase total in nanoseconds (for percentage calculation)
-   * @param indent the indentation string for this level
-   * @param isLast whether this is the last sibling at this level
+   * @return a map representing the phase entry
    */
-  private void appendPhaseJson(
-      StringBuilder sb, String phase, long parentNanos, String indent, boolean isLast) {
+  private Map<String, Object> buildPhaseJson(String phase, long parentNanos) {
     long nanos = phaseTimes.getOrDefault(phase, 0L);
     double seconds = nanos / 1_000_000_000.0;
     double percentage = parentNanos > 0 ? (nanos * 100.0 / parentNanos) : 0;
-    String childIndent = indent + "  ";
-
-    sb.append(indent).append(jsonString(phase)).append(": {\n");
-    sb.append(childIndent)
-        .append(jsonString(JSON_KEY_ELAPSED_NANOS))
-        .append(": ")
-        .append(nanos)
-        .append(",\n");
-    sb.append(childIndent)
-        .append(jsonString("elapsedSeconds"))
-        .append(": ")
-        .append(String.format(Locale.US, "%.3f", seconds))
-        .append(",\n");
-    sb.append(childIndent)
-        .append(jsonString("percentage"))
-        .append(": ")
-        .append(String.format(Locale.US, "%.1f", percentage));
-
+    Map<String, Object> phaseMap = new LinkedHashMap<>();
+    phaseMap.put(JSON_KEY_ELAPSED_NANOS, nanos);
+    phaseMap.put("elapsedSeconds", seconds);
+    phaseMap.put("percentage", percentage);
     List<String> children = PHASE_CHILDREN.get(phase);
     if (children != null && !children.isEmpty()) {
-      sb.append(",\n");
-      sb.append(childIndent).append(jsonString("children")).append(": {\n");
-      for (int i = 0; i < children.size(); i++) {
-        appendPhaseJson(sb, children.get(i), nanos, childIndent + "  ", i == children.size() - 1);
+      Map<String, Object> childrenMap = new LinkedHashMap<>();
+      for (String child : children) {
+        childrenMap.put(child, buildPhaseJson(child, nanos));
       }
-      sb.append(childIndent).append("}\n");
-    } else {
-      sb.append("\n");
+      phaseMap.put("children", childrenMap);
     }
-    sb.append(indent).append(isLast ? "}\n" : "},\n");
+    return phaseMap;
+  }
+
+  /**
+   * Builds named statistics (generators or enhancers) as a JSON-compatible list.
+   *
+   * @param timesMap map of names to elapsed nanoseconds
+   * @param callsMap map of names to call counts
+   * @return a list of maps representing each stat entry
+   */
+  private List<Map<String, Object>> buildNamedStatsJson(
+      Map<String, Long> timesMap, Map<String, Integer> callsMap) {
+    List<Map.Entry<String, Long>> sorted = new ArrayList<>(timesMap.entrySet());
+    sorted.sort(Map.Entry.<String, Long>comparingByValue().reversed());
+    List<Map<String, Object>> stats = new ArrayList<>();
+    for (Map.Entry<String, Long> entry : sorted) {
+      int calls = callsMap.getOrDefault(entry.getKey(), 0);
+      double avgMs = calls > 0 ? (entry.getValue() / 1_000_000.0) / calls : 0;
+      Map<String, Object> stat = new LinkedHashMap<>();
+      stat.put("name", entry.getKey());
+      stat.put(JSON_KEY_ELAPSED_NANOS, entry.getValue());
+      stat.put("calls", calls);
+      stat.put("avgMsPerCall", avgMs);
+      stats.add(stat);
+    }
+    return stats;
+  }
+
+  /**
+   * Serializes a JSON-compatible object (Map, List, String, Number, Boolean, or null) to a
+   * pretty-printed JSON string with 2-space indentation.
+   *
+   * @param value the value to serialize
+   * @return the JSON string representation
+   */
+  private static String toJsonString(Object value) {
+    StringBuilder sb = new StringBuilder(4096);
+    appendJson(sb, value, 0);
+    return sb.toString();
+  }
+
+  /**
+   * Recursively appends a JSON-compatible value to the string builder.
+   *
+   * @param sb the string builder to append to
+   * @param value the value to serialize
+   * @param indent the current indentation level
+   */
+  private static void appendJson(StringBuilder sb, Object value, int indent) {
+    if (value == null) {
+      sb.append("null");
+      return;
+    }
+    String pad = "  ".repeat(indent);
+    String pad2 = pad + "  ";
+    if (value instanceof Map<?, ?> map) {
+      if (map.isEmpty()) {
+        sb.append("{}");
+        return;
+      }
+      sb.append("{\n");
+      List<? extends Map.Entry<?, ?>> entries = new ArrayList<>(map.entrySet());
+      for (int i = 0; i < entries.size(); i++) {
+        Map.Entry<?, ?> entry = entries.get(i);
+        sb.append(pad2).append(jsonString(entry.getKey().toString())).append(": ");
+        appendJson(sb, entry.getValue(), indent + 1);
+        if (i < entries.size() - 1) {
+          sb.append(",");
+        }
+        sb.append("\n");
+      }
+      sb.append(pad).append("}");
+    } else if (value instanceof List<?> list) {
+      if (list.isEmpty()) {
+        sb.append("[]");
+        return;
+      }
+      sb.append("[\n");
+      for (int i = 0; i < list.size(); i++) {
+        sb.append(pad2);
+        appendJson(sb, list.get(i), indent + 1);
+        if (i < list.size() - 1) {
+          sb.append(",");
+        }
+        sb.append("\n");
+      }
+      sb.append(pad).append("]");
+    } else if (value instanceof String s) {
+      sb.append(jsonString(s));
+    } else if (value instanceof Number n) {
+      sb.append(n);
+    } else if (value instanceof Boolean b) {
+      sb.append(b);
+    } else {
+      sb.append(jsonString(value.toString()));
+    }
   }
 
   /**
