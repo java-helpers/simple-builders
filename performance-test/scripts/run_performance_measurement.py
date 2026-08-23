@@ -6,14 +6,14 @@ Usage:
 
 Options:
     --runs N          Number of compilation runs (default: 10)
-    --label LABEL     Subdirectory name under target/performance-reports (default: <runs>runs)
+    --label LABEL     Subdirectory name under performance-reports (default: <runs>runs)
     --builder-type T  Builder framework preset, same names as generate_classes.py
                       (simple-builder, simple-minimal-builder, record-builder, lombok)
 
 For builder types with JSON reports (simple-builder, simple-minimal-builder), each
 run does a clean compile with performanceTracking enabled and writes a JSON report
-to target/performance-reports/<label>/run-<N>.json. After all runs, an aggregated
-summary is written to target/performance-reports/<label>/summary.json.
+to performance-reports/<label>/run-<N>.json. After all runs, an aggregated
+summary is written to performance-reports/<label>/summary.json.
 
 For builder types without JSON reports (record-builder, lombok), only wall time
 is measured. A minimal summary with wall time statistics is written.
@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -44,14 +45,68 @@ BUILDER_TYPE_TO_PROFILE = {
 }
 
 
+def count_source_files() -> int:
+    """Count Java source files in src/main/java before compilation."""
+    src_dir = BASE_DIR / "src" / "main" / "java"
+    if not src_dir.exists():
+        return 0
+    return sum(1 for _ in src_dir.rglob("*.java"))
+
+
+def count_generated_builders() -> int:
+    """Count generated builder files in generated-performance-builder after compilation."""
+    gen_dir = BASE_DIR / "generated-performance-builder"
+    if not gen_dir.exists():
+        return 0
+    return sum(1 for _ in gen_dir.rglob("*.java"))
+
+
+_TIMESTAMP_RE = re.compile(r"^(\d{2}):(\d{2}):(\d{2})\.(\d{3})")
+
+
+def parse_compiler_time(output: str) -> Optional[float]:
+    """Extract compiler phase duration in seconds from Maven timestamped output.
+
+    Looks for the 'compiler:3.x:compile' line as start and 'BUILD SUCCESS' as end.
+    Returns None if timestamps are not present or cannot be parsed.
+    """
+    lines = output.splitlines()
+    start_ts: Optional[float] = None
+    end_ts: Optional[float] = None
+
+    for line in lines:
+        m = _TIMESTAMP_RE.match(line)
+        if not m:
+            continue
+        h, mi, s, ms = int(m.group(1)), int(m.group(2)), int(m.group(3)), int(m.group(4))
+        ts = h * 3600 + mi * 60 + s + ms / 1000.0
+
+        if "compiler:" in line and "compile" in line and start_ts is None:
+            start_ts = ts
+        if "BUILD SUCCESS" in line and start_ts is not None:
+            end_ts = ts
+            break
+
+    if start_ts is not None and end_ts is not None:
+        return round(end_ts - start_ts, 3)
+    return None
+
+
 def run_one(run_index: int, profile: str, has_json: bool, report_dir: Path) -> Optional[dict]:
     """Run a single clean compile and return the parsed JSON report (or wall-time-only dict)."""
     report_file = report_dir / f"run-{run_index:02d}.json"
 
+    source_count = count_source_files()
+
     print(f"  Run {run_index}: compiling...", flush=True)
     start = time.time()
 
-    cmd = ["mvn", "clean", "compile", "-P", profile, "-q"]
+    cmd = [
+        "mvn", "clean", "compile", "-P", profile,
+        "-Dorg.slf4j.simpleLogger.showDateTime=true",
+        "-Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss.SSS",
+        "--no-transfer-progress",
+    ]
     if has_json:
         cmd.extend([
             "-Dsimplebuilder.performanceTracking=true",
@@ -72,6 +127,9 @@ def run_one(run_index: int, profile: str, has_json: bool, report_dir: Path) -> O
         print(result.stderr[-500:] if result.stderr else "(no stderr)")
         return None
 
+    builder_count = count_generated_builders()
+    compiler_time = parse_compiler_time(result.stdout + result.stderr)
+
     if has_json:
         if not report_file.exists():
             print(f"  Run {run_index}: compiled OK but no JSON report found ({elapsed:.1f}s)")
@@ -84,16 +142,32 @@ def run_one(run_index: int, profile: str, has_json: bool, report_dir: Path) -> O
                 print(f"  Run {run_index}: JSON report is invalid: {e}", file=sys.stderr)
                 return None
 
+        data["sourceFileCount"] = source_count
+        data["generatedBuilderCount"] = builder_count
+        if compiler_time is not None:
+            data["compilerTimeSeconds"] = compiler_time
+        compiler_str = f", {compiler_time:.1f}s compiler" if compiler_time else ""
         print(
-            f"  Run {run_index}: OK - {data['totalClasses']} classes, "
-            f"{data['totalProcessingTimeSeconds']}s processor, "
-            f"{elapsed:.1f}s total wall time",
+            f"  Run {run_index}: OK - {data['totalClasses']} builders from {source_count} sources, "
+            f"{data['totalProcessingTimeSeconds']}s processor{compiler_str}, "
+            f"{elapsed:.1f}s wall",
             flush=True,
         )
         return data
     else:
-        print(f"  Run {run_index}: OK - {elapsed:.1f}s wall time (no JSON report)", flush=True)
-        return {"_wallTimeSeconds": elapsed, "_wallTimeOnly": True}
+        compiler_str = f", {compiler_time:.1f}s compiler" if compiler_time else ""
+        print(
+            f"  Run {run_index}: OK - {builder_count} builders from {source_count} sources, "
+            f"{elapsed:.1f}s wall{compiler_str} (no JSON report)",
+            flush=True,
+        )
+        return {
+            "_wallTimeSeconds": elapsed,
+            "_wallTimeOnly": True,
+            "sourceFileCount": source_count,
+            "generatedBuilderCount": builder_count,
+            "compilerTimeSeconds": compiler_time if compiler_time is not None else 0,
+        }
 
 
 def aggregate(runs: list[dict]) -> dict:
@@ -113,6 +187,27 @@ def aggregate(runs: list[dict]) -> dict:
             "values": wall_times,
         },
     }
+
+    # Add source/builder counts (available for all builder types)
+    summary["sourceFileCount"] = runs[0].get("sourceFileCount", 0)
+    summary["generatedBuilderCount"] = runs[0].get("generatedBuilderCount", 0)
+
+    # Add compiler time aggregation (available for all builder types via Maven timestamps)
+    compiler_times = [r.get("compilerTimeSeconds", 0) for r in runs if r.get("compilerTimeSeconds")]
+    if compiler_times:
+        summary["compilerTime"] = {
+            "min": min(compiler_times),
+            "max": max(compiler_times),
+            "avg": sum(compiler_times) / len(compiler_times),
+            "values": compiler_times,
+        }
+        builder_count = summary["generatedBuilderCount"]
+        if builder_count > 0:
+            summary["compilerTimePerBuilderMs"] = {
+                "min": round(min(compiler_times) / builder_count * 1000, 1),
+                "max": round(max(compiler_times) / builder_count * 1000, 1),
+                "avg": round(sum(compiler_times) / len(compiler_times) / builder_count * 1000, 1),
+            }
 
     # Check if this is a wall-time-only run (no JSON reports)
     if all(r.get("_wallTimeOnly", False) for r in runs):
@@ -279,7 +374,7 @@ def main() -> None:
     profile = BUILDER_TYPE_TO_PROFILE[builder_type]
     has_json = builder_type in JSON_BUILDER_TYPES
 
-    report_dir = BASE_DIR / "target" / "performance-reports" / run_label
+    report_dir = BASE_DIR / "performance-reports" / run_label
     if report_dir.exists():
         shutil.rmtree(report_dir)
     report_dir.mkdir(parents=True)
@@ -307,6 +402,7 @@ def main() -> None:
         sys.exit(1)
 
     summary = aggregate(runs)
+    report_dir.mkdir(parents=True, exist_ok=True)
     summary_file = report_dir / "summary.json"
     with summary_file.open("w") as f:
         json.dump(summary, f, indent=2)
@@ -320,6 +416,14 @@ def main() -> None:
               f"(min: {summary['processorTime']['min']:.1f}s, max: {summary['processorTime']['max']:.1f}s)")
         print(f"  Avg per class: {summary['averagePerClassMs']['avg']:.1f}ms "
               f"(min: {summary['averagePerClassMs']['min']:.1f}ms, max: {summary['averagePerClassMs']['max']:.1f}ms)")
+    print(f"  Source files: {summary.get('sourceFileCount', '?')}")
+    print(f"  Generated builders: {summary.get('generatedBuilderCount', '?')}")
+    if "compilerTime" in summary:
+        print(f"  Compiler time avg: {summary['compilerTime']['avg']:.1f}s "
+              f"(min: {summary['compilerTime']['min']:.1f}s, max: {summary['compilerTime']['max']:.1f}s)")
+    if "compilerTimePerBuilderMs" in summary:
+        print(f"  Compiler time per builder avg: {summary['compilerTimePerBuilderMs']['avg']:.1f}ms "
+              f"(min: {summary['compilerTimePerBuilderMs']['min']:.1f}ms, max: {summary['compilerTimePerBuilderMs']['max']:.1f}ms)")
     print(f"  Wall time avg: {summary['wallTime']['avg']:.1f}s "
           f"(min: {summary['wallTime']['min']:.1f}s, max: {summary['wallTime']['max']:.1f}s)")
     if "topClassesByAvg" in summary:

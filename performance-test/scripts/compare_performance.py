@@ -40,7 +40,7 @@ import json
 import sys
 from pathlib import Path
 
-BASE = Path(__file__).resolve().parent.parent / "target" / "performance-reports"
+BASE = Path(__file__).resolve().parent.parent / "performance-reports"
 
 
 def load_summary(filepath: str) -> dict | None:
@@ -162,6 +162,20 @@ def main() -> None:
             print(f"Wall-time-only (no JSON): {', '.join(wall_only_labels)}")
     print()
 
+    # --- Source & Builder Counts (always available) ---
+    print("--- Source & Builder Counts ---")
+    count_header = "{:<24}" + " {:>12}" * n
+    count_row = "{:<24}" + " {:>12}" * n
+    print(count_header.format("Metric", *labels))
+    print(count_row.format("Source files",
+          *[s.get("sourceFileCount", 0) for _, s in summaries]))
+    print(count_row.format("Generated builders",
+          *[s.get("generatedBuilderCount", 0) for _, s in summaries]))
+    # For JSON builder types, totalClasses is the processor's own count
+    tc_vals = [s.get("totalClasses", "-") for _, s in summaries]
+    print(count_row.format("Processor-reported", *tc_vals))
+    print()
+
     # --- Wall Time (always available) ---
     print("--- Wall Time (seconds) ---")
     header = "{:<16}" + " {:>12}" * n
@@ -171,6 +185,28 @@ def main() -> None:
     print(row.format("Max", *[s["wallTime"]["max"] for _, s in summaries]))
     print(row.format("Avg", *[s["wallTime"]["avg"] for _, s in summaries]))
     print()
+
+    # --- Compiler Time (from Maven timestamps, available for all types) ---
+    has_compiler_time = any("compilerTime" in s for _, s in summaries)
+    if has_compiler_time:
+        print("--- Compiler Time (seconds, from Maven timestamps) ---")
+        print(header.format("Metric", *labels))
+        ct = lambda key: [s.get("compilerTime", {}).get(key, 0.0) for _, s in summaries]
+        print(row.format("Min", *ct("min")))
+        print(row.format("Max", *ct("max")))
+        print(row.format("Avg", *ct("avg")))
+        print()
+
+    # --- Compiler Time per Builder (ms, comparable across builder types) ---
+    has_per_builder = any("compilerTimePerBuilderMs" in s for _, s in summaries)
+    if has_per_builder:
+        print("--- Compiler Time per Builder (ms) ---")
+        print(header.format("Metric", *labels))
+        ctpb = lambda key: [s.get("compilerTimePerBuilderMs", {}).get(key, 0.0) for _, s in summaries]
+        print(row.format("Min", *ctpb("min")))
+        print(row.format("Max", *ctpb("max")))
+        print(row.format("Avg", *ctpb("avg")))
+        print()
 
     # --- Processor Time ---
     if has_processor_time:
