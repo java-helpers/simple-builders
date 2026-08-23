@@ -463,71 +463,75 @@ class CustomCollectionTypeTest {
 
     ProcessorAsserts.assertingResult(
         generatedCode,
-        contains("public PrimitiveArrayDtoBuilder scores(List<Integer> scores)"),
         contains(
             """
-            this.scores = changedValue(ArrayUtils.toPrimitive(scores.toArray(new Integer[0])));
-            return this;
-            """),
-        contains(
-            "public PrimitiveArrayDtoBuilder scores(Consumer<ArrayListBuilder<Integer>> scoresBuilderConsumer)"),
-        contains(
-            """
-            ArrayListBuilder<Integer> builder;
-            if (this.scores.isSet()) {
-              builder = new ArrayListBuilder<Integer>(Arrays.asList(ArrayUtils.toObject(this.scores.value())));
-            } else {
-              builder = new ArrayListBuilder<Integer>();
+            public PrimitiveArrayDtoBuilder scores(List<Integer> scores) {
+              this.scores = changedValue(ArrayUtils.toPrimitive(scores.toArray(new Integer[0])));
+              return this;
             }
-            scoresBuilderConsumer.accept(builder);
-            this.scores = changedValue(ArrayUtils.toPrimitive(builder.build().toArray(new Integer[0])));
-            return this;
-            """),
-        contains("public PrimitiveArrayDtoBuilder flags(List<Boolean> flags)"),
-        contains(
-            """
-            this.flags = changedValue(ArrayUtils.toPrimitive(flags.toArray(new Boolean[0])));
-            return this;
             """),
         contains(
-            "public PrimitiveArrayDtoBuilder flags(Consumer<ArrayListBuilder<Boolean>> flagsBuilderConsumer)"),
-        contains(
             """
-            ArrayListBuilder<Boolean> builder;
-            if (this.flags.isSet()) {
-              builder = new ArrayListBuilder<Boolean>(Arrays.asList(ArrayUtils.toObject(this.flags.value())));
-            } else {
-              builder = new ArrayListBuilder<Boolean>();
+            public PrimitiveArrayDtoBuilder scores(Consumer<ArrayListBuilder<Integer>> scoresBuilderConsumer) {
+              ArrayListBuilder<Integer> builder;
+              if (this.scores.isSet()) {
+                builder = new ArrayListBuilder<Integer>(Arrays.asList(ArrayUtils.toObject(this.scores.value())));
+              } else {
+                builder = new ArrayListBuilder<Integer>();
+              }
+              scoresBuilderConsumer.accept(builder);
+              this.scores = changedValue(ArrayUtils.toPrimitive(builder.build().toArray(new Integer[0])));
+              return this;
             }
-            flagsBuilderConsumer.accept(builder);
-            this.flags = changedValue(ArrayUtils.toPrimitive(builder.build().toArray(new Boolean[0])));
-            return this;
-            """),
-        contains("public PrimitiveArrayDtoBuilder values(List<Double> values)"),
-        contains(
-            """
-            this.values = changedValue(ArrayUtils.toPrimitive(values.toArray(new Double[0])));
-            return this;
             """),
         contains(
-            "public PrimitiveArrayDtoBuilder values(Consumer<ArrayListBuilder<Double>> valuesBuilderConsumer)"),
-        contains(
             """
-            ArrayListBuilder<Double> builder;
-            if (this.values.isSet()) {
-              builder = new ArrayListBuilder<Double>(Arrays.asList(ArrayUtils.toObject(this.values.value())));
-            } else {
-              builder = new ArrayListBuilder<Double>();
+            public PrimitiveArrayDtoBuilder flags(List<Boolean> flags) {
+              this.flags = changedValue(ArrayUtils.toPrimitive(flags.toArray(new Boolean[0])));
+              return this;
             }
-            valuesBuilderConsumer.accept(builder);
-            this.values = changedValue(ArrayUtils.toPrimitive(builder.build().toArray(new Double[0])));
-            return this;
             """),
-        contains("public PrimitiveArrayDto build()"),
         contains(
             """
-            PrimitiveArrayDto result = new PrimitiveArrayDto(this.scores.value(), this.flags.value(), this.values.value());
-            return result;
+            public PrimitiveArrayDtoBuilder flags(Consumer<ArrayListBuilder<Boolean>> flagsBuilderConsumer) {
+              ArrayListBuilder<Boolean> builder;
+              if (this.flags.isSet()) {
+                builder = new ArrayListBuilder<Boolean>(Arrays.asList(ArrayUtils.toObject(this.flags.value())));
+              } else {
+                builder = new ArrayListBuilder<Boolean>();
+              }
+              flagsBuilderConsumer.accept(builder);
+              this.flags = changedValue(ArrayUtils.toPrimitive(builder.build().toArray(new Boolean[0])));
+              return this;
+            }
+            """),
+        contains(
+            """
+            public PrimitiveArrayDtoBuilder values(List<Double> values) {
+              this.values = changedValue(ArrayUtils.toPrimitive(values.toArray(new Double[0])));
+              return this;
+            }
+            """),
+        contains(
+            """
+            public PrimitiveArrayDtoBuilder values(Consumer<ArrayListBuilder<Double>> valuesBuilderConsumer) {
+              ArrayListBuilder<Double> builder;
+              if (this.values.isSet()) {
+                builder = new ArrayListBuilder<Double>(Arrays.asList(ArrayUtils.toObject(this.values.value())));
+              } else {
+                builder = new ArrayListBuilder<Double>();
+              }
+              valuesBuilderConsumer.accept(builder);
+              this.values = changedValue(ArrayUtils.toPrimitive(builder.build().toArray(new Double[0])));
+              return this;
+            }
+            """),
+        contains(
+            """
+            public PrimitiveArrayDto build() {
+              PrimitiveArrayDto result = new PrimitiveArrayDto(this.scores.value(), this.flags.value(), this.values.value());
+              return result;
+            }
             """));
   }
 
