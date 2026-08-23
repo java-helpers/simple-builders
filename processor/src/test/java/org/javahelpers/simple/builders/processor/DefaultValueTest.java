@@ -129,6 +129,48 @@ class DefaultValueTest {
           PlainRecord result = new PlainRecord(this.name.value(), this.age.value());
           return result;
         }
+        """),
+        Arguments.of(
+            "EnumDefaultRecord",
+            """
+            package test;
+
+            import org.javahelpers.simple.builders.core.annotations.Default;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+            @SimpleBuilder
+            public record EnumDefaultRecord(
+                String name,
+                @Default("ACTIVE") Status status) {}
+
+            enum Status { ACTIVE, INACTIVE, PENDING }
+            """,
+            """
+        public EnumDefaultRecord build() {
+          EnumDefaultRecord result = new EnumDefaultRecord(this.name.value(), this.status.valueOr(Status.ACTIVE));
+          return result;
+        }
+        """),
+        Arguments.of(
+            "EnumQualifiedDefaultRecord",
+            """
+            package test;
+
+            import org.javahelpers.simple.builders.core.annotations.Default;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+            @SimpleBuilder
+            public record EnumQualifiedDefaultRecord(
+                String name,
+                @Default("Priority.HIGH") Priority priority) {}
+
+            enum Priority { LOW, MEDIUM, HIGH }
+            """,
+            """
+        public EnumQualifiedDefaultRecord build() {
+          EnumQualifiedDefaultRecord result = new EnumQualifiedDefaultRecord(this.name.value(), this.priority.valueOr(Priority.HIGH));
+          return result;
+        }
         """));
   }
 
@@ -195,6 +237,124 @@ class DefaultValueTest {
     // Setter method for the defaulted field must still be generated
     ProcessorAsserts.assertContaining(
         generatedCode, "public OrderDtoBuilder status(String status)");
+  }
+
+  /**
+   * Verifies that a {@code @Default} annotation on an enum-typed setter field qualifies the raw
+   * constant name with the enum class name, producing e.g. {@code .orElse(ItemCondition.GOOD)}
+   * instead of the unqualified {@code .orElse(GOOD)} that would fail to compile.
+   *
+   * @see <a href="https://github.com/java-helpers/simple-builders/issues/260">Issue #260</a>
+   */
+  @Test
+  void defaultAppliedWhenUnset_setterField_enumQualified() {
+    String className = "ChoralScore";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject enumSource =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+
+            public enum ItemCondition { GOOD, FAIR, POOR }
+            """);
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+
+            import org.javahelpers.simple.builders.core.annotations.Default;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+            @SimpleBuilder
+            public class ChoralScore {
+              private String title;
+              @Default("GOOD")
+              private ItemCondition condition;
+
+              public String getTitle() { return title; }
+              public void setTitle(String title) { this.title = title; }
+              public ItemCondition getCondition() { return condition; }
+              public void setCondition(ItemCondition condition) { this.condition = condition; }
+            }
+            """);
+
+    Compilation compilation = compile(enumSource, sourceFile);
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    // build() must use ifSet().orElse() with the qualified enum constant
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        """
+        public ChoralScore build() {
+          ChoralScore result = new ChoralScore();
+          this.condition.ifSet(result::setCondition).orElse(ItemCondition.GOOD);
+          this.title.ifSet(result::setTitle);
+          return result;
+        }
+        """);
+  }
+
+  /**
+   * Verifies that a {@code @Default} annotation with a complex expression (e.g. {@code new
+   * ScoreValue(12)}) on a non-enum field is used as-is without any qualification, supporting
+   * constructor calls and other arbitrary Java expressions.
+   */
+  @Test
+  void defaultAppliedWhenUnset_setterField_complexExpressionUsedAsIs() {
+    String className = "ScoreDto";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject scoreValueSource =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+
+            public class ScoreValue {
+              private final int value;
+              public ScoreValue(int value) { this.value = value; }
+              public int getValue() { return value; }
+            }
+            """);
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+
+            import org.javahelpers.simple.builders.core.annotations.Default;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+            @SimpleBuilder
+            public class ScoreDto {
+              private String name;
+              @Default("new ScoreValue(12)")
+              private ScoreValue score;
+
+              public String getName() { return name; }
+              public void setName(String name) { this.name = name; }
+              public ScoreValue getScore() { return score; }
+              public void setScore(ScoreValue score) { this.score = score; }
+            }
+            """);
+
+    Compilation compilation = compile(scoreValueSource, sourceFile);
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    // build() must use the complex expression as-is (no qualification attempted)
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        """
+        public ScoreDto build() {
+          ScoreDto result = new ScoreDto();
+          this.name.ifSet(result::setName);
+          this.score.ifSet(result::setScore).orElse(new ScoreValue(12));
+          return result;
+        }
+        """);
   }
 
   /**

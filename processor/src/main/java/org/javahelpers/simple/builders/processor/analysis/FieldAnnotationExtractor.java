@@ -384,6 +384,9 @@ public final class FieldAnnotationExtractor {
    *   <li>{@code String} — wrapped in double quotes, e.g. {@code "GENERAL"}
    *   <li>{@code char} — wrapped in single quotes, e.g. {@code 'A'}
    *   <li>numeric/boolean primitives — used as-is, e.g. {@code 0.0}, {@code true}
+   *   <li>enum types — a simple constant name is qualified with the enum class name, e.g. {@code
+   *       GOOD} becomes {@code ItemCondition.GOOD}; already-qualified names or complex expressions
+   *       are left as-is
    *   <li>complex types (List, custom objects) — used as a raw Java expression, e.g. {@code
    *       List.of()}
    * </ul>
@@ -399,6 +402,35 @@ public final class FieldAnnotationExtractor {
     if (fieldType.equals(TypeNamePrimitive.CHAR)) {
       return "'%s'".formatted(rawValue);
     }
+    if (fieldType.isEnumType() && isSimpleIdentifier(rawValue)) {
+      return fieldType.getClassName() + "." + rawValue;
+    }
     return rawValue;
+  }
+
+  /**
+   * Checks whether the given raw value is a simple Java identifier (e.g. an enum constant name like
+   * {@code GOOD}).
+   *
+   * <p>Values containing dots (e.g. {@code ItemCondition.GOOD}), parentheses (e.g. {@code new
+   * IntegerDto(12)}), spaces, or other non-identifier characters are not simple identifiers and
+   * will not be auto-qualified.
+   *
+   * @param rawValue the raw string to check
+   * @return {@code true} if the value is a simple Java identifier
+   */
+  private static boolean isSimpleIdentifier(String rawValue) {
+    if (rawValue == null || rawValue.isEmpty()) {
+      return false;
+    }
+    if (!Character.isJavaIdentifierStart(rawValue.charAt(0))) {
+      return false;
+    }
+    for (int i = 1; i < rawValue.length(); i++) {
+      if (!Character.isJavaIdentifierPart(rawValue.charAt(i))) {
+        return false;
+      }
+    }
+    return true;
   }
 }
