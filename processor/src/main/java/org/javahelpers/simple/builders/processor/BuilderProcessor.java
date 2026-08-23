@@ -24,7 +24,6 @@
 
 package org.javahelpers.simple.builders.processor;
 
-import static org.javahelpers.simple.builders.processor.model.core.BuilderToGenerationTypeMapper.toRenderingDto;
 import static org.javahelpers.simple.builders.processor.processing.BuilderDefinitionCreator.extractFromElement;
 
 import com.google.auto.service.AutoService;
@@ -51,6 +50,7 @@ import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 import org.javahelpers.simple.builders.processor.generators.integration.JacksonModuleGenerator;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
+import org.javahelpers.simple.builders.processor.model.core.BuilderToGenerationTypeMapper;
 import org.javahelpers.simple.builders.processor.model.core.GenerationTargetClassDto;
 import org.javahelpers.simple.builders.processor.processing.BuilderConfigurationReader;
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsEnum;
@@ -226,7 +226,8 @@ public class BuilderProcessor extends AbstractProcessor {
       throws BuilderException {
     context.initConfigurationForProcessingTarget(config);
     BuilderDefinitionDto builderDef = extractFromElement(annotatedElement, context);
-    GenerationTargetClassDto renderingDto = toRenderingDto(builderDef, context);
+    GenerationTargetClassDto renderingDto =
+        new BuilderToGenerationTypeMapper(config).toRenderingDto(builderDef);
     codeGenerator.generateClass(renderingDto);
 
     // Collect info for Jackson Module if enabled

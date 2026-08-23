@@ -667,7 +667,6 @@ public @interface SimpleBuilder {
      */
     String jacksonModulePackage() default "";
 
-    // === Documentation ===
     /**
      * Generate Javadoc comments on the generated builder class and its members. <br>
      * When disabled, no class, field, constructor or method Javadoc is emitted, producing smaller
