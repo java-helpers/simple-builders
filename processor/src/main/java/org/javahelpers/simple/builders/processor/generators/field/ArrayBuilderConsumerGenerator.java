@@ -139,7 +139,7 @@ public class ArrayBuilderConsumerGenerator implements MethodGenerator {
           if (this.$fieldName:N.isSet()) {
             builder = new $helperType:T(Arrays.asList(ArrayUtils.toObject(this.$fieldName:N.value())));
           } else {
-            builder = new $helperType:T();
+            builder = new $helperType:T(Arrays.asList());
           }
           $dtoMethodParam:N.accept(builder);
           this.$fieldName:N = $builderFieldWrapper:T.changedValue(

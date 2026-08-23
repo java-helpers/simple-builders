@@ -477,7 +477,7 @@ class CustomCollectionTypeTest {
               if (this.scores.isSet()) {
                 builder = new ArrayListBuilder<Integer>(Arrays.asList(ArrayUtils.toObject(this.scores.value())));
               } else {
-                builder = new ArrayListBuilder<Integer>();
+                builder = new ArrayListBuilder<Integer>(Arrays.asList());
               }
               scoresBuilderConsumer.accept(builder);
               this.scores = changedValue(ArrayUtils.toPrimitive(builder.build().toArray(new Integer[0])));
@@ -498,7 +498,7 @@ class CustomCollectionTypeTest {
               if (this.flags.isSet()) {
                 builder = new ArrayListBuilder<Boolean>(Arrays.asList(ArrayUtils.toObject(this.flags.value())));
               } else {
-                builder = new ArrayListBuilder<Boolean>();
+                builder = new ArrayListBuilder<Boolean>(Arrays.asList());
               }
               flagsBuilderConsumer.accept(builder);
               this.flags = changedValue(ArrayUtils.toPrimitive(builder.build().toArray(new Boolean[0])));
@@ -519,7 +519,7 @@ class CustomCollectionTypeTest {
               if (this.values.isSet()) {
                 builder = new ArrayListBuilder<Double>(Arrays.asList(ArrayUtils.toObject(this.values.value())));
               } else {
-                builder = new ArrayListBuilder<Double>();
+                builder = new ArrayListBuilder<Double>(Arrays.asList());
               }
               valuesBuilderConsumer.accept(builder);
               this.values = changedValue(ArrayUtils.toPrimitive(builder.build().toArray(new Double[0])));
