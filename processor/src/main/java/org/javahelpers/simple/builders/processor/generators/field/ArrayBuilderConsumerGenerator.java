@@ -137,21 +137,13 @@ public class ArrayBuilderConsumerGenerator implements MethodGenerator {
           """
           $helperType:T builder;
           if (this.$fieldName:N.isSet()) {
-            java.util.List<$elementType:B> $fieldName:N__existing = new java.util.ArrayList<>($fieldName:N.value().length);
-            for (int $fieldName:N__i = 0; $fieldName:N__i < $fieldName:N.value().length; $fieldName:N__i++) {
-              $fieldName:N__existing.add($fieldName:N.value()[$fieldName:N__i]);
-            }
-            builder = new $helperType:T($fieldName:N__existing);
+            builder = new $helperType:T(java.util.Arrays.asList(org.apache.commons.lang3.ArrayUtils.toObject(this.$fieldName:N.value())));
           } else {
             builder = new $helperType:T();
           }
           $dtoMethodParam:N.accept(builder);
-          var $fieldName:N__list = builder.build();
-          $elementType:T[] $fieldName:N__array = new $elementType:T[$fieldName:N__list.size()];
-          for (int $fieldName:N__i = 0; $fieldName:N__i < $fieldName:N__array.length; $fieldName:N__i++) {
-            $fieldName:N__array[$fieldName:N__i] = $fieldName:N__list.get($fieldName:N__i);
-          }
-          this.$fieldName:N = $builderFieldWrapper:T.changedValue($fieldName:N__array);
+          this.$fieldName:N = $builderFieldWrapper:T.changedValue(
+              org.apache.commons.lang3.ArrayUtils.toPrimitive(builder.build().toArray(new $elementType:B[0])));
           return this;
           """);
     } else {

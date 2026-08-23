@@ -123,12 +123,8 @@ public class ArrayConversionGenerator implements MethodGenerator {
     if (elementType instanceof TypeNamePrimitive) {
       methodDto.setCode(
           """
-          var $fieldName:N__list = $dtoMethodParams:N;
-          $elementType:T[] $fieldName:N__array = new $elementType:T[$fieldName:N__list.size()];
-          for (int $fieldName:N__i = 0; $fieldName:N__i < $fieldName:N__array.length; $fieldName:N__i++) {
-            $fieldName:N__array[$fieldName:N__i] = $fieldName:N__list.get($fieldName:N__i);
-          }
-          this.$fieldName:N = $builderFieldWrapper:T.changedValue($fieldName:N__array);
+          this.$fieldName:N = $builderFieldWrapper:T.changedValue(
+              org.apache.commons.lang3.ArrayUtils.toPrimitive($dtoMethodParams:N.toArray(new $elementType:B[0])));
           return this;
           """);
     } else {
