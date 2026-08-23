@@ -79,6 +79,8 @@ public final class ActivePerformanceTracker implements PerformanceTracker {
           PHASE_DTO_MAPPING,
           PHASE_CODE_GENERATION);
 
+  private static final String JSON_KEY_ELAPSED_NANOS = "elapsedNanos";
+
   private static final Map<String, List<String>> PHASE_CHILDREN = new LinkedHashMap<>();
 
   static {
@@ -222,83 +224,122 @@ public final class ActivePerformanceTracker implements PerformanceTracker {
       logger.info("");
     }
 
-    // Top 20 slowest classes
+    reportTopClasses(logger);
+    reportTopGenerators(logger);
+    reportTopEnhancers(logger);
+    writeJsonReportIfNeeded(logger, totalTime);
+
+    // Clean up ThreadLocals to prevent memory leaks
+    phaseStartStack.remove();
+    generatorStartStack.remove();
+    enhancerStartStack.remove();
+  }
+
+  /**
+   * Reports the top 20 slowest classes to the logger.
+   *
+   * @param logger the processing logger to output the report
+   */
+  private void reportTopClasses(ProcessingLogger logger) {
     List<ClassMetric> topClasses = new ArrayList<>(classMetrics);
     topClasses.sort(Comparator.comparingLong(ClassMetric::elapsedNanos).reversed());
     int classLimit = Math.min(20, topClasses.size());
-    if (classLimit > 0) {
-      logger.info("Top %d slowest classes:", classLimit);
-      for (int i = 0; i < classLimit; i++) {
-        ClassMetric cm = topClasses.get(i);
-        double ms = cm.elapsedNanos() / 1_000_000.0;
-        logger.info(
-            String.format(
-                Locale.US,
-                "  %d. %s - %.1fms (%d fields, %d collections)",
-                i + 1,
-                cm.className(),
-                ms,
-                cm.fieldCount(),
-                cm.collectionCount()));
-      }
-      logger.info("");
+    if (classLimit <= 0) {
+      return;
     }
+    logger.info("Top %d slowest classes:", classLimit);
+    for (int i = 0; i < classLimit; i++) {
+      ClassMetric cm = topClasses.get(i);
+      double ms = cm.elapsedNanos() / 1_000_000.0;
+      logger.info(
+          String.format(
+              Locale.US,
+              "  %d. %s - %.1fms (%d fields, %d collections)",
+              i + 1,
+              cm.className(),
+              ms,
+              cm.fieldCount(),
+              cm.collectionCount()));
+    }
+    logger.info("");
+  }
 
-    // Top 5 slowest MethodGenerators
+  /**
+   * Reports the top 5 slowest MethodGenerators to the logger.
+   *
+   * @param logger the processing logger to output the report
+   */
+  private void reportTopGenerators(ProcessingLogger logger) {
     List<Map.Entry<String, Long>> topGenerators = new ArrayList<>(generatorTimes.entrySet());
     topGenerators.sort(Map.Entry.<String, Long>comparingByValue().reversed());
     int genLimit = Math.min(5, topGenerators.size());
-    if (genLimit > 0) {
-      logger.info("Top %d slowest MethodGenerators:", genLimit);
-      for (int i = 0; i < genLimit; i++) {
-        Map.Entry<String, Long> entry = topGenerators.get(i);
-        double seconds = entry.getValue() / 1_000_000_000.0;
-        int calls = generatorCalls.getOrDefault(entry.getKey(), 0);
-        double avgMs = calls > 0 ? (entry.getValue() / 1_000_000.0) / calls : 0;
-        logger.info(
-            String.format(
-                Locale.US,
-                "  %d. %s - %.1fs (%d calls, %.2fms/call)",
-                i + 1,
-                entry.getKey(),
-                seconds,
-                calls,
-                avgMs));
-      }
-      logger.info("");
+    if (genLimit <= 0) {
+      return;
     }
+    logger.info("Top %d slowest MethodGenerators:", genLimit);
+    for (int i = 0; i < genLimit; i++) {
+      Map.Entry<String, Long> entry = topGenerators.get(i);
+      double seconds = entry.getValue() / 1_000_000_000.0;
+      int calls = generatorCalls.getOrDefault(entry.getKey(), 0);
+      double avgMs = calls > 0 ? (entry.getValue() / 1_000_000.0) / calls : 0;
+      logger.info(
+          String.format(
+              Locale.US,
+              "  %d. %s - %.1fs (%d calls, %.2fms/call)",
+              i + 1,
+              entry.getKey(),
+              seconds,
+              calls,
+              avgMs));
+    }
+    logger.info("");
+  }
 
-    // Top 5 slowest BuilderEnhancers
+  /**
+   * Reports the top 5 slowest BuilderEnhancers to the logger.
+   *
+   * @param logger the processing logger to output the report
+   */
+  private void reportTopEnhancers(ProcessingLogger logger) {
     List<Map.Entry<String, Long>> topEnhancers = new ArrayList<>(enhancerTimes.entrySet());
     topEnhancers.sort(Map.Entry.<String, Long>comparingByValue().reversed());
     int enhLimit = Math.min(5, topEnhancers.size());
-    if (enhLimit > 0) {
-      logger.info("Top %d slowest BuilderEnhancers:", enhLimit);
-      for (int i = 0; i < enhLimit; i++) {
-        Map.Entry<String, Long> entry = topEnhancers.get(i);
-        double seconds = entry.getValue() / 1_000_000_000.0;
-        int calls = enhancerCalls.getOrDefault(entry.getKey(), 0);
-        double avgMs = calls > 0 ? (entry.getValue() / 1_000_000.0) / calls : 0;
-        logger.info(
-            String.format(
-                Locale.US,
-                "  %d. %s - %.1fs (%d calls, %.2fms/call)",
-                i + 1,
-                entry.getKey(),
-                seconds,
-                calls,
-                avgMs));
-      }
+    if (enhLimit <= 0) {
+      return;
     }
+    logger.info("Top %d slowest BuilderEnhancers:", enhLimit);
+    for (int i = 0; i < enhLimit; i++) {
+      Map.Entry<String, Long> entry = topEnhancers.get(i);
+      double seconds = entry.getValue() / 1_000_000_000.0;
+      int calls = enhancerCalls.getOrDefault(entry.getKey(), 0);
+      double avgMs = calls > 0 ? (entry.getValue() / 1_000_000.0) / calls : 0;
+      logger.info(
+          String.format(
+              Locale.US,
+              "  %d. %s - %.1fs (%d calls, %.2fms/call)",
+              i + 1,
+              entry.getKey(),
+              seconds,
+              calls,
+              avgMs));
+    }
+  }
 
-    // Write JSON report if output file is configured
-    if (outputFilePath != null && !outputFilePath.isBlank()) {
-      try {
-        writeJsonReport(totalTime);
-        logger.info("Performance JSON report written to: %s", outputFilePath);
-      } catch (IOException | java.nio.file.InvalidPathException | SecurityException e) {
-        logger.warning("Failed to write performance JSON report: %s", e.getMessage());
-      }
+  /**
+   * Writes the JSON report to the configured output file if one is set.
+   *
+   * @param logger the processing logger for status messages
+   * @param totalTime total processing time in nanoseconds
+   */
+  private void writeJsonReportIfNeeded(ProcessingLogger logger, long totalTime) {
+    if (outputFilePath == null || outputFilePath.isBlank()) {
+      return;
+    }
+    try {
+      writeJsonReport(totalTime);
+      logger.info("Performance JSON report written to: %s", outputFilePath);
+    } catch (IOException | java.nio.file.InvalidPathException | SecurityException e) {
+      logger.warning("Failed to write performance JSON report: %s", e.getMessage());
     }
   }
 
@@ -374,7 +415,31 @@ public final class ActivePerformanceTracker implements PerformanceTracker {
     }
     sb.append(indent).append("},\n");
 
-    // Class metrics (all, sorted by elapsed descending)
+    appendClassMetricsJson(sb, indent, indent2, indent3);
+    appendNamedStatsJson(
+        sb, "generatorStats", generatorTimes, generatorCalls, indent, indent2, indent3, false);
+    appendNamedStatsJson(
+        sb, "enhancerStats", enhancerTimes, enhancerCalls, indent, indent2, indent3, true);
+
+    sb.append("}\n");
+
+    Path outPath = Paths.get(outputFilePath);
+    if (outPath.getParent() != null) {
+      Files.createDirectories(outPath.getParent());
+    }
+    Files.writeString(outPath, sb.toString(), StandardCharsets.UTF_8);
+  }
+
+  /**
+   * Appends class metrics as a JSON array to the string builder.
+   *
+   * @param sb the string builder to append to
+   * @param indent the base indentation level
+   * @param indent2 two-level indentation
+   * @param indent3 three-level indentation
+   */
+  private void appendClassMetricsJson(
+      StringBuilder sb, String indent, String indent2, String indent3) {
     List<ClassMetric> sortedClasses = new ArrayList<>(classMetrics);
     sortedClasses.sort(Comparator.comparingLong(ClassMetric::elapsedNanos).reversed());
     sb.append(indent).append(jsonString("classMetrics")).append(": [\n");
@@ -388,7 +453,7 @@ public final class ActivePerformanceTracker implements PerformanceTracker {
           .append(jsonString(cm.className()))
           .append(",\n");
       sb.append(indent3)
-          .append(jsonString("elapsedNanos"))
+          .append(jsonString(JSON_KEY_ELAPSED_NANOS))
           .append(": ")
           .append(cm.elapsedNanos())
           .append(",\n");
@@ -410,14 +475,35 @@ public final class ActivePerformanceTracker implements PerformanceTracker {
       sb.append(indent2).append(i < sortedClasses.size() - 1 ? "},\n" : "}\n");
     }
     sb.append(indent).append("],\n");
+  }
 
-    // Generator stats
-    List<Map.Entry<String, Long>> sortedGenerators = new ArrayList<>(generatorTimes.entrySet());
-    sortedGenerators.sort(Map.Entry.<String, Long>comparingByValue().reversed());
-    sb.append(indent).append(jsonString("generatorStats")).append(": [\n");
-    for (int i = 0; i < sortedGenerators.size(); i++) {
-      Map.Entry<String, Long> entry = sortedGenerators.get(i);
-      int calls = generatorCalls.getOrDefault(entry.getKey(), 0);
+  /**
+   * Appends named statistics (generators or enhancers) as a JSON array.
+   *
+   * @param sb the string builder to append to
+   * @param statsKey the JSON key for this stats array (e.g., "generatorStats")
+   * @param timesMap map of names to elapsed nanoseconds
+   * @param callsMap map of names to call counts
+   * @param indent the base indentation level
+   * @param indent2 two-level indentation
+   * @param indent3 three-level indentation
+   * @param isLast whether this is the last array in the JSON object (controls trailing comma)
+   */
+  private void appendNamedStatsJson(
+      StringBuilder sb,
+      String statsKey,
+      Map<String, Long> timesMap,
+      Map<String, Integer> callsMap,
+      String indent,
+      String indent2,
+      String indent3,
+      boolean isLast) {
+    List<Map.Entry<String, Long>> sorted = new ArrayList<>(timesMap.entrySet());
+    sorted.sort(Map.Entry.<String, Long>comparingByValue().reversed());
+    sb.append(indent).append(jsonString(statsKey)).append(": [\n");
+    for (int i = 0; i < sorted.size(); i++) {
+      Map.Entry<String, Long> entry = sorted.get(i);
+      int calls = callsMap.getOrDefault(entry.getKey(), 0);
       double avgMs = calls > 0 ? (entry.getValue() / 1_000_000.0) / calls : 0;
       sb.append(indent2).append("{\n");
       sb.append(indent3)
@@ -426,7 +512,7 @@ public final class ActivePerformanceTracker implements PerformanceTracker {
           .append(jsonString(entry.getKey()))
           .append(",\n");
       sb.append(indent3)
-          .append(jsonString("elapsedNanos"))
+          .append(jsonString(JSON_KEY_ELAPSED_NANOS))
           .append(": ")
           .append(entry.getValue())
           .append(",\n");
@@ -436,46 +522,9 @@ public final class ActivePerformanceTracker implements PerformanceTracker {
           .append(": ")
           .append(String.format(Locale.US, "%.3f", avgMs))
           .append("\n");
-      sb.append(indent2).append(i < sortedGenerators.size() - 1 ? "},\n" : "}\n");
+      sb.append(indent2).append(i < sorted.size() - 1 ? "},\n" : "}\n");
     }
-    sb.append(indent).append("],\n");
-
-    // Enhancer stats
-    List<Map.Entry<String, Long>> sortedEnhancers = new ArrayList<>(enhancerTimes.entrySet());
-    sortedEnhancers.sort(Map.Entry.<String, Long>comparingByValue().reversed());
-    sb.append(indent).append(jsonString("enhancerStats")).append(": [\n");
-    for (int i = 0; i < sortedEnhancers.size(); i++) {
-      Map.Entry<String, Long> entry = sortedEnhancers.get(i);
-      int calls = enhancerCalls.getOrDefault(entry.getKey(), 0);
-      double avgMs = calls > 0 ? (entry.getValue() / 1_000_000.0) / calls : 0;
-      sb.append(indent2).append("{\n");
-      sb.append(indent3)
-          .append(jsonString("name"))
-          .append(": ")
-          .append(jsonString(entry.getKey()))
-          .append(",\n");
-      sb.append(indent3)
-          .append(jsonString("elapsedNanos"))
-          .append(": ")
-          .append(entry.getValue())
-          .append(",\n");
-      sb.append(indent3).append(jsonString("calls")).append(": ").append(calls).append(",\n");
-      sb.append(indent3)
-          .append(jsonString("avgMsPerCall"))
-          .append(": ")
-          .append(String.format(Locale.US, "%.3f", avgMs))
-          .append("\n");
-      sb.append(indent2).append(i < sortedEnhancers.size() - 1 ? "},\n" : "}\n");
-    }
-    sb.append(indent).append("]\n");
-
-    sb.append("}\n");
-
-    Path outPath = Paths.get(outputFilePath);
-    if (outPath.getParent() != null) {
-      Files.createDirectories(outPath.getParent());
-    }
-    Files.writeString(outPath, sb.toString(), StandardCharsets.UTF_8);
+    sb.append(indent).append(isLast ? "]\n" : "],\n");
   }
 
   /**
@@ -496,7 +545,7 @@ public final class ActivePerformanceTracker implements PerformanceTracker {
 
     sb.append(indent).append(jsonString(phase)).append(": {\n");
     sb.append(childIndent)
-        .append(jsonString("elapsedNanos"))
+        .append(jsonString(JSON_KEY_ELAPSED_NANOS))
         .append(": ")
         .append(nanos)
         .append(",\n");
