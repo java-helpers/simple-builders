@@ -12,8 +12,8 @@ processor to measure processing time. Three scripts work together:
 | Script | Purpose |
 |---|---|
 | `generate_classes.py` | Generate Java source files with a chosen builder annotation |
-| `run_performance_analysis.py` | Run N compilations and aggregate timing results |
-| `compare_performance.py` | Compare results from multiple analysis runs side-by-side |
+| `run_performance_measurement.py` | Run N compilations and aggregate timing results |
+| `compare_performance.py` | Compare results from multiple measurement runs side-by-side |
 
 ## Supported Builder Types
 
@@ -24,8 +24,8 @@ processor to measure processing time. Three scripts work together:
 | `record-builder` | `@RecordBuilder` | `recordbuilder` | No | RecordBuilder library (wall-time only) |
 | `lombok` | `@Builder` | `lombok` | No | Lombok (wall-time only) |
 
-Profiles with JSON reports produce detailed phase/class/generator/enhancer
-metrics. Profiles without JSON reports only measure overall wall time.
+Builder types with JSON reports produce detailed phase/class/generator/enhancer
+metrics. Builder types without JSON reports only measure overall wall time.
 
 ## Step-by-Step: Running an Analysis
 
@@ -78,26 +78,28 @@ python3 scripts/generate_classes.py \
 Individual parameters override preset values when used together with
 `--builder-type`.
 
-### 2. Run Performance Analysis
+### 2. Run Performance Measurement
 
-Run N compilations and collect timing data:
+Run N compilations and collect timing data. Use `--builder-type` (same as
+`generate_classes.py`) to select the framework — the Maven profile and JSON
+detection are handled automatically:
 
 ```bash
 # SimpleBuilder — 30 runs, labeled "sb-30runs"
-python3 scripts/run_performance_analysis.py \
-    --runs 30 --label sb-30runs --profile simplebuilder
+python3 scripts/run_performance_measurement.py \
+    --runs 30 --label sb-30runs --builder-type simple-builder
 
 # MinimalBuilder — 30 runs, labeled "mb-30runs"
-python3 scripts/run_performance_analysis.py \
-    --runs 30 --label mb-30runs --profile minimalbuilder
+python3 scripts/run_performance_measurement.py \
+    --runs 30 --label mb-30runs --builder-type simple-minimal-builder
 
 # RecordBuilder — 30 runs, wall-time only
-python3 scripts/run_performance_analysis.py \
-    --runs 30 --label rb-30runs --profile recordbuilder
+python3 scripts/run_performance_measurement.py \
+    --runs 30 --label rb-30runs --builder-type record-builder
 
 # Lombok — 30 runs, wall-time only
-python3 scripts/run_performance_analysis.py \
-    --runs 30 --label lombok-30runs --profile lombok
+python3 scripts/run_performance_measurement.py \
+    --runs 30 --label lombok-30runs --builder-type lombok
 ```
 
 Results are written to `target/performance-reports/<label>/`:
@@ -107,19 +109,17 @@ Results are written to `target/performance-reports/<label>/`:
 
 #### JSON vs Wall-Time-Only Mode
 
-The script auto-detects whether the profile produces JSON reports:
+The script auto-detects whether the builder type produces JSON reports:
 
-- `simplebuilder`, `minimalbuilder` → JSON mode (detailed metrics)
-- `recordbuilder`, `lombok` → wall-time-only mode
-
-You can override with `--has-json` or `--no-json` if needed.
+- `simple-builder`, `simple-minimal-builder` → JSON mode (detailed metrics)
+- `record-builder`, `lombok` → wall-time-only mode
 
 #### Quick Test Run
 
 For a quick sanity check, use a small number of runs:
 
 ```bash
-python3 scripts/run_performance_analysis.py --runs 3 --label test-3runs
+python3 scripts/run_performance_measurement.py --runs 3 --label test-3runs --builder-type simple-builder
 ```
 
 ### 3. Compare Results
@@ -129,22 +129,23 @@ Compare two or more analysis runs side-by-side:
 ```bash
 # Compare SimpleBuilder 3-run vs 30-run
 python3 scripts/compare_performance.py \
-    3runs/summary.json:3runs \
-    30runs/summary.json:30runs
+    3runs/summary.json \
+    30runs/summary.json
 
 # Compare SimpleBuilder vs MinimalBuilder
 python3 scripts/compare_performance.py \
-    sb-30runs/summary.json:SimpleBuilder \
-    mb-30runs/summary.json:MinimalBuilder
+    sb-30runs/summary.json \
+    mb-30runs/summary.json
 
 # Compare three frameworks (wall-time only for RecordBuilder and Lombok)
 python3 scripts/compare_performance.py \
-    sb-30runs/summary.json:SimpleBuilder \
-    rb-30runs/summary.json:RecordBuilder \
-    lombok-30runs/summary.json:Lombok
+    sb-30runs/summary.json \
+    rb-30runs/summary.json \
+    lombok-30runs/summary.json
 ```
 
 File paths are relative to `target/performance-reports/` (or use absolute paths).
+The parent directory name is used as the column label (e.g. `sb-30runs/summary.json` → `sb-30runs`).
 
 #### Comparison Options
 
@@ -157,8 +158,8 @@ File paths are relative to `target/performance-reports/` (or use absolute paths)
 ```bash
 python3 scripts/compare_performance.py \
     --top-classes 20 --top-generators 10 \
-    sb-30runs/summary.json:SimpleBuilder \
-    mb-30runs/summary.json:MinimalBuilder
+    sb-30runs/summary.json \
+    mb-30runs/summary.json
 ```
 
 #### Handling Partial Data
@@ -173,26 +174,32 @@ automatically:
 
 ## Typical Workflow: Full Framework Comparison
 
+Using a shell variable for `BUILDER_TYPE` avoids repeating the framework name:
+
 ```bash
-# 1. Generate classes for each framework
-python3 scripts/generate_classes.py --builder-type simple-builder --force
-python3 scripts/run_performance_analysis.py --runs 30 --label sb-30runs --profile simplebuilder
+# 1. Generate classes and measure each framework
+BUILDER_TYPE=simple-builder
+python3 scripts/generate_classes.py --builder-type $BUILDER_TYPE --force
+python3 scripts/run_performance_measurement.py --runs 30 --label sb-30runs --builder-type $BUILDER_TYPE
 
-python3 scripts/generate_classes.py --builder-type simple-minimal-builder --force
-python3 scripts/run_performance_analysis.py --runs 30 --label mb-30runs --profile minimalbuilder
+BUILDER_TYPE=simple-minimal-builder
+python3 scripts/generate_classes.py --builder-type $BUILDER_TYPE --force
+python3 scripts/run_performance_measurement.py --runs 30 --label mb-30runs --builder-type $BUILDER_TYPE
 
-python3 scripts/generate_classes.py --builder-type record-builder --force
-python3 scripts/run_performance_analysis.py --runs 30 --label rb-30runs --profile recordbuilder
+BUILDER_TYPE=record-builder
+python3 scripts/generate_classes.py --builder-type $BUILDER_TYPE --force
+python3 scripts/run_performance_measurement.py --runs 30 --label rb-30runs --builder-type $BUILDER_TYPE
 
-python3 scripts/generate_classes.py --builder-type lombok --force
-python3 scripts/run_performance_analysis.py --runs 30 --label lombok-30runs --profile lombok
+BUILDER_TYPE=lombok
+python3 scripts/generate_classes.py --builder-type $BUILDER_TYPE --force
+python3 scripts/run_performance_measurement.py --runs 30 --label lombok-30runs --builder-type $BUILDER_TYPE
 
 # 2. Compare all four
 python3 scripts/compare_performance.py \
-    sb-30runs/summary.json:SimpleBuilder \
-    mb-30runs/summary.json:MinimalBuilder \
-    rb-30runs/summary.json:RecordBuilder \
-    lombok-30runs/summary.json:Lombok
+    sb-30runs/summary.json \
+    mb-30runs/summary.json \
+    rb-30runs/summary.json \
+    lombok-30runs/summary.json
 ```
 
 ## Output File Locations
@@ -216,7 +223,7 @@ performance-test/
 
 ## Summary JSON Structure
 
-### JSON-Profile Summaries (simplebuilder, minimalbuilder)
+### JSON-Profile Summaries (simple-builder, simple-minimal-builder)
 
 ```json
 {
@@ -232,7 +239,7 @@ performance-test/
 }
 ```
 
-### Wall-Time-Only Summaries (recordbuilder, lombok)
+### Wall-Time-Only Summaries (record-builder, lombok)
 
 ```json
 {
