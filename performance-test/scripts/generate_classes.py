@@ -4,7 +4,7 @@ Generate Java class/record source files from library-class-catalog.json.
 
 The JSON blueprint defines all classes for the performance-test module. This
 script reads the JSON and produces one .java file per class entry under
-performance-test/src/main/java/... following the package layout from the plan:
+performance-test/src/main/java/... following the package layout:
 
   org.javahelpers.simple.builders.performance_test.library.<package>.<ClassName>
 
@@ -15,12 +15,32 @@ The script generates three categories of Java source files:
   3. DTO classes/records — from the ``packages.<name>.classes`` arrays.
 
 Usage:
-  python3 generate_classes.py                      # generate all classes
-  python3 generate_classes.py --limit 5            # generate only the first 5 classes (test mode)
-  python3 generate_classes.py --dry-run            # print what would be written, write nothing
-  python3 generate_classes.py --json other.json    # use an alternate JSON file
-  python3 generate_classes.py --out other/dir      # use an alternate output root
-  python3 generate_classes.py --force              # overwrite existing .java files
+  python3 generate_classes.py                                      # generate all classes (default: SimpleBuilder)
+  python3 generate_classes.py --builder-type simple-minimal-builder # use @SimpleMinimalBuilder
+  python3 generate_classes.py --builder-type record-builder         # use RecordBuilder (records only)
+  python3 generate_classes.py --builder-type lombok                 # use Lombok @Builder
+  python3 generate_classes.py --limit 5                            # generate only the first 5 classes (test mode)
+  python3 generate_classes.py --dry-run                            # print what would be written, write nothing
+  python3 generate_classes.py --json other.json                    # use an alternate JSON file
+  python3 generate_classes.py --out other/dir                      # use an alternate output root
+  python3 generate_classes.py --force                              # overwrite existing .java files
+
+Builder type presets (--builder-type):
+  Each preset configures the annotation, its import, the wither interface
+  suffix, and which class kinds are supported:
+
+  - simple-builder:        @SimpleBuilder, records implement <Name>Builder.With (wither interface),
+                           supports class + record. Uses @Default and @IgnoreInBuilder.
+  - simple-minimal-builder: @SimpleMinimalBuilder, no With interface (disabled by
+                           template), supports class + record. Uses @Default and @IgnoreInBuilder.
+  - record-builder:        @RecordBuilder (io.soabase.recordbuilder.core), records
+                           implement <Name>Builder.With, supports record only.
+                           No @Default or @IgnoreInBuilder (different mechanisms).
+  - lombok:                @Builder (lombok.Builder), no With interface, supports
+                           class + record. No @Default or @IgnoreInBuilder.
+
+  Classes whose ``kind`` is not in the preset's ``supported_kinds`` are skipped
+  (e.g. plain classes are skipped for record-builder).
 
 JSON schema (expected by this script):
   {
@@ -59,8 +79,8 @@ JSON schema (expected by this script):
               {
                 "name": "<propName>",      # required, valid Java identifier
                 "type": "<JavaType>",      # required, e.g. "String", "List<Foo>", "int[]"
-                "default": "<value>",      # optional -> @Default("value")
-                "ignore": true             # optional -> @IgnoreInBuilder on setter
+                "default": "<value>",      # optional -> @Default("value") (SimpleBuilders only)
+                "ignore": true             # optional -> @IgnoreInBuilder (SimpleBuilders only)
               }
             ]
           }
@@ -74,9 +94,11 @@ this script for a different project):
   - BASE_PACKAGE: the generated classes live under
     org.javahelpers.simple.builders.performance_test.library.<subPackage>
   - COPYRIGHT_YEAR / COPYRIGHT_HOLDER: the MIT license header in every file
-  - ANNOTATION_IMPORTS: uses org.javahelpers.simple.builders.core.annotations
-    (@SimpleBuilder, @Default, @IgnoreInBuilder)
-  - Records get `implements <Name>Builder.With` (simple-builders convention)
+  - SimpleBuilders annotations use org.javahelpers.simple.builders.core.annotations
+    (@SimpleBuilder, @SimpleMinimalBuilder, @Default, @IgnoreInBuilder)
+  - Records get `implements <Name><wither_interface_suffix>` when the builder
+    framework supports a wither interface (SimpleBuilder and RecordBuilder do;
+    SimpleMinimalBuilder and Lombok do not). Plain classes do not get an implements clause.
   - ENUM_PACKAGE: enum types are generated in <BASE_PACKAGE>.enums from the
     JSON's ``enums.types`` array. Any property type that is NOT a primitive,
     NOT in STANDARD_IMPORTS, and NOT a class declared in the JSON is assumed
@@ -132,50 +154,44 @@ STANDARD_IMPORTS: dict[str, str] = {
 # new enum to the catalog only requires using it as a property type.
 ENUM_PACKAGE = f"{BASE_PACKAGE}.enums"
 
-# Annotation imports
-ANNOTATION_IMPORTS: dict[str, str] = {
-    "SimpleBuilder": "org.javahelpers.simple.builders.core.annotations.SimpleBuilder",
-    "Default": "org.javahelpers.simple.builders.core.annotations.Default",
-    "IgnoreInBuilder": "org.javahelpers.simple.builders.core.annotations.IgnoreInBuilder",
-}
-
-# Default annotation settings — can be overridden via CLI args (--annotation, --annotation-import,
-# --record-implements). These control which builder annotation is placed on generated classes
-# and what implements clause records get.
-DEFAULT_ANNOTATION = "SimpleBuilder"
-DEFAULT_ANNOTATION_IMPORT = ANNOTATION_IMPORTS["SimpleBuilder"]
-DEFAULT_RECORD_IMPLEMENTS_SUFFIX = "Builder.With"
-
 # Predefined builder type presets. Each preset configures all annotation-related
 # parameters for a known framework. Use via ``--builder-type``.
-BUILDER_TYPE_PRESETS: dict[str, dict[str, str]] = {
+BUILDER_TYPE_PRESETS: dict[str, dict] = {
     "simple-builder": {
         "annotation": "SimpleBuilder",
-        "annotation_import": ANNOTATION_IMPORTS["SimpleBuilder"],
-        "record_implements_suffix": "Builder.With",
-        "default_import": ANNOTATION_IMPORTS["Default"],
-        "ignore_import": ANNOTATION_IMPORTS["IgnoreInBuilder"],
+        "annotation_import": "org.javahelpers.simple.builders.core.annotations.SimpleBuilder",
+        "wither_interface_suffix": "Builder.With",
+        "default_import": "org.javahelpers.simple.builders.core.annotations.Default",
+        "ignore_import": "org.javahelpers.simple.builders.core.annotations.IgnoreInBuilder",
+        "supported_kinds": {"class", "record"},
     },
     "simple-minimal-builder": {
-        "annotation": "MinimalBuilder",
-        "annotation_import": f"{ANNOTATION_IMPORTS['SimpleBuilder'].rsplit('.', 1)[0]}.MinimalBuilder",
-        "record_implements_suffix": "MinimalBuilder.With",
-        "default_import": ANNOTATION_IMPORTS["Default"],
-        "ignore_import": ANNOTATION_IMPORTS["IgnoreInBuilder"],
+        "annotation": "SimpleMinimalBuilder",
+        "annotation_import": "org.javahelpers.simple.builders.core.annotations.SimpleMinimalBuilder",
+        "wither_interface_suffix": "",
+        "default_import": "org.javahelpers.simple.builders.core.annotations.Default",
+        "ignore_import": "org.javahelpers.simple.builders.core.annotations.IgnoreInBuilder",
+        "supported_kinds": {"class", "record"},
     },
+    # RecordBuilder: only supports records (not plain classes). Has its own With interface
+    # (enableWither=true by default). No @Default/@IgnoreInBuilder — different mechanisms.
     "record-builder": {
         "annotation": "RecordBuilder",
-        "annotation_import": "io.soabase.recordbuilder.annotations.RecordBuilder",
-        "record_implements_suffix": "",
+        "annotation_import": "io.soabase.recordbuilder.core.RecordBuilder",
+        "wither_interface_suffix": "Builder.With",
         "default_import": "",
         "ignore_import": "",
+        "supported_kinds": {"record"},
     },
+    # Lombok: @Builder supports both classes and records. No With interface.
+    # No @Default/@IgnoreInBuilder — Lombok uses @Builder.Default on field initializers instead.
     "lombok": {
         "annotation": "Builder",
         "annotation_import": "lombok.Builder",
-        "record_implements_suffix": "",
+        "wither_interface_suffix": "",
         "default_import": "",
         "ignore_import": "",
+        "supported_kinds": {"class", "record"},
     },
 }
 
@@ -392,9 +408,7 @@ def resolve_imports(
     class_entry: dict,
     sub_package: str,
     class_index: dict[str, str],
-    annotation_import: str = DEFAULT_ANNOTATION_IMPORT,
-    default_import: str = ANNOTATION_IMPORTS["Default"],
-    ignore_import: str = ANNOTATION_IMPORTS["IgnoreInBuilder"],
+    preset: dict = BUILDER_TYPE_PRESETS["simple-builder"],
 ) -> list[str]:
     """
     Determine the sorted list of import statements needed for a class/record.
@@ -439,11 +453,11 @@ def resolve_imports(
             uses_ignore = True
 
     # Builder annotation is always used (parameterized via CLI)
-    needed.add(annotation_import)
-    if uses_default and default_import:
-        needed.add(default_import)
-    if uses_ignore and ignore_import:
-        needed.add(ignore_import)
+    needed.add(preset["annotation_import"])
+    if uses_default and preset["default_import"]:
+        needed.add(preset["default_import"])
+    if uses_ignore and preset["ignore_import"]:
+        needed.add(preset["ignore_import"])
 
     return sorted(needed)
 
@@ -457,10 +471,7 @@ def generate_class_source(
     class_entry: dict,
     sub_package: str,
     class_index: dict[str, str],
-    annotation_name: str = DEFAULT_ANNOTATION,
-    annotation_import: str = DEFAULT_ANNOTATION_IMPORT,
-    default_import: str = ANNOTATION_IMPORTS["Default"],
-    ignore_import: str = ANNOTATION_IMPORTS["IgnoreInBuilder"],
+    preset: dict = BUILDER_TYPE_PRESETS["simple-builder"],
 ) -> str:
     """
     Generate the full Java source for a ``kind: "class"`` entry.
@@ -470,7 +481,7 @@ def generate_class_source(
     """
     name = class_entry["name"]
     props = class_entry.get("properties", [])
-    imports = resolve_imports(class_entry, sub_package, class_index, annotation_import, default_import, ignore_import)
+    imports = resolve_imports(class_entry, sub_package, class_index, preset)
     package_decl = f"{BASE_PACKAGE}.{sub_package}"
 
     # Determine extends clause from the per-class field.
@@ -486,7 +497,7 @@ def generate_class_source(
         for imp in imports:
             lines.append(f"import {imp};")
         lines.append("")
-    lines.append(f"@{annotation_name}")
+    lines.append(f"@{preset['annotation']}")
     lines.append(f"public class {name}{extends_clause} {{")
     lines.append("")
 
@@ -495,7 +506,7 @@ def generate_class_source(
         field_name = prop["name"]
         field_type = prop["type"]
         annotations: list[str] = []
-        if "default" in prop and default_import:
+        if "default" in prop and preset["default_import"]:
             escaped = escape_java_string_literal(str(prop["default"]))
             annotations.append(f'@Default("{escaped}")')
         # NOTE: @IgnoreInBuilder targets METHOD/PARAMETER, not FIELD, so it is
@@ -521,7 +532,7 @@ def generate_class_source(
         lines.append("")
 
         # Setter (with @IgnoreInBuilder if flagged)
-        if prop.get("ignore") and ignore_import:
+        if prop.get("ignore") and preset["ignore_import"]:
             lines.append(f"{indent}@IgnoreInBuilder")
         lines.append(f"{indent}public void {setter}({field_type} {field_name}) {{")
         lines.append(f"{indent}  this.{field_name} = {field_name};")
@@ -537,16 +548,12 @@ def generate_record_source(
     class_entry: dict,
     sub_package: str,
     class_index: dict[str, str],
-    annotation_name: str = DEFAULT_ANNOTATION,
-    annotation_import: str = DEFAULT_ANNOTATION_IMPORT,
-    record_implements_suffix: str = DEFAULT_RECORD_IMPLEMENTS_SUFFIX,
-    default_import: str = ANNOTATION_IMPORTS["Default"],
-    ignore_import: str = ANNOTATION_IMPORTS["IgnoreInBuilder"],
+    preset: dict = BUILDER_TYPE_PRESETS["simple-builder"],
 ) -> str:
     """Generate the full Java source for a ``kind: "record"`` entry."""
     name = class_entry["name"]
     props = class_entry.get("properties", [])
-    imports = resolve_imports(class_entry, sub_package, class_index, annotation_import, default_import, ignore_import)
+    imports = resolve_imports(class_entry, sub_package, class_index, preset)
     package_decl = f"{BASE_PACKAGE}.{sub_package}"
 
     lines: list[str] = []
@@ -558,7 +565,7 @@ def generate_record_source(
         for imp in imports:
             lines.append(f"import {imp};")
         lines.append("")
-    lines.append(f"@{annotation_name}")
+    lines.append(f"@{preset['annotation']}")
     lines.append(f"public record {name}(")
 
     # Record components
@@ -566,10 +573,10 @@ def generate_record_source(
         field_name = prop["name"]
         field_type = prop["type"]
         annotations: list[str] = []
-        if "default" in prop and default_import:
+        if "default" in prop and preset["default_import"]:
             escaped = escape_java_string_literal(str(prop["default"]))
             annotations.append(f'@Default("{escaped}")')
-        if prop.get("ignore") and ignore_import:
+        if prop.get("ignore") and preset["ignore_import"]:
             annotations.append("@IgnoreInBuilder")
         prefix = "    "
         if annotations:
@@ -579,7 +586,7 @@ def generate_record_source(
         comma = "," if i < len(props) - 1 else ""
         lines.append(f"{ann_str}{field_type} {field_name}{comma}")
 
-    implements_clause = f" implements {name}{record_implements_suffix}" if record_implements_suffix else ""
+    implements_clause = f" implements {name}{preset['wither_interface_suffix']}" if preset["wither_interface_suffix"] else ""
     lines.append(f"){implements_clause} {{")
     lines.append("}")
     lines.append("")
@@ -618,10 +625,7 @@ def generate_base_class_source(
     props: list[dict],
     class_index: dict[str, str],
     root_entity_name: str = "",
-    annotation_name: str = DEFAULT_ANNOTATION,
-    annotation_import: str = DEFAULT_ANNOTATION_IMPORT,
-    default_import: str = ANNOTATION_IMPORTS["Default"],
-    ignore_import: str = ANNOTATION_IMPORTS["IgnoreInBuilder"],
+    preset: dict = BUILDER_TYPE_PRESETS["simple-builder"],
 ) -> str:
     """
     Generate a base infrastructure class (root entity or intermediate base).
@@ -634,9 +638,9 @@ def generate_base_class_source(
 
     # Build a minimal class_entry for resolve_imports
     class_entry: dict = {"properties": props}
-    imports = resolve_imports(class_entry, sub_package, class_index, annotation_import, default_import, ignore_import)
+    imports = resolve_imports(class_entry, sub_package, class_index, preset)
     # Remove builder annotation from imports — base classes are not annotated
-    imports = [i for i in imports if not i.endswith(f".{annotation_name}") and i != annotation_import]
+    imports = [i for i in imports if not i.endswith(f".{preset['annotation']}") and i != preset["annotation_import"]]
 
     # Add import for superclass if it's in a different package
     if extends_value:
@@ -699,17 +703,13 @@ def generate_source(
     class_entry: dict,
     sub_package: str,
     class_index: dict[str, str],
-    annotation_name: str = DEFAULT_ANNOTATION,
-    annotation_import: str = DEFAULT_ANNOTATION_IMPORT,
-    record_implements_suffix: str = DEFAULT_RECORD_IMPLEMENTS_SUFFIX,
-    default_import: str = ANNOTATION_IMPORTS["Default"],
-    ignore_import: str = ANNOTATION_IMPORTS["IgnoreInBuilder"],
+    preset: dict = BUILDER_TYPE_PRESETS["simple-builder"],
 ) -> str:
     """Dispatch to the correct generator based on ``kind``."""
     kind = class_entry.get("kind", "class")
     if kind == "record":
-        return generate_record_source(class_entry, sub_package, class_index, annotation_name, annotation_import, record_implements_suffix, default_import, ignore_import)
-    return generate_class_source(class_entry, sub_package, class_index, annotation_name, annotation_import, default_import, ignore_import)
+        return generate_record_source(class_entry, sub_package, class_index, preset)
+    return generate_class_source(class_entry, sub_package, class_index, preset)
 
 
 # ---------------------------------------------------------------------------
@@ -803,7 +803,7 @@ def main(argv: list[str] | None = None) -> int:
         "--annotation",
         type=str,
         default=None,
-        help=f"Builder annotation name to place on classes (default: {DEFAULT_ANNOTATION}). "
+        help=f"Builder annotation name to place on classes (default: {BUILDER_TYPE_PRESETS['simple-builder']['annotation']}). "
         "Use e.g. MinimalBuilder for a custom template annotation.",
     )
     parser.add_argument(
@@ -814,10 +814,10 @@ def main(argv: list[str] | None = None) -> int:
         "If omitted, derived from --annotation (simple-builders annotations package).",
     )
     parser.add_argument(
-        "--record-implements-suffix",
+        "--wither-interface-suffix",
         type=str,
         default=None,
-        help="Suffix for the implements clause on records (default: Builder.With). "
+        help="Suffix for the wither interface implements clause on records (default: Builder.With). "
         "The full clause is <ClassName><suffix>. Use empty string to omit the implements clause.",
     )
     parser.add_argument(
@@ -840,17 +840,20 @@ def main(argv: list[str] | None = None) -> int:
     out_root: Path = args.out
     limit: int | None = args.limit
 
-    # Resolve annotation settings: start with preset (if any), then apply individual overrides
-    preset = BUILDER_TYPE_PRESETS.get(args.builder_type, BUILDER_TYPE_PRESETS["simple-builder"])
-
-    annotation_name: str = args.annotation or preset["annotation"]
-    annotation_import: str = args.annotation_import or preset["annotation_import"]
-    record_implements_suffix: str = (
-        args.record_implements_suffix if args.record_implements_suffix is not None
-        else preset["record_implements_suffix"]
-    )
-    default_import: str = args.default_import if args.default_import is not None else preset["default_import"]
-    ignore_import: str = args.ignore_import if args.ignore_import is not None else preset["ignore_import"]
+    # Resolve preset: start with builder-type preset, then apply individual overrides
+    base_preset = BUILDER_TYPE_PRESETS.get(args.builder_type, BUILDER_TYPE_PRESETS["simple-builder"])
+    preset: dict = {
+        "annotation": args.annotation or base_preset["annotation"],
+        "annotation_import": args.annotation_import or base_preset["annotation_import"],
+        "wither_interface_suffix": (
+            args.wither_interface_suffix if args.wither_interface_suffix is not None
+            else base_preset["wither_interface_suffix"]
+        ),
+        "default_import": args.default_import if args.default_import is not None else base_preset["default_import"],
+        "ignore_import": args.ignore_import if args.ignore_import is not None else base_preset["ignore_import"],
+        "supported_kinds": base_preset.get("supported_kinds", {"class", "record"}),
+    }
+    supported_kinds: set[str] = preset["supported_kinds"]
 
     if limit is not None and limit < 0:
         print("error: --limit must be >= 0", file=sys.stderr)
@@ -886,11 +889,11 @@ def main(argv: list[str] | None = None) -> int:
 
     print(f"JSON:       {json_path}")
     print(f"Output:     {out_root}")
-    print(f"Annotation: @{annotation_name} (from {annotation_import})")
-    if record_implements_suffix:
-        print(f"Record impl: <Name>{record_implements_suffix}")
+    print(f"Annotation: @{preset['annotation']} (from {preset['annotation_import']})")
+    if preset["wither_interface_suffix"]:
+        print(f"Wither iface: <Name>{preset['wither_interface_suffix']}")
     else:
-        print(f"Record impl: (none)")
+        print(f"Wither iface: (none)")
     print(f"Enums:      {len(enum_types)}")
     print(f"Base classes: {1 + len(intermediate_classes) if root_entity else len(intermediate_classes)}")
     print(f"Classes in JSON: {total_in_json}")
@@ -954,7 +957,7 @@ def main(argv: list[str] | None = None) -> int:
             validate_identifier(root_name, f"root entity name {root_name!r}")
             source = generate_base_class_source(
                 root_name, root_pkg, None, root_props, class_index, root_name,
-                annotation_name, annotation_import, default_import, ignore_import,
+                preset,
             )
         except (ValidationError, KeyError, TypeError) as e:
             msg = f"failed to generate root entity {root_name!r}: {e}"
@@ -988,7 +991,7 @@ def main(argv: list[str] | None = None) -> int:
             validate_identifier(inter_name, f"intermediate base class name {inter_name!r}")
             source = generate_base_class_source(
                 inter_name, inter_pkg, inter_extends, [], class_index, root_name,
-                annotation_name, annotation_import, default_import, ignore_import,
+                preset,
             )
         except (ValidationError, KeyError, TypeError) as e:
             msg = f"failed to generate base class {inter_name!r}: {e}"
@@ -1035,6 +1038,9 @@ def main(argv: list[str] | None = None) -> int:
                     f"expected one of {sorted(VALID_KINDS)}"
                 )
 
+            if kind not in supported_kinds:
+                continue
+
             # Validate extends if present.
             extends_value = cls.get("extends")
             if extends_value is not None:
@@ -1060,7 +1066,7 @@ def main(argv: list[str] | None = None) -> int:
 
         # --- Generate source ---
         try:
-            source = generate_source(cls, sub_package, class_index, annotation_name, annotation_import, record_implements_suffix, default_import, ignore_import)
+            source = generate_source(cls, sub_package, class_index, preset)
         except (KeyError, TypeError) as e:
             msg = f"failed to generate source for class {name!r}: {e}"
             errors.append(msg)

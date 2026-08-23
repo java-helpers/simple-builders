@@ -21,8 +21,8 @@
     <commons-lang.version>3.20.0</commons-lang.version>
 
     <!-- Builder framework versions for performance comparison profiles -->
-    <record-builder.version>37</record-builder.version>
-    <lombok.version>1.18.38</lombok.version>
+    <record-builder.version>53</record-builder.version>
+    <lombok.version>1.18.46</lombok.version>
 
     <maven.compiler.source>${java.version}</maven.compiler.source>
     <maven.compiler.target>${java.version}</maven.compiler.target>
@@ -118,9 +118,8 @@
     </profile>
 
     <!--
-      MinimalBuilder profile: uses @SimpleBuilder with all optional features disabled
-      and a custom builder suffix "MinimalBuilder". This tests the performance of
-      the minimal code generation path.
+      SimpleMinimalBuilder profile: uses @SimpleMinimalBuilder annotation which
+      disables all optional features via its template. No compiler args needed.
     -->
     <profile>
       <id>minimalbuilder</id>
@@ -149,22 +148,6 @@
                     <arg>-Averbose=${simplebuilder.verbose}</arg>
                     <arg>-Asimplebuilder.performanceTracking=${simplebuilder.performanceTracking}</arg>
                     <arg>-Asimplebuilder.performanceOutputFile=${simplebuilder.performanceOutputFile}</arg>
-                    <arg>-Asimplebuilder.generateFieldSupplier=DISABLED</arg>
-                    <arg>-Asimplebuilder.generateFieldConsumer=DISABLED</arg>
-                    <arg>-Asimplebuilder.generateBuilderConsumer=DISABLED</arg>
-                    <arg>-Asimplebuilder.generateConditionalHelper=DISABLED</arg>
-                    <arg>-Asimplebuilder.generateVarArgsHelpers=DISABLED</arg>
-                    <arg>-Asimplebuilder.generateStringFormatHelpers=DISABLED</arg>
-                    <arg>-Asimplebuilder.generateUnboxedOptional=DISABLED</arg>
-                    <arg>-Asimplebuilder.generateAddToCollectionHelpers=DISABLED</arg>
-                    <arg>-Asimplebuilder.generateWithInterface=DISABLED</arg>
-                    <arg>-Asimplebuilder.usingArrayListBuilder=DISABLED</arg>
-                    <arg>-Asimplebuilder.usingHashSetBuilder=DISABLED</arg>
-                    <arg>-Asimplebuilder.usingHashMapBuilder=DISABLED</arg>
-                    <arg>-Asimplebuilder.usingGeneratedAnnotation=DISABLED</arg>
-                    <arg>-Asimplebuilder.usingBuilderImplementationAnnotation=DISABLED</arg>
-                    <arg>-Asimplebuilder.usingJacksonDeserializerAnnotation=DISABLED</arg>
-                    <arg>-Asimplebuilder.builderSuffix=MinimalBuilder</arg>
                   </compilerArgs>
                 </configuration>
               </execution>
@@ -181,14 +164,10 @@
     -->
     <profile>
       <id>recordbuilder</id>
-      <properties>
-        <simplebuilder.performanceTracking>false</simplebuilder.performanceTracking>
-        <simplebuilder.performanceOutputFile></simplebuilder.performanceOutputFile>
-      </properties>
       <dependencies>
         <dependency>
           <groupId>io.soabase.record-builder</groupId>
-          <artifactId>record-builder-annotations</artifactId>
+          <artifactId>record-builder-core</artifactId>
           <version>${record-builder.version}</version>
         </dependency>
       </dependencies>
@@ -209,10 +188,6 @@
                       <version>${record-builder.version}</version>
                     </path>
                   </annotationProcessorPaths>
-                  <!-- No simplebuilder compiler args — RecordBuilder has its own processor -->
-                  <compilerArgs>
-                    <arg>-ArecordBuilder.packagesCanUseRecordBuilder=*</arg>
-                  </compilerArgs>
                 </configuration>
               </execution>
             </executions>
@@ -228,10 +203,6 @@
     -->
     <profile>
       <id>lombok</id>
-      <properties>
-        <simplebuilder.performanceTracking>false</simplebuilder.performanceTracking>
-        <simplebuilder.performanceOutputFile></simplebuilder.performanceOutputFile>
-      </properties>
       <dependencies>
         <dependency>
           <groupId>org.projectlombok</groupId>
@@ -257,7 +228,6 @@
                       <version>${lombok.version}</version>
                     </path>
                   </annotationProcessorPaths>
-                  <!-- No simplebuilder compiler args — Lombok has its own processor -->
                 </configuration>
               </execution>
             </executions>
