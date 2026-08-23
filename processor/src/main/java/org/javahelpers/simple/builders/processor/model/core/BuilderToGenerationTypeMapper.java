@@ -27,12 +27,14 @@ package org.javahelpers.simple.builders.processor.model.core;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
+import org.javahelpers.simple.builders.processor.model.method.ConstructorDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodCodePlaceholder;
 import org.javahelpers.simple.builders.processor.model.method.MethodCodeStringPlaceholder;
 import org.javahelpers.simple.builders.processor.model.method.MethodCodeTypePlaceholder;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 import org.javahelpers.simple.builders.processor.model.type.BuilderNestedTypeDto;
 import org.javahelpers.simple.builders.processor.model.type.NestedTypeDto;
+import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
 /**
  * Maps generation-side DTOs ({@link BuilderDefinitionDto}, {@link BuilderMethodDto}, {@link
@@ -53,24 +55,38 @@ public class BuilderToGenerationTypeMapper {
    * Maps a {@link BuilderDefinitionDto} (generation DTO) to a {@link GenerationTargetClassDto}
    * (rendering DTO) for code generation.
    *
-   * <p>This maps all rendering-relevant fields, converting {@link BuilderMethodDto} to {@link
-   * MethodDto} and {@link BuilderNestedTypeDto} to {@link NestedTypeDto}.
+   * <p>Javadoc generation is controlled by the effective configuration in {@code context}. When
+   * disabled, all {@link JavadocDto} instances are left out of the rendering DTO so the code
+   * generator can remain a pure renderer.
    *
    * @param builderDto the generation DTO
+   * @param context the processing context with the effective builder configuration
    * @return the rendering DTO for code generation
    */
-  public static GenerationTargetClassDto toRenderingDto(BuilderDefinitionDto builderDto) {
+  public static GenerationTargetClassDto toRenderingDto(
+      BuilderDefinitionDto builderDto, ProcessingContext context) {
+    boolean generateJavaDoc = isJavaDocGenerationEnabled(context);
     GenerationTargetClassDto renderingDto = new GenerationTargetClassDto();
     renderingDto.setTypeName(builderDto.getTypeName());
     renderingDto.setClassAccessModifier(builderDto.getClassAccessModifier());
     renderingDto.setSuperType(builderDto.getSuperType());
-    renderingDto.setClassJavadoc(builderDto.getClassJavadoc());
+    renderingDto.setClassJavadoc(generateJavaDoc ? builderDto.getClassJavadoc() : null);
 
-    // Copy class fields
-    builderDto.getClassFields().forEach(renderingDto::addClassField);
+    // Copy class fields, clearing javadoc if generation is disabled
+    for (ClassFieldDto classField : builderDto.getClassFields()) {
+      if (!generateJavaDoc) {
+        classField.setJavadoc(null);
+      }
+      renderingDto.addClassField(classField);
+    }
 
-    // Copy constructors
-    builderDto.getConstructors().forEach(renderingDto::addConstructor);
+    // Copy constructors, clearing javadoc if generation is disabled
+    for (ConstructorDto constructor : builderDto.getConstructors()) {
+      if (!generateJavaDoc) {
+        constructor.setJavadoc(null);
+      }
+      renderingDto.addConstructor(constructor);
+    }
 
     // Copy generics
     builderDto.getGenerics().forEach(renderingDto::addGeneric);
@@ -87,23 +103,23 @@ public class BuilderToGenerationTypeMapper {
     // Map and copy methods from fields
     for (FieldDto field : builderDto.getConstructorFieldsForBuilder()) {
       for (BuilderMethodDto method : field.getMethods()) {
-        renderingDto.addMethod(toMethodDto(method));
+        renderingDto.addMethod(toMethodDto(method, generateJavaDoc));
       }
     }
     for (FieldDto field : builderDto.getSetterFieldsForBuilder()) {
       for (BuilderMethodDto method : field.getMethods()) {
-        renderingDto.addMethod(toMethodDto(method));
+        renderingDto.addMethod(toMethodDto(method, generateJavaDoc));
       }
     }
 
     // Map and copy builder-level methods from enhancers
     for (BuilderMethodDto classMethod : builderDto.getMethods()) {
-      renderingDto.addMethod(toMethodDto(classMethod));
+      renderingDto.addMethod(toMethodDto(classMethod, generateJavaDoc));
     }
 
     // Map and copy nested types from enhancers
     for (BuilderNestedTypeDto builderNestedType : builderDto.getNestedTypes()) {
-      renderingDto.addNestedType(toNestedTypeDto(builderNestedType));
+      renderingDto.addNestedType(toNestedTypeDto(builderNestedType, generateJavaDoc));
     }
 
     return renderingDto;
@@ -117,26 +133,29 @@ public class BuilderToGenerationTypeMapper {
    * (not deep-copied), since the rendering phase only reads from it.
    *
    * @param classMethod the generation DTO to map
+   * @param generateJavaDoc whether javadoc should be copied into the rendering DTO
    * @return a new {@link MethodDto} with all rendering fields copied
    */
-  private static MethodDto toMethodDto(BuilderMethodDto classMethod) {
+  private static MethodDto toMethodDto(BuilderMethodDto classMethod, boolean generateJavaDoc) {
     MethodDto method = new MethodDto(classMethod.getMethodName(), classMethod.getReturnType());
     method.setModifier(classMethod.getModifier().orElse(null));
     method.setStatic(classMethod.isStatic());
     method.setOrdering(classMethod.getOrdering());
 
-    // Enrich javadoc with pre-built source description if source field is known
-    JavadocDto javadoc = classMethod.getJavadoc();
-    if (StringUtils.isNotBlank(classMethod.getSourceFieldName())) {
-      if (javadoc == null) {
-        javadoc = new JavadocDto();
+    if (generateJavaDoc) {
+      // Enrich javadoc with pre-built source description if source field is known
+      JavadocDto javadoc = classMethod.getJavadoc();
+      if (StringUtils.isNotBlank(classMethod.getSourceFieldName())) {
+        if (javadoc == null) {
+          javadoc = new JavadocDto();
+        }
+        String sourceDescription = classMethod.getSourceDescription();
+        if (sourceDescription != null) {
+          javadoc.appendDescriptionLine(sourceDescription);
+        }
       }
-      String sourceDescription = classMethod.getSourceDescription();
-      if (sourceDescription != null) {
-        javadoc.appendDescriptionLine(sourceDescription);
-      }
+      method.setJavadoc(javadoc);
     }
-    method.setJavadoc(javadoc);
     classMethod.getAnnotations().forEach(method::addAnnotation);
     classMethod.getParameters().forEach(method::addParameter);
     classMethod.getGenericParameters().forEach(method::addGenericParameter);
@@ -164,16 +183,34 @@ public class BuilderToGenerationTypeMapper {
    * annotations, and methods (mapped via {@link #toMethodDto}).
    *
    * @param builderNestedType the generation DTO to map
+   * @param generateJavaDoc whether javadoc should be copied into the rendering DTO
    * @return a new {@link NestedTypeDto} with all rendering fields copied
    */
-  public static NestedTypeDto toNestedTypeDto(BuilderNestedTypeDto builderNestedType) {
+  private static NestedTypeDto toNestedTypeDto(
+      BuilderNestedTypeDto builderNestedType, boolean generateJavaDoc) {
     NestedTypeDto nestedType = new NestedTypeDto();
     nestedType.setTypeName(builderNestedType.getTypeName());
     nestedType.setKind(builderNestedType.getKind());
     nestedType.setVisibility(builderNestedType.getVisibility());
-    nestedType.setJavadoc(builderNestedType.getJavadoc());
+    if (generateJavaDoc) {
+      nestedType.setJavadoc(builderNestedType.getJavadoc());
+    }
     builderNestedType.getAnnotations().forEach(nestedType::addAnnotation);
-    builderNestedType.getMethods().forEach(method -> nestedType.addMethod(toMethodDto(method)));
+    builderNestedType
+        .getMethods()
+        .forEach(method -> nestedType.addMethod(toMethodDto(method, generateJavaDoc)));
     return nestedType;
+  }
+
+  /**
+   * Determines whether javadoc should be emitted based on the effective configuration.
+   *
+   * @param context the processing context, may be {@code null} for tests
+   * @return {@code true} when javadoc generation is enabled (default) or context is unavailable
+   */
+  private static boolean isJavaDocGenerationEnabled(ProcessingContext context) {
+    return context == null
+        || context.getConfiguration() == null
+        || context.getConfiguration().shouldGenerateJavaDoc();
   }
 }
