@@ -44,6 +44,14 @@ BUILDER_TYPE_TO_PROFILE = {
     "lombok": "lombok",
 }
 
+# Mapping from --builder-type to the annotation name used in generated source files
+BUILDER_TYPE_ANNOTATION = {
+    "simple-builder": "@SimpleBuilder",
+    "simple-minimal-builder": "@SimpleMinimalBuilder",
+    "record-builder": "@RecordBuilder",
+    "lombok": "@Builder",
+}
+
 
 def count_source_files() -> int:
     """Count Java source files in src/main/java before compilation."""
@@ -59,6 +67,26 @@ def count_generated_builders() -> int:
     if not gen_dir.exists():
         return 0
     return sum(1 for _ in gen_dir.rglob("*.java"))
+
+
+def count_annotated_sources(annotation: str) -> int:
+    """Count Java source files in src/main/java containing the given annotation.
+
+    Used as a fallback for builder types that modify classes in-place (e.g. Lombok)
+    rather than generating separate source files.
+    """
+    src_dir = BASE_DIR / "src" / "main" / "java"
+    if not src_dir.exists():
+        return 0
+    count = 0
+    for f in src_dir.rglob("*.java"):
+        try:
+            text = f.read_text()
+        except OSError:
+            continue
+        if annotation in text:
+            count += 1
+    return count
 
 
 _TIMESTAMP_RE = re.compile(r"^(\d{2}):(\d{2}):(\d{2})\.(\d{3})")
@@ -92,7 +120,8 @@ def parse_compiler_time(output: str) -> Optional[float]:
     return None
 
 
-def run_one(run_index: int, profile: str, has_json: bool, report_dir: Path) -> Optional[dict]:
+def run_one(run_index: int, profile: str, has_json: bool, report_dir: Path,
+           builder_type: str = "") -> Optional[dict]:
     """Run a single clean compile and return the parsed JSON report (or wall-time-only dict)."""
     report_file = report_dir / f"run-{run_index:02d}.json"
 
@@ -128,6 +157,10 @@ def run_one(run_index: int, profile: str, has_json: bool, report_dir: Path) -> O
         return None
 
     builder_count = count_generated_builders()
+    if builder_count == 0 and builder_type:
+        annotation = BUILDER_TYPE_ANNOTATION.get(builder_type, "")
+        if annotation:
+            builder_count = count_annotated_sources(annotation)
     compiler_time = parse_compiler_time(result.stdout + result.stderr)
 
     if has_json:
@@ -388,7 +421,7 @@ def main() -> None:
     runs: list[dict] = []
     for i in range(1, num_runs + 1):
         run_start = time.time()
-        data = run_one(i, profile, has_json, report_dir)
+        data = run_one(i, profile, has_json, report_dir, builder_type)
         if data is not None:
             if "_wallTimeSeconds" not in data:
                 data["_wallTimeSeconds"] = time.time() - run_start
