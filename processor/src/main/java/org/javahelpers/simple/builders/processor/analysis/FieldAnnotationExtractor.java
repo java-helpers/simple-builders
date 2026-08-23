@@ -420,7 +420,7 @@ public final class FieldAnnotationExtractor {
    * @return {@code true} if the value is a simple Java identifier
    */
   private static boolean isSimpleIdentifier(String rawValue) {
-    if (rawValue == null || rawValue.isEmpty()) {
+    if (rawValue.isEmpty()) {
       return false;
     }
     if (!Character.isJavaIdentifierStart(rawValue.charAt(0))) {
