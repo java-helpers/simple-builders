@@ -416,10 +416,8 @@ public final class ActivePerformanceTracker implements PerformanceTracker {
     sb.append(indent).append("},\n");
 
     appendClassMetricsJson(sb, indent, indent2, indent3);
-    appendNamedStatsJson(
-        sb, "generatorStats", generatorTimes, generatorCalls, indent, indent2, indent3, false);
-    appendNamedStatsJson(
-        sb, "enhancerStats", enhancerTimes, enhancerCalls, indent, indent2, indent3, true);
+    appendNamedStatsJson(sb, "generatorStats", generatorTimes, generatorCalls, indent, false);
+    appendNamedStatsJson(sb, "enhancerStats", enhancerTimes, enhancerCalls, indent, true);
 
     sb.append("}\n");
 
@@ -485,8 +483,6 @@ public final class ActivePerformanceTracker implements PerformanceTracker {
    * @param timesMap map of names to elapsed nanoseconds
    * @param callsMap map of names to call counts
    * @param indent the base indentation level
-   * @param indent2 two-level indentation
-   * @param indent3 three-level indentation
    * @param isLast whether this is the last array in the JSON object (controls trailing comma)
    */
   private void appendNamedStatsJson(
@@ -495,9 +491,9 @@ public final class ActivePerformanceTracker implements PerformanceTracker {
       Map<String, Long> timesMap,
       Map<String, Integer> callsMap,
       String indent,
-      String indent2,
-      String indent3,
       boolean isLast) {
+    String indent2 = indent + "  ";
+    String indent3 = indent + "    ";
     List<Map.Entry<String, Long>> sorted = new ArrayList<>(timesMap.entrySet());
     sorted.sort(Map.Entry.<String, Long>comparingByValue().reversed());
     sb.append(indent).append(jsonString(statsKey)).append(": [\n");

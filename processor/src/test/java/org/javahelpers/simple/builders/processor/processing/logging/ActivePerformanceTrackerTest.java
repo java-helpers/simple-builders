@@ -494,7 +494,7 @@ class ActivePerformanceTrackerTest {
   }
 
   @Test
-  void generateReport_logsJsonWrittenMessageOnSuccess() throws IOException {
+  void generateReport_logsJsonWrittenMessageOnSuccess() {
     Path jsonFile = tempDir.resolve("report-success.json");
     ActivePerformanceTracker tracker = new ActivePerformanceTracker(jsonFile.toString());
     tracker.startClass("MyClass");
