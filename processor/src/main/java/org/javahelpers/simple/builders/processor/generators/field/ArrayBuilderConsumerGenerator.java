@@ -137,15 +137,17 @@ public class ArrayBuilderConsumerGenerator implements MethodGenerator {
           """
           $helperType:T builder;
           if (this.$fieldName:N.isSet()) {
-            builder = new $helperType:T(java.util.Arrays.asList(org.apache.commons.lang3.ArrayUtils.toObject(this.$fieldName:N.value())));
+            builder = new $helperType:T(Arrays.asList(ArrayUtils.toObject(this.$fieldName:N.value())));
           } else {
             builder = new $helperType:T();
           }
           $dtoMethodParam:N.accept(builder);
           this.$fieldName:N = $builderFieldWrapper:T.changedValue(
-              org.apache.commons.lang3.ArrayUtils.toPrimitive(builder.build().toArray(new $elementType:B[0])));
+              ArrayUtils.toPrimitive(builder.build().toArray(new $elementType:B[0])));
           return this;
           """);
+      methodDto.getMethodCodeDto().addCodeBlockImport(java.util.Arrays.class);
+      methodDto.getMethodCodeDto().addCodeBlockImport(org.apache.commons.lang3.ArrayUtils.class);
     } else {
       methodDto.setCode(
           """

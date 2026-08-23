@@ -151,6 +151,17 @@ public class CodeTemplateDto {
   }
 
   /**
+   * Adding an import statement to the code block.
+   *
+   * @param importStatement the import statement to add
+   */
+  public void addCodeBlockImport(ImportStatement importStatement) {
+    if (importStatement != null) {
+      this.codeBlockImports.add(importStatement);
+    }
+  }
+
+  /**
    * Adds a static import for a method/field used in the code block (convenience method).
    *
    * @param clazz the class containing the static member

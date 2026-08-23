@@ -124,9 +124,10 @@ public class ArrayConversionGenerator implements MethodGenerator {
       methodDto.setCode(
           """
           this.$fieldName:N = $builderFieldWrapper:T.changedValue(
-              org.apache.commons.lang3.ArrayUtils.toPrimitive($dtoMethodParams:N.toArray(new $elementType:B[0])));
+              ArrayUtils.toPrimitive($dtoMethodParams:N.toArray(new $elementType:B[0])));
           return this;
           """);
+      methodDto.getMethodCodeDto().addCodeBlockImport(org.apache.commons.lang3.ArrayUtils.class);
     } else {
       methodDto.setCode(
           """
