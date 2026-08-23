@@ -152,10 +152,10 @@ public class BuilderToGenerationTypeMapper {
           method.addArgument(typePlaceholder.getLabel(), typePlaceholder.getValue());
         }
       }
-      classMethod
+      method
           .getMethodCodeDto()
           .getCodeBlockImports()
-          .forEach(method.getMethodCodeDto()::addCodeBlockImport);
+          .addAll(classMethod.getMethodCodeDto().getCodeBlockImports());
     }
 
     return method;
