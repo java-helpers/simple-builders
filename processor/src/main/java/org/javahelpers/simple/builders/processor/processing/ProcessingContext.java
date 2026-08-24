@@ -257,15 +257,6 @@ public final class ProcessingContext {
   }
 
   /**
-   * Gets the processing logger for this context.
-   *
-   * @return the processing logger
-   */
-  public ProcessingLogger getLogger() {
-    return logger;
-  }
-
-  /**
    * Logs an info-level message that appears in normal Maven output.
    *
    * @param message the info message to log

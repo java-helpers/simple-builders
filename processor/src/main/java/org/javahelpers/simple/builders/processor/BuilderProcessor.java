@@ -75,6 +75,7 @@ import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLo
 @SupportedAnnotationTypes("*")
 public class BuilderProcessor extends AbstractProcessor {
   private ProcessingContext context;
+  private ProcessingLogger logger;
   private RoasterCodeGenerator codeGenerator;
   private JacksonModuleGenerator jacksonModuleGenerator;
   private boolean supportedJdk = true;
@@ -82,7 +83,7 @@ public class BuilderProcessor extends AbstractProcessor {
   @Override
   public synchronized void init(ProcessingEnvironment processingEnv) {
     super.init(processingEnv);
-    ProcessingLogger logger = new ProcessingLogger(processingEnv);
+    this.logger = new ProcessingLogger(processingEnv);
     logger.debug("Starting BuilderProcessor...");
 
     // Read global configuration from compiler arguments
@@ -123,7 +124,7 @@ public class BuilderProcessor extends AbstractProcessor {
     if (roundEnv.processingOver()) {
       // Generate performance report at the end of processing
       PerformanceTracker tracker = context.getPerformanceTracker();
-      tracker.generateReport(context.getLogger());
+      tracker.generateReport(logger);
 
       List<GenerationTargetClassDto> moduleClassDefs =
           jacksonModuleGenerator.getModuleDefinitions();
