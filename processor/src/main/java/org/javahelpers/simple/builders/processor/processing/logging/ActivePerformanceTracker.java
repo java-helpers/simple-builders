@@ -31,11 +31,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Active implementation of {@link PerformanceTracker} that measures execution times using {@link
@@ -53,12 +56,11 @@ import java.util.Map;
  * structured JSON report with hierarchical phase breakdown, class metrics, and generator/enhancer
  * statistics for automated analysis.
  *
- * <p><b>Thread-safety:</b> The {@code start*}/{@code end*} methods use per-thread stacks and are
- * safe for concurrent use. However, the aggregation maps ({@link #phaseTimes}, {@link
- * #generatorTimes}, etc.) are plain {@link LinkedHashMap}s — concurrent {@code end*} calls that
- * write to the same map keys may race. The current annotation processing pipeline is
- * single-threaded; if parallel processing is introduced, these maps must be replaced with
- * concurrent alternatives.
+ * <p><b>Thread-safety:</b> All methods are safe for concurrent use. The {@code start*}/{@code end*}
+ * methods use per-thread {@link ThreadLocal} stacks, so each thread's timing is isolated.
+ * Aggregation maps are {@link ConcurrentHashMap}s and the class counter is an {@link
+ * AtomicInteger}, allowing concurrent writes from multiple threads. The {@code startClass}/{@code
+ * endClass} pair uses per-thread state, so each thread must call them in matched pairs.
  */
 public final class ActivePerformanceTracker implements PerformanceTracker {
 
@@ -92,12 +94,12 @@ public final class ActivePerformanceTracker implements PerformanceTracker {
             PHASE_CLASS_ANNOTATIONS));
   }
 
-  private final Map<String, Long> phaseTimes = new LinkedHashMap<>();
-  private final Map<String, Long> generatorTimes = new LinkedHashMap<>();
-  private final Map<String, Integer> generatorCalls = new LinkedHashMap<>();
-  private final Map<String, Long> enhancerTimes = new LinkedHashMap<>();
-  private final Map<String, Integer> enhancerCalls = new LinkedHashMap<>();
-  private final List<ClassMetric> classMetrics = new ArrayList<>();
+  private final Map<String, Long> phaseTimes = new ConcurrentHashMap<>();
+  private final Map<String, Long> generatorTimes = new ConcurrentHashMap<>();
+  private final Map<String, Integer> generatorCalls = new ConcurrentHashMap<>();
+  private final Map<String, Long> enhancerTimes = new ConcurrentHashMap<>();
+  private final Map<String, Integer> enhancerCalls = new ConcurrentHashMap<>();
+  private final List<ClassMetric> classMetrics = Collections.synchronizedList(new ArrayList<>());
 
   private final ThreadLocal<List<Long>> phaseStartStack = ThreadLocal.withInitial(ArrayList::new);
   private final ThreadLocal<List<Long>> generatorStartStack =
@@ -105,12 +107,12 @@ public final class ActivePerformanceTracker implements PerformanceTracker {
   private final ThreadLocal<List<Long>> enhancerStartStack =
       ThreadLocal.withInitial(ArrayList::new);
 
-  private long totalStartTime;
-  private int totalClasses = 0;
+  private final long totalStartTime;
+  private final AtomicInteger totalClasses = new AtomicInteger(0);
   private final String outputFilePath;
 
-  private String currentClassName;
-  private long classStartTime;
+  private final ThreadLocal<String> currentClassName = new ThreadLocal<>();
+  private final ThreadLocal<Long> classStartTime = new ThreadLocal<>();
 
   /**
    * Creates a new ActivePerformanceTracker and records the overall start time.
@@ -174,19 +176,20 @@ public final class ActivePerformanceTracker implements PerformanceTracker {
 
   @Override
   public void startClass(String className) {
-    this.currentClassName = className;
-    this.classStartTime = System.nanoTime();
+    this.currentClassName.set(className);
+    this.classStartTime.set(System.nanoTime());
   }
 
   @Override
   public void endClass(int fieldCount, int collectionCount) {
-    if (currentClassName == null) {
+    String name = currentClassName.get();
+    if (name == null) {
       return;
     }
-    long elapsed = System.nanoTime() - classStartTime;
-    classMetrics.add(new ClassMetric(currentClassName, elapsed, fieldCount, collectionCount));
-    totalClasses++;
-    currentClassName = null;
+    long elapsed = System.nanoTime() - classStartTime.get();
+    classMetrics.add(new ClassMetric(name, elapsed, fieldCount, collectionCount));
+    totalClasses.incrementAndGet();
+    currentClassName.remove();
   }
 
   @Override
@@ -196,7 +199,7 @@ public final class ActivePerformanceTracker implements PerformanceTracker {
 
     logger.info("simple-builders: PERFORMANCE REPORT");
     logger.info("================================");
-    logger.info("Total classes processed: %d", totalClasses);
+    logger.info("Total classes processed: %d", totalClasses.get());
     logger.info(String.format(Locale.US, "Total processing time: %.1fs", totalSeconds));
     logger.info("");
 
@@ -209,8 +212,8 @@ public final class ActivePerformanceTracker implements PerformanceTracker {
     logger.info("");
 
     // Average per class
-    if (totalClasses > 0) {
-      double avgPerClass = (totalTime / 1_000_000.0) / totalClasses;
+    if (totalClasses.get() > 0) {
+      double avgPerClass = (totalTime / 1_000_000.0) / totalClasses.get();
       logger.info(String.format(Locale.US, "Average per class: %.1fms", avgPerClass));
       logger.info("");
     }
@@ -367,11 +370,12 @@ public final class ActivePerformanceTracker implements PerformanceTracker {
    */
   private void writeJsonReport(long totalNanos) throws IOException {
     double totalSeconds = totalNanos / 1_000_000_000.0;
-    double avgPerClassMs = totalClasses > 0 ? (totalNanos / 1_000_000.0) / totalClasses : 0;
+    int classCount = totalClasses.get();
+    double avgPerClassMs = classCount > 0 ? (totalNanos / 1_000_000.0) / classCount : 0;
 
     Map<String, Object> root = new LinkedHashMap<>();
     root.put("timestamp", Instant.now().toString());
-    root.put("totalClasses", totalClasses);
+    root.put("totalClasses", classCount);
     root.put("totalProcessingTimeNanos", totalNanos);
     root.put("totalProcessingTimeSeconds", totalSeconds);
     root.put("averagePerClassMs", avgPerClassMs);
