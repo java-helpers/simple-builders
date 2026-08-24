@@ -56,6 +56,9 @@ import org.javahelpers.simple.builders.processor.generators.integration.JacksonM
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.model.core.GenerationTargetClassDto;
+import org.javahelpers.simple.builders.processor.model.type.TypeNameList;
+import org.javahelpers.simple.builders.processor.model.type.TypeNameMap;
+import org.javahelpers.simple.builders.processor.model.type.TypeNameSet;
 import org.javahelpers.simple.builders.processor.processing.BuilderConfigurationReader;
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsEnum;
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsReader;
@@ -251,13 +254,10 @@ public class BuilderProcessor extends AbstractProcessor {
         (int)
             builderDef.getAllFieldsForBuilder().stream()
                 .filter(
-                    f -> {
-                      String typeName = f.getFieldType().getFullQualifiedName();
-                      return typeName.startsWith("java.util.List")
-                          || typeName.startsWith("java.util.Set")
-                          || typeName.startsWith("java.util.Map")
-                          || typeName.startsWith("java.util.Collection");
-                    })
+                    f ->
+                        f.getFieldType() instanceof TypeNameList
+                            || f.getFieldType() instanceof TypeNameSet
+                            || f.getFieldType() instanceof TypeNameMap)
                 .count();
 
     // Track DTO Mapping
