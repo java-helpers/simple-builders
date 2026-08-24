@@ -190,6 +190,7 @@ public final class ActivePerformanceTracker implements PerformanceTracker {
     classMetrics.add(new ClassMetric(name, elapsed, fieldCount, collectionCount));
     totalClasses.incrementAndGet();
     currentClassName.remove();
+    classStartTime.remove();
   }
 
   @Override
@@ -488,42 +489,10 @@ public final class ActivePerformanceTracker implements PerformanceTracker {
   private static void appendJson(StringBuilder sb, Object value, int indent) {
     if (value == null) {
       sb.append("null");
-      return;
-    }
-    String pad = "  ".repeat(indent);
-    String pad2 = pad + "  ";
-    if (value instanceof Map<?, ?> map) {
-      if (map.isEmpty()) {
-        sb.append("{}");
-        return;
-      }
-      sb.append("{\n");
-      List<? extends Map.Entry<?, ?>> entries = new ArrayList<>(map.entrySet());
-      for (int i = 0; i < entries.size(); i++) {
-        Map.Entry<?, ?> entry = entries.get(i);
-        sb.append(pad2).append(jsonString(entry.getKey().toString())).append(": ");
-        appendJson(sb, entry.getValue(), indent + 1);
-        if (i < entries.size() - 1) {
-          sb.append(",");
-        }
-        sb.append("\n");
-      }
-      sb.append(pad).append("}");
+    } else if (value instanceof Map<?, ?> map) {
+      appendJsonMap(sb, map, indent);
     } else if (value instanceof List<?> list) {
-      if (list.isEmpty()) {
-        sb.append("[]");
-        return;
-      }
-      sb.append("[\n");
-      for (int i = 0; i < list.size(); i++) {
-        sb.append(pad2);
-        appendJson(sb, list.get(i), indent + 1);
-        if (i < list.size() - 1) {
-          sb.append(",");
-        }
-        sb.append("\n");
-      }
-      sb.append(pad).append("]");
+      appendJsonList(sb, list, indent);
     } else if (value instanceof String s) {
       sb.append(jsonString(s));
     } else if (value instanceof Number n) {
@@ -533,6 +502,46 @@ public final class ActivePerformanceTracker implements PerformanceTracker {
     } else {
       sb.append(jsonString(value.toString()));
     }
+  }
+
+  private static void appendJsonMap(StringBuilder sb, Map<?, ?> map, int indent) {
+    if (map.isEmpty()) {
+      sb.append("{}");
+      return;
+    }
+    String pad = "  ".repeat(indent);
+    String pad2 = pad + "  ";
+    sb.append("{\n");
+    List<? extends Map.Entry<?, ?>> entries = new ArrayList<>(map.entrySet());
+    for (int i = 0; i < entries.size(); i++) {
+      Map.Entry<?, ?> entry = entries.get(i);
+      sb.append(pad2).append(jsonString(entry.getKey().toString())).append(": ");
+      appendJson(sb, entry.getValue(), indent + 1);
+      if (i < entries.size() - 1) {
+        sb.append(",");
+      }
+      sb.append("\n");
+    }
+    sb.append(pad).append("}");
+  }
+
+  private static void appendJsonList(StringBuilder sb, List<?> list, int indent) {
+    if (list.isEmpty()) {
+      sb.append("[]");
+      return;
+    }
+    String pad = "  ".repeat(indent);
+    String pad2 = pad + "  ";
+    sb.append("[\n");
+    for (int i = 0; i < list.size(); i++) {
+      sb.append(pad2);
+      appendJson(sb, list.get(i), indent + 1);
+      if (i < list.size() - 1) {
+        sb.append(",");
+      }
+      sb.append("\n");
+    }
+    sb.append(pad).append("]");
   }
 
   /**
