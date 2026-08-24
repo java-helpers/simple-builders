@@ -41,33 +41,24 @@ import java.util.Map;
  * Active implementation of {@link PerformanceTracker} that measures execution times using {@link
  * System#nanoTime()} and aggregates results for a summary report.
  *
- * <p>This tracker maintains:
+ * <p>Timing uses {@link ThreadLocal} stacks for {@code start*}/{@code end*} calls: each {@code
+ * start} pushes a timestamp onto the stack, and the matching {@code end} pops it and accumulates
+ * the elapsed time. This allows nested calls without passing identifiers.
  *
- * <ul>
- *   <li>Per-phase total time with a hardcoded hierarchy for display:
- *       <pre>
- *       Configuration Resolution
- *       Builder Definition Extraction
- *       DTO Mapping
- *       Code Generation
- *       ├─ Source Construction
- *       │  ├─ Element Building
- *       │  │  ├─ Class Creation
- *       │  │  ├─ Class Metadata
- *       │  │  ├─ Fields
- *       │  │  ├─ Constructors
- *       │  │  ├─ Methods
- *       │  │  ├─ Nested Types
- *       │  │  └─ Class Annotations
- *       │  ├─ String Generation
- *       │  └─ Formatting
- *       └─ File Writing
- *       </pre>
- *       Percentages are calculated relative to the parent phase.
- *   <li>Per-generator total time and call count (for MethodGenerators)
- *   <li>Per-enhancer total time and call count (for BuilderEnhancers)
- *   <li>Per-class total time with field count and collection count
- * </ul>
+ * <p>The tracker maintains per-phase totals (with a hardcoded hierarchy defined by {@link
+ * #PHASE_CHILDREN} for report display), per-generator and per-enhancer totals with call counts, and
+ * per-class metrics including field and collection counts.
+ *
+ * <p>When an output file path is provided, {@link #generateReport(ProcessingLogger)} writes a
+ * structured JSON report with hierarchical phase breakdown, class metrics, and generator/enhancer
+ * statistics for automated analysis.
+ *
+ * <p><b>Thread-safety:</b> The {@code start*}/{@code end*} methods use per-thread stacks and are
+ * safe for concurrent use. However, the aggregation maps ({@link #phaseTimes}, {@link
+ * #generatorTimes}, etc.) are plain {@link LinkedHashMap}s — concurrent {@code end*} calls that
+ * write to the same map keys may race. The current annotation processing pipeline is
+ * single-threaded; if parallel processing is introduced, these maps must be replaced with
+ * concurrent alternatives.
  */
 public final class ActivePerformanceTracker implements PerformanceTracker {
 
