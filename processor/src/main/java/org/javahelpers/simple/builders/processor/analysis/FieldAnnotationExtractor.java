@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -420,17 +421,6 @@ public final class FieldAnnotationExtractor {
    * @return {@code true} if the value is a simple Java identifier
    */
   private static boolean isSimpleIdentifier(String rawValue) {
-    if (rawValue.isEmpty()) {
-      return false;
-    }
-    if (!Character.isJavaIdentifierStart(rawValue.charAt(0))) {
-      return false;
-    }
-    for (int i = 1; i < rawValue.length(); i++) {
-      if (!Character.isJavaIdentifierPart(rawValue.charAt(i))) {
-        return false;
-      }
-    }
-    return true;
+    return SourceVersion.isIdentifier(rawValue);
   }
 }

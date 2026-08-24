@@ -30,6 +30,9 @@ import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUti
 import com.google.testing.compile.Compilation;
 import java.util.stream.Stream;
 import javax.tools.JavaFileObject;
+import org.javahelpers.simple.builders.processor.analysis.FieldAnnotationExtractor;
+import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.simple.builders.processor.model.type.TypeNamePrimitive;
 import org.javahelpers.simple.builders.processor.testing.ProcessorAsserts;
 import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
 import org.junit.jupiter.api.Test;
@@ -515,5 +518,31 @@ class DefaultValueTest {
           return result;
         }
         """);
+  }
+
+  // === formatDefaultExpression unit tests ===
+
+  private static Stream<Arguments> formatDefaultExpressionCases() {
+    TypeName enumType = new TypeName("test", "Status");
+    enumType.setEnumType(true);
+    TypeName nonEnumType = new TypeName("test", "Other");
+    return Stream.of(
+        Arguments.of(enumType, "ACTIVE", "Status.ACTIVE"),
+        Arguments.of(enumType, "", ""),
+        Arguments.of(enumType, "1BAD", "1BAD"),
+        Arguments.of(enumType, "GO OD", "GO OD"),
+        Arguments.of(enumType, "Status.ACTIVE", "Status.ACTIVE"),
+        Arguments.of(enumType, "new Status()", "new Status()"),
+        Arguments.of(nonEnumType, "ACTIVE", "ACTIVE"),
+        Arguments.of(TypeName.of(String.class), "hello", "\"hello\""),
+        Arguments.of(TypeNamePrimitive.CHAR, "X", "'X'"));
+  }
+
+  @ParameterizedTest
+  @MethodSource("formatDefaultExpressionCases")
+  void formatDefaultExpression_producesExpectedOutput(
+      TypeName fieldType, String rawValue, String expected) {
+    org.junit.jupiter.api.Assertions.assertEquals(
+        expected, FieldAnnotationExtractor.formatDefaultExpression(rawValue, fieldType));
   }
 }
