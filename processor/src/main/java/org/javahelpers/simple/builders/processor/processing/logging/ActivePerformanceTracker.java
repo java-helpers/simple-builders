@@ -129,15 +129,25 @@ public final class ActivePerformanceTracker implements PerformanceTracker {
     phaseStartStack.get().add(System.nanoTime());
   }
 
-  @Override
-  public void endPhase(String phase) {
-    List<Long> stack = phaseStartStack.get();
+  /**
+   * Pops the most recent timestamp from the given ThreadLocal stack and returns the elapsed
+   * nanoseconds since that timestamp. Returns -1 if the stack is empty (unmatched end call).
+   */
+  private static long popElapsed(ThreadLocal<List<Long>> startStack) {
+    List<Long> stack = startStack.get();
     if (stack.isEmpty()) {
-      return;
+      return -1;
     }
     long start = stack.remove(stack.size() - 1);
-    long elapsed = System.nanoTime() - start;
-    phaseTimes.merge(phase, elapsed, Long::sum);
+    return System.nanoTime() - start;
+  }
+
+  @Override
+  public void endPhase(String phase) {
+    long elapsed = popElapsed(phaseStartStack);
+    if (elapsed >= 0) {
+      phaseTimes.merge(phase, elapsed, Long::sum);
+    }
   }
 
   @Override
@@ -147,14 +157,11 @@ public final class ActivePerformanceTracker implements PerformanceTracker {
 
   @Override
   public void endGenerator(String generatorName) {
-    List<Long> stack = generatorStartStack.get();
-    if (stack.isEmpty()) {
-      return;
+    long elapsed = popElapsed(generatorStartStack);
+    if (elapsed >= 0) {
+      generatorTimes.merge(generatorName, elapsed, Long::sum);
+      generatorCalls.merge(generatorName, 1, Integer::sum);
     }
-    long start = stack.remove(stack.size() - 1);
-    long elapsed = System.nanoTime() - start;
-    generatorTimes.merge(generatorName, elapsed, Long::sum);
-    generatorCalls.merge(generatorName, 1, Integer::sum);
   }
 
   @Override
@@ -164,14 +171,11 @@ public final class ActivePerformanceTracker implements PerformanceTracker {
 
   @Override
   public void endEnhancer(String enhancerName) {
-    List<Long> stack = enhancerStartStack.get();
-    if (stack.isEmpty()) {
-      return;
+    long elapsed = popElapsed(enhancerStartStack);
+    if (elapsed >= 0) {
+      enhancerTimes.merge(enhancerName, elapsed, Long::sum);
+      enhancerCalls.merge(enhancerName, 1, Integer::sum);
     }
-    long start = stack.remove(stack.size() - 1);
-    long elapsed = System.nanoTime() - start;
-    enhancerTimes.merge(enhancerName, elapsed, Long::sum);
-    enhancerCalls.merge(enhancerName, 1, Integer::sum);
   }
 
   @Override

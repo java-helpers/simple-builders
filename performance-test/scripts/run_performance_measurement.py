@@ -33,8 +33,8 @@ from typing import Optional
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Builder types that produce JSON performance reports via simple-builders processor
-JSON_BUILDER_TYPES = {"simple-builder", "simple-minimal-builder"}
+# Builder types that use the simple-builders processor (produce JSON performance reports)
+SIMPLE_BUILDERS_TYPES = {"simple-builder", "simple-minimal-builder"}
 
 # Mapping from --builder-type to Maven profile names
 BUILDER_TYPE_TO_PROFILE = {
@@ -120,7 +120,7 @@ def parse_compiler_time(output: str) -> Optional[float]:
     return None
 
 
-def run_one(run_index: int, profile: str, has_json: bool, report_dir: Path,
+def run_one(run_index: int, profile: str, is_simple_builders: bool, report_dir: Path,
            builder_type: str = "") -> Optional[dict]:
     """Run a single clean compile and return the parsed JSON report (or wall-time-only dict)."""
     report_file = report_dir / f"run-{run_index:02d}.json"
@@ -136,7 +136,7 @@ def run_one(run_index: int, profile: str, has_json: bool, report_dir: Path,
         "-Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss.SSS",
         "--no-transfer-progress",
     ]
-    if has_json:
+    if is_simple_builders:
         cmd.extend([
             "-Dsimplebuilder.performanceTracking=true",
             f"-Dsimplebuilder.performanceOutputFile={report_file}",
@@ -163,7 +163,7 @@ def run_one(run_index: int, profile: str, has_json: bool, report_dir: Path,
             builder_count = count_annotated_sources(annotation)
     compiler_time = parse_compiler_time(result.stdout + result.stderr)
 
-    if has_json:
+    if is_simple_builders:
         if not report_file.exists():
             print(f"  Run {run_index}: compiled OK but no JSON report found ({elapsed:.1f}s)")
             return None
@@ -405,7 +405,7 @@ def main() -> None:
     run_label = args.label or f"{num_runs}runs"
     builder_type = args.builder_type
     profile = BUILDER_TYPE_TO_PROFILE[builder_type]
-    has_json = builder_type in JSON_BUILDER_TYPES
+    is_simple_builders = builder_type in SIMPLE_BUILDERS_TYPES
 
     report_dir = BASE_DIR / "performance-reports" / run_label
     if report_dir.exists():
@@ -414,14 +414,14 @@ def main() -> None:
 
     print(f"Running {num_runs} performance measurement runs...")
     print(f"Builder type: {builder_type}")
-    print(f"JSON reports: {'yes' if has_json else 'no (wall-time only)'}")
+    print(f"JSON reports: {'yes' if is_simple_builders else 'no (wall-time only)'}")
     print(f"Report directory: {report_dir}")
     print()
 
     runs: list[dict] = []
     for i in range(1, num_runs + 1):
         run_start = time.time()
-        data = run_one(i, profile, has_json, report_dir, builder_type)
+        data = run_one(i, profile, is_simple_builders, report_dir, builder_type)
         if data is not None:
             if "_wallTimeSeconds" not in data:
                 data["_wallTimeSeconds"] = time.time() - run_start
