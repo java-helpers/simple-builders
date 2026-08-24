@@ -51,22 +51,22 @@ import org.javahelpers.simple.builders.processor.model.type.NestedTypeDto;
 public class BuilderToGenerationTypeMapper {
 
   private final BuilderConfiguration configuration;
-  private final boolean generateJavaDoc;
 
   /**
    * Creates a mapper for the given effective builder configuration.
    *
-   * @param configuration the effective builder configuration, or {@code null} to enable all
-   *     features by default
+   * @param configuration the effective builder configuration
    */
   public BuilderToGenerationTypeMapper(BuilderConfiguration configuration) {
     this.configuration = configuration;
-    this.generateJavaDoc = configuration == null || configuration.shouldGenerateJavaDoc();
   }
 
   /**
    * Maps a {@link BuilderDefinitionDto} (generation DTO) to a {@link GenerationTargetClassDto}
    * (rendering DTO) for code generation.
+   *
+   * <p>This maps all rendering-relevant fields, converting {@link BuilderMethodDto} to {@link
+   * MethodDto} and {@link BuilderNestedTypeDto} to {@link NestedTypeDto}.
    *
    * @param builderDto the generation DTO
    * @return the rendering DTO for code generation
@@ -76,25 +76,17 @@ public class BuilderToGenerationTypeMapper {
     renderingDto.setTypeName(builderDto.getTypeName());
     renderingDto.setClassAccessModifier(builderDto.getClassAccessModifier());
     renderingDto.setSuperType(builderDto.getSuperType());
-    renderingDto.setClassJavadoc(generateJavaDoc ? builderDto.getClassJavadoc() : null);
+    renderingDto.setClassJavadoc(
+        configuration.shouldGenerateJavaDoc() ? builderDto.getClassJavadoc() : null);
 
-    // Copy class fields, clearing javadoc if generation is disabled
-    for (ClassFieldDto classField : builderDto.getClassFields()) {
-      if (!generateJavaDoc) {
-        classField.setJavadoc(null);
-      }
-      renderingDto.addClassField(classField);
-    }
+    builderDto.getClassFields().stream()
+        .map(this::toRenderingClassField)
+        .forEach(renderingDto::addClassField);
 
-    // Copy constructors, clearing javadoc if generation is disabled
-    for (ConstructorDto constructor : builderDto.getConstructors()) {
-      if (!generateJavaDoc) {
-        constructor.setJavadoc(null);
-      }
-      renderingDto.addConstructor(constructor);
-    }
+    builderDto.getConstructors().stream()
+        .map(this::toRenderingConstructor)
+        .forEach(renderingDto::addConstructor);
 
-    // Copy generics
     builderDto.getGenerics().forEach(renderingDto::addGeneric);
 
     // Copy imports
@@ -123,10 +115,9 @@ public class BuilderToGenerationTypeMapper {
       renderingDto.addMethod(toMethodDto(classMethod));
     }
 
-    // Map and copy nested types from enhancers
-    for (BuilderNestedTypeDto builderNestedType : builderDto.getNestedTypes()) {
-      renderingDto.addNestedType(toNestedTypeDto(builderNestedType));
-    }
+    builderDto
+        .getNestedTypes()
+        .forEach(nestedType -> renderingDto.addNestedType(toNestedTypeDto(nestedType)));
 
     return renderingDto;
   }
@@ -147,19 +138,8 @@ public class BuilderToGenerationTypeMapper {
     method.setStatic(classMethod.isStatic());
     method.setOrdering(classMethod.getOrdering());
 
-    if (generateJavaDoc) {
-      // Enrich javadoc with pre-built source description if source field is known
-      JavadocDto javadoc = classMethod.getJavadoc();
-      if (StringUtils.isNotBlank(classMethod.getSourceFieldName())) {
-        if (javadoc == null) {
-          javadoc = new JavadocDto();
-        }
-        String sourceDescription = classMethod.getSourceDescription();
-        if (sourceDescription != null) {
-          javadoc.appendDescriptionLine(sourceDescription);
-        }
-      }
-      method.setJavadoc(javadoc);
+    if (configuration.shouldGenerateJavaDoc()) {
+      method.setJavadoc(buildMethodJavadoc(classMethod));
     }
     classMethod.getAnnotations().forEach(method::addAnnotation);
     classMethod.getParameters().forEach(method::addParameter);
@@ -181,6 +161,53 @@ public class BuilderToGenerationTypeMapper {
   }
 
   /**
+   * Returns the given class field, clearing its Javadoc when Javadoc generation is disabled.
+   *
+   * @param classField the source class field
+   * @return the class field ready for rendering
+   */
+  private ClassFieldDto toRenderingClassField(ClassFieldDto classField) {
+    if (!configuration.shouldGenerateJavaDoc()) {
+      classField.setJavadoc(null);
+    }
+    return classField;
+  }
+
+  /**
+   * Returns the given constructor, clearing its Javadoc when Javadoc generation is disabled.
+   *
+   * @param constructor the source constructor
+   * @return the constructor ready for rendering
+   */
+  private ConstructorDto toRenderingConstructor(ConstructorDto constructor) {
+    if (!configuration.shouldGenerateJavaDoc()) {
+      constructor.setJavadoc(null);
+    }
+    return constructor;
+  }
+
+  /**
+   * Builds the {@link JavadocDto} for a method, appending the pre-built source description when a
+   * source field is known.
+   *
+   * @param classMethod the generation method DTO
+   * @return the Javadoc to render, or {@code null} when none is present
+   */
+  private JavadocDto buildMethodJavadoc(BuilderMethodDto classMethod) {
+    JavadocDto javadoc = classMethod.getJavadoc();
+    if (StringUtils.isNotBlank(classMethod.getSourceFieldName())) {
+      if (javadoc == null) {
+        javadoc = new JavadocDto();
+      }
+      String sourceDescription = classMethod.getSourceDescription();
+      if (sourceDescription != null) {
+        javadoc.appendDescriptionLine(sourceDescription);
+      }
+    }
+    return javadoc;
+  }
+
+  /**
    * Maps a {@link BuilderNestedTypeDto} (generation DTO) to a {@link NestedTypeDto} (rendering
    * DTO).
    *
@@ -195,7 +222,7 @@ public class BuilderToGenerationTypeMapper {
     nestedType.setTypeName(builderNestedType.getTypeName());
     nestedType.setKind(builderNestedType.getKind());
     nestedType.setVisibility(builderNestedType.getVisibility());
-    if (generateJavaDoc) {
+    if (configuration.shouldGenerateJavaDoc()) {
       nestedType.setJavadoc(builderNestedType.getJavadoc());
     }
     builderNestedType.getAnnotations().forEach(nestedType::addAnnotation);
