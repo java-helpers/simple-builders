@@ -21,16 +21,11 @@ Examples:
         rb-30runs/summary.json \
         lombok-30runs/summary.json
 
-Options:
-    --top-classes N    Number of top classes to show (default: 10)
-    --top-generators N Number of top generators to show (default: 5)
-    --top-enhancers N  Number of top enhancers to show (default: 5)
-
 Each FILE argument is a path to a summary.json file. The parent directory
 name is used as the column label (e.g. `sb-30runs/summary.json` → label
 `sb-30runs`). The script auto-discovers phase names from the data and
-gracefully handles summaries that lack phase/class/generator/enhancer
-data (e.g. wall-time-only runs from RecordBuilder or Lombok).
+gracefully handles summaries that lack phase data (e.g. wall-time-only
+runs from RecordBuilder or Lombok).
 """
 
 from __future__ import annotations
@@ -59,19 +54,6 @@ def load_summary(filepath: str) -> dict | None:
             return None
 
 
-def collect_phase_names(summaries: list[tuple[str, dict]]) -> list[str]:
-    """Collect all unique phase names across all summaries, preserving order."""
-    phases: list[str] = []
-    seen: set[str] = set()
-    for _label, s in summaries:
-        phase_avgs = s.get("phaseAverageNanos", {})
-        for p in phase_avgs:
-            if p not in seen:
-                seen.add(p)
-                phases.append(p)
-    return phases
-
-
 def shorten_phase(name: str) -> str:
     """Abbreviate long phase names for compact display."""
     return (
@@ -81,6 +63,37 @@ def shorten_phase(name: str) -> str:
         .replace("Configuration Resolution", "Config Resolution")
         .replace("Builder Definition Extraction", "Builder Def Extraction")
     )
+
+
+def print_min_max_avg(title: str, summaries: list[tuple[str, dict]], key: str,
+                       labels: list[str]) -> None:
+    """Print a Min/Max/Avg table for a summary section that all summaries have."""
+    n = len(labels)
+    header = "{:<16}" + " {:>12}" * n
+    row = "{:<16}" + " {:>12.1f}" * n
+    print(f"--- {title} ---")
+    print(header.format("Metric", *labels))
+    for stat in ("min", "max", "avg"):
+        vals = [s[key][stat] for _, s in summaries]
+        print(row.format(stat.capitalize(), *vals))
+    print()
+
+
+def print_min_max_avg_opt(title: str, summaries: list[tuple[str, dict]], key: str,
+                           labels: list[str]) -> None:
+    """Like print_min_max_avg but for sections that only some summaries have.
+    Uses .get() with 0.0 fallback for missing keys."""
+    if not any(key in s for _, s in summaries):
+        return
+    n = len(labels)
+    header = "{:<16}" + " {:>12}" * n
+    row = "{:<16}" + " {:>12.1f}" * n
+    print(f"--- {title} ---")
+    print(header.format("Metric", *labels))
+    for stat in ("min", "max", "avg"):
+        vals = [s.get(key, {}).get(stat, 0.0) for _, s in summaries]
+        print(row.format(stat.capitalize(), *vals))
+    print()
 
 
 def main() -> None:
@@ -93,24 +106,6 @@ def main() -> None:
         "files",
         nargs="+",
         help="Paths to summary.json files (e.g. sb-30runs/summary.json)",
-    )
-    parser.add_argument(
-        "--top-classes",
-        type=int,
-        default=10,
-        help="Number of top classes to show (default: 10)",
-    )
-    parser.add_argument(
-        "--top-generators",
-        type=int,
-        default=5,
-        help="Number of top generators to show (default: 5)",
-    )
-    parser.add_argument(
-        "--top-enhancers",
-        type=int,
-        default=5,
-        help="Number of top enhancers to show (default: 5)",
     )
     args = parser.parse_args()
 
@@ -141,9 +136,6 @@ def main() -> None:
     has_processor_time = all("processorTime" in s for _, s in summaries)
     has_per_class = all("averagePerClassMs" in s for _, s in summaries)
     has_phases = all("phaseAverageNanos" in s for _, s in summaries)
-    has_classes = any("topClassesByAvg" in s for _, s in summaries)
-    has_generators = any("generatorStats" in s for _, s in summaries)
-    has_enhancers = any("enhancerStats" in s for _, s in summaries)
 
     # Header
     print("=" * 80)
@@ -164,144 +156,44 @@ def main() -> None:
 
     # --- Source & Builder Counts (always available) ---
     print("--- Source & Builder Counts ---")
-    count_header = "{:<24}" + " {:>12}" * n
-    count_row = "{:<24}" + " {:>12}" * n
-    print(count_header.format("Metric", *labels))
-    print(count_row.format("Source files",
+    count_fmt = "{:<24}" + " {:>12}" * n
+    print(count_fmt.format("Metric", *labels))
+    print(count_fmt.format("Source files",
           *[s.get("sourceFileCount", 0) for _, s in summaries]))
-    print(count_row.format("Generated builders",
+    print(count_fmt.format("Generated builders",
           *[s.get("generatedBuilderCount", 0) for _, s in summaries]))
-    # For JSON builder types, totalClasses is the processor's own count
-    tc_vals = [s.get("totalClasses", "-") for _, s in summaries]
-    print(count_row.format("Processor-reported", *tc_vals))
+    print(count_fmt.format("Processor-reported",
+          *[s.get("totalClasses", "-") for _, s in summaries]))
     print()
 
-    # --- Wall Time (always available) ---
-    print("--- Wall Time (seconds) ---")
-    header = "{:<16}" + " {:>12}" * n
-    row = "{:<16}" + " {:>12.1f}" * n
-    print(header.format("Metric", *labels))
-    print(row.format("Min", *[s["wallTime"]["min"] for _, s in summaries]))
-    print(row.format("Max", *[s["wallTime"]["max"] for _, s in summaries]))
-    print(row.format("Avg", *[s["wallTime"]["avg"] for _, s in summaries]))
-    print()
-
-    # --- Compiler Time (from Maven timestamps, available for all types) ---
-    has_compiler_time = any("compilerTime" in s for _, s in summaries)
-    if has_compiler_time:
-        print("--- Compiler Time (seconds, from Maven timestamps) ---")
-        print(header.format("Metric", *labels))
-        ct = lambda key: [s.get("compilerTime", {}).get(key, 0.0) for _, s in summaries]
-        print(row.format("Min", *ct("min")))
-        print(row.format("Max", *ct("max")))
-        print(row.format("Avg", *ct("avg")))
-        print()
-
-    # --- Compiler Time per Builder (ms, comparable across builder types) ---
-    has_per_builder = any("compilerTimePerBuilderMs" in s for _, s in summaries)
-    if has_per_builder:
-        print("--- Compiler Time per Builder (ms) ---")
-        print(header.format("Metric", *labels))
-        ctpb = lambda key: [s.get("compilerTimePerBuilderMs", {}).get(key, 0.0) for _, s in summaries]
-        print(row.format("Min", *ctpb("min")))
-        print(row.format("Max", *ctpb("max")))
-        print(row.format("Avg", *ctpb("avg")))
-        print()
-
-    # --- Processor Time ---
+    # --- Timing tables ---
+    print_min_max_avg("Wall Time (seconds)", summaries, "wallTime", labels)
+    print_min_max_avg_opt("Compiler Time (seconds, from Maven timestamps)",
+                          summaries, "compilerTime", labels)
+    print_min_max_avg_opt("Compiler Time per Builder (ms)",
+                          summaries, "compilerTimePerBuilderMs", labels)
     if has_processor_time:
-        print("--- Processor Time (seconds) ---")
-        print(header.format("Metric", *labels))
-        print(row.format("Min", *[s["processorTime"]["min"] for _, s in summaries]))
-        print(row.format("Max", *[s["processorTime"]["max"] for _, s in summaries]))
-        print(row.format("Avg", *[s["processorTime"]["avg"] for _, s in summaries]))
-        print()
-
-    # --- Average per Class ---
+        print_min_max_avg("Processor Time (seconds)", summaries, "processorTime", labels)
     if has_per_class:
-        print("--- Average per Class (ms) ---")
-        print(header.format("Metric", *labels))
-        print(row.format("Min", *[s["averagePerClassMs"]["min"] for _, s in summaries]))
-        print(row.format("Max", *[s["averagePerClassMs"]["max"] for _, s in summaries]))
-        print(row.format("Avg", *[s["averagePerClassMs"]["avg"] for _, s in summaries]))
-        print()
+        print_min_max_avg("Average per Class (ms)", summaries, "averagePerClassMs", labels)
 
     # --- Phase Averages ---
     if has_phases:
-        phases = collect_phase_names(summaries)
+        phases: list[str] = []
+        seen: set[str] = set()
+        for _label, s in summaries:
+            for p in s.get("phaseAverageNanos", {}):
+                if p not in seen:
+                    seen.add(p)
+                    phases.append(p)
         if phases:
             print("--- Phase Average (seconds) ---")
-            phase_header = "{:<50}" + " {:>10}" * n
-            phase_row = "{:<50}" + " {:>9.2f}s" * n
-            print(phase_header.format("Phase", *labels))
+            phase_fmt = "{:<50}" + " {:>10}" * n
+            print(phase_fmt.format("Phase", *labels))
             for p in phases:
-                vals = []
-                for _, s in summaries:
-                    v = s.get("phaseAverageNanos", {}).get(p, 0) / 1e9
-                    vals.append(v)
-                short = shorten_phase(p)
-                print(phase_row.format(short, *vals))
+                vals = [s.get("phaseAverageNanos", {}).get(p, 0) / 1e9 for _, s in summaries]
+                print(phase_fmt.format(shorten_phase(p), *vals))
             print()
-
-    # --- Top Classes ---
-    if has_classes:
-        # Use the first summary that has class data as the reference
-        ref_label, ref_s = next((l, s) for l, s in summaries if "topClassesByAvg" in s)
-        print(f"--- Top {args.top_classes} Classes by Avg Time (from {ref_label}) ---")
-        cls_header = "{:<3} {:<30}" + " {:>12}" * n
-        cls_row = "{:<3} {:<30}" + " {:>12.1f}" * n
-        print(cls_header.format("#", "Class", *[f"{l} avg" for l in labels]))
-        for i, cm in enumerate(ref_s["topClassesByAvg"][:args.top_classes]):
-            name = cm["className"]
-            vals = []
-            for label, s in summaries:
-                avg = 0
-                for c in s.get("topClassesByAvg", []):
-                    if c["className"] == name:
-                        avg = c["avgMs"]
-                        break
-                vals.append(avg)
-            print(cls_row.format(i + 1, name, *vals))
-        print()
-
-    # --- Generator Stats ---
-    if has_generators:
-        ref_label, ref_s = next((l, s) for l, s in summaries if "generatorStats" in s)
-        print(f"--- Generator Stats (from {ref_label}, avg) ---")
-        gen_header = "{:<3} {:<35}" + " {:>12}" * n
-        gen_row = "{:<3} {:<35}" + " {:>12.3f}" * n
-        print(gen_header.format("#", "Generator", *[f"{l} ms/call" for l in labels]))
-        for i, gs in enumerate(ref_s["generatorStats"][:args.top_generators]):
-            name = gs["name"]
-            vals = []
-            for label, s in summaries:
-                v = 0
-                for g in s.get("generatorStats", []):
-                    if g["name"] == name:
-                        v = g["avgMsPerCall"]
-                        break
-                vals.append(v)
-            print(gen_row.format(i + 1, name, *vals))
-        print()
-
-    # --- Enhancer Stats ---
-    if has_enhancers:
-        ref_label, ref_s = next((l, s) for l, s in summaries if "enhancerStats" in s)
-        print(f"--- Enhancer Stats (from {ref_label}, avg) ---")
-        enh_header = "{:<3} {:<35}" + " {:>12}" * n
-        enh_row = "{:<3} {:<35}" + " {:>12.3f}" * n
-        print(enh_header.format("#", "Enhancer", *[f"{l} ms/call" for l in labels]))
-        for i, es in enumerate(ref_s["enhancerStats"][:args.top_enhancers]):
-            name = es["name"]
-            vals = []
-            for label, s in summaries:
-                v = 0
-                for e in s.get("enhancerStats", []):
-                    if e["name"] == name:
-                        v = e["avgMsPerCall"]
-                        break
-                vals.append(v)
-            print(enh_row.format(i + 1, name, *vals))
 
 
 if __name__ == "__main__":
