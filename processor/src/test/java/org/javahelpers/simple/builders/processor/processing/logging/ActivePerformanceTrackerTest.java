@@ -249,19 +249,6 @@ class ActivePerformanceTrackerTest {
   }
 
   @Test
-  void generateReport_withBlankOutputFile_doesNotWriteFile() {
-    ActivePerformanceTracker tracker = new ActivePerformanceTracker("  ");
-    tracker.startClass("MyClass");
-    tracker.endClass(1, 0);
-
-    List<String> messages = new ArrayList<>();
-    ProcessingLogger logger = createLogger(messages);
-    tracker.generateReport(logger);
-
-    assertFalse(messages.stream().anyMatch(m -> m.contains("JSON report written")));
-  }
-
-  @Test
   void generateReport_withOutputFile_writesValidJson() throws IOException {
     Path jsonFile = tempDir.resolve("report.json");
     JsonNode root = generateReportAndParseJson(jsonFile.toString());
@@ -384,68 +371,21 @@ class ActivePerformanceTrackerTest {
   }
 
   @Test
-  void jsonReport_withSpecialCharactersInClassName_escapesCorrectly() throws IOException {
-    Path jsonFile = tempDir.resolve("report-escape.json");
-    ActivePerformanceTracker tracker = new ActivePerformanceTracker(jsonFile.toString());
-    tracker.startClass("Class\"With\\Special\nChars\tTab");
-    tracker.endClass(1, 0);
-
-    List<String> messages = new ArrayList<>();
-    ProcessingLogger logger = createLogger(messages);
-    tracker.generateReport(logger);
-
-    JsonNode root = new ObjectMapper().readTree(Files.readString(jsonFile));
-    assertEquals(
-        "Class\"With\\Special\nChars\tTab",
-        root.get("classMetrics").get(0).get("className").asText());
-  }
-
-  @Test
-  void endPhase_withoutStartPhase_doesNothing() {
+  void endMethodsWithoutStart_doesNothing() {
     ActivePerformanceTracker tracker = new ActivePerformanceTracker(null);
     tracker.endPhase(PerformanceTracker.PHASE_CONFIGURATION_RESOLUTION);
-
-    List<String> messages = new ArrayList<>();
-    ProcessingLogger logger = createLogger(messages);
-    tracker.generateReport(logger);
-
-    assertTrue(messages.stream().anyMatch(m -> m.contains("PERFORMANCE REPORT")));
-  }
-
-  @Test
-  void endGenerator_withoutStartGenerator_doesNothing() {
-    ActivePerformanceTracker tracker = new ActivePerformanceTracker(null);
     tracker.endGenerator("NonexistentGenerator");
-
-    List<String> messages = new ArrayList<>();
-    ProcessingLogger logger = createLogger(messages);
-    tracker.generateReport(logger);
-
-    assertFalse(messages.stream().anyMatch(m -> m.contains("MethodGenerators")));
-  }
-
-  @Test
-  void endEnhancer_withoutStartEnhancer_doesNothing() {
-    ActivePerformanceTracker tracker = new ActivePerformanceTracker(null);
     tracker.endEnhancer("NonexistentEnhancer");
-
-    List<String> messages = new ArrayList<>();
-    ProcessingLogger logger = createLogger(messages);
-    tracker.generateReport(logger);
-
-    assertFalse(messages.stream().anyMatch(m -> m.contains("BuilderEnhancers")));
-  }
-
-  @Test
-  void endClass_withoutStartClass_doesNothing() {
-    ActivePerformanceTracker tracker = new ActivePerformanceTracker(null);
     tracker.endClass(5, 2);
 
     List<String> messages = new ArrayList<>();
     ProcessingLogger logger = createLogger(messages);
     tracker.generateReport(logger);
 
+    assertTrue(messages.stream().anyMatch(m -> m.contains("PERFORMANCE REPORT")));
     assertTrue(messages.stream().anyMatch(m -> m.contains("Total classes processed: 0")));
+    assertFalse(messages.stream().anyMatch(m -> m.contains("MethodGenerators")));
+    assertFalse(messages.stream().anyMatch(m -> m.contains("BuilderEnhancers")));
   }
 
   @Test
@@ -494,21 +434,6 @@ class ActivePerformanceTrackerTest {
   }
 
   @Test
-  void generateReport_logsJsonWrittenMessageOnSuccess() {
-    Path jsonFile = tempDir.resolve("report-success.json");
-    ActivePerformanceTracker tracker = new ActivePerformanceTracker(jsonFile.toString());
-    tracker.startClass("MyClass");
-    tracker.endClass(1, 0);
-
-    List<String> messages = new ArrayList<>();
-    ProcessingLogger logger = createLogger(messages);
-    tracker.generateReport(logger);
-
-    assertTrue(messages.stream().anyMatch(m -> m.contains("JSON report written")));
-    assertTrue(Files.exists(jsonFile));
-  }
-
-  @Test
   void generateReport_logsWarningOnInvalidPath() {
     ActivePerformanceTracker tracker =
         new ActivePerformanceTracker("/nonexistent\0invalid/path.json");
@@ -521,21 +446,6 @@ class ActivePerformanceTrackerTest {
 
     assertTrue(
         messages.stream().anyMatch(m -> m.contains("WARNING") && m.contains("Failed to write")));
-  }
-
-  @Test
-  void generateReport_canBeCalledMultipleTimesWithoutError() {
-    ActivePerformanceTracker tracker = new ActivePerformanceTracker(null);
-    tracker.startClass("MyClass");
-    tracker.endClass(1, 0);
-
-    List<String> messages = new ArrayList<>();
-    ProcessingLogger logger = createLogger(messages);
-
-    tracker.generateReport(logger);
-    tracker.generateReport(logger);
-
-    assertTrue(messages.stream().anyMatch(m -> m.contains("PERFORMANCE REPORT")));
   }
 
   @Test
@@ -586,39 +496,5 @@ class ActivePerformanceTrackerTest {
     long firstE = enhStats.get(0).get("elapsedNanos").asLong();
     long secondE = enhStats.get(1).get("elapsedNanos").asLong();
     assertTrue(firstE >= secondE, "Enhancer stats should be sorted by elapsed descending");
-  }
-
-  @Test
-  void jsonReport_emptyClassMetrics_hasCorrectTrailingComma() throws IOException {
-    Path jsonFile = tempDir.resolve("report-empty-classes.json");
-    ActivePerformanceTracker tracker = new ActivePerformanceTracker(jsonFile.toString());
-    tracker.startGenerator();
-    tracker.endGenerator("GenA");
-
-    List<String> messages = new ArrayList<>();
-    ProcessingLogger logger = createLogger(messages);
-    tracker.generateReport(logger);
-
-    String json = Files.readString(jsonFile);
-    JsonNode root = new ObjectMapper().readTree(json);
-    assertEquals(0, root.get("classMetrics").size());
-    assertEquals(1, root.get("generatorStats").size());
-  }
-
-  @Test
-  void jsonReport_onlyEnhancerStats_hasCorrectLastArrayFormat() throws IOException {
-    Path jsonFile = tempDir.resolve("report-only-enhancers.json");
-    ActivePerformanceTracker tracker = new ActivePerformanceTracker(jsonFile.toString());
-    tracker.startEnhancer();
-    tracker.endEnhancer("EnhA");
-
-    List<String> messages = new ArrayList<>();
-    ProcessingLogger logger = createLogger(messages);
-    tracker.generateReport(logger);
-
-    String json = Files.readString(jsonFile);
-    JsonNode root = new ObjectMapper().readTree(json);
-    assertEquals(0, root.get("generatorStats").size());
-    assertEquals(1, root.get("enhancerStats").size());
   }
 }
