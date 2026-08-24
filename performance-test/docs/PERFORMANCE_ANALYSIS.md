@@ -14,6 +14,7 @@ processor to measure processing time. Three scripts work together:
 | `generate_classes.py` | Generate Java source files with a chosen builder annotation |
 | `run_performance_measurement.py` | Run N compilations and aggregate timing results |
 | `compare_performance.py` | Compare results from multiple measurement runs side-by-side |
+| `run_full_comparison.py` | Run all frameworks end-to-end and compare (convenience) |
 
 ## Supported Builder Types
 
@@ -27,35 +28,32 @@ processor to measure processing time. Three scripts work together:
 Builder types with JSON reports produce detailed phase/class/generator/enhancer
 metrics. Builder types without JSON reports only measure overall wall time.
 
-## Typical Workflow
+## Quick Start
 
-Always regenerate classes when switching builder types (use `--force` to
-overwrite). Use `--dry-run` to preview without writing.
+Run all four frameworks with N runs each, then compare:
 
 ```bash
-# 1. Generate classes and measure each framework
-BUILDER_TYPE=simple-builder
-python3 scripts/generate_classes.py --builder-type $BUILDER_TYPE --force
-python3 scripts/run_performance_measurement.py --runs 30 --label sb-30runs --builder-type $BUILDER_TYPE
+python3 scripts/run_full_comparison.py --runs 10
+```
 
-BUILDER_TYPE=simple-minimal-builder
-python3 scripts/generate_classes.py --builder-type $BUILDER_TYPE --force
-python3 scripts/run_performance_measurement.py --runs 30 --label mb-30runs --builder-type $BUILDER_TYPE
+Use `--keep-builders` to copy generated builders to `generated-builders/<type>/`
+so they survive Maven clean:
 
-BUILDER_TYPE=record-builder
-python3 scripts/generate_classes.py --builder-type $BUILDER_TYPE --force
-python3 scripts/run_performance_measurement.py --runs 30 --label rb-30runs --builder-type $BUILDER_TYPE
+```bash
+python3 scripts/run_full_comparison.py --runs 30 --keep-builders
+```
 
-BUILDER_TYPE=lombok
-python3 scripts/generate_classes.py --builder-type $BUILDER_TYPE --force
-python3 scripts/run_performance_measurement.py --runs 30 --label lombok-30runs --builder-type $BUILDER_TYPE
+Labels are auto-generated as `sb-<N>runs`, `mb-<N>runs`, `rb-<N>runs`,
+`lombok-<N>runs`.
 
-# 2. Compare all four
-python3 scripts/compare_performance.py \
-    sb-30runs/summary.json \
-    mb-30runs/summary.json \
-    rb-30runs/summary.json \
-    lombok-30runs/summary.json
+### Running Individual Frameworks
+
+For single-framework measurements, use the individual scripts directly.
+Use `--force` when regenerating classes after switching builder types.
+
+```bash
+python3 scripts/generate_classes.py --builder-type simple-builder --force
+python3 scripts/run_performance_measurement.py --runs 30 --label sb-30runs --builder-type simple-builder
 ```
 
 Results are written to `performance-test/performance-reports/<label>/`. Compare paths
