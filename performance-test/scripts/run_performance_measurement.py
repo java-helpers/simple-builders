@@ -33,6 +33,19 @@ from typing import Optional
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+
+def safe_rmtree(path: Path) -> None:
+    """Remove a directory tree only if it is inside BASE_DIR.
+
+    Guards against accidental deletion of unexpected locations.
+    """
+    resolved = path.resolve()
+    if not resolved.is_relative_to(BASE_DIR):
+        raise ValueError(f"Refusing to remove {resolved}: outside {BASE_DIR}")
+    if resolved == BASE_DIR:
+        raise ValueError(f"Refusing to remove {resolved}: is BASE_DIR itself")
+    shutil.rmtree(resolved)
+
 # Builder types that use the simple-builders processor (produce JSON performance reports)
 SIMPLE_BUILDERS_TYPES = {"simple-builder", "simple-minimal-builder"}
 
@@ -409,7 +422,7 @@ def main() -> None:
 
     report_dir = BASE_DIR / "performance-reports" / run_label
     if report_dir.exists():
-        shutil.rmtree(report_dir)
+        safe_rmtree(report_dir)
     report_dir.mkdir(parents=True)
 
     print(f"Running {num_runs} performance measurement runs...")

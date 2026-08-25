@@ -32,6 +32,19 @@ from pathlib import Path
 SCRIPT_DIR = Path(__file__).resolve().parent
 BASE_DIR = SCRIPT_DIR.parent
 
+
+def safe_rmtree(path: Path) -> None:
+    """Remove a directory tree only if it is inside BASE_DIR.
+
+    Guards against accidental deletion of unexpected locations.
+    """
+    resolved = path.resolve()
+    if not resolved.is_relative_to(BASE_DIR):
+        raise ValueError(f"Refusing to remove {resolved}: outside {BASE_DIR}")
+    if resolved == BASE_DIR:
+        raise ValueError(f"Refusing to remove {resolved}: is BASE_DIR itself")
+    shutil.rmtree(resolved)
+
 BUILDER_TYPES = ["simple-builder", "simple-minimal-builder", "record-builder", "lombok"]
 
 LABEL_PREFIX = {
@@ -108,7 +121,7 @@ def main() -> None:
         if keep_builders:
             dst = BASE_DIR / "generated-builders" / bt
             if dst.exists():
-                shutil.rmtree(dst)
+                safe_rmtree(dst)
             if bt == "lombok":
                 # Lombok instruments bytecode in-place; no separate source files.
                 src = BASE_DIR / "target" / "classes"
