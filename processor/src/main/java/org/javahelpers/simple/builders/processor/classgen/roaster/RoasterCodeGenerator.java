@@ -88,6 +88,8 @@ public class RoasterCodeGenerator {
 
   private final Properties formatterProperties;
 
+  private final boolean skipFormatting;
+
   /**
    * Constructor for RoasterCodeGenerator.
    *
@@ -95,10 +97,14 @@ public class RoasterCodeGenerator {
    * @param logger Logger for debug output
    */
   public RoasterCodeGenerator(
-      ProcessingEnvironment processingEnv, ProcessingLogger logger, PerformanceTracker tracker) {
+      ProcessingEnvironment processingEnv,
+      ProcessingLogger logger,
+      PerformanceTracker tracker,
+      boolean skipFormatting) {
     this.processingEnv = processingEnv;
     this.logger = logger;
     this.performanceTracker = tracker;
+    this.skipFormatting = skipFormatting;
     this.formatterProperties = loadFormatterProperties();
   }
 
@@ -556,8 +562,8 @@ public class RoasterCodeGenerator {
   }
 
   private String formatSource(String rawSource) {
-    if (formatterProperties.isEmpty()) {
-      return rawSource;
+    if (skipFormatting || formatterProperties.isEmpty()) {
+      return lightweightFormat(rawSource);
     }
     try {
       return Roaster.format(formatterProperties, rawSource);
@@ -567,6 +573,113 @@ public class RoasterCodeGenerator {
           StringUtils.defaultIfBlank(ex.getMessage(), ex.getClass().getSimpleName()));
       return rawSource;
     }
+  }
+
+  /**
+   * Lightweight post-processing of Roaster's unformatted output.
+   *
+   * <p>Applies minimal cosmetic fixes that are much cheaper than the full Eclipse JDT formatter:
+   *
+   * <ul>
+   *   <li>Convert tab indentation to 2-space indentation
+   *   <li>Remove duplicate blank lines (collapse 2+ consecutive blanks to 1)
+   *   <li>Insert newline between a trailing import and an adjacent {@code /**} javadoc opening
+   *   <li>Add missing {@code " * "} prefixes to javadoc body lines
+   *   <li>Normalize javadoc body indentation to match the enclosing member
+   * </ul>
+   */
+  private String lightweightFormat(String source) {
+    // Use a list so we can insert new lines when splitting concatenated code
+    List<String> lines = new java.util.ArrayList<>(java.util.Arrays.asList(source.split("\n", -1)));
+    boolean inJavadoc = false;
+    int javadocIndent = 0;
+
+    for (int i = 0; i < lines.size(); i++) {
+      // 1. Convert leading tabs to 2-space indentation
+      lines.set(i, convertTabsToSpaces(lines.get(i)));
+      String converted = lines.get(i);
+      String convertedStripped = converted.strip();
+
+      // 2. Handle import/code concatenated with /** (e.g. "import ...;/**")
+      if (!inJavadoc) {
+        int jdStart = converted.indexOf("/**");
+        if (jdStart >= 0) {
+          String afterOpen = converted.substring(jdStart + 3);
+          if (!afterOpen.contains("*/")) {
+            String before = converted.substring(0, jdStart).stripTrailing();
+            String indent = getLeadingIndent(converted);
+            if (!before.isEmpty()) {
+              // Split: code stays on this line, /** goes on next line
+              lines.set(i, before);
+              lines.add(i + 1, indent + "/**");
+              converted = indent + "/**";
+              convertedStripped = "/**";
+            }
+            inJavadoc = true;
+            javadocIndent = getLeadingIndent(converted).length();
+            continue;
+          }
+        }
+      }
+
+      // 3. Javadoc asterisk and indentation fixup
+      if (inJavadoc && !convertedStripped.startsWith("/**")) {
+        if (convertedStripped.endsWith("*/")) {
+          // Closing line
+          if (!convertedStripped.equals("*/") && !convertedStripped.startsWith("*")) {
+            String content = converted.substring(0, converted.indexOf("*/")).strip();
+            lines.set(i, " ".repeat(javadocIndent) + " * " + content + " */");
+          }
+          inJavadoc = false;
+        } else if (!convertedStripped.startsWith("*") && !convertedStripped.isBlank()) {
+          // Body line missing asterisk — add " * " prefix with proper indentation
+          lines.set(i, " ".repeat(javadocIndent) + " * " + convertedStripped);
+        }
+      }
+    }
+
+    // Second pass: collapse consecutive blank lines to one
+    List<String> result = new java.util.ArrayList<>();
+    boolean prevBlank = false;
+    for (String line : lines) {
+      boolean isBlank = line.isBlank();
+      if (isBlank && prevBlank) {
+        continue;
+      }
+      result.add(line);
+      prevBlank = isBlank;
+    }
+
+    return String.join("\n", result);
+  }
+
+  /** Convert leading tab characters to 2 spaces per tab. */
+  private String convertTabsToSpaces(String line) {
+    if (!line.contains("\t")) {
+      return line;
+    }
+    StringBuilder sb = new StringBuilder(line.length());
+    for (int j = 0; j < line.length(); j++) {
+      char c = line.charAt(j);
+      if (c == '\t') {
+        sb.append("  ");
+      } else if (c == ' ') {
+        sb.append(' ');
+      } else {
+        sb.append(line, j, line.length());
+        break;
+      }
+    }
+    return sb.toString();
+  }
+
+  /** Extract leading whitespace (spaces and tabs) from a line. */
+  private String getLeadingIndent(String line) {
+    int end = 0;
+    while (end < line.length() && (line.charAt(end) == ' ' || line.charAt(end) == '\t')) {
+      end++;
+    }
+    return line.substring(0, end);
   }
 
   private Properties loadFormatterProperties() {

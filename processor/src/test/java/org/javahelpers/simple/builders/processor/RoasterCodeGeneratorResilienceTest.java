@@ -87,7 +87,8 @@ class RoasterCodeGeneratorResilienceTest {
 
     ProcessingEnvironment env = new NoopProcessingEnvironment();
     RoasterCodeGenerator generator =
-        new RoasterCodeGenerator(env, new ProcessingLogger(env), new NoOpPerformanceTracker());
+        new RoasterCodeGenerator(
+            env, new ProcessingLogger(env), new NoOpPerformanceTracker(), false);
 
     BuilderException thrown =
         assertThrows(BuilderException.class, () -> generator.generateClass(classDef));

@@ -136,6 +136,13 @@ public enum CompilerArgumentsEnum {
   /** Option for verbose logging output. */
   VERBOSE("verbose"),
 
+  // === Performance ===
+  /**
+   * Option to skip Eclipse code formatting for faster generation. Output is still valid Java but
+   * not style-formatted.
+   */
+  SKIP_FORMATTING("skipFormatting"),
+
   // === Performance Tracking ===
   /** Option for performance tracking during annotation processing. */
   PERFORMANCE_TRACKING("performanceTracking"),
