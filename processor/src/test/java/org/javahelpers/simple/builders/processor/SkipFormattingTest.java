@@ -118,7 +118,7 @@ class SkipFormattingTest {
          * method chaining and validation. Use the static {@code create()} method
          * to obtain a new builder instance, configure the desired properties using
          * the setter methods, and then call {@code build()} to create the final DTO.
-
+         *
          * <h4>Example:</h4><pre>{@code
          * FormatTestDto result = FormatTestDtoBuilder.create()
          *     .name("example value")
@@ -160,7 +160,7 @@ class SkipFormattingTest {
 
           /**
            * Creating a new builder for {@code test.FormatTestDto}.
-
+           *
            * <h4>Example:</h4><pre>{@code
            * FormatTestDtoBuilder builder = FormatTestDtoBuilder.create();
            * }</pre>
@@ -173,7 +173,7 @@ class SkipFormattingTest {
           /**
            * Sets the value for <code>count</code>.
            * <p>Generated from parameter in constructor {@link FormatTestDto#FormatTestDto(String, int) FormatTestDto(String name, int count)}
-
+           *
            * <h4>Example:</h4><pre>{@code
            * builder.count(42);
            * }</pre>
@@ -188,7 +188,7 @@ class SkipFormattingTest {
           /**
            * Sets the value for <code>count</code> by invoking the provided supplier.
            * <p>Generated from parameter in constructor {@link FormatTestDto#FormatTestDto(String, int) FormatTestDto(String name, int count)}
-
+           *
            * <h4>Example:</h4><pre>{@code
            * builder.count(() -> 42);
            * }</pre>
@@ -203,7 +203,7 @@ class SkipFormattingTest {
           /**
            * Sets the value for <code>name</code>.
            * <p>Generated from parameter in constructor {@link FormatTestDto#FormatTestDto(String, int) FormatTestDto(String name, int count)}
-
+           *
            * <h4>Example:</h4><pre>{@code
            * builder.name("example value");
            * }</pre>
@@ -218,7 +218,7 @@ class SkipFormattingTest {
           /**
            * Sets the value for <code>name</code> by executing the provided consumer.
            * <p>Generated from parameter in constructor {@link FormatTestDto#FormatTestDto(String, int) FormatTestDto(String name, int count)}
-
+           *
            * <h4>Example:</h4><pre>{@code
            * builder.name(sb -> sb.append("text"));
            * }</pre>
@@ -235,7 +235,7 @@ class SkipFormattingTest {
           /**
            * Sets the value for <code>name</code> by invoking the provided supplier.
            * <p>Generated from parameter in constructor {@link FormatTestDto#FormatTestDto(String, int) FormatTestDto(String name, int count)}
-
+           *
            * <h4>Example:</h4><pre>{@code
            * builder.name(() -> "example value");
            * }</pre>
@@ -251,7 +251,7 @@ class SkipFormattingTest {
            * Sets the String value for <code>name</code> by using String.format(format, args).
            * See {@link String#format(String, Object...)} for details.
            * <p>Generated from parameter in constructor {@link FormatTestDto#FormatTestDto(String, int) FormatTestDto(String name, int count)}
-
+           *
            * <h4>Example:</h4><pre>{@code
            * builder.name("Hello %s", "World");
            * }</pre>
@@ -293,7 +293,7 @@ class SkipFormattingTest {
 
           /**
            * Builds the configured DTO instance.
-
+           *
            * <h4>Example:</h4><pre>{@code
            * FormatTestDto result = builder.build();
            * }</pre>

@@ -159,7 +159,9 @@ public class SourceFormatter {
               converted = " ".repeat(javadocIndent) + " * " + content + " */";
             }
             inJavadoc = false;
-          } else if (!stripped.startsWith("*") && !stripped.isBlank()) {
+          } else if (stripped.isBlank()) {
+            converted = " ".repeat(javadocIndent) + " *";
+          } else if (!stripped.startsWith("*")) {
             converted = " ".repeat(javadocIndent) + " * " + stripped;
           }
         }
