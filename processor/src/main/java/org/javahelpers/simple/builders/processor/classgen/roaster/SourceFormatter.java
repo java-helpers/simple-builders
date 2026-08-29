@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 import org.apache.commons.lang3.StringUtils;
+import org.javahelpers.simple.builders.core.enums.FormattingMode;
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster.model.util.FormatterProfileReader;
@@ -34,56 +35,45 @@ import org.jboss.forge.roaster.model.util.FormatterProfileReader;
 /**
  * Handles formatting of generated Java source code.
  *
- * <p>Supports two modes:
- *
- * <ul>
- *   <li><b>Eclipse JDT formatter</b> — full formatting using a bundled Eclipse formatter profile.
- *       This is the default and produces the highest quality output.
- *   <li><b>Lightweight formatter</b> — minimal post-processing of Roaster's {@code
- *       toUnformattedString()} output. Used when {@code skipFormatting} is enabled or when the
- *       Eclipse formatter profile cannot be loaded. Applies cosmetic fixes at a fraction of the
- *       cost:
- *       <ul>
- *         <li>Convert tab indentation to 2-space indentation
- *         <li>Remove duplicate blank lines (collapse 2+ consecutive blanks to 1)
- *         <li>Insert newline between a trailing import and an adjacent {@code /**} javadoc opening
- *         <li>Add missing {@code " * "} prefixes to javadoc body lines
- *         <li>Normalize javadoc body indentation to match the enclosing member
- *       </ul>
- * </ul>
+ * <p>Supports three modes controlled by {@link FormattingMode}: full Eclipse JDT formatting,
+ * lightweight cosmetic post-processing, or no formatting at all. See the {@link FormattingMode}
+ * enum for details on each mode.
  */
 public class SourceFormatter {
 
   private static final String FORMATTER_PROFILE_RESOURCE = "eclipse-java-format.xml";
 
   private final ProcessingLogger logger;
-  private final boolean skipFormatting;
+  private final FormattingMode formattingMode;
   private final Properties formatterProperties;
 
   /**
    * Creates a formatter instance.
    *
    * @param logger logger for warnings (e.g. formatter profile load failures)
-   * @param skipFormatting if {@code true}, bypass the Eclipse formatter and use lightweight
-   *     post-processing instead
+   * @param formattingMode the formatting mode to use for source code post-processing
    */
-  public SourceFormatter(ProcessingLogger logger, boolean skipFormatting) {
+  public SourceFormatter(ProcessingLogger logger, FormattingMode formattingMode) {
     this.logger = logger;
-    this.skipFormatting = skipFormatting;
+    this.formattingMode = formattingMode;
     this.formatterProperties = loadFormatterProperties();
   }
 
   /**
-   * Formats the given raw source code.
+   * Formats the given raw source code according to the configured {@link FormattingMode}.
    *
-   * <p>If {@code skipFormatting} is enabled or the Eclipse formatter profile is unavailable, the
-   * lightweight formatter is used instead. Otherwise the full Eclipse JDT formatter is applied.
+   * <p>If {@link FormattingMode#NONE}, the raw source is returned as-is. If {@link
+   * FormattingMode#LIGHTWEIGHT} or if the Eclipse formatter profile is unavailable, the lightweight
+   * formatter is used. Otherwise the full Eclipse JDT formatter is applied.
    *
    * @param rawSource the unformatted Java source code from Roaster's {@code toUnformattedString()}
    * @return the formatted source code
    */
   public String format(String rawSource) {
-    if (skipFormatting || formatterProperties.isEmpty()) {
+    if (formattingMode == FormattingMode.NONE) {
+      return rawSource;
+    }
+    if (formattingMode == FormattingMode.LIGHTWEIGHT || formatterProperties.isEmpty()) {
       return lightweightFormat(rawSource);
     }
     try {
@@ -176,7 +166,6 @@ public class SourceFormatter {
       output.append(converted);
       prevBlank = isBlank;
     }
-
     return output.toString();
   }
 

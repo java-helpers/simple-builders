@@ -41,6 +41,7 @@ import javax.tools.JavaFileObject;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
+import org.javahelpers.simple.builders.core.enums.FormattingMode;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.annotation.InterfaceName;
@@ -88,16 +89,18 @@ public class RoasterCodeGenerator {
    *
    * @param processingEnv Processing environment for accessing filer and element utilities
    * @param logger Logger for debug output
+   * @param tracker Performance tracker for sub-phase timing
+   * @param formattingMode Formatting mode for source code post-processing
    */
   public RoasterCodeGenerator(
       ProcessingEnvironment processingEnv,
       ProcessingLogger logger,
       PerformanceTracker tracker,
-      boolean skipFormatting) {
+      FormattingMode formattingMode) {
     this.processingEnv = processingEnv;
     this.logger = logger;
     this.performanceTracker = tracker;
-    this.sourceFormatter = new SourceFormatter(logger, skipFormatting);
+    this.sourceFormatter = new SourceFormatter(logger, formattingMode);
   }
 
   /**

@@ -132,16 +132,17 @@ public enum CompilerArgumentsEnum {
    */
   DEACTIVATE_GENERATION_COMPONENTS("deactivateGenerationComponents"),
 
-  // === Logging ===
+  // === Debug Logging ===
   /** Option for verbose logging output. */
   VERBOSE("verbose"),
 
-  // === Performance ===
+  // === Performance Optimization ===
   /**
-   * Option to skip Eclipse code formatting for faster generation. Output is still valid Java but
-   * not style-formatted.
+   * Option to control the formatting mode for generated source files. Accepts values {@code jdt},
+   * {@code lightweight}, or {@code none}. See {@link
+   * org.javahelpers.simple.builders.core.enums.FormattingMode} for details.
    */
-  SKIP_FORMATTING("skipFormatting"),
+  FORMATTING_MODE("formattingMode"),
 
   // === Performance Tracking ===
   /** Option for performance tracking during annotation processing. */
