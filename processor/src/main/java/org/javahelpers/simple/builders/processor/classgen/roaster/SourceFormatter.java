@@ -25,9 +25,6 @@ package org.javahelpers.simple.builders.processor.classgen.roaster;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Properties;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
@@ -116,16 +113,17 @@ public class SourceFormatter {
    * @return the lightly post-processed source
    */
   String lightweightFormat(String source) {
-    // Use a list so we can insert new lines when splitting concatenated code
-    List<String> lines = new ArrayList<>(Arrays.asList(source.split("\n", -1)));
+    String[] rawLines = source.split("\n", -1);
+    StringBuilder output = new StringBuilder(source.length());
     boolean inJavadoc = false;
     int javadocIndent = 0;
+    boolean prevBlank = false;
 
-    for (int i = 0; i < lines.size(); i++) {
+    for (int i = 0; i < rawLines.length; i++) {
+      String line = rawLines[i];
+
       // 1. Convert leading tabs to 2-space indentation
-      lines.set(i, convertTabsToSpaces(lines.get(i)));
-      String converted = lines.get(i);
-      String convertedStripped = converted.strip();
+      String converted = convertTabsToSpaces(line);
 
       // 2. Handle import/code concatenated with /** (e.g. "import ...;/**")
       if (!inJavadoc) {
@@ -136,67 +134,79 @@ public class SourceFormatter {
             String before = converted.substring(0, jdStart).stripTrailing();
             String indent = getLeadingIndent(converted);
             if (!before.isEmpty()) {
-              // Split: code stays on this line, /** goes on next line
-              lines.set(i, before);
-              lines.add(i + 1, indent + "/**");
+              // Split: emit before-part as its own line, then process /** next
+              boolean beforeBlank = before.isBlank();
+              if (!(beforeBlank && prevBlank)) {
+                if (output.length() > 0) output.append('\n');
+                output.append(before);
+                prevBlank = beforeBlank;
+              }
               converted = indent + "/**";
-              convertedStripped = "/**";
             }
             inJavadoc = true;
-            javadocIndent = getLeadingIndent(converted).length();
-            continue;
+            javadocIndent = indent.length();
           }
         }
       }
 
-      // 3. Javadoc asterisk and indentation fixup
-      if (inJavadoc && !convertedStripped.startsWith("/**")) {
-        if (convertedStripped.endsWith("*/")) {
-          // Closing line
-          if (!convertedStripped.equals("*/") && !convertedStripped.startsWith("*")) {
-            String content = converted.substring(0, converted.indexOf("*/")).strip();
-            lines.set(i, " ".repeat(javadocIndent) + " * " + content + " */");
+      // 3. Javadoc asterisk and indentation fixup (only when in javadoc)
+      if (inJavadoc) {
+        String stripped = converted.strip();
+        if (!stripped.startsWith("/**")) {
+          if (stripped.endsWith("*/")) {
+            if (!stripped.equals("*/") && !stripped.startsWith("*")) {
+              String content = converted.substring(0, converted.indexOf("*/")).strip();
+              converted = " ".repeat(javadocIndent) + " * " + content + " */";
+            }
+            inJavadoc = false;
+          } else if (!stripped.startsWith("*") && !stripped.isBlank()) {
+            converted = " ".repeat(javadocIndent) + " * " + stripped;
           }
-          inJavadoc = false;
-        } else if (!convertedStripped.startsWith("*") && !convertedStripped.isBlank()) {
-          // Body line missing asterisk — add " * " prefix with proper indentation
-          lines.set(i, " ".repeat(javadocIndent) + " * " + convertedStripped);
         }
       }
-    }
 
-    // Second pass: collapse consecutive blank lines to one
-    List<String> result = new ArrayList<>();
-    boolean prevBlank = false;
-    for (String line : lines) {
-      boolean isBlank = line.isBlank();
+      // 4. Collapse consecutive blank lines + append (merged from second pass)
+      boolean isBlank = converted.isBlank();
       if (isBlank && prevBlank) {
         continue;
       }
-      result.add(line);
+      if (output.length() > 0) output.append('\n');
+      output.append(converted);
       prevBlank = isBlank;
     }
 
-    return String.join("\n", result);
+    return output.toString();
   }
 
   /** Convert leading tab characters to 2 spaces per tab. */
   private String convertTabsToSpaces(String line) {
-    if (!line.contains("\t")) {
+    int wsEnd = 0;
+    while (wsEnd < line.length() && (line.charAt(wsEnd) == ' ' || line.charAt(wsEnd) == '\t')) {
+      wsEnd++;
+    }
+    if (wsEnd == 0) {
       return line;
     }
-    StringBuilder sb = new StringBuilder(line.length());
-    for (int j = 0; j < line.length(); j++) {
-      char c = line.charAt(j);
-      if (c == '\t') {
-        sb.append("  ");
-      } else if (c == ' ') {
-        sb.append(' ');
-      } else {
-        sb.append(line, j, line.length());
+    boolean hasTab = false;
+    for (int j = 0; j < wsEnd; j++) {
+      if (line.charAt(j) == '\t') {
+        hasTab = true;
         break;
       }
     }
+    if (!hasTab) {
+      return line;
+    }
+    StringBuilder sb = new StringBuilder(line.length() + wsEnd);
+    for (int j = 0; j < wsEnd; j++) {
+      char c = line.charAt(j);
+      if (c == '\t') {
+        sb.append("  ");
+      } else {
+        sb.append(c);
+      }
+    }
+    sb.append(line, wsEnd, line.length());
     return sb.toString();
   }
 
