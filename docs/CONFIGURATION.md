@@ -1017,10 +1017,7 @@ information on log levels, output format, and configuration examples.
 #### `formattingMode`
 
 **Default**: `jdt` | **Compiler Option**: `-Asimplebuilder.formattingMode=JDT|LIGHTWEIGHT|NONE`
-
-> **Note**: This is a **processor-level option** only. It cannot be set per-annotation via
-> `@SimpleBuilder.Options` because formatting applies uniformly to all generated sources within a
-> compilation.
+| **Annotation Option**: `@SimpleBuilder.Options(formattingMode = "lightweight")`
 
 Controls how generated source code is post-processed before being written to disk:
 
@@ -1037,6 +1034,14 @@ mvn compile -Dsimplebuilder.formattingMode=lightweight
 
 # Or via compiler arg
 -Asimplebuilder.formattingMode=lightweight
+```
+
+Per-annotation override:
+```java
+@SimpleBuilder(options = @SimpleBuilder.Options(
+    formattingMode = "lightweight"
+))
+public class PersonDto { ... }
 ```
 
 ## Examples

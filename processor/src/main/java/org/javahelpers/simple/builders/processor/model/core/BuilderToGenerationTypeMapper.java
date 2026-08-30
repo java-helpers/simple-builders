@@ -25,6 +25,7 @@
 package org.javahelpers.simple.builders.processor.model.core;
 
 import org.apache.commons.lang3.StringUtils;
+import org.javahelpers.simple.builders.core.enums.FormattingMode;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.method.ConstructorDto;
@@ -51,14 +52,19 @@ import org.javahelpers.simple.builders.processor.model.type.NestedTypeDto;
 public class BuilderToGenerationTypeMapper {
 
   private final BuilderConfiguration configuration;
+  private final FormattingMode globalFormattingMode;
 
   /**
    * Creates a mapper for the given effective builder configuration.
    *
    * @param configuration the effective builder configuration
+   * @param globalFormattingMode the global formatting mode from compiler arguments (used as
+   *     fallback when the annotation does not specify a formatting mode)
    */
-  public BuilderToGenerationTypeMapper(BuilderConfiguration configuration) {
+  public BuilderToGenerationTypeMapper(
+      BuilderConfiguration configuration, FormattingMode globalFormattingMode) {
     this.configuration = configuration;
+    this.globalFormattingMode = globalFormattingMode;
   }
 
   /**
@@ -78,6 +84,7 @@ public class BuilderToGenerationTypeMapper {
     renderingDto.setSuperType(builderDto.getSuperType());
     renderingDto.setClassJavadoc(
         configuration.shouldGenerateJavaDoc() ? builderDto.getClassJavadoc() : null);
+    renderingDto.setFormattingMode(configuration.resolveFormattingMode(globalFormattingMode));
 
     builderDto.getClassFields().stream()
         .map(this::toRenderingClassField)

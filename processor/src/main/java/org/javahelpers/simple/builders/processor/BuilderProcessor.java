@@ -93,8 +93,7 @@ public class BuilderProcessor extends AbstractProcessor {
 
     this.context = new ProcessingContext(logger, globalConfig, processingEnv);
     this.codeGenerator =
-        new RoasterCodeGenerator(
-            processingEnv, logger, context.getPerformanceTracker(), context.getFormattingMode());
+        new RoasterCodeGenerator(processingEnv, logger, context.getPerformanceTracker());
     this.jacksonModuleGenerator = new JacksonModuleGenerator(processingEnv, logger);
 
     // Initialize GeneratorRegistry once during processor initialization
@@ -131,6 +130,7 @@ public class BuilderProcessor extends AbstractProcessor {
           jacksonModuleGenerator.getModuleDefinitions();
       for (GenerationTargetClassDto moduleClassDef : moduleClassDefs) {
         String packageName = moduleClassDef.getTypeName().getPackageName();
+        moduleClassDef.setFormattingMode(context.getFormattingMode());
         context.info("Generating Jackson Module in package '%s'", packageName);
         try {
           codeGenerator.generateClass(moduleClassDef);
@@ -265,7 +265,8 @@ public class BuilderProcessor extends AbstractProcessor {
     // Track DTO Mapping
     tracker.startPhase();
     GenerationTargetClassDto renderingDto =
-        new BuilderToGenerationTypeMapper(config).toRenderingDto(builderDef);
+        new BuilderToGenerationTypeMapper(config, context.getFormattingMode())
+            .toRenderingDto(builderDef);
     tracker.endPhase(PHASE_DTO_MAPPING);
 
     // Track Code Generation (parent phase; sub-phases tracked inside RoasterCodeGenerator)

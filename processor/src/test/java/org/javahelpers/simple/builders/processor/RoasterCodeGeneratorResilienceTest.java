@@ -41,7 +41,6 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
-import org.javahelpers.simple.builders.core.enums.FormattingMode;
 import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterCodeGenerator;
 import org.javahelpers.simple.builders.processor.classgen.roaster.exceptions.RoasterMapperException;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
@@ -88,8 +87,7 @@ class RoasterCodeGeneratorResilienceTest {
 
     ProcessingEnvironment env = new NoopProcessingEnvironment();
     RoasterCodeGenerator generator =
-        new RoasterCodeGenerator(
-            env, new ProcessingLogger(env), new NoOpPerformanceTracker(), FormattingMode.JDT);
+        new RoasterCodeGenerator(env, new ProcessingLogger(env), new NoOpPerformanceTracker());
 
     BuilderException thrown =
         assertThrows(BuilderException.class, () -> generator.generateClass(classDef));
