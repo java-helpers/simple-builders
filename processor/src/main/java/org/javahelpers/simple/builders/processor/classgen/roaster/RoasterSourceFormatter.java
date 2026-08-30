@@ -25,6 +25,7 @@ package org.javahelpers.simple.builders.processor.classgen.roaster;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Objects;
 import java.util.Properties;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.enums.FormattingMode;
@@ -33,30 +34,42 @@ import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster.model.util.FormatterProfileReader;
 
 /**
- * Handles formatting of generated Java source code.
+ * Handles formatting of Java source code produced by Roaster's {@code toUnformattedString()}.
+ *
+ * <p>This formatter is specifically designed for Roaster's output format and addresses its quirks
+ * (tab indentation, concatenated imports/javadoc, missing javadoc asterisk prefixes). It is not a
+ * general-purpose source code formatter.
  *
  * <p>Supports three modes controlled by {@link FormattingMode}: full Eclipse JDT formatting,
  * lightweight cosmetic post-processing, or no formatting at all. See the {@link FormattingMode}
  * enum for details on each mode.
  */
-public class SourceFormatter {
+public final class RoasterSourceFormatter {
 
   private static final String FORMATTER_PROFILE_RESOURCE = "eclipse-java-format.xml";
+  private static final int SPACES_PER_TAB = 2;
 
   private final ProcessingLogger logger;
   private final FormattingMode formattingMode;
   private final Properties formatterProperties;
+  private final boolean formatterProfileAvailable;
 
   /**
    * Creates a formatter instance.
    *
    * @param logger logger for warnings (e.g. formatter profile load failures)
    * @param formattingMode the formatting mode to use for source code post-processing
+   * @throws NullPointerException if logger or formattingMode is null
    */
-  public SourceFormatter(ProcessingLogger logger, FormattingMode formattingMode) {
-    this.logger = logger;
-    this.formattingMode = formattingMode;
+  public RoasterSourceFormatter(ProcessingLogger logger, FormattingMode formattingMode) {
+    this.logger = Objects.requireNonNull(logger, "logger must not be null");
+    this.formattingMode = Objects.requireNonNull(formattingMode, "formattingMode must not be null");
     this.formatterProperties = loadFormatterProperties();
+    this.formatterProfileAvailable = !formatterProperties.isEmpty();
+    if (formattingMode == FormattingMode.JDT && !formatterProfileAvailable) {
+      logger.warning(
+          "simple-builders: JDT formatting requested but Eclipse formatter profile is unavailable; falling back to lightweight formatting.");
+    }
   }
 
   /**
@@ -73,7 +86,10 @@ public class SourceFormatter {
     if (formattingMode == FormattingMode.NONE) {
       return rawSource;
     }
-    if (formattingMode == FormattingMode.LIGHTWEIGHT || formatterProperties.isEmpty()) {
+    if (formattingMode == FormattingMode.LIGHTWEIGHT) {
+      return lightweightFormat(rawSource);
+    }
+    if (!formatterProfileAvailable) {
       return lightweightFormat(rawSource);
     }
     try {
@@ -105,71 +121,108 @@ public class SourceFormatter {
   String lightweightFormat(String source) {
     String[] rawLines = source.split("\n", -1);
     StringBuilder output = new StringBuilder(source.length());
-    boolean inJavadoc = false;
-    int javadocIndent = 0;
+    JavadocState javadocState = new JavadocState();
     boolean prevBlank = false;
 
-    for (int i = 0; i < rawLines.length; i++) {
-      String line = rawLines[i];
-
-      // 1. Convert leading tabs to 2-space indentation
+    for (String line : rawLines) {
+      // 1. Convert leading tabs to spaces
       String converted = convertTabsToSpaces(line);
 
-      // 2. Handle import/code concatenated with /** (e.g. "import ...;/**")
-      if (!inJavadoc) {
-        int jdStart = converted.indexOf("/**");
-        if (jdStart >= 0) {
-          String afterOpen = converted.substring(jdStart + 3);
-          if (!afterOpen.contains("*/")) {
-            String before = converted.substring(0, jdStart).stripTrailing();
-            String indent = getLeadingIndent(converted);
-            if (!before.isEmpty()) {
-              // Split: emit before-part as its own line, then process /** next
-              boolean beforeBlank = before.isBlank();
-              if (!(beforeBlank && prevBlank)) {
-                if (output.length() > 0) output.append('\n');
-                output.append(before);
-                prevBlank = beforeBlank;
-              }
-              converted = indent + "/**";
-            }
-            inJavadoc = true;
-            javadocIndent = indent.length();
-          }
-        }
+      // 2. Split import/code concatenated with /**
+      if (!javadocState.inJavadoc) {
+        converted = splitConcatenatedJavadocOpen(converted, output, javadocState, prevBlank);
       }
 
-      // 3. Javadoc asterisk and indentation fixup (only when in javadoc)
-      if (inJavadoc) {
-        String stripped = converted.strip();
-        if (!stripped.startsWith("/**")) {
-          if (stripped.endsWith("*/")) {
-            if (!stripped.equals("*/") && !stripped.startsWith("*")) {
-              String content = converted.substring(0, converted.indexOf("*/")).strip();
-              converted = " ".repeat(javadocIndent) + " * " + content + " */";
-            }
-            inJavadoc = false;
-          } else if (stripped.isBlank()) {
-            converted = " ".repeat(javadocIndent) + " *";
-          } else if (!stripped.startsWith("*")) {
-            converted = " ".repeat(javadocIndent) + " * " + stripped;
-          }
-        }
+      // 3. Fix javadoc asterisk prefixes and indentation
+      if (javadocState.inJavadoc) {
+        converted = fixJavadocLine(converted, javadocState);
       }
 
-      // 4. Collapse consecutive blank lines + append (merged from second pass)
+      // 4. Collapse consecutive blank lines and append
       boolean isBlank = converted.isBlank();
       if (isBlank && prevBlank) {
         continue;
       }
-      if (output.length() > 0) output.append('\n');
+      if (output.length() > 0) {
+        output.append('\n');
+      }
       output.append(converted);
       prevBlank = isBlank;
     }
     return output.toString();
   }
 
-  /** Convert leading tab characters to 2 spaces per tab. */
+  /**
+   * Handles a line that may contain a {@code /**} javadoc opening concatenated with preceding code
+   * (e.g. {@code "import ...;/**"}). If found, emits the preceding part as its own line and updates
+   * the javadoc state. Returns the remaining line to process (either the original or just the
+   * {@code /**} part).
+   */
+  private String splitConcatenatedJavadocOpen(
+      String converted, StringBuilder output, JavadocState javadocState, boolean prevBlank) {
+    int jdStart = converted.indexOf("/**");
+    if (jdStart < 0) {
+      return converted;
+    }
+    String afterOpen = converted.substring(jdStart + 3);
+    if (afterOpen.contains("*/")) {
+      return converted;
+    }
+    String before = converted.substring(0, jdStart).stripTrailing();
+    String indent = getLeadingIndent(converted);
+    javadocState.inJavadoc = true;
+    javadocState.indent = indent.length();
+    if (!before.isEmpty()) {
+      boolean beforeBlank = before.isBlank();
+      if (!(beforeBlank && prevBlank)) {
+        if (output.length() > 0) {
+          output.append('\n');
+        }
+        output.append(before);
+      }
+      return indent + "/**";
+    }
+    return converted;
+  }
+
+  /**
+   * Fixes javadoc body lines by adding missing {@code " * "} prefixes and normalizing indentation.
+   * Updates the javadoc state when the closing javadoc delimiter is encountered.
+   */
+  private String fixJavadocLine(String converted, JavadocState javadocState) {
+    String stripped = converted.strip();
+    if (stripped.startsWith("/**")) {
+      return converted;
+    }
+    if (stripped.endsWith("*/")) {
+      if (!stripped.equals("*/") && !stripped.startsWith("*")) {
+        String content = converted.substring(0, converted.indexOf("*/")).strip();
+        converted = " ".repeat(javadocState.indent) + " * " + content + " */";
+      }
+      javadocState.inJavadoc = false;
+      return converted;
+    }
+    if (stripped.isBlank()) {
+      return " ".repeat(javadocState.indent) + " *";
+    }
+    if (!stripped.startsWith("*")) {
+      return " ".repeat(javadocState.indent) + " * " + stripped;
+    }
+    return converted;
+  }
+
+  /** Mutable state for javadoc processing within {@link #lightweightFormat(String)}. */
+  private static final class JavadocState {
+    boolean inJavadoc = false;
+    int indent = 0;
+  }
+
+  /**
+   * Convert leading tab characters to spaces (2 spaces per tab).
+   *
+   * @param line the line to convert
+   * @return the line with leading tabs replaced by spaces, or the original line if no tabs
+   */
   private String convertTabsToSpaces(String line) {
     int wsEnd = 0;
     while (wsEnd < line.length() && (line.charAt(wsEnd) == ' ' || line.charAt(wsEnd) == '\t')) {
@@ -192,7 +245,7 @@ public class SourceFormatter {
     for (int j = 0; j < wsEnd; j++) {
       char c = line.charAt(j);
       if (c == '\t') {
-        sb.append("  ");
+        sb.append(" ".repeat(SPACES_PER_TAB));
       } else {
         sb.append(c);
       }
@@ -201,8 +254,13 @@ public class SourceFormatter {
     return sb.toString();
   }
 
-  /** Extract leading whitespace (spaces and tabs) from a line. */
-  private String getLeadingIndent(String line) {
+  /**
+   * Extract leading whitespace (spaces and tabs) from a line.
+   *
+   * @param line the line to extract indent from
+   * @return the leading whitespace string
+   */
+  private static String getLeadingIndent(String line) {
     int end = 0;
     while (end < line.length() && (line.charAt(end) == ' ' || line.charAt(end) == '\t')) {
       end++;
@@ -212,7 +270,9 @@ public class SourceFormatter {
 
   private Properties loadFormatterProperties() {
     try (InputStream inputStream =
-        SourceFormatter.class.getClassLoader().getResourceAsStream(FORMATTER_PROFILE_RESOURCE)) {
+        RoasterSourceFormatter.class
+            .getClassLoader()
+            .getResourceAsStream(FORMATTER_PROFILE_RESOURCE)) {
       if (inputStream == null) {
         logger.warning(
             "simple-builders: Bundled Eclipse formatter profile '%s' was not found on the processor classpath.",

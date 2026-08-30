@@ -82,7 +82,7 @@ public class RoasterCodeGenerator {
   /** Performance tracker for sub-phase timing (Source Construction, File Writing). */
   private final PerformanceTracker performanceTracker;
 
-  private final SourceFormatter sourceFormatter;
+  private final RoasterSourceFormatter sourceFormatter;
 
   /**
    * Constructor for RoasterCodeGenerator.
@@ -100,7 +100,7 @@ public class RoasterCodeGenerator {
     this.processingEnv = processingEnv;
     this.logger = logger;
     this.performanceTracker = tracker;
-    this.sourceFormatter = new SourceFormatter(logger, formattingMode);
+    this.sourceFormatter = new RoasterSourceFormatter(logger, formattingMode);
   }
 
   /**
