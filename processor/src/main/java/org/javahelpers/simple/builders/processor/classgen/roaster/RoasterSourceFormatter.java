@@ -156,7 +156,7 @@ public final class RoasterSourceFormatter {
     if (isBlank && prevBlank) {
       return;
     }
-    if (output.length() > 0) {
+    if (!output.isEmpty()) {
       output.append('\n');
     }
     output.append(converted);
@@ -211,40 +211,52 @@ public final class RoasterSourceFormatter {
    * @return the start index of the next segment, or -1 if no split is needed
    */
   private int findSplitPosition(String line) {
-    int bestPos = -1;
+    int pos = findSemicolonKeywordSplit(line);
+    if (pos >= 0) {
+      return pos;
+    }
+    return findClosingBraceSplit(line);
+  }
 
-    // Pattern 1: semicolon followed by a declaration keyword
+  /**
+   * Finds a semicolon followed by a Java declaration keyword and returns the position of the
+   * keyword.
+   */
+  private int findSemicolonKeywordSplit(String line) {
     int semiIdx = 0;
     while ((semiIdx = line.indexOf(';', semiIdx)) >= 0) {
-      int afterSemi = semiIdx + 1;
-      // Skip whitespace after semicolon
-      while (afterSemi < line.length() && Character.isWhitespace(line.charAt(afterSemi))) {
-        afterSemi++;
-      }
+      int afterSemi = skipWhitespace(line, semiIdx + 1);
       if (matchesDeclarationKeyword(line, afterSemi)) {
-        bestPos = afterSemi;
-        break;
+        return afterSemi;
       }
       semiIdx++;
     }
+    return -1;
+  }
 
-    // Pattern 2: closing brace followed by closing brace (with optional whitespace)
-    if (bestPos < 0) {
-      int braceIdx = 0;
-      while ((braceIdx = line.indexOf('}', braceIdx)) >= 0) {
-        int afterBrace = braceIdx + 1;
-        while (afterBrace < line.length() && Character.isWhitespace(line.charAt(afterBrace))) {
-          afterBrace++;
-        }
-        if (afterBrace < line.length() && line.charAt(afterBrace) == '}') {
-          bestPos = afterBrace;
-          break;
-        }
-        braceIdx++;
+  /**
+   * Finds a closing brace followed by another closing brace (with optional whitespace between) and
+   * returns the position of the second brace.
+   */
+  private int findClosingBraceSplit(String line) {
+    int braceIdx = 0;
+    while ((braceIdx = line.indexOf('}', braceIdx)) >= 0) {
+      int afterBrace = skipWhitespace(line, braceIdx + 1);
+      if (afterBrace < line.length() && line.charAt(afterBrace) == '}') {
+        return afterBrace;
       }
+      braceIdx++;
     }
+    return -1;
+  }
 
-    return bestPos;
+  /** Skips whitespace starting at the given index and returns the first non-whitespace position. */
+  private int skipWhitespace(String line, int start) {
+    int pos = start;
+    while (pos < line.length() && Character.isWhitespace(line.charAt(pos))) {
+      pos++;
+    }
+    return pos;
   }
 
   /** Checks whether the text at the given position starts with a Java declaration keyword. */
@@ -300,7 +312,7 @@ public final class RoasterSourceFormatter {
     if (!before.isEmpty()) {
       boolean beforeBlank = before.isBlank();
       if (!(beforeBlank && prevBlank)) {
-        if (output.length() > 0) {
+        if (!output.isEmpty()) {
           output.append('\n');
         }
         output.append(before);

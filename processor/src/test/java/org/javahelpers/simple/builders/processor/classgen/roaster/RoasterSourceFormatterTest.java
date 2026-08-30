@@ -46,6 +46,8 @@ import javax.tools.Diagnostic;
 import org.javahelpers.simple.builders.core.enums.FormattingMode;
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 /**
  * Unit tests for {@link RoasterSourceFormatter}.
@@ -155,9 +157,8 @@ class RoasterSourceFormatterTest {
 
   @Test
   void constructor_nullFormattingMode_throwsNullPointerException() {
-    assertThrows(
-        NullPointerException.class,
-        () -> new RoasterSourceFormatter(new ProcessingLogger(createProcessingEnv()), null));
+    ProcessingLogger logger = new ProcessingLogger(createProcessingEnv());
+    assertThrows(NullPointerException.class, () -> new RoasterSourceFormatter(logger, null));
   }
 
   // === NONE mode tests ===
@@ -247,26 +248,33 @@ class RoasterSourceFormatterTest {
         "Import and javadoc opening should be split into separate lines");
   }
 
-  @Test
-  void lightweightFormat_addsJavadocAsteriskPrefixes() {
+  @ParameterizedTest
+  @CsvSource({
+    "This is a javadoc body line.,Another body line.",
+    "Single line.,",
+  })
+  void lightweightFormat_addsJavadocAsteriskPrefixes(String bodyLine1, String bodyLine2) {
     RoasterSourceFormatter formatter = createFormatter(FormattingMode.LIGHTWEIGHT);
+    boolean hasSecondLine = bodyLine2 != null && !bodyLine2.isEmpty();
+    String javadocBody = hasSecondLine ? bodyLine1 + "\n" + bodyLine2 : bodyLine1;
     String input =
         """
         package test;
         /**
-        This is a javadoc body line.
-        Another body line.
+        %s
          */
         public class Foo {
         }
-        """;
-    String result = formatter.lightweightFormat(input);
-    String expected =
         """
-         * This is a javadoc body line.
-         * Another body line."""
-            .indent(1);
-    assertTrue(result.contains(expected), "Javadoc body lines should get ' * ' prefix");
+            .formatted(javadocBody);
+    String result = formatter.lightweightFormat(input);
+    String expectedLine1 = " * " + bodyLine1;
+    assertTrue(result.contains(expectedLine1), "First javadoc body line should get ' * ' prefix");
+    if (hasSecondLine) {
+      String expectedLine2 = " * " + bodyLine2;
+      assertTrue(
+          result.contains(expectedLine2), "Second javadoc body line should get ' * ' prefix");
+    }
   }
 
   @Test
@@ -293,20 +301,24 @@ class RoasterSourceFormatterTest {
     assertTrue(result.contains(expected), "Blank javadoc lines should get ' *' prefix");
   }
 
-  @Test
-  void lightweightFormat_handlesInlineJavadocClose() {
+  @ParameterizedTest
+  @CsvSource({
+    "/** This is a one-line javadoc. */",
+    "/** Short. */",
+    "/** Multi word inline javadoc with several words. */",
+  })
+  void lightweightFormat_handlesInlineJavadocClose(String inlineJavadoc) {
     RoasterSourceFormatter formatter = createFormatter(FormattingMode.LIGHTWEIGHT);
     String input =
         """
         package test;
-        /** This is a one-line javadoc. */
+        %s
         public class Foo {
         }
-        """;
+        """
+            .formatted(inlineJavadoc);
     String result = formatter.lightweightFormat(input);
-    assertTrue(
-        result.contains("/** This is a one-line javadoc. */"),
-        "Inline javadoc (/** ... */) should be preserved as-is");
+    assertTrue(result.contains(inlineJavadoc), "Inline javadoc should be preserved as-is");
   }
 
   @Test
