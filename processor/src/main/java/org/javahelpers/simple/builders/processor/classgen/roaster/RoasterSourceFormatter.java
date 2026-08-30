@@ -46,13 +46,14 @@ import org.jboss.forge.roaster.model.util.FormatterProfileReader;
  */
 public final class RoasterSourceFormatter {
 
-  private static final String FORMATTER_PROFILE_RESOURCE = "eclipse-java-format.xml";
+  static final String DEFAULT_FORMATTER_PROFILE_RESOURCE = "eclipse-java-format.xml";
   private static final int SPACES_PER_TAB = 2;
 
   private final ProcessingLogger logger;
   private final FormattingMode formattingMode;
   private final Properties formatterProperties;
   private final boolean formatterProfileAvailable;
+  private final String formatterProfileResource;
 
   /**
    * Creates a formatter instance.
@@ -62,8 +63,16 @@ public final class RoasterSourceFormatter {
    * @throws NullPointerException if logger or formattingMode is null
    */
   public RoasterSourceFormatter(ProcessingLogger logger, FormattingMode formattingMode) {
+    this(logger, formattingMode, DEFAULT_FORMATTER_PROFILE_RESOURCE);
+  }
+
+  RoasterSourceFormatter(
+      ProcessingLogger logger, FormattingMode formattingMode, String formatterProfileResource) {
     this.logger = Objects.requireNonNull(logger, "logger must not be null");
     this.formattingMode = Objects.requireNonNull(formattingMode, "formattingMode must not be null");
+    this.formatterProfileResource =
+        Objects.requireNonNull(
+            formatterProfileResource, "formatterProfileResource must not be null");
     this.formatterProperties = loadFormatterProperties();
     this.formatterProfileAvailable = !formatterProperties.isEmpty();
     if (formattingMode == FormattingMode.JDT && !formatterProfileAvailable) {
@@ -92,14 +101,7 @@ public final class RoasterSourceFormatter {
     if (!formatterProfileAvailable) {
       return lightweightFormat(rawSource);
     }
-    try {
-      return Roaster.format(formatterProperties, rawSource);
-    } catch (Exception ex) {
-      logger.warning(
-          "simple-builders: Failed to format generated source with bundled Eclipse formatter profile: %s",
-          StringUtils.defaultIfBlank(ex.getMessage(), ex.getClass().getSimpleName()));
-      return rawSource;
-    }
+    return Roaster.format(formatterProperties, rawSource);
   }
 
   /**
@@ -272,11 +274,11 @@ public final class RoasterSourceFormatter {
     try (InputStream inputStream =
         RoasterSourceFormatter.class
             .getClassLoader()
-            .getResourceAsStream(FORMATTER_PROFILE_RESOURCE)) {
+            .getResourceAsStream(formatterProfileResource)) {
       if (inputStream == null) {
         logger.warning(
             "simple-builders: Bundled Eclipse formatter profile '%s' was not found on the processor classpath.",
-            FORMATTER_PROFILE_RESOURCE);
+            formatterProfileResource);
         return new Properties();
       }
       FormatterProfileReader profileReader = FormatterProfileReader.fromEclipseXml(inputStream);
@@ -284,7 +286,7 @@ public final class RoasterSourceFormatter {
     } catch (IOException ex) {
       logger.warning(
           "simple-builders: Failed to load bundled Eclipse formatter profile '%s': %s",
-          FORMATTER_PROFILE_RESOURCE,
+          formatterProfileResource,
           StringUtils.defaultIfBlank(ex.getMessage(), ex.getClass().getSimpleName()));
       return new Properties();
     }

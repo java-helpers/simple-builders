@@ -238,8 +238,12 @@ class RoasterSourceFormatterTest {
         }
         """;
     String result = formatter.lightweightFormat(input);
+    String expected =
+        """
+        import java.util.List;
+        /**""";
     assertTrue(
-        result.contains("import java.util.List;\n/**"),
+        result.contains(expected),
         "Import and javadoc opening should be split into separate lines");
   }
 
@@ -257,12 +261,12 @@ class RoasterSourceFormatterTest {
         }
         """;
     String result = formatter.lightweightFormat(input);
-    assertTrue(
-        result.contains(" * This is a javadoc body line."),
-        "Javadoc body lines should get ' * ' prefix");
-    assertTrue(
-        result.contains(" * Another body line."),
-        "Multiple javadoc body lines should get ' * ' prefix");
+    String expected =
+        """
+         * This is a javadoc body line.
+         * Another body line."""
+            .indent(1);
+    assertTrue(result.contains(expected), "Javadoc body lines should get ' * ' prefix");
   }
 
   @Test
@@ -280,9 +284,13 @@ class RoasterSourceFormatterTest {
         }
         """;
     String result = formatter.lightweightFormat(input);
-    assertTrue(
-        result.contains(" * First line.\n *\n * Second line."),
-        "Blank javadoc lines should get ' *' prefix");
+    String expected =
+        """
+         * First line.
+         *
+         * Second line."""
+            .indent(1);
+    assertTrue(result.contains(expected), "Blank javadoc lines should get ' *' prefix");
   }
 
   @Test
@@ -323,12 +331,23 @@ class RoasterSourceFormatterTest {
         }
         """;
     String result = formatter.lightweightFormat(input);
+    String expectedJavadoc =
+        """
+          /**
+           * Body line."""
+            .indent(2)
+            .stripTrailing();
+    String expectedClose =
+        """
+          */
+          public void bar()"""
+            .indent(2)
+            .stripTrailing();
     assertTrue(
-        result.contains("  /**\n   * Body line."),
+        result.contains(expectedJavadoc),
         "Javadoc body lines should be indented to match the enclosing member");
     assertTrue(
-        result.contains("  */\n  public void bar()"),
-        "Closing javadoc should align with the enclosing member");
+        result.contains(expectedClose), "Closing javadoc should align with the enclosing member");
   }
 
   @Test
@@ -390,11 +409,13 @@ class RoasterSourceFormatterTest {
         }
         """;
     String result = formatter.lightweightFormat(input);
+    String expected =
+        """
+         * @param value the value
+         * @return the result"""
+            .indent(1);
     assertTrue(
-        result.contains(" * @param value the value"),
-        "Javadoc @param tags should get ' * ' prefix");
-    assertTrue(
-        result.contains(" * @return the result"), "Javadoc @return tags should get ' * ' prefix");
+        result.contains(expected), "Javadoc @param and @return tags should get ' * ' prefix");
   }
 
   @Test
@@ -454,6 +475,28 @@ class RoasterSourceFormatterTest {
   // === format() dispatch tests ===
 
   @Test
+  void lightweightFormat_splitsConcatenatedImportAndJavadocWithPrecedingLine() {
+    RoasterSourceFormatter formatter = createFormatter(FormattingMode.LIGHTWEIGHT);
+    String input =
+        """
+        package test;
+        import java.util.List;/**
+         * Test javadoc.
+         */
+        public class Foo {
+        }
+        """;
+    String result = formatter.lightweightFormat(input);
+    String expected =
+        """
+        import java.util.List;
+        /**""";
+    assertTrue(
+        result.contains(expected),
+        "Concatenated import and javadoc should be split into separate lines with newline between");
+  }
+
+  @Test
   void format_lightweightMode_usesLightweightFormat() {
     RoasterSourceFormatter formatter = createFormatter(FormattingMode.LIGHTWEIGHT);
     String input =
@@ -497,5 +540,72 @@ class RoasterSourceFormatterTest {
     assertTrue(
         env.messager.warnings.stream().noneMatch(w -> w.contains("JDT formatting requested")),
         "No fallback warning should be logged when formatter profile is available on classpath");
+  }
+
+  // === Error path tests (missing/malformed formatter profile) ===
+
+  @Test
+  void constructor_jdtMode_missingProfile_logsFallbackWarning() {
+    TestProcessingEnv env = createProcessingEnv();
+    ProcessingLogger logger = new ProcessingLogger(env);
+    new RoasterSourceFormatter(logger, FormattingMode.JDT, "nonexistent-profile.xml");
+    assertTrue(
+        env.messager.warnings.stream()
+            .anyMatch(w -> w.contains("JDT formatting requested") && w.contains("unavailable")),
+        "JDT mode with missing profile should log fallback warning");
+  }
+
+  @Test
+  void constructor_lightweightMode_missingProfile_noFallbackWarning() {
+    TestProcessingEnv env = createProcessingEnv();
+    ProcessingLogger logger = new ProcessingLogger(env);
+    new RoasterSourceFormatter(logger, FormattingMode.LIGHTWEIGHT, "nonexistent-profile.xml");
+    assertTrue(
+        env.messager.warnings.stream().noneMatch(w -> w.contains("JDT formatting requested")),
+        "LIGHTWEIGHT mode should not log JDT fallback warning even if profile is missing");
+  }
+
+  @Test
+  void constructor_missingProfile_logsProfileNotFoundWarning() {
+    TestProcessingEnv env = createProcessingEnv();
+    ProcessingLogger logger = new ProcessingLogger(env);
+    new RoasterSourceFormatter(logger, FormattingMode.JDT, "nonexistent-profile.xml");
+    assertTrue(
+        env.messager.warnings.stream()
+            .anyMatch(w -> w.contains("not found") && w.contains("nonexistent-profile.xml")),
+        "Missing formatter profile should log 'not found' warning with resource name");
+  }
+
+  @Test
+  void format_jdtMode_missingProfile_fallsBackToLightweight() {
+    TestProcessingEnv env = createProcessingEnv();
+    ProcessingLogger logger = new ProcessingLogger(env);
+    RoasterSourceFormatter formatter =
+        new RoasterSourceFormatter(logger, FormattingMode.JDT, "nonexistent-profile.xml");
+    String input =
+        """
+        package test;
+        \tpublic class Foo {
+        }
+        """;
+    String result = formatter.format(input);
+    assertNotNull(result, "Format should always return a non-null string");
+    assertTrue(
+        !result.contains("\t"),
+        "JDT mode with missing profile should fall back to lightweight (tabs converted)");
+  }
+
+  @Test
+  void constructor_malformedProfile_logsLoadFailureWarning() {
+    TestProcessingEnv env = createProcessingEnv();
+    ProcessingLogger logger = new ProcessingLogger(env);
+    new RoasterSourceFormatter(logger, FormattingMode.JDT, "eclipse-java-format-malformed.xml");
+    assertTrue(
+        env.messager.warnings.stream()
+            .anyMatch(
+                w ->
+                    w.contains("Failed to load")
+                        && w.contains("eclipse-java-format-malformed.xml")),
+        "Malformed formatter profile should log 'Failed to load' warning");
   }
 }
