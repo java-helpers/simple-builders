@@ -354,7 +354,8 @@ class FormattingModeTest {
                     ex);
               }
             }
-          } }""";
+          }
+        }""";
     assertEquals(
         expectedCode,
         generatedCode,
