@@ -434,6 +434,23 @@ class RoasterSourceFormatterTest {
         "Lines with '*' prefix but no space should be preserved as-is (already have asterisk)");
   }
 
+  @Test
+  void lightweightFormat_fixesJavadocLineEndingWithStarSlash() {
+    RoasterSourceFormatter formatter = createFormatter(FormattingMode.LIGHTWEIGHT);
+    String input =
+        """
+        package test;
+        /**
+        Some description text */
+        public class Foo {
+        }
+        """;
+    String result = formatter.lightweightFormat(input);
+    assertTrue(
+        result.contains(" * Some description text */"),
+        "Javadoc line ending with */ but not starting with * should get ' * ' prefix");
+  }
+
   // === format() dispatch tests ===
 
   @Test
