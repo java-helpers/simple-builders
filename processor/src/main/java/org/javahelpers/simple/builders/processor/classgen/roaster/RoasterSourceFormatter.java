@@ -130,28 +130,151 @@ public final class RoasterSourceFormatter {
       // 1. Convert leading tabs to spaces
       String converted = convertTabsToSpaces(line);
 
-      // 2. Split import/code concatenated with /**
-      if (!javadocState.inJavadoc) {
-        converted = splitConcatenatedJavadocOpen(converted, output, javadocState, prevBlank);
+      // 2. Split concatenated lines (import;class, }})
+      for (String splitLine : splitConcatenatedLines(converted)) {
+        processLine(splitLine, output, javadocState, prevBlank);
+        prevBlank = splitLine.isBlank();
       }
-
-      // 3. Fix javadoc asterisk prefixes and indentation
-      if (javadocState.inJavadoc) {
-        converted = fixJavadocLine(converted, javadocState);
-      }
-
-      // 4. Collapse consecutive blank lines and append
-      boolean isBlank = converted.isBlank();
-      if (isBlank && prevBlank) {
-        continue;
-      }
-      if (output.length() > 0) {
-        output.append('\n');
-      }
-      output.append(converted);
-      prevBlank = isBlank;
     }
     return output.toString();
+  }
+
+  private void processLine(
+      String converted, StringBuilder output, JavadocState javadocState, boolean prevBlank) {
+    // Split import/code concatenated with /**
+    if (!javadocState.inJavadoc) {
+      converted = splitConcatenatedJavadocOpen(converted, output, javadocState, prevBlank);
+    }
+
+    // Fix javadoc asterisk prefixes and indentation
+    if (javadocState.inJavadoc) {
+      converted = fixJavadocLine(converted, javadocState);
+    }
+
+    // Collapse consecutive blank lines and append
+    boolean isBlank = converted.isBlank();
+    if (isBlank && prevBlank) {
+      return;
+    }
+    if (output.length() > 0) {
+      output.append('\n');
+    }
+    output.append(converted);
+  }
+
+  /**
+   * Splits a single line that Roaster concatenated without newlines.
+   *
+   * <p>Roaster's {@code toUnformattedString()} sometimes glues together:
+   *
+   * <ul>
+   *   <li>The last import and the class declaration: {@code "import x.Y;public class Foo {"}
+   *       <li>Closing braces at end of file: {@code " } }"}
+   * </ul>
+   *
+   * <p>This method splits such lines at:
+   *
+   * <ol>
+   *   <li>Semicolon followed by a Java declaration keyword ({@code public}, {@code private}, {@code
+   *       protected}, {@code class}, {@code interface}, {@code enum}, {@code record}, {@code
+   *       abstract}, {@code final}, {@code import}, {@code package})
+   *   <li>A closing brace ({@code }}) followed by another closing brace (with optional whitespace)
+   * </ol>
+   *
+   * @param line the potentially concatenated line
+   * @return a list of split lines (or a singleton list if no splitting was needed)
+   */
+  private java.util.List<String> splitConcatenatedLines(String line) {
+    // Fast path: no semicolons or closing braces, nothing to split
+    if (!line.contains(";") && !line.contains("}")) {
+      return java.util.List.of(line);
+    }
+
+    java.util.List<String> result = new java.util.ArrayList<>();
+    String remaining = line;
+
+    while (true) {
+      int splitPos = findSplitPosition(remaining);
+      if (splitPos < 0) {
+        result.add(remaining);
+        break;
+      }
+      result.add(remaining.substring(0, splitPos).stripTrailing());
+      remaining = remaining.substring(splitPos).strip();
+    }
+    return result;
+  }
+
+  /**
+   * Finds the position at which a line should be split for the next concatenated segment.
+   *
+   * @return the start index of the next segment, or -1 if no split is needed
+   */
+  private int findSplitPosition(String line) {
+    int bestPos = -1;
+
+    // Pattern 1: semicolon followed by a declaration keyword
+    int semiIdx = 0;
+    while ((semiIdx = line.indexOf(';', semiIdx)) >= 0) {
+      int afterSemi = semiIdx + 1;
+      // Skip whitespace after semicolon
+      while (afterSemi < line.length() && Character.isWhitespace(line.charAt(afterSemi))) {
+        afterSemi++;
+      }
+      if (matchesDeclarationKeyword(line, afterSemi)) {
+        bestPos = afterSemi;
+        break;
+      }
+      semiIdx++;
+    }
+
+    // Pattern 2: closing brace followed by closing brace (with optional whitespace)
+    if (bestPos < 0) {
+      int braceIdx = 0;
+      while ((braceIdx = line.indexOf('}', braceIdx)) >= 0) {
+        int afterBrace = braceIdx + 1;
+        while (afterBrace < line.length() && Character.isWhitespace(line.charAt(afterBrace))) {
+          afterBrace++;
+        }
+        if (afterBrace < line.length() && line.charAt(afterBrace) == '}') {
+          bestPos = afterBrace;
+          break;
+        }
+        braceIdx++;
+      }
+    }
+
+    return bestPos;
+  }
+
+  /** Checks whether the text at the given position starts with a Java declaration keyword. */
+  private boolean matchesDeclarationKeyword(String text, int pos) {
+    if (pos >= text.length()) {
+      return false;
+    }
+    String[] keywords = {
+      "public",
+      "private",
+      "protected",
+      "class",
+      "interface",
+      "enum",
+      "record",
+      "abstract",
+      "final",
+      "import",
+      "package"
+    };
+    for (String kw : keywords) {
+      if (text.startsWith(kw, pos)) {
+        int endPos = pos + kw.length();
+        // Ensure the keyword is a complete word (followed by whitespace or other non-word char)
+        if (endPos >= text.length() || !Character.isJavaIdentifierPart(text.charAt(endPos))) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   /**

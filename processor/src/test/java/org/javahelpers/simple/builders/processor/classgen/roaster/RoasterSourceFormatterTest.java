@@ -475,6 +475,118 @@ class RoasterSourceFormatterTest {
   // === format() dispatch tests ===
 
   @Test
+  void lightweightFormat_splitsConcatenatedImportAndClassDeclaration() {
+    RoasterSourceFormatter formatter = createFormatter(FormattingMode.LIGHTWEIGHT);
+    String input =
+        """
+        package test;
+        import java.util.List;public class Foo {
+          private List<String> items;
+        }
+        """;
+    String result = formatter.lightweightFormat(input);
+    String[] lines = result.split("\n", -1);
+    int importIdx = -1;
+    int classIdx = -1;
+    for (int i = 0; i < lines.length; i++) {
+      if (lines[i].equals("import java.util.List;")) {
+        importIdx = i;
+      }
+      if (lines[i].equals("public class Foo {")) {
+        classIdx = i;
+      }
+    }
+    assertTrue(importIdx >= 0, "Import should be on its own line");
+    assertTrue(classIdx >= 0, "Class declaration should be on its own line");
+    assertEquals(
+        importIdx + 1,
+        classIdx,
+        "Class declaration should be on the line immediately after the import");
+  }
+
+  @Test
+  void lightweightFormat_splitsConcatenatedClosingBraces() {
+    RoasterSourceFormatter formatter = createFormatter(FormattingMode.LIGHTWEIGHT);
+    String input =
+        """
+        package test;
+        public class Foo {
+          public void bar() {
+            return;
+          } }""";
+    String result = formatter.lightweightFormat(input);
+    String[] lines = result.split("\n", -1);
+    int methodCloseIdx = -1;
+    int classCloseIdx = -1;
+    for (int i = 0; i < lines.length; i++) {
+      if (lines[i].equals("  }")) {
+        methodCloseIdx = i;
+      }
+      if (lines[i].equals("}")) {
+        classCloseIdx = i;
+      }
+    }
+    assertTrue(methodCloseIdx >= 0, "Method closing brace should be on its own line");
+    assertTrue(classCloseIdx >= 0, "Class closing brace should be on its own line");
+    assertEquals(
+        methodCloseIdx + 1,
+        classCloseIdx,
+        "Class closing brace should be on the line immediately after method closing brace");
+  }
+
+  @Test
+  void lightweightFormat_splitsConcatenatedPackageAndImport() {
+    RoasterSourceFormatter formatter = createFormatter(FormattingMode.LIGHTWEIGHT);
+    String input =
+        """
+        package test;import java.util.List;
+        public class Foo {
+        }
+        """;
+    String result = formatter.lightweightFormat(input);
+    String[] lines = result.split("\n", -1);
+    int pkgIdx = -1;
+    int importIdx = -1;
+    for (int i = 0; i < lines.length; i++) {
+      if (lines[i].equals("package test;")) {
+        pkgIdx = i;
+      }
+      if (lines[i].equals("import java.util.List;")) {
+        importIdx = i;
+      }
+    }
+    assertTrue(pkgIdx >= 0, "Package declaration should be on its own line");
+    assertTrue(importIdx >= 0, "Import should be on its own line");
+    assertEquals(
+        pkgIdx + 1,
+        importIdx,
+        "Import should be on the line immediately after package declaration");
+  }
+
+  @Test
+  void lightweightFormat_splitsTripleConcatenatedClosingBraces() {
+    RoasterSourceFormatter formatter = createFormatter(FormattingMode.LIGHTWEIGHT);
+    String input =
+        """
+        package test;
+        public class Foo {
+          public void bar() {
+            if (true) {
+              return;
+            } } }""";
+    String result = formatter.lightweightFormat(input);
+    // After splitting, each brace ends up on its own line. The first brace
+    // retains its original indentation; subsequent braces are stripped to bare "}".
+    String[] lines = result.split("\n", -1);
+    assertTrue(lines.length >= 3, "Should have at least 3 lines for 3 closing braces");
+    assertTrue(
+        lines[lines.length - 3].endsWith("}"), "Third-to-last line should end with closing brace");
+    assertEquals(
+        "}", lines[lines.length - 2], "Second-to-last line should be a bare closing brace");
+    assertEquals("}", lines[lines.length - 1], "Last line should be a bare closing brace");
+  }
+
+  @Test
   void lightweightFormat_splitsConcatenatedImportAndJavadocWithPrecedingLine() {
     RoasterSourceFormatter formatter = createFormatter(FormattingMode.LIGHTWEIGHT);
     String input =
