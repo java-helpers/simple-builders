@@ -75,5 +75,5 @@ public class CustomerDtoBuilder {
   public String toString() {
     return new ToStringBuilder(this, BuilderToStringStyle.INSTANCE).append("email", this.email)
         .append("id", this.id).append("name", this.name).append("tags", this.tags).toString();
-  } 
+  }
 }
