@@ -33,6 +33,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Stream;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -47,7 +48,9 @@ import org.javahelpers.simple.builders.core.enums.FormattingMode;
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
 
 /**
  * Unit tests for {@link RoasterSourceFormatter}.
@@ -362,22 +365,49 @@ class RoasterSourceFormatterTest {
         result.contains(expectedClose), "Closing javadoc should align with the enclosing member");
   }
 
-  @Test
-  void lightweightFormat_preservesAlreadyPrefixedJavadocLines() {
+  @ParameterizedTest(name = "{2}")
+  @MethodSource("javadocPrefixCases")
+  void lightweightFormat_preservesOrAddsJavadocPrefixes(
+      String input, String expected, String description) {
     RoasterSourceFormatter formatter = createFormatter(FormattingMode.LIGHTWEIGHT);
-    String input =
-        """
-        package test;
-        /**
-         * Already has prefix.
-         */
-        public class Foo {
-        }
-        """;
     String result = formatter.lightweightFormat(input);
-    assertTrue(
-        result.contains(" * Already has prefix."),
-        "Lines that already have ' * ' prefix should be preserved");
+    assertTrue(result.contains(expected), "Case: " + description);
+  }
+
+  static Stream<Arguments> javadocPrefixCases() {
+    return Stream.of(
+        Arguments.of(
+            """
+            package test;
+            /**
+             * Already has prefix.
+             */
+            public class Foo {
+            }
+            """,
+            " * Already has prefix.",
+            "already-prefixed lines keep ' * ' prefix"),
+        Arguments.of(
+            """
+            package test;
+            /**
+            *Body line without space.
+             */
+            public class Foo {
+            }
+            """,
+            "*Body line without space.",
+            "star-only prefix without space is preserved"),
+        Arguments.of(
+            """
+            package test;
+            /**
+            Some description text */
+            public class Foo {
+            }
+            """,
+            " * Some description text */",
+            "line ending with */ gets ' * ' prefix"));
   }
 
   @Test
@@ -447,41 +477,6 @@ class RoasterSourceFormatterTest {
         result.contains("    public void bar()"),
         "Mixed tab+space indentation should be converted (tab=2 spaces, then existing spaces)");
     assertTrue(!result.contains("\t"), "No tabs should remain in output");
-  }
-
-  @Test
-  void lightweightFormat_preservesStarPrefixWithoutSpace() {
-    RoasterSourceFormatter formatter = createFormatter(FormattingMode.LIGHTWEIGHT);
-    String input =
-        """
-        package test;
-        /**
-        *Body line without space.
-         */
-        public class Foo {
-        }
-        """;
-    String result = formatter.lightweightFormat(input);
-    assertTrue(
-        result.contains("*Body line without space."),
-        "Lines with '*' prefix but no space should be preserved as-is (already have asterisk)");
-  }
-
-  @Test
-  void lightweightFormat_fixesJavadocLineEndingWithStarSlash() {
-    RoasterSourceFormatter formatter = createFormatter(FormattingMode.LIGHTWEIGHT);
-    String input =
-        """
-        package test;
-        /**
-        Some description text */
-        public class Foo {
-        }
-        """;
-    String result = formatter.lightweightFormat(input);
-    assertTrue(
-        result.contains(" * Some description text */"),
-        "Javadoc line ending with */ but not starting with * should get ' * ' prefix");
   }
 
   // === format() dispatch tests ===
