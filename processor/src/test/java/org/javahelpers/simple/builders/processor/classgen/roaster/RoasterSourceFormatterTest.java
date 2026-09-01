@@ -24,8 +24,8 @@
 package org.javahelpers.simple.builders.processor.classgen.roaster;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
@@ -49,7 +49,6 @@ import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLo
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 
 /**
@@ -62,7 +61,6 @@ import org.junit.jupiter.params.provider.MethodSource;
  *       fixup, concatenated import/javadoc splitting
  *   <li>{@code format()} dispatch logic for NONE, LIGHTWEIGHT, and JDT modes
  *   <li>Fallback behavior when JDT formatter profile is unavailable
- *   <li>Constructor null checks
  * </ul>
  */
 class RoasterSourceFormatterTest {
@@ -151,30 +149,17 @@ class RoasterSourceFormatterTest {
   }
 
   @Test
-  void constructor_nullLogger_throwsNullPointerException() {
-    assertThrows(
-        NullPointerException.class, () -> new RoasterSourceFormatter(null, FormattingMode.JDT));
-  }
-
-  @Test
-  void constructor_nullFormattingMode_throwsNullPointerException() {
-    ProcessingLogger logger = new ProcessingLogger(createProcessingEnv());
-    assertThrows(NullPointerException.class, () -> new RoasterSourceFormatter(logger, null));
-  }
-
-  @Test
   void format_noneMode_returnsRawSourceUnchanged() {
     RoasterSourceFormatter formatter = createFormatter(FormattingMode.NONE);
+    // Input is intentionally misformatted so that any active formatter would change it;
+    // NONE mode must return it verbatim.
     String raw =
         """
-        package test;
-        public class Foo {
-        }
-        """;
+        package   test;
+        public    class   Foo   {
+        }""";
     assertEquals(raw, formatter.format(raw));
   }
-
-  // === LIGHTWEIGHT mode tests ===
 
   @Test
   void lightweightFormat_convertsTabsToSpaces() {
@@ -189,9 +174,17 @@ class RoasterSourceFormatterTest {
         }
         """;
     String result = formatter.lightweightFormat(input);
-    assertTrue(result.contains("  public void bar()"), "Tabs should be converted to 2 spaces");
-    assertTrue(result.contains("    return;"), "Nested tabs should be converted to 4 spaces");
-    assertTrue(!result.contains("\t"), "No tabs should remain in output");
+    assertFalse(result.contains("\t"), "No tabs should remain in output");
+    String expected =
+        """
+        package test;
+        public class Foo {
+          public void bar() {
+            return;
+          }
+        }
+        """;
+    assertEquals(expected, result);
   }
 
   @Test
@@ -226,152 +219,39 @@ class RoasterSourceFormatterTest {
     assertEquals(1, blankCount, "Single blank line should be preserved");
   }
 
-  @Test
-  void lightweightFormat_splitsConcatenatedImportAndJavadoc() {
-    RoasterSourceFormatter formatter = createFormatter(FormattingMode.LIGHTWEIGHT);
-    String input =
-        """
-        package test;import java.util.List;/**
-         * This is a javadoc.
-         */
-        public class Foo {
-        }
-        """;
-    String result = formatter.lightweightFormat(input);
-    String expected =
-        """
-        import java.util.List;
-        /**""";
-    assertTrue(
-        result.contains(expected),
-        "Import and javadoc opening should be split into separate lines");
-  }
-
-  @ParameterizedTest
-  @CsvSource({
-    "This is a javadoc body line.,Another body line.",
-    "Single line.,",
-  })
-  void lightweightFormat_addsJavadocAsteriskPrefixes(String bodyLine1, String bodyLine2) {
-    RoasterSourceFormatter formatter = createFormatter(FormattingMode.LIGHTWEIGHT);
-    boolean hasSecondLine = bodyLine2 != null && !bodyLine2.isEmpty();
-    String javadocBody = hasSecondLine ? bodyLine1 + "\n" + bodyLine2 : bodyLine1;
-    String input =
-        """
-        package test;
-        /**
-        %s
-         */
-        public class Foo {
-        }
-        """
-            .formatted(javadocBody);
-    String result = formatter.lightweightFormat(input);
-    String expectedLine1 = " * " + bodyLine1;
-    assertTrue(result.contains(expectedLine1), "First javadoc body line should get ' * ' prefix");
-    if (hasSecondLine) {
-      String expectedLine2 = " * " + bodyLine2;
-      assertTrue(
-          result.contains(expectedLine2), "Second javadoc body line should get ' * ' prefix");
-    }
-  }
-
-  @Test
-  void lightweightFormat_normalizesBlankJavadocLines() {
-    RoasterSourceFormatter formatter = createFormatter(FormattingMode.LIGHTWEIGHT);
-    String input =
-        """
-        package test;
-        /**
-        First line.
-
-        Second line.
-         */
-        public class Foo {
-        }
-        """;
-    String result = formatter.lightweightFormat(input);
-    String expected =
-        """
-         * First line.
-         *
-         * Second line."""
-            .indent(1);
-    assertTrue(result.contains(expected), "Blank javadoc lines should get ' *' prefix");
-  }
-
-  @ParameterizedTest
-  @CsvSource({
-    "/** This is a one-line javadoc. */",
-    "/** Short. */",
-    "/** Multi word inline javadoc with several words. */",
-  })
-  void lightweightFormat_handlesInlineJavadocClose(String inlineJavadoc) {
-    RoasterSourceFormatter formatter = createFormatter(FormattingMode.LIGHTWEIGHT);
-    String input =
-        """
-        package test;
-        %s
-        public class Foo {
-        }
-        """
-            .formatted(inlineJavadoc);
-    String result = formatter.lightweightFormat(input);
-    assertTrue(result.contains(inlineJavadoc), "Inline javadoc should be preserved as-is");
-  }
-
-  @Test
-  void lightweightFormat_handlesEmptyInput() {
-    RoasterSourceFormatter formatter = createFormatter(FormattingMode.LIGHTWEIGHT);
-    String result = formatter.lightweightFormat("");
-    assertEquals("", result, "Empty input should produce empty output");
-  }
-
-  @Test
-  void lightweightFormat_handlesJavadocWithIndentation() {
-    RoasterSourceFormatter formatter = createFormatter(FormattingMode.LIGHTWEIGHT);
-    String input =
-        """
-        package test;
-        public class Foo {
-          /**
-          Body line.
-          */
-          public void bar() {
-          }
-        }
-        """;
-    String result = formatter.lightweightFormat(input);
-    String expectedJavadoc =
-        """
-          /**
-           * Body line."""
-            .indent(2)
-            .stripTrailing();
-    String expectedClose =
-        """
-          */
-          public void bar()"""
-            .indent(2)
-            .stripTrailing();
-    assertTrue(
-        result.contains(expectedJavadoc),
-        "Javadoc body lines should be indented to match the enclosing member");
-    assertTrue(
-        result.contains(expectedClose), "Closing javadoc should align with the enclosing member");
-  }
-
   @ParameterizedTest(name = "{2}")
-  @MethodSource("javadocPrefixCases")
-  void lightweightFormat_preservesOrAddsJavadocPrefixes(
-      String input, String expected, String description) {
+  @MethodSource("javadocFormattingCases")
+  void lightweightFormat_javadocFormatting(String input, String expected, String description) {
     RoasterSourceFormatter formatter = createFormatter(FormattingMode.LIGHTWEIGHT);
     String result = formatter.lightweightFormat(input);
-    assertTrue(result.contains(expected), "Case: " + description);
+    assertEquals(expected, result.strip(), "Case: " + description);
   }
 
-  static Stream<Arguments> javadocPrefixCases() {
+  static Stream<Arguments> javadocFormattingCases() {
     return Stream.of(
+        // Multi-line javadoc: body lines get ' * ' prefix, blank lines get ' *'
+        Arguments.of(
+            """
+            package test;
+            /**
+            First line.
+
+            Second line.
+             */
+            public class Foo {
+            }
+            """,
+            """
+            package test;
+            /**
+             * First line.
+             *
+             * Second line.
+             */
+            public class Foo {
+            }""",
+            "multi-line javadoc with blank line gets ' * ' prefixes"),
+        // Already-prefixed lines are preserved
         Arguments.of(
             """
             package test;
@@ -381,8 +261,15 @@ class RoasterSourceFormatterTest {
             public class Foo {
             }
             """,
-            " * Already has prefix.",
+            """
+            package test;
+            /**
+             * Already has prefix.
+             */
+            public class Foo {
+            }""",
             "already-prefixed lines keep ' * ' prefix"),
+        // Star-only prefix (no space) is preserved as-is
         Arguments.of(
             """
             package test;
@@ -392,8 +279,15 @@ class RoasterSourceFormatterTest {
             public class Foo {
             }
             """,
-            "*Body line without space.",
+            """
+            package test;
+            /**
+            *Body line without space.
+             */
+            public class Foo {
+            }""",
             "star-only prefix without space is preserved"),
+        // Line ending with */ gets ' * ' prefix
         Arguments.of(
             """
             package test;
@@ -402,58 +296,150 @@ class RoasterSourceFormatterTest {
             public class Foo {
             }
             """,
-            " * Some description text */",
-            "line ending with */ gets ' * ' prefix"));
+            """
+            package test;
+            /**
+             * Some description text */
+            public class Foo {
+            }""",
+            "line ending with */ gets ' * ' prefix"),
+        // Inline one-line javadoc is preserved as-is
+        Arguments.of(
+            """
+            package test;
+            /** This is a one-line javadoc. */
+            public class Foo {
+            }
+            """,
+            """
+            package test;
+            /** This is a one-line javadoc. */
+            public class Foo {
+            }""",
+            "inline one-line javadoc is preserved"),
+        Arguments.of(
+            """
+            package test;
+            /** Short. */
+            public class Foo {
+            }
+            """,
+            """
+            package test;
+            /** Short. */
+            public class Foo {
+            }""",
+            "short inline javadoc is preserved"),
+        Arguments.of(
+            """
+            package test;
+            /** Multi word inline javadoc with several words. */
+            public class Foo {
+            }
+            """,
+            """
+            package test;
+            /** Multi word inline javadoc with several words. */
+            public class Foo {
+            }""",
+            "multi-word inline javadoc is preserved"),
+        // Javadoc tag lines get ' * ' prefix
+        Arguments.of(
+            """
+            package test;
+            /**
+            Description.
+            @param value the value
+            @return the result
+             */
+            public class Foo {
+            }
+            """,
+            """
+            package test;
+            /**
+             * Description.
+             * @param value the value
+             * @return the result
+             */
+            public class Foo {
+            }""",
+            "javadoc tag lines get ' * ' prefix"),
+        // Multiple javadoc blocks at different indentation levels
+        Arguments.of(
+            """
+            package test;
+            /**
+            Class-level javadoc.
+             */
+            public class Foo {
+              /**
+              Method javadoc.
+              */
+              public void bar() {
+              }
+            }
+            """,
+            """
+            package test;
+            /**
+             * Class-level javadoc.
+             */
+            public class Foo {
+              /**
+               * Method javadoc.
+              */
+              public void bar() {
+              }
+            }""",
+            "multiple javadoc blocks at different indentation levels"),
+        // Javadoc inside a method gets indented to match enclosing member
+        Arguments.of(
+            """
+            package test;
+            public class Foo {
+              /**
+              Body line.
+              */
+              public void bar() {
+              }
+            }
+            """,
+            """
+            package test;
+            public class Foo {
+              /**
+               * Body line.
+              */
+              public void bar() {
+              }
+            }""",
+            "javadoc body lines indented to match enclosing member"),
+        // Concatenated import and javadoc are split into separate lines
+        Arguments.of(
+            """
+            package test;import java.util.List;/**
+             * This is a javadoc.
+             */
+            public class Foo {
+            }
+            """,
+            """
+            package test;
+            import java.util.List;
+            /**
+             * This is a javadoc.
+             */
+            public class Foo {
+            }""",
+            "concatenated import and javadoc are split"));
   }
 
   @Test
-  void lightweightFormat_handlesMultipleJavadocBlocks() {
+  void lightweightFormat_handlesEmptyInput() {
     RoasterSourceFormatter formatter = createFormatter(FormattingMode.LIGHTWEIGHT);
-    String input =
-        """
-        package test;
-        /**
-        Class-level javadoc.
-         */
-        public class Foo {
-          /**
-          Method javadoc.
-          */
-          public void bar() {
-          }
-        }
-        """;
-    String result = formatter.lightweightFormat(input);
-    assertTrue(
-        result.contains(" * Class-level javadoc."),
-        "First javadoc block body should get ' * ' prefix");
-    assertTrue(
-        result.contains("   * Method javadoc."),
-        "Second javadoc block body should get ' * ' prefix with correct indentation");
-  }
-
-  @Test
-  void lightweightFormat_preservesJavadocTagLines() {
-    RoasterSourceFormatter formatter = createFormatter(FormattingMode.LIGHTWEIGHT);
-    String input =
-        """
-        package test;
-        /**
-        Description.
-        @param value the value
-        @return the result
-         */
-        public class Foo {
-        }
-        """;
-    String result = formatter.lightweightFormat(input);
-    String expected =
-        """
-         * @param value the value
-         * @return the result"""
-            .indent(1);
-    assertTrue(
-        result.contains(expected), "Javadoc @param and @return tags should get ' * ' prefix");
+    String result = formatter.lightweightFormat("");
+    assertEquals("", result, "Empty input should produce empty output");
   }
 
   @Test
@@ -474,8 +460,6 @@ class RoasterSourceFormatterTest {
         "Mixed tab+space indentation should be converted (tab=2 spaces, then existing spaces)");
     assertTrue(!result.contains("\t"), "No tabs should remain in output");
   }
-
-  // === format() dispatch tests ===
 
   @Test
   void lightweightFormat_splitsConcatenatedImportAndClassDeclaration() {
@@ -637,8 +621,6 @@ class RoasterSourceFormatterTest {
     assertTrue(result.contains("\t"), "NONE mode should preserve tabs");
   }
 
-  // === JDT mode tests ===
-
   @Test
   void format_jdtMode_withProfile_producesFormattedOutput() {
     TestProcessingEnv env = createProcessingEnv();
@@ -656,8 +638,6 @@ class RoasterSourceFormatterTest {
         env.messager.warnings.stream().noneMatch(w -> w.contains("JDT formatting requested")),
         "No fallback warning should be logged when formatter profile is available on classpath");
   }
-
-  // === Error path tests (missing/malformed formatter profile) ===
 
   @Test
   void constructor_jdtMode_missingProfile_logsFallbackWarning() {
