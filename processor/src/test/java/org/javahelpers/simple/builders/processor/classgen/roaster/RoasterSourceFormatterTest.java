@@ -150,8 +150,6 @@ class RoasterSourceFormatterTest {
     return new RoasterSourceFormatter(new ProcessingLogger(createProcessingEnv()), mode);
   }
 
-  // === Constructor tests ===
-
   @Test
   void constructor_nullLogger_throwsNullPointerException() {
     assertThrows(
@@ -163,8 +161,6 @@ class RoasterSourceFormatterTest {
     ProcessingLogger logger = new ProcessingLogger(createProcessingEnv());
     assertThrows(NullPointerException.class, () -> new RoasterSourceFormatter(logger, null));
   }
-
-  // === NONE mode tests ===
 
   @Test
   void format_noneMode_returnsRawSourceUnchanged() {
