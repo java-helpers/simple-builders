@@ -53,11 +53,9 @@ public class BuilderToGenerationTypeMapper {
   private final BuilderConfiguration configuration;
 
   /**
-   * Creates a mapper for the given effective builder configuration.
+   * Creates a mapper for the given builder configuration.
    *
-   * @param configuration the effective builder configuration (already merged with global compiler
-   *     arguments, so the formatting mode is available via {@link
-   *     BuilderConfiguration#formattingModeEnum})
+   * @param configuration the builder configuration (already merged with global compiler arguments)
    */
   public BuilderToGenerationTypeMapper(BuilderConfiguration configuration) {
     this.configuration = configuration;
