@@ -48,7 +48,6 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder.Template;
-import org.javahelpers.simple.builders.core.enums.FormattingMode;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyser;
 import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterCodeGenerator;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
@@ -95,7 +94,7 @@ public class BuilderProcessor extends AbstractProcessor {
     this.context = new ProcessingContext(logger, globalConfig, processingEnv);
     this.codeGenerator =
         new RoasterCodeGenerator(processingEnv, logger, context.getPerformanceTracker());
-    this.jacksonModuleGenerator = new JacksonModuleGenerator(processingEnv, logger);
+    this.jacksonModuleGenerator = new JacksonModuleGenerator(processingEnv, logger, globalConfig);
 
     // Initialize GeneratorRegistry once during processor initialization
     context.debugStartOperation("Initializing generator registry");
@@ -131,11 +130,6 @@ public class BuilderProcessor extends AbstractProcessor {
           jacksonModuleGenerator.getModuleDefinitions();
       for (GenerationTargetClassDto moduleClassDef : moduleClassDefs) {
         String packageName = moduleClassDef.getTypeName().getPackageName();
-        moduleClassDef.setFormattingMode(
-            context
-                .getConfigurationReader()
-                .getGlobalConfiguration()
-                .resolveFormattingMode(FormattingMode.JDT));
         context.info("Generating Jackson Module in package '%s'", packageName);
         try {
           codeGenerator.generateClass(moduleClassDef);

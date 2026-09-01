@@ -130,7 +130,7 @@ public record BuilderConfiguration(
           .jacksonModulePackage(null)
           .builderSuffix("Builder")
           .setterSuffix("")
-          .formattingMode(null)
+          .formattingMode(FormattingMode.JDT.getOptionValue())
           .strict(DISABLED)
           .build();
 
@@ -248,21 +248,8 @@ public record BuilderConfiguration(
     return strict == ENABLED;
   }
 
-  /**
-   * Resolves the effective formatting mode for this configuration.
-   *
-   * <p>If this configuration's {@code formattingMode} is null or blank, the provided fallback (from
-   * compiler arguments) is used. Otherwise, this configuration's value takes priority.
-   *
-   * @param fallback the formatting mode from compiler arguments (used when annotation value is
-   *     unset)
-   * @return the resolved formatting mode
-   */
-  public FormattingMode resolveFormattingMode(FormattingMode fallback) {
-    if (formattingMode != null && !formattingMode.isBlank()) {
-      return FormattingMode.fromString(formattingMode);
-    }
-    return fallback;
+  public FormattingMode formattingModeEnum() {
+    return FormattingMode.fromString(formattingMode);
   }
 
   /**

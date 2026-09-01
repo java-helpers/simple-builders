@@ -556,38 +556,34 @@ class ConfigurationProcessingTest {
     // Then: Override should win
     assertEquals("none", merged.formattingMode(), "Override should win for formattingMode");
 
-    // And: resolveFormattingMode should return the override value
+    // And: formattingModeEnum should return the override value
     assertEquals(
         FormattingMode.NONE,
-        merged.resolveFormattingMode(FormattingMode.JDT),
+        merged.formattingModeEnum(),
         "Annotation formattingMode should override compiler arg fallback");
   }
 
-  /** resolveFormattingMode test: Null/blank formattingMode should fall back to compiler arg. */
+  /** formattingModeEnum test: Null/blank formattingMode should default to JDT. */
   @Test
-  void resolveFormattingMode_WhenUnset_ShouldUseFallback() {
+  void formattingModeEnum_WhenUnset_ShouldDefaultToJdt() {
     BuilderConfiguration config = BuilderConfiguration.builder().build();
 
     assertEquals(
         FormattingMode.JDT,
-        config.resolveFormattingMode(FormattingMode.JDT),
-        "Null formattingMode should fall back to JDT");
-    assertEquals(
-        FormattingMode.LIGHTWEIGHT,
-        config.resolveFormattingMode(FormattingMode.LIGHTWEIGHT),
-        "Null formattingMode should fall back to LIGHTWEIGHT when provided as fallback");
+        config.formattingModeEnum(),
+        "Null formattingMode should default to JDT");
   }
 
-  /** resolveFormattingMode test: Set formattingMode should override fallback. */
+  /** formattingModeEnum test: Set formattingMode should be resolved. */
   @Test
-  void resolveFormattingMode_WhenSet_ShouldOverrideFallback() {
+  void formattingModeEnum_WhenSet_ShouldReturnSetValue() {
     BuilderConfiguration config =
         BuilderConfiguration.builder().formattingMode("lightweight").build();
 
     assertEquals(
         FormattingMode.LIGHTWEIGHT,
-        config.resolveFormattingMode(FormattingMode.JDT),
-        "Set formattingMode should override compiler arg fallback");
+        config.formattingModeEnum(),
+        "Set formattingMode should be resolved correctly");
   }
 
   /**

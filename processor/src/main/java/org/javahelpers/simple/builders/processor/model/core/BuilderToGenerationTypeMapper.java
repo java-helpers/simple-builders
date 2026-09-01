@@ -25,7 +25,6 @@
 package org.javahelpers.simple.builders.processor.model.core;
 
 import org.apache.commons.lang3.StringUtils;
-import org.javahelpers.simple.builders.core.enums.FormattingMode;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.method.ConstructorDto;
@@ -58,7 +57,7 @@ public class BuilderToGenerationTypeMapper {
    *
    * @param configuration the effective builder configuration (already merged with global compiler
    *     arguments, so the formatting mode is available via {@link
-   *     BuilderConfiguration#resolveFormattingMode})
+   *     BuilderConfiguration#formattingModeEnum})
    */
   public BuilderToGenerationTypeMapper(BuilderConfiguration configuration) {
     this.configuration = configuration;
@@ -81,7 +80,7 @@ public class BuilderToGenerationTypeMapper {
     renderingDto.setSuperType(builderDto.getSuperType());
     renderingDto.setClassJavadoc(
         configuration.shouldGenerateJavaDoc() ? builderDto.getClassJavadoc() : null);
-    renderingDto.setFormattingMode(configuration.resolveFormattingMode(FormattingMode.JDT));
+    renderingDto.setFormattingMode(configuration.formattingModeEnum());
 
     builderDto.getClassFields().stream()
         .map(this::toRenderingClassField)

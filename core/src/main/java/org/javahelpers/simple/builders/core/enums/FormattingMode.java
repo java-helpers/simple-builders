@@ -54,6 +54,11 @@ public enum FormattingMode {
     this.optionValue = optionValue;
   }
 
+  /** Returns the option string used in compiler arguments and annotations. */
+  public String getOptionValue() {
+    return optionValue;
+  }
+
   /**
    * Parses a string into a {@link FormattingMode}.
    *
