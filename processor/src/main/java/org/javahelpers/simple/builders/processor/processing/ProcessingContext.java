@@ -32,7 +32,6 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
-import org.javahelpers.simple.builders.core.enums.FormattingMode;
 import org.javahelpers.simple.builders.processor.generators.registry.GeneratorRegistry;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
@@ -54,7 +53,6 @@ public final class ProcessingContext {
   private final BuilderConfigurationReader configurationReader;
   private final ProcessingEnvironment processingEnv;
   private final PerformanceTracker performanceTracker;
-  private final FormattingMode formattingMode;
   private GeneratorRegistry generatorRegistry;
   private BuilderConfiguration configurationForProcessingTarget;
 
@@ -84,7 +82,6 @@ public final class ProcessingContext {
         perfTrackingEnabled
             ? new ActivePerformanceTracker(perfOutputFile)
             : new NoOpPerformanceTracker();
-    this.formattingMode = argReader.readFormattingMode();
     // GeneratorRegistry will be lazily initialized on first access
   }
 
@@ -141,18 +138,6 @@ public final class ProcessingContext {
    */
   public PerformanceTracker getPerformanceTracker() {
     return performanceTracker;
-  }
-
-  /**
-   * Gets the formatting mode for generated source files.
-   *
-   * <p>Controlled via {@code -Asimplebuilder.formattingMode=JDT|LIGHTWEIGHT|NONE}. Defaults to
-   * {@link FormattingMode#JDT} when not specified.
-   *
-   * @return the formatting mode to use for source code post-processing
-   */
-  public FormattingMode getFormattingMode() {
-    return formattingMode;
   }
 
   /**

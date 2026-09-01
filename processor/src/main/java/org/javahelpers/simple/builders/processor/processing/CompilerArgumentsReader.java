@@ -27,7 +27,6 @@ package org.javahelpers.simple.builders.processor.processing;
 import javax.annotation.processing.ProcessingEnvironment;
 import org.apache.commons.lang3.Strings;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
-import org.javahelpers.simple.builders.core.enums.FormattingMode;
 import org.javahelpers.simple.builders.core.enums.OptionState;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 
@@ -125,19 +124,6 @@ public class CompilerArgumentsReader {
   }
 
   /**
-   * Reads the formatting mode from compiler arguments.
-   *
-   * <p>Returns the corresponding FormattingMode enum value, or {@link FormattingMode#JDT} as the
-   * default if not set or invalid.
-   *
-   * @return the FormattingMode value, defaults to {@link FormattingMode#JDT}
-   */
-  public FormattingMode readFormattingMode() {
-    String value = readValue(CompilerArgumentsEnum.FORMATTING_MODE);
-    return FormattingMode.fromString(value);
-  }
-
-  /**
    * Reads a complete BuilderConfiguration from compiler arguments.
    *
    * <p>This method reads all configuration options from compiler arguments like:
@@ -189,6 +175,7 @@ public class CompilerArgumentsReader {
         .jacksonModulePackage(readValue(CompilerArgumentsEnum.JACKSON_MODULE_PACKAGE))
         .builderSuffix(readValue(CompilerArgumentsEnum.BUILDER_SUFFIX))
         .setterSuffix(readValue(CompilerArgumentsEnum.SETTER_SUFFIX))
+        .formattingMode(readValue(CompilerArgumentsEnum.FORMATTING_MODE))
         .strict(readOptionState(CompilerArgumentsEnum.STRICT))
         .build();
   }
