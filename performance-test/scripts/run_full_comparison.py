@@ -95,6 +95,14 @@ def main() -> None:
         "avoiding the overhead of the processor's internal performance tracker. "
         "This ensures a fair comparison without measurement overhead.",
     )
+    parser.add_argument(
+        "--label-suffix",
+        type=str,
+        default="",
+        help="Suffix appended to the label for each builder type "
+        "(e.g. --label-suffix stability gives 'sb-5runs-stability'). "
+        "Useful to distinguish different measurement campaigns.",
+    )
     args = parser.parse_args()
 
     num_runs = args.runs
@@ -104,6 +112,8 @@ def main() -> None:
 
     for bt in BUILDER_TYPES:
         label = f"{LABEL_PREFIX[bt]}-{num_runs}runs"
+        if args.label_suffix:
+            label += f"-{args.label_suffix}"
         print_section(f"{bt}  (label: {label})")
 
         # 1. Generate classes
