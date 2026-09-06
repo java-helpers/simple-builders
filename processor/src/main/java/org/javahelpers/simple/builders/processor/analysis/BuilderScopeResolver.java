@@ -23,6 +23,9 @@
  */
 package org.javahelpers.simple.builders.processor.analysis;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import javax.lang.model.element.TypeElement;
@@ -39,12 +42,16 @@ import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
  * {@code builderGenerationPackages} and {@code builderUsagePackages} scopes and on the availability
  * of the builder type on the classpath.
  *
- * <p>The resolver is constructed per target configuration and holds its parsed package scopes.
+ * <p>The resolver is constructed once per processing context and refreshes its parsed package
+ * scopes and per-type results when the target configuration changes.
  */
 public final class BuilderScopeResolver {
 
-  private final Set<String> generationPackages;
-  private final Set<String> usagePackages;
+  private final ProcessingContext context;
+  private BuilderConfiguration cachedConfiguration;
+  private Set<String> generationPackages = Set.of();
+  private Set<String> usagePackages = Set.of();
+  private final Map<String, Optional<TypeName>> resolvedBuilderTypes = new HashMap<>();
 
   /**
    * Creates a new resolver for the given processing context.
@@ -52,9 +59,7 @@ public final class BuilderScopeResolver {
    * @param context the processing context providing configuration and type utilities
    */
   public BuilderScopeResolver(ProcessingContext context) {
-    BuilderConfiguration config = context.getConfiguration();
-    this.generationPackages = config == null ? Set.of() : config.getBuilderGenerationPackagesSet();
-    this.usagePackages = config == null ? Set.of() : config.getBuilderUsagePackagesSet();
+    this.context = context;
   }
 
   /**
@@ -76,11 +81,18 @@ public final class BuilderScopeResolver {
    * </ol>
    *
    * @param referencedType the type element being referenced as a field or collection element
-   * @param context the processing context for type lookup
    * @return the builder type to reference, or empty if no builder should be referenced
    */
-  public Optional<TypeName> resolveUsableBuilderType(
-      TypeElement referencedType, ProcessingContext context) {
+  public Optional<TypeName> resolveUsableBuilderType(TypeElement referencedType) {
+    if (referencedType == null) {
+      return Optional.empty();
+    }
+    refreshForConfigurationIfNeeded();
+    return resolvedBuilderTypes.computeIfAbsent(
+        referencedType.getQualifiedName().toString(), fqn -> resolve(referencedType));
+  }
+
+  private Optional<TypeName> resolve(TypeElement referencedType) {
     if (!hasSimpleBuilderAnnotation(referencedType)
         || JavaLangAnalyser.findAnnotation(referencedType, Ignore4BuilderGeneration.class)
             .isPresent()) {
@@ -88,8 +100,7 @@ public final class BuilderScopeResolver {
     }
 
     TypeName candidate = JavaLangMapper.createBuilderTypeName(referencedType, context);
-    String packageName =
-        JavaLangMapper.extractPackageName(referencedType.getQualifiedName().toString());
+    String packageName = context.getPackageName(referencedType);
 
     // Both scopes unset → full backward compatibility, no type search.
     if (generationPackages.isEmpty() && usagePackages.isEmpty()) {
@@ -110,6 +121,18 @@ public final class BuilderScopeResolver {
     }
 
     return Optional.empty();
+  }
+
+  private void refreshForConfigurationIfNeeded() {
+    BuilderConfiguration configuration = context.getConfiguration();
+    if (Objects.equals(cachedConfiguration, configuration)) {
+      return;
+    }
+    generationPackages =
+        configuration == null ? Set.of() : configuration.getBuilderGenerationPackagesSet();
+    usagePackages = configuration == null ? Set.of() : configuration.getBuilderUsagePackagesSet();
+    resolvedBuilderTypes.clear();
+    cachedConfiguration = configuration;
   }
 
   private boolean hasSimpleBuilderAnnotation(TypeElement typeElement) {

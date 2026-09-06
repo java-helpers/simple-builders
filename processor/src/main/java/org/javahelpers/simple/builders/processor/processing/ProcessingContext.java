@@ -54,8 +54,8 @@ public final class ProcessingContext {
   private final BuilderConfigurationReader configurationReader;
   private final ProcessingEnvironment processingEnv;
   private final PerformanceTracker performanceTracker;
+  private final BuilderScopeResolver builderScopeResolver;
   private GeneratorRegistry generatorRegistry;
-  private BuilderScopeResolver builderScopeResolver;
   private BuilderConfiguration configurationForProcessingTarget;
 
   /**
@@ -84,6 +84,7 @@ public final class ProcessingContext {
         perfTrackingEnabled
             ? new ActivePerformanceTracker(perfOutputFile)
             : new NoOpPerformanceTracker();
+    this.builderScopeResolver = new BuilderScopeResolver(this);
     // GeneratorRegistry will be lazily initialized on first access
   }
 
@@ -94,7 +95,6 @@ public final class ProcessingContext {
    */
   public void initConfigurationForProcessingTarget(BuilderConfiguration config) {
     this.configurationForProcessingTarget = config;
-    this.builderScopeResolver = null;
   }
 
   /**
@@ -152,9 +152,6 @@ public final class ProcessingContext {
    * @return the builder scope resolver
    */
   public BuilderScopeResolver getBuilderScopeResolver() {
-    if (builderScopeResolver == null) {
-      builderScopeResolver = new BuilderScopeResolver(this);
-    }
     return builderScopeResolver;
   }
 

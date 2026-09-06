@@ -25,8 +25,22 @@
 package org.javahelpers.simple.builders.processor;
 
 import static com.google.testing.compile.CompilationSubject.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 import com.google.testing.compile.Compilation;
+import com.google.testing.compile.Compiler;
+import java.util.Optional;
+import java.util.Set;
+import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.RoundEnvironment;
+import javax.lang.model.SourceVersion;
+import javax.lang.model.element.TypeElement;
+import org.javahelpers.simple.builders.processor.analysis.BuilderScopeResolver;
+import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
+import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
+import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 import org.javahelpers.simple.builders.processor.testing.ProcessorAsserts;
 import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
 import org.junit.jupiter.api.Test;
@@ -66,5 +80,95 @@ class BuilderScopeResolverTest {
     String generated = ProcessorTestUtils.loadGeneratedSource(compilation, "ResolverDtoBuilder");
     ProcessorAsserts.assertContaining(generated, "helper(LibHelper helper)");
     ProcessorAsserts.assertNotContaining(generated, "helperBuilderConsumer", "LibHelperBuilder");
+  }
+
+  @Test
+  void resolverRefreshesScopesWhenTargetConfigurationChanges() {
+    ResolverProbeProcessor.reset();
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+                    @SimpleBuilder
+                    public class LibHelper { public LibHelper() {} }
+                    """));
+
+    assertThat(compilation).succeeded();
+    assertEquals("lib.LibHelperBuilder", ResolverProbeProcessor.first.get().getFullQualifiedName());
+    assertEquals(Optional.empty(), ResolverProbeProcessor.afterConfigurationChange);
+  }
+
+  @Test
+  void resolverCachesResolvedOptionalPerReferencedType() {
+    ResolverProbeProcessor.reset();
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+                    @SimpleBuilder
+                    public class LibHelper { public LibHelper() {} }
+                    """));
+
+    assertThat(compilation).succeeded();
+    assertSame(ResolverProbeProcessor.first, ResolverProbeProcessor.second);
+  }
+
+  private static final class ResolverProbeProcessor extends AbstractProcessor {
+    private static Optional<TypeName> first;
+    private static Optional<TypeName> second;
+    private static Optional<TypeName> afterConfigurationChange;
+
+    private boolean captured;
+
+    static void reset() {
+      first = null;
+      second = null;
+      afterConfigurationChange = null;
+    }
+
+    @Override
+    public Set<String> getSupportedAnnotationTypes() {
+      return Set.of("*");
+    }
+
+    @Override
+    public SourceVersion getSupportedSourceVersion() {
+      return SourceVersion.latestSupported();
+    }
+
+    @Override
+    public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+      if (captured || roundEnv.processingOver()) {
+        return false;
+      }
+      TypeElement helper = processingEnv.getElementUtils().getTypeElement("lib.LibHelper");
+      ProcessingContext context =
+          new ProcessingContext(
+              new ProcessingLogger(processingEnv), BuilderConfiguration.DEFAULT, processingEnv);
+      context.initConfigurationForProcessingTarget(configuration("lib", "Builder"));
+      BuilderScopeResolver resolver = context.getBuilderScopeResolver();
+      first = resolver.resolveUsableBuilderType(helper);
+      second = resolver.resolveUsableBuilderType(helper);
+      context.initConfigurationForProcessingTarget(configuration("other", "OtherBuilder"));
+      afterConfigurationChange = resolver.resolveUsableBuilderType(helper);
+      captured = true;
+      return false;
+    }
+
+    private static BuilderConfiguration configuration(String packageName, String suffix) {
+      return BuilderConfiguration.DEFAULT.merge(
+          BuilderConfiguration.builder()
+              .builderGenerationPackages(packageName)
+              .builderSuffix(suffix)
+              .build());
+    }
   }
 }

@@ -200,23 +200,23 @@ public final class JavaLangMapper {
    */
   private static void setBuilderAndConstructorInfo(
       TypeName typeName, TypeElement typeElement, ProcessingContext context) {
-    setBuilderTypeIfAnnotated(typeName, typeElement, context);
+    setBuilderTypeIfUsable(typeName, typeElement, context);
     setEmptyConstructorInfoIfAvailable(typeName, typeElement, context);
-    setElementBuilderTypeForGenericCollections(typeName, context);
+    setElementBuilderTypeIfUsable(typeName, context);
   }
 
   /**
-   * Sets the builder type if the type element has @SimpleBuilder annotation.
+   * Sets the builder type if the type element has a usable @SimpleBuilder builder.
    *
    * @param typeName the TypeName to enhance
    * @param typeElement the type element to check
    * @param context the processing context
    */
-  private static void setBuilderTypeIfAnnotated(
+  private static void setBuilderTypeIfUsable(
       TypeName typeName, TypeElement typeElement, ProcessingContext context) {
     context
         .getBuilderScopeResolver()
-        .resolveUsableBuilderType(typeElement, context)
+        .resolveUsableBuilderType(typeElement)
         .ifPresent(typeName::setBuilderType);
   }
 
@@ -237,13 +237,13 @@ public final class JavaLangMapper {
   }
 
   /**
-   * Sets element builder type for generic collections with @SimpleBuilder annotated elements.
+   * Sets the element builder type for generic collections when the @SimpleBuilder builder is
+   * usable.
    *
    * @param typeName the TypeName to enhance
    * @param context the processing context
    */
-  private static void setElementBuilderTypeForGenericCollections(
-      TypeName typeName, ProcessingContext context) {
+  private static void setElementBuilderTypeIfUsable(TypeName typeName, ProcessingContext context) {
     // Only process generic types
     if (!(typeName instanceof TypeNameGeneric genericType)) {
       return;
@@ -266,7 +266,7 @@ public final class JavaLangMapper {
     // Resolve usable element builder type through the scope resolver
     context
         .getBuilderScopeResolver()
-        .resolveUsableBuilderType(elementTypeElement, context)
+        .resolveUsableBuilderType(elementTypeElement)
         .ifPresent(genericType::setElementBuilderType);
   }
 
@@ -290,22 +290,11 @@ public final class JavaLangMapper {
    * @param context the processing context
    * @return the TypeName for the builder
    */
-  static TypeName createBuilderTypeName(TypeElement typeElement, ProcessingContext context) {
+  public static TypeName createBuilderTypeName(TypeElement typeElement, ProcessingContext context) {
     String builderClassName =
         typeElement.getSimpleName().toString() + context.getConfiguration().getBuilderSuffix();
-    String packageName = extractPackageName(typeElement.getQualifiedName().toString());
+    String packageName = context.getPackageName(typeElement);
     return new TypeName(packageName, builderClassName);
-  }
-
-  /**
-   * Extracts the package name from a qualified class name.
-   *
-   * @param qualifiedName the fully qualified class name (e.g., "com.example.MyClass")
-   * @return the package name (e.g., "com.example"), or empty string if no package
-   */
-  static String extractPackageName(String qualifiedName) {
-    int lastDot = qualifiedName.lastIndexOf('.');
-    return lastDot > 0 ? qualifiedName.substring(0, lastDot) : "";
   }
 
   /**

@@ -316,7 +316,7 @@ public record BuilderConfiguration(
     }
     return Arrays.stream(StringUtils.split(value, ","))
         .map(String::trim)
-        .filter(s -> !s.isEmpty())
+        .filter(StringUtils::isNotBlank)
         .collect(Collectors.toCollection(HashSet::new));
   }
 
