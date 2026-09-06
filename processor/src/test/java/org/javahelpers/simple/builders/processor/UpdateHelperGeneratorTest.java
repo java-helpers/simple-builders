@@ -52,99 +52,100 @@ import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/** Tests for {@code mapX(UnaryOperator<T>)} helper generation. */
-class MapperHelperGeneratorTest {
+/** Tests for {@code xyzUpdate(UnaryOperator<T>)} helper generation. */
+class UpdateHelperGeneratorTest {
 
   @TempDir Path tempDirectory;
 
   @Test
-  void mapperHelpers_DefaultEnabled_GeneratesMethods() {
+  void updateHelpers_DefaultEnabled_GeneratesMethods() {
     Compilation compilation = ProcessorTestUtils.createCompiler().compile(personSource());
 
     assertThat(compilation).succeeded();
     String generated = loadGeneratedSource(compilation, "PersonDtoBuilder");
 
-    ProcessorAsserts.assertContaining(generated, "mapName(");
-    ProcessorAsserts.assertContaining(generated, "mapQuantity(");
+    ProcessorAsserts.assertContaining(generated, "nameUpdate(");
+    ProcessorAsserts.assertContaining(generated, "quantityUpdate(");
   }
 
   @Test
-  void mapperHelpers_DisabledByCompilerOption_DoesNotGenerateMethods() {
+  void updateHelpers_DisabledByCompilerOption_DoesNotGenerateMethods() {
     Compilation compilation =
         ProcessorTestUtils.createCompiler()
-            .withOptions("-Asimplebuilder.generateMapperHelpers=DISABLED")
+            .withOptions("-Asimplebuilder.generateUpdateHelpers=DISABLED")
             .compile(personSource());
 
     assertThat(compilation).succeeded();
     String generated = loadGeneratedSource(compilation, "PersonDtoBuilder");
 
-    ProcessorAsserts.assertNotContaining(generated, "mapName(");
-    ProcessorAsserts.assertNotContaining(generated, "mapQuantity(");
+    ProcessorAsserts.assertNotContaining(generated, "nameUpdate(");
+    ProcessorAsserts.assertNotContaining(generated, "quantityUpdate(");
   }
 
   @Test
-  void mapperHelpers_CompilerOptionEnabled_GeneratesStringAndPrimitiveMethods() {
+  void updateHelpers_CompilerOptionEnabled_GeneratesStringAndPrimitiveMethods() {
     Compilation compilation =
         ProcessorTestUtils.createCompiler()
-            .withOptions("-Asimplebuilder.generateMapperHelpers=ENABLED")
+            .withOptions("-Asimplebuilder.generateUpdateHelpers=ENABLED")
             .compile(personSource());
 
     assertThat(compilation).succeeded();
     String generated = loadGeneratedSource(compilation, "PersonDtoBuilder");
 
     ProcessorAsserts.assertContaining(
-        generated, "public PersonDtoBuilder mapName(UnaryOperator<String> nameMapper)");
+        generated, "public PersonDtoBuilder nameUpdate(UnaryOperator<String> nameUpdater)");
     ProcessorAsserts.assertContaining(
-        generated, "public PersonDtoBuilder mapQuantity(UnaryOperator<Integer> quantityMapper)");
+        generated,
+        "public PersonDtoBuilder quantityUpdate(UnaryOperator<Integer> quantityUpdater)");
     ProcessorAsserts.assertContaining(
-        generated, "throw new IllegalStateException(\"Cannot map 'name' before it is set\")");
+        generated, "throw new IllegalStateException(\"Cannot update 'name' before it is set\")");
     ProcessorAsserts.assertContaining(
-        generated, "this.quantity = changedValue(quantityMapper.apply(this.quantity.value()));");
+        generated, "this.quantity = changedValue(quantityUpdater.apply(this.quantity.value()));");
     assertTrue(
-        generated.contains(".mapName(String::trim);"),
-        "String mapper methods should use a type-aware example");
+        generated.contains(".nameUpdate(String::trim);"),
+        "String updater methods should use a type-aware example");
     assertTrue(
-        generated.contains(".mapQuantity(Math::abs);"),
-        "Primitive mapper methods should use a type-aware example");
+        generated.contains(".quantityUpdate(Math::abs);"),
+        "Primitive updater methods should use a type-aware example");
   }
 
   @Test
-  void mapperHelpers_CompilerOptionEnabled_ContainsUnsetFieldGuard() {
+  void updateHelpers_CompilerOptionEnabled_ContainsUnsetFieldGuard() {
     Compilation compilation =
         ProcessorTestUtils.createCompiler()
-            .withOptions("-Asimplebuilder.generateMapperHelpers=ENABLED")
+            .withOptions("-Asimplebuilder.generateUpdateHelpers=ENABLED")
             .compile(personSource());
 
     assertThat(compilation).succeeded();
     String generated = loadGeneratedSource(compilation, "PersonDtoBuilder");
 
     ProcessorAsserts.assertContaining(generated, "if (!this.name.isSet())");
-    ProcessorAsserts.assertContaining(generated, "Cannot map 'name' before it is set");
+    ProcessorAsserts.assertContaining(generated, "Cannot update 'name' before it is set");
   }
 
   @Test
-  void mapperHelpers_RuntimeMappingAndUnsetFieldFailure() throws Exception {
+  void updateHelpers_RuntimeUpdatingAndUnsetFieldFailure() throws Exception {
     try (URLClassLoader classLoader = compileRuntimePerson()) {
       Class<?> builderClass = classLoader.loadClass("test.PersonDtoBuilder");
       Method create = builderClass.getMethod("create");
       Method name = builderClass.getMethod("name", String.class);
       Method quantity = builderClass.getMethod("quantity", int.class);
-      Method mapName = builderClass.getMethod("mapName", UnaryOperator.class);
-      Method mapQuantity = builderClass.getMethod("mapQuantity", UnaryOperator.class);
+      Method nameUpdate = builderClass.getMethod("nameUpdate", UnaryOperator.class);
+      Method quantityUpdate = builderClass.getMethod("quantityUpdate", UnaryOperator.class);
       Method build = builderClass.getMethod("build");
 
       Object builder = create.invoke(null);
       InvocationTargetException exception =
           assertThrows(
               InvocationTargetException.class,
-              () -> mapName.invoke(builder, (UnaryOperator<String>) String::trim));
-      assertEquals("Cannot map 'name' before it is set", exception.getCause().getMessage());
+              () -> nameUpdate.invoke(builder, (UnaryOperator<String>) String::trim));
+      assertEquals("Cannot update 'name' before it is set", exception.getCause().getMessage());
 
       name.invoke(builder, "  bob ");
-      mapName.invoke(builder, (UnaryOperator<String>) String::trim);
-      mapName.invoke(builder, (UnaryOperator<String>) String::toUpperCase);
+      nameUpdate.invoke(builder, (UnaryOperator<String>) String::trim);
+      nameUpdate.invoke(builder, (UnaryOperator<String>) String::toUpperCase);
       quantity.invoke(builder, 10);
-      mapQuantity.invoke(builder, (UnaryOperator<Integer>) value -> value * 2);
+      quantityUpdate.invoke(builder, (UnaryOperator<Integer>) value -> value * 2);
 
       Object person = build.invoke(builder);
       assertEquals("BOB", person.getClass().getMethod("name").invoke(person));
@@ -153,7 +154,7 @@ class MapperHelperGeneratorTest {
   }
 
   @Test
-  void mapperHelpers_WithCopyInteraction_UsesInitialValueAsSet() {
+  void updateHelpers_WithCopyInteraction_UsesInitialValueAsSet() {
     JavaFileObject source =
         ProcessorTestUtils.forSource(
             """
@@ -162,7 +163,7 @@ class MapperHelperGeneratorTest {
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 
             @SimpleBuilder(options = @SimpleBuilder.Options(
-                generateMapperHelpers = org.javahelpers.simple.builders.core.enums.OptionState.ENABLED,
+                generateUpdateHelpers = org.javahelpers.simple.builders.core.enums.OptionState.ENABLED,
                 generateWithInterface = org.javahelpers.simple.builders.core.enums.OptionState.ENABLED))
             public record PersonWith(String name) implements PersonWithBuilder.With {}
             """);
@@ -173,29 +174,29 @@ class MapperHelperGeneratorTest {
     String generated = loadGeneratedSource(compilation, "PersonWithBuilder");
 
     ProcessorAsserts.assertContaining(
-        generated, "public PersonWithBuilder mapName(UnaryOperator<String> nameMapper)");
+        generated, "public PersonWithBuilder nameUpdate(UnaryOperator<String> nameUpdater)");
     ProcessorAsserts.assertContaining(generated, "initialValue(instance.name())");
   }
 
   @Test
-  void mapperHelpers_WithCopyInteraction_MapsCopiedValue() throws Exception {
+  void updateHelpers_WithCopyInteraction_UpdatesCopiedValue() throws Exception {
     try (URLClassLoader classLoader = compileRuntimeWithPerson()) {
       Class<?> personClass = classLoader.loadClass("test.PersonWith");
       Object person = personClass.getConstructor(String.class).newInstance("  bob ");
       Method with = personClass.getMethod("with", java.util.function.Consumer.class);
 
-      Object mapped =
+      Object updated =
           with.invoke(
               person,
               (java.util.function.Consumer<Object>)
-                  builder -> invokeMapper(builder, (UnaryOperator<String>) String::toUpperCase));
+                  builder -> invokeUpdater(builder, (UnaryOperator<String>) String::toUpperCase));
 
-      assertEquals("  BOB ", mapped.getClass().getMethod("name").invoke(mapped));
+      assertEquals("  BOB ", updated.getClass().getMethod("name").invoke(updated));
     }
   }
 
   @Test
-  void mapperHelpers_AnnotationOptionEnabled_GeneratesMethod() {
+  void updateHelpers_AnnotationOptionEnabled_GeneratesMethod() {
     JavaFileObject source =
         ProcessorTestUtils.forSource(
             """
@@ -205,7 +206,7 @@ class MapperHelperGeneratorTest {
             import org.javahelpers.simple.builders.core.enums.OptionState;
 
             @SimpleBuilder(options = @SimpleBuilder.Options(
-                generateMapperHelpers = OptionState.ENABLED))
+                generateUpdateHelpers = OptionState.ENABLED))
             public record AnnotatedPerson(String name) {}
             """);
 
@@ -215,27 +216,27 @@ class MapperHelperGeneratorTest {
     String generated = loadGeneratedSource(compilation, "AnnotatedPersonBuilder");
 
     ProcessorAsserts.assertContaining(
-        generated, "public AnnotatedPersonBuilder mapName(UnaryOperator<String> nameMapper)");
+        generated, "public AnnotatedPersonBuilder nameUpdate(UnaryOperator<String> nameUpdater)");
   }
 
   @Test
-  void mapperHelpers_ComponentDeactivation_DisablesGeneration() {
+  void updateHelpers_ComponentDeactivation_DisablesGeneration() {
     Compilation compilation =
         ProcessorTestUtils.createCompiler()
             .withOptions(
-                "-Asimplebuilder.generateMapperHelpers=ENABLED",
-                "-Asimplebuilder.deactivateGenerationComponents=MapperHelperGenerator")
+                "-Asimplebuilder.generateUpdateHelpers=ENABLED",
+                "-Asimplebuilder.deactivateGenerationComponents=UpdateHelperGenerator")
             .compile(personSource());
 
     assertThat(compilation).succeeded();
     String generated = loadGeneratedSource(compilation, "PersonDtoBuilder");
 
-    ProcessorAsserts.assertNotContaining(generated, "mapName(");
-    ProcessorAsserts.assertNotContaining(generated, "mapQuantity(");
+    ProcessorAsserts.assertNotContaining(generated, "nameUpdate(");
+    ProcessorAsserts.assertNotContaining(generated, "quantityUpdate(");
   }
 
   @Test
-  void mapperHelpers_SameSignatureCollision_PlainSetterWins() {
+  void updateHelpers_SameSignatureCollision_PlainSetterWins() {
     JavaFileObject source =
         ProcessorTestUtils.forSource(
             """
@@ -245,7 +246,7 @@ class MapperHelperGeneratorTest {
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 
             @SimpleBuilder
-            public record CollisionDto(String test, UnaryOperator<String> mapTest) {}
+            public record CollisionDto(String test, UnaryOperator<String> testUpdate) {}
             """);
 
     Compilation compilation = ProcessorTestUtils.createCompiler().compile(source);
@@ -258,29 +259,30 @@ class MapperHelperGeneratorTest {
             .filter(diagnostic -> diagnostic.getMessage(null).contains("Method conflict resolved"))
             .count();
 
-    assertTrue(conflictWarnings > 0, "Expected a mapper/setter conflict warning");
-    ProcessorAsserts.assertContaining(generated, "mapTest(UnaryOperator<String> mapTest)");
-    ProcessorAsserts.assertNotContaining(generated, "mapTest(UnaryOperator<String> testMapper)");
+    assertTrue(conflictWarnings > 0, "Expected an update-helper/setter conflict warning");
+    ProcessorAsserts.assertContaining(generated, "testUpdate(UnaryOperator<String> testUpdate)");
+    ProcessorAsserts.assertNotContaining(
+        generated, "testUpdate(UnaryOperator<String> testUpdater)");
     ProcessorAsserts.assertContaining(
-        generated, "mapMapTest(UnaryOperator<UnaryOperator<String>> mapTestMapper)");
+        generated, "testUpdateUpdate(UnaryOperator<UnaryOperator<String>> testUpdateUpdater)");
   }
 
   @Test
-  void mapperHelpers_SameSignatureCollision_PlainSetterCanBeCalled() throws Exception {
+  void updateHelpers_SameSignatureCollision_PlainSetterCanBeCalled() throws Exception {
     try (URLClassLoader classLoader = compileRuntimeCollision()) {
       Class<?> builderClass = classLoader.loadClass("test.CollisionDtoBuilder");
       Object builder = builderClass.getMethod("create").invoke(null);
-      UnaryOperator<String> mapper = String::trim;
+      UnaryOperator<String> updater = String::trim;
 
-      builderClass.getMethod("mapTest", UnaryOperator.class).invoke(builder, mapper);
+      builderClass.getMethod("testUpdate", UnaryOperator.class).invoke(builder, updater);
 
       Object dto = builderClass.getMethod("build").invoke(builder);
-      assertEquals(mapper, dto.getClass().getMethod("mapTest").invoke(dto));
+      assertEquals(updater, dto.getClass().getMethod("testUpdate").invoke(dto));
     }
   }
 
   @Test
-  void mapperHelpers_DifferentTypeCollision_GeneratesBothMethods() {
+  void updateHelpers_DifferentTypeCollision_GeneratesBothMethods() {
     JavaFileObject source =
         ProcessorTestUtils.forSource(
             """
@@ -289,7 +291,7 @@ class MapperHelperGeneratorTest {
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 
             @SimpleBuilder
-            public record DifferentTypeDto(String test, String mapTest) {}
+            public record DifferentTypeDto(String test, String testUpdate) {}
             """);
 
     Compilation compilation = ProcessorTestUtils.createCompiler().compile(source);
@@ -297,38 +299,38 @@ class MapperHelperGeneratorTest {
     assertThat(compilation).succeeded();
     String generated = loadGeneratedSource(compilation, "DifferentTypeDtoBuilder");
 
-    ProcessorAsserts.assertContaining(generated, "mapTest(String mapTest)");
-    ProcessorAsserts.assertContaining(generated, "mapTest(UnaryOperator<String> testMapper)");
+    ProcessorAsserts.assertContaining(generated, "testUpdate(String testUpdate)");
+    ProcessorAsserts.assertContaining(generated, "testUpdate(UnaryOperator<String> testUpdater)");
   }
 
   @Test
-  void mapperHelpers_DifferentTypeCollision_BothMethodsCanBeCalled() throws Exception {
+  void updateHelpers_DifferentTypeCollision_BothMethodsCanBeCalled() throws Exception {
     try (URLClassLoader classLoader = compileRuntimeDifferentType()) {
       Class<?> builderClass = classLoader.loadClass("test.DifferentTypeDtoBuilder");
       Object builder = builderClass.getMethod("create").invoke(null);
       builderClass.getMethod("test", String.class).invoke(builder, "  bob ");
-      builderClass.getMethod("mapTest", String.class).invoke(builder, "mapped");
+      builderClass.getMethod("testUpdate", String.class).invoke(builder, "updated");
       builderClass
-          .getMethod("mapTest", UnaryOperator.class)
+          .getMethod("testUpdate", UnaryOperator.class)
           .invoke(builder, (UnaryOperator<String>) String::trim);
 
       Object dto = builderClass.getMethod("build").invoke(builder);
       assertEquals("bob", dto.getClass().getMethod("test").invoke(dto));
-      assertEquals("mapped", dto.getClass().getMethod("mapTest").invoke(dto));
+      assertEquals("updated", dto.getClass().getMethod("testUpdate").invoke(dto));
     }
   }
 
   @Test
-  void mapperHelpers_NullResult_NonNullFieldFailsAtBuild() throws Exception {
+  void updateHelpers_NullResult_NonNullFieldFailsAtBuild() throws Exception {
     try (URLClassLoader classLoader = compileRuntimeNullResult()) {
       Class<?> builderClass = classLoader.loadClass("test.NullResultDtoBuilder");
       Object builder = builderClass.getMethod("create").invoke(null);
       Method name = builderClass.getMethod("name", String.class);
-      Method mapName = builderClass.getMethod("mapName", UnaryOperator.class);
+      Method nameUpdate = builderClass.getMethod("nameUpdate", UnaryOperator.class);
       Method build = builderClass.getMethod("build");
 
       name.invoke(builder, "x");
-      assertDoesNotThrow(() -> mapName.invoke(builder, (UnaryOperator<String>) value -> null));
+      assertDoesNotThrow(() -> nameUpdate.invoke(builder, (UnaryOperator<String>) value -> null));
 
       InvocationTargetException exception =
           assertThrows(InvocationTargetException.class, () -> build.invoke(builder));
@@ -337,16 +339,17 @@ class MapperHelperGeneratorTest {
   }
 
   @Test
-  void mapperHelpers_NullResult_PrimitiveFieldFailsAtBuild() throws Exception {
+  void updateHelpers_NullResult_PrimitiveFieldFailsAtBuild() throws Exception {
     try (URLClassLoader classLoader = compileRuntimeNullResult()) {
       Class<?> builderClass = classLoader.loadClass("test.NullResultDtoBuilder");
       Object builder = builderClass.getMethod("create").invoke(null);
       Method quantity = builderClass.getMethod("quantity", int.class);
-      Method mapQuantity = builderClass.getMethod("mapQuantity", UnaryOperator.class);
+      Method quantityUpdate = builderClass.getMethod("quantityUpdate", UnaryOperator.class);
       Method build = builderClass.getMethod("build");
 
       quantity.invoke(builder, 1);
-      assertDoesNotThrow(() -> mapQuantity.invoke(builder, (UnaryOperator<Integer>) value -> null));
+      assertDoesNotThrow(
+          () -> quantityUpdate.invoke(builder, (UnaryOperator<Integer>) value -> null));
 
       InvocationTargetException exception =
           assertThrows(InvocationTargetException.class, () -> build.invoke(builder));
@@ -355,17 +358,17 @@ class MapperHelperGeneratorTest {
   }
 
   @Test
-  void mapperHelpers_NullResult_NullableFieldBuildsWithNull() throws Exception {
+  void updateHelpers_NullResult_NullableFieldBuildsWithNull() throws Exception {
     try (URLClassLoader classLoader = compileRuntimeNullResult()) {
       Class<?> builderClass = classLoader.loadClass("test.NullResultDtoBuilder");
       Object builder = builderClass.getMethod("create").invoke(null);
       Method description = builderClass.getMethod("description", String.class);
-      Method mapDescription = builderClass.getMethod("mapDescription", UnaryOperator.class);
+      Method descriptionUpdate = builderClass.getMethod("descriptionUpdate", UnaryOperator.class);
       Method build = builderClass.getMethod("build");
 
       description.invoke(builder, "x");
       assertDoesNotThrow(
-          () -> mapDescription.invoke(builder, (UnaryOperator<String>) value -> null));
+          () -> descriptionUpdate.invoke(builder, (UnaryOperator<String>) value -> null));
 
       Object dto = build.invoke(builder);
       assertNull(dto.getClass().getMethod("getDescription").invoke(dto));
@@ -407,7 +410,7 @@ class MapperHelperGeneratorTest {
         import org.javahelpers.simple.builders.core.enums.OptionState;
 
         @SimpleBuilder(options = @SimpleBuilder.Options(
-            generateMapperHelpers = OptionState.ENABLED,
+            generateUpdateHelpers = OptionState.ENABLED,
             generateWithInterface = OptionState.ENABLED))
         public record PersonWith(String name) implements PersonWithBuilder.With {}
         """);
@@ -423,7 +426,7 @@ class MapperHelperGeneratorTest {
         import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 
         @SimpleBuilder
-        public record CollisionDto(String test, UnaryOperator<String> mapTest) {}
+        public record CollisionDto(String test, UnaryOperator<String> testUpdate) {}
         """);
   }
 
@@ -436,7 +439,7 @@ class MapperHelperGeneratorTest {
         import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 
         @SimpleBuilder
-        public record DifferentTypeDto(String test, String mapTest) {}
+        public record DifferentTypeDto(String test, String testUpdate) {}
         """);
   }
 
@@ -506,7 +509,7 @@ class MapperHelperGeneratorTest {
               System.getProperty("java.class.path"),
               "-processorpath",
               System.getProperty("java.class.path"),
-              "-Asimplebuilder.generateMapperHelpers=ENABLED");
+              "-Asimplebuilder.generateUpdateHelpers=ENABLED");
       JavaCompiler.CompilationTask task =
           compiler.getTask(null, fileManager, null, options, null, sourceFiles);
       task.setProcessors(List.<Processor>of(new BuilderProcessor()));
@@ -515,12 +518,12 @@ class MapperHelperGeneratorTest {
 
     return new URLClassLoader(
         new URL[] {classDirectory.toUri().toURL()},
-        MapperHelperGeneratorTest.class.getClassLoader());
+        UpdateHelperGeneratorTest.class.getClassLoader());
   }
 
-  private static void invokeMapper(Object builder, UnaryOperator<String> mapper) {
+  private static void invokeUpdater(Object builder, UnaryOperator<String> updater) {
     try {
-      builder.getClass().getMethod("mapName", UnaryOperator.class).invoke(builder, mapper);
+      builder.getClass().getMethod("nameUpdate", UnaryOperator.class).invoke(builder, updater);
     } catch (ReflectiveOperationException ex) {
       throw new RuntimeException(ex);
     }

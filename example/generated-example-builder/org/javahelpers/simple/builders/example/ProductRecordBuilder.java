@@ -28,15 +28,15 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  *     .name("example value")
  *     .name("Hello %s", "World")
  *     .name(() -> "example value")
- *     .mapName(String::trim)
+ *     .nameUpdate(String::trim)
  *     .name(sb -> sb.append("text"))
  *     .price(3.14)
  *     .price(() -> 3.14)
- *     .mapPrice(Math::abs)
+ *     .priceUpdate(Math::abs)
  *     .category("example value")
  *     .category("Hello %s", "World")
  *     .category(() -> "example value")
- *     .mapCategory(String::trim)
+ *     .categoryUpdate(String::trim)
  *     .category(sb -> sb.append("text"))
  *     .build();
  * }</pre>
@@ -175,83 +175,29 @@ public class ProductRecordBuilder implements IBuilderBase<ProductRecord> {
   }
 
   /**
-   * Transforms the current value of <code>category</code> in place by applying the given operator, instead of reading
-   * it out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * Updates the current value of <code>category</code> in place by applying the given operator, instead of reading it
+   * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
    * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from parameter in constructor {@link ProductRecord#ProductRecord(String, double, String)
    * ProductRecord(String name, double price, String category)}
-   * 
+   *
    * <h4>Example:</h4>
-   * 
+   *
    * <pre>{@code
-   * builder.mapCategory(String::trim);
+   * builder.categoryUpdate(String::trim);
    * }</pre>
-   * 
-   * @param categoryMapper operator applied to the current value; its result becomes the new value
+   *
+   * @param categoryUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
    * @throws IllegalStateException if <code>category</code> has not been set yet
    */
-  public ProductRecordBuilder mapCategory(UnaryOperator<String> categoryMapper) {
+  public ProductRecordBuilder categoryUpdate(UnaryOperator<String> categoryUpdater) {
     if (!this.category.isSet()) {
-      throw new IllegalStateException("Cannot map 'category' before it is set");
+      throw new IllegalStateException("Cannot update 'category' before it is set");
     }
-    this.category = changedValue(categoryMapper.apply(this.category.value()));
-    return this;
-  }
-
-  /**
-   * Transforms the current value of <code>name</code> in place by applying the given operator, instead of reading it
-   * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
-   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance).
-   * <p>
-   * Generated from parameter in constructor {@link ProductRecord#ProductRecord(String, double, String)
-   * ProductRecord(String name, double price, String category)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.mapName(String::trim);
-   * }</pre>
-   * 
-   * @param nameMapper operator applied to the current value; its result becomes the new value
-   * @return current instance of builder
-   * @throws IllegalStateException if <code>name</code> has not been set yet
-   */
-  public ProductRecordBuilder mapName(UnaryOperator<String> nameMapper) {
-    if (!this.name.isSet()) {
-      throw new IllegalStateException("Cannot map 'name' before it is set");
-    }
-    this.name = changedValue(nameMapper.apply(this.name.value()));
-    return this;
-  }
-
-  /**
-   * Transforms the current value of <code>price</code> in place by applying the given operator, instead of reading it
-   * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
-   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance).
-   * <p>
-   * Generated from parameter in constructor {@link ProductRecord#ProductRecord(String, double, String)
-   * ProductRecord(String name, double price, String category)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.mapPrice(Math::abs);
-   * }</pre>
-   * 
-   * @param priceMapper operator applied to the current value; its result becomes the new value
-   * @return current instance of builder
-   * @throws IllegalStateException if <code>price</code> has not been set yet
-   */
-  public ProductRecordBuilder mapPrice(UnaryOperator<Double> priceMapper) {
-    if (!this.price.isSet()) {
-      throw new IllegalStateException("Cannot map 'price' before it is set");
-    }
-    this.price = changedValue(priceMapper.apply(this.price.value()));
+    this.category = changedValue(categoryUpdater.apply(this.category.value()));
     return this;
   }
 
@@ -340,6 +286,33 @@ public class ProductRecordBuilder implements IBuilderBase<ProductRecord> {
   }
 
   /**
+   * Updates the current value of <code>name</code> in place by applying the given operator, instead of reading it out,
+   * changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance).
+   * <p>
+   * Generated from parameter in constructor {@link ProductRecord#ProductRecord(String, double, String)
+   * ProductRecord(String name, double price, String category)}
+   *
+   * <h4>Example:</h4>
+   *
+   * <pre>{@code
+   * builder.nameUpdate(String::trim);
+   * }</pre>
+   *
+   * @param nameUpdater operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>name</code> has not been set yet
+   */
+  public ProductRecordBuilder nameUpdate(UnaryOperator<String> nameUpdater) {
+    if (!this.name.isSet()) {
+      throw new IllegalStateException("Cannot update 'name' before it is set");
+    }
+    this.name = changedValue(nameUpdater.apply(this.name.value()));
+    return this;
+  }
+
+  /**
    * Sets the value for <code>price</code>.
    * <p>
    * Generated from parameter in constructor {@link ProductRecord#ProductRecord(String, double, String)
@@ -376,6 +349,33 @@ public class ProductRecordBuilder implements IBuilderBase<ProductRecord> {
    */
   public ProductRecordBuilder price(Supplier<Double> priceSupplier) {
     this.price = changedValue(priceSupplier.get());
+    return this;
+  }
+
+  /**
+   * Updates the current value of <code>price</code> in place by applying the given operator, instead of reading it out,
+   * changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance).
+   * <p>
+   * Generated from parameter in constructor {@link ProductRecord#ProductRecord(String, double, String)
+   * ProductRecord(String name, double price, String category)}
+   *
+   * <h4>Example:</h4>
+   *
+   * <pre>{@code
+   * builder.priceUpdate(Math::abs);
+   * }</pre>
+   *
+   * @param priceUpdater operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>price</code> has not been set yet
+   */
+  public ProductRecordBuilder priceUpdate(UnaryOperator<Double> priceUpdater) {
+    if (!this.price.isSet()) {
+      throw new IllegalStateException("Cannot update 'price' before it is set");
+    }
+    this.price = changedValue(priceUpdater.apply(this.price.value()));
     return this;
   }
 

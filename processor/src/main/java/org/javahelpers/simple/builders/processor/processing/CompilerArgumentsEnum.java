@@ -69,8 +69,8 @@ public enum CompilerArgumentsEnum {
   /** Option for string format helper generation. */
   GENERATE_STRING_FORMAT_HELPERS("generateStringFormatHelpers"),
 
-  /** Option for mapper helper generation. */
-  GENERATE_MAPPER_HELPERS("generateMapperHelpers"),
+  /** Option for update helper generation. */
+  GENERATE_UPDATE_HELPERS("generateUpdateHelpers"),
 
   /** Option for add to collection helper generation. */
   GENERATE_ADD_TO_COLLECTION_HELPERS("generateAddToCollectionHelpers"),

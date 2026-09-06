@@ -27,12 +27,12 @@ package org.javahelpers.simple.builders.processor.generators.field;
 import static org.javahelpers.simple.builders.processor.analysis.JavaLangMapper.map2TypeName;
 import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.TRACKED_VALUE_TYPE;
 import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.addExampleChainFragmentTemplate;
+import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.generateBuilderMethodName;
 import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.getMethodAccessModifier;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.function.UnaryOperator;
-import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.generators.util.JavadocConstants;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
@@ -46,28 +46,28 @@ import org.javahelpers.simple.builders.processor.model.type.TypeNamePrimitive.Pr
 import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
 /**
- * Generates mapper helper methods for builder fields.
+ * Generates update helper methods for builder fields.
  *
  * <p>This generator is enabled by default and can be deactivated by setting the configuration flag
- * {@code generateMapperHelpers} to {@code DISABLED}. Each generated method accepts a {@code
+ * {@code generateUpdateHelpers} to {@code DISABLED}. Each generated method accepts a {@code
  * UnaryOperator<T>} and applies it to the field's current value. Throws {@link
  * IllegalStateException} if the value has not been set yet.
  *
  * <p>If a DTO already has a field whose setter has the same signature, the setter wins and the
- * mapper is skipped with a warning.
+ * update helper is skipped with a warning.
  *
  * <h3>Example to demonstrate the generated methods</h3>
  *
  * <pre>{@code
  * var result = PersonDtoBuilder.create()
  *     .name("  bob ")
- *     .mapName(String::trim)
+ *     .nameUpdate(String::trim)
  *     .quantity(10)
- *     .mapQuantity(Math::abs)
+ *     .quantityUpdate(Math::abs)
  *     .build();
  * }</pre>
  */
-public class MapperHelperGenerator implements MethodGenerator {
+public class UpdateHelperGenerator implements MethodGenerator {
 
   private static final int PRIORITY = 59;
 
@@ -78,29 +78,30 @@ public class MapperHelperGenerator implements MethodGenerator {
 
   @Override
   public boolean appliesTo(FieldDto field, TypeName dtoType, ProcessingContext context) {
-    return context.getConfiguration().shouldGenerateMapperHelpers();
+    return context.getConfiguration().shouldGenerateUpdateHelpers();
   }
 
   @Override
   public List<BuilderMethodDto> generateMethods(
       FieldDto field, TypeName builderType, ProcessingContext context) {
     String originalFieldName = field.getOriginalFieldName();
-    String parameterName = originalFieldName + "Mapper";
-    TypeNameGeneric mapperType =
+    String parameterName = originalFieldName + "Updater";
+    TypeNameGeneric updaterType =
         new TypeNameGeneric(map2TypeName(UnaryOperator.class), field.getFieldType());
 
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName(parameterName);
-    parameter.setParameterTypeName(mapperType);
+    parameter.setParameterTypeName(updaterType);
 
     BuilderMethodDto methodDto =
-        new BuilderMethodDto("map" + StringUtils.capitalize(originalFieldName), builderType);
+        new BuilderMethodDto(
+            generateBuilderMethodName(originalFieldName, context) + "Update", builderType);
     methodDto.setModifier(getMethodAccessModifier(context));
     methodDto.addParameter(parameter);
     methodDto.setCode(
         """
         if (!this.$fieldName:N.isSet()) {
-          throw new $illegalStateException:T("Cannot map '$originalFieldName:N' before it is set");
+          throw new $illegalStateException:T("Cannot update '$originalFieldName:N' before it is set");
         }
         this.$fieldName:N = $builderFieldWrapper:T.changedValue($param:N.apply(this.$fieldName:N.value()));
         return this;
@@ -115,7 +116,7 @@ public class MapperHelperGenerator implements MethodGenerator {
     methodDto.setJavadoc(
         new JavadocDto(
                 """
-                Transforms the current value of <code>%s</code> in place by applying the given operator, instead of reading it out, changing it and setting it again.
+                Updates the current value of <code>%s</code> in place by applying the given operator, instead of reading it out, changing it and setting it again.
                 Useful for adjustments relative to the current value, e.g. trimming, upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow.
                 The value must have been set before (directly or via an existing instance).
                 """
@@ -130,11 +131,11 @@ public class MapperHelperGenerator implements MethodGenerator {
                 "if <code>%s</code> has not been set yet".formatted(originalFieldName)));
 
     addExampleChainFragmentTemplate(
-        methodDto, "#{methodName}(" + getMapperExample(field.getFieldType()) + ")");
+        methodDto, "#{methodName}(" + getUpdateExample(field.getFieldType()) + ")");
     return Collections.singletonList(methodDto);
   }
 
-  private static String getMapperExample(TypeName fieldType) {
+  private static String getUpdateExample(TypeName fieldType) {
     String fullyQualifiedName = fieldType.getFullQualifiedName();
     if ("java.lang.String".equals(fullyQualifiedName)
         || "String".equals(fieldType.getClassName())) {

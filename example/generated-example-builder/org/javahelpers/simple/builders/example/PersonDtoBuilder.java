@@ -33,24 +33,24 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  *     .name("example value")
  *     .name("Hello %s", "World")
  *     .name(() -> "example value")
- *     .mapName(String::trim)
+ *     .nameUpdate(String::trim)
  *     .name(sb -> sb.append("text"))
  *     .birthdate(LocalDate.now())
  *     .birthdate(() -> LocalDate.now())
- *     .mapBirthdate(UnaryOperator.identity())
+ *     .birthdateUpdate(UnaryOperator.identity())
  *     .mannschaft(new MannschaftDto())
  *     .mannschaft(MannschaftDto::new)
- *     .mapMannschaft(UnaryOperator.identity())
+ *     .mannschaftUpdate(UnaryOperator.identity())
  *     .mannschaft(mannschaftDtoBuilder -> mannschaftDtoBuilder)
  *     .nickNames(List.of("example value"))
  *     .nickNames(() -> List.of("example value"))
- *     .mapNickNames(UnaryOperator.identity())
+ *     .nickNamesUpdate(UnaryOperator.identity())
  *     .nickNames(t -> t.add("example value"))
  *     .nickNames("example value", "example value")
  *     .add2NickNames("example value")
  *     .nickNames2("example value")
  *     .nickNames2(() -> "example value")
- *     .mapNickNames2(String::trim)
+ *     .nickNames2Update(String::trim)
  *     .nickNames2("example value")
  *     .build();
  * }</pre>
@@ -178,6 +178,32 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
   }
 
   /**
+   * Updates the current value of <code>birthdate</code> in place by applying the given operator, instead of reading it
+   * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance).
+   * <p>
+   * Generated from setter {@link PersonDto#setBirthdate(LocalDate) setBirthdate(LocalDate birthdate)}
+   *
+   * <h4>Example:</h4>
+   *
+   * <pre>{@code
+   * builder.birthdateUpdate(UnaryOperator.identity());
+   * }</pre>
+   *
+   * @param birthdateUpdater operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>birthdate</code> has not been set yet
+   */
+  public PersonDtoBuilder birthdateUpdate(UnaryOperator<LocalDate> birthdateUpdater) {
+    if (!this.birthdate.isSet()) {
+      throw new IllegalStateException("Cannot update 'birthdate' before it is set");
+    }
+    this.birthdate = changedValue(birthdateUpdater.apply(this.birthdate.value()));
+    return this;
+  }
+
+  /**
    * Sets the value for <code>mannschaft</code>.
    * <p>
    * Generated from setter {@link PersonDto#setMannschaft(MannschaftDto) setMannschaft(MannschaftDto mannschaft)}
@@ -239,132 +265,28 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
   }
 
   /**
-   * Transforms the current value of <code>birthdate</code> in place by applying the given operator, instead of reading
-   * it out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
-   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance).
-   * <p>
-   * Generated from setter {@link PersonDto#setBirthdate(LocalDate) setBirthdate(LocalDate birthdate)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.mapBirthdate(UnaryOperator.identity());
-   * }</pre>
-   * 
-   * @param birthdateMapper operator applied to the current value; its result becomes the new value
-   * @return current instance of builder
-   * @throws IllegalStateException if <code>birthdate</code> has not been set yet
-   */
-  public PersonDtoBuilder mapBirthdate(UnaryOperator<LocalDate> birthdateMapper) {
-    if (!this.birthdate.isSet()) {
-      throw new IllegalStateException("Cannot map 'birthdate' before it is set");
-    }
-    this.birthdate = changedValue(birthdateMapper.apply(this.birthdate.value()));
-    return this;
-  }
-
-  /**
-   * Transforms the current value of <code>mannschaft</code> in place by applying the given operator, instead of reading
-   * it out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
-   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance).
-   * <p>
-   * Generated from setter {@link PersonDto#setMannschaft(MannschaftDto) setMannschaft(MannschaftDto mannschaft)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.mapMannschaft(UnaryOperator.identity());
-   * }</pre>
-   * 
-   * @param mannschaftMapper operator applied to the current value; its result becomes the new value
-   * @return current instance of builder
-   * @throws IllegalStateException if <code>mannschaft</code> has not been set yet
-   */
-  public PersonDtoBuilder mapMannschaft(UnaryOperator<MannschaftDto> mannschaftMapper) {
-    if (!this.mannschaft.isSet()) {
-      throw new IllegalStateException("Cannot map 'mannschaft' before it is set");
-    }
-    this.mannschaft = changedValue(mannschaftMapper.apply(this.mannschaft.value()));
-    return this;
-  }
-
-  /**
-   * Transforms the current value of <code>name</code> in place by applying the given operator, instead of reading it
+   * Updates the current value of <code>mannschaft</code> in place by applying the given operator, instead of reading it
    * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
    * value must have been set before (directly or via an existing instance).
    * <p>
-   * Generated from parameter in constructor {@link PersonDto#PersonDto(String) PersonDto(String name)}
-   * 
+   * Generated from setter {@link PersonDto#setMannschaft(MannschaftDto) setMannschaft(MannschaftDto mannschaft)}
+   *
    * <h4>Example:</h4>
-   * 
+   *
    * <pre>{@code
-   * builder.mapName(String::trim);
+   * builder.mannschaftUpdate(UnaryOperator.identity());
    * }</pre>
-   * 
-   * @param nameMapper operator applied to the current value; its result becomes the new value
+   *
+   * @param mannschaftUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
-   * @throws IllegalStateException if <code>name</code> has not been set yet
+   * @throws IllegalStateException if <code>mannschaft</code> has not been set yet
    */
-  public PersonDtoBuilder mapName(UnaryOperator<String> nameMapper) {
-    if (!this.name.isSet()) {
-      throw new IllegalStateException("Cannot map 'name' before it is set");
+  public PersonDtoBuilder mannschaftUpdate(UnaryOperator<MannschaftDto> mannschaftUpdater) {
+    if (!this.mannschaft.isSet()) {
+      throw new IllegalStateException("Cannot update 'mannschaft' before it is set");
     }
-    this.name = changedValue(nameMapper.apply(this.name.value()));
-    return this;
-  }
-
-  /**
-   * Transforms the current value of <code>nickNames</code> in place by applying the given operator, instead of reading
-   * it out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
-   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance).
-   * <p>
-   * Generated from setter {@link PersonDto#setNickNames(List) setNickNames(List<String> nickNames)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.mapNickNames(UnaryOperator.identity());
-   * }</pre>
-   * 
-   * @param nickNamesMapper operator applied to the current value; its result becomes the new value
-   * @return current instance of builder
-   * @throws IllegalStateException if <code>nickNames</code> has not been set yet
-   */
-  public PersonDtoBuilder mapNickNames(UnaryOperator<List<String>> nickNamesMapper) {
-    if (!this.nickNames.isSet()) {
-      throw new IllegalStateException("Cannot map 'nickNames' before it is set");
-    }
-    this.nickNames = changedValue(nickNamesMapper.apply(this.nickNames.value()));
-    return this;
-  }
-
-  /**
-   * Transforms the current value of <code>nickNames2</code> in place by applying the given operator, instead of reading
-   * it out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
-   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance).
-   * <p>
-   * Generated from setter {@link PersonDto#setNickNames2(String) setNickNames2(String nickNames2)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.mapNickNames2(String::trim);
-   * }</pre>
-   * 
-   * @param nickNames2Mapper operator applied to the current value; its result becomes the new value
-   * @return current instance of builder
-   * @throws IllegalStateException if <code>nickNames2</code> has not been set yet
-   */
-  public PersonDtoBuilder mapNickNames2(UnaryOperator<String[]> nickNames2Mapper) {
-    if (!this.nickNames2.isSet()) {
-      throw new IllegalStateException("Cannot map 'nickNames2' before it is set");
-    }
-    this.nickNames2 = changedValue(nickNames2Mapper.apply(this.nickNames2.value()));
+    this.mannschaft = changedValue(mannschaftUpdater.apply(this.mannschaft.value()));
     return this;
   }
 
@@ -445,6 +367,32 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
    */
   public PersonDtoBuilder name(String format, Object... args) {
     this.name = changedValue(String.format(format, args));
+    return this;
+  }
+
+  /**
+   * Updates the current value of <code>name</code> in place by applying the given operator, instead of reading it out,
+   * changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance).
+   * <p>
+   * Generated from parameter in constructor {@link PersonDto#PersonDto(String) PersonDto(String name)}
+   *
+   * <h4>Example:</h4>
+   *
+   * <pre>{@code
+   * builder.nameUpdate(String::trim);
+   * }</pre>
+   *
+   * @param nameUpdater operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>name</code> has not been set yet
+   */
+  public PersonDtoBuilder nameUpdate(UnaryOperator<String> nameUpdater) {
+    if (!this.name.isSet()) {
+      throw new IllegalStateException("Cannot update 'name' before it is set");
+    }
+    this.name = changedValue(nameUpdater.apply(this.name.value()));
     return this;
   }
 
@@ -602,6 +550,58 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
    */
   public PersonDtoBuilder nickNames2(Supplier<String[]> nickNames2Supplier) {
     this.nickNames2 = changedValue(nickNames2Supplier.get());
+    return this;
+  }
+
+  /**
+   * Updates the current value of <code>nickNames2</code> in place by applying the given operator, instead of reading it
+   * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance).
+   * <p>
+   * Generated from setter {@link PersonDto#setNickNames2(String) setNickNames2(String nickNames2)}
+   *
+   * <h4>Example:</h4>
+   *
+   * <pre>{@code
+   * builder.nickNames2Update(String::trim);
+   * }</pre>
+   *
+   * @param nickNames2Updater operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>nickNames2</code> has not been set yet
+   */
+  public PersonDtoBuilder nickNames2Update(UnaryOperator<String[]> nickNames2Updater) {
+    if (!this.nickNames2.isSet()) {
+      throw new IllegalStateException("Cannot update 'nickNames2' before it is set");
+    }
+    this.nickNames2 = changedValue(nickNames2Updater.apply(this.nickNames2.value()));
+    return this;
+  }
+
+  /**
+   * Updates the current value of <code>nickNames</code> in place by applying the given operator, instead of reading it
+   * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance).
+   * <p>
+   * Generated from setter {@link PersonDto#setNickNames(List) setNickNames(List<String> nickNames)}
+   *
+   * <h4>Example:</h4>
+   *
+   * <pre>{@code
+   * builder.nickNamesUpdate(UnaryOperator.identity());
+   * }</pre>
+   *
+   * @param nickNamesUpdater operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>nickNames</code> has not been set yet
+   */
+  public PersonDtoBuilder nickNamesUpdate(UnaryOperator<List<String>> nickNamesUpdater) {
+    if (!this.nickNames.isSet()) {
+      throw new IllegalStateException("Cannot update 'nickNames' before it is set");
+    }
+    this.nickNames = changedValue(nickNamesUpdater.apply(this.nickNames.value()));
     return this;
   }
 

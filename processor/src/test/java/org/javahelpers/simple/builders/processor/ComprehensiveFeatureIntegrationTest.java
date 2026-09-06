@@ -1289,9 +1289,9 @@ class ComprehensiveFeatureIntegrationTest {
     ProcessorAsserts.assertContaining(
         generatedCode,
         "import java.util.function.UnaryOperator;",
-        "public PersonDtoBuilder mapName(UnaryOperator<String> nameMapper)",
-        "public PersonDtoBuilder mapAge(UnaryOperator<Integer> ageMapper)",
-        "public PersonDtoBuilder mapEmail(UnaryOperator<Optional<String>> emailMapper)",
-        "public PersonDtoBuilder mapPhoneNumbers(UnaryOperator<LinkedList<String>> phoneNumbersMapper)");
+        "public PersonDtoBuilder nameUpdate(UnaryOperator<String> nameUpdater)",
+        "public PersonDtoBuilder ageUpdate(UnaryOperator<Integer> ageUpdater)",
+        "public PersonDtoBuilder emailUpdate(UnaryOperator<Optional<String>> emailUpdater)",
+        "public PersonDtoBuilder phoneNumbersUpdate(UnaryOperator<LinkedList<String>> phoneNumbersUpdater)");
   }
 }

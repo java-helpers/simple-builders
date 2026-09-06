@@ -359,8 +359,8 @@ class FormattingModeTest {
     ProcessorAsserts.assertContaining(
         generatedCode,
         "import java.util.function.UnaryOperator;",
-        "public FormatTestDtoBuilder mapName(UnaryOperator<String> nameMapper)",
-        "public FormatTestDtoBuilder mapCount(UnaryOperator<Integer> countMapper)");
+        "public FormatTestDtoBuilder nameUpdate(UnaryOperator<String> nameUpdater)",
+        "public FormatTestDtoBuilder countUpdate(UnaryOperator<Integer> countUpdater)");
   }
 
   @Test
@@ -443,7 +443,7 @@ class FormattingModeTest {
     ProcessorAsserts.assertContaining(
         generatedCode,
         "import java.util.function.UnaryOperator;",
-        " *     .mapValue(String::trim)",
+        " *     .valueUpdate(String::trim)",
         "public class DefaultFormatDtoBuilder implements IBuilderBase<DefaultFormatDto> {");
 
     // Section 2: class body — the closing brace at 0 indentation anchors the common prefix
@@ -667,7 +667,7 @@ class FormattingModeTest {
         }""";
     ProcessorAsserts.assertContaining(
         generatedCode,
-        "public DefaultFormatDtoBuilder mapValue(UnaryOperator<String> valueMapper)",
+        "public DefaultFormatDtoBuilder valueUpdate(UnaryOperator<String> valueUpdater)",
         "return this;");
   }
 }

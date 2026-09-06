@@ -101,17 +101,17 @@ class BuilderJavadocExampleTest {
         * BookDto result = BookDtoBuilder.create()
         *     .pages(42)
         *     .pages(() -> 42)
-        *     .mapPages(Math::abs)
+        *     .pagesUpdate(Math::abs)
         *     .tags(List.of("example value"))
         *     .tags(() -> List.of("example value"))
-        *     .mapTags(UnaryOperator.identity())
+        *     .tagsUpdate(UnaryOperator.identity())
         *     .tags(t -> t.add("example value"))
         *     .tags("example value", "example value")
         *     .add2Tags("example value")
         *     .title("example value")
         *     .title("Hello %s", "World")
         *     .title(() -> "example value")
-        *     .mapTitle(String::trim)
+        *     .titleUpdate(String::trim)
         *     .title(sb -> sb.append("text"))
         *     .build();
         * }</pre>
@@ -388,11 +388,11 @@ class BuilderJavadocExampleTest {
         """
         * <pre>{@code
         * MixedDto result = MixedDtoBuilder.create()
-        *     .mapHelper(UnaryOperator.identity())
+        *     .helperUpdate(UnaryOperator.identity())
         *     .title("example value")
         *     .title("Hello %s", "World")
         *     .title(() -> "example value")
-        *     .mapTitle(String::trim)
+        *     .titleUpdate(String::trim)
         *     .title(sb -> sb.append("text"))
         *     .build();
         * }</pre>

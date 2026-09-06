@@ -66,7 +66,7 @@ class ConfigurationProcessingTest {
             // Helper method generation
             .generateVarArgsHelpers(OptionState.ENABLED)
             .generateStringFormatHelpers(OptionState.ENABLED)
-            .generateMapperHelpers(OptionState.ENABLED)
+            .generateUpdateHelpers(OptionState.ENABLED)
             .generateUnboxedOptional(OptionState.ENABLED)
             .copyTypeAnnotations(OptionState.ENABLED)
             // Collection builder options
@@ -103,7 +103,7 @@ class ConfigurationProcessingTest {
     assertEquals(AccessModifier.PACKAGE_PRIVATE, config.getMethodAccess());
     assertEquals(OptionState.ENABLED, config.generateVarArgsHelpers());
     assertEquals(OptionState.ENABLED, config.generateStringFormatHelpers());
-    assertEquals(OptionState.ENABLED, config.generateMapperHelpers());
+    assertEquals(OptionState.ENABLED, config.generateUpdateHelpers());
     assertEquals(OptionState.ENABLED, config.generateUnboxedOptional());
     assertEquals(OptionState.ENABLED, config.copyTypeAnnotations());
     assertEquals(OptionState.ENABLED, config.usingArrayListBuilder());
@@ -212,7 +212,7 @@ class ConfigurationProcessingTest {
                 "-Asimplebuilder.methodAccess=PACKAGE_PRIVATE",
                 "-Asimplebuilder.generateVarArgsHelpers=false",
                 "-Asimplebuilder.generateStringFormatHelpers=false",
-                "-Asimplebuilder.generateMapperHelpers=false",
+                "-Asimplebuilder.generateUpdateHelpers=false",
                 "-Asimplebuilder.generateUnboxedOptional=false",
                 "-Asimplebuilder.copyTypeAnnotations=false",
                 "-Asimplebuilder.usingArrayListBuilder=false",
@@ -501,7 +501,7 @@ class ConfigurationProcessingTest {
     ProcessorAsserts.assertContaining(
         generatedCode,
         "import java.util.function.UnaryOperator;",
-        "public PersonDtoBuilder mapName(UnaryOperator<String> nameMapper)");
+        "public PersonDtoBuilder nameUpdate(UnaryOperator<String> nameUpdater)");
   }
 
   /**

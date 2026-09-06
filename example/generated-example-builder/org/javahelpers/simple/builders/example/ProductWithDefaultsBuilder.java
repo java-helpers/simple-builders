@@ -29,19 +29,19 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  *     .name("example value")
  *     .name("Hello %s", "World")
  *     .name(() -> "example value")
- *     .mapName(String::trim)
+ *     .nameUpdate(String::trim)
  *     .name(sb -> sb.append("text"))
  *     .price(3.14)
  *     .price(() -> 3.14)
- *     .mapPrice(Math::abs)
+ *     .priceUpdate(Math::abs)
  *     .category("example value")
  *     .category("Hello %s", "World")
  *     .category(() -> "example value")
- *     .mapCategory(String::trim)
+ *     .categoryUpdate(String::trim)
  *     .category(sb -> sb.append("text"))
  *     .active(true)
  *     .active(() -> true)
- *     .mapActive(UnaryOperator.identity())
+ *     .activeUpdate(UnaryOperator.identity())
  *     .build();
  * }</pre>
  */
@@ -142,6 +142,34 @@ public class ProductWithDefaultsBuilder implements IBuilderBase<ProductWithDefau
   }
 
   /**
+   * Updates the current value of <code>active</code> in place by applying the given operator, instead of reading it
+   * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance).
+   * <p>
+   * Generated from parameter in constructor
+   * {@link ProductWithDefaults#ProductWithDefaults(String, double, String, boolean) ProductWithDefaults(String name,
+   * double price, String category, boolean active)}
+   *
+   * <h4>Example:</h4>
+   *
+   * <pre>{@code
+   * builder.activeUpdate(UnaryOperator.identity());
+   * }</pre>
+   *
+   * @param activeUpdater operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>active</code> has not been set yet
+   */
+  public ProductWithDefaultsBuilder activeUpdate(UnaryOperator<Boolean> activeUpdater) {
+    if (!this.active.isSet()) {
+      throw new IllegalStateException("Cannot update 'active' before it is set");
+    }
+    this.active = changedValue(activeUpdater.apply(this.active.value()));
+    return this;
+  }
+
+  /**
    * Sets the value for <code>category</code>.
    * <p>
    * Generated from parameter in constructor
@@ -230,7 +258,7 @@ public class ProductWithDefaultsBuilder implements IBuilderBase<ProductWithDefau
   }
 
   /**
-   * Transforms the current value of <code>active</code> in place by applying the given operator, instead of reading it
+   * Updates the current value of <code>category</code> in place by applying the given operator, instead of reading it
    * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
    * value must have been set before (directly or via an existing instance).
@@ -238,106 +266,22 @@ public class ProductWithDefaultsBuilder implements IBuilderBase<ProductWithDefau
    * Generated from parameter in constructor
    * {@link ProductWithDefaults#ProductWithDefaults(String, double, String, boolean) ProductWithDefaults(String name,
    * double price, String category, boolean active)}
-   * 
+   *
    * <h4>Example:</h4>
-   * 
+   *
    * <pre>{@code
-   * builder.mapActive(UnaryOperator.identity());
+   * builder.categoryUpdate(String::trim);
    * }</pre>
-   * 
-   * @param activeMapper operator applied to the current value; its result becomes the new value
-   * @return current instance of builder
-   * @throws IllegalStateException if <code>active</code> has not been set yet
-   */
-  public ProductWithDefaultsBuilder mapActive(UnaryOperator<Boolean> activeMapper) {
-    if (!this.active.isSet()) {
-      throw new IllegalStateException("Cannot map 'active' before it is set");
-    }
-    this.active = changedValue(activeMapper.apply(this.active.value()));
-    return this;
-  }
-
-  /**
-   * Transforms the current value of <code>category</code> in place by applying the given operator, instead of reading
-   * it out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
-   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance).
-   * <p>
-   * Generated from parameter in constructor
-   * {@link ProductWithDefaults#ProductWithDefaults(String, double, String, boolean) ProductWithDefaults(String name,
-   * double price, String category, boolean active)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.mapCategory(String::trim);
-   * }</pre>
-   * 
-   * @param categoryMapper operator applied to the current value; its result becomes the new value
+   *
+   * @param categoryUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
    * @throws IllegalStateException if <code>category</code> has not been set yet
    */
-  public ProductWithDefaultsBuilder mapCategory(UnaryOperator<String> categoryMapper) {
+  public ProductWithDefaultsBuilder categoryUpdate(UnaryOperator<String> categoryUpdater) {
     if (!this.category.isSet()) {
-      throw new IllegalStateException("Cannot map 'category' before it is set");
+      throw new IllegalStateException("Cannot update 'category' before it is set");
     }
-    this.category = changedValue(categoryMapper.apply(this.category.value()));
-    return this;
-  }
-
-  /**
-   * Transforms the current value of <code>name</code> in place by applying the given operator, instead of reading it
-   * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
-   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance).
-   * <p>
-   * Generated from parameter in constructor
-   * {@link ProductWithDefaults#ProductWithDefaults(String, double, String, boolean) ProductWithDefaults(String name,
-   * double price, String category, boolean active)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.mapName(String::trim);
-   * }</pre>
-   * 
-   * @param nameMapper operator applied to the current value; its result becomes the new value
-   * @return current instance of builder
-   * @throws IllegalStateException if <code>name</code> has not been set yet
-   */
-  public ProductWithDefaultsBuilder mapName(UnaryOperator<String> nameMapper) {
-    if (!this.name.isSet()) {
-      throw new IllegalStateException("Cannot map 'name' before it is set");
-    }
-    this.name = changedValue(nameMapper.apply(this.name.value()));
-    return this;
-  }
-
-  /**
-   * Transforms the current value of <code>price</code> in place by applying the given operator, instead of reading it
-   * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
-   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance).
-   * <p>
-   * Generated from parameter in constructor
-   * {@link ProductWithDefaults#ProductWithDefaults(String, double, String, boolean) ProductWithDefaults(String name,
-   * double price, String category, boolean active)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.mapPrice(Math::abs);
-   * }</pre>
-   * 
-   * @param priceMapper operator applied to the current value; its result becomes the new value
-   * @return current instance of builder
-   * @throws IllegalStateException if <code>price</code> has not been set yet
-   */
-  public ProductWithDefaultsBuilder mapPrice(UnaryOperator<Double> priceMapper) {
-    if (!this.price.isSet()) {
-      throw new IllegalStateException("Cannot map 'price' before it is set");
-    }
-    this.price = changedValue(priceMapper.apply(this.price.value()));
+    this.category = changedValue(categoryUpdater.apply(this.category.value()));
     return this;
   }
 
@@ -430,6 +374,34 @@ public class ProductWithDefaultsBuilder implements IBuilderBase<ProductWithDefau
   }
 
   /**
+   * Updates the current value of <code>name</code> in place by applying the given operator, instead of reading it out,
+   * changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance).
+   * <p>
+   * Generated from parameter in constructor
+   * {@link ProductWithDefaults#ProductWithDefaults(String, double, String, boolean) ProductWithDefaults(String name,
+   * double price, String category, boolean active)}
+   *
+   * <h4>Example:</h4>
+   *
+   * <pre>{@code
+   * builder.nameUpdate(String::trim);
+   * }</pre>
+   *
+   * @param nameUpdater operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>name</code> has not been set yet
+   */
+  public ProductWithDefaultsBuilder nameUpdate(UnaryOperator<String> nameUpdater) {
+    if (!this.name.isSet()) {
+      throw new IllegalStateException("Cannot update 'name' before it is set");
+    }
+    this.name = changedValue(nameUpdater.apply(this.name.value()));
+    return this;
+  }
+
+  /**
    * Sets the value for <code>price</code>.
    * <p>
    * Generated from parameter in constructor
@@ -468,6 +440,34 @@ public class ProductWithDefaultsBuilder implements IBuilderBase<ProductWithDefau
    */
   public ProductWithDefaultsBuilder price(Supplier<Double> priceSupplier) {
     this.price = changedValue(priceSupplier.get());
+    return this;
+  }
+
+  /**
+   * Updates the current value of <code>price</code> in place by applying the given operator, instead of reading it out,
+   * changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance).
+   * <p>
+   * Generated from parameter in constructor
+   * {@link ProductWithDefaults#ProductWithDefaults(String, double, String, boolean) ProductWithDefaults(String name,
+   * double price, String category, boolean active)}
+   *
+   * <h4>Example:</h4>
+   *
+   * <pre>{@code
+   * builder.priceUpdate(Math::abs);
+   * }</pre>
+   *
+   * @param priceUpdater operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>price</code> has not been set yet
+   */
+  public ProductWithDefaultsBuilder priceUpdate(UnaryOperator<Double> priceUpdater) {
+    if (!this.price.isSet()) {
+      throw new IllegalStateException("Cannot update 'price' before it is set");
+    }
+    this.price = changedValue(priceUpdater.apply(this.price.value()));
     return this;
   }
 

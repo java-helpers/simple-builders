@@ -28,7 +28,7 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  *     .name("example value")
  *     .name("Hello %s", "World")
  *     .name(() -> "example value")
- *     .mapName(String::trim)
+ *     .nameUpdate(String::trim)
  *     .name(sb -> sb.append("text"))
  *     .build();
  * }</pre>
@@ -70,32 +70,6 @@ public class SponsorDtoBuilder implements IBuilderBase<SponsorDto> {
    */
   public static SponsorDtoBuilder create() {
     return new SponsorDtoBuilder();
-  }
-
-  /**
-   * Transforms the current value of <code>name</code> in place by applying the given operator, instead of reading it
-   * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
-   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance).
-   * <p>
-   * Generated from setter {@link SponsorDto#setName(String) setName(String name)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.mapName(String::trim);
-   * }</pre>
-   * 
-   * @param nameMapper operator applied to the current value; its result becomes the new value
-   * @return current instance of builder
-   * @throws IllegalStateException if <code>name</code> has not been set yet
-   */
-  public SponsorDtoBuilder mapName(UnaryOperator<String> nameMapper) {
-    if (!this.name.isSet()) {
-      throw new IllegalStateException("Cannot map 'name' before it is set");
-    }
-    this.name = changedValue(nameMapper.apply(this.name.value()));
-    return this;
   }
 
   /**
@@ -175,6 +149,32 @@ public class SponsorDtoBuilder implements IBuilderBase<SponsorDto> {
    */
   public SponsorDtoBuilder name(String format, Object... args) {
     this.name = changedValue(String.format(format, args));
+    return this;
+  }
+
+  /**
+   * Updates the current value of <code>name</code> in place by applying the given operator, instead of reading it out,
+   * changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance).
+   * <p>
+   * Generated from setter {@link SponsorDto#setName(String) setName(String name)}
+   *
+   * <h4>Example:</h4>
+   *
+   * <pre>{@code
+   * builder.nameUpdate(String::trim);
+   * }</pre>
+   *
+   * @param nameUpdater operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>name</code> has not been set yet
+   */
+  public SponsorDtoBuilder nameUpdate(UnaryOperator<String> nameUpdater) {
+    if (!this.name.isSet()) {
+      throw new IllegalStateException("Cannot update 'name' before it is set");
+    }
+    this.name = changedValue(nameUpdater.apply(this.name.value()));
     return this;
   }
 

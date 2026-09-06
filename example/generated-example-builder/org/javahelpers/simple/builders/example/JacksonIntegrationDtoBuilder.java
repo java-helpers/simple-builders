@@ -30,11 +30,11 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  *     .name("example value")
  *     .name("Hello %s", "World")
  *     .name(() -> "example value")
- *     .mapName(String::trim)
+ *     .nameUpdate(String::trim)
  *     .name(sb -> sb.append("text"))
  *     .age(42)
  *     .age(() -> 42)
- *     .mapAge(Math::abs)
+ *     .ageUpdate(Math::abs)
  *     .build();
  * }</pre>
  */
@@ -124,56 +124,29 @@ public class JacksonIntegrationDtoBuilder implements IBuilderBase<JacksonIntegra
   }
 
   /**
-   * Transforms the current value of <code>age</code> in place by applying the given operator, instead of reading it
-   * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * Updates the current value of <code>age</code> in place by applying the given operator, instead of reading it out,
+   * changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
    * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from parameter in constructor {@link JacksonIntegrationDto#JacksonIntegrationDto(String, int)
    * JacksonIntegrationDto(String name, int age)}
-   * 
+   *
    * <h4>Example:</h4>
-   * 
+   *
    * <pre>{@code
-   * builder.mapAge(Math::abs);
+   * builder.ageUpdate(Math::abs);
    * }</pre>
-   * 
-   * @param ageMapper operator applied to the current value; its result becomes the new value
+   *
+   * @param ageUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
    * @throws IllegalStateException if <code>age</code> has not been set yet
    */
-  public JacksonIntegrationDtoBuilder mapAge(UnaryOperator<Integer> ageMapper) {
+  public JacksonIntegrationDtoBuilder ageUpdate(UnaryOperator<Integer> ageUpdater) {
     if (!this.age.isSet()) {
-      throw new IllegalStateException("Cannot map 'age' before it is set");
+      throw new IllegalStateException("Cannot update 'age' before it is set");
     }
-    this.age = changedValue(ageMapper.apply(this.age.value()));
-    return this;
-  }
-
-  /**
-   * Transforms the current value of <code>name</code> in place by applying the given operator, instead of reading it
-   * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
-   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance).
-   * <p>
-   * Generated from parameter in constructor {@link JacksonIntegrationDto#JacksonIntegrationDto(String, int)
-   * JacksonIntegrationDto(String name, int age)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.mapName(String::trim);
-   * }</pre>
-   * 
-   * @param nameMapper operator applied to the current value; its result becomes the new value
-   * @return current instance of builder
-   * @throws IllegalStateException if <code>name</code> has not been set yet
-   */
-  public JacksonIntegrationDtoBuilder mapName(UnaryOperator<String> nameMapper) {
-    if (!this.name.isSet()) {
-      throw new IllegalStateException("Cannot map 'name' before it is set");
-    }
-    this.name = changedValue(nameMapper.apply(this.name.value()));
+    this.age = changedValue(ageUpdater.apply(this.age.value()));
     return this;
   }
 
@@ -258,6 +231,33 @@ public class JacksonIntegrationDtoBuilder implements IBuilderBase<JacksonIntegra
    */
   public JacksonIntegrationDtoBuilder name(String format, Object... args) {
     this.name = changedValue(String.format(format, args));
+    return this;
+  }
+
+  /**
+   * Updates the current value of <code>name</code> in place by applying the given operator, instead of reading it out,
+   * changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance).
+   * <p>
+   * Generated from parameter in constructor {@link JacksonIntegrationDto#JacksonIntegrationDto(String, int)
+   * JacksonIntegrationDto(String name, int age)}
+   *
+   * <h4>Example:</h4>
+   *
+   * <pre>{@code
+   * builder.nameUpdate(String::trim);
+   * }</pre>
+   *
+   * @param nameUpdater operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>name</code> has not been set yet
+   */
+  public JacksonIntegrationDtoBuilder nameUpdate(UnaryOperator<String> nameUpdater) {
+    if (!this.name.isSet()) {
+      throw new IllegalStateException("Cannot update 'name' before it is set");
+    }
+    this.name = changedValue(nameUpdater.apply(this.name.value()));
     return this;
   }
 
