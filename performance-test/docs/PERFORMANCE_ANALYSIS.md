@@ -127,3 +127,81 @@ performance-test/
   "wallTimeOnly": true
 }
 ```
+
+## Benchmark Results
+
+The following results are from a 10-iteration stability run using
+[`run_full_comparison.py`](../scripts/run_full_comparison.py)
+`--runs 10 --no-tracking --label-suffix stability`.
+All frameworks were measured with wall-time only (no JSON tracking overhead) to
+ensure a fair comparison. Note that the builder counts differ: Simple Builders
+and Lombok generate one builder per class, while RecordBuilder generates fewer
+(295) because the test dataset contains fewer records than plain classes.
+
+### Wall-Time Comparison (10 runs, wall-time only)
+
+| Framework | Builders | Wall Avg (s) | Wall Min (s) | Wall Max (s) | Per Builder (ms) |
+|-----------|----------|-------------|-------------|-------------|-----------------|
+| Simple Builder (`@SimpleBuilder`) | 1079 | 53.1 | 52.8 | 53.4 | 48.0 |
+| Simple Minimal Builder (`@SimpleMinimalBuilder`) | 1079 | 22.0 | 21.5 | 22.4 | 19.3 |
+| RecordBuilder (`@RecordBuilder`) | 295 | 6.6 | 6.5 | 6.7 | 18.5 |
+| Lombok (`@Builder`) | 1077 | 6.9 | 6.7 | 7.1 | 5.3 |
+
+Key observations:
+
+- **Lombok** is fastest per builder but instruments bytecode at compile time
+  rather than generating separate source files, so the comparison is not
+  apples-to-apples.
+- **RecordBuilder** generates far fewer builders (295 vs 1079) because the test
+  dataset contains fewer records than plain classes. However, its per-builder
+  cost (~18.5 ms) is nearly identical to Simple Minimal Builder (~19.3 ms) — the
+  wall-time difference is almost entirely due to the lower builder count, not
+  per-builder efficiency.
+- **Simple Minimal Builder** is ~2.4x faster than Simple Builder. The speedup
+  comes from two factors: fewer generated methods (no collection helpers,
+  conditional logic, supplier/consumer setters, Javadoc, etc.) and
+  correspondingly less source formatting work.
+- **Simple Builder** is the slowest due to its full feature set. The per-builder
+  cost (~48 ms) is dominated by code generation and formatting.
+
+### Processor-Internal Breakdown (with JSON tracking)
+
+For deeper insight into where time is spent inside the Simple Builders
+processor, enable the processor's internal performance tracker with
+`-Asimplebuilder.performanceTracking=true`. This adds minor overhead but
+provides phase-level breakdowns in the JSON report.
+
+A representative 10-run measurement of Simple Builder (full features, JDT
+formatting) shows the following phase distribution:
+
+| Phase | Avg (s) | Share |
+|-------|---------|-------|
+| Config Resolution | 0.08 | <1% |
+| Builder Def Extraction | 0.73 | ~2% |
+| DTO Mapping | 0.03 | <1% |
+| Code Generation | 42.3 | ~93% |
+| **Processor Total** | **45.3** | |
+| **Wall Total** | **54.0** | |
+
+Code generation dominates at ~93% of processor time. This includes Roaster
+source construction and source formatting. A 5-run comparison of the three
+formatting modes (Simple Builder, 1079 builders) shows the following:
+
+| Formatting Mode | Wall Avg (s) | Per Builder (ms) | vs NONE |
+|-----------------|-------------|-----------------|---------|
+| NONE (raw Roaster) | 74.8 | 67.6 | — |
+| LIGHTWEIGHT | 78.5 | 71.1 | +5% |
+| JDT (default) | 81.8 | 74.1 | +9% |
+
+Formatting adds ~7s total (~6.5 ms/builder) for JDT over NONE. The lightweight
+formatter adds about half that cost. While measurable, formatting is a
+secondary factor compared to the difference in generated method count between
+Simple Builder and Simple Minimal Builder (~31s), which is driven primarily by
+the number of methods and collection helpers generated.
+
+### Running the Benchmarks
+
+To reproduce the wall-time comparison, see [Quick Start](#quick-start) above.
+For processor-internal breakdowns, run
+[`run_performance_measurement.py`](../scripts/run_performance_measurement.py)
+without `--no-tracking` to enable JSON reporting.
