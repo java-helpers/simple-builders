@@ -29,16 +29,16 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  *     .id("example value")
  *     .id("Hello %s", "World")
  *     .id(() -> "example value")
- *     .idUpdate(String::trim)
  *     .id(sb -> sb.append("text"))
+ *     .idUpdate(String::trim)
  *     .priority(42)
  *     .priority(() -> 42)
  *     .priorityUpdate(Math::abs)
  *     .status("example value")
  *     .status("Hello %s", "World")
  *     .status(() -> "example value")
- *     .statusUpdate(String::trim)
  *     .status(sb -> sb.append("text"))
+ *     .statusUpdate(String::trim)
  *     .build();
  * }</pre>
  */

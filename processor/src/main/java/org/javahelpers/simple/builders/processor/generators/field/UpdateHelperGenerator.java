@@ -69,7 +69,7 @@ import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
  */
 public class UpdateHelperGenerator implements MethodGenerator {
 
-  private static final int PRIORITY = 59;
+  private static final int PRIORITY = 20;
 
   @Override
   public int getPriority() {

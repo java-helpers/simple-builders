@@ -31,10 +31,10 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  *     .name("example value")
  *     .name("Hello %s", "World")
  *     .name(() -> "example value")
- *     .nameUpdate(String::trim)
  *     .name(sb -> sb.append("text"))
- *     .sponsorenUpdate(UnaryOperator.identity())
+ *     .nameUpdate(String::trim)
  *     .sponsoren(t -> t.add(sponsorDtoBuilder -> sponsorDtoBuilder))
+ *     .sponsorenUpdate(UnaryOperator.identity())
  *     .build();
  * }</pre>
  */

@@ -39,8 +39,10 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 import javax.annotation.processing.Processor;
 import javax.tools.JavaCompiler;
@@ -150,6 +152,63 @@ class UpdateHelperGeneratorTest {
       Object person = build.invoke(builder);
       assertEquals("BOB", person.getClass().getMethod("name").invoke(person));
       assertEquals(20, person.getClass().getMethod("quantity").invoke(person));
+    }
+  }
+
+  @Test
+  void updateHelpers_RuntimeListFieldCanBeUpdatedAfterDirectSetter() throws Exception {
+    try (URLClassLoader classLoader = compileRuntimeList()) {
+      Class<?> builderClass = classLoader.loadClass("test.ListDtoBuilder");
+      Object builder = builderClass.getMethod("create").invoke(null);
+      Method tags = builderClass.getMethod("tags", List.class);
+      Method tagsUpdate = builderClass.getMethod("tagsUpdate", UnaryOperator.class);
+      Method build = builderClass.getMethod("build");
+
+      tags.invoke(builder, List.of("a"));
+      tagsUpdate.invoke(
+          builder,
+          (UnaryOperator<List<String>>)
+              values -> {
+                var updated = new ArrayList<>(values);
+                updated.add("b");
+                return updated;
+              });
+
+      Object dto = build.invoke(builder);
+      assertEquals(List.of("a", "b"), dto.getClass().getMethod("tags").invoke(dto));
+    }
+  }
+
+  @Test
+  void updateHelpers_RuntimeListFieldCanBeUpdatedAfterConsumer() throws Exception {
+    try (URLClassLoader classLoader = compileRuntimeList()) {
+      Class<?> builderClass = classLoader.loadClass("test.ListDtoBuilder");
+      Object builder = builderClass.getMethod("create").invoke(null);
+      Method tagsConsumer = builderClass.getMethod("tags", Consumer.class);
+      Method tagsUpdate = builderClass.getMethod("tagsUpdate", UnaryOperator.class);
+      Method build = builderClass.getMethod("build");
+
+      tagsConsumer.invoke(
+          builder,
+          (Consumer<Object>)
+              values -> {
+                try {
+                  values.getClass().getMethod("add", Object.class).invoke(values, "a");
+                } catch (ReflectiveOperationException ex) {
+                  throw new RuntimeException(ex);
+                }
+              });
+      tagsUpdate.invoke(
+          builder,
+          (UnaryOperator<List<String>>)
+              values -> {
+                var updated = new ArrayList<>(values);
+                updated.add("b");
+                return updated;
+              });
+
+      Object dto = build.invoke(builder);
+      assertEquals(List.of("a", "b"), dto.getClass().getMethod("tags").invoke(dto));
     }
   }
 
@@ -397,6 +456,20 @@ class UpdateHelperGeneratorTest {
 
         @SimpleBuilder
         public record PersonDto(String name, int quantity) {}
+        """);
+  }
+
+  private URLClassLoader compileRuntimeList() throws Exception {
+    return compileRuntimeSource(
+        "ListDto.java",
+        """
+        package test;
+
+        import java.util.List;
+        import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+        @SimpleBuilder
+        public record ListDto(List<String> tags, String name) {}
         """);
   }
 
