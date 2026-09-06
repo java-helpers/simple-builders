@@ -134,7 +134,7 @@ def parse_compiler_time(output: str) -> Optional[float]:
 
 
 def run_one(run_index: int, profile: str, is_simple_builders: bool, report_dir: Path,
-           builder_type: str = "") -> Optional[dict]:
+           builder_type: str = "", formatting_mode: str = "") -> Optional[dict]:
     """Run a single clean compile and return the parsed JSON report (or wall-time-only dict).
 
     The report file uses the run_index in its name so that retries overwrite the failed
@@ -158,6 +158,8 @@ def run_one(run_index: int, profile: str, is_simple_builders: bool, report_dir: 
             "-Dsimplebuilder.performanceTracking=true",
             f"-Dsimplebuilder.performanceOutputFile={report_file}",
         ])
+        if formatting_mode:
+            cmd.append(f"-Dsimplebuilder.formattingMode={formatting_mode}")
 
     result = subprocess.run(
         cmd,
@@ -432,6 +434,15 @@ def main() -> None:
         "lombok/record-builder), avoiding the overhead of the processor's "
         "internal performance tracker.",
     )
+    parser.add_argument(
+        "--formatting-mode",
+        type=str,
+        default="",
+        choices=["", "jdt", "lightweight", "none"],
+        help="Override the formatting mode for simple-builders types via "
+        "-Asimplebuilder.formattingMode. Only affects simple-builder and "
+        "simple-minimal-builder. Default: empty (use default from profile or JDT, if not defined in profile).",
+    )
     args = parser.parse_args()
 
     num_runs = args.runs
@@ -494,7 +505,8 @@ def main() -> None:
             if attempt > 1:
                 print(f"  Run {i}: retry {attempt - 1}/{max_retries}...", flush=True)
             run_start = time.time()
-            data = run_one(i, profile, use_tracking, report_dir, builder_type)
+            data = run_one(i, profile, use_tracking, report_dir, builder_type,
+                           args.formatting_mode)
             if data is not None:
                 if "_wallTimeSeconds" not in data:
                     data["_wallTimeSeconds"] = time.time() - run_start
