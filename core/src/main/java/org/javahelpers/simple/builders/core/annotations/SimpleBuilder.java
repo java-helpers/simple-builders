@@ -63,6 +63,7 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
  *   <li><b>Integration:</b> generateWithInterface (default: true)
  *   <li><b>Builder Scoping:</b> builderGenerationPackages, builderUsagePackages (default: "" = all
  *       annotated DTOs; comma-separated package list, subpackages included)
+ *   <li><b>Documentation:</b> generateJavaDoc (default: true)
  * </ul>
  *
  * <p>This annotation is itself a built-in {@link Template}: it is meta-annotated with
@@ -708,6 +709,18 @@ public @interface SimpleBuilder {
      */
     String builderUsagePackages() default "";
 
+    /**
+     * Generate Javadoc comments on the generated builder class and its members. <br>
+     * When disabled, no class, field, constructor or method Javadoc is emitted, producing smaller
+     * generated files.
+     *
+     * <p>Default: ENABLED <br>
+     * Compiler option: -Asimplebuilder.generateJavaDoc
+     *
+     * @return the option state for generating Javadoc
+     */
+    OptionState generateJavaDoc() default OptionState.UNSET;
+
     // === Naming ===
     /**
      * Suffix to append to the DTO name to generate the builder class name. <br>
@@ -758,6 +771,38 @@ public @interface SimpleBuilder {
      * @return the suffix for setter method names
      */
     String setterSuffix() default "";
+
+    /**
+     * Formatting mode for the generated source code. <br>
+     * Controls how the generated builder source is post-processed for readability.
+     *
+     * <p>Accepted values (case-insensitive):
+     *
+     * <ul>
+     *   <li>{@code "jdt"} - Full Eclipse JDT formatting (default)
+     *   <li>{@code "lightweight"} - Lightweight cosmetic formatting (tabs to spaces, javadoc fixup,
+     *       blank line collapsing)
+     *   <li>{@code "none"} - No formatting, raw Roaster output
+     * </ul>
+     *
+     * <p>An empty string (the default) means "inherit from compiler argument {@code
+     * -Asimplebuilder.formattingMode}", which itself defaults to {@code jdt}.
+     *
+     * <p>Example:
+     *
+     * <pre>{@code
+     * @SimpleBuilder(options = @SimpleBuilder.Options(
+     *     formattingMode = "lightweight"
+     * ))
+     * public class PersonDto { ... }
+     * }</pre>
+     *
+     * Default: "" (empty - inherit from compiler argument) <br>
+     * Compiler option: -Asimplebuilder.formattingMode
+     *
+     * @return the formatting mode for generated source code
+     */
+    String formattingMode() default "";
   }
 
   /**
