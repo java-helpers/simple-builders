@@ -178,13 +178,13 @@ public class OrderWithDefaultsBuilder implements IBuilderBase<OrderWithDefaults>
    * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from setter {@link OrderWithDefaults#setId(String) setId(String id)}
-   *
+   * 
    * <h4>Example:</h4>
-   *
+   * 
    * <pre>{@code
    * builder.idUpdate(String::trim);
    * }</pre>
-   *
+   * 
    * @param idUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
    * @throws IllegalStateException if <code>id</code> has not been set yet
@@ -242,13 +242,13 @@ public class OrderWithDefaultsBuilder implements IBuilderBase<OrderWithDefaults>
    * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from setter {@link OrderWithDefaults#setPriority(int) setPriority(int priority)}
-   *
+   * 
    * <h4>Example:</h4>
-   *
+   * 
    * <pre>{@code
    * builder.priorityUpdate(Math::abs);
    * }</pre>
-   *
+   * 
    * @param priorityUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
    * @throws IllegalStateException if <code>priority</code> has not been set yet
@@ -348,13 +348,13 @@ public class OrderWithDefaultsBuilder implements IBuilderBase<OrderWithDefaults>
    * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from setter {@link OrderWithDefaults#setStatus(String) setStatus(String status)}
-   *
+   * 
    * <h4>Example:</h4>
-   *
+   * 
    * <pre>{@code
    * builder.statusUpdate(String::trim);
    * }</pre>
-   *
+   * 
    * @param statusUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
    * @throws IllegalStateException if <code>status</code> has not been set yet

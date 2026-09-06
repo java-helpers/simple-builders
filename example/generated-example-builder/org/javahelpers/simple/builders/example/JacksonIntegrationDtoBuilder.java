@@ -131,13 +131,13 @@ public class JacksonIntegrationDtoBuilder implements IBuilderBase<JacksonIntegra
    * <p>
    * Generated from parameter in constructor {@link JacksonIntegrationDto#JacksonIntegrationDto(String, int)
    * JacksonIntegrationDto(String name, int age)}
-   *
+   * 
    * <h4>Example:</h4>
-   *
+   * 
    * <pre>{@code
    * builder.ageUpdate(Math::abs);
    * }</pre>
-   *
+   * 
    * @param ageUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
    * @throws IllegalStateException if <code>age</code> has not been set yet
@@ -242,13 +242,13 @@ public class JacksonIntegrationDtoBuilder implements IBuilderBase<JacksonIntegra
    * <p>
    * Generated from parameter in constructor {@link JacksonIntegrationDto#JacksonIntegrationDto(String, int)
    * JacksonIntegrationDto(String name, int age)}
-   *
+   * 
    * <h4>Example:</h4>
-   *
+   * 
    * <pre>{@code
    * builder.nameUpdate(String::trim);
    * }</pre>
-   *
+   * 
    * @param nameUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
    * @throws IllegalStateException if <code>name</code> has not been set yet

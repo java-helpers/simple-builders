@@ -150,13 +150,13 @@ public class ProductWithDefaultsBuilder implements IBuilderBase<ProductWithDefau
    * Generated from parameter in constructor
    * {@link ProductWithDefaults#ProductWithDefaults(String, double, String, boolean) ProductWithDefaults(String name,
    * double price, String category, boolean active)}
-   *
+   * 
    * <h4>Example:</h4>
-   *
+   * 
    * <pre>{@code
    * builder.activeUpdate(UnaryOperator.identity());
    * }</pre>
-   *
+   * 
    * @param activeUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
    * @throws IllegalStateException if <code>active</code> has not been set yet
@@ -266,13 +266,13 @@ public class ProductWithDefaultsBuilder implements IBuilderBase<ProductWithDefau
    * Generated from parameter in constructor
    * {@link ProductWithDefaults#ProductWithDefaults(String, double, String, boolean) ProductWithDefaults(String name,
    * double price, String category, boolean active)}
-   *
+   * 
    * <h4>Example:</h4>
-   *
+   * 
    * <pre>{@code
    * builder.categoryUpdate(String::trim);
    * }</pre>
-   *
+   * 
    * @param categoryUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
    * @throws IllegalStateException if <code>category</code> has not been set yet
@@ -382,13 +382,13 @@ public class ProductWithDefaultsBuilder implements IBuilderBase<ProductWithDefau
    * Generated from parameter in constructor
    * {@link ProductWithDefaults#ProductWithDefaults(String, double, String, boolean) ProductWithDefaults(String name,
    * double price, String category, boolean active)}
-   *
+   * 
    * <h4>Example:</h4>
-   *
+   * 
    * <pre>{@code
    * builder.nameUpdate(String::trim);
    * }</pre>
-   *
+   * 
    * @param nameUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
    * @throws IllegalStateException if <code>name</code> has not been set yet
@@ -452,13 +452,13 @@ public class ProductWithDefaultsBuilder implements IBuilderBase<ProductWithDefau
    * Generated from parameter in constructor
    * {@link ProductWithDefaults#ProductWithDefaults(String, double, String, boolean) ProductWithDefaults(String name,
    * double price, String category, boolean active)}
-   *
+   * 
    * <h4>Example:</h4>
-   *
+   * 
    * <pre>{@code
    * builder.priceUpdate(Math::abs);
    * }</pre>
-   *
+   * 
    * @param priceUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
    * @throws IllegalStateException if <code>price</code> has not been set yet

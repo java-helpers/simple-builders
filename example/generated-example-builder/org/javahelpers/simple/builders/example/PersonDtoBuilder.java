@@ -184,13 +184,13 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
    * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from setter {@link PersonDto#setBirthdate(LocalDate) setBirthdate(LocalDate birthdate)}
-   *
+   * 
    * <h4>Example:</h4>
-   *
+   * 
    * <pre>{@code
    * builder.birthdateUpdate(UnaryOperator.identity());
    * }</pre>
-   *
+   * 
    * @param birthdateUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
    * @throws IllegalStateException if <code>birthdate</code> has not been set yet
@@ -271,13 +271,13 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
    * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from setter {@link PersonDto#setMannschaft(MannschaftDto) setMannschaft(MannschaftDto mannschaft)}
-   *
+   * 
    * <h4>Example:</h4>
-   *
+   * 
    * <pre>{@code
    * builder.mannschaftUpdate(UnaryOperator.identity());
    * }</pre>
-   *
+   * 
    * @param mannschaftUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
    * @throws IllegalStateException if <code>mannschaft</code> has not been set yet
@@ -377,13 +377,13 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
    * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from parameter in constructor {@link PersonDto#PersonDto(String) PersonDto(String name)}
-   *
+   * 
    * <h4>Example:</h4>
-   *
+   * 
    * <pre>{@code
    * builder.nameUpdate(String::trim);
    * }</pre>
-   *
+   * 
    * @param nameUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
    * @throws IllegalStateException if <code>name</code> has not been set yet
@@ -560,13 +560,13 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
    * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from setter {@link PersonDto#setNickNames2(String) setNickNames2(String nickNames2)}
-   *
+   * 
    * <h4>Example:</h4>
-   *
+   * 
    * <pre>{@code
    * builder.nickNames2Update(String::trim);
    * }</pre>
-   *
+   * 
    * @param nickNames2Updater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
    * @throws IllegalStateException if <code>nickNames2</code> has not been set yet
@@ -586,13 +586,13 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
    * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from setter {@link PersonDto#setNickNames(List) setNickNames(List<String> nickNames)}
-   *
+   * 
    * <h4>Example:</h4>
-   *
+   * 
    * <pre>{@code
    * builder.nickNamesUpdate(UnaryOperator.identity());
    * }</pre>
-   *
+   * 
    * @param nickNamesUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
    * @throws IllegalStateException if <code>nickNames</code> has not been set yet

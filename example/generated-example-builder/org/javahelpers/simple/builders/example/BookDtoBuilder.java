@@ -218,13 +218,13 @@ public class BookDtoBuilder {
    * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from setter {@link BookDto#setAuthor(String) setAuthor(String author)}
-   *
+   * 
    * <h4>Example:</h4>
-   *
+   * 
    * <pre>{@code
    * builder.authorUpdate(String::trim);
    * }</pre>
-   *
+   * 
    * @param authorUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
    * @throws IllegalStateException if <code>author</code> has not been set yet
@@ -263,13 +263,13 @@ public class BookDtoBuilder {
    * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from setter {@link BookDto#setAvailable(boolean) setAvailable(boolean available)}
-   *
+   * 
    * <h4>Example:</h4>
-   *
+   * 
    * <pre>{@code
    * builder.availableUpdate(UnaryOperator.identity());
    * }</pre>
-   *
+   * 
    * @param availableUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
    * @throws IllegalStateException if <code>available</code> has not been set yet
@@ -308,13 +308,13 @@ public class BookDtoBuilder {
    * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from setter {@link BookDto#setCategory(char) setCategory(char category)}
-   *
+   * 
    * <h4>Example:</h4>
-   *
+   * 
    * <pre>{@code
    * builder.categoryUpdate(UnaryOperator.identity());
    * }</pre>
-   *
+   * 
    * @param categoryUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
    * @throws IllegalStateException if <code>category</code> has not been set yet
@@ -353,13 +353,13 @@ public class BookDtoBuilder {
    * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from setter {@link BookDto#setDiscount(float) setDiscount(float discount)}
-   *
+   * 
    * <h4>Example:</h4>
-   *
+   * 
    * <pre>{@code
    * builder.discountUpdate(Math::abs);
    * }</pre>
-   *
+   * 
    * @param discountUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
    * @throws IllegalStateException if <code>discount</code> has not been set yet
@@ -392,13 +392,13 @@ public class BookDtoBuilder {
    * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from setter {@link BookDto#setEdition(short) setEdition(short edition)}
-   *
+   * 
    * <h4>Example:</h4>
-   *
+   * 
    * <pre>{@code
    * builder.editionUpdate(UnaryOperator.identity());
    * }</pre>
-   *
+   * 
    * @param editionUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
    * @throws IllegalStateException if <code>edition</code> has not been set yet
@@ -437,13 +437,13 @@ public class BookDtoBuilder {
    * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from setter {@link BookDto#setExactPrice(BigDecimal) setExactPrice(BigDecimal exactPrice)}
-   *
+   * 
    * <h4>Example:</h4>
-   *
+   * 
    * <pre>{@code
    * builder.exactPriceUpdate(UnaryOperator.identity());
    * }</pre>
-   *
+   * 
    * @param exactPriceUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
    * @throws IllegalStateException if <code>exactPrice</code> has not been set yet
@@ -482,13 +482,13 @@ public class BookDtoBuilder {
    * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from setter {@link BookDto#setGenres(Set) setGenres(Set<String> genres)}
-   *
+   * 
    * <h4>Example:</h4>
-   *
+   * 
    * <pre>{@code
    * builder.genresUpdate(UnaryOperator.identity());
    * }</pre>
-   *
+   * 
    * @param genresUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
    * @throws IllegalStateException if <code>genres</code> has not been set yet
@@ -527,13 +527,13 @@ public class BookDtoBuilder {
    * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from setter {@link BookDto#setIsbn(String) setIsbn(String isbn)}
-   *
+   * 
    * <h4>Example:</h4>
-   *
+   * 
    * <pre>{@code
    * builder.isbnUpdate(String::trim);
    * }</pre>
-   *
+   * 
    * @param isbnUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
    * @throws IllegalStateException if <code>isbn</code> has not been set yet
@@ -572,13 +572,13 @@ public class BookDtoBuilder {
    * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from setter {@link BookDto#setLastUpdated(LocalDateTime) setLastUpdated(LocalDateTime lastUpdated)}
-   *
+   * 
    * <h4>Example:</h4>
-   *
+   * 
    * <pre>{@code
    * builder.lastUpdatedUpdate(UnaryOperator.identity());
    * }</pre>
-   *
+   * 
    * @param lastUpdatedUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
    * @throws IllegalStateException if <code>lastUpdated</code> has not been set yet
@@ -617,13 +617,13 @@ public class BookDtoBuilder {
    * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from setter {@link BookDto#setMetadata(Map) setMetadata(Map<String, String> metadata)}
-   *
+   * 
    * <h4>Example:</h4>
-   *
+   * 
    * <pre>{@code
    * builder.metadataUpdate(UnaryOperator.identity());
    * }</pre>
-   *
+   * 
    * @param metadataUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
    * @throws IllegalStateException if <code>metadata</code> has not been set yet
@@ -662,13 +662,13 @@ public class BookDtoBuilder {
    * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from setter {@link BookDto#setPages(int) setPages(int pages)}
-   *
+   * 
    * <h4>Example:</h4>
-   *
+   * 
    * <pre>{@code
    * builder.pagesUpdate(Math::abs);
    * }</pre>
-   *
+   * 
    * @param pagesUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
    * @throws IllegalStateException if <code>pages</code> has not been set yet
@@ -707,13 +707,13 @@ public class BookDtoBuilder {
    * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from setter {@link BookDto#setPrice(double) setPrice(double price)}
-   *
+   * 
    * <h4>Example:</h4>
-   *
+   * 
    * <pre>{@code
    * builder.priceUpdate(Math::abs);
    * }</pre>
-   *
+   * 
    * @param priceUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
    * @throws IllegalStateException if <code>price</code> has not been set yet
@@ -752,13 +752,13 @@ public class BookDtoBuilder {
    * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from setter {@link BookDto#setPublishDate(LocalDate) setPublishDate(LocalDate publishDate)}
-   *
+   * 
    * <h4>Example:</h4>
-   *
+   * 
    * <pre>{@code
    * builder.publishDateUpdate(UnaryOperator.identity());
    * }</pre>
-   *
+   * 
    * @param publishDateUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
    * @throws IllegalStateException if <code>publishDate</code> has not been set yet
@@ -797,13 +797,13 @@ public class BookDtoBuilder {
    * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from setter {@link BookDto#setPublisher(PersonDto) setPublisher(PersonDto publisher)}
-   *
+   * 
    * <h4>Example:</h4>
-   *
+   * 
    * <pre>{@code
    * builder.publisherUpdate(UnaryOperator.identity());
    * }</pre>
-   *
+   * 
    * @param publisherUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
    * @throws IllegalStateException if <code>publisher</code> has not been set yet
@@ -836,13 +836,13 @@ public class BookDtoBuilder {
    * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from setter {@link BookDto#setRating(byte) setRating(byte rating)}
-   *
+   * 
    * <h4>Example:</h4>
-   *
+   * 
    * <pre>{@code
    * builder.ratingUpdate(UnaryOperator.identity());
    * }</pre>
-   *
+   * 
    * @param ratingUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
    * @throws IllegalStateException if <code>rating</code> has not been set yet
@@ -881,13 +881,13 @@ public class BookDtoBuilder {
    * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from setter {@link BookDto#setSalesCount(long) setSalesCount(long salesCount)}
-   *
+   * 
    * <h4>Example:</h4>
-   *
+   * 
    * <pre>{@code
    * builder.salesCountUpdate(Math::abs);
    * }</pre>
-   *
+   * 
    * @param salesCountUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
    * @throws IllegalStateException if <code>salesCount</code> has not been set yet
@@ -926,13 +926,13 @@ public class BookDtoBuilder {
    * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from setter {@link BookDto#setSubtitle(Optional) setSubtitle(Optional<String> subtitle)}
-   *
+   * 
    * <h4>Example:</h4>
-   *
+   * 
    * <pre>{@code
    * builder.subtitleUpdate(UnaryOperator.identity());
    * }</pre>
-   *
+   * 
    * @param subtitleUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
    * @throws IllegalStateException if <code>subtitle</code> has not been set yet
@@ -971,13 +971,13 @@ public class BookDtoBuilder {
    * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from setter {@link BookDto#setTags(List) setTags(List<String> tags)}
-   *
+   * 
    * <h4>Example:</h4>
-   *
+   * 
    * <pre>{@code
    * builder.tagsUpdate(UnaryOperator.identity());
    * }</pre>
-   *
+   * 
    * @param tagsUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
    * @throws IllegalStateException if <code>tags</code> has not been set yet
@@ -1016,13 +1016,13 @@ public class BookDtoBuilder {
    * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from setter {@link BookDto#setTitle(String) setTitle(String title)}
-   *
+   * 
    * <h4>Example:</h4>
-   *
+   * 
    * <pre>{@code
    * builder.titleUpdate(String::trim);
    * }</pre>
-   *
+   * 
    * @param titleUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
    * @throws IllegalStateException if <code>title</code> has not been set yet

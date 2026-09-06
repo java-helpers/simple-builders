@@ -159,13 +159,13 @@ public class SponsorDtoBuilder implements IBuilderBase<SponsorDto> {
    * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from setter {@link SponsorDto#setName(String) setName(String name)}
-   *
+   * 
    * <h4>Example:</h4>
-   *
+   * 
    * <pre>{@code
    * builder.nameUpdate(String::trim);
    * }</pre>
-   *
+   * 
    * @param nameUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
    * @throws IllegalStateException if <code>name</code> has not been set yet
