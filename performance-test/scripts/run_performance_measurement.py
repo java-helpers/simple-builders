@@ -454,6 +454,34 @@ def main() -> None:
     print(f"Report directory: {report_dir}")
     print()
 
+    # Pre-flight check: verify generated sources use the expected annotation.
+    # If generate_classes.py was run for a different builder type, the Maven
+    # profile won't match and compilation will fail or produce wrong results.
+    expected_annotation = BUILDER_TYPE_ANNOTATION.get(builder_type)
+    if expected_annotation:
+        src_dir = BASE_DIR / "src" / "main" / "java"
+        if src_dir.exists():
+            actual = None
+            for f in src_dir.rglob("*.java"):
+                try:
+                    text = f.read_text()
+                except OSError:
+                    continue
+                for ann in BUILDER_TYPE_ANNOTATION.values():
+                    if ann in text:
+                        actual = ann
+                        break
+                if actual is not None:
+                    break
+            if actual is not None and actual != expected_annotation:
+                print(f"ERROR: Generated sources use {actual} but --builder-type is "
+                      f"{builder_type} (expects {expected_annotation}).")
+                print(f"Run generate_classes.py first: "
+                      f"python3 scripts/generate_classes.py --builder-type {builder_type} --force")
+                sys.exit(1)
+
+
+
     max_retries = args.max_retries
     runs: list[dict] = []
     total_attempts = 0
