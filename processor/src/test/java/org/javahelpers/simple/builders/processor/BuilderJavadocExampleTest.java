@@ -96,12 +96,26 @@ class BuilderJavadocExampleTest {
     // field the generator lines in priority order.
     ProcessorAsserts.assertContaining(
         generatedCode,
-        ".pages(42)",
-        ".pages(() -> 42)",
-        ".tags(List.of(\"example value\"))",
-        ".title(\"example value\")",
-        ".mapPages(Math::abs)",
-        ".mapTitle(String::trim)");
+        """
+        * <pre>{@code
+        * BookDto result = BookDtoBuilder.create()
+        *     .pages(42)
+        *     .pages(() -> 42)
+        *     .mapPages(Math::abs)
+        *     .tags(List.of("example value"))
+        *     .tags(() -> List.of("example value"))
+        *     .mapTags(UnaryOperator.identity())
+        *     .tags(t -> t.add("example value"))
+        *     .tags("example value", "example value")
+        *     .add2Tags("example value")
+        *     .title("example value")
+        *     .title("Hello %s", "World")
+        *     .title(() -> "example value")
+        *     .mapTitle(String::trim)
+        *     .title(sb -> sb.append("text"))
+        *     .build();
+        * }</pre>
+        * """);
   }
 
   @ParameterizedTest(name = "{0}")
@@ -320,7 +334,6 @@ class BuilderJavadocExampleTest {
     Compilation compilation = compile(dto, helper);
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-
     // The basic setter must still be generated,
     // but the method javadoc must NOT contain any example block:
     // neither a bogus "builder.helper(null)" line
@@ -367,12 +380,23 @@ class BuilderJavadocExampleTest {
     Compilation compilation = compile(dto, helper);
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-
     // The class-level kitchen-sink chain includes ONLY the resolvable field (title).
     // The helper field (HelperPlain) has no example value and must be omitted.
     // HelperPlain has only a parameterized constructor (no empty constructor) and no builder.
     ProcessorAsserts.assertContaining(
-        generatedCode, ".title(\"example value\")", ".mapTitle(String::trim)");
+        generatedCode,
+        """
+        * <pre>{@code
+        * MixedDto result = MixedDtoBuilder.create()
+        *     .mapHelper(UnaryOperator.identity())
+        *     .title("example value")
+        *     .title("Hello %s", "World")
+        *     .title(() -> "example value")
+        *     .mapTitle(String::trim)
+        *     .title(sb -> sb.append("text"))
+        *     .build();
+        * }</pre>
+        * """);
 
     // No `.helper(...)` call in the class example chain
     ProcessorAsserts.assertNotContaining(generatedCode, ".helper(");
