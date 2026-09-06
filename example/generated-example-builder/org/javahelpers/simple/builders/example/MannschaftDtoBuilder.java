@@ -33,7 +33,7 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  *     .name(() -> "example value")
  *     .mapName(String::trim)
  *     .name(sb -> sb.append("text"))
- *     .mapSponsoren(value -> value)
+ *     .mapSponsoren(UnaryOperator.identity())
  *     .sponsoren(t -> t.add(sponsorDtoBuilder -> sponsorDtoBuilder))
  *     .build();
  * }</pre>
@@ -106,8 +106,7 @@ public class MannschaftDtoBuilder implements IBuilderBase<MannschaftDto> {
    * Transforms the current value of <code>name</code> in place by applying the given operator, instead of reading it
    * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
-   * and validated by <code>build()</code> like any other value.
+   * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from setter {@link MannschaftDto#setName(String) setName(String name)}
    * 
@@ -133,15 +132,14 @@ public class MannschaftDtoBuilder implements IBuilderBase<MannschaftDto> {
    * Transforms the current value of <code>sponsoren</code> in place by applying the given operator, instead of reading
    * it out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
-   * and validated by <code>build()</code> like any other value.
+   * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from setter {@link MannschaftDto#setSponsoren(Set) setSponsoren(Set<SponsorDto> sponsoren)}
    * 
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.mapSponsoren(value -> value);
+   * builder.mapSponsoren(UnaryOperator.identity());
    * }</pre>
    * 
    * @param sponsorenMapper operator applied to the current value; its result becomes the new value

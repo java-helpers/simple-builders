@@ -334,8 +334,6 @@ public @interface SimpleBuilder {
     /**
      * Generate mapper helper methods for all fields. The generated method has the parameter type
      * {@code UnaryOperator<T>} and transforms the current field value using the supplied operator.
-     * The field must already be set; otherwise the generated method throws {@link
-     * IllegalStateException}.
      *
      * <p>Example:
      *
@@ -344,7 +342,7 @@ public @interface SimpleBuilder {
      *     .name("  bob ")
      *     .mapName(String::trim)
      *     .quantity(10)
-     *     .mapQuantity(q -> q * 2)
+     *     .mapQuantity(Math::abs)
      *     .build();
      * }</pre>
      *

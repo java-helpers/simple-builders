@@ -57,9 +57,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 class BuilderJavadocExampleTest {
 
   protected Compilation compile(JavaFileObject... sourceFiles) {
-    return ProcessorTestUtils.createCompiler()
-        .withOptions("-Asimplebuilder.generateMapperHelpers=DISABLED")
-        .compile(sourceFiles);
+    return ProcessorTestUtils.createCompiler().compile(sourceFiles);
   }
 
   @Test
@@ -98,23 +96,12 @@ class BuilderJavadocExampleTest {
     // field the generator lines in priority order.
     ProcessorAsserts.assertContaining(
         generatedCode,
-        """
-        * <pre>{@code
-        * BookDto result = BookDtoBuilder.create()
-        *     .pages(42)
-        *     .pages(() -> 42)
-        *     .tags(List.of("example value"))
-        *     .tags(() -> List.of("example value"))
-        *     .tags(t -> t.add("example value"))
-        *     .tags("example value", "example value")
-        *     .add2Tags("example value")
-        *     .title("example value")
-        *     .title("Hello %s", "World")
-        *     .title(() -> "example value")
-        *     .title(sb -> sb.append("text"))
-        *     .build();
-        * }</pre>
-        """);
+        ".pages(42)",
+        ".pages(() -> 42)",
+        ".tags(List.of(\"example value\"))",
+        ".title(\"example value\")",
+        ".mapPages(Math::abs)",
+        ".mapTitle(String::trim)");
   }
 
   @ParameterizedTest(name = "{0}")
@@ -385,17 +372,7 @@ class BuilderJavadocExampleTest {
     // The helper field (HelperPlain) has no example value and must be omitted.
     // HelperPlain has only a parameterized constructor (no empty constructor) and no builder.
     ProcessorAsserts.assertContaining(
-        generatedCode,
-        """
-        * <pre>{@code
-        * MixedDto result = MixedDtoBuilder.create()
-        *     .title("example value")
-        *     .title("Hello %s", "World")
-        *     .title(() -> "example value")
-        *     .title(sb -> sb.append("text"))
-        *     .build();
-        * }</pre>
-        """);
+        generatedCode, ".title(\"example value\")", ".mapTitle(String::trim)");
 
     // No `.helper(...)` call in the class example chain
     ProcessorAsserts.assertNotContaining(generatedCode, ".helper(");

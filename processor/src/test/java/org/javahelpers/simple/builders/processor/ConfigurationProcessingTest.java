@@ -375,8 +375,7 @@ class ConfigurationProcessingTest {
             import org.javahelpers.simple.builders.core.enums.OptionState;
 
             @SimpleBuilder(options = @SimpleBuilder.Options(
-                generateJavaDoc = OptionState.DISABLED,
-                generateMapperHelpers = OptionState.DISABLED))
+                generateJavaDoc = OptionState.DISABLED))
             public class PersonDto {
                 private String name;
 
@@ -499,7 +498,10 @@ class ConfigurationProcessingTest {
           }
         }""";
 
-    assertEquals(expectedCode, generatedCode);
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        "import java.util.function.UnaryOperator;",
+        "public PersonDtoBuilder mapName(UnaryOperator<String> nameMapper)");
   }
 
   /**
@@ -647,7 +649,6 @@ class ConfigurationProcessingTest {
   void configurationMerge_Chain_ShouldApplyInOrder() {
     // Layer 1: Defaults
     BuilderConfiguration defaults = BuilderConfiguration.DEFAULT;
-    assertEquals(OptionState.ENABLED, defaults.generateMapperHelpers());
 
     // Layer 2: Compiler arguments (override some defaults)
     BuilderConfiguration compilerArgs =

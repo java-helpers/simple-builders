@@ -76,8 +76,7 @@ public class SponsorDtoBuilder implements IBuilderBase<SponsorDto> {
    * Transforms the current value of <code>name</code> in place by applying the given operator, instead of reading it
    * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
-   * and validated by <code>build()</code> like any other value.
+   * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from setter {@link SponsorDto#setName(String) setName(String name)}
    * 

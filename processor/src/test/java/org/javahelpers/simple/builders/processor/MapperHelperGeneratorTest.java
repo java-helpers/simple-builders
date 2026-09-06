@@ -104,7 +104,7 @@ class MapperHelperGeneratorTest {
         generated.contains(".mapName(String::trim);"),
         "String mapper methods should use a type-aware example");
     assertTrue(
-        generated.contains(".mapQuantity(value -> value * 2);"),
+        generated.contains(".mapQuantity(Math::abs);"),
         "Primitive mapper methods should use a type-aware example");
   }
 

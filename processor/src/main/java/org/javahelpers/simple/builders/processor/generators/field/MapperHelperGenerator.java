@@ -35,13 +35,14 @@ import java.util.function.UnaryOperator;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.generators.util.JavadocConstants;
-import org.javahelpers.simple.builders.processor.generators.util.JavadocExampleValues;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
+import org.javahelpers.simple.builders.processor.model.type.TypeNamePrimitive;
+import org.javahelpers.simple.builders.processor.model.type.TypeNamePrimitive.PrimitiveTypeEnum;
 import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
 /**
@@ -62,7 +63,7 @@ import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
  *     .name("  bob ")
  *     .mapName(String::trim)
  *     .quantity(10)
- *     .mapQuantity(q -> q * 2)
+ *     .mapQuantity(Math::abs)
  *     .build();
  * }</pre>
  */
@@ -113,14 +114,12 @@ public class MapperHelperGenerator implements MethodGenerator {
     methodDto.setPriority(BuilderMethodDto.PRIORITY_LOW);
     methodDto.setJavadoc(
         new JavadocDto(
-                "Transforms the current value of <code>%s</code> in place by applying the given "
-                    + "operator, instead of reading it out, changing it and setting it again.\n"
-                    + "Useful for adjustments relative to the current value, e.g. trimming, "
-                    + "upper-casing, clamping or incrementing, and in combination with the "
-                    + "<code>With</code> copy-and-modify flow.\n"
-                    + "The value must have been set before (directly or via an existing instance).\n"
-                    + "A <code>null</code> result is stored as-is and validated by <code>build()</code> "
-                    + "like any other value.",
+                """
+                Transforms the current value of <code>%s</code> in place by applying the given operator, instead of reading it out, changing it and setting it again.
+                Useful for adjustments relative to the current value, e.g. trimming, upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow.
+                The value must have been set before (directly or via an existing instance).
+                """
+                    .strip(),
                 originalFieldName)
             .addParam(
                 parameterName,
@@ -130,9 +129,38 @@ public class MapperHelperGenerator implements MethodGenerator {
                 "IllegalStateException",
                 "if <code>%s</code> has not been set yet".formatted(originalFieldName)));
 
-    String mapperExample =
-        JavadocExampleValues.getMapperExample(field.getFieldType()).orElse("value -> value");
-    addExampleChainFragmentTemplate(methodDto, "#{methodName}(" + mapperExample + ")");
+    addExampleChainFragmentTemplate(
+        methodDto, "#{methodName}(" + getMapperExample(field.getFieldType()) + ")");
     return Collections.singletonList(methodDto);
+  }
+
+  private static String getMapperExample(TypeName fieldType) {
+    String fullyQualifiedName = fieldType.getFullQualifiedName();
+    if ("java.lang.String".equals(fullyQualifiedName)
+        || "String".equals(fieldType.getClassName())) {
+      return "String::trim";
+    }
+    if (fieldType instanceof TypeNamePrimitive primitive
+        && isNumericPrimitive(primitive.getType())) {
+      return "Math::abs";
+    }
+    if (isNumericWrapper(fullyQualifiedName)) {
+      return "Math::abs";
+    }
+    return "UnaryOperator.identity()";
+  }
+
+  private static boolean isNumericPrimitive(PrimitiveTypeEnum type) {
+    return type == PrimitiveTypeEnum.INT
+        || type == PrimitiveTypeEnum.LONG
+        || type == PrimitiveTypeEnum.FLOAT
+        || type == PrimitiveTypeEnum.DOUBLE;
+  }
+
+  private static boolean isNumericWrapper(String fullyQualifiedName) {
+    return "java.lang.Integer".equals(fullyQualifiedName)
+        || "java.lang.Long".equals(fullyQualifiedName)
+        || "java.lang.Float".equals(fullyQualifiedName)
+        || "java.lang.Double".equals(fullyQualifiedName);
   }
 }

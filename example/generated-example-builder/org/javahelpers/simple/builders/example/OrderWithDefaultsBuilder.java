@@ -33,7 +33,7 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  *     .id(sb -> sb.append("text"))
  *     .priority(42)
  *     .priority(() -> 42)
- *     .mapPriority(value -> value * 2)
+ *     .mapPriority(Math::abs)
  *     .status("example value")
  *     .status("Hello %s", "World")
  *     .status(() -> "example value")
@@ -175,8 +175,7 @@ public class OrderWithDefaultsBuilder implements IBuilderBase<OrderWithDefaults>
    * Transforms the current value of <code>id</code> in place by applying the given operator, instead of reading it out,
    * changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
-   * and validated by <code>build()</code> like any other value.
+   * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from setter {@link OrderWithDefaults#setId(String) setId(String id)}
    * 
@@ -202,15 +201,14 @@ public class OrderWithDefaultsBuilder implements IBuilderBase<OrderWithDefaults>
    * Transforms the current value of <code>priority</code> in place by applying the given operator, instead of reading
    * it out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
-   * and validated by <code>build()</code> like any other value.
+   * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from setter {@link OrderWithDefaults#setPriority(int) setPriority(int priority)}
    * 
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.mapPriority(value -> value * 2);
+   * builder.mapPriority(Math::abs);
    * }</pre>
    * 
    * @param priorityMapper operator applied to the current value; its result becomes the new value
@@ -229,8 +227,7 @@ public class OrderWithDefaultsBuilder implements IBuilderBase<OrderWithDefaults>
    * Transforms the current value of <code>status</code> in place by applying the given operator, instead of reading it
    * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
-   * and validated by <code>build()</code> like any other value.
+   * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from setter {@link OrderWithDefaults#setStatus(String) setStatus(String status)}
    * 

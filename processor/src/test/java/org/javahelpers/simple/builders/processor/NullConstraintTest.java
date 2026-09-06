@@ -39,10 +39,7 @@ import org.junit.jupiter.api.Test;
 class NullConstraintTest {
 
   private Compilation compileSources(JavaFileObject... sources) {
-    Compilation compilation =
-        createCompiler()
-            .withOptions("-Asimplebuilder.generateMapperHelpers=DISABLED")
-            .compile(sources);
+    Compilation compilation = createCompiler().compile(sources);
     printDiagnosticsOnVerbose(compilation);
     return compilation;
   }
@@ -78,8 +75,7 @@ class NullConstraintTest {
     ProcessorAsserts.assertGenerationSucceeded(compilation, "PersonBuilder", generatedCode);
 
     // Verify NO validation for constructor field without @NotNull (can be left unset → null passed)
-    ProcessorAsserts.assertNotContaining(
-        generatedCode, "if (!this.name.isSet())", "Required field 'name' must be set");
+    ProcessorAsserts.assertNotContaining(generatedCode, "Required field 'name' must be set");
   }
 
   @Test

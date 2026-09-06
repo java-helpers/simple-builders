@@ -481,7 +481,7 @@ PersonDto person = PersonDtoBuilder.create()
     .name("  bob ")
     .mapName(String::trim)
     .quantity(10)
-    .mapQuantity(q -> q * 2)
+    .mapQuantity(Math::abs)
     .build();
 ```
 

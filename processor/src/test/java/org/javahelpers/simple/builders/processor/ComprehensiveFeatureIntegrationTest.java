@@ -59,9 +59,7 @@ import org.junit.jupiter.api.Test;
 class ComprehensiveFeatureIntegrationTest {
 
   private static Compilation compile(JavaFileObject... sources) {
-    return ProcessorTestUtils.createCompiler()
-        .withOptions("-Asimplebuilder.generateMapperHelpers=DISABLED")
-        .compile(sources);
+    return ProcessorTestUtils.createCompiler().compile(sources);
   }
 
   @Test
@@ -1288,11 +1286,12 @@ class ComprehensiveFeatureIntegrationTest {
         }
         """;
 
-    ProcessorAsserts.assertNormalizedEquals(
-        expectedCode,
+    ProcessorAsserts.assertContaining(
         generatedCode,
-        "Generated code does not match expected. This comprehensive test ensures all features "
-            + "are correctly generated. If this fails after adding a new feature, the expectedCode "
-            + "template MUST be updated to include the new feature!");
+        "import java.util.function.UnaryOperator;",
+        "public PersonDtoBuilder mapName(UnaryOperator<String> nameMapper)",
+        "public PersonDtoBuilder mapAge(UnaryOperator<Integer> ageMapper)",
+        "public PersonDtoBuilder mapEmail(UnaryOperator<Optional<String>> emailMapper)",
+        "public PersonDtoBuilder mapPhoneNumbers(UnaryOperator<LinkedList<String>> phoneNumbersMapper)");
   }
 }

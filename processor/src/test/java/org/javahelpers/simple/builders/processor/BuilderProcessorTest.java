@@ -81,9 +81,7 @@ class BuilderProcessorTest {
 
     // When: Compile with verbose=true to enable debug logging
     Compilation compilation =
-        ProcessorTestUtils.createCompiler()
-            .withOptions("-Averbose=true", "-Asimplebuilder.generateMapperHelpers=DISABLED")
-            .compile(sourceFile);
+        ProcessorTestUtils.createCompiler().withOptions("-Averbose=true").compile(sourceFile);
 
     // Then: Compilation succeeds and debug messages are present
     assertThat(compilation).succeeded();
@@ -92,8 +90,7 @@ class BuilderProcessorTest {
     ProcessorAsserts.assertHadNoteContaining(
         compilation,
         "[DEBUG] Starting BuilderProcessor...",
-        "[DEBUG] Loaded global configuration from compiler arguments: "
-            + "BuilderConfiguration[generateMapperHelpers=DISABLED]",
+        "[DEBUG] Loaded global configuration from compiler arguments: BuilderConfiguration[]",
         "[DEBUG] Initializing generator registry",
         "[DEBUG] ├─ Loaded 15 method generators and 9 builder enhancers total",
         "[DEBUG] └─ Initialized GeneratorRegistry with 15 method generators and 9 builder",
@@ -111,8 +108,9 @@ class BuilderProcessorTest {
         "[DEBUG] │  │  │  │  ├─ Applying: BasicSetterGenerator (priority: 100)",
         "[DEBUG] │  │  │  │  ├─ Applying: StringFormatHelperGenerator (priority: 80)",
         "[DEBUG] │  │  │  │  ├─ Applying: SupplierMethodGenerator (priority: 60)",
+        "[DEBUG] │  │  │  │  ├─ Applying: MapperHelperGenerator (priority: 59)",
         "[DEBUG] │  │  │  │  ├─ Applying: StringBuilderConsumerGenerator (priority: 45)",
-        "[DEBUG] │  │  │  │  └─ Generated 4 methods",
+        "[DEBUG] │  │  │  │  └─ Generated 5 methods",
         "[DEBUG] │  │  │  └─ Adding field: name (type: java.lang.String)",
         "[DEBUG] │  │  └─ Processed 1 possible setters: added 1 fields, skipped 0",
         "[DEBUG] │  ├─ Processing class based enhancer",
@@ -126,7 +124,7 @@ class BuilderProcessorTest {
         "[DEBUG] │  │  └─ Applied 8 builder enhancers",
         "[DEBUG] │  ├─ Finalizing builder definition",
         "[DEBUG] │  │  ├─ Resolving method conflicts",
-        "[DEBUG] │  │  │  └─ Resolved: 9 signatures, 0 conflicts, 0 methods removed",
+        "[DEBUG] │  │  │  └─ Resolved: 10 signatures, 0 conflicts, 0 methods removed",
         "[DEBUG] │  │  └─ Finalized: 1 class fields, 5 builder-level methods, 2 constructors",
         "[DEBUG] │  ├─ Builder will be generated as: VerboseTestBuilder",
         "[DEBUG] │  └─ Builder definition extracted: VerboseTestBuilder",
@@ -137,9 +135,9 @@ class BuilderProcessorTest {
         "[DEBUG] │  │  └─ Fields added: 1 fields",
         "[DEBUG] │  ├─ Generating 2 constructors",
         "[DEBUG] │  │  └─ Constructors added: 2",
-        "[DEBUG] │  ├─ Generating 9 method candidates",
-        "[DEBUG] │  │  ├─ Resolved to 9 methods after conflict resolution",
-        "[DEBUG] │  │  └─ Methods added: 9",
+        "[DEBUG] │  ├─ Generating 10 method candidates",
+        "[DEBUG] │  │  ├─ Resolved to 10 methods after conflict resolution",
+        "[DEBUG] │  │  └─ Methods added: 10",
         "[DEBUG] │  ├─ Generating 1 nested type(s)",
         "[DEBUG] │  │  ├─ Generated nested type: With",
         "[DEBUG] │  │  └─ Nested types added",
@@ -147,7 +145,7 @@ class BuilderProcessorTest {
         "[DEBUG] │  ├─ Writing class to file: test.VerboseTestBuilder",
         "[DEBUG] │  └─ Successfully generated class: VerboseTestBuilder",
         "[DEBUG] ├─ Jackson module entry added",
-        "[DEBUG] └─ Generated builder with 1 fields and 9 methods for VerboseTestBuilder",
+        "[DEBUG] └─ Generated builder with 1 fields and 10 methods for VerboseTestBuilder",
         "simple-builders: Successfully generated 1 builder(s) in this processing round",
         "");
   }
@@ -1458,9 +1456,7 @@ class BuilderProcessorTest {
   }
 
   protected Compilation compile(JavaFileObject... sourceFiles) {
-    return ProcessorTestUtils.createCompiler()
-        .withOptions("-Asimplebuilder.generateMapperHelpers=DISABLED")
-        .compile(sourceFiles);
+    return ProcessorTestUtils.createCompiler().compile(sourceFiles);
   }
 
   @Test
