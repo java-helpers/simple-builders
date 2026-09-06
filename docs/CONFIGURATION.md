@@ -224,7 +224,7 @@ compileJava {
 
 ### Command Line (-D)
 
-Maven supports compiler options without a `pom.xml` change, for example: `mvn compile -Dsimplebuilder.generateJavaDoc=DISABLED`.
+Maven and Gradle accept the options as JVM system properties without a build-file change, for example `mvn compile -Dsimplebuilder.generateJavaDoc=DISABLED` or `gradle compileJava -Dsimplebuilder.generateJavaDoc=DISABLED`.
 The precedence is `@SimpleBuilder.Options` > `-D` system property > `-A` compiler argument > default.
 The system property wins so you can override options configured in the build file from the command line without editing it.
 This relies on javac running in the build tool's JVM (the default for Maven and Gradle); use the `-A` form for forked compilation (`<fork>true</fork>` / `options.fork = true`) and IDE builds. Gradle also accepts `systemProp.simplebuilder.<option>=...` in `gradle.properties`; note that Gradle does not track the property as a task input, so run `clean` or `--rerun-tasks` after changing it.
@@ -1272,7 +1272,7 @@ Or in compiler options:
 
 ### Compiler Options Not Working
 
-1. **Check option names**: Ensure you're using the full option name (e.g., `-Asimplebuilder.generateFieldSupplier`); Maven also supports the `-Dsimplebuilder.<option>` fallback
+1. **Check option names**: Ensure you're using the full option name (e.g., `-Asimplebuilder.generateFieldSupplier`); the same name also works as a JVM system property (`-Dsimplebuilder.<option>`), which takes precedence over `-A`
 2. **Verify processor is running**: Ensure annotation processor is configured correctly
 3. **Check IDE configuration**: Some IDEs need special configuration for compiler options
 4. **Clean and rebuild**: Run `mvn clean compile` to ensure fresh build

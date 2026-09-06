@@ -62,15 +62,15 @@ public class CompilerArgumentsReader {
    * @return the value of the compiler argument, or null if not set
    */
   public String readValue(CompilerArgumentsEnum argument) {
-    // Try the prefixed JVM system property first (e.g., "simplebuilder.verbose")
+    // Try the -D JVM system property first (e.g., -Dsimplebuilder.verbose)
     String value = System.getProperty(argument.getCompilerArgument());
 
-    // Fall back to the full compiler argument name (e.g., "simplebuilder.verbose")
+    // Then the -A compiler argument (e.g., -Asimplebuilder.verbose)
     if (value == null) {
       value = processingEnv.getOptions().get(argument.getCompilerArgument());
     }
 
-    // Finally, fall back to the simple option name for backward compatibility (e.g., "verbose")
+    // Finally the bare option name for backward compatibility (e.g., -Averbose)
     if (value == null) {
       value = processingEnv.getOptions().get(argument.getOptionName());
     }
@@ -137,11 +137,17 @@ public class CompilerArgumentsReader {
    * <p>This method reads all configuration options from compiler arguments like:
    *
    * <ul>
-   *   <li>{@code -Asimplebuilder.generateFieldSupplier=true}
-   *   <li>{@code -Dsimplebuilder.generateFieldSupplier=true} as a system-property alternative
+   *   <li>{@code -Dsimplebuilder.generateFieldSupplier=true} (JVM system property, highest
+   *       precedence)
+   *   <li>{@code -Asimplebuilder.generateFieldSupplier=true} (compiler argument)
+   *   <li>{@code -AgenerateFieldSupplier=true} (bare option name, backward compatibility)
    *   <li>{@code -Asimplebuilder.builderAccess=public}
    *   <li>etc.
    * </ul>
+   *
+   * <p>Options set via {@code @SimpleBuilder.Options} on the annotated type are not handled here;
+   * they are read by {@link BuilderConfigurationReader} and merged on top of this global
+   * configuration.
    *
    * <p>All values default to UNSET or DEFAULT if not specified in compiler arguments.
    *
