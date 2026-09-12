@@ -51,6 +51,8 @@ Simple Builders generates fluent, type-safe builders for your **existing** class
 
 Use Simple Builders when you want fluent, type-safe builders for the classes and records you already have, generated as plain readable source, with no bytecode manipulation and no IDE plugin — and no lock-in: because the builders are ordinary generated Java, you can drop the dependency at any time by copying the generated builder classes into your own sources, and they keep working.
 
+For performance benchmark results comparing Simple Builders, Simple Minimal Builder, RecordBuilder, and Lombok, see the [Performance Analysis Guide](performance-test/docs/PERFORMANCE_ANALYSIS.md#benchmark-results).
+
 ### Doing what other builders advertise — the Simple Builders way
 
 - **Required fields:** Primitive fields and fields annotated with an annotation named `NotNull` or `NonNull` are non-nullable; constructor parameters are builder inputs. `build()` enforces the required/non-null contract with `IllegalStateException` ([configuration details](#required-fields-and-null-safety)).

@@ -133,8 +133,8 @@ def parse_compiler_time(output: str) -> Optional[float]:
     return None
 
 
-def run_one(run_index: int, profile: str, is_simple_builders: bool, report_dir: Path,
-           builder_type: str = "") -> Optional[dict]:
+def run_one(run_index: int, profile: str, use_tracking: bool, report_dir: Path,
+           builder_type: str = "", formatting_mode: str = "") -> Optional[dict]:
     """Run a single clean compile and return the parsed JSON report (or wall-time-only dict).
 
     The report file uses the run_index in its name so that retries overwrite the failed
@@ -153,11 +153,14 @@ def run_one(run_index: int, profile: str, is_simple_builders: bool, report_dir: 
         "-Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss.SSS",
         "--no-transfer-progress",
     ]
-    if is_simple_builders:
+    is_simple_builders = builder_type in SIMPLE_BUILDERS_TYPES
+    if use_tracking:
         cmd.extend([
             "-Dsimplebuilder.performanceTracking=true",
             f"-Dsimplebuilder.performanceOutputFile={report_file}",
         ])
+    if is_simple_builders and formatting_mode:
+        cmd.append(f"-Dsimplebuilder.formattingMode={formatting_mode}")
 
     result = subprocess.run(
         cmd,
@@ -180,7 +183,7 @@ def run_one(run_index: int, profile: str, is_simple_builders: bool, report_dir: 
             builder_count = count_annotated_sources(annotation)
     compiler_time = parse_compiler_time(result.stdout + result.stderr)
 
-    if is_simple_builders:
+    if use_tracking:
         if not report_file.exists():
             print(f"  Run {run_index}: compiled OK but no JSON report found ({elapsed:.1f}s)")
             return None
@@ -432,6 +435,15 @@ def main() -> None:
         "lombok/record-builder), avoiding the overhead of the processor's "
         "internal performance tracker.",
     )
+    parser.add_argument(
+        "--formatting-mode",
+        type=str,
+        default="",
+        choices=["", "jdt", "lightweight", "none"],
+        help="Override the formatting mode for simple-builders types via "
+        "-Asimplebuilder.formattingMode. Only affects simple-builder and "
+        "simple-minimal-builder. Default: empty (use default from profile or JDT, if not defined in profile).",
+    )
     args = parser.parse_args()
 
     num_runs = args.runs
@@ -454,6 +466,34 @@ def main() -> None:
     print(f"Report directory: {report_dir}")
     print()
 
+    # Pre-flight check: verify generated sources use the expected annotation.
+    # If generate_classes.py was run for a different builder type, the Maven
+    # profile won't match and compilation will fail or produce wrong results.
+    expected_annotation = BUILDER_TYPE_ANNOTATION.get(builder_type)
+    if expected_annotation:
+        src_dir = BASE_DIR / "src" / "main" / "java"
+        if src_dir.exists():
+            actual = None
+            for f in src_dir.rglob("*.java"):
+                try:
+                    text = f.read_text()
+                except OSError:
+                    continue
+                for ann in BUILDER_TYPE_ANNOTATION.values():
+                    if ann in text:
+                        actual = ann
+                        break
+                if actual is not None:
+                    break
+            if actual is not None and actual != expected_annotation:
+                print(f"ERROR: Generated sources use {actual} but --builder-type is "
+                      f"{builder_type} (expects {expected_annotation}).")
+                print(f"Run generate_classes.py first: "
+                      f"python3 scripts/generate_classes.py --builder-type {builder_type} --force")
+                sys.exit(1)
+
+
+
     max_retries = args.max_retries
     runs: list[dict] = []
     total_attempts = 0
@@ -466,7 +506,8 @@ def main() -> None:
             if attempt > 1:
                 print(f"  Run {i}: retry {attempt - 1}/{max_retries}...", flush=True)
             run_start = time.time()
-            data = run_one(i, profile, use_tracking, report_dir, builder_type)
+            data = run_one(i, profile, use_tracking, report_dir, builder_type,
+                           args.formatting_mode)
             if data is not None:
                 if "_wallTimeSeconds" not in data:
                     data["_wallTimeSeconds"] = time.time() - run_start
