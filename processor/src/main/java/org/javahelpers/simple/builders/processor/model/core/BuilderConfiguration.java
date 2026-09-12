@@ -295,7 +295,8 @@ public record BuilderConfiguration(
   /**
    * Checks whether the given package is within any configured package scope.
    *
-   * <p>A package matches when it equals a configured scope or is one of its subpackages.
+   * <p>A package matches when it equals a configured scope or is one of its subpackages. Matching
+   * ignores case.
    *
    * @param packageName the package to check
    * @param packageScopes the configured package scopes
@@ -303,7 +304,8 @@ public record BuilderConfiguration(
    */
   public static boolean isInScope(String packageName, Set<String> packageScopes) {
     for (String scope : packageScopes) {
-      if (packageName.equals(scope) || packageName.startsWith(scope + ".")) {
+      if (StringUtils.equalsIgnoreCase(packageName, scope)
+          || StringUtils.startsWithIgnoreCase(packageName, scope + ".")) {
         return true;
       }
     }

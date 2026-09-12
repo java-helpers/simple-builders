@@ -76,4 +76,19 @@ class BuilderConfigurationTest {
     assertTrue(config.isInUsageScope("c.d.child"));
     assertFalse(config.isInUsageScope("c.de"));
   }
+
+  @Test
+  void packageScopesMatchIgnoringCase() {
+    BuilderConfiguration config =
+        BuilderConfiguration.builder()
+            .builderGenerationPackages("com.Example.Dto")
+            .builderUsagePackages("com.library")
+            .build();
+
+    assertTrue(config.isInGenerationScope("com.example.dto"));
+    assertTrue(config.isInGenerationScope("COM.EXAMPLE.DTO.child"));
+    assertFalse(config.isInGenerationScope("com.example.dtos"));
+    assertTrue(config.isInUsageScope("COM.Library"));
+    assertTrue(config.isInUsageScope("com.LIBRARY.sub"));
+  }
 }

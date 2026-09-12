@@ -683,10 +683,10 @@ public @interface SimpleBuilder {
     // === Builder Scoping ===
     /**
      * Comma-separated list of packages for which builders are generated. <br>
-     * Subpackages are included automatically. When non-empty, builder generation is restricted to
-     * DTOs whose package equals or is a subpackage of a listed package. Types in this scope are
-     * trusted to have their builder generated in the same compilation and may be referenced without
-     * a type-existence search.
+     * Subpackages are included automatically and matching ignores case. When non-empty, builder
+     * generation is restricted to DTOs whose package equals or is a subpackage of a listed package.
+     * Types in this scope are trusted to have their builder generated in the same compilation and
+     * may be referenced without a type-existence search.
      *
      * <p>Example: {@code "com.example.dto, com.example.shared"}
      *
@@ -701,10 +701,10 @@ public @interface SimpleBuilder {
     /**
      * Comma-separated list of packages whose builders may be used as helper methods for other DTOs.
      * <br>
-     * Subpackages are included automatically. A type in this scope but not in {@link
-     * #builderGenerationPackages()} must have its compiled builder verified (via type search)
-     * before a builder reference is emitted. If the builder type cannot be resolved, the field
-     * falls back to a plain setter.
+     * Subpackages are included automatically and matching ignores case. A type in this scope but
+     * not in {@link #builderGenerationPackages()} must have its compiled builder verified (via type
+     * search) before a builder reference is emitted. If the builder type cannot be resolved, the
+     * field falls back to a plain setter.
      *
      * <p>Example: {@code "com.example.library, com.example.external"}
      *

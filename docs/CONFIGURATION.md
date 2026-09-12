@@ -666,9 +666,9 @@ Generates methods using `HashMapBuilder` for fluent Map construction.
 `-Asimplebuilder.builderGenerationPackages=package1,package2`
 
 Restricts builder generation to annotated DTOs in the listed packages. Packages are
-comma-separated, and each listed package includes all of its subpackages. Types in the
-generation scope are trusted to have their builders generated in the current compilation,
-so references to their builders do not require a type search.
+comma-separated, each listed package includes all of its subpackages, and matching ignores
+case. Types in the generation scope are trusted to have their builders generated in the
+current compilation, so references to their builders do not require a type search.
 
 #### `builderUsagePackages`
 
@@ -676,10 +676,10 @@ so references to their builders do not require a type search.
 `-Asimplebuilder.builderUsagePackages=package1,package2`
 
 Controls which packages may provide builders as nested builder helpers. Packages are
-comma-separated, and each listed package includes all of its subpackages. For a type in
-the usage scope but outside the generation scope, the processor verifies that its builder
-actually exists on the classpath before emitting a builder reference. If it cannot be
-resolved, the field falls back to a plain setter.
+comma-separated, each listed package includes all of its subpackages, and matching ignores
+case. For a type in the usage scope but outside the generation scope, the processor verifies
+that its builder actually exists on the classpath before emitting a builder reference. If it
+cannot be resolved, the field falls back to a plain setter.
 
 The `example` module contains a runnable demo in package
 `org.javahelpers.simple.builders.example.scoping` ([`ScopedOwnerDto.java`](../example/src/main/java/org/javahelpers/simple/builders/example/scoping/ScopedOwnerDto.java)).
