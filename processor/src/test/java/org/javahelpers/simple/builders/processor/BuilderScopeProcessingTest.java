@@ -49,6 +49,17 @@ class BuilderScopeProcessingTest {
   }
 
   @Test
+  void usageScopeOnly_TrustsHelperGeneratedInSameCompilation() {
+    Compilation compilation =
+        ProcessorTestUtils.createCompiler()
+            .withOptions("-Asimplebuilder.builderUsagePackages=test")
+            .compile(dto("test", "ScopeDto", "HelperAnno"), helper("test"));
+
+    assertThat(compilation).succeeded();
+    assertBuilderConsumer(compilation, "ScopeDtoBuilder", "HelperAnnoBuilder");
+  }
+
+  @Test
   void generationScope_IncludesExactPackageAndSubpackages() {
     Compilation exact =
         ProcessorTestUtils.createCompiler()

@@ -30,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 
 import com.google.testing.compile.Compilation;
 import com.google.testing.compile.Compiler;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import javax.annotation.processing.AbstractProcessor;
@@ -121,10 +122,38 @@ class BuilderScopeResolverTest {
     assertSame(ResolverProbeProcessor.first, ResolverProbeProcessor.second);
   }
 
+  @Test
+  void resolverScopesRegisteredTypesToUsagePackagesAndClearsCache() {
+    ResolverProbeProcessor.reset();
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+                    @SimpleBuilder
+                    public class LibHelper { public LibHelper() {} }
+                    """));
+
+    assertThat(compilation).succeeded();
+    assertEquals(Optional.empty(), ResolverProbeProcessor.beforeRegistration);
+    assertEquals(Optional.empty(), ResolverProbeProcessor.afterRegistration);
+    assertEquals(Optional.empty(), ResolverProbeProcessor.usageBeforeRegistration);
+    assertEquals(
+        "lib.LibHelperBuilder",
+        ResolverProbeProcessor.usageAfterRegistration.get().getFullQualifiedName());
+  }
+
   private static final class ResolverProbeProcessor extends AbstractProcessor {
     private static Optional<TypeName> first;
     private static Optional<TypeName> second;
     private static Optional<TypeName> afterConfigurationChange;
+    private static Optional<TypeName> beforeRegistration;
+    private static Optional<TypeName> afterRegistration;
+    private static Optional<TypeName> usageBeforeRegistration;
+    private static Optional<TypeName> usageAfterRegistration;
 
     private boolean captured;
 
@@ -132,6 +161,10 @@ class BuilderScopeResolverTest {
       first = null;
       second = null;
       afterConfigurationChange = null;
+      beforeRegistration = null;
+      afterRegistration = null;
+      usageBeforeRegistration = null;
+      usageAfterRegistration = null;
     }
 
     @Override
@@ -159,6 +192,15 @@ class BuilderScopeResolverTest {
       second = resolver.resolveUsableBuilderType(helper);
       context.initConfigurationForProcessingTarget(configuration("other", "OtherBuilder"));
       afterConfigurationChange = resolver.resolveUsableBuilderType(helper);
+      context.initConfigurationForProcessingTarget(usageOnlyConfiguration("other"));
+      beforeRegistration = resolver.resolveUsableBuilderType(helper);
+      resolver.registerGeneratedTypes(List.of(helper));
+      afterRegistration = resolver.resolveUsableBuilderType(helper);
+      context.initConfigurationForProcessingTarget(usageOnlyConfiguration("lib"));
+      resolver.registerGeneratedTypes(List.of());
+      usageBeforeRegistration = resolver.resolveUsableBuilderType(helper);
+      resolver.registerGeneratedTypes(List.of(helper));
+      usageAfterRegistration = resolver.resolveUsableBuilderType(helper);
       captured = true;
       return false;
     }
@@ -169,6 +211,11 @@ class BuilderScopeResolverTest {
               .builderGenerationPackages(packageName)
               .builderSuffix(suffix)
               .build());
+    }
+
+    private static BuilderConfiguration usageOnlyConfiguration(String packageName) {
+      return BuilderConfiguration.DEFAULT.merge(
+          BuilderConfiguration.builder().builderUsagePackages(packageName).build());
     }
   }
 }

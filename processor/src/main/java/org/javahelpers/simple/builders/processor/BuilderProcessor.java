@@ -27,7 +27,6 @@ package org.javahelpers.simple.builders.processor;
 import static org.javahelpers.simple.builders.processor.processing.BuilderDefinitionCreator.extractFromElement;
 import static org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker.PHASE_BUILDER_DEFINITION_EXTRACTION;
 import static org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker.PHASE_CODE_GENERATION;
-import static org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker.PHASE_CONFIGURATION_RESOLUTION;
 import static org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker.PHASE_DTO_MAPPING;
 
 import com.google.auto.service.AutoService;
@@ -190,16 +189,14 @@ public class BuilderProcessor extends AbstractProcessor {
             .toList();
 
     PerformanceTracker tracker = context.getPerformanceTracker();
-    int successfulGenerations = 0;
+    List<ElementToGenerate> elementsToGenerate = new ArrayList<>();
+
+    // Resolve configuration and apply generation scopes before processing any builder. This lets
+    // the scope resolver know every builder that will be generated in this round.
     for (Element annotatedElement : sortedElements) {
       context.debugStartOperation("Processing element: " + annotatedElement.getSimpleName());
-      String className = annotatedElement.getSimpleName().toString();
-      tracker.startClass(className);
       try {
-        // Track Configuration Resolution (actual work happens here)
-        tracker.startPhase();
         BuilderConfiguration config = reader.resolveConfiguration(annotatedElement);
-        tracker.endPhase(PHASE_CONFIGURATION_RESOLUTION);
         context.debug("Configuration resolved: %s", config);
 
         // Restrict builder generation to configured scopes, if any
@@ -212,8 +209,33 @@ public class BuilderProcessor extends AbstractProcessor {
             continue;
           }
         }
+        elementsToGenerate.add(new ElementToGenerate(annotatedElement, config));
+      } catch (BuilderException ex) {
+        // By default builder generation failures are warnings so other builders are still
+        // generated. In opt-in strict mode they are promoted to errors that fail the build.
+        context.reportBasedOnStrictMode(
+            annotatedElement, "simple-builders: Failed to generate builder - %s", ex.getMessage());
+      } finally {
+        context.debugEndOperation();
+      }
+    }
 
-        process(annotatedElement, config);
+    context
+        .getBuilderScopeResolver()
+        .registerGeneratedTypes(
+            elementsToGenerate.stream()
+                .map(ElementToGenerate::element)
+                .filter(TypeElement.class::isInstance)
+                .map(TypeElement.class::cast)
+                .toList());
+
+    int successfulGenerations = 0;
+    for (ElementToGenerate elementToGenerate : elementsToGenerate) {
+      Element annotatedElement = elementToGenerate.element();
+      context.debugStartOperation("Processing element: " + annotatedElement.getSimpleName());
+      tracker.startClass(annotatedElement.getSimpleName().toString());
+      try {
+        process(annotatedElement, elementToGenerate.config());
         successfulGenerations++;
       } catch (BuilderException ex) {
         // By default builder generation failures are warnings so other builders are still
@@ -299,6 +321,8 @@ public class BuilderProcessor extends AbstractProcessor {
         renderingDto.getMethods().size(),
         builderDef.getBuilderTypeName().getClassName());
   }
+
+  private record ElementToGenerate(Element element, BuilderConfiguration config) {}
 
   /**
    * Checks whether the provided SourceVersion is at least Java 17 in a backwards compatible way.

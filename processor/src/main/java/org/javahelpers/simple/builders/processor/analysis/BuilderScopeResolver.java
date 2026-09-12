@@ -23,7 +23,9 @@
  */
 package org.javahelpers.simple.builders.processor.analysis;
 
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -39,11 +41,12 @@ import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
  * Central resolver that decides whether a builder may be referenced for a given type.
  *
  * <p>This resolver is independent of generator/enhancer code; it only relies on the configured
- * {@code builderGenerationPackages} and {@code builderUsagePackages} scopes and on the availability
- * of the builder type on the classpath.
+ * {@code builderGenerationPackages} and {@code builderUsagePackages} scopes, registered generated
+ * types, and the availability of builder types on the classpath.
  *
  * <p>The resolver is constructed once per processing context and refreshes its parsed package
- * scopes and per-type results when the target configuration changes.
+ * scopes and per-type results when the target configuration changes. Types whose builders are
+ * generated in the current processing round are registered before resolution.
  */
 public final class BuilderScopeResolver {
 
@@ -51,6 +54,7 @@ public final class BuilderScopeResolver {
   private BuilderConfiguration cachedConfiguration;
   private Set<String> generationPackages = Set.of();
   private Set<String> usagePackages = Set.of();
+  private Set<String> generatedTypeNames = Set.of();
   private final Map<String, Optional<TypeName>> resolvedBuilderTypes = new HashMap<>();
 
   /**
@@ -75,8 +79,8 @@ public final class BuilderScopeResolver {
    *   <li>If the referenced type's package is in {@code builderGenerationPackages}, the candidate
    *       builder is returned without a type-existence search.
    *   <li>If the referenced type's package is in {@code builderUsagePackages} (but not in the
-   *       generation scope), the candidate builder is returned only if the builder type can be
-   *       resolved on the classpath.
+   *       generation scope), the candidate builder is returned if its builder is generated in the
+   *       current processing round or can be resolved on the classpath.
    *   <li>Otherwise no builder may be referenced.
    * </ol>
    *
@@ -90,6 +94,20 @@ public final class BuilderScopeResolver {
     refreshForConfigurationIfNeeded();
     return resolvedBuilderTypes.computeIfAbsent(
         referencedType.getQualifiedName().toString(), fqn -> resolve(referencedType));
+  }
+
+  /**
+   * Registers the types whose builders are generated in the current processing round.
+   *
+   * @param generatedTypes types whose builders will be generated in this round
+   */
+  public void registerGeneratedTypes(Collection<? extends TypeElement> generatedTypes) {
+    Set<String> registeredTypeNames = new HashSet<>();
+    for (TypeElement generatedType : generatedTypes) {
+      registeredTypeNames.add(generatedType.getQualifiedName().toString());
+    }
+    generatedTypeNames = registeredTypeNames;
+    resolvedBuilderTypes.clear();
   }
 
   private Optional<TypeName> resolve(TypeElement referencedType) {
@@ -113,11 +131,12 @@ public final class BuilderScopeResolver {
       return Optional.of(candidate);
     }
 
-    // Usage scope: types whose builders may already be compiled; verify existence.
+    // Usage scope: types whose builders may be generated now or already compiled.
     if (!usagePackages.isEmpty() && BuilderConfiguration.isInScope(packageName, usagePackages)) {
-      return context.getTypeElement(candidate.getFullQualifiedName()) != null
-          ? Optional.of(candidate)
-          : Optional.empty();
+      boolean builderAvailable =
+          generatedTypeNames.contains(referencedType.getQualifiedName().toString())
+              || context.getTypeElement(candidate.getFullQualifiedName()) != null;
+      return builderAvailable ? Optional.of(candidate) : Optional.empty();
     }
 
     return Optional.empty();
