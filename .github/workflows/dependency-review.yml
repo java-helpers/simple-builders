@@ -68,3 +68,11 @@ jobs:
           # Fail closed with licenses derived from the project's full dependency tree,
           # replacing the deprecated deny-licenses option.
           allow-licenses: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, EPL-1.0, EPL-2.0, CDDL-1.0, CDDL-1.1, ISC, Unlicense, CC0-1.0
+          # Per-dependency exception to the allowlist above: sonarqube-scan-action
+          # (used in fork-sonar.yml) is LGPL-3.0. The action only executes the
+          # scanner on the runner — use of an unmodified tool, not distribution
+          # or a derivative work — so LGPL obligations do not apply. The purl is
+          # deliberately version-less: dependency-review-action's matcher ignores
+          # the version anyway, and it is the usage as a CI action that makes the
+          # license unproblematic, independent of the pinned revision.
+          allow-dependencies-licenses: 'pkg:githubactions/SonarSource/sonarqube-scan-action'
