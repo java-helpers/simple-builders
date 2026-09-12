@@ -27,6 +27,7 @@ package org.javahelpers.simple.builders.processor;
 import static org.javahelpers.simple.builders.processor.processing.BuilderDefinitionCreator.extractFromElement;
 import static org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker.PHASE_BUILDER_DEFINITION_EXTRACTION;
 import static org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker.PHASE_CODE_GENERATION;
+import static org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker.PHASE_CONFIGURATION_RESOLUTION;
 import static org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker.PHASE_DTO_MAPPING;
 
 import com.google.auto.service.AutoService;
@@ -196,7 +197,9 @@ public class BuilderProcessor extends AbstractProcessor {
     for (Element annotatedElement : sortedElements) {
       context.debugStartOperation("Processing element: " + annotatedElement.getSimpleName());
       try {
+        tracker.startPhase();
         BuilderConfiguration config = reader.resolveConfiguration(annotatedElement);
+        tracker.endPhase(PHASE_CONFIGURATION_RESOLUTION);
         context.debug("Configuration resolved: %s", config);
 
         // Restrict builder generation to configured scopes, if any
