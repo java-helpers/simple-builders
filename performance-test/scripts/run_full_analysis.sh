@@ -1,4 +1,4 @@
-#!/usr/bin/env zsh
+#!/usr/bin/env bash
 # Run the full performance analysis for simple-builders.
 #
 # This is the single entry point referenced in PERFORMANCE_ANALYSIS.md.
@@ -14,8 +14,8 @@
 #      deeper insight into formatting overhead.
 #
 # Usage:
-#   zsh performance-test/scripts/run_full_analysis.sh
-#   RUNS=5 zsh performance-test/scripts/run_full_analysis.sh   # override run count (default: 10)
+#   ./performance-test/scripts/run_full_analysis.sh
+#   RUNS=5 ./performance-test/scripts/run_full_analysis.sh   # override run count (default: 10)
 #
 # Output directories:
 #   performance-reports/{sb,mb,rb,lombok}-{N}runs/
@@ -26,25 +26,27 @@
 set -euo pipefail
 
 RUNS="${RUNS:-10}"
+DATE_FMT='+%Y-%m-%d %H:%M:%S'
+
+START_TIME_FMT=$(date "$DATE_FMT")
 
 echo "============================================================"
-echo "  FULL PERFORMANCE ANALYSIS started: $(date '+%Y-%m-%d %H:%M:%S')"
+echo "  FULL PERFORMANCE ANALYSIS started: ${START_TIME_FMT}"
 echo "  Runs per measurement: ${RUNS}"
 echo "============================================================"
 echo
 
-START_TIME=$(date +%s)
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 BASE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$BASE_DIR/.."
 
-# --- macOS performance optimizations ---
+# --- macOS performance optimizations (skipped on other platforms) ---
 # Prevent system sleep while the analysis is running
 if command -v caffeinate &>/dev/null; then
   caffeinate -dimsu -w $$ &
 fi
 
-# Run the script and all children at elevated priority
+# Run the script and all children at elevated priority (requires privileges; ignore failure)
 renice -n -10 -p $$ 2>/dev/null || true
 
 echo "============================================================"
@@ -128,8 +130,8 @@ echo
 # ============================================================
 echo "============================================================"
 echo "  Full performance analysis complete."
-echo "  Started:  $(date -r "$START_TIME" '+%Y-%m-%d %H:%M:%S')"
-echo "  Finished: $(date '+%Y-%m-%d %H:%M:%S')"
+echo "  Started:  ${START_TIME_FMT}"
+echo "  Finished: $(date "$DATE_FMT")"
 echo "  Reports:"
 echo "    Cross-framework: performance-test/performance-reports/{sb,mb,rb,lombok}-${RUNS}runs/"
 echo "    Formatting-mode: performance-test/performance-reports/fmt-{jdt,lightweight,none}-${RUNS}runs/"
