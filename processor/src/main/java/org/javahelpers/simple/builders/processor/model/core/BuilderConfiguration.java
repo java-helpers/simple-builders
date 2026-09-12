@@ -32,6 +32,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
@@ -304,8 +305,8 @@ public record BuilderConfiguration(
    */
   public static boolean isInScope(String packageName, Set<String> packageScopes) {
     for (String scope : packageScopes) {
-      if (StringUtils.equalsIgnoreCase(packageName, scope)
-          || StringUtils.startsWithIgnoreCase(packageName, scope + ".")) {
+      if (Strings.CI.equals(packageName, scope)
+          || Strings.CI.startsWith(packageName, scope + ".")) {
         return true;
       }
     }
