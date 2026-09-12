@@ -133,7 +133,7 @@ def parse_compiler_time(output: str) -> Optional[float]:
     return None
 
 
-def run_one(run_index: int, profile: str, is_simple_builders: bool, report_dir: Path,
+def run_one(run_index: int, profile: str, use_tracking: bool, report_dir: Path,
            builder_type: str = "", formatting_mode: str = "") -> Optional[dict]:
     """Run a single clean compile and return the parsed JSON report (or wall-time-only dict).
 
@@ -153,13 +153,14 @@ def run_one(run_index: int, profile: str, is_simple_builders: bool, report_dir: 
         "-Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss.SSS",
         "--no-transfer-progress",
     ]
-    if is_simple_builders:
+    is_simple_builders = builder_type in SIMPLE_BUILDERS_TYPES
+    if use_tracking:
         cmd.extend([
             "-Dsimplebuilder.performanceTracking=true",
             f"-Dsimplebuilder.performanceOutputFile={report_file}",
         ])
-        if formatting_mode:
-            cmd.append(f"-Dsimplebuilder.formattingMode={formatting_mode}")
+    if is_simple_builders and formatting_mode:
+        cmd.append(f"-Dsimplebuilder.formattingMode={formatting_mode}")
 
     result = subprocess.run(
         cmd,
@@ -182,7 +183,7 @@ def run_one(run_index: int, profile: str, is_simple_builders: bool, report_dir: 
             builder_count = count_annotated_sources(annotation)
     compiler_time = parse_compiler_time(result.stdout + result.stderr)
 
-    if is_simple_builders:
+    if use_tracking:
         if not report_file.exists():
             print(f"  Run {run_index}: compiled OK but no JSON report found ({elapsed:.1f}s)")
             return None
