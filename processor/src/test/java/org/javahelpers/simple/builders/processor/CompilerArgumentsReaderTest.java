@@ -90,6 +90,15 @@ class CompilerArgumentsReaderTest {
   }
 
   @Test
+  void readValue_FormatterProfileCompilerOption_ReturnsValue() {
+    ProcessingEnvironment env =
+        ProcessingEnvironmentStub.builder().put("simplebuilder.formatterProfile", "x").build();
+    CompilerArgumentsReader reader = new CompilerArgumentsReader(env);
+
+    assertEquals("x", reader.readValue(CompilerArgumentsEnum.FORMATTER_PROFILE));
+  }
+
+  @Test
   void readValue_SystemPropertySet_FallsBackToSystemProperty() {
     System.setProperty("simplebuilder.verbose", "true");
     try {
