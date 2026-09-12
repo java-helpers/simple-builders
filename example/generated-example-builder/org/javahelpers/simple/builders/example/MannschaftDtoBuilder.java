@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 import javax.annotation.processing.Generated;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.javahelpers.simple.builders.core.annotations.BuilderImplementation;
@@ -31,7 +32,9 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  *     .name("Hello %s", "World")
  *     .name(() -> "example value")
  *     .name(sb -> sb.append("text"))
+ *     .nameUpdate(String::trim)
  *     .sponsoren(t -> t.add(sponsorDtoBuilder -> sponsorDtoBuilder))
+ *     .sponsorenUpdate(UnaryOperator.identity())
  *     .build();
  * }</pre>
  */
@@ -180,6 +183,32 @@ public class MannschaftDtoBuilder implements IBuilderBase<MannschaftDto> {
   }
 
   /**
+   * Updates the current value of <code>name</code> in place by applying the given operator, instead of reading it out,
+   * changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance).
+   * <p>
+   * Generated from setter {@link MannschaftDto#setName(String) setName(String name)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.nameUpdate(String::trim);
+   * }</pre>
+   * 
+   * @param nameUpdater operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>name</code> has not been set yet
+   */
+  public MannschaftDtoBuilder nameUpdate(UnaryOperator<String> nameUpdater) {
+    if (!this.name.isSet()) {
+      throw new IllegalStateException("Cannot update 'name' before it is set");
+    }
+    this.name = changedValue(nameUpdater.apply(this.name.value()));
+    return this;
+  }
+
+  /**
    * Sets the value for <code>sponsoren</code>.
    * <p>
    * Generated from setter {@link MannschaftDto#setSponsoren(Set) setSponsoren(Set<SponsorDto> sponsoren)}
@@ -240,6 +269,32 @@ public class MannschaftDtoBuilder implements IBuilderBase<MannschaftDto> {
    */
   public MannschaftDtoBuilder sponsoren(Supplier<Set<SponsorDto>> sponsorenSupplier) {
     this.sponsoren = changedValue(sponsorenSupplier.get());
+    return this;
+  }
+
+  /**
+   * Updates the current value of <code>sponsoren</code> in place by applying the given operator, instead of reading it
+   * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance).
+   * <p>
+   * Generated from setter {@link MannschaftDto#setSponsoren(Set) setSponsoren(Set<SponsorDto> sponsoren)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.sponsorenUpdate(UnaryOperator.identity());
+   * }</pre>
+   * 
+   * @param sponsorenUpdater operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>sponsoren</code> has not been set yet
+   */
+  public MannschaftDtoBuilder sponsorenUpdate(UnaryOperator<Set<SponsorDto>> sponsorenUpdater) {
+    if (!this.sponsoren.isSet()) {
+      throw new IllegalStateException("Cannot update 'sponsoren' before it is set");
+    }
+    this.sponsoren = changedValue(sponsorenUpdater.apply(this.sponsoren.value()));
     return this;
   }
 

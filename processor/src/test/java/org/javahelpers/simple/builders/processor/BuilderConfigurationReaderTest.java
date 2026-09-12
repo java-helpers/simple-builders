@@ -76,6 +76,7 @@ class BuilderConfigurationReaderTest {
                 generateFieldConsumer = OptionState.DISABLED,
                 generateBuilderConsumer = OptionState.DISABLED,
                 generateVarArgsHelpers = OptionState.DISABLED,
+                generateUpdateHelpers = OptionState.DISABLED,
                 builderAccess = AccessModifier.PACKAGE_PRIVATE,
                 methodAccess = AccessModifier.PACKAGE_PRIVATE,
                 builderSuffix = "Factory",
@@ -135,6 +136,7 @@ class BuilderConfigurationReaderTest {
     // Verify generateVarArgsHelpers=DISABLED
     ProcessorAsserts.assertNotContaining(
         generatedCode, "PersonDtoFactory withTags(String... tags)");
+    ProcessorAsserts.assertNotContaining(generatedCode, "nameUpdate(");
   }
 
   /**
@@ -446,7 +448,8 @@ class BuilderConfigurationReaderTest {
             .withOptions(
                 "-Asimplebuilder.generateConditionalHelper=DISABLED",
                 "-Asimplebuilder.generateWithInterface=DISABLED",
-                "-Asimplebuilder.generateStringFormatHelpers=DISABLED")
+                "-Asimplebuilder.generateStringFormatHelpers=DISABLED",
+                "-Asimplebuilder.generateUpdateHelpers=DISABLED")
             .compile(dtoSource);
 
     // Then: Configuration is applied correctly

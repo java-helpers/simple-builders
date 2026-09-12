@@ -90,7 +90,6 @@ class BuilderJavadocExampleTest {
     // Then
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-
     // The generated class javadoc must contain the full kitchen-sink chain,
     // with fields in alphabetical order (pages, tags, title) and within each
     // field the generator lines in priority order.
@@ -101,18 +100,21 @@ class BuilderJavadocExampleTest {
         * BookDto result = BookDtoBuilder.create()
         *     .pages(42)
         *     .pages(() -> 42)
+        *     .pagesUpdate(Math::abs)
         *     .tags(List.of("example value"))
         *     .tags(() -> List.of("example value"))
         *     .tags(t -> t.add("example value"))
         *     .tags("example value", "example value")
         *     .add2Tags("example value")
+        *     .tagsUpdate(UnaryOperator.identity())
         *     .title("example value")
         *     .title("Hello %s", "World")
         *     .title(() -> "example value")
         *     .title(sb -> sb.append("text"))
+        *     .titleUpdate(String::trim)
         *     .build();
         * }</pre>
-        """);
+        * """);
   }
 
   @ParameterizedTest(name = "{0}")
@@ -331,7 +333,6 @@ class BuilderJavadocExampleTest {
     Compilation compilation = compile(dto, helper);
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-
     // The basic setter must still be generated,
     // but the method javadoc must NOT contain any example block:
     // neither a bogus "builder.helper(null)" line
@@ -378,7 +379,6 @@ class BuilderJavadocExampleTest {
     Compilation compilation = compile(dto, helper);
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
-
     // The class-level kitchen-sink chain includes ONLY the resolvable field (title).
     // The helper field (HelperPlain) has no example value and must be omitted.
     // HelperPlain has only a parameterized constructor (no empty constructor) and no builder.
@@ -387,13 +387,15 @@ class BuilderJavadocExampleTest {
         """
         * <pre>{@code
         * MixedDto result = MixedDtoBuilder.create()
+        *     .helperUpdate(UnaryOperator.identity())
         *     .title("example value")
         *     .title("Hello %s", "World")
         *     .title(() -> "example value")
         *     .title(sb -> sb.append("text"))
+        *     .titleUpdate(String::trim)
         *     .build();
         * }</pre>
-        """);
+        * """);
 
     // No `.helper(...)` call in the class example chain
     ProcessorAsserts.assertNotContaining(generatedCode, ".helper(");

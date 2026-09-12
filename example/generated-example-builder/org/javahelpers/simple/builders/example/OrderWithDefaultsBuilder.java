@@ -6,6 +6,7 @@ import static org.javahelpers.simple.builders.core.util.TrackedValue.unsetValue;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 import javax.annotation.processing.Generated;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.javahelpers.simple.builders.core.annotations.BuilderImplementation;
@@ -29,12 +30,15 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  *     .id("Hello %s", "World")
  *     .id(() -> "example value")
  *     .id(sb -> sb.append("text"))
+ *     .idUpdate(String::trim)
  *     .priority(42)
  *     .priority(() -> 42)
+ *     .priorityUpdate(Math::abs)
  *     .status("example value")
  *     .status("Hello %s", "World")
  *     .status(() -> "example value")
  *     .status(sb -> sb.append("text"))
+ *     .statusUpdate(String::trim)
  *     .build();
  * }</pre>
  */
@@ -168,6 +172,32 @@ public class OrderWithDefaultsBuilder implements IBuilderBase<OrderWithDefaults>
   }
 
   /**
+   * Updates the current value of <code>id</code> in place by applying the given operator, instead of reading it out,
+   * changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance).
+   * <p>
+   * Generated from setter {@link OrderWithDefaults#setId(String) setId(String id)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.idUpdate(String::trim);
+   * }</pre>
+   * 
+   * @param idUpdater operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>id</code> has not been set yet
+   */
+  public OrderWithDefaultsBuilder idUpdate(UnaryOperator<String> idUpdater) {
+    if (!this.id.isSet()) {
+      throw new IllegalStateException("Cannot update 'id' before it is set");
+    }
+    this.id = changedValue(idUpdater.apply(this.id.value()));
+    return this;
+  }
+
+  /**
    * Sets the value for <code>priority</code>.
    * <p>
    * Generated from setter {@link OrderWithDefaults#setPriority(int) setPriority(int priority)}
@@ -202,6 +232,32 @@ public class OrderWithDefaultsBuilder implements IBuilderBase<OrderWithDefaults>
    */
   public OrderWithDefaultsBuilder priority(Supplier<Integer> prioritySupplier) {
     this.priority = changedValue(prioritySupplier.get());
+    return this;
+  }
+
+  /**
+   * Updates the current value of <code>priority</code> in place by applying the given operator, instead of reading it
+   * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance).
+   * <p>
+   * Generated from setter {@link OrderWithDefaults#setPriority(int) setPriority(int priority)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.priorityUpdate(Math::abs);
+   * }</pre>
+   * 
+   * @param priorityUpdater operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>priority</code> has not been set yet
+   */
+  public OrderWithDefaultsBuilder priorityUpdate(UnaryOperator<Integer> priorityUpdater) {
+    if (!this.priority.isSet()) {
+      throw new IllegalStateException("Cannot update 'priority' before it is set");
+    }
+    this.priority = changedValue(priorityUpdater.apply(this.priority.value()));
     return this;
   }
 
@@ -282,6 +338,32 @@ public class OrderWithDefaultsBuilder implements IBuilderBase<OrderWithDefaults>
    */
   public OrderWithDefaultsBuilder status(String format, Object... args) {
     this.status = changedValue(String.format(format, args));
+    return this;
+  }
+
+  /**
+   * Updates the current value of <code>status</code> in place by applying the given operator, instead of reading it
+   * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance).
+   * <p>
+   * Generated from setter {@link OrderWithDefaults#setStatus(String) setStatus(String status)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.statusUpdate(String::trim);
+   * }</pre>
+   * 
+   * @param statusUpdater operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>status</code> has not been set yet
+   */
+  public OrderWithDefaultsBuilder statusUpdate(UnaryOperator<String> statusUpdater) {
+    if (!this.status.isSet()) {
+      throw new IllegalStateException("Cannot update 'status' before it is set");
+    }
+    this.status = changedValue(statusUpdater.apply(this.status.value()));
     return this;
   }
 

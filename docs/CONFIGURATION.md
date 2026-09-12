@@ -103,6 +103,7 @@ Create reusable configuration presets with custom template annotations. The buil
     generateConditionalHelper = OptionState.DISABLED,
     generateVarArgsHelpers = OptionState.DISABLED,
     generateStringFormatHelpers = OptionState.DISABLED,
+    generateUpdateHelpers = OptionState.DISABLED,
     generateAddToCollectionHelpers = OptionState.DISABLED,
     generateUnboxedOptional = OptionState.DISABLED,
     copyTypeAnnotations = OptionState.DISABLED,
@@ -473,6 +474,35 @@ BookDto book = BookDtoBuilder.create()
 ```
 
 **When DISABLED**: No format helper methods are generated.
+
+---
+
+#### `generateUpdateHelpers`
+
+**Default**: `ENABLED` | **Compiler Option**: `-Asimplebuilder.generateUpdateHelpers=ENABLED|DISABLED`
+
+Generates `xyzUpdate(UnaryOperator<T>)` methods for every builder field. The update helper transforms the
+current value and returns the builder for continued fluent chaining.
+
+```java
+PersonDto person = PersonDtoBuilder.create()
+    .name("  bob ")
+    .nameUpdate(String::trim)
+    .quantity(10)
+    .quantityUpdate(Math::abs)
+    .build();
+```
+
+The field must be set before its update helper is called. Otherwise, the update helper throws
+`IllegalStateException`. Update helpers also work with `With` copy-and-modify operations because
+values copied from an existing instance count as set.
+
+A `null` result is stored as-is and validated by `build()` like any other value.
+
+If a DTO field already has a setter with the same signature as a generated update helper, the setter
+wins and the update helper is omitted with a conflict warning.
+
+**When DISABLED**: No update methods are generated.
 
 ---
 
@@ -1141,6 +1171,7 @@ The built-in `@SimpleMinimalBuilder` is the simplest way to get a lightweight bu
     generateConditionalHelper = OptionState.DISABLED,
     generateVarArgsHelpers = OptionState.DISABLED,
     generateStringFormatHelpers = OptionState.DISABLED,
+    generateUpdateHelpers = OptionState.DISABLED,
     generateAddToCollectionHelpers = OptionState.DISABLED,
     generateUnboxedOptional = OptionState.DISABLED,
     copyTypeAnnotations = OptionState.DISABLED,
@@ -1404,6 +1435,7 @@ methodAccess = AccessModifier.PRIVATE
 # Helper Methods
 -Asimplebuilder.generateVarArgsHelpers=ENABLED|DISABLED
 -Asimplebuilder.generateStringFormatHelpers=ENABLED|DISABLED
+-Asimplebuilder.generateUpdateHelpers=ENABLED|DISABLED
 -Asimplebuilder.generateAddToCollectionHelpers=ENABLED|DISABLED
 -Asimplebuilder.generateUnboxedOptional=ENABLED|DISABLED
 -Asimplebuilder.copyTypeAnnotations=ENABLED|DISABLED
@@ -1469,6 +1501,7 @@ methodAccess = AccessModifier.PRIVATE
     // Helper Methods
     generateVarArgsHelpers = OptionState.ENABLED,
     generateStringFormatHelpers = OptionState.ENABLED,
+    generateUpdateHelpers = OptionState.ENABLED,
     generateUnboxedOptional = OptionState.ENABLED,
     
     // Collection Helpers

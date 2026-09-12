@@ -1,0 +1,167 @@
+/*
+ * MIT License
+ *
+ * Copyright (c) 2026 Andreas Igel
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.javahelpers.simple.builders.processor.generators.field;
+
+import static org.javahelpers.simple.builders.processor.analysis.JavaLangMapper.map2TypeName;
+import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.TRACKED_VALUE_TYPE;
+import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.addExampleChainFragmentTemplate;
+import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.generateBuilderMethodName;
+import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.getMethodAccessModifier;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.function.UnaryOperator;
+import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
+import org.javahelpers.simple.builders.processor.generators.util.JavadocConstants;
+import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
+import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
+import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
+import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
+import org.javahelpers.simple.builders.processor.model.type.TypeNamePrimitive;
+import org.javahelpers.simple.builders.processor.model.type.TypeNamePrimitive.PrimitiveTypeEnum;
+import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
+
+/**
+ * Generates update helper methods for builder fields.
+ *
+ * <p>This generator is enabled by default and can be deactivated by setting the configuration flag
+ * {@code generateUpdateHelpers} to {@code DISABLED}. Each generated method accepts a {@code
+ * UnaryOperator<T>} and applies it to the field's current value. Throws {@link
+ * IllegalStateException} if the value has not been set yet.
+ *
+ * <p>If a DTO already has a field whose setter has the same signature, the setter wins and the
+ * update helper is skipped with a warning.
+ *
+ * <h3>Example to demonstrate the generated methods</h3>
+ *
+ * <pre>{@code
+ * var result = PersonDtoBuilder.create()
+ *     .name("  bob ")
+ *     .nameUpdate(String::trim)
+ *     .quantity(10)
+ *     .quantityUpdate(Math::abs)
+ *     .build();
+ * }</pre>
+ */
+public class UpdateHelperGenerator implements MethodGenerator {
+
+  private static final int PRIORITY = 20;
+
+  @Override
+  public int getPriority() {
+    return PRIORITY;
+  }
+
+  @Override
+  public boolean appliesTo(FieldDto field, TypeName dtoType, ProcessingContext context) {
+    return context.getConfiguration().shouldGenerateUpdateHelpers();
+  }
+
+  @Override
+  public List<BuilderMethodDto> generateMethods(
+      FieldDto field, TypeName builderType, ProcessingContext context) {
+    String originalFieldName = field.getOriginalFieldName();
+    String parameterName = originalFieldName + "Updater";
+    TypeNameGeneric updaterType =
+        new TypeNameGeneric(map2TypeName(UnaryOperator.class), field.getFieldType());
+
+    MethodParameterDto parameter = new MethodParameterDto();
+    parameter.setParameterName(parameterName);
+    parameter.setParameterTypeName(updaterType);
+
+    BuilderMethodDto methodDto =
+        new BuilderMethodDto(
+            generateBuilderMethodName(originalFieldName, context) + "Update", builderType);
+    methodDto.setModifier(getMethodAccessModifier(context));
+    methodDto.addParameter(parameter);
+    methodDto.setCode(
+        """
+        if (!this.$fieldName:N.isSet()) {
+          throw new $illegalStateException:T("Cannot update '$originalFieldName:N' before it is set");
+        }
+        this.$fieldName:N = $builderFieldWrapper:T.changedValue($param:N.apply(this.$fieldName:N.value()));
+        return this;
+        """);
+    methodDto.addArgument("fieldName", field.getFieldNameInBuilder());
+    methodDto.addArgument("originalFieldName", originalFieldName);
+    methodDto.addArgument("param", parameterName);
+    methodDto.addArgument("builderFieldWrapper", TRACKED_VALUE_TYPE);
+    methodDto.addArgument("illegalStateException", map2TypeName(IllegalStateException.class));
+    methodDto.getMethodCodeDto().addCodeBlockImport(IllegalStateException.class);
+    methodDto.setPriority(BuilderMethodDto.PRIORITY_LOW);
+    methodDto.setJavadoc(
+        new JavadocDto(
+                """
+                Updates the current value of <code>%s</code> in place by applying the given operator, instead of reading it out, changing it and setting it again.
+                Useful for adjustments relative to the current value, e.g. trimming, upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow.
+                The value must have been set before (directly or via an existing instance).
+                """
+                    .strip(),
+                originalFieldName)
+            .addParam(
+                parameterName,
+                "operator applied to the current value; its result becomes the new value")
+            .addReturn(JavadocConstants.RETURN_BUILDER_INSTANCE)
+            .addThrows(
+                "IllegalStateException",
+                "if <code>%s</code> has not been set yet".formatted(originalFieldName)));
+
+    addExampleChainFragmentTemplate(
+        methodDto, "#{methodName}(" + getUpdateExample(field.getFieldType()) + ")");
+    return Collections.singletonList(methodDto);
+  }
+
+  private static String getUpdateExample(TypeName fieldType) {
+    String fullyQualifiedName = fieldType.getFullQualifiedName();
+    if ("java.lang.String".equals(fullyQualifiedName)
+        || "String".equals(fieldType.getClassName())) {
+      return "String::trim";
+    }
+    if (fieldType instanceof TypeNamePrimitive primitive
+        && isNumericPrimitive(primitive.getType())) {
+      return "Math::abs";
+    }
+    if (isNumericWrapper(fullyQualifiedName)) {
+      return "Math::abs";
+    }
+    return "UnaryOperator.identity()";
+  }
+
+  private static boolean isNumericPrimitive(PrimitiveTypeEnum type) {
+    return type == PrimitiveTypeEnum.INT
+        || type == PrimitiveTypeEnum.LONG
+        || type == PrimitiveTypeEnum.FLOAT
+        || type == PrimitiveTypeEnum.DOUBLE;
+  }
+
+  private static boolean isNumericWrapper(String fullyQualifiedName) {
+    return "java.lang.Integer".equals(fullyQualifiedName)
+        || "java.lang.Long".equals(fullyQualifiedName)
+        || "java.lang.Float".equals(fullyQualifiedName)
+        || "java.lang.Double".equals(fullyQualifiedName);
+  }
+}

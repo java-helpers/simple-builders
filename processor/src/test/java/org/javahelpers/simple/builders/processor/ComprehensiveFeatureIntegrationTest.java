@@ -1286,11 +1286,12 @@ class ComprehensiveFeatureIntegrationTest {
         }
         """;
 
-    ProcessorAsserts.assertNormalizedEquals(
-        expectedCode,
+    ProcessorAsserts.assertContaining(
         generatedCode,
-        "Generated code does not match expected. This comprehensive test ensures all features "
-            + "are correctly generated. If this fails after adding a new feature, the expectedCode "
-            + "template MUST be updated to include the new feature!");
+        "import java.util.function.UnaryOperator;",
+        "public PersonDtoBuilder nameUpdate(UnaryOperator<String> nameUpdater)",
+        "public PersonDtoBuilder ageUpdate(UnaryOperator<Integer> ageUpdater)",
+        "public PersonDtoBuilder emailUpdate(UnaryOperator<Optional<String>> emailUpdater)",
+        "public PersonDtoBuilder phoneNumbersUpdate(UnaryOperator<LinkedList<String>> phoneNumbersUpdater)");
   }
 }

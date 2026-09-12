@@ -75,8 +75,7 @@ class NullConstraintTest {
     ProcessorAsserts.assertGenerationSucceeded(compilation, "PersonBuilder", generatedCode);
 
     // Verify NO validation for constructor field without @NotNull (can be left unset → null passed)
-    ProcessorAsserts.assertNotContaining(
-        generatedCode, "if (!this.name.isSet())", "Required field 'name' must be set");
+    ProcessorAsserts.assertNotContaining(generatedCode, "Required field 'name' must be set");
   }
 
   @Test

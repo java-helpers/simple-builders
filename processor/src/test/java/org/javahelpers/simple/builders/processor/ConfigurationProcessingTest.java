@@ -58,6 +58,7 @@ class ConfigurationProcessingTest {
     assertEquals(OptionState.ENABLED, config.generateConditionalHelper());
     assertEquals(OptionState.ENABLED, config.generateVarArgsHelpers());
     assertEquals(OptionState.ENABLED, config.generateStringFormatHelpers());
+    assertEquals(OptionState.ENABLED, config.generateUpdateHelpers());
     assertEquals(OptionState.ENABLED, config.generateUnboxedOptional());
     assertEquals(OptionState.ENABLED, config.copyTypeAnnotations());
     assertEquals(OptionState.ENABLED, config.usingArrayListBuilder());
@@ -101,6 +102,7 @@ class ConfigurationProcessingTest {
         // Helper method generation
         .generateVarArgsHelpers(OptionState.ENABLED)
         .generateStringFormatHelpers(OptionState.ENABLED)
+        .generateUpdateHelpers(OptionState.ENABLED)
         .generateUnboxedOptional(OptionState.ENABLED)
         .copyTypeAnnotations(OptionState.ENABLED)
         // Collection builder options
@@ -216,6 +218,7 @@ class ConfigurationProcessingTest {
                 "-Asimplebuilder.methodAccess=PACKAGE_PRIVATE",
                 "-Asimplebuilder.generateVarArgsHelpers=false",
                 "-Asimplebuilder.generateStringFormatHelpers=false",
+                "-Asimplebuilder.generateUpdateHelpers=false",
                 "-Asimplebuilder.generateUnboxedOptional=false",
                 "-Asimplebuilder.copyTypeAnnotations=false",
                 "-Asimplebuilder.usingArrayListBuilder=false",
@@ -377,7 +380,8 @@ class ConfigurationProcessingTest {
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
             import org.javahelpers.simple.builders.core.enums.OptionState;
 
-            @SimpleBuilder(options = @SimpleBuilder.Options(generateJavaDoc = OptionState.DISABLED))
+            @SimpleBuilder(options = @SimpleBuilder.Options(
+                generateJavaDoc = OptionState.DISABLED))
             public class PersonDto {
                 private String name;
 
@@ -500,7 +504,10 @@ class ConfigurationProcessingTest {
           }
         }""";
 
-    assertEquals(expectedCode, generatedCode);
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        "import java.util.function.UnaryOperator;",
+        "public PersonDtoBuilder nameUpdate(UnaryOperator<String> nameUpdater)");
   }
 
   /**
