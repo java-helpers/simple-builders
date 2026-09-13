@@ -101,7 +101,7 @@ public class CompilerArgumentsReader {
    * @return the OptionState value
    */
   public OptionState readOptionState(CompilerArgumentsEnum argument) {
-    return CompilerArgumentsEnum.parseOptionState(readValue(argument));
+    return OptionValueParsers.parseOptionState(readValue(argument));
   }
 
   /**
@@ -113,7 +113,7 @@ public class CompilerArgumentsReader {
    * @return the AccessModifier value, or DEFAULT if not set
    */
   public AccessModifier readAccessModifier(CompilerArgumentsEnum argument) {
-    return CompilerArgumentsEnum.parseAccessModifier(readValue(argument));
+    return OptionValueParsers.parseAccessModifier(readValue(argument));
   }
 
   /**

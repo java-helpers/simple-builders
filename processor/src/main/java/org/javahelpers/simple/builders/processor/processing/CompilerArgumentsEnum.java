@@ -25,7 +25,6 @@
 package org.javahelpers.simple.builders.processor.processing;
 
 import java.util.function.BiConsumer;
-import org.apache.commons.lang3.Strings;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.core.enums.OptionState;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
@@ -319,51 +318,18 @@ public enum CompilerArgumentsEnum {
 
   private static BiConsumer<BuilderConfiguration.Builder, Object> optionState(
       BiConsumer<BuilderConfiguration.Builder, OptionState> setter) {
-    return (builder, value) -> setter.accept(builder, parseOptionState(extractEnumName(value)));
+    return (builder, value) ->
+        setter.accept(builder, OptionValueParsers.parseOptionState(extractEnumName(value)));
   }
 
   private static BiConsumer<BuilderConfiguration.Builder, Object> accessModifier(
       BiConsumer<BuilderConfiguration.Builder, AccessModifier> setter) {
-    return (builder, value) -> setter.accept(builder, parseAccessModifier(extractEnumName(value)));
+    return (builder, value) ->
+        setter.accept(builder, OptionValueParsers.parseAccessModifier(extractEnumName(value)));
   }
 
   private static BiConsumer<BuilderConfiguration.Builder, Object> string(
       BiConsumer<BuilderConfiguration.Builder, String> setter) {
     return (builder, value) -> setter.accept(builder, value == null ? null : value.toString());
-  }
-
-  /**
-   * Parses an option value as {@link OptionState}: {@code "true"}/{@code "enabled"} mean ENABLED,
-   * {@code "false"}/{@code "disabled"} mean DISABLED, anything else (including null) means UNSET.
-   *
-   * @param value the raw option value
-   * @return the parsed OptionState
-   */
-  static OptionState parseOptionState(String value) {
-    if (Strings.CI.equalsAny(value, "true", "enabled")) {
-      return OptionState.ENABLED;
-    } else if (Strings.CI.equalsAny(value, "false", "disabled")) {
-      return OptionState.DISABLED;
-    }
-    return OptionState.UNSET;
-  }
-
-  /**
-   * Parses an option value as {@link AccessModifier}, returning DEFAULT for unset or invalid
-   * values.
-   *
-   * @param value the raw option value
-   * @return the parsed AccessModifier
-   */
-  static AccessModifier parseAccessModifier(String value) {
-    if (Strings.CI.equals(value, "public")) {
-      return AccessModifier.PUBLIC;
-    } else if (Strings.CI.equals(value, "private")) {
-      return AccessModifier.PRIVATE;
-    } else if (Strings.CI.equalsAny(value, "package-private", "package_private")) {
-      return AccessModifier.PACKAGE_PRIVATE;
-    } else {
-      return AccessModifier.DEFAULT;
-    }
   }
 }
