@@ -252,7 +252,7 @@ public class BuilderProcessor extends AbstractProcessor {
 
   /** Returns whether the element's package is outside the configured builder generation scope. */
   private boolean isOutsideGenerationScope(Element element, BuilderConfiguration config) {
-    if (config.getBuilderGenerationPackagesSet().isEmpty()) {
+    if (config.builderGenerationPackages().isEmpty()) {
       return false;
     }
     String packageName = context.getPackageName(element);

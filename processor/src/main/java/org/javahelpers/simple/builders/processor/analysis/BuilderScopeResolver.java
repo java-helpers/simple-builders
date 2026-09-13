@@ -34,6 +34,7 @@ import javax.lang.model.element.TypeElement;
 import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
+import org.javahelpers.simple.builders.processor.model.core.PackageScopes;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
@@ -52,8 +53,8 @@ public final class BuilderScopeResolver {
 
   private final ProcessingContext context;
   private BuilderConfiguration cachedConfiguration;
-  private Set<String> generationPackages = Set.of();
-  private Set<String> usagePackages = Set.of();
+  private PackageScopes generationPackages = PackageScopes.unscoped();
+  private PackageScopes usagePackages = PackageScopes.unscoped();
   private Set<String> generatedTypeNames = Set.of();
   private final Map<String, Optional<TypeName>> resolvedBuilderTypes = new HashMap<>();
 
@@ -125,12 +126,12 @@ public final class BuilderScopeResolver {
     }
 
     // Generation scope: trusted types whose builders are generated in this compilation.
-    if (BuilderConfiguration.isInScope(packageName, generationPackages)) {
+    if (generationPackages.includes(packageName)) {
       return Optional.of(candidate);
     }
 
     // Usage scope: types whose builders may be generated now or already compiled.
-    if (BuilderConfiguration.isInScope(packageName, usagePackages)) {
+    if (usagePackages.includes(packageName)) {
       boolean builderAvailable =
           generatedTypeNames.contains(referencedType.getQualifiedName().toString())
               || context.getTypeElement(candidate.getFullQualifiedName()) != null;
@@ -146,8 +147,11 @@ public final class BuilderScopeResolver {
       return;
     }
     generationPackages =
-        configuration == null ? Set.of() : configuration.getBuilderGenerationPackagesSet();
-    usagePackages = configuration == null ? Set.of() : configuration.getBuilderUsagePackagesSet();
+        configuration == null
+            ? PackageScopes.unscoped()
+            : configuration.builderGenerationPackages();
+    usagePackages =
+        configuration == null ? PackageScopes.unscoped() : configuration.builderUsagePackages();
     resolvedBuilderTypes.clear();
     cachedConfiguration = configuration;
   }

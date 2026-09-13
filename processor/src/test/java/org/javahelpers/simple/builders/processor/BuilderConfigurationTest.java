@@ -51,7 +51,7 @@ class BuilderConfigurationTest {
     BuilderConfiguration config =
         BuilderConfiguration.builder()
             .builderGenerationPackages("  ")
-            .builderUsagePackages(null)
+            .builderUsagePackages((String) null)
             .build();
 
     assertTrue(config.getBuilderGenerationPackagesSet().isEmpty());
