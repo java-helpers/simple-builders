@@ -152,14 +152,14 @@ public final class BuilderScopeResolver {
     cachedConfiguration = configuration;
   }
 
-  private boolean hasSimpleBuilderAnnotation(TypeElement typeElement) {
+  private static boolean hasSimpleBuilderAnnotation(TypeElement typeElement) {
     if (typeElement == null) {
       return false;
     }
     return JavaLangAnalyser.findAnnotation(typeElement, SimpleBuilder.class).isPresent();
   }
 
-  private boolean isIgnoredForBuilderGeneration(TypeElement typeElement) {
+  private static boolean isIgnoredForBuilderGeneration(TypeElement typeElement) {
     if (typeElement == null) {
       return false;
     }
