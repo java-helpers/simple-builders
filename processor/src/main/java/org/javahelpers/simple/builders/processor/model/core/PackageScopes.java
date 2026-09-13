@@ -106,6 +106,28 @@ public final class PackageScopes {
   }
 
   /**
+   * Merges two package scopes into a combined scope containing all packages from both.
+   *
+   * <p>If either scope is empty, the other is returned unchanged. If both are empty, the unscoped
+   * instance is returned.
+   *
+   * @param a the first scope, may be unscoped
+   * @param b the second scope, may be unscoped
+   * @return the merged scope
+   */
+  public static PackageScopes merge(PackageScopes a, PackageScopes b) {
+    if (a.isEmpty()) {
+      return b;
+    }
+    if (b.isEmpty()) {
+      return a;
+    }
+    Set<String> merged = new LinkedHashSet<>(a.packages());
+    merged.addAll(b.packages());
+    return new PackageScopes(Collections.unmodifiableSet(merged));
+  }
+
+  /**
    * Returns the configured package names in declaration order.
    *
    * @return unmodifiable set of package names

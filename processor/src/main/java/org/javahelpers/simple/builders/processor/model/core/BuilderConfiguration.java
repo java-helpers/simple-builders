@@ -387,8 +387,8 @@ public record BuilderConfiguration(
         .generateJavaDoc(mergeOptionState(other.generateJavaDoc, this.generateJavaDoc))
         .jacksonModulePackage(mergeString(other.jacksonModulePackage, this.jacksonModulePackage))
         .builderGenerationPackages(
-            mergeScopes(other.builderGenerationPackages, this.builderGenerationPackages))
-        .builderUsagePackages(mergeScopes(other.builderUsagePackages, this.builderUsagePackages))
+            overrideScopes(other.builderGenerationPackages, this.builderGenerationPackages))
+        .builderUsagePackages(overrideScopes(other.builderUsagePackages, this.builderUsagePackages))
         .builderSuffix(mergeString(other.builderSuffix, this.builderSuffix))
         .builderUsageSuffix(mergeString(other.builderUsageSuffix, this.builderUsageSuffix))
         .setterSuffix(mergeString(other.setterSuffix, this.setterSuffix))
@@ -435,14 +435,18 @@ public record BuilderConfiguration(
   }
 
   /**
-   * Merges two package scope values: the other configuration takes priority when it is scoped;
-   * unscoped means unset and falls back to this configuration's value.
+   * Resolves a package scope value by override: the other configuration takes priority when it is
+   * scoped; unscoped means unset and falls back to this configuration's value.
+   *
+   * <p>This is an override, not a union — when the other configuration specifies any packages, this
+   * configuration's packages are completely replaced. This matches the configuration layering
+   * semantics: annotation-level options override compiler-argument-level options when set.
    *
    * @param other the other scopes (higher priority)
    * @param thisValue the current scopes (lower priority)
-   * @return the merged scopes
+   * @return the resolved scopes
    */
-  private static PackageScopes mergeScopes(PackageScopes other, PackageScopes thisValue) {
+  private static PackageScopes overrideScopes(PackageScopes other, PackageScopes thisValue) {
     return other.isEmpty() ? thisValue : other;
   }
 
