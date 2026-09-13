@@ -409,8 +409,7 @@ class ActivePerformanceTrackerTest {
     JsonNode genStats = root.get("generatorStats");
     assertEquals(2, genStats.size());
 
-    JsonNode genA =
-        genStats.get(0).get("name").asText().equals("GenA") ? genStats.get(0) : genStats.get(1);
+    JsonNode genA = genStats.get(genStats.get(0).get("name").asText().equals("GenA") ? 0 : 1);
     assertEquals(2, genA.get("calls").asInt());
   }
 
