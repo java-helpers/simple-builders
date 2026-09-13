@@ -36,7 +36,6 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
-import org.javahelpers.simple.builders.core.enums.OptionState;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
@@ -290,69 +289,16 @@ public class BuilderConfigurationReader {
         values.entrySet()) {
       String name = entry.getKey().getSimpleName().toString();
       Object value = entry.getValue().getValue();
-      String enumValue = extractEnumName(value);
 
-      switch (name) {
-        case "generateFieldSupplier" -> builder.generateSupplier(OptionState.valueOf(enumValue));
-        case "generateFieldConsumer" -> builder.generateConsumer(OptionState.valueOf(enumValue));
-        case "generateBuilderConsumer" ->
-            builder.generateBuilderConsumer(OptionState.valueOf(enumValue));
-        case "generateConditionalHelper" ->
-            builder.generateConditionalLogic(OptionState.valueOf(enumValue));
-        case "builderAccess" -> builder.builderAccess(AccessModifier.valueOf(enumValue));
-        case "builderConstructorAccess" ->
-            builder.builderConstructorAccess(AccessModifier.valueOf(enumValue));
-        case "methodAccess" -> builder.methodAccess(AccessModifier.valueOf(enumValue));
-        case "generateVarArgsHelpers" ->
-            builder.generateVarArgsHelpers(OptionState.valueOf(enumValue));
-        case "generateStringFormatHelpers" ->
-            builder.generateStringFormatHelpers(OptionState.valueOf(enumValue));
-        case "generateAddToCollectionHelpers" ->
-            builder.generateAddToCollectionHelpers(OptionState.valueOf(enumValue));
-        case "generateUnboxedOptional" ->
-            builder.generateUnboxedOptional(OptionState.valueOf(enumValue));
-        case "copyTypeAnnotations" -> builder.copyTypeAnnotations(OptionState.valueOf(enumValue));
-        case "usingArrayListBuilder" ->
-            builder.usingArrayListBuilder(OptionState.valueOf(enumValue));
-        case "usingArrayListBuilderWithElementBuilders" ->
-            builder.usingArrayListBuilderWithElementBuilders(OptionState.valueOf(enumValue));
-        case "usingHashSetBuilder" -> builder.usingHashSetBuilder(OptionState.valueOf(enumValue));
-        case "usingHashSetBuilderWithElementBuilders" ->
-            builder.usingHashSetBuilderWithElementBuilders(OptionState.valueOf(enumValue));
-        case "usingHashMapBuilder" -> builder.usingHashMapBuilder(OptionState.valueOf(enumValue));
-        case "usingGeneratedAnnotation" ->
-            builder.usingGeneratedAnnotation(OptionState.valueOf(enumValue));
-        case "usingBuilderImplementationAnnotation" ->
-            builder.usingBuilderImplementationAnnotation(OptionState.valueOf(enumValue));
-        case "implementsBuilderBase" ->
-            builder.implementsBuilderBase(OptionState.valueOf(enumValue));
-        case "generateWithInterface" ->
-            builder.generateWithInterface(OptionState.valueOf(enumValue));
-        case "usingJacksonDeserializerAnnotation" ->
-            builder.usingJacksonDeserializerAnnotation(OptionState.valueOf(enumValue));
-        case "generateJacksonModule" ->
-            builder.generateJacksonModule(OptionState.valueOf(enumValue));
-        case "generateJavaDoc" -> builder.generateJavaDoc(OptionState.valueOf(enumValue));
-        case "jacksonModulePackage" -> builder.jacksonModulePackage(value.toString());
-        case "builderGenerationPackages" -> builder.builderGenerationPackages(value.toString());
-        case "builderUsagePackages" -> builder.builderUsagePackages(value.toString());
-        case "builderSuffix" -> builder.builderSuffix(value.toString());
-        case "setterSuffix" -> builder.setterSuffix(value.toString());
-        case "formattingMode" -> builder.formattingMode(value.toString());
-        default ->
-            logger.warning(
-                "Unknown configuration option '%s' with value '%s' - ignoring", name, value);
+      CompilerArgumentsEnum option = CompilerArgumentsEnum.fromOptionName(name);
+      if (option == null || !option.isBuilderOption()) {
+        logger.warning("Unknown configuration option '%s' with value '%s' - ignoring", name, value);
+        continue;
       }
+      option.apply(builder, value);
     }
 
     return builder.build();
-  }
-
-  private String extractEnumName(Object value) {
-    String enumString = value.toString();
-    return enumString.contains(".")
-        ? enumString.substring(enumString.lastIndexOf('.') + 1)
-        : enumString;
   }
 
   private enum AnnotationScope {
