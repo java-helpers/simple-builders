@@ -136,13 +136,13 @@ public final class ProcessorAsserts {
         expectedSubstrings.length,
         notes.size(),
         "Log note count changed — update expectedSubstrings and docs. "
-            + "Expected %d, got %d. Actual notes:\n%s"
-                .formatted(expectedSubstrings.length, notes.size(), String.join("\n", notes)));
+            + "Expected %d, got %d. Actual notes:%n%s"
+                .formatted(expectedSubstrings.length, notes.size(), String.join("%n", notes)));
     for (int i = 0; i < notes.size(); i++) {
       int index = i;
       Assertions.assertTrue(
           notes.get(i).contains(expectedSubstrings[i]),
-          "Note %d mismatch.\n  Expected to contain: %s\n  Actual: %s"
+          "Note %d mismatch.%n  Expected to contain: %s%n  Actual: %s"
               .formatted(index, expectedSubstrings[index], notes.get(index)));
     }
   }
