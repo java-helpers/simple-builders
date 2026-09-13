@@ -285,18 +285,20 @@ public class BuilderConfigurationReader {
 
     BuilderConfiguration.Builder builder = BuilderConfiguration.builder();
 
-    for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry :
-        values.entrySet()) {
-      String name = entry.getKey().getSimpleName().toString();
-      Object value = entry.getValue().getValue();
+    values.entrySet().stream()
+        .forEach(
+            entry -> {
+              String name = entry.getKey().getSimpleName().toString();
+              Object value = entry.getValue().getValue();
 
-      CompilerArgumentsEnum option = CompilerArgumentsEnum.fromOptionName(name);
-      if (isNotABuilderOption(option)) {
-        logger.warning("Unknown configuration option '%s' with value '%s' - ignoring", name, value);
-        continue;
-      }
-      option.apply(builder, value);
-    }
+              CompilerArgumentsEnum option = CompilerArgumentsEnum.fromOptionName(name);
+              if (isNotABuilderOption(option)) {
+                logger.warning(
+                    "Unknown configuration option '%s' with value '%s' - ignoring", name, value);
+                return;
+              }
+              option.apply(builder, value);
+            });
 
     return builder.build();
   }

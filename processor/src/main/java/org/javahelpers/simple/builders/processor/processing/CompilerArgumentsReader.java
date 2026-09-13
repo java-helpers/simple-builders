@@ -24,6 +24,7 @@
 
 package org.javahelpers.simple.builders.processor.processing;
 
+import java.util.Arrays;
 import javax.annotation.processing.ProcessingEnvironment;
 import org.apache.commons.lang3.Strings;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
@@ -157,9 +158,8 @@ public class CompilerArgumentsReader {
    */
   public BuilderConfiguration readBuilderConfiguration() {
     BuilderConfiguration.Builder builder = BuilderConfiguration.builder();
-    for (CompilerArgumentsEnum option : CompilerArgumentsEnum.values()) {
-      option.apply(builder, readValue(option));
-    }
+    Arrays.stream(CompilerArgumentsEnum.values())
+        .forEach(option -> option.apply(builder, readValue(option)));
     return builder.build();
   }
 }
