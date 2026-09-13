@@ -36,27 +36,27 @@ import org.junit.jupiter.api.Test;
 class BuilderScopeProcessingTest {
 
   @Test
-  void bothScopesUnset_UsesAnnotatedInCompilationHelperBuilder() {
+  void bothScopesUnset_UsesBuilderOfReferencedType() {
     Compilation compilation =
         ProcessorTestUtils.createCompiler()
-            .compile(dto("test", "ScopeDto", "HelperAnno"), helper("test"));
+            .compile(dto("test", "ScopeDto", "ReferencedDto"), referencedDto("test"));
 
     assertThat(compilation).succeeded();
-    assertBuilderConsumer(compilation, "ScopeDtoBuilder", "HelperAnnoBuilder");
+    assertBuilderConsumer(compilation, "ScopeDtoBuilder", "ReferencedDtoBuilder");
     ProcessorAsserts.assertContaining(
         ProcessorTestUtils.loadGeneratedSource(compilation, "ScopeDtoBuilder"),
-        "public ScopeDtoBuilder helper(HelperAnno helper)");
+        "public ScopeDtoBuilder referenced(ReferencedDto referenced)");
   }
 
   @Test
-  void usageScopeOnly_TrustsHelperGeneratedInSameCompilation() {
+  void usageScopeOnly_TrustsReferencedTypeGeneratedInSameCompilation() {
     Compilation compilation =
         ProcessorTestUtils.createCompiler()
             .withOptions("-Asimplebuilder.builderUsagePackages=test")
-            .compile(dto("test", "ScopeDto", "HelperAnno"), helper("test"));
+            .compile(dto("test", "ScopeDto", "ReferencedDto"), referencedDto("test"));
 
     assertThat(compilation).succeeded();
-    assertBuilderConsumer(compilation, "ScopeDtoBuilder", "HelperAnnoBuilder");
+    assertBuilderConsumer(compilation, "ScopeDtoBuilder", "ReferencedDtoBuilder");
   }
 
   @Test
@@ -64,16 +64,16 @@ class BuilderScopeProcessingTest {
     Compilation exact =
         ProcessorTestUtils.createCompiler()
             .withOptions("-Asimplebuilder.builderGenerationPackages=test")
-            .compile(dto("test", "ExactDto", "HelperAnno"), helper("test"));
+            .compile(dto("test", "ExactDto", "ReferencedDto"), referencedDto("test"));
     Compilation subpackage =
         ProcessorTestUtils.createCompiler()
             .withOptions("-Asimplebuilder.builderGenerationPackages=test")
-            .compile(dto("test.sub", "SubDto", "HelperAnno"), helper("test.sub"));
+            .compile(dto("test.sub", "SubDto", "ReferencedDto"), referencedDto("test.sub"));
 
     assertThat(exact).succeeded();
     assertThat(subpackage).succeeded();
-    assertBuilderConsumer(exact, "ExactDtoBuilder", "HelperAnnoBuilder");
-    assertBuilderConsumer(subpackage, "SubDtoBuilder", "HelperAnnoBuilder");
+    assertBuilderConsumer(exact, "ExactDtoBuilder", "ReferencedDtoBuilder");
+    assertBuilderConsumer(subpackage, "SubDtoBuilder", "ReferencedDtoBuilder");
   }
 
   @Test
@@ -81,7 +81,7 @@ class BuilderScopeProcessingTest {
     Compilation compilation =
         ProcessorTestUtils.createCompiler()
             .withOptions("-Asimplebuilder.builderGenerationPackages=other.pkg")
-            .compile(dto("test", "OutOfScopeDto", "HelperAnno"), helper("test"));
+            .compile(dto("test", "OutOfScopeDto", "ReferencedDto"), referencedDto("test"));
 
     assertThat(compilation).succeeded();
     ProcessorAsserts.assertNoBuilderGenerated(
@@ -90,24 +90,25 @@ class BuilderScopeProcessingTest {
 
   @Test
   void usageScope_RequiresExistingPrecompiledBuilder() {
-    JavaFileObject dto = dto("test", "LibraryUsageDto", "LibHelper", "lib");
-    JavaFileObject helper = helper("lib", "LibHelper");
+    JavaFileObject dto = dto("test", "LibraryUsageDto", "LibraryDto", "lib");
+    JavaFileObject libraryDto = referencedDto("lib", "LibraryDto");
 
     Compilation compilation =
         ProcessorTestUtils.createCompiler()
             .withOptions(
                 "-Asimplebuilder.builderGenerationPackages=test",
                 "-Asimplebuilder.builderUsagePackages=lib")
-            .compile(dto, helper);
+            .compile(dto, libraryDto);
 
     assertThat(compilation).succeeded();
     String generated =
         ProcessorTestUtils.loadGeneratedSource(compilation, "LibraryUsageDtoBuilder");
     ProcessorAsserts.assertContaining(
-        generated, "public LibraryUsageDtoBuilder helper(LibHelper helper)");
-    ProcessorAsserts.assertNotContaining(generated, "helperBuilderConsumer", "LibHelperBuilder");
+        generated, "public LibraryUsageDtoBuilder referenced(LibraryDto referenced)");
+    ProcessorAsserts.assertNotContaining(
+        generated, "referencedBuilderConsumer", "LibraryDtoBuilder");
     ProcessorAsserts.assertNoBuilderGenerated(
-        compilation, "LibHelper", "The library helper must not be generated in this compilation");
+        compilation, "LibraryDto", "The library type must not be generated in this compilation");
   }
 
   @Test
@@ -118,13 +119,14 @@ class BuilderScopeProcessingTest {
                 "-Asimplebuilder.builderGenerationPackages=test,lib",
                 "-Asimplebuilder.builderUsagePackages=lib")
             .compile(
-                dto("test", "LibraryUsageDto", "LibHelper", "lib"), helper("lib", "LibHelper"));
+                dto("test", "LibraryUsageDto", "LibraryDto", "lib"),
+                referencedDto("lib", "LibraryDto"));
 
     assertThat(compilation).succeeded();
-    assertBuilderConsumer(compilation, "LibraryUsageDtoBuilder", "LibHelperBuilder");
+    assertBuilderConsumer(compilation, "LibraryUsageDtoBuilder", "LibraryDtoBuilder");
     ProcessorAsserts.assertContaining(
-        ProcessorTestUtils.loadGeneratedSource(compilation, "LibHelperBuilder"),
-        "public LibHelper build()");
+        ProcessorTestUtils.loadGeneratedSource(compilation, "LibraryDtoBuilder"),
+        "public LibraryDto build()");
   }
 
   @Test
@@ -140,51 +142,50 @@ class BuilderScopeProcessingTest {
                 builderUsagePackages = "test"
             ))
             public class InlineScopeDto {
-              private HelperAnno helper;
-              public HelperAnno getHelper() { return helper; }
-              public void setHelper(HelperAnno helper) { this.helper = helper; }
+              private ReferencedDto referenced;
+              public ReferencedDto getReferenced() { return referenced; }
+              public void setReferenced(ReferencedDto referenced) { this.referenced = referenced; }
             }
             """);
 
-    Compilation compilation = ProcessorTestUtils.createCompiler().compile(dto, helper("test"));
+    Compilation compilation =
+        ProcessorTestUtils.createCompiler().compile(dto, referencedDto("test"));
 
     assertThat(compilation).succeeded();
-    assertBuilderConsumer(compilation, "InlineScopeDtoBuilder", "HelperAnnoBuilder");
+    assertBuilderConsumer(compilation, "InlineScopeDtoBuilder", "ReferencedDtoBuilder");
   }
 
   @Test
   void optOutTakesPrecedenceOverScopes() {
-    Compilation ignored =
+    Compilation optedOut =
         ProcessorTestUtils.createCompiler()
             .withOptions(
                 "-Asimplebuilder.builderGenerationPackages=test",
                 "-Asimplebuilder.builderUsagePackages=test")
-            .compile(dto("test", "IgnoredHelperDto", "IgnoredHelper"), ignoredHelper());
+            .compile(dto("test", "OptedOutFieldDto", "OptedOutDto"), optedOutDto());
     Compilation unannotated =
         ProcessorTestUtils.createCompiler()
             .withOptions(
                 "-Asimplebuilder.builderGenerationPackages=test",
                 "-Asimplebuilder.builderUsagePackages=test")
-            .compile(dto("test", "PlainHelperDto", "PlainHelper"), plainHelper());
+            .compile(dto("test", "UnannotatedFieldDto", "UnannotatedDto"), unannotatedDto());
 
-    assertThat(ignored).succeeded();
+    assertThat(optedOut).succeeded();
     assertThat(unannotated).succeeded();
     assertNoBuilderConsumer(
-        ignored, "IgnoredHelperDtoBuilder", "IgnoredHelper", "IgnoredHelperBuilder");
+        optedOut, "OptedOutFieldDtoBuilder", "OptedOutDto", "OptedOutDtoBuilder");
     assertNoBuilderConsumer(
-        unannotated, "PlainHelperDtoBuilder", "PlainHelper", "PlainHelperBuilder");
+        unannotated, "UnannotatedFieldDtoBuilder", "UnannotatedDto", "UnannotatedDtoBuilder");
   }
 
-  private static JavaFileObject dto(String packageName, String className, String helperType) {
-    return dto(packageName, className, helperType, packageName);
+  private static JavaFileObject dto(String packageName, String className, String fieldType) {
+    return dto(packageName, className, fieldType, packageName);
   }
 
   private static JavaFileObject dto(
-      String packageName, String className, String helperType, String helperPackage) {
+      String packageName, String className, String fieldType, String fieldPackage) {
     String importLine =
-        packageName.equals(helperPackage)
-            ? ""
-            : "import " + helperPackage + "." + helperType + ";\n";
+        packageName.equals(fieldPackage) ? "" : "import " + fieldPackage + "." + fieldType + ";\n";
     return ProcessorTestUtils.forSource(
         """
         package %s;
@@ -192,19 +193,19 @@ class BuilderScopeProcessingTest {
         %s
         @SimpleBuilder
         public class %s {
-          private %s helper;
-          public %s getHelper() { return helper; }
-          public void setHelper(%s helper) { this.helper = helper; }
+          private %s referenced;
+          public %s getReferenced() { return referenced; }
+          public void setReferenced(%s referenced) { this.referenced = referenced; }
         }
         """
-            .formatted(packageName, importLine, className, helperType, helperType, helperType));
+            .formatted(packageName, importLine, className, fieldType, fieldType, fieldType));
   }
 
-  private static JavaFileObject helper(String packageName) {
-    return helper(packageName, "HelperAnno");
+  private static JavaFileObject referencedDto(String packageName) {
+    return referencedDto(packageName, "ReferencedDto");
   }
 
-  private static JavaFileObject helper(String packageName, String className) {
+  private static JavaFileObject referencedDto(String packageName, String className) {
     return ProcessorTestUtils.forSource(
         """
         package %s;
@@ -215,7 +216,7 @@ class BuilderScopeProcessingTest {
             .formatted(packageName, className, className));
   }
 
-  private static JavaFileObject ignoredHelper() {
+  private static JavaFileObject optedOutDto() {
     return ProcessorTestUtils.forSource(
         """
         package test;
@@ -223,35 +224,36 @@ class BuilderScopeProcessingTest {
         import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
         @SimpleBuilder
         @Ignore4BuilderGeneration
-        public class IgnoredHelper { public IgnoredHelper() {} }
+        public class OptedOutDto { public OptedOutDto() {} }
         """);
   }
 
-  private static JavaFileObject plainHelper() {
+  private static JavaFileObject unannotatedDto() {
     return ProcessorTestUtils.forSource(
         """
         package test;
-        public class PlainHelper { public PlainHelper() {} }
+        public class UnannotatedDto { public UnannotatedDto() {} }
         """);
   }
 
   private static void assertBuilderConsumer(
-      Compilation compilation, String builderName, String helperBuilderName) {
+      Compilation compilation, String builderName, String referencedBuilderName) {
     String generated = ProcessorTestUtils.loadGeneratedSource(compilation, builderName);
     ProcessorAsserts.assertContaining(
         generated,
-        "helperBuilderConsumer",
-        helperBuilderName + " builder",
-        "helperBuilderConsumer.accept(builder)");
+        "referencedBuilderConsumer",
+        referencedBuilderName + " builder",
+        "referencedBuilderConsumer.accept(builder)");
   }
 
   private static void assertNoBuilderConsumer(
       Compilation compilation,
       String builderName,
-      String helperTypeName,
-      String helperBuilderName) {
+      String fieldTypeName,
+      String referencedBuilderName) {
     String generated = ProcessorTestUtils.loadGeneratedSource(compilation, builderName);
-    ProcessorAsserts.assertContaining(generated, "helper(" + helperTypeName + " helper)");
-    ProcessorAsserts.assertNotContaining(generated, "helperBuilderConsumer", helperBuilderName);
+    ProcessorAsserts.assertContaining(generated, "referenced(" + fieldTypeName + " referenced)");
+    ProcessorAsserts.assertNotContaining(
+        generated, "referencedBuilderConsumer", referencedBuilderName);
   }
 }
