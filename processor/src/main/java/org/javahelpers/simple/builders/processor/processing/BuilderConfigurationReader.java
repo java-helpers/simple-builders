@@ -306,7 +306,7 @@ public class BuilderConfigurationReader {
 
   /** Returns whether the option is unknown or not settable via @SimpleBuilder.Options. */
   private static boolean isNotABuilderOption(CompilerArgumentsEnum option) {
-    return option == null || !option.isBuilderOption();
+    return option == null || !option.hasValueApplier();
   }
 
   private enum AnnotationScope {

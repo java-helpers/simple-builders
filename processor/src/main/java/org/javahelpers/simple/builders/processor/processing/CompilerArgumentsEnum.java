@@ -205,6 +205,14 @@ public enum CompilerArgumentsEnum {
    * Constructs a CompilerArgumentsEnum constant for an argument that is not a builder configuration
    * option.
    *
+   * <p>These are process-control flags (e.g. {@code VERBOSE}, {@code PERFORMANCE_TRACKING}, {@code
+   * PERFORMANCE_OUTPUT_FILE}, {@code DEACTIVATE_GENERATION_COMPONENTS}) that are read directly via
+   * {@link CompilerArgumentsReader#readValue} or {@link CompilerArgumentsReader#readBooleanValue}
+   * rather than applied to a {@link BuilderConfiguration.Builder}. The {@code null} applier is
+   * intentional: {@link #apply} is a no-op for these constants, and {@link #hasValueApplier()}
+   * returns {@code false} so {@link BuilderConfigurationReader} skips them when parsing annotation
+   * attributes.
+   *
    * @param optionName The option name
    */
   CompilerArgumentsEnum(String optionName) {
@@ -213,6 +221,10 @@ public enum CompilerArgumentsEnum {
 
   /**
    * Constructs a CompilerArgumentsEnum constant for a builder configuration option.
+   *
+   * <p>The {@code builderApplier} converts the raw option value (from a compiler argument or
+   * annotation attribute) into the corresponding {@link BuilderConfiguration.Builder} setter call.
+   * {@link #hasValueApplier()} returns {@code true} for these constants.
    *
    * @param optionName The option name
    * @param builderApplier applies the raw option value to the configuration builder
@@ -260,11 +272,21 @@ public enum CompilerArgumentsEnum {
   }
 
   /**
-   * Returns whether this argument is a builder configuration option.
+   * Returns whether this enum constant has a value applier that maps the raw option value to a
+   * {@link BuilderConfiguration.Builder} setter.
    *
-   * @return true if a value of this option can be applied to a {@link BuilderConfiguration.Builder}
+   * <p>Not all enum constants have an applier. Process-control flags like {@code VERBOSE}, {@code
+   * PERFORMANCE_TRACKING}, {@code PERFORMANCE_OUTPUT_FILE}, and {@code
+   * DEACTIVATE_GENERATION_COMPONENTS} are read directly via {@link
+   * CompilerArgumentsReader#readValue} or {@link CompilerArgumentsReader#readBooleanValue} instead
+   * of being applied to a builder configuration. For these, the single-argument constructor sets
+   * the applier to {@code null}, {@link #apply} is a no-op, and this method returns {@code false}.
+   * This lets {@link BuilderConfigurationReader} skip them when parsing annotation attributes.
+   *
+   * @return {@code true} if this option has a value applier for {@link
+   *     BuilderConfiguration.Builder}
    */
-  public boolean isBuilderOption() {
+  public boolean hasValueApplier() {
     return builderApplier != null;
   }
 

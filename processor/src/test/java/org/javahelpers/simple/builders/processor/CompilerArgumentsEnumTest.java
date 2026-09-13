@@ -53,12 +53,12 @@ class CompilerArgumentsEnumTest {
   }
 
   @Test
-  void isBuilderOption_distinguishesConfigFromProcessFlags() {
-    assertTrue(CompilerArgumentsEnum.GENERATE_FIELD_SUPPLIER.isBuilderOption());
-    assertFalse(CompilerArgumentsEnum.VERBOSE.isBuilderOption());
-    assertFalse(CompilerArgumentsEnum.DEACTIVATE_GENERATION_COMPONENTS.isBuilderOption());
-    assertFalse(CompilerArgumentsEnum.PERFORMANCE_TRACKING.isBuilderOption());
-    assertFalse(CompilerArgumentsEnum.PERFORMANCE_OUTPUT_FILE.isBuilderOption());
+  void hasValueApplier_distinguishesConfigFromProcessFlags() {
+    assertTrue(CompilerArgumentsEnum.GENERATE_FIELD_SUPPLIER.hasValueApplier());
+    assertFalse(CompilerArgumentsEnum.VERBOSE.hasValueApplier());
+    assertFalse(CompilerArgumentsEnum.DEACTIVATE_GENERATION_COMPONENTS.hasValueApplier());
+    assertFalse(CompilerArgumentsEnum.PERFORMANCE_TRACKING.hasValueApplier());
+    assertFalse(CompilerArgumentsEnum.PERFORMANCE_OUTPUT_FILE.hasValueApplier());
   }
 
   @Test
