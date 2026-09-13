@@ -720,7 +720,9 @@ public @interface SimpleBuilder {
      *
      * <p>Example: {@code "com.example.library, com.example.external"}
      *
-     * <p>Default: "" (empty - all annotated types may be referenced without type search) <br>
+     * <p>Default: "" (empty - all {@code @SimpleBuilder}-annotated types may be referenced as
+     * builders; the builder type is not verified to exist on the classpath, preserving
+     * backward-compatible behavior) <br>
      * Compiler option: -Asimplebuilder.builderUsagePackages
      *
      * @return the packages whose builders may be used as helpers

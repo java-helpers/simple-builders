@@ -24,12 +24,11 @@
 
 package org.javahelpers.simple.builders.processor.processing;
 
-import java.util.Arrays;
+import java.util.stream.Stream;
 import javax.annotation.processing.ProcessingEnvironment;
 import org.apache.commons.lang3.Strings;
-import org.javahelpers.simple.builders.core.enums.AccessModifier;
-import org.javahelpers.simple.builders.core.enums.OptionState;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
+import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 
 /**
  * Utility class for reading compiler arguments from the annotation processing environment.
@@ -93,31 +92,6 @@ public class CompilerArgumentsReader {
   }
 
   /**
-   * Reads the value of a compiler argument as an OptionState.
-   *
-   * <p>Returns ENABLED for "true" or "enabled", DISABLED for "false" or "disabled", and UNSET
-   * otherwise.
-   *
-   * @param argument the compiler argument enum to read
-   * @return the OptionState value
-   */
-  public OptionState readOptionState(CompilerArgumentsEnum argument) {
-    return OptionValueParsers.parseOptionState(readValue(argument));
-  }
-
-  /**
-   * Reads the value of a compiler argument as an AccessModifier.
-   *
-   * <p>Returns the corresponding AccessModifier enum value, or DEFAULT if not set or invalid.
-   *
-   * @param argument the compiler argument enum to read
-   * @return the AccessModifier value, or DEFAULT if not set
-   */
-  public AccessModifier readAccessModifier(CompilerArgumentsEnum argument) {
-    return OptionValueParsers.parseAccessModifier(readValue(argument));
-  }
-
-  /**
    * Reads a complete BuilderConfiguration from compiler arguments.
    *
    * <p>This method reads all configuration options from compiler arguments like:
@@ -156,10 +130,10 @@ public class CompilerArgumentsReader {
    *
    * @return a BuilderConfiguration with values read from compiler arguments
    */
-  public BuilderConfiguration readBuilderConfiguration() {
+  public BuilderConfiguration readBuilderConfiguration(ProcessingLogger logger) {
     BuilderConfiguration.Builder builder = BuilderConfiguration.builder();
-    Arrays.stream(CompilerArgumentsEnum.values())
-        .forEach(option -> option.apply(builder, readValue(option)));
+    Stream.of(CompilerArgumentsEnum.values())
+        .forEach(option -> option.apply(builder, readValue(option), logger));
     return builder.build();
   }
 }

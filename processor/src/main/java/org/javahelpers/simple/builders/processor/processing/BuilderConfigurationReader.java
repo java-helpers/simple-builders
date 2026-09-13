@@ -285,22 +285,23 @@ public class BuilderConfigurationReader {
 
     BuilderConfiguration.Builder builder = BuilderConfiguration.builder();
 
-    values.entrySet().stream()
-        .forEach(
-            entry -> {
-              String name = entry.getKey().getSimpleName().toString();
-              Object value = entry.getValue().getValue();
-
-              CompilerArgumentsEnum option = CompilerArgumentsEnum.fromOptionName(name);
-              if (isNotABuilderOption(option)) {
-                logger.warning(
-                    "Unknown configuration option '%s' with value '%s' - ignoring", name, value);
-                return;
-              }
-              option.apply(builder, value);
-            });
+    values.entrySet().forEach(entry -> applyOption(builder, entry.getKey(), entry.getValue()));
 
     return builder.build();
+  }
+
+  private void applyOption(
+      BuilderConfiguration.Builder builder,
+      ExecutableElement key,
+      AnnotationValue annotationValue) {
+    String name = key.getSimpleName().toString();
+    Object value = annotationValue.getValue();
+    CompilerArgumentsEnum option = CompilerArgumentsEnum.fromOptionName(name);
+    if (isNotABuilderOption(option)) {
+      logger.warning("Unknown configuration option '%s' with value '%s' - ignoring", name, value);
+      return;
+    }
+    option.apply(builder, value, logger);
   }
 
   /** Returns whether the option is unknown or not settable via @SimpleBuilder.Options. */

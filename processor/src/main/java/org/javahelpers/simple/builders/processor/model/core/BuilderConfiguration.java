@@ -254,24 +254,6 @@ public record BuilderConfiguration(
   }
 
   /**
-   * Returns the raw comma-separated builder generation packages value.
-   *
-   * @return the package list as configured, or null if unscoped
-   */
-  public String getBuilderGenerationPackages() {
-    return builderGenerationPackages.isEmpty() ? null : builderGenerationPackages.toString();
-  }
-
-  /**
-   * Returns the raw comma-separated builder usage packages value.
-   *
-   * @return the package list as configured, or null if unscoped
-   */
-  public String getBuilderUsagePackages() {
-    return builderUsagePackages.isEmpty() ? null : builderUsagePackages.toString();
-  }
-
-  /**
    * Returns the parsed set of builder generation package scopes.
    *
    * @return set of package names and their subpackages, empty if unset

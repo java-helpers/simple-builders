@@ -34,6 +34,7 @@ import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.core.enums.OptionState;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsEnum;
+import org.javahelpers.simple.builders.processor.testing.CapturingProcessingLogger;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -63,8 +64,9 @@ class CompilerArgumentsEnumTest {
   @Test
   void apply_optionState_acceptsEnumNameAndKeywords() {
     BuilderConfiguration.Builder builder = BuilderConfiguration.builder();
-    CompilerArgumentsEnum.GENERATE_FIELD_SUPPLIER.apply(builder, "OptionState.ENABLED");
-    CompilerArgumentsEnum.GENERATE_FIELD_CONSUMER.apply(builder, "false");
+    var logger = CapturingProcessingLogger.create().logger();
+    CompilerArgumentsEnum.GENERATE_FIELD_SUPPLIER.apply(builder, "OptionState.ENABLED", logger);
+    CompilerArgumentsEnum.GENERATE_FIELD_CONSUMER.apply(builder, "false", logger);
     BuilderConfiguration config = builder.build();
     assertEquals(OptionState.ENABLED, config.generateFieldSupplier());
     assertEquals(OptionState.DISABLED, config.generateFieldConsumer());
@@ -73,8 +75,9 @@ class CompilerArgumentsEnumTest {
   @Test
   void apply_accessModifier_andString() {
     BuilderConfiguration.Builder builder = BuilderConfiguration.builder();
-    CompilerArgumentsEnum.BUILDER_ACCESS.apply(builder, "AccessModifier.PRIVATE");
-    CompilerArgumentsEnum.BUILDER_SUFFIX.apply(builder, "Builder2");
+    var logger = CapturingProcessingLogger.create().logger();
+    CompilerArgumentsEnum.BUILDER_ACCESS.apply(builder, "AccessModifier.PRIVATE", logger);
+    CompilerArgumentsEnum.BUILDER_SUFFIX.apply(builder, "Builder2", logger);
     BuilderConfiguration config = builder.build();
     assertEquals(AccessModifier.PRIVATE, config.builderAccess());
     assertEquals("Builder2", config.builderSuffix());
@@ -84,7 +87,8 @@ class CompilerArgumentsEnumTest {
   void apply_nonBuilderOption_isIgnored() {
     BuilderConfiguration.Builder builder = BuilderConfiguration.builder();
     BuilderConfiguration before = builder.build();
-    CompilerArgumentsEnum.VERBOSE.apply(builder, "true");
+    CompilerArgumentsEnum.VERBOSE.apply(
+        builder, "true", CapturingProcessingLogger.create().logger());
     assertEquals(before.generateFieldSupplier(), builder.build().generateFieldSupplier());
   }
 }

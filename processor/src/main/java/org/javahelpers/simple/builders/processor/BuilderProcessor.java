@@ -89,7 +89,7 @@ public class BuilderProcessor extends AbstractProcessor {
 
     // Read global configuration from compiler arguments
     CompilerArgumentsReader reader = new CompilerArgumentsReader(processingEnv);
-    BuilderConfiguration globalConfig = reader.readBuilderConfiguration();
+    BuilderConfiguration globalConfig = reader.readBuilderConfiguration(logger);
     logger.debug("Loaded global configuration from compiler arguments: %s", globalConfig);
 
     this.context = new ProcessingContext(logger, globalConfig, processingEnv);

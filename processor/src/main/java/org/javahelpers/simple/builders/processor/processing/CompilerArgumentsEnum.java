@@ -29,6 +29,7 @@ import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.core.enums.OptionState;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration.Builder;
+import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 
 /**
  * Enumeration of all builder configuration compiler arguments.
@@ -198,7 +199,7 @@ public enum CompilerArgumentsEnum {
    * Applies a raw option value to a {@link BuilderConfiguration.Builder}, or {@code null} for
    * arguments that are not builder configuration options (e.g. {@code verbose}).
    */
-  private final BiConsumer<BuilderConfiguration.Builder, Object> builderApplier;
+  private final OptionApplier builderApplier;
 
   /**
    * Constructs a CompilerArgumentsEnum constant for an argument that is not a builder configuration
@@ -216,8 +217,7 @@ public enum CompilerArgumentsEnum {
    * @param optionName The option name
    * @param builderApplier applies the raw option value to the configuration builder
    */
-  CompilerArgumentsEnum(
-      String optionName, BiConsumer<BuilderConfiguration.Builder, Object> builderApplier) {
+  CompilerArgumentsEnum(String optionName, OptionApplier builderApplier) {
     this.optionName = optionName;
     this.builderApplier = builderApplier;
   }
@@ -277,10 +277,12 @@ public enum CompilerArgumentsEnum {
    *
    * @param builder the configuration builder to modify
    * @param rawValue the raw option value (annotation value or compiler-argument string)
+   * @param logger the logger for warnings on unrecognized values, or null to suppress
    */
-  public void apply(BuilderConfiguration.Builder builder, Object rawValue) {
+  public void apply(
+      BuilderConfiguration.Builder builder, Object rawValue, ProcessingLogger logger) {
     if (builderApplier != null) {
-      builderApplier.accept(builder, rawValue);
+      builderApplier.apply(builder, rawValue, logger);
     }
   }
 
@@ -301,20 +303,27 @@ public enum CompilerArgumentsEnum {
         : enumString;
   }
 
-  private static BiConsumer<BuilderConfiguration.Builder, Object> optionState(
+  private static OptionApplier optionState(
       BiConsumer<BuilderConfiguration.Builder, OptionState> setter) {
-    return (builder, value) ->
-        setter.accept(builder, OptionValueParsers.parseOptionState(extractEnumName(value)));
+    return (builder, value, logger) ->
+        setter.accept(builder, OptionValueParsers.parseOptionState(extractEnumName(value), logger));
   }
 
-  private static BiConsumer<BuilderConfiguration.Builder, Object> accessModifier(
+  private static OptionApplier accessModifier(
       BiConsumer<BuilderConfiguration.Builder, AccessModifier> setter) {
-    return (builder, value) ->
-        setter.accept(builder, OptionValueParsers.parseAccessModifier(extractEnumName(value)));
+    return (builder, value, logger) ->
+        setter.accept(
+            builder, OptionValueParsers.parseAccessModifier(extractEnumName(value), logger));
   }
 
-  private static BiConsumer<BuilderConfiguration.Builder, Object> string(
-      BiConsumer<BuilderConfiguration.Builder, String> setter) {
-    return (builder, value) -> setter.accept(builder, value == null ? null : value.toString());
+  private static OptionApplier string(BiConsumer<BuilderConfiguration.Builder, String> setter) {
+    return (builder, value, logger) ->
+        setter.accept(builder, value == null ? null : value.toString());
+  }
+
+  /** Functional interface for applying a raw option value with optional logging. */
+  @FunctionalInterface
+  interface OptionApplier {
+    void apply(BuilderConfiguration.Builder builder, Object rawValue, ProcessingLogger logger);
   }
 }

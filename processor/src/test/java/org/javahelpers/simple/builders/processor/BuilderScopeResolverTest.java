@@ -26,6 +26,7 @@ package org.javahelpers.simple.builders.processor;
 
 import static com.google.testing.compile.CompilationSubject.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
 import com.google.testing.compile.Compilation;
@@ -54,7 +55,7 @@ import org.junit.jupiter.api.Test;
 class BuilderScopeResolverTest {
 
   @Test
-  void resolverRefreshesScopesWhenTargetConfigurationChanges() {
+  void resolverReturnsEmptyAfterConfigurationChangesToExcludePackage() {
     ResolverProbeProcessor.reset();
     Compilation compilation =
         Compiler.javac()
@@ -69,12 +70,16 @@ class BuilderScopeResolverTest {
                     """));
 
     assertThat(compilation).succeeded();
+    // First resolution with generation scope "lib" → builder found
     assertEquals("lib.LibHelperBuilder", ResolverProbeProcessor.first.get().getFullQualifiedName());
+    // After changing config to exclude "lib", the resolver returns empty
     assertEquals(Optional.empty(), ResolverProbeProcessor.afterConfigurationChange);
+    // Cache was cleared by the config change, so a new Optional instance is returned
+    assertNotSame(ResolverProbeProcessor.first, ResolverProbeProcessor.afterConfigurationChange);
   }
 
   @Test
-  void resolverCachesResolvedOptionalPerReferencedType() {
+  void resolverCachesResolvedOptionalInstancePerReferencedType() {
     ResolverProbeProcessor.reset();
     Compilation compilation =
         Compiler.javac()
@@ -89,11 +94,12 @@ class BuilderScopeResolverTest {
                     """));
 
     assertThat(compilation).succeeded();
+    // Two consecutive calls with the same config return the same cached Optional instance
     assertSame(ResolverProbeProcessor.first, ResolverProbeProcessor.second);
   }
 
   @Test
-  void resolverScopesRegisteredTypesToUsagePackagesAndClearsCache() {
+  void resolverClearsCacheOnRegistrationAndResolvesUsageScope() {
     ResolverProbeProcessor.reset();
     Compilation compilation =
         Compiler.javac()
@@ -108,9 +114,13 @@ class BuilderScopeResolverTest {
                     """));
 
     assertThat(compilation).succeeded();
+    // With usage scope "other" (not "lib"), type is not in scope → empty
     assertEquals(Optional.empty(), ResolverProbeProcessor.beforeRegistration);
+    // Registration alone doesn't help — type is still not in usage scope
     assertEquals(Optional.empty(), ResolverProbeProcessor.afterRegistration);
+    // With usage scope "lib" but no registration → empty (builder not yet generated/verified)
     assertEquals(Optional.empty(), ResolverProbeProcessor.usageBeforeRegistration);
+    // With usage scope "lib" AND registration → builder resolved
     assertEquals(
         "lib.LibHelperBuilder",
         ResolverProbeProcessor.usageAfterRegistration.get().getFullQualifiedName());
