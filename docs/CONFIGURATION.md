@@ -997,7 +997,7 @@ processing. A summary report is logged to the compiler output at the end of proc
 
 **When enabled**: A hierarchical performance report is printed to the compiler log, including:
 - Total processing time and average time per class
-- Phase breakdown (Configuration Resolution, Builder Definition Extraction, DTO Mapping, Code Generation)
+- Phase breakdown (Element Collection, Configuration Resolution, Builder Definition Extraction, DTO Mapping, Code Generation)
 - Top 20 slowest classes with field and collection counts
 - Top 5 slowest MethodGenerators and BuilderEnhancers
 

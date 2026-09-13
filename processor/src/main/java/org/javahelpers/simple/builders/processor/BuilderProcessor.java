@@ -231,7 +231,6 @@ public class BuilderProcessor extends AbstractProcessor {
         tracker.startPhase();
         BuilderConfiguration config = reader.resolveConfiguration(annotatedElement);
         tracker.endPhase(PHASE_CONFIGURATION_RESOLUTION);
-        context.debug("Configuration resolved: %s", config);
 
         if (!context.getBuilderScopeResolver().isInGenerationScope(annotatedElement, config)) {
           continue;
