@@ -32,7 +32,12 @@ import org.javahelpers.simple.builders.processor.testing.ProcessorAsserts;
 import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
 import org.junit.jupiter.api.Test;
 
-/** Compile-testing coverage for builder generation and usage package scopes. */
+/**
+ * End-to-end coverage of the builder generation and usage package scopes: which annotated elements
+ * get a builder generated, and whether generated builders consume the builders of their field
+ * types. Resolver internals (caching, type registration) are covered by {@link
+ * BuilderScopeResolverTest}.
+ */
 class BuilderScopeProcessingTest {
 
   @Test

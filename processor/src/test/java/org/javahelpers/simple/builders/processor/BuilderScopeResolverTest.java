@@ -42,46 +42,16 @@ import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
-import org.javahelpers.simple.builders.processor.testing.ProcessorAsserts;
 import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
 import org.junit.jupiter.api.Test;
 
-/** Compile-testing coverage for the resolver's builder availability decisions. */
+/**
+ * Probe-based coverage of {@link BuilderScopeResolver} internals that generated-source assertions
+ * cannot observe: result caching, cache invalidation on configuration change, and per-round
+ * registration of generated types. End-to-end scope behavior visible in generated builders is
+ * covered by {@link BuilderScopeProcessingTest}.
+ */
 class BuilderScopeResolverTest {
-
-  @Test
-  void usageScopeWithoutResolvedBuilderFallsBackToPlainSetter() {
-    Compilation compilation =
-        ProcessorTestUtils.createCompiler()
-            .withOptions(
-                "-Asimplebuilder.builderGenerationPackages=test",
-                "-Asimplebuilder.builderUsagePackages=lib")
-            .compile(
-                ProcessorTestUtils.forSource(
-                    """
-                    package test;
-                    import lib.LibHelper;
-                    import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
-                    @SimpleBuilder
-                    public class ResolverDto {
-                      private LibHelper helper;
-                      public LibHelper getHelper() { return helper; }
-                      public void setHelper(LibHelper helper) { this.helper = helper; }
-                    }
-                    """),
-                ProcessorTestUtils.forSource(
-                    """
-                    package lib;
-                    import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
-                    @SimpleBuilder
-                    public class LibHelper { public LibHelper() {} }
-                    """));
-
-    assertThat(compilation).succeeded();
-    String generated = ProcessorTestUtils.loadGeneratedSource(compilation, "ResolverDtoBuilder");
-    ProcessorAsserts.assertContaining(generated, "helper(LibHelper helper)");
-    ProcessorAsserts.assertNotContaining(generated, "helperBuilderConsumer", "LibHelperBuilder");
-  }
 
   @Test
   void resolverRefreshesScopesWhenTargetConfigurationChanges() {
