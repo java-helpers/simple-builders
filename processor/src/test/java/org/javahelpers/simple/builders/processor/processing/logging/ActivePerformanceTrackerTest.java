@@ -236,6 +236,43 @@ class ActivePerformanceTrackerTest {
   }
 
   @Test
+  void generateReport_withElementCollectionPhase_logsPhaseInReport() {
+    ActivePerformanceTracker tracker = new ActivePerformanceTracker(null);
+    tracker.startPhase();
+    tracker.endPhase(PerformanceTracker.PHASE_ELEMENT_COLLECTION);
+
+    List<String> messages = new ArrayList<>();
+    ProcessingLogger logger = createLogger(messages);
+    tracker.generateReport(logger);
+
+    assertTrue(
+        messages.stream().anyMatch(m -> m.contains(PerformanceTracker.PHASE_ELEMENT_COLLECTION)),
+        "Text report should contain " + PerformanceTracker.PHASE_ELEMENT_COLLECTION);
+  }
+
+  @Test
+  void jsonReport_phaseBreakdown_containsElementCollectionPhase() throws IOException {
+    Path jsonFile = tempDir.resolve("report-element-collection.json");
+    ActivePerformanceTracker tracker = new ActivePerformanceTracker(jsonFile.toString());
+    tracker.startPhase();
+    tracker.endPhase(PerformanceTracker.PHASE_ELEMENT_COLLECTION);
+
+    List<String> messages = new ArrayList<>();
+    ProcessingLogger logger = createLogger(messages);
+    tracker.generateReport(logger);
+
+    JsonNode root = new ObjectMapper().readTree(Files.readString(jsonFile));
+    JsonNode phases = root.get("phaseBreakdown");
+    assertTrue(
+        phases.has(PerformanceTracker.PHASE_ELEMENT_COLLECTION),
+        "JSON phaseBreakdown should contain " + PerformanceTracker.PHASE_ELEMENT_COLLECTION);
+    JsonNode elementCollection = phases.get(PerformanceTracker.PHASE_ELEMENT_COLLECTION);
+    assertTrue(elementCollection.has("elapsedNanos"));
+    assertTrue(elementCollection.has("elapsedSeconds"));
+    assertTrue(elementCollection.has("percentage"));
+  }
+
+  @Test
   void generateReport_withNullOutputFile_doesNotWriteFile() {
     ActivePerformanceTracker tracker = new ActivePerformanceTracker(null);
     tracker.startClass("MyClass");
