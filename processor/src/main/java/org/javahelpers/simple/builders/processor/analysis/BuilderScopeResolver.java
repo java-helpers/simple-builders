@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
@@ -95,6 +96,32 @@ public final class BuilderScopeResolver {
     refreshForConfigurationIfNeeded();
     return resolvedBuilderTypes.computeIfAbsent(
         referencedType.getQualifiedName().toString(), fqn -> resolve(referencedType));
+  }
+
+  /**
+   * Checks whether a builder may be generated for the given element under the generation scope of
+   * the resolved configuration.
+   *
+   * <p>An unscoped {@code builderGenerationPackages} allows every element. Otherwise the element's
+   * package must match the scope; skipped elements are logged at debug level.
+   *
+   * @param element the annotated element to check
+   * @param configuration the configuration resolved for that element
+   * @return true if a builder may be generated for the element
+   */
+  public boolean isInGenerationScope(Element element, BuilderConfiguration configuration) {
+    PackageScopes scopes = configuration.builderGenerationPackages();
+    if (scopes.isEmpty()) {
+      return true;
+    }
+    String packageName = context.getPackageName(element);
+    if (!scopes.includes(packageName)) {
+      context.debug(
+          "Skipping %s: package '%s' is not in builderGenerationPackages",
+          element.getSimpleName(), packageName);
+      return false;
+    }
+    return true;
   }
 
   /**

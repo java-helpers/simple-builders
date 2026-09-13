@@ -233,7 +233,7 @@ public class BuilderProcessor extends AbstractProcessor {
         tracker.endPhase(PHASE_CONFIGURATION_RESOLUTION);
         context.debug("Configuration resolved: %s", config);
 
-        if (isOutsideGenerationScope(annotatedElement, config)) {
+        if (!context.getBuilderScopeResolver().isInGenerationScope(annotatedElement, config)) {
           continue;
         }
         elementsToGenerate.add(new ElementToGenerate(annotatedElement, config));
@@ -262,21 +262,6 @@ public class BuilderProcessor extends AbstractProcessor {
                 .filter(TypeElement.class::isInstance)
                 .map(TypeElement.class::cast)
                 .toList());
-  }
-
-  /** Returns whether the element's package is outside the configured builder generation scope. */
-  private boolean isOutsideGenerationScope(Element element, BuilderConfiguration config) {
-    if (config.builderGenerationPackages().isEmpty()) {
-      return false;
-    }
-    String packageName = context.getPackageName(element);
-    if (!config.isInGenerationScope(packageName)) {
-      context.debug(
-          "Skipping %s: package '%s' is not in builderGenerationPackages",
-          element.getSimpleName(), packageName);
-      return true;
-    }
-    return false;
   }
 
   /** Generates a builder for each planned element and returns the number of successes. */
