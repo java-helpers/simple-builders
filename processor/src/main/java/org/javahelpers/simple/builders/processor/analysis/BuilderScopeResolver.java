@@ -125,13 +125,12 @@ public final class BuilderScopeResolver {
     }
 
     // Generation scope: trusted types whose builders are generated in this compilation.
-    if (!generationPackages.isEmpty()
-        && BuilderConfiguration.isInScope(packageName, generationPackages)) {
+    if (BuilderConfiguration.isInScope(packageName, generationPackages)) {
       return Optional.of(candidate);
     }
 
     // Usage scope: types whose builders may be generated now or already compiled.
-    if (!usagePackages.isEmpty() && BuilderConfiguration.isInScope(packageName, usagePackages)) {
+    if (BuilderConfiguration.isInScope(packageName, usagePackages)) {
       boolean builderAvailable =
           generatedTypeNames.contains(referencedType.getQualifiedName().toString())
               || context.getTypeElement(candidate.getFullQualifiedName()) != null;
