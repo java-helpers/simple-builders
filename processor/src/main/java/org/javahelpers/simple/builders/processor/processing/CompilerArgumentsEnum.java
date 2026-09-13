@@ -300,20 +300,31 @@ public enum CompilerArgumentsEnum {
     }
   }
 
-  private static String unqualify(String value) {
-    return value.contains(".") ? value.substring(value.lastIndexOf('.') + 1) : value;
+  /**
+   * Extracts the simple enum constant name from a qualified annotation value (e.g. {@code
+   * "...OptionState.ENABLED"} → {@code "ENABLED"}). Unqualified values are returned as given.
+   *
+   * @param value the raw annotation/argument value
+   * @return the simple enum name, or null if the value is null
+   */
+  private static String extractEnumName(Object value) {
+    if (value == null) {
+      return null;
+    }
+    String enumString = value.toString();
+    return enumString.contains(".")
+        ? enumString.substring(enumString.lastIndexOf('.') + 1)
+        : enumString;
   }
 
   private static BiConsumer<BuilderConfiguration.Builder, Object> optionState(
       BiConsumer<BuilderConfiguration.Builder, OptionState> setter) {
-    return (builder, value) ->
-        setter.accept(builder, parseOptionState(unqualify(String.valueOf(value))));
+    return (builder, value) -> setter.accept(builder, parseOptionState(extractEnumName(value)));
   }
 
   private static BiConsumer<BuilderConfiguration.Builder, Object> accessModifier(
       BiConsumer<BuilderConfiguration.Builder, AccessModifier> setter) {
-    return (builder, value) ->
-        setter.accept(builder, parseAccessModifier(unqualify(String.valueOf(value))));
+    return (builder, value) -> setter.accept(builder, parseAccessModifier(extractEnumName(value)));
   }
 
   private static BiConsumer<BuilderConfiguration.Builder, Object> string(
