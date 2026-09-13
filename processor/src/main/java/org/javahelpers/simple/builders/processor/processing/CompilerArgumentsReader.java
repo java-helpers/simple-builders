@@ -136,10 +136,10 @@ public class CompilerArgumentsReader {
    *
    * <p>All values default to UNSET or DEFAULT if not specified in compiler arguments.
    *
-   * <p><b>Adding a new option:</b> this method applies every {@link CompilerArgumentsEnum} constant
-   * that carries a builder applier ({@link CompilerArgumentsEnum#isBuilderOption()}), so wiring a
-   * new option means declaring the applier on the enum constant once — no change is needed here or
-   * in {@code BuilderConfigurationReader}. The remaining checklist when adding a new option:
+   * <p><b>Adding a new option:</b> every {@link CompilerArgumentsEnum} constant is applied; those
+   * without a builder applier are no-ops in {@link CompilerArgumentsEnum#apply}, so wiring a new
+   * option means declaring the applier on the enum constant once — no change is needed here or in
+   * {@code BuilderConfigurationReader}. The remaining checklist when adding a new option:
    *
    * <ol>
    *   <li>{@code CompilerArgumentsEnum} — add the enum constant with its applier.
@@ -158,9 +158,7 @@ public class CompilerArgumentsReader {
   public BuilderConfiguration readBuilderConfiguration() {
     BuilderConfiguration.Builder builder = BuilderConfiguration.builder();
     for (CompilerArgumentsEnum option : CompilerArgumentsEnum.values()) {
-      if (option.isBuilderOption()) {
-        option.apply(builder, readValue(option));
-      }
+      option.apply(builder, readValue(option));
     }
     return builder.build();
   }
