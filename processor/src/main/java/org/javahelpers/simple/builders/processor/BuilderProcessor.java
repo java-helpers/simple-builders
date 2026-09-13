@@ -147,14 +147,7 @@ public class BuilderProcessor extends AbstractProcessor {
     // the scope resolver know every builder that will be generated in this round.
     List<ElementToGenerate> elementsToGenerate =
         resolveGenerationPlan(sortedElements, context.getConfigurationReader(), tracker);
-    context
-        .getBuilderScopeResolver()
-        .registerGeneratedTypes(
-            elementsToGenerate.stream()
-                .map(ElementToGenerate::element)
-                .filter(TypeElement.class::isInstance)
-                .map(TypeElement.class::cast)
-                .toList());
+    registerGeneratedTypes(elementsToGenerate);
 
     int successfulGenerations = generateBuilders(elementsToGenerate, tracker);
 
@@ -251,6 +244,21 @@ public class BuilderProcessor extends AbstractProcessor {
       }
     }
     return elementsToGenerate;
+  }
+
+  /**
+   * Registers the types whose builders will be generated this round with the scope resolver, so it
+   * can trust them without a type search.
+   */
+  private void registerGeneratedTypes(List<ElementToGenerate> elementsToGenerate) {
+    context
+        .getBuilderScopeResolver()
+        .registerGeneratedTypes(
+            elementsToGenerate.stream()
+                .map(ElementToGenerate::element)
+                .filter(TypeElement.class::isInstance)
+                .map(TypeElement.class::cast)
+                .toList());
   }
 
   /** Returns whether the element's package is outside the configured builder generation scope. */
