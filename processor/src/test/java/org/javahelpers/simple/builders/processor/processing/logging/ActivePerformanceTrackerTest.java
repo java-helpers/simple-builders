@@ -409,9 +409,29 @@ class ActivePerformanceTrackerTest {
     JsonNode genStats = root.get("generatorStats");
     assertEquals(2, genStats.size());
 
-    JsonNode genA =
-        genStats.get(0).get("name").asText().equals("GenA") ? genStats.get(0) : genStats.get(1);
+    JsonNode genA = genStats.get(genStats.get(0).get("name").asText().equals("GenA") ? 0 : 1);
     assertEquals(2, genA.get("calls").asInt());
+  }
+
+  @Test
+  void jsonReport_escapesSpecialCharactersInNames() throws IOException {
+    Path jsonFile = tempDir.resolve("report-escaping.json");
+    ActivePerformanceTracker tracker = new ActivePerformanceTracker(jsonFile.toString());
+    tracker.startClass("MyClass");
+    tracker.startGenerator();
+    tracker.endGenerator("Gen\"\\\n\t\r\b\fA\u0001");
+    tracker.startClass("MyClass2");
+    tracker.startEnhancer();
+    tracker.endEnhancer("Enh\u0001x");
+    tracker.endClass(2, 0);
+
+    tracker.generateReport(createLogger(new ArrayList<>()));
+
+    JsonNode root = new ObjectMapper().readTree(Files.readString(jsonFile));
+    JsonNode genStats = root.get("generatorStats");
+    assertEquals("Gen\"\\\n\t\r\b\fA\u0001", genStats.get(0).get("name").asText());
+    JsonNode enhStats = root.get("enhancerStats");
+    assertEquals("Enh\u0001x", enhStats.get(0).get("name").asText());
   }
 
   @Test

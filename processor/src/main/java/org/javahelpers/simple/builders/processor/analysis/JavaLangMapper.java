@@ -23,14 +23,10 @@
  */
 package org.javahelpers.simple.builders.processor.analysis;
 
-import static javax.lang.model.element.Modifier.DEFAULT;
-import static javax.lang.model.element.Modifier.PROTECTED;
-import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.type.TypeKind.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
@@ -43,7 +39,6 @@ import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.SimpleTypeVisitor14;
-import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.GenericParameterDto;
@@ -62,41 +57,6 @@ public final class JavaLangMapper {
   /** Private constructor to prevent instantiation of utility class. */
   private JavaLangMapper() {
     // Utility class
-  }
-
-  /**
-   * Mapper for {@code java.util.Set<javax.lang.model.element.Modifier>} to extract the relevant
-   * modifier. If there is a public modifier, this is returned. If there is a protected modifier,
-   * this will be returned. Default is returned in all other cases.
-   *
-   * @param modifier Set of modifiers to be checked
-   * @return DEFAULT, PUBLIC or PROTECTED
-   */
-  public static Modifier mapRelevantModifier(Set<Modifier> modifier) {
-    if (modifier.contains(PUBLIC)) {
-      return PUBLIC;
-    } else if (modifier.contains(PROTECTED)) {
-      return PROTECTED;
-    }
-    return DEFAULT;
-  }
-
-  /**
-   * Maps an AccessModifier enum value to a javax.lang.model.element.Modifier.
-   *
-   * @param accessModifier the access modifier to map
-   * @return the corresponding Modifier, or null for package-private
-   */
-  public static Modifier mapAccessModifier(AccessModifier accessModifier) {
-    if (accessModifier == null) {
-      return null;
-    }
-    return switch (accessModifier) {
-      case PUBLIC, DEFAULT -> Modifier.PUBLIC;
-      case PROTECTED -> Modifier.PROTECTED;
-      case PRIVATE -> Modifier.PRIVATE;
-      case PACKAGE_PRIVATE -> null; // Package-private has no explicit modifier
-    };
   }
 
   /**

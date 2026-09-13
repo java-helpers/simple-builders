@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.Optional;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
@@ -153,19 +152,6 @@ public final class JavaLangAnalyser {
   }
 
   /**
-   * Checks whether the given {@link TypeElement} declares generic type parameters.
-   *
-   * @param typeElement the type element to inspect
-   * @return {@code true} if the type declares one or more type parameters; {@code false} otherwise
-   */
-  public static boolean hasGenericTypes(TypeElement typeElement) {
-    if (typeElement == null) {
-      return false;
-    }
-    return CollectionUtils.isNotEmpty(typeElement.getTypeParameters());
-  }
-
-  /**
    * Checks whether the given {@link ExecutableElement} declares generic type parameters.
    *
    * @param executableElement the executable element to inspect
@@ -230,38 +216,6 @@ public final class JavaLangAnalyser {
     }
 
     return Optional.empty();
-  }
-
-  /**
-   * Determines whether a given type element is a functional interface.
-   *
-   * <p>Prefers the explicit @FunctionalInterface annotation. Otherwise, returns true only if the
-   * element is an interface and declares exactly one abstract instance method (ignoring static and
-   * default methods). Inherited abstract methods are ignored for simplicity.
-   *
-   * @param typeElement the type element to check
-   * @return {@code true} if the type is a functional interface, {@code false} otherwise
-   */
-  public static boolean isFunctionalInterface(TypeElement typeElement) {
-    if (typeElement == null) {
-      return false;
-    }
-
-    // Prefer explicit annotation
-    if (JavaLangAnalyser.findAnnotation(typeElement, FunctionalInterface.class).isPresent()) {
-      return true;
-    }
-    // Only interfaces can be functional interfaces
-    if (typeElement.getKind() != ElementKind.INTERFACE) {
-      return false;
-    }
-    // Heuristic: exactly one abstract method declared (ignores inherited ones for simplicity)
-    long abstractDeclared =
-        ElementFilter.methodsIn(typeElement.getEnclosedElements()).stream()
-            .filter(m -> !m.getModifiers().contains(javax.lang.model.element.Modifier.STATIC))
-            .filter(m -> !m.getModifiers().contains(javax.lang.model.element.Modifier.DEFAULT))
-            .count();
-    return abstractDeclared == 1;
   }
 
   /**
