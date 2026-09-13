@@ -678,6 +678,12 @@ comma-separated, each listed package includes all of its subpackages, and matchi
 case. Types in the generation scope are trusted to have their builders generated in the
 current compilation, so references to their builders do not require a type search.
 
+This option is an allowlist for whole packages: once set, builders are generated only inside
+the listed packages and every other package is excluded implicitly. Excluding a single
+package while generating everywhere else is not expressible; to exclude a single class,
+use `@Ignore4BuilderGeneration` instead. The scope also applies to types that carry
+`@SimpleBuilder` only through inheritance or a template annotation.
+
 #### `builderUsagePackages`
 
 **Default**: `""` (empty, unchanged behavior) | **Compiler Option**:

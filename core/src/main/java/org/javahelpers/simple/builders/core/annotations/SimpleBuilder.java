@@ -689,6 +689,12 @@ public @interface SimpleBuilder {
      * may be referenced without a type-existence search; they are automatically usable as helpers
      * and do not need to be listed in {@link #builderUsagePackages()}.
      *
+     * <p>On a single class this is mainly useful to <i>opt back in</i>: annotation options take
+     * precedence over the compiler option, so a type can include its own package even when the
+     * global scope excludes it. Set on a {@link Template} annotation or a base class ({@code
+     * SimpleBuilder} is {@code @Inherited}), it instead filters which inheriting types get a
+     * builder. To exclude a single type, prefer {@link Ignore4BuilderGeneration}.
+     *
      * <p>Example: {@code "com.example.dto, com.example.shared"}
      *
      * <p>Default: "" (empty - builders are generated for all {@code @SimpleBuilder} annotated DTOs,
