@@ -291,7 +291,7 @@ public class BuilderConfigurationReader {
       Object value = entry.getValue().getValue();
 
       CompilerArgumentsEnum option = CompilerArgumentsEnum.fromOptionName(name);
-      if (option == null || !option.isBuilderOption()) {
+      if (isNotABuilderOption(option)) {
         logger.warning("Unknown configuration option '%s' with value '%s' - ignoring", name, value);
         continue;
       }
@@ -299,6 +299,11 @@ public class BuilderConfigurationReader {
     }
 
     return builder.build();
+  }
+
+  /** Returns whether the option is unknown or not settable via @SimpleBuilder.Options. */
+  private static boolean isNotABuilderOption(CompilerArgumentsEnum option) {
+    return option == null || !option.isBuilderOption();
   }
 
   private enum AnnotationScope {
