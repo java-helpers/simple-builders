@@ -71,6 +71,13 @@ public final class BuilderScopeResolver {
   /**
    * Resolves the builder type to use for the given referenced type, if any.
    *
+   * <p>This method reads the configuration from the processing context via {@link
+   * org.javahelpers.simple.builders.processor.processing.ProcessingContext#getConfiguration()}. The
+   * caller must ensure that {@link
+   * org.javahelpers.simple.builders.processor.processing.ProcessingContext#initConfigurationForProcessingTarget}
+   * has been invoked with the owner element's resolved configuration beforehand, so that
+   * per-element {@code builderUsagePackages} overrides are respected.
+   *
    * <p>The decision follows these rules:
    *
    * <ol>
@@ -101,6 +108,13 @@ public final class BuilderScopeResolver {
   /**
    * Checks whether a builder may be generated for the given element under the generation scope of
    * the resolved configuration.
+   *
+   * <p>Unlike {@link #resolveUsableBuilderType(TypeElement)}, this method takes the configuration
+   * as an explicit parameter rather than reading it from the processing context. This is because it
+   * is called during generation-plan resolution, before {@link
+   * org.javahelpers.simple.builders.processor.processing.ProcessingContext#initConfigurationForProcessingTarget}
+   * has been invoked for the element, so the context does not yet hold the per-element
+   * configuration.
    *
    * <p>An unscoped {@code builderGenerationPackages} allows every element. Otherwise the element's
    * package must match the scope; skipped elements are logged at debug level.
