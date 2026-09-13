@@ -160,19 +160,19 @@ public final class JavaLangMapper {
    */
   private static void setBuilderAndConstructorInfo(
       TypeName typeName, TypeElement typeElement, ProcessingContext context) {
-    setBuilderTypeIfUsable(typeName, typeElement, context);
+    setBuilderTypeIfScopeMatches(typeName, typeElement, context);
     setEmptyConstructorInfoIfAvailable(typeName, typeElement, context);
-    setElementBuilderTypeIfUsable(typeName, context);
+    setElementBuilderTypeIfScopeMatches(typeName, context);
   }
 
   /**
-   * Sets the builder type if the type element has a usable @SimpleBuilder builder.
+   * Sets the builder type if the type element's package is in the configured builder scope.
    *
    * @param typeName the TypeName to enhance
    * @param typeElement the type element to check
    * @param context the processing context
    */
-  private static void setBuilderTypeIfUsable(
+  private static void setBuilderTypeIfScopeMatches(
       TypeName typeName, TypeElement typeElement, ProcessingContext context) {
     context
         .getBuilderScopeResolver()
@@ -197,13 +197,14 @@ public final class JavaLangMapper {
   }
 
   /**
-   * Sets the element builder type for generic collections when the @SimpleBuilder builder is
-   * usable.
+   * Sets the element builder type for generic collections when the element type's package is in the
+   * configured builder scope.
    *
    * @param typeName the TypeName to enhance
    * @param context the processing context
    */
-  private static void setElementBuilderTypeIfUsable(TypeName typeName, ProcessingContext context) {
+  private static void setElementBuilderTypeIfScopeMatches(
+      TypeName typeName, ProcessingContext context) {
     // Only process generic types
     if (!(typeName instanceof TypeNameGeneric genericType)) {
       return;
