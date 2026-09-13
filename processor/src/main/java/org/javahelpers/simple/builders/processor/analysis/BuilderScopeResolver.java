@@ -112,8 +112,7 @@ public final class BuilderScopeResolver {
 
   private Optional<TypeName> resolve(TypeElement referencedType) {
     if (!hasSimpleBuilderAnnotation(referencedType)
-        || JavaLangAnalyser.findAnnotation(referencedType, Ignore4BuilderGeneration.class)
-            .isPresent()) {
+        || isIgnoredForBuilderGeneration(referencedType)) {
       return Optional.empty();
     }
 
@@ -159,5 +158,12 @@ public final class BuilderScopeResolver {
       return false;
     }
     return JavaLangAnalyser.findAnnotation(typeElement, SimpleBuilder.class).isPresent();
+  }
+
+  private boolean isIgnoredForBuilderGeneration(TypeElement typeElement) {
+    if (typeElement == null) {
+      return false;
+    }
+    return JavaLangAnalyser.findAnnotation(typeElement, Ignore4BuilderGeneration.class).isPresent();
   }
 }
