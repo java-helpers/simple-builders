@@ -147,6 +147,9 @@ public class BuilderProcessor extends AbstractProcessor {
     // the scope resolver know every builder that will be generated in this round.
     List<ElementToGenerate> elementsToGenerate =
         resolveGenerationPlan(sortedElements, context.getConfigurationReader(), tracker);
+    context.debug(
+        "simple-builders: %d of %d annotated element(s) are inside the builderGenerationPackages scope.",
+        elementsToGenerate.size(), sortedElements.size());
     registerGeneratedTypes(elementsToGenerate);
 
     int successfulGenerations = generateBuilders(elementsToGenerate, tracker);
