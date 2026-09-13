@@ -70,9 +70,10 @@ class BuilderScopeResolverTest {
                     """));
 
     assertThat(compilation).succeeded();
-    // First resolution with generation scope "lib" → builder found
+    // First resolution with generation scope "lib" and registered → builder found
     assertEquals("lib.LibHelperBuilder", ResolverProbeProcessor.first.get().getFullQualifiedName());
-    // After changing config to exclude "lib", the resolver returns empty
+    // After clearing registration and changing config to exclude "lib", the resolver returns
+    // empty (not registered, not in scope)
     assertEquals(Optional.empty(), ResolverProbeProcessor.afterConfigurationChange);
     // Cache was cleared by the config change, so a new Optional instance is returned
     assertNotSame(ResolverProbeProcessor.first, ResolverProbeProcessor.afterConfigurationChange);
@@ -114,16 +115,105 @@ class BuilderScopeResolverTest {
                     """));
 
     assertThat(compilation).succeeded();
-    // With usage scope "other" (not "lib"), type is not in scope → empty
+    // With usage scope "other" (not "lib") and no registration → empty
     assertEquals(Optional.empty(), ResolverProbeProcessor.beforeRegistration);
-    // Registration alone doesn't help — type is still not in usage scope
+    // Registration alone is not enough — the type must also be in the usage scope
     assertEquals(Optional.empty(), ResolverProbeProcessor.afterRegistration);
-    // With usage scope "lib" but no registration → empty (builder not yet generated/verified)
+    // With usage scope "lib" but no registration → empty (builder not on classpath)
     assertEquals(Optional.empty(), ResolverProbeProcessor.usageBeforeRegistration);
     // With usage scope "lib" AND registration → builder resolved
     assertEquals(
         "lib.LibHelperBuilder",
         ResolverProbeProcessor.usageAfterRegistration.get().getFullQualifiedName());
+  }
+
+  @Test
+  void resolverUsageScope_ResolvesBuilderWithoutSimpleBuilderAnnotation() {
+    ResolverProbeProcessor.reset();
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelper { public LibHelper() {} }
+                    """),
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelperBuilder {
+                      public LibHelperBuilder() {}
+                      public LibHelperBuilder(LibHelper value) {}
+                      public LibHelper build() { return new LibHelper(); }
+                    }
+                    """));
+
+    assertThat(compilation).succeeded();
+    // Usage scope without @SimpleBuilder annotation — builder resolved by contract check
+    assertEquals(
+        "lib.LibHelperBuilder",
+        ResolverProbeProcessor.usageWithoutAnnotation.get().getFullQualifiedName());
+  }
+
+  @Test
+  void resolverUsageScope_UsesBuilderUsageSuffixWhenConfigured() {
+    ResolverProbeProcessor.reset();
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelper { public LibHelper() {} }
+                    """),
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelperFactory {
+                      public LibHelperFactory() {}
+                      public LibHelperFactory(LibHelper value) {}
+                      public LibHelper build() { return new LibHelper(); }
+                    }
+                    """));
+
+    assertThat(compilation).succeeded();
+    // With builderUsageSuffix="Factory", the candidate name uses "Factory"
+    assertEquals(
+        "lib.LibHelperFactory",
+        ResolverProbeProcessor.usageWithSuffix.get().getFullQualifiedName());
+  }
+
+  @Test
+  void resolverUsageScope_FallsBackToBuilderSuffixWhenUsageSuffixNotSet() {
+    ResolverProbeProcessor.reset();
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+                    @SimpleBuilder
+                    public class LibHelper { public LibHelper() {} }
+                    """),
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelperBuilder {
+                      public LibHelperBuilder() {}
+                      public LibHelperBuilder(LibHelper value) {}
+                      public LibHelper build() { return new LibHelper(); }
+                    }
+                    """));
+
+    assertThat(compilation).succeeded();
+    // Without builderUsageSuffix, the candidate name uses builderSuffix ("Builder")
+    assertEquals(
+        "lib.LibHelperBuilder",
+        ResolverProbeProcessor.usageDefaultSuffix.get().getFullQualifiedName());
   }
 
   private static final class ResolverProbeProcessor extends AbstractProcessor {
@@ -134,6 +224,9 @@ class BuilderScopeResolverTest {
     private static Optional<TypeName> afterRegistration;
     private static Optional<TypeName> usageBeforeRegistration;
     private static Optional<TypeName> usageAfterRegistration;
+    private static Optional<TypeName> usageWithoutAnnotation;
+    private static Optional<TypeName> usageWithSuffix;
+    private static Optional<TypeName> usageDefaultSuffix;
 
     private boolean captured;
 
@@ -145,6 +238,9 @@ class BuilderScopeResolverTest {
       afterRegistration = null;
       usageBeforeRegistration = null;
       usageAfterRegistration = null;
+      usageWithoutAnnotation = null;
+      usageWithSuffix = null;
+      usageDefaultSuffix = null;
     }
 
     @Override
@@ -168,19 +264,36 @@ class BuilderScopeResolverTest {
               new ProcessingLogger(processingEnv), BuilderConfiguration.DEFAULT, processingEnv);
       context.initConfigurationForProcessingTarget(configuration("lib", "Builder"));
       BuilderScopeResolver resolver = context.getBuilderScopeResolver();
+      // Register the type as generated, mirroring the real processor which calls
+      // registerGeneratedTypes before any resolution happens.
+      resolver.registerGeneratedTypes(List.of(helper));
       first = resolver.resolveUsableBuilderType(helper);
       second = resolver.resolveUsableBuilderType(helper);
+      // Clear registration before testing scope-only behavior
+      resolver.registerGeneratedTypes(List.of());
       context.initConfigurationForProcessingTarget(configuration("other", "OtherBuilder"));
       afterConfigurationChange = resolver.resolveUsableBuilderType(helper);
       context.initConfigurationForProcessingTarget(usageOnlyConfiguration("other"));
       beforeRegistration = resolver.resolveUsableBuilderType(helper);
+      // Registration alone is not enough — the type must be in scope
       resolver.registerGeneratedTypes(List.of(helper));
       afterRegistration = resolver.resolveUsableBuilderType(helper);
+      // Clear registration for usage-scope classpath lookup tests
       context.initConfigurationForProcessingTarget(usageOnlyConfiguration("lib"));
       resolver.registerGeneratedTypes(List.of());
       usageBeforeRegistration = resolver.resolveUsableBuilderType(helper);
       resolver.registerGeneratedTypes(List.of(helper));
       usageAfterRegistration = resolver.resolveUsableBuilderType(helper);
+      // Usage scope without @SimpleBuilder annotation — type existence check only
+      context.initConfigurationForProcessingTarget(usageOnlyConfiguration("lib"));
+      resolver.registerGeneratedTypes(List.of());
+      usageWithoutAnnotation = resolver.resolveUsableBuilderType(helper);
+      // Usage scope with builderUsageSuffix="Factory"
+      context.initConfigurationForProcessingTarget(usageWithSuffixConfiguration("lib", "Factory"));
+      usageWithSuffix = resolver.resolveUsableBuilderType(helper);
+      // Usage scope with default suffix (no builderUsageSuffix configured)
+      context.initConfigurationForProcessingTarget(usageOnlyConfiguration("lib"));
+      usageDefaultSuffix = resolver.resolveUsableBuilderType(helper);
       captured = true;
       return false;
     }
@@ -196,6 +309,15 @@ class BuilderScopeResolverTest {
     private static BuilderConfiguration usageOnlyConfiguration(String packageName) {
       return BuilderConfiguration.DEFAULT.merge(
           BuilderConfiguration.builder().builderUsagePackages(packageName).build());
+    }
+
+    private static BuilderConfiguration usageWithSuffixConfiguration(
+        String packageName, String usageSuffix) {
+      return BuilderConfiguration.DEFAULT.merge(
+          BuilderConfiguration.builder()
+              .builderUsagePackages(packageName)
+              .builderUsageSuffix(usageSuffix)
+              .build());
     }
   }
 }

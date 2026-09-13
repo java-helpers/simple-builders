@@ -691,19 +691,24 @@ use `@Ignore4BuilderGeneration` instead. The scope also applies to types that ca
 
 Controls which packages may provide builders as nested builder helpers. Packages are
 comma-separated, each listed package includes all of its subpackages, and matching ignores
-case. For a type in the usage scope but outside the generation scope, the processor verifies
-that its builder actually exists on the classpath before emitting a builder reference. If it
-cannot be resolved, the field falls back to a plain setter.
+case.
 
-Packages listed in `builderGenerationPackages` are automatically part of the usage scope and
-never need to be repeated here: their builders are generated in the same compilation, so they
-are trusted without a type-existence search.
+The processor constructs the candidate builder name using `builderUsageSuffix`
+(or `builderSuffix` if not configured) and verifies the builder contract: a
+constructor accepting the referenced type and a no-arg `build()` method returning
+it. Any class with the expected name and a matching contract qualifies, allowing
+references to builders generated with custom template annotations, external tools,
+or different suffixes. If the candidate builder cannot be found, the field falls
+back to a plain setter.
 
-When both options are empty, builders from any package may be referenced (the behavior before
-scoping existed). Once you configure `builderGenerationPackages`, usage is limited to the
-packages listed in the two options — so setting a generation scope while leaving
-`builderUsagePackages` empty means only generation-scope builders are used as helpers, and
-every other field falls back to a plain setter.
+Packages listed in `builderGenerationPackages` are automatically included in the usage
+scope — their builders are generated in the same compilation and don't need to be listed
+here.
+
+When `builderUsagePackages` is empty, builders from any package may be referenced (the
+behavior before scoping existed). When set, only packages listed in `builderUsagePackages`
+(and generation-scope types) may provide builder helpers — types outside both scopes fall
+back to a plain setter.
 
 The `example` module contains a runnable demo in package
 `org.javahelpers.simple.builders.example.scoping` ([`ScopedOwnerDto.java`](../example/src/main/java/org/javahelpers/simple/builders/example/scoping/ScopedOwnerDto.java)).
@@ -953,6 +958,39 @@ Customizes the suffix appended to the DTO class name to create the builder class
 public class PersonDto { }
 
 // Generated class name: PersonDtoFactory (instead of PersonDtoBuilder)
+```
+
+---
+
+#### `builderUsageSuffix`
+
+**Default**: `""` (empty — falls back to `builderSuffix`) | **Compiler Option**:
+`-Asimplebuilder.builderUsageSuffix=CustomSuffix`
+
+Customizes the suffix used when looking up builders from the usage scope. The processor
+constructs the candidate builder name as `referencedType.getSimpleName() + builderUsageSuffix`.
+If empty, `builderSuffix` is used instead. This allows referencing builders that were generated
+with a different suffix (e.g. by another module using `"Factory"` as suffix) without changing
+the suffix used for own builder generation.
+
+The candidate class must provide a constructor accepting the referenced type and a no-arg
+`build()` method returning it. The contract check is annotation-agnostic, so builders
+generated with custom template annotations or external tools are supported. If the
+candidate class does not exist or does not satisfy this contract, the field falls back
+to a plain setter.
+
+**Example**:
+```java
+@SimpleBuilder.Options(
+    builderSuffix = "Builder",       // own builders: *Builder
+    builderUsageSuffix = "Factory"   // usage-scope builders: *Factory
+)
+public class OwnerDto {
+    private ExternalDto external;
+}
+
+// Own builder: OwnerDtoBuilder
+// External builder looked up as: ExternalDtoFactory (not ExternalDtoBuilder)
 ```
 
 ---

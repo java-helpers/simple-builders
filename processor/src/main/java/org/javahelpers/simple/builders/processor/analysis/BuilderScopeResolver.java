@@ -33,7 +33,6 @@ import java.util.Set;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration;
-import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.core.PackageScopes;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
@@ -43,8 +42,9 @@ import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
  * Central resolver that decides whether a builder may be referenced for a given type.
  *
  * <p>This resolver is independent of generator/enhancer code; it only relies on the configured
- * {@code builderGenerationPackages} and {@code builderUsagePackages} scopes, registered generated
- * types, and the availability of builder types on the classpath.
+ * {@code builderUsagePackages} scope (which includes {@code builderGenerationPackages}
+ * automatically), registered generated types, and the availability of builder types on the
+ * classpath.
  *
  * <p>The resolver is constructed once per processing context and refreshes its parsed package
  * scopes and per-type results when the target configuration changes. Types whose builders are
@@ -54,7 +54,6 @@ public final class BuilderScopeResolver {
 
   private final ProcessingContext context;
   private BuilderConfiguration cachedConfiguration;
-  private PackageScopes generationPackages = PackageScopes.unscoped();
   private PackageScopes usagePackages = PackageScopes.unscoped();
   private Set<String> generatedTypeNames = Set.of();
   private final Map<String, Optional<TypeName>> resolvedBuilderTypes = new HashMap<>();
@@ -81,16 +80,19 @@ public final class BuilderScopeResolver {
    * <p>The decision follows these rules:
    *
    * <ol>
-   *   <li>If the referenced type is opted out with {@code @Ignore4BuilderGeneration}, or is not
-   *       annotated with {@code @SimpleBuilder}, no builder may be used.
-   *   <li>If both scopes are empty/unset, the candidate builder is returned for full backward
-   *       compatibility (current behavior, no type search).
-   *   <li>If the referenced type's package is in {@code builderGenerationPackages}, the candidate
-   *       builder is returned without a type-existence search.
-   *   <li>If the referenced type's package is in {@code builderUsagePackages} (but not in the
-   *       generation scope), the candidate builder is returned if its builder is generated in the
-   *       current processing round or can be resolved on the classpath.
-   *   <li>Otherwise no builder may be referenced.
+   *   <li>If the usage scope is set and the referenced type's package is not in it, no builder may
+   *       be referenced. The usage scope includes generation-scope packages automatically. When the
+   *       scope is empty, any package is allowed (backward compatibility).
+   *   <li>If the referenced type's builder is generated in the current processing round (registered
+   *       via {@link #registerGeneratedTypes}), the candidate builder (using {@code builderSuffix})
+   *       is returned immediately — trusted without a classpath lookup or contract check.
+   *   <li>Otherwise, the candidate builder name is constructed using {@code builderUsageSuffix}
+   *       (falling back to {@code builderSuffix} if not configured). The candidate is looked up on
+   *       the classpath and returned if it satisfies the builder contract: a constructor accepting
+   *       the referenced type and a no-arg {@code build()} method returning it. The contract check
+   *       is annotation-agnostic, so builders generated with custom template annotations, external
+   *       tools, or different suffixes are supported. The referenced type must not be opted out
+   *       with {@code @Ignore4BuilderGeneration}.
    * </ol>
    *
    * @param referencedType the type element being referenced as a field or collection element
@@ -153,33 +155,63 @@ public final class BuilderScopeResolver {
   }
 
   private Optional<TypeName> resolve(TypeElement referencedType) {
-    if (!hasSimpleBuilderAnnotation(referencedType)
-        || isIgnoredForBuilderGeneration(referencedType)) {
+    if (referencedType == null || isIgnoredForBuilderGeneration(referencedType)) {
       return Optional.empty();
     }
 
-    TypeName candidate = JavaLangMapper.createBuilderTypeName(referencedType, context);
+    String referencedTypeFqn = referencedType.getQualifiedName().toString();
     String packageName = context.getPackageName(referencedType);
 
-    // Both scopes unset → full backward compatibility, no type search.
-    if (generationPackages.isEmpty() && usagePackages.isEmpty()) {
+    // The usage scope determines whether a type is eligible to be referenced as a builder
+    // helper. When empty, any package is allowed (backward compatibility). When set, only
+    // packages in the scope qualify. The scope already includes generation-scope packages.
+    if (!usagePackages.isEmpty() && !usagePackages.includes(packageName)) {
+      return Optional.empty();
+    }
+
+    // Types whose builders are generated in the current processing round are trusted
+    // immediately — our own generators always produce the builder contract, so no
+    // classpath lookup or contract check is needed. The candidate uses builderSuffix
+    // because that is what our own generators produce.
+    if (generatedTypeNames.contains(referencedTypeFqn)) {
+      TypeName candidate =
+          JavaLangMapper.createBuilderTypeName(
+              referencedType, context, context.getConfiguration().getBuilderSuffix());
       return Optional.of(candidate);
     }
 
-    // Generation scope: trusted types whose builders are generated in this compilation.
-    if (generationPackages.includes(packageName)) {
-      return Optional.of(candidate);
-    }
+    // For types not generated in this round, look up the candidate on the classpath using
+    // builderUsageSuffix (which falls back to builderSuffix if not configured) and verify
+    // the builder contract.
+    String suffix = context.getConfiguration().getBuilderUsageSuffix();
+    TypeName candidate = JavaLangMapper.createBuilderTypeName(referencedType, context, suffix);
+    return resolveByBuilderContract(candidate, referencedTypeFqn);
+  }
 
-    // Usage scope: types whose builders may be generated now or already compiled.
-    if (usagePackages.includes(packageName)) {
-      boolean builderAvailable =
-          generatedTypeNames.contains(referencedType.getQualifiedName().toString())
-              || context.getTypeElement(candidate.getFullQualifiedName()) != null;
-      return builderAvailable ? Optional.of(candidate) : Optional.empty();
+  /**
+   * Looks up the candidate builder type on the classpath and verifies it satisfies the builder
+   * contract: a constructor accepting the referenced type and a no-arg {@code build()} method
+   * returning it. The contract check is annotation-agnostic, so builders generated with custom
+   * template annotations or from external sources are supported as long as they follow the builder
+   * contract. It also avoids false positives like {@code String} → {@code StringBuilder}.
+   *
+   * @param candidate the candidate builder type name to look up
+   * @param expectedType the qualified name of the referenced type the builder must accept and
+   *     return
+   * @return the candidate if a matching builder class exists on the classpath, empty otherwise
+   */
+  private Optional<TypeName> resolveByBuilderContract(TypeName candidate, String expectedType) {
+    TypeElement builderTypeElement = context.getTypeElement(candidate.getFullQualifiedName());
+    if (builderTypeElement == null) {
+      return Optional.empty();
     }
-
-    return Optional.empty();
+    if (!JavaLangAnalyser.hasConstructorAccepting(builderTypeElement, expectedType, context)) {
+      return Optional.empty();
+    }
+    if (!JavaLangAnalyser.hasBuildMethodReturning(builderTypeElement, expectedType, context)) {
+      return Optional.empty();
+    }
+    return Optional.of(candidate);
   }
 
   private void refreshForConfigurationIfNeeded() {
@@ -187,21 +219,17 @@ public final class BuilderScopeResolver {
     if (Objects.equals(cachedConfiguration, configuration)) {
       return;
     }
-    generationPackages =
+    // The effective usage scope combines builderUsagePackages and builderGenerationPackages,
+    // since generation-scope packages are automatically included in the usage scope.
+    PackageScopes generation =
         configuration == null
             ? PackageScopes.unscoped()
             : configuration.builderGenerationPackages();
-    usagePackages =
+    PackageScopes usage =
         configuration == null ? PackageScopes.unscoped() : configuration.builderUsagePackages();
+    usagePackages = PackageScopes.merge(generation, usage);
     resolvedBuilderTypes.clear();
     cachedConfiguration = configuration;
-  }
-
-  private static boolean hasSimpleBuilderAnnotation(TypeElement typeElement) {
-    if (typeElement == null) {
-      return false;
-    }
-    return JavaLangAnalyser.findAnnotation(typeElement, SimpleBuilder.class).isPresent();
   }
 
   private static boolean isIgnoredForBuilderGeneration(TypeElement typeElement) {

@@ -183,6 +183,166 @@ class BuilderScopeProcessingTest {
         unannotated, "UnannotatedFieldDtoBuilder", "UnannotatedDto", "UnannotatedDtoBuilder");
   }
 
+  @Test
+  void usageScope_ReferencesBuilderWithoutSimpleBuilderAnnotation() {
+    JavaFileObject dto = dto("test", "UnannotatedUsageDto", "LibraryDto", "lib");
+    JavaFileObject libraryDto = unannotatedDto("lib", "LibraryDto");
+    JavaFileObject libraryDtoBuilder = manualBuilder("lib", "LibraryDtoBuilder", "LibraryDto");
+
+    Compilation compilation =
+        ProcessorTestUtils.createCompiler()
+            .withOptions(
+                "-Asimplebuilder.builderGenerationPackages=test",
+                "-Asimplebuilder.builderUsagePackages=lib")
+            .compile(dto, libraryDto, libraryDtoBuilder);
+
+    assertThat(compilation).succeeded();
+    String generated =
+        ProcessorTestUtils.loadGeneratedSource(compilation, "UnannotatedUsageDtoBuilder");
+    ProcessorAsserts.assertContaining(
+        generated, "public UnannotatedUsageDtoBuilder referenced(LibraryDto referenced)");
+    ProcessorAsserts.assertContaining(generated, "referencedBuilderConsumer");
+    ProcessorAsserts.assertContaining(generated, "LibraryDtoBuilder");
+    ProcessorAsserts.assertNoBuilderGenerated(
+        compilation, "LibraryDto", "The library type must not be generated in this compilation");
+  }
+
+  @Test
+  void usageScope_UsesBuilderUsageSuffixForLookup() {
+    JavaFileObject dto = dto("test", "SuffixUsageDto", "LibraryDto", "lib");
+    JavaFileObject libraryDto = unannotatedDto("lib", "LibraryDto");
+    JavaFileObject libraryDtoFactory = manualBuilder("lib", "LibraryDtoFactory", "LibraryDto");
+
+    Compilation compilation =
+        ProcessorTestUtils.createCompiler()
+            .withOptions(
+                "-Asimplebuilder.builderGenerationPackages=test",
+                "-Asimplebuilder.builderUsagePackages=lib",
+                "-Asimplebuilder.builderUsageSuffix=Factory")
+            .compile(dto, libraryDto, libraryDtoFactory);
+
+    assertThat(compilation).succeeded();
+    String generated = ProcessorTestUtils.loadGeneratedSource(compilation, "SuffixUsageDtoBuilder");
+    ProcessorAsserts.assertContaining(
+        generated, "public SuffixUsageDtoBuilder referenced(LibraryDto referenced)");
+    ProcessorAsserts.assertContaining(generated, "referencedBuilderConsumer");
+    ProcessorAsserts.assertContaining(generated, "LibraryDtoFactory");
+    ProcessorAsserts.assertNotContaining(generated, "LibraryDtoBuilder");
+    ProcessorAsserts.assertNoBuilderGenerated(
+        compilation, "LibraryDto", "The library type must not be generated in this compilation");
+  }
+
+  @Test
+  void usageScope_FallsBackToBuilderSuffixWhenUsageSuffixNotConfigured() {
+    JavaFileObject dto = dto("test", "FallbackSuffixDto", "LibraryDto", "lib");
+    JavaFileObject libraryDto = unannotatedDto("lib", "LibraryDto");
+    JavaFileObject libraryDtoBuilder = manualBuilder("lib", "LibraryDtoBuilder", "LibraryDto");
+
+    Compilation compilation =
+        ProcessorTestUtils.createCompiler()
+            .withOptions(
+                "-Asimplebuilder.builderGenerationPackages=test",
+                "-Asimplebuilder.builderUsagePackages=lib")
+            .compile(dto, libraryDto, libraryDtoBuilder);
+
+    assertThat(compilation).succeeded();
+    String generated =
+        ProcessorTestUtils.loadGeneratedSource(compilation, "FallbackSuffixDtoBuilder");
+    ProcessorAsserts.assertContaining(generated, "referencedBuilderConsumer");
+    ProcessorAsserts.assertContaining(generated, "LibraryDtoBuilder");
+  }
+
+  @Test
+  void usageScope_DoesNotReferenceBuilderWhenClassNotFoundWithUsageSuffix() {
+    JavaFileObject dto = dto("test", "MissingBuilderDto", "LibraryDto", "lib");
+    JavaFileObject libraryDto = unannotatedDto("lib", "LibraryDto");
+    JavaFileObject libraryDtoBuilder = manualBuilder("lib", "LibraryDtoBuilder", "LibraryDto");
+
+    Compilation compilation =
+        ProcessorTestUtils.createCompiler()
+            .withOptions(
+                "-Asimplebuilder.builderGenerationPackages=test",
+                "-Asimplebuilder.builderUsagePackages=lib",
+                "-Asimplebuilder.builderUsageSuffix=Factory")
+            .compile(dto, libraryDto, libraryDtoBuilder);
+
+    assertThat(compilation).succeeded();
+    String generated =
+        ProcessorTestUtils.loadGeneratedSource(compilation, "MissingBuilderDtoBuilder");
+    ProcessorAsserts.assertContaining(
+        generated, "public MissingBuilderDtoBuilder referenced(LibraryDto referenced)");
+    ProcessorAsserts.assertNotContaining(
+        generated, "referencedBuilderConsumer", "LibraryDtoFactory");
+  }
+
+  @Test
+  void inlineOptions_ConfigureBuilderUsageSuffix() {
+    JavaFileObject dto =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+            import lib.LibraryDto;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+            @SimpleBuilder(options = @SimpleBuilder.Options(
+                builderGenerationPackages = "test",
+                builderUsagePackages = "lib",
+                builderUsageSuffix = "Factory"
+            ))
+            public class InlineSuffixDto {
+              private LibraryDto referenced;
+              public LibraryDto getReferenced() { return referenced; }
+              public void setReferenced(LibraryDto referenced) { this.referenced = referenced; }
+            }
+            """);
+    JavaFileObject libraryDto = unannotatedDto("lib", "LibraryDto");
+    JavaFileObject libraryDtoFactory = manualBuilder("lib", "LibraryDtoFactory", "LibraryDto");
+
+    Compilation compilation =
+        ProcessorTestUtils.createCompiler().compile(dto, libraryDto, libraryDtoFactory);
+
+    assertThat(compilation).succeeded();
+    String generated =
+        ProcessorTestUtils.loadGeneratedSource(compilation, "InlineSuffixDtoBuilder");
+    ProcessorAsserts.assertContaining(generated, "referencedBuilderConsumer");
+    ProcessorAsserts.assertContaining(generated, "LibraryDtoFactory");
+  }
+
+  private static JavaFileObject unannotatedDto(String packageName, String className) {
+    return ProcessorTestUtils.forSource(
+        """
+        package %s;
+        public class %s { public %s() {} }
+        """
+            .formatted(packageName, className, className));
+  }
+
+  private static JavaFileObject manualBuilder(
+      String packageName, String builderName, String dtoName) {
+    return ProcessorTestUtils.forSource(
+        """
+        package %s;
+        public class %s {
+          private %s value;
+          public %s() {}
+          public %s(%s value) { this.value = value; }
+          public static %s create() { return new %s(); }
+          public %s build() { return value != null ? value : new %s(); }
+        }
+        """
+            .formatted(
+                packageName,
+                builderName,
+                dtoName,
+                builderName,
+                builderName,
+                dtoName,
+                builderName,
+                builderName,
+                dtoName,
+                dtoName));
+  }
+
   private static JavaFileObject dto(String packageName, String className, String fieldType) {
     return dto(packageName, className, fieldType, packageName);
   }

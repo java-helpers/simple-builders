@@ -60,7 +60,8 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
  *   <li><b>Collection Helpers:</b> generateVarArgsHelpers, usingArrayListBuilder,
  *       usingArrayListBuilderWithElementBuilders, usingHashSetBuilder,
  *       usingHashSetBuilderWithElementBuilders, usingHashMapBuilder (all default: true)
- *   <li><b>Builder Scoping:</b> builderGenerationPackages, builderUsagePackages (default: empty)
+ *   <li><b>Builder Scoping:</b> builderGenerationPackages, builderUsagePackages, builderUsageSuffix
+ *       (default: empty)
  *   <li><b>Integration:</b> generateWithInterface (default: true)
  *   <li><b>Documentation:</b> generateJavaDoc (default: true)
  * </ul>
@@ -708,21 +709,22 @@ public @interface SimpleBuilder {
     /**
      * Comma-separated list of packages whose builders may be used as helper methods for other DTOs.
      * <br>
-     * Subpackages are included automatically and matching ignores case. A type in this scope but
-     * not in {@link #builderGenerationPackages()} must have its compiled builder verified (via type
-     * search) before a builder reference is emitted. If the builder type cannot be resolved, the
-     * field falls back to a plain setter.
+     * Subpackages are included automatically and matching ignores case. The processor constructs
+     * the candidate builder name using {@link #builderUsageSuffix()} (or {@link #builderSuffix()}
+     * if not configured) and verifies that a class with that name exists on the classpath or was
+     * generated in the current processing round. This allows referencing builders generated with
+     * custom template annotations or different suffixes. If the builder type cannot be resolved,
+     * the field falls back to a plain setter.
      *
      * <p>Packages in {@link #builderGenerationPackages()} are automatically part of the usage scope
-     * and never need to be repeated here. When both options are empty, builders from any package
-     * may be referenced; once a generation scope is configured, usage is limited to the packages
-     * listed in the two options.
+     * and never need to be repeated here. When this option is empty, builders from any package may
+     * be referenced; once set, only packages listed here (and generation-scope types) may provide
+     * builder helpers.
      *
      * <p>Example: {@code "com.example.library, com.example.external"}
      *
-     * <p>Default: "" (empty - all {@code @SimpleBuilder}-annotated types may be referenced as
-     * builders; the builder type is not verified to exist on the classpath, preserving
-     * backward-compatible behavior) <br>
+     * <p>Default: "" (empty - all types may be referenced as builders; the builder type is not
+     * verified to exist on the classpath, preserving backward-compatible behavior) <br>
      * Compiler option: -Asimplebuilder.builderUsagePackages
      *
      * @return the packages whose builders may be used as helpers
@@ -751,6 +753,35 @@ public @interface SimpleBuilder {
      * @return the suffix for the builder class name
      */
     String builderSuffix() default "Builder";
+
+    /**
+     * Suffix to append to the DTO name when looking up a builder from the usage scope. <br>
+     * The processor constructs the candidate builder name using this suffix and verifies that a
+     * class with that name exists on the classpath. If empty, the value of {@link #builderSuffix()}
+     * is used. This allows referencing builders that were generated with a different suffix (e.g.
+     * by another module using "Factory" as suffix) without changing the suffix used for own builder
+     * generation.
+     *
+     * <p>Example:
+     *
+     * <pre>{@code
+     * @SimpleBuilder(options = @SimpleBuilder.Options(
+     *     builderSuffix = "Builder",
+     *     builderUsageSuffix = "Factory"
+     * ))
+     * public class OwnerDto {
+     *     // Own builder: OwnerDtoBuilder
+     *     // Referenced builders from usage scope: looked up as *Factory
+     * }
+     * }</pre>
+     *
+     * Default: "" (empty - falls back to {@link #builderSuffix()}) <br>
+     * Compiler option: -Asimplebuilder.builderUsageSuffix
+     *
+     * @return the suffix for usage-scope builder class names, or empty to use {@link
+     *     #builderSuffix()}
+     */
+    String builderUsageSuffix() default "";
 
     /**
      * Suffix to append to setter method names in the generated builder. <br>

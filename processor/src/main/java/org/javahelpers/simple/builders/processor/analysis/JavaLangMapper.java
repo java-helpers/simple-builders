@@ -245,15 +245,28 @@ public final class JavaLangMapper {
   }
 
   /**
-   * Creates a TypeName for the builder of a given TypeElement.
+   * Creates a TypeName for the builder of a given TypeElement using the configured builder suffix.
    *
    * @param typeElement the type element to create builder name for
    * @param context the processing context
    * @return the TypeName for the builder
    */
   public static TypeName createBuilderTypeName(TypeElement typeElement, ProcessingContext context) {
-    String builderClassName =
-        typeElement.getSimpleName().toString() + context.getConfiguration().getBuilderSuffix();
+    return createBuilderTypeName(
+        typeElement, context, context.getConfiguration().getBuilderSuffix());
+  }
+
+  /**
+   * Creates a TypeName for the builder of a given TypeElement using an explicit suffix.
+   *
+   * @param typeElement the type element to create builder name for
+   * @param context the processing context
+   * @param suffix the builder class name suffix to append
+   * @return the TypeName for the builder
+   */
+  public static TypeName createBuilderTypeName(
+      TypeElement typeElement, ProcessingContext context, String suffix) {
+    String builderClassName = typeElement.getSimpleName().toString() + suffix;
     String packageName = context.getPackageName(typeElement);
     return new TypeName(packageName, builderClassName);
   }

@@ -71,6 +71,8 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
  *     all packages if builderGenerationPackages is unscoped as well, otherwise only the generation
  *     scope is usable)
  * @param builderSuffix Suffix for builder class name
+ * @param builderUsageSuffix Suffix for builder class name when referencing builders from the usage
+ *     scope; null means fall back to {@code builderSuffix}
  * @param setterSuffix Suffix for setter method names
  * @param formattingMode Formatting mode for generated source code (null = inherit from compiler
  *     arg)
@@ -105,6 +107,7 @@ public record BuilderConfiguration(
     PackageScopes builderGenerationPackages,
     PackageScopes builderUsagePackages,
     String builderSuffix,
+    String builderUsageSuffix,
     String setterSuffix,
     String formattingMode,
     OptionState strict) {
@@ -295,6 +298,17 @@ public record BuilderConfiguration(
     return builderSuffix;
   }
 
+  /**
+   * Returns the suffix used when referencing builders from the usage scope.
+   *
+   * @return the usage-scope builder suffix, or {@link #getBuilderSuffix()} if not configured
+   */
+  public String getBuilderUsageSuffix() {
+    return builderUsageSuffix != null && !builderUsageSuffix.isEmpty()
+        ? builderUsageSuffix
+        : builderSuffix;
+  }
+
   public String getSetterSuffix() {
     return setterSuffix;
   }
@@ -376,6 +390,7 @@ public record BuilderConfiguration(
             mergeScopes(other.builderGenerationPackages, this.builderGenerationPackages))
         .builderUsagePackages(mergeScopes(other.builderUsagePackages, this.builderUsagePackages))
         .builderSuffix(mergeString(other.builderSuffix, this.builderSuffix))
+        .builderUsageSuffix(mergeString(other.builderUsageSuffix, this.builderUsageSuffix))
         .setterSuffix(mergeString(other.setterSuffix, this.setterSuffix))
         .formattingMode(mergeString(other.formattingMode, this.formattingMode))
         .strict(mergeOptionState(other.strict, this.strict))
@@ -458,6 +473,7 @@ public record BuilderConfiguration(
         .appendIfNotEmpty("builderGenerationPackages", builderGenerationPackages.toString())
         .appendIfNotEmpty("builderUsagePackages", builderUsagePackages.toString())
         .appendIfNotEmpty("builderSuffix", builderSuffix)
+        .appendIfNotEmpty("builderUsageSuffix", builderUsageSuffix)
         .appendIfNotEmpty("setterSuffix", setterSuffix)
         .appendIfNotEmpty("formattingMode", formattingMode)
         .appendValueIfSet("strict", strict)
@@ -540,6 +556,7 @@ public record BuilderConfiguration(
 
     // === Naming ===
     private String builderSuffix = null;
+    private String builderUsageSuffix = null;
     private String setterSuffix = null;
 
     // === Formatting ===
@@ -823,6 +840,11 @@ public record BuilderConfiguration(
       return this;
     }
 
+    public Builder builderUsageSuffix(String value) {
+      this.builderUsageSuffix = value == null ? null : value.trim();
+      return this;
+    }
+
     public Builder setterSuffix(String value) {
       this.setterSuffix = value == null ? null : value.trim();
       return this;
@@ -873,6 +895,7 @@ public record BuilderConfiguration(
           builderGenerationPackages,
           builderUsagePackages,
           builderSuffix,
+          builderUsageSuffix,
           setterSuffix,
           formattingMode,
           strict);
