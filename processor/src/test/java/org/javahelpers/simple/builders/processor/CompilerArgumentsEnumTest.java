@@ -36,22 +36,12 @@ import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsEnum;
 import org.junit.jupiter.api.Test;
 
-/** Unit tests for {@link CompilerArgumentsEnum} option lookup and value application. */
+/**
+ * Unit tests for {@link CompilerArgumentsEnum} lookup and value application not covered by {@link
+ * CompilerArgumentsReaderTest}: option-name resolution, the builder-option distinction, qualified
+ * annotation values, and the no-op contract for non-builder options.
+ */
 class CompilerArgumentsEnumTest {
-
-  @Test
-  void fromCompilerArgument_resolvesPrefixedName() {
-    assertSame(
-        CompilerArgumentsEnum.GENERATE_FIELD_SUPPLIER,
-        CompilerArgumentsEnum.fromCompilerArgument("simplebuilder.generateFieldSupplier"));
-  }
-
-  @Test
-  void fromCompilerArgument_returnsNullForUnknownOrBare() {
-    assertNull(CompilerArgumentsEnum.fromCompilerArgument("unknown"));
-    // bare option names are only accepted as compiler args, not as prefixed arguments
-    assertNull(CompilerArgumentsEnum.fromCompilerArgument("generateFieldSupplier"));
-  }
 
   @Test
   void fromOptionName_resolvesAndRejects() {

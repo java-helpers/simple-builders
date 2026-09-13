@@ -245,21 +245,6 @@ public enum CompilerArgumentsEnum {
   }
 
   /**
-   * Finds a CompilerArgumentsEnum by its compiler argument.
-   *
-   * @param compilerArgument The compiler argument to search for
-   * @return The matching CompilerArgumentsEnum, or null if not found
-   */
-  public static CompilerArgumentsEnum fromCompilerArgument(String compilerArgument) {
-    for (CompilerArgumentsEnum option : values()) {
-      if (option.getCompilerArgument().equals(compilerArgument)) {
-        return option;
-      }
-    }
-    return null;
-  }
-
-  /**
    * Finds a CompilerArgumentsEnum by its option name (as used in annotation methods).
    *
    * @param optionName the option name to search for
