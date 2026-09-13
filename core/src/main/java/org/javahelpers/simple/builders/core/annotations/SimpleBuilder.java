@@ -686,7 +686,8 @@ public @interface SimpleBuilder {
      * Subpackages are included automatically and matching ignores case. When non-empty, builder
      * generation is restricted to DTOs whose package equals or is a subpackage of a listed package.
      * Types in this scope are trusted to have their builder generated in the same compilation and
-     * may be referenced without a type-existence search.
+     * may be referenced without a type-existence search; they are automatically usable as helpers
+     * and do not need to be listed in {@link #builderUsagePackages()}.
      *
      * <p>Example: {@code "com.example.dto, com.example.shared"}
      *
@@ -705,6 +706,11 @@ public @interface SimpleBuilder {
      * not in {@link #builderGenerationPackages()} must have its compiled builder verified (via type
      * search) before a builder reference is emitted. If the builder type cannot be resolved, the
      * field falls back to a plain setter.
+     *
+     * <p>Packages in {@link #builderGenerationPackages()} are automatically part of the usage scope
+     * and never need to be repeated here. When both options are empty, builders from any package
+     * may be referenced; once a generation scope is configured, usage is limited to the packages
+     * listed in the two options.
      *
      * <p>Example: {@code "com.example.library, com.example.external"}
      *

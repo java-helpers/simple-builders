@@ -69,8 +69,11 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
  * @param implementsBuilderBase Implement IBuilderBase interface
  * @param generateWithInterface Generate With interface
  * @param generateJavaDoc Generate Javadoc comments
- * @param builderGenerationPackages Packages for which builders are generated (empty = unscoped)
- * @param builderUsagePackages Packages whose builders may be used as helpers (empty = unscoped)
+ * @param builderGenerationPackages Packages for which builders are generated; automatically part of
+ *     the usage scope (empty = unscoped)
+ * @param builderUsagePackages Additional packages whose builders may be used as helpers (empty =
+ *     all packages if builderGenerationPackages is empty as well, otherwise only the generation
+ *     scope is usable)
  * @param builderSuffix Suffix for builder class name
  * @param setterSuffix Suffix for setter method names
  * @param formattingMode Formatting mode for generated source code (null = inherit from compiler

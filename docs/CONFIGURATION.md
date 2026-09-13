@@ -689,6 +689,16 @@ case. For a type in the usage scope but outside the generation scope, the proces
 that its builder actually exists on the classpath before emitting a builder reference. If it
 cannot be resolved, the field falls back to a plain setter.
 
+Packages listed in `builderGenerationPackages` are automatically part of the usage scope and
+never need to be repeated here: their builders are generated in the same compilation, so they
+are trusted without a type-existence search.
+
+When both options are empty, builders from any package may be referenced (the behavior before
+scoping existed). Once you configure `builderGenerationPackages`, usage is limited to the
+packages listed in the two options — so setting a generation scope while leaving
+`builderUsagePackages` empty means only generation-scope builders are used as helpers, and
+every other field falls back to a plain setter.
+
 The `example` module contains a runnable demo in package
 `org.javahelpers.simple.builders.example.scoping` ([`ScopedOwnerDto.java`](../example/src/main/java/org/javahelpers/simple/builders/example/scoping/ScopedOwnerDto.java)).
 It demonstrates a generation-scope builder consumer, a usage-scope missing-builder fallback, and
