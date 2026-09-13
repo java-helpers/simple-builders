@@ -29,6 +29,7 @@ import static org.javahelpers.simple.builders.processor.processing.logging.Perfo
 import static org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker.PHASE_CODE_GENERATION;
 import static org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker.PHASE_CONFIGURATION_RESOLUTION;
 import static org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker.PHASE_DTO_MAPPING;
+import static org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker.PHASE_ELEMENT_COLLECTION;
 
 import com.google.auto.service.AutoService;
 import java.util.ArrayList;
@@ -126,19 +127,21 @@ public class BuilderProcessor extends AbstractProcessor {
       return false;
     }
 
-    Set<Element> elementsToProcess = collectElementsToProcess(annotations, roundEnv);
+    PerformanceTracker tracker = context.getPerformanceTracker();
     context.info("simple-builders: PROCESSING ROUND START");
-    context.debug(
-        "simple-builders: Processing round started. Found %d annotated elements.",
-        elementsToProcess.size());
 
+    tracker.startPhase();
+    Set<Element> elementsToProcess = collectElementsToProcess(annotations, roundEnv);
     // Sort elements alphabetically by simple name for deterministic processing
     List<Element> sortedElements =
         elementsToProcess.stream()
             .sorted(Comparator.comparing(element -> element.getSimpleName().toString()))
             .toList();
+    tracker.endPhase(PHASE_ELEMENT_COLLECTION);
 
-    PerformanceTracker tracker = context.getPerformanceTracker();
+    context.debug(
+        "simple-builders: Processing round started. Found %d annotated elements.",
+        elementsToProcess.size());
 
     // Resolve configuration and apply generation scopes before processing any builder. This lets
     // the scope resolver know every builder that will be generated in this round.
