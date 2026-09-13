@@ -357,6 +357,8 @@
                     <exclude>**/processor/model/**</exclude>
                     <!-- Exclude exception classes from coverage (simple constructors) -->
                     <exclude>**/exceptions/**</exclude>
+                    <!-- Exclude constants-only holders -->
+                    <exclude>**/JavadocConstants.*</exclude>
                   </excludes>
                 </configuration>
               </execution>
