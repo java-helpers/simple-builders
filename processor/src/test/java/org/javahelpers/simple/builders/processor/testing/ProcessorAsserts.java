@@ -120,6 +120,34 @@ public final class ProcessorAsserts {
   }
 
   /**
+   * Asserts that the compilation's notes match the expected substrings in order and count.
+   *
+   * <p>Each expected substring is matched against the corresponding note message (by position). The
+   * note count must match exactly, so adding or removing any log message fails the test — making
+   * logging changes visible in code review and prompting documentation updates.
+   *
+   * @param compilation the compilation result
+   * @param expectedSubstrings the substring each note (in order) must contain; length must equal
+   *     the number of notes produced
+   */
+  public static void assertNotesInOrder(Compilation compilation, String... expectedSubstrings) {
+    List<String> notes = compilation.notes().stream().map(n -> n.getMessage(null)).toList();
+    assertEquals(
+        expectedSubstrings.length,
+        notes.size(),
+        "Log note count changed — update expectedSubstrings and docs. "
+            + "Expected %d, got %d. Actual notes:%n%s"
+                .formatted(expectedSubstrings.length, notes.size(), String.join("%n", notes)));
+    for (int i = 0; i < notes.size(); i++) {
+      int index = i;
+      Assertions.assertTrue(
+          notes.get(i).contains(expectedSubstrings[i]),
+          "Note %d mismatch.%n  Expected to contain: %s%n  Actual: %s"
+              .formatted(index, expectedSubstrings[index], notes.get(index)));
+    }
+  }
+
+  /**
    * Asserts that no generated source file for the given class' builder exists in the compilation.
    *
    * <p>The check is based on the simple class name: a file whose name ends with {@code

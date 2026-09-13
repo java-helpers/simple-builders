@@ -1,0 +1,94 @@
+/*
+ * MIT License
+ *
+ * Copyright (c) 2025-2026 Andreas Igel
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.javahelpers.simple.builders.processor;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.javahelpers.simple.builders.core.enums.AccessModifier;
+import org.javahelpers.simple.builders.core.enums.OptionState;
+import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
+import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsEnum;
+import org.javahelpers.simple.builders.processor.testing.CapturingProcessingLogger;
+import org.junit.jupiter.api.Test;
+
+/**
+ * Unit tests for {@link CompilerArgumentsEnum} lookup and value application not covered by {@link
+ * CompilerArgumentsReaderTest}: option-name resolution, the builder-option distinction, qualified
+ * annotation values, and the no-op contract for non-builder options.
+ */
+class CompilerArgumentsEnumTest {
+
+  @Test
+  void fromOptionName_resolvesAndRejects() {
+    assertSame(
+        CompilerArgumentsEnum.BUILDER_ACCESS,
+        CompilerArgumentsEnum.fromOptionName("builderAccess"));
+    assertNull(CompilerArgumentsEnum.fromOptionName("doesNotExist"));
+  }
+
+  @Test
+  void hasValueApplier_distinguishesConfigFromProcessFlags() {
+    assertTrue(CompilerArgumentsEnum.GENERATE_FIELD_SUPPLIER.hasValueApplier());
+    assertFalse(CompilerArgumentsEnum.VERBOSE.hasValueApplier());
+    assertFalse(CompilerArgumentsEnum.DEACTIVATE_GENERATION_COMPONENTS.hasValueApplier());
+    assertFalse(CompilerArgumentsEnum.PERFORMANCE_TRACKING.hasValueApplier());
+    assertFalse(CompilerArgumentsEnum.PERFORMANCE_OUTPUT_FILE.hasValueApplier());
+  }
+
+  @Test
+  void apply_optionState_acceptsEnumNameAndKeywords() {
+    BuilderConfiguration.Builder builder = BuilderConfiguration.builder();
+    var logger = CapturingProcessingLogger.create().logger();
+    CompilerArgumentsEnum.GENERATE_FIELD_SUPPLIER.apply(builder, "OptionState.ENABLED", logger);
+    CompilerArgumentsEnum.GENERATE_FIELD_CONSUMER.apply(builder, "false", logger);
+    BuilderConfiguration config = builder.build();
+    assertEquals(OptionState.ENABLED, config.generateFieldSupplier());
+    assertEquals(OptionState.DISABLED, config.generateFieldConsumer());
+  }
+
+  @Test
+  void apply_accessModifier_andString() {
+    BuilderConfiguration.Builder builder = BuilderConfiguration.builder();
+    var logger = CapturingProcessingLogger.create().logger();
+    CompilerArgumentsEnum.BUILDER_ACCESS.apply(builder, "AccessModifier.PRIVATE", logger);
+    CompilerArgumentsEnum.BUILDER_SUFFIX.apply(builder, "Builder2", logger);
+    BuilderConfiguration config = builder.build();
+    assertEquals(AccessModifier.PRIVATE, config.builderAccess());
+    assertEquals("Builder2", config.builderSuffix());
+  }
+
+  @Test
+  void apply_nonBuilderOption_isIgnored() {
+    BuilderConfiguration.Builder builder = BuilderConfiguration.builder();
+    BuilderConfiguration before = builder.build();
+    CompilerArgumentsEnum.VERBOSE.apply(
+        builder, "true", CapturingProcessingLogger.create().logger());
+    assertEquals(before.generateFieldSupplier(), builder.build().generateFieldSupplier());
+  }
+}

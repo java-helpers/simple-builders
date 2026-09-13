@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.testing.compile.Compilation;
+import java.util.Set;
 import javax.tools.JavaFileObject;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.core.enums.FormattingMode;
@@ -84,6 +85,8 @@ class ConfigurationProcessingTest {
     assertEquals("Builder", config.getBuilderSuffix());
     assertEquals("", config.getSetterSuffix());
     assertEquals("lightweight", config.formattingMode());
+    assertEquals(Set.of("a.b"), config.getBuilderGenerationPackagesSet());
+    assertEquals(Set.of("c.d"), config.getBuilderUsagePackagesSet());
   }
 
   private static BuilderConfiguration buildFullyConfigured() {
@@ -124,6 +127,9 @@ class ConfigurationProcessingTest {
         .setterSuffix("")
         // Formatting
         .formattingMode("lightweight")
+        // Builder scoping
+        .builderGenerationPackages("a.b")
+        .builderUsagePackages("c.d")
         .build();
   }
 
@@ -517,6 +523,8 @@ class ConfigurationProcessingTest {
             .generateConsumer(OptionState.ENABLED)
             .builderAccess(AccessModifier.PUBLIC)
             .setterSuffix("")
+            .builderGenerationPackages("base.pkg")
+            .builderUsagePackages("base.lib")
             .build();
 
     // When: Merge with override configuration
@@ -525,6 +533,7 @@ class ConfigurationProcessingTest {
             .generateSupplier(OptionState.DISABLED) // Override
             .generateBuilderConsumer(OptionState.DISABLED) // New value
             .setterSuffix("with") // Override setterSuffix
+            .builderGenerationPackages("override.pkg")
             // generateConsumer not set, should keep base value
             .build();
 
@@ -546,6 +555,8 @@ class ConfigurationProcessingTest {
         merged.getBuilderAccess(),
         "Base value should be kept when override is DEFAULT");
     assertEquals("with", merged.getSetterSuffix(), "Override should win for setterSuffix");
+    assertEquals(Set.of("override.pkg"), merged.getBuilderGenerationPackagesSet());
+    assertEquals(Set.of("base.lib"), merged.getBuilderUsagePackagesSet());
   }
 
   /** Merge logic test for formattingMode: Annotation value must override compiler arg default. */

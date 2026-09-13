@@ -92,6 +92,7 @@ When debug logging is enabled, you'll see detailed output with visual separators
 ```
 [INFO] simple-builders: PROCESSING ROUND START
 [INFO] [DEBUG] simple-builders: Processing round started. Found 3 annotated elements.
+[INFO] [DEBUG] simple-builders: 3 of 3 annotated element(s) are inside the builderGenerationPackages scope.
 [INFO] [DEBUG] Processing element: PersonDto
 [INFO] [DEBUG] ├─ Extracting builder definition from: org.example.PersonDto
 [INFO] [DEBUG] │  ├─ Builder will be generated as: org.example.PersonDtoBuilder
@@ -123,6 +124,9 @@ When debug logging is enabled, you'll see detailed output with visual separators
 [INFO] [DEBUG] ├─ Code generation for builder: CustomerDtoBuilder
 [INFO] [DEBUG] │  └─ Successfully generated builder: CustomerDtoBuilder
 [INFO]         simple-builders: Successfully generated 3 builder(s) in this processing round
+[INFO] simple-builders: PROCESSING ROUND START
+[INFO] [DEBUG] simple-builders: Processing round started. Found 0 annotated elements.
+[INFO] [DEBUG] simple-builders: 0 of 0 annotated element(s) are inside the builderGenerationPackages scope.
 ```
 
 **Note**: Debug messages are prefixed with `[DEBUG]` and use `Diagnostic.Kind.OTHER` which appears as `[INFO]` in Maven output.
