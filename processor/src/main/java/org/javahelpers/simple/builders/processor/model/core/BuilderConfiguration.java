@@ -27,6 +27,7 @@ package org.javahelpers.simple.builders.processor.model.core;
 import static org.javahelpers.simple.builders.core.enums.AccessModifier.*;
 import static org.javahelpers.simple.builders.core.enums.OptionState.*;
 
+import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
@@ -64,7 +65,14 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
  * @param implementsBuilderBase Implement IBuilderBase interface
  * @param generateWithInterface Generate With interface
  * @param generateJavaDoc Generate Javadoc comments
+ * @param builderGenerationPackages Packages for which builders are generated; automatically part of
+ *     the usage scope (unscoped = no restriction)
+ * @param builderUsagePackages Additional packages whose builders may be used as helpers (unscoped =
+ *     all packages if builderGenerationPackages is unscoped as well, otherwise only the generation
+ *     scope is usable)
  * @param builderSuffix Suffix for builder class name
+ * @param builderUsageSuffix Suffix for builder class name when referencing builders from the usage
+ *     scope; null means fall back to {@code builderSuffix}
  * @param setterSuffix Suffix for setter method names
  * @param formattingMode Formatting mode for generated source code (null = inherit from compiler
  *     arg)
@@ -96,10 +104,20 @@ public record BuilderConfiguration(
     OptionState generateJacksonModule,
     OptionState generateJavaDoc,
     String jacksonModulePackage,
+    PackageScopes builderGenerationPackages,
+    PackageScopes builderUsagePackages,
     String builderSuffix,
+    String builderUsageSuffix,
     String setterSuffix,
     String formattingMode,
     OptionState strict) {
+
+  public BuilderConfiguration {
+    builderGenerationPackages =
+        builderGenerationPackages == null ? PackageScopes.unscoped() : builderGenerationPackages;
+    builderUsagePackages =
+        builderUsagePackages == null ? PackageScopes.unscoped() : builderUsagePackages;
+  }
 
   public static final BuilderConfiguration DEFAULT =
       builder()
@@ -128,6 +146,8 @@ public record BuilderConfiguration(
           .generateJacksonModule(DISABLED)
           .generateJavaDoc(ENABLED)
           .jacksonModulePackage(null)
+          .builderGenerationPackages(PackageScopes.unscoped())
+          .builderUsagePackages(PackageScopes.unscoped())
           .builderSuffix("Builder")
           .setterSuffix("")
           .formattingMode(FormattingMode.JDT.getOptionValue())
@@ -236,8 +256,35 @@ public record BuilderConfiguration(
     return jacksonModulePackage;
   }
 
+  /**
+   * Returns the parsed set of builder generation package scopes.
+   *
+   * @return set of package names and their subpackages, empty if unset
+   */
+  public Set<String> getBuilderGenerationPackagesSet() {
+    return builderGenerationPackages.packages();
+  }
+
+  /**
+   * Returns the parsed set of builder usage package scopes.
+   *
+   * @return set of package names and their subpackages, empty if unset
+   */
+  public Set<String> getBuilderUsagePackagesSet() {
+    return builderUsagePackages.packages();
+  }
+
   public String getBuilderSuffix() {
     return builderSuffix;
+  }
+
+  /**
+   * Returns the suffix used when referencing builders from the usage scope.
+   *
+   * @return the usage-scope builder suffix, or {@link #getBuilderSuffix()} if not configured
+   */
+  public String getBuilderUsageSuffix() {
+    return StringUtils.defaultIfBlank(builderUsageSuffix, builderSuffix);
   }
 
   public String getSetterSuffix() {
@@ -317,7 +364,11 @@ public record BuilderConfiguration(
             mergeOptionState(other.generateJacksonModule, this.generateJacksonModule))
         .generateJavaDoc(mergeOptionState(other.generateJavaDoc, this.generateJavaDoc))
         .jacksonModulePackage(mergeString(other.jacksonModulePackage, this.jacksonModulePackage))
+        .builderGenerationPackages(
+            overrideScopes(other.builderGenerationPackages, this.builderGenerationPackages))
+        .builderUsagePackages(overrideScopes(other.builderUsagePackages, this.builderUsagePackages))
         .builderSuffix(mergeString(other.builderSuffix, this.builderSuffix))
+        .builderUsageSuffix(mergeString(other.builderUsageSuffix, this.builderUsageSuffix))
         .setterSuffix(mergeString(other.setterSuffix, this.setterSuffix))
         .formattingMode(mergeString(other.formattingMode, this.formattingMode))
         .strict(mergeOptionState(other.strict, this.strict))
@@ -361,6 +412,22 @@ public record BuilderConfiguration(
     return other != null && !other.isEmpty() ? other : thisValue;
   }
 
+  /**
+   * Resolves a package scope value by override: the other configuration takes priority when it is
+   * scoped; unscoped means unset and falls back to this configuration's value.
+   *
+   * <p>This is an override, not a union — when the other configuration specifies any packages, this
+   * configuration's packages are completely replaced. This matches the configuration layering
+   * semantics: annotation-level options override compiler-argument-level options when set.
+   *
+   * @param other the other scopes (higher priority)
+   * @param thisValue the current scopes (lower priority)
+   * @return the resolved scopes
+   */
+  private static PackageScopes overrideScopes(PackageScopes other, PackageScopes thisValue) {
+    return other.isEmpty() ? thisValue : other;
+  }
+
   @Override
   public String toString() {
     return new ConfigToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
@@ -385,7 +452,10 @@ public record BuilderConfiguration(
         .appendValueIfSet("generateJacksonModule", generateJacksonModule)
         .appendValueIfSet("generateJavaDoc", generateJavaDoc)
         .appendIfNotEmpty("jacksonModulePackage", jacksonModulePackage)
+        .appendIfNotEmpty("builderGenerationPackages", builderGenerationPackages.toString())
+        .appendIfNotEmpty("builderUsagePackages", builderUsagePackages.toString())
         .appendIfNotEmpty("builderSuffix", builderSuffix)
+        .appendIfNotEmpty("builderUsageSuffix", builderUsageSuffix)
         .appendIfNotEmpty("setterSuffix", setterSuffix)
         .appendIfNotEmpty("formattingMode", formattingMode)
         .appendValueIfSet("strict", strict)
@@ -468,10 +538,15 @@ public record BuilderConfiguration(
 
     // === Naming ===
     private String builderSuffix = null;
+    private String builderUsageSuffix = null;
     private String setterSuffix = null;
 
     // === Formatting ===
     private String formattingMode = null;
+
+    // === Builder Scoping ===
+    private PackageScopes builderGenerationPackages = null;
+    private PackageScopes builderUsagePackages = null;
 
     // === Error Handling ===
     private OptionState strict = OptionState.UNSET;
@@ -559,6 +634,26 @@ public record BuilderConfiguration(
 
     public Builder jacksonModulePackage(String value) {
       this.jacksonModulePackage = StringUtils.trimToNull(value);
+      return this;
+    }
+
+    public Builder builderGenerationPackages(String value) {
+      this.builderGenerationPackages = PackageScopes.parse(value);
+      return this;
+    }
+
+    public Builder builderGenerationPackages(PackageScopes value) {
+      this.builderGenerationPackages = value;
+      return this;
+    }
+
+    public Builder builderUsagePackages(String value) {
+      this.builderUsagePackages = PackageScopes.parse(value);
+      return this;
+    }
+
+    public Builder builderUsagePackages(PackageScopes value) {
+      this.builderUsagePackages = value;
       return this;
     }
 
@@ -727,6 +822,11 @@ public record BuilderConfiguration(
       return this;
     }
 
+    public Builder builderUsageSuffix(String value) {
+      this.builderUsageSuffix = value == null ? null : value.trim();
+      return this;
+    }
+
     public Builder setterSuffix(String value) {
       this.setterSuffix = value == null ? null : value.trim();
       return this;
@@ -774,7 +874,10 @@ public record BuilderConfiguration(
           generateJacksonModule,
           generateJavaDoc,
           jacksonModulePackage,
+          builderGenerationPackages,
+          builderUsagePackages,
           builderSuffix,
+          builderUsageSuffix,
           setterSuffix,
           formattingMode,
           strict);

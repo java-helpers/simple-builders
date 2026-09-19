@@ -33,6 +33,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import org.apache.commons.lang3.StringUtils;
+import org.javahelpers.simple.builders.processor.analysis.BuilderScopeResolver;
 import org.javahelpers.simple.builders.processor.generators.registry.GeneratorRegistry;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
@@ -55,6 +56,7 @@ public final class ProcessingContext {
   private final ProcessingEnvironment processingEnv;
   private final PerformanceTracker performanceTracker;
   private final String formatterProfile;
+  private final BuilderScopeResolver builderScopeResolver;
   private GeneratorRegistry generatorRegistry;
   private BuilderConfiguration configurationForProcessingTarget;
 
@@ -86,6 +88,7 @@ public final class ProcessingContext {
         perfTrackingEnabled
             ? new ActivePerformanceTracker(perfOutputFile)
             : new NoOpPerformanceTracker();
+    this.builderScopeResolver = new BuilderScopeResolver(this);
     // GeneratorRegistry will be lazily initialized on first access
   }
 
@@ -169,6 +172,18 @@ public final class ProcessingContext {
    */
   public String getFormatterProfile() {
     return formatterProfile;
+  }
+
+  /**
+   * Get the builder scope resolver for deciding whether a builder may be referenced.
+   *
+   * <p>The resolver is keyed off the current target configuration and is recomputed when the target
+   * configuration changes.
+   *
+   * @return the builder scope resolver
+   */
+  public BuilderScopeResolver getBuilderScopeResolver() {
+    return builderScopeResolver;
   }
 
   /**
