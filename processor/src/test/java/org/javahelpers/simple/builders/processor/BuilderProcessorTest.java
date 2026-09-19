@@ -86,20 +86,29 @@ class BuilderProcessorTest {
     // Then: Compilation succeeds and debug messages are present
     assertThat(compilation).succeeded();
 
-    // Verify key debug messages are logged with hierarchical format
-    ProcessorAsserts.assertHadNoteContaining(
+    // Assert the complete ordered log output so that ANY change (added, removed, or
+    // modified message) fails this test. When you change logging, update the expected
+    // list below and the documentation in DEBUG_LOGGING.md / CONTRIBUTING.md.
+    ProcessorAsserts.assertNotesInOrder(
         compilation,
+        // Processor init
         "[DEBUG] Starting BuilderProcessor...",
         "[DEBUG] Loaded global configuration from compiler arguments: BuilderConfiguration[]",
         "[DEBUG] Initializing generator registry",
         "[DEBUG] ├─ Loaded 15 method generators and 9 builder enhancers total",
         "[DEBUG] └─ Initialized GeneratorRegistry with 15 method generators and 9 builder",
+        // Round 1 — start
         "simple-builders: PROCESSING ROUND START",
         "[DEBUG] simple-builders: Processing round started. Found 1 annotated elements.",
+        // Round 1 — configuration resolution
         "[DEBUG] Processing element: VerboseTest",
         "[DEBUG] ├─ Resolving configuration for element: VerboseTest",
         "[DEBUG] │  ├─ Built-in template @SimpleBuilder found in DIRECT scope",
         "[DEBUG] │  └─ Resulting configuration resolved: BuilderConfiguration[",
+        "[DEBUG] simple-builders: 1 of 1 annotated element(s) are inside the"
+            + " builderGenerationPackages scope.",
+        // Round 1 — builder definition extraction
+        "[DEBUG] Processing element: VerboseTest",
         "[DEBUG] ├─ Extracting builder definition from: test.VerboseTest",
         "[DEBUG] │  ├─ Builder will be generated as: test.VerboseTestBuilder",
         "[DEBUG] │  ├─ Analysing setters for finding fields",
@@ -108,18 +117,21 @@ class BuilderProcessorTest {
         "[DEBUG] │  │  │  │  ├─ Applying: BasicSetterGenerator (priority: 100)",
         "[DEBUG] │  │  │  │  ├─ Applying: StringFormatHelperGenerator (priority: 80)",
         "[DEBUG] │  │  │  │  ├─ Applying: SupplierMethodGenerator (priority: 60)",
-        "[DEBUG] │  │  │  │  ├─ Applying: UpdateHelperGenerator (priority: 20)",
         "[DEBUG] │  │  │  │  ├─ Applying: StringBuilderConsumerGenerator (priority: 45)",
+        "[DEBUG] │  │  │  │  ├─ Applying: UpdateHelperGenerator (priority: 20)",
         "[DEBUG] │  │  │  │  └─ Generated 5 methods",
         "[DEBUG] │  │  │  └─ Adding field: name (type: java.lang.String)",
         "[DEBUG] │  │  └─ Processed 1 possible setters: added 1 fields, skipped 0",
         "[DEBUG] │  ├─ Processing class based enhancer",
         "[DEBUG] │  │  ├─ Applying: GeneratedAnnotationEnhancer (priority: 120)",
         "[DEBUG] │  │  ├─ Applying: BuilderImplementationAnnotationEnhancer (priority: 115)",
+        "[DEBUG] │  │  ├─ Added @BuilderImplementation annotation to builder VerboseTestBuilder",
         "[DEBUG] │  │  ├─ Applying: CoreMethodsEnhancer (priority: 100)",
+        "[DEBUG] │  │  ├─ Applying: ConstructorEnhancer (priority: 95)",
         "[DEBUG] │  │  ├─ Applying: WithInterfaceEnhancer (priority: 95)",
         "[DEBUG] │  │  ├─ Applying: InterfaceEnhancer (priority: 90)",
         "[DEBUG] │  │  ├─ Applying: ConditionalEnhancer (priority: 80)",
+        "[DEBUG] │  │  ├─ Added conditional methods to builder VerboseTestBuilder",
         "[DEBUG] │  │  ├─ Applying: ClassJavaDocEnhancer (priority: 10)",
         "[DEBUG] │  │  └─ Applied 8 builder enhancers",
         "[DEBUG] │  ├─ Finalizing builder definition",
@@ -128,6 +140,7 @@ class BuilderProcessorTest {
         "[DEBUG] │  │  └─ Finalized: 1 class fields, 5 builder-level methods, 2 constructors",
         "[DEBUG] │  ├─ Builder will be generated as: VerboseTestBuilder",
         "[DEBUG] │  └─ Builder definition extracted: VerboseTestBuilder",
+        // Round 1 — code generation
         "[DEBUG] ├─ Code generation for class: VerboseTestBuilder",
         "[DEBUG] │  ├─ JavaClassSource created",
         "[DEBUG] │  ├─ Class metadata added",
@@ -147,7 +160,11 @@ class BuilderProcessorTest {
         "[DEBUG] ├─ Jackson module entry added",
         "[DEBUG] └─ Generated builder with 1 fields and 10 methods for VerboseTestBuilder",
         "simple-builders: Successfully generated 1 builder(s) in this processing round",
-        "");
+        // Round 2 — no new elements
+        "simple-builders: PROCESSING ROUND START",
+        "[DEBUG] simple-builders: Processing round started. Found 0 annotated elements.",
+        "[DEBUG] simple-builders: 0 of 0 annotated element(s) are inside the"
+            + " builderGenerationPackages scope.");
   }
 
   @Test

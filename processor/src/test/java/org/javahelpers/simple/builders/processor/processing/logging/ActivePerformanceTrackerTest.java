@@ -31,21 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import javax.annotation.processing.Filer;
-import javax.annotation.processing.Messager;
-import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.SourceVersion;
-import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.AnnotationValue;
-import javax.lang.model.element.Element;
-import javax.lang.model.util.Elements;
-import javax.lang.model.util.Types;
-import javax.tools.Diagnostic;
+import org.javahelpers.simple.builders.processor.testing.CapturingProcessingLogger;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -58,79 +44,6 @@ import org.junit.jupiter.api.io.TempDir;
 class ActivePerformanceTrackerTest {
 
   @TempDir Path tempDir;
-
-  /** Creates a ProcessingLogger with a capturing Messager for verification. */
-  private ProcessingLogger createLogger(List<String> messages) {
-    ProcessingEnvironment env =
-        new ProcessingEnvironment() {
-          @Override
-          public Map<String, String> getOptions() {
-            return Collections.emptyMap();
-          }
-
-          @Override
-          public Messager getMessager() {
-            return new CapturingMessager(messages);
-          }
-
-          @Override
-          public Filer getFiler() {
-            return null;
-          }
-
-          @Override
-          public Elements getElementUtils() {
-            return null;
-          }
-
-          @Override
-          public Types getTypeUtils() {
-            return null;
-          }
-
-          @Override
-          public SourceVersion getSourceVersion() {
-            return SourceVersion.latest();
-          }
-
-          @Override
-          public Locale getLocale() {
-            return Locale.getDefault();
-          }
-        };
-    return new ProcessingLogger(env);
-  }
-
-  /** Messager that captures all messages into a list for assertion. */
-  private static final class CapturingMessager implements Messager {
-    private final List<String> messages;
-
-    CapturingMessager(List<String> messages) {
-      this.messages = messages;
-    }
-
-    @Override
-    public void printMessage(Diagnostic.Kind kind, CharSequence msg) {
-      messages.add(kind + ": " + msg);
-    }
-
-    @Override
-    public void printMessage(Diagnostic.Kind kind, CharSequence msg, Element e) {
-      messages.add(kind + ": " + msg);
-    }
-
-    @Override
-    public void printMessage(
-        Diagnostic.Kind kind, CharSequence msg, Element e, AnnotationMirror a) {
-      messages.add(kind + ": " + msg);
-    }
-
-    @Override
-    public void printMessage(
-        Diagnostic.Kind kind, CharSequence msg, Element e, AnnotationMirror a, AnnotationValue v) {
-      messages.add(kind + ": " + msg);
-    }
-  }
 
   /** Helper to create a tracker, track some data, and generate report with JSON output. */
   private JsonNode generateReportAndParseJson(String outputFile) throws IOException {
@@ -149,8 +62,8 @@ class ActivePerformanceTrackerTest {
     tracker.endPhase(PerformanceTracker.PHASE_DTO_MAPPING);
     tracker.endClass(3, 1);
 
-    List<String> messages = new ArrayList<>();
-    ProcessingLogger logger = createLogger(messages);
+    CapturingProcessingLogger capturing = CapturingProcessingLogger.create();
+    ProcessingLogger logger = capturing.logger();
     tracker.generateReport(logger);
 
     String jsonContent = Files.readString(Path.of(outputFile));
@@ -160,13 +73,14 @@ class ActivePerformanceTrackerTest {
   @Test
   void generateReport_withNoData_logsBasicReport() {
     ActivePerformanceTracker tracker = new ActivePerformanceTracker(null);
-    List<String> messages = new ArrayList<>();
-    ProcessingLogger logger = createLogger(messages);
+    CapturingProcessingLogger capturing = CapturingProcessingLogger.create();
+    ProcessingLogger logger = capturing.logger();
 
     tracker.generateReport(logger);
 
-    assertTrue(messages.stream().anyMatch(m -> m.contains("PERFORMANCE REPORT")));
-    assertTrue(messages.stream().anyMatch(m -> m.contains("Total classes processed: 0")));
+    assertTrue(capturing.messages().stream().anyMatch(m -> m.contains("PERFORMANCE REPORT")));
+    assertTrue(
+        capturing.messages().stream().anyMatch(m -> m.contains("Total classes processed: 0")));
   }
 
   @Test
@@ -175,12 +89,13 @@ class ActivePerformanceTrackerTest {
     tracker.startClass("MyClass");
     tracker.endClass(4, 1);
 
-    List<String> messages = new ArrayList<>();
-    ProcessingLogger logger = createLogger(messages);
+    CapturingProcessingLogger capturing = CapturingProcessingLogger.create();
+    ProcessingLogger logger = capturing.logger();
     tracker.generateReport(logger);
 
-    assertTrue(messages.stream().anyMatch(m -> m.contains("Total classes processed: 1")));
-    assertTrue(messages.stream().anyMatch(m -> m.contains("MyClass")));
+    assertTrue(
+        capturing.messages().stream().anyMatch(m -> m.contains("Total classes processed: 1")));
+    assertTrue(capturing.messages().stream().anyMatch(m -> m.contains("MyClass")));
   }
 
   @Test
@@ -191,12 +106,12 @@ class ActivePerformanceTrackerTest {
     tracker.endGenerator("MyGenerator");
     tracker.endClass(2, 0);
 
-    List<String> messages = new ArrayList<>();
-    ProcessingLogger logger = createLogger(messages);
+    CapturingProcessingLogger capturing = CapturingProcessingLogger.create();
+    ProcessingLogger logger = capturing.logger();
     tracker.generateReport(logger);
 
-    assertTrue(messages.stream().anyMatch(m -> m.contains("MethodGenerators")));
-    assertTrue(messages.stream().anyMatch(m -> m.contains("MyGenerator")));
+    assertTrue(capturing.messages().stream().anyMatch(m -> m.contains("MethodGenerators")));
+    assertTrue(capturing.messages().stream().anyMatch(m -> m.contains("MyGenerator")));
   }
 
   @Test
@@ -207,12 +122,12 @@ class ActivePerformanceTrackerTest {
     tracker.endEnhancer("MyEnhancer");
     tracker.endClass(2, 0);
 
-    List<String> messages = new ArrayList<>();
-    ProcessingLogger logger = createLogger(messages);
+    CapturingProcessingLogger capturing = CapturingProcessingLogger.create();
+    ProcessingLogger logger = capturing.logger();
     tracker.generateReport(logger);
 
-    assertTrue(messages.stream().anyMatch(m -> m.contains("BuilderEnhancers")));
-    assertTrue(messages.stream().anyMatch(m -> m.contains("MyEnhancer")));
+    assertTrue(capturing.messages().stream().anyMatch(m -> m.contains("BuilderEnhancers")));
+    assertTrue(capturing.messages().stream().anyMatch(m -> m.contains("MyEnhancer")));
   }
 
   @Test
@@ -223,16 +138,55 @@ class ActivePerformanceTrackerTest {
     tracker.startPhase();
     tracker.endPhase(PerformanceTracker.PHASE_CODE_GENERATION);
 
-    List<String> messages = new ArrayList<>();
-    ProcessingLogger logger = createLogger(messages);
+    CapturingProcessingLogger capturing = CapturingProcessingLogger.create();
+    ProcessingLogger logger = capturing.logger();
     tracker.generateReport(logger);
 
-    assertTrue(messages.stream().anyMatch(m -> m.contains("Phase breakdown")));
+    assertTrue(capturing.messages().stream().anyMatch(m -> m.contains("Phase breakdown")));
     assertTrue(
-        messages.stream()
+        capturing.messages().stream()
             .anyMatch(m -> m.contains(PerformanceTracker.PHASE_CONFIGURATION_RESOLUTION)));
     assertTrue(
-        messages.stream().anyMatch(m -> m.contains(PerformanceTracker.PHASE_CODE_GENERATION)));
+        capturing.messages().stream()
+            .anyMatch(m -> m.contains(PerformanceTracker.PHASE_CODE_GENERATION)));
+  }
+
+  @Test
+  void generateReport_withElementCollectionPhase_logsPhaseInReport() {
+    ActivePerformanceTracker tracker = new ActivePerformanceTracker(null);
+    tracker.startPhase();
+    tracker.endPhase(PerformanceTracker.PHASE_ELEMENT_COLLECTION);
+
+    CapturingProcessingLogger capturing = CapturingProcessingLogger.create();
+    ProcessingLogger logger = capturing.logger();
+    tracker.generateReport(logger);
+
+    assertTrue(
+        capturing.messages().stream()
+            .anyMatch(m -> m.contains(PerformanceTracker.PHASE_ELEMENT_COLLECTION)),
+        "Text report should contain " + PerformanceTracker.PHASE_ELEMENT_COLLECTION);
+  }
+
+  @Test
+  void jsonReport_phaseBreakdown_containsElementCollectionPhase() throws IOException {
+    Path jsonFile = tempDir.resolve("report-element-collection.json");
+    ActivePerformanceTracker tracker = new ActivePerformanceTracker(jsonFile.toString());
+    tracker.startPhase();
+    tracker.endPhase(PerformanceTracker.PHASE_ELEMENT_COLLECTION);
+
+    CapturingProcessingLogger capturing = CapturingProcessingLogger.create();
+    ProcessingLogger logger = capturing.logger();
+    tracker.generateReport(logger);
+
+    JsonNode root = new ObjectMapper().readTree(Files.readString(jsonFile));
+    JsonNode phases = root.get("phaseBreakdown");
+    assertTrue(
+        phases.has(PerformanceTracker.PHASE_ELEMENT_COLLECTION),
+        "JSON phaseBreakdown should contain " + PerformanceTracker.PHASE_ELEMENT_COLLECTION);
+    JsonNode elementCollection = phases.get(PerformanceTracker.PHASE_ELEMENT_COLLECTION);
+    assertTrue(elementCollection.has("elapsedNanos"));
+    assertTrue(elementCollection.has("elapsedSeconds"));
+    assertTrue(elementCollection.has("percentage"));
   }
 
   @Test
@@ -241,11 +195,11 @@ class ActivePerformanceTrackerTest {
     tracker.startClass("MyClass");
     tracker.endClass(1, 0);
 
-    List<String> messages = new ArrayList<>();
-    ProcessingLogger logger = createLogger(messages);
+    CapturingProcessingLogger capturing = CapturingProcessingLogger.create();
+    ProcessingLogger logger = capturing.logger();
     tracker.generateReport(logger);
 
-    assertFalse(messages.stream().anyMatch(m -> m.contains("JSON report written")));
+    assertFalse(capturing.messages().stream().anyMatch(m -> m.contains("JSON report written")));
   }
 
   @Test
@@ -347,8 +301,8 @@ class ActivePerformanceTrackerTest {
     Path jsonFile = tempDir.resolve("report-empty.json");
     ActivePerformanceTracker tracker = new ActivePerformanceTracker(jsonFile.toString());
 
-    List<String> messages = new ArrayList<>();
-    ProcessingLogger logger = createLogger(messages);
+    CapturingProcessingLogger capturing = CapturingProcessingLogger.create();
+    ProcessingLogger logger = capturing.logger();
     tracker.generateReport(logger);
 
     JsonNode root = new ObjectMapper().readTree(Files.readString(jsonFile));
@@ -378,14 +332,15 @@ class ActivePerformanceTrackerTest {
     tracker.endEnhancer("NonexistentEnhancer");
     tracker.endClass(5, 2);
 
-    List<String> messages = new ArrayList<>();
-    ProcessingLogger logger = createLogger(messages);
+    CapturingProcessingLogger capturing = CapturingProcessingLogger.create();
+    ProcessingLogger logger = capturing.logger();
     tracker.generateReport(logger);
 
-    assertTrue(messages.stream().anyMatch(m -> m.contains("PERFORMANCE REPORT")));
-    assertTrue(messages.stream().anyMatch(m -> m.contains("Total classes processed: 0")));
-    assertFalse(messages.stream().anyMatch(m -> m.contains("MethodGenerators")));
-    assertFalse(messages.stream().anyMatch(m -> m.contains("BuilderEnhancers")));
+    assertTrue(capturing.messages().stream().anyMatch(m -> m.contains("PERFORMANCE REPORT")));
+    assertTrue(
+        capturing.messages().stream().anyMatch(m -> m.contains("Total classes processed: 0")));
+    assertFalse(capturing.messages().stream().anyMatch(m -> m.contains("MethodGenerators")));
+    assertFalse(capturing.messages().stream().anyMatch(m -> m.contains("BuilderEnhancers")));
   }
 
   @Test
@@ -401,17 +356,45 @@ class ActivePerformanceTrackerTest {
     tracker.endGenerator("GenB");
     tracker.endClass(2, 0);
 
-    List<String> messages = new ArrayList<>();
-    ProcessingLogger logger = createLogger(messages);
+    CapturingProcessingLogger capturing = CapturingProcessingLogger.create();
+    ProcessingLogger logger = capturing.logger();
     tracker.generateReport(logger);
 
     JsonNode root = new ObjectMapper().readTree(Files.readString(jsonFile));
     JsonNode genStats = root.get("generatorStats");
     assertEquals(2, genStats.size());
 
-    JsonNode genA =
-        genStats.get(0).get("name").asText().equals("GenA") ? genStats.get(0) : genStats.get(1);
-    assertEquals(2, genA.get("calls").asInt());
+    // Find GenA by name (stats are sorted by elapsed time, so index is unpredictable)
+    JsonNode genA = null;
+    for (int i = 0; i < genStats.size(); i++) {
+      if ("GenA".equals(genStats.get(i).get("name").asText())) {
+        genA = genStats.get(i);
+        break;
+      }
+    }
+    assertNotNull(genA, "GenA should be present in generator stats");
+    assertEquals(2, genA.get("calls").asInt(), "GenA was called twice");
+  }
+
+  @Test
+  void jsonReport_escapesSpecialCharactersInNames() throws IOException {
+    Path jsonFile = tempDir.resolve("report-escaping.json");
+    ActivePerformanceTracker tracker = new ActivePerformanceTracker(jsonFile.toString());
+    tracker.startClass("MyClass");
+    tracker.startGenerator();
+    tracker.endGenerator("Gen\"\\\n\t\r\b\fA\u0001");
+    tracker.startClass("MyClass2");
+    tracker.startEnhancer();
+    tracker.endEnhancer("Enh\u0001x");
+    tracker.endClass(2, 0);
+
+    tracker.generateReport(CapturingProcessingLogger.create().logger());
+
+    JsonNode root = new ObjectMapper().readTree(Files.readString(jsonFile));
+    JsonNode genStats = root.get("generatorStats");
+    assertEquals("Gen\"\\\n\t\r\b\fA\u0001", genStats.get(0).get("name").asText());
+    JsonNode enhStats = root.get("enhancerStats");
+    assertEquals("Enh\u0001x", enhStats.get(0).get("name").asText());
   }
 
   @Test
@@ -423,8 +406,8 @@ class ActivePerformanceTrackerTest {
     tracker.startPhase();
     tracker.endPhase(PerformanceTracker.PHASE_CONFIGURATION_RESOLUTION);
 
-    List<String> messages = new ArrayList<>();
-    ProcessingLogger logger = createLogger(messages);
+    CapturingProcessingLogger capturing = CapturingProcessingLogger.create();
+    ProcessingLogger logger = capturing.logger();
     tracker.generateReport(logger);
 
     JsonNode root = new ObjectMapper().readTree(Files.readString(jsonFile));
@@ -440,19 +423,20 @@ class ActivePerformanceTrackerTest {
     tracker.startClass("MyClass");
     tracker.endClass(1, 0);
 
-    List<String> messages = new ArrayList<>();
-    ProcessingLogger logger = createLogger(messages);
+    CapturingProcessingLogger capturing = CapturingProcessingLogger.create();
+    ProcessingLogger logger = capturing.logger();
     tracker.generateReport(logger);
 
     assertTrue(
-        messages.stream().anyMatch(m -> m.contains("WARNING") && m.contains("Failed to write")));
+        capturing.messages().stream()
+            .anyMatch(m -> m.contains("WARNING") && m.contains("Failed to write")));
   }
 
   @Test
   void noOpPerformanceTracker_allMethodsAreNoOps() {
     NoOpPerformanceTracker tracker = new NoOpPerformanceTracker();
-    List<String> messages = new ArrayList<>();
-    ProcessingLogger logger = createLogger(messages);
+    CapturingProcessingLogger capturing = CapturingProcessingLogger.create();
+    ProcessingLogger logger = capturing.logger();
 
     tracker.startPhase();
     tracker.endPhase("Phase");
@@ -464,7 +448,7 @@ class ActivePerformanceTrackerTest {
     tracker.endClass(1, 0);
     tracker.generateReport(logger);
 
-    assertTrue(messages.isEmpty());
+    assertTrue(capturing.messages().isEmpty());
   }
 
   @Test
@@ -482,8 +466,8 @@ class ActivePerformanceTrackerTest {
     tracker.endEnhancer("FastEnh");
     tracker.endClass(2, 0);
 
-    List<String> messages = new ArrayList<>();
-    ProcessingLogger logger = createLogger(messages);
+    CapturingProcessingLogger capturing = CapturingProcessingLogger.create();
+    ProcessingLogger logger = capturing.logger();
     tracker.generateReport(logger);
 
     JsonNode root = new ObjectMapper().readTree(Files.readString(jsonFile));
