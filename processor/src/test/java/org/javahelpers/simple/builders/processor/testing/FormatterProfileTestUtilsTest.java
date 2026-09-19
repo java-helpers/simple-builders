@@ -40,11 +40,10 @@ class FormatterProfileTestUtilsTest {
 
   @Test
   void createFormatterProfile_unknownSetting_throwsIllegalArgumentException(@TempDir Path tempDir) {
+    Map<String, String> settings = Map.of("no.such.formatter.setting", "x");
     assertThrows(
         IllegalArgumentException.class,
-        () ->
-            FormatterProfileTestUtils.createFormatterProfile(
-                tempDir, Map.of("no.such.formatter.setting", "x")));
+        () -> FormatterProfileTestUtils.createFormatterProfile(tempDir, settings));
   }
 
   @Test
