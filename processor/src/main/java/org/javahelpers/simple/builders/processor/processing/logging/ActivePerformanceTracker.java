@@ -67,6 +67,7 @@ public final class ActivePerformanceTracker implements PerformanceTracker {
   /** Hardcoded phase hierarchy for report display. Order defines display order. */
   private static final List<String> TOP_LEVEL_PHASES =
       List.of(
+          PHASE_ELEMENT_COLLECTION,
           PHASE_CONFIGURATION_RESOLUTION,
           PHASE_BUILDER_DEFINITION_EXTRACTION,
           PHASE_DTO_MAPPING,

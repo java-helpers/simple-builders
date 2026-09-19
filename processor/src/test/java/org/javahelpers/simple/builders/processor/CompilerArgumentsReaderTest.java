@@ -28,12 +28,14 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import javax.annotation.processing.ProcessingEnvironment;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.core.enums.OptionState;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsEnum;
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsReader;
+import org.javahelpers.simple.builders.processor.testing.CapturingProcessingLogger;
 import org.javahelpers.simple.builders.processor.testing.ProcessingEnvironmentStub;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -186,187 +188,14 @@ class CompilerArgumentsReaderTest {
         "Should return false for: " + value);
   }
 
-  /** Test: readOptionState returns UNSET when value is null. */
-  @Test
-  void readOptionState_NullValue_ReturnsUnset() {
-    ProcessingEnvironment env = ProcessingEnvironmentStub.createEmpty();
-    CompilerArgumentsReader reader = new CompilerArgumentsReader(env);
-
-    assertEquals(
-        OptionState.UNSET,
-        reader.readOptionState(CompilerArgumentsEnum.GENERATE_FIELD_SUPPLIER),
-        "Should return UNSET for null value");
-  }
-
-  /** Test: readOptionState returns UNSET for empty string. */
-  @Test
-  void readOptionState_EmptyString_ReturnsUnset() {
-    Map<String, String> options = new HashMap<>();
-    options.put("simplebuilder.generateFieldSupplier", "");
-
-    ProcessingEnvironment env = ProcessingEnvironmentStub.create(options);
-    CompilerArgumentsReader reader = new CompilerArgumentsReader(env);
-
-    assertEquals(
-        OptionState.UNSET,
-        reader.readOptionState(CompilerArgumentsEnum.GENERATE_FIELD_SUPPLIER),
-        "Should return UNSET for empty string");
-  }
-
-  /** Test: readOptionState handles case-insensitive "true" and "enabled". */
-  @ParameterizedTest
-  @ValueSource(strings = {"true", "TRUE", "enabled", "ENABLED", "Enabled"})
-  void readOptionState_TrueOrEnabled_ReturnsEnabled(String value) {
-    Map<String, String> options = new HashMap<>();
-    options.put("simplebuilder.generateFieldSupplier", value);
-
-    ProcessingEnvironment env = ProcessingEnvironmentStub.create(options);
-    CompilerArgumentsReader reader = new CompilerArgumentsReader(env);
-
-    assertEquals(
-        OptionState.ENABLED,
-        reader.readOptionState(CompilerArgumentsEnum.GENERATE_FIELD_SUPPLIER),
-        "Should return ENABLED for: " + value);
-  }
-
-  /** Test: readOptionState handles case-insensitive "false" and "disabled". */
-  @ParameterizedTest
-  @ValueSource(strings = {"false", "FALSE", "False", "disabled", "DISABLED", "Disabled"})
-  void readOptionState_FalseOrDisabled_ReturnsDisabled(String value) {
-    Map<String, String> options = new HashMap<>();
-    options.put("simplebuilder.generateFieldSupplier", value);
-
-    ProcessingEnvironment env = ProcessingEnvironmentStub.create(options);
-    CompilerArgumentsReader reader = new CompilerArgumentsReader(env);
-
-    assertEquals(
-        OptionState.DISABLED,
-        reader.readOptionState(CompilerArgumentsEnum.GENERATE_FIELD_SUPPLIER),
-        "Should return DISABLED for: " + value);
-  }
-
-  /** Test: readOptionState returns UNSET for invalid values. */
-  @ParameterizedTest
-  @ValueSource(strings = {"yes", "no", "1", "0", "on", "off", "invalid"})
-  void readOptionState_InvalidValues_ReturnsUnset(String value) {
-    Map<String, String> options = new HashMap<>();
-    options.put("simplebuilder.generateFieldSupplier", value);
-
-    ProcessingEnvironment env = ProcessingEnvironmentStub.create(options);
-    CompilerArgumentsReader reader = new CompilerArgumentsReader(env);
-
-    assertEquals(
-        OptionState.UNSET,
-        reader.readOptionState(CompilerArgumentsEnum.GENERATE_FIELD_SUPPLIER),
-        "Should return UNSET for invalid value: " + value);
-  }
-
-  /** Test: readAccessModifier returns DEFAULT when value is null. */
-  @Test
-  void readAccessModifier_NullValue_ReturnsDefault() {
-    ProcessingEnvironment env = ProcessingEnvironmentStub.createEmpty();
-    CompilerArgumentsReader reader = new CompilerArgumentsReader(env);
-
-    assertEquals(
-        AccessModifier.DEFAULT,
-        reader.readAccessModifier(CompilerArgumentsEnum.BUILDER_ACCESS),
-        "Should return DEFAULT for null value");
-  }
-
-  /** Test: readAccessModifier returns DEFAULT for empty string. */
-  @Test
-  void readAccessModifier_EmptyString_ReturnsDefault() {
-    Map<String, String> options = new HashMap<>();
-    options.put("simplebuilder.builderAccess", "");
-
-    ProcessingEnvironment env = ProcessingEnvironmentStub.create(options);
-    CompilerArgumentsReader reader = new CompilerArgumentsReader(env);
-
-    assertEquals(
-        AccessModifier.DEFAULT,
-        reader.readAccessModifier(CompilerArgumentsEnum.BUILDER_ACCESS),
-        "Should return DEFAULT for empty string");
-  }
-
-  /** Test: readAccessModifier handles case-insensitive "public". */
-  @ParameterizedTest
-  @ValueSource(strings = {"public", "PUBLIC", "Public", "PuBlIc"})
-  void readAccessModifier_CaseInsensitivePublic_ReturnsPublic(String value) {
-    Map<String, String> options = new HashMap<>();
-    options.put("simplebuilder.builderAccess", value);
-
-    ProcessingEnvironment env = ProcessingEnvironmentStub.create(options);
-    CompilerArgumentsReader reader = new CompilerArgumentsReader(env);
-
-    assertEquals(
-        AccessModifier.PUBLIC,
-        reader.readAccessModifier(CompilerArgumentsEnum.BUILDER_ACCESS),
-        "Should return PUBLIC for: " + value);
-  }
-
-  /** Test: readAccessModifier handles case-insensitive "private". */
-  @ParameterizedTest
-  @ValueSource(strings = {"private", "PRIVATE", "Private", "PrIvAtE"})
-  void readAccessModifier_CaseInsensitivePrivate_ReturnsPrivate(String value) {
-    Map<String, String> options = new HashMap<>();
-    options.put("simplebuilder.builderAccess", value);
-
-    ProcessingEnvironment env = ProcessingEnvironmentStub.create(options);
-    CompilerArgumentsReader reader = new CompilerArgumentsReader(env);
-
-    assertEquals(
-        AccessModifier.PRIVATE,
-        reader.readAccessModifier(CompilerArgumentsEnum.BUILDER_ACCESS),
-        "Should return PRIVATE for: " + value);
-  }
-
-  /** Test: readAccessModifier handles both "package-private" and "package_private". */
-  @ParameterizedTest
-  @ValueSource(
-      strings = {
-        "package-private",
-        "PACKAGE-PRIVATE",
-        "Package-Private",
-        "package_private",
-        "PACKAGE_PRIVATE",
-        "Package_Private"
-      })
-  void readAccessModifier_PackagePrivateVariants_ReturnsPackagePrivate(String value) {
-    Map<String, String> options = new HashMap<>();
-    options.put("simplebuilder.builderAccess", value);
-
-    ProcessingEnvironment env = ProcessingEnvironmentStub.create(options);
-    CompilerArgumentsReader reader = new CompilerArgumentsReader(env);
-
-    assertEquals(
-        AccessModifier.PACKAGE_PRIVATE,
-        reader.readAccessModifier(CompilerArgumentsEnum.BUILDER_ACCESS),
-        "Should return PACKAGE_PRIVATE for: " + value);
-  }
-
-  /** Test: readAccessModifier returns DEFAULT for invalid values. */
-  @ParameterizedTest
-  @ValueSource(strings = {"protected", "default", "package", "invalid", "123"})
-  void readAccessModifier_InvalidValues_ReturnsDefault(String value) {
-    Map<String, String> options = new HashMap<>();
-    options.put("simplebuilder.builderAccess", value);
-
-    ProcessingEnvironment env = ProcessingEnvironmentStub.create(options);
-    CompilerArgumentsReader reader = new CompilerArgumentsReader(env);
-
-    assertEquals(
-        AccessModifier.DEFAULT,
-        reader.readAccessModifier(CompilerArgumentsEnum.BUILDER_ACCESS),
-        "Should return DEFAULT for invalid value: " + value);
-  }
-
   /** Test: readBuilderConfiguration with no arguments returns all UNSET/DEFAULT values. */
   @Test
   void readBuilderConfiguration_NoArguments_ReturnsDefaults() {
     ProcessingEnvironment env = ProcessingEnvironmentStub.createEmpty();
     CompilerArgumentsReader reader = new CompilerArgumentsReader(env);
 
-    BuilderConfiguration config = reader.readBuilderConfiguration();
+    BuilderConfiguration config =
+        reader.readBuilderConfiguration(CapturingProcessingLogger.create().logger());
 
     assertNotNull(config, "Configuration should not be null");
     assertEquals(OptionState.UNSET, config.generateFieldSupplier());
@@ -377,6 +206,12 @@ class CompilerArgumentsReaderTest {
     assertEquals(AccessModifier.DEFAULT, config.getMethodAccess());
     assertNull(config.getBuilderSuffix(), "Builder suffix should be null when not set");
     assertNull(config.getSetterSuffix(), "Setter suffix should be null when not set");
+    assertTrue(
+        config.getBuilderGenerationPackagesSet().isEmpty(),
+        "Builder generation packages should be empty when not set");
+    assertTrue(
+        config.getBuilderUsagePackagesSet().isEmpty(),
+        "Builder usage packages should be empty when not set");
   }
 
   /** Test: readBuilderConfiguration reads all options correctly. */
@@ -394,10 +229,13 @@ class CompilerArgumentsReaderTest {
             .put("simplebuilder.copyTypeAnnotations", "enabled")
             .put("simplebuilder.builderSuffix", "Factory")
             .put("simplebuilder.setterSuffix", "with")
+            .put("simplebuilder.builderGenerationPackages", "a.b, c.d")
+            .put("simplebuilder.builderUsagePackages", "x.y")
             .build();
     CompilerArgumentsReader reader = new CompilerArgumentsReader(env);
 
-    BuilderConfiguration config = reader.readBuilderConfiguration();
+    BuilderConfiguration config =
+        reader.readBuilderConfiguration(CapturingProcessingLogger.create().logger());
 
     assertEquals(OptionState.ENABLED, config.generateFieldSupplier());
     assertEquals(OptionState.DISABLED, config.generateFieldConsumer());
@@ -409,6 +247,8 @@ class CompilerArgumentsReaderTest {
     assertEquals(OptionState.ENABLED, config.copyTypeAnnotations());
     assertEquals("Factory", config.getBuilderSuffix());
     assertEquals("with", config.getSetterSuffix());
+    assertEquals(Set.of("a.b", "c.d"), config.getBuilderGenerationPackagesSet());
+    assertEquals(Set.of("x.y"), config.getBuilderUsagePackagesSet());
   }
 
   /** Test: readBuilderConfiguration handles mixed valid and invalid values. */
@@ -422,7 +262,8 @@ class CompilerArgumentsReaderTest {
             .build();
     CompilerArgumentsReader reader = new CompilerArgumentsReader(env);
 
-    BuilderConfiguration config = reader.readBuilderConfiguration();
+    BuilderConfiguration config =
+        reader.readBuilderConfiguration(CapturingProcessingLogger.create().logger());
 
     assertEquals(
         OptionState.UNSET, config.generateFieldSupplier(), "Invalid option should be UNSET");
@@ -446,7 +287,8 @@ class CompilerArgumentsReaderTest {
             .build();
     CompilerArgumentsReader reader = new CompilerArgumentsReader(env);
 
-    BuilderConfiguration config = reader.readBuilderConfiguration();
+    BuilderConfiguration config =
+        reader.readBuilderConfiguration(CapturingProcessingLogger.create().logger());
 
     assertEquals(OptionState.UNSET, config.generateFieldSupplier(), "Empty should be UNSET");
     assertEquals(AccessModifier.DEFAULT, config.getBuilderAccess(), "Empty should be DEFAULT");

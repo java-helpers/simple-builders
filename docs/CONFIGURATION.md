@@ -18,6 +18,7 @@ Simple-builders supports fine-grained configuration through the `@SimpleBuilder.
   - [Conditional Logic](#conditional-logic)
   - [Access Control](#access-control)
   - [Collection Helpers](#collection-helpers)
+  - [Builder Scoping](#builder-scoping)
   - [Component Filtering](#component-filtering)
   - [Integration](#integration)
   - [Documentation](#documentation)
@@ -665,6 +666,55 @@ Generates methods using `HashMapBuilder` for fluent Map construction.
 
 ---
 
+### Builder Scoping
+
+#### `builderGenerationPackages`
+
+**Default**: `""` (empty, unchanged behavior) | **Compiler Option**:
+`-Asimplebuilder.builderGenerationPackages=package1,package2`
+
+Restricts builder generation to annotated DTOs in the listed packages. Packages are
+comma-separated, each listed package includes all of its subpackages, and matching ignores
+case. Types in the generation scope are trusted to have their builders generated in the
+current compilation, so references to their builders do not require a type search.
+
+This option is an allowlist for whole packages: once set, builders are generated only inside
+the listed packages and every other package is excluded implicitly. Excluding a single
+package while generating everywhere else is not expressible; to exclude a single class,
+use `@Ignore4BuilderGeneration` instead. The scope also applies to types that carry
+`@SimpleBuilder` only through inheritance or a template annotation.
+
+#### `builderUsagePackages`
+
+**Default**: `""` (empty, unchanged behavior) | **Compiler Option**:
+`-Asimplebuilder.builderUsagePackages=package1,package2`
+
+Controls which packages may provide builders as nested builder helpers. Packages are
+comma-separated, each listed package includes all of its subpackages, and matching ignores
+case.
+
+The processor constructs the candidate builder name using `builderUsageSuffix`
+(or `builderSuffix` if not configured) and verifies the builder contract: a
+constructor accepting the referenced type and a no-arg `build()` method returning
+it. Any class with the expected name and a matching contract qualifies, allowing
+references to builders generated with custom template annotations, external tools,
+or different suffixes. If the candidate builder cannot be found, the field falls
+back to a plain setter.
+
+Packages listed in `builderGenerationPackages` are automatically included in the usage
+scope — their builders are generated in the same compilation and don't need to be listed
+here.
+
+When `builderUsagePackages` is empty, builders from any package may be referenced (the
+behavior before scoping existed). When set, only packages listed in `builderUsagePackages`
+(and generation-scope types) may provide builder helpers — types outside both scopes fall
+back to a plain setter.
+
+The `example` module contains a runnable demo in package
+`org.javahelpers.simple.builders.example.scoping` ([`ScopedOwnerDto.java`](../example/src/main/java/org/javahelpers/simple/builders/example/scoping/ScopedOwnerDto.java)).
+It demonstrates a generation-scope builder consumer, a usage-scope missing-builder fallback, and
+an out-of-scope plain setter in [`ScopedOwnerDtoBuilder.java`](../example/generated-example-builder/org/javahelpers/simple/builders/example/scoping/ScopedOwnerDtoBuilder.java).
+
 ### Component Filtering
 
 #### `deactivateGenerationComponents`
@@ -912,6 +962,39 @@ public class PersonDto { }
 
 ---
 
+#### `builderUsageSuffix`
+
+**Default**: `""` (empty — falls back to `builderSuffix`) | **Compiler Option**:
+`-Asimplebuilder.builderUsageSuffix=CustomSuffix`
+
+Customizes the suffix used when looking up builders from the usage scope. The processor
+constructs the candidate builder name as `referencedType.getSimpleName() + builderUsageSuffix`.
+If empty, `builderSuffix` is used instead. This allows referencing builders that were generated
+with a different suffix (e.g. by another module using `"Factory"` as suffix) without changing
+the suffix used for own builder generation.
+
+The candidate class must provide a constructor accepting the referenced type and a no-arg
+`build()` method returning it. The contract check is annotation-agnostic, so builders
+generated with custom template annotations or external tools are supported. If the
+candidate class does not exist or does not satisfy this contract, the field falls back
+to a plain setter.
+
+**Example**:
+```java
+@SimpleBuilder.Options(
+    builderSuffix = "Builder",       // own builders: *Builder
+    builderUsageSuffix = "Factory"   // usage-scope builders: *Factory
+)
+public class OwnerDto {
+    private ExternalDto external;
+}
+
+// Own builder: OwnerDtoBuilder
+// External builder looked up as: ExternalDtoFactory (not ExternalDtoBuilder)
+```
+
+---
+
 #### `setterSuffix`
 
 **Default**: `""` (empty) | **Compiler Option**: `-Asimplebuilder.setterSuffix=customPrefix`
@@ -952,7 +1035,7 @@ processing. A summary report is logged to the compiler output at the end of proc
 
 **When enabled**: A hierarchical performance report is printed to the compiler log, including:
 - Total processing time and average time per class
-- Phase breakdown (Configuration Resolution, Builder Definition Extraction, DTO Mapping, Code Generation)
+- Phase breakdown (Element Collection, Configuration Resolution, Builder Definition Extraction, DTO Mapping, Code Generation)
 - Top 20 slowest classes with field and collection counts
 - Top 5 slowest MethodGenerators and BuilderEnhancers
 
@@ -1418,6 +1501,10 @@ methodAccess = AccessModifier.PRIVATE
 # Component Filtering
 -Asimplebuilder.deactivateGenerationComponents=pattern1,pattern2,...
 
+# Builder Scoping
+-Asimplebuilder.builderGenerationPackages=package1,package2
+-Asimplebuilder.builderUsagePackages=package1,package2
+
 # Integration & Annotations
 -Asimplebuilder.generateWithInterface=ENABLED|DISABLED
 -Asimplebuilder.implementsBuilderBase=ENABLED|DISABLED
@@ -1477,6 +1564,10 @@ methodAccess = AccessModifier.PRIVATE
     usingHashSetBuilder = OptionState.ENABLED,
     usingHashSetBuilderWithElementBuilders = OptionState.ENABLED,
     usingHashMapBuilder = OptionState.ENABLED,
+
+    // Builder Scoping
+    builderGenerationPackages = "com.example.dto",
+    builderUsagePackages = "com.example.library",
     
     // Integration & Annotations
     generateWithInterface = OptionState.ENABLED,
