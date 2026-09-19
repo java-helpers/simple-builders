@@ -274,26 +274,6 @@ public record BuilderConfiguration(
     return builderUsagePackages.packages();
   }
 
-  /**
-   * Checks whether the given package is within the builder generation scope.
-   *
-   * @param packageName the package to check
-   * @return true if the package equals or is a subpackage of a configured generation package
-   */
-  public boolean isInGenerationScope(String packageName) {
-    return builderGenerationPackages.includes(packageName);
-  }
-
-  /**
-   * Checks whether the given package is within the builder usage scope.
-   *
-   * @param packageName the package to check
-   * @return true if the package equals or is a subpackage of a configured usage package
-   */
-  public boolean isInUsageScope(String packageName) {
-    return builderUsagePackages.includes(packageName);
-  }
-
   public String getBuilderSuffix() {
     return builderSuffix;
   }
@@ -304,9 +284,7 @@ public record BuilderConfiguration(
    * @return the usage-scope builder suffix, or {@link #getBuilderSuffix()} if not configured
    */
   public String getBuilderUsageSuffix() {
-    return builderUsageSuffix != null && !builderUsageSuffix.isEmpty()
-        ? builderUsageSuffix
-        : builderSuffix;
+    return StringUtils.defaultIfBlank(builderUsageSuffix, builderSuffix);
   }
 
   public String getSetterSuffix() {

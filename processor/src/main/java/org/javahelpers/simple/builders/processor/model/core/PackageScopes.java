@@ -27,8 +27,10 @@ package org.javahelpers.simple.builders.processor.model.core;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 
@@ -68,13 +70,14 @@ public final class PackageScopes {
     if (StringUtils.isBlank(value)) {
       return UNSCOPED;
     }
-    return new PackageScopes(
-        Arrays.stream(StringUtils.split(value, ","))
+    Set<String> packages =
+        Stream.ofNullable(StringUtils.split(value, ','))
+            .flatMap(Arrays::stream)
             .map(String::trim)
             .filter(StringUtils::isNotBlank)
-            .collect(
-                Collectors.collectingAndThen(
-                    Collectors.toCollection(LinkedHashSet::new), Collections::unmodifiableSet)));
+            .map(packageName -> packageName.toLowerCase(Locale.ROOT))
+            .collect(Collectors.toCollection(LinkedHashSet::new));
+    return packages.isEmpty() ? UNSCOPED : new PackageScopes(Collections.unmodifiableSet(packages));
   }
 
   /**

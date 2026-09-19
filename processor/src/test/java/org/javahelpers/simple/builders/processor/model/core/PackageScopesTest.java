@@ -49,11 +49,12 @@ class PackageScopesTest {
   }
 
   @Test
-  void parse_trimsAndFiltersBlankEntries() {
-    PackageScopes scopes = PackageScopes.parse(" com.example , , com.other ");
+  void parse_trimsNormalizesCaseAndFiltersBlankEntries() {
+    PackageScopes scopes = PackageScopes.parse(" com.Example , , COM.other ");
     assertFalse(scopes.isEmpty());
     assertTrue(scopes.includes("com.example"));
     assertTrue(scopes.includes("com.other"));
+    assertEquals("com.example, com.other", scopes.toString());
   }
 
   @Test
