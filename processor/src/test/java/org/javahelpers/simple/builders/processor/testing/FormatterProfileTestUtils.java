@@ -27,6 +27,8 @@ package org.javahelpers.simple.builders.processor.testing;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 
 /**
@@ -36,25 +38,24 @@ import java.util.Map;
  * <p>Usage:
  *
  * <pre>{@code
- * String profile = FormatterProfileTestUtils.formatterProfileWithSettings(
+ * Path profile = FormatterProfileTestUtils.createFormatterProfile(
+ *     tempDir,
  *     Map.of("org.eclipse.jdt.core.formatter.tabulation.char", "tab"));
  * }</pre>
  */
 public final class FormatterProfileTestUtils {
 
   private static final String BUNDLED_PROFILE_RESOURCE = "eclipse-java-format.xml";
+  private static final String CUSTOM_PROFILE_FILENAME = "custom-eclipse-profile.xml";
 
   private FormatterProfileTestUtils() {}
 
   /**
    * Reads the bundled formatter profile and replaces the values of the given settings.
    *
-   * @param settings map of Eclipse formatter setting ids to their new values
-   * @return the profile XML with the requested settings applied
-   * @throws IOException if the bundled profile cannot be read
    * @throws IllegalArgumentException if a requested setting id is absent or malformed
    */
-  public static String formatterProfileWithSettings(Map<String, String> settings)
+  private static String formatterProfileWithSettings(Map<String, String> settings)
       throws IOException {
     String profile;
     try (InputStream inputStream =
@@ -83,5 +84,21 @@ public final class FormatterProfileTestUtils {
       profile = profile.substring(0, valueStart) + setting.getValue() + profile.substring(valueEnd);
     }
     return profile;
+  }
+
+  /**
+   * Writes a formatter profile derived from the bundled resource into the given directory.
+   *
+   * @param directory the directory to create {@code custom-eclipse-profile.xml} in
+   * @param settings map of Eclipse formatter setting ids to their new values
+   * @return the path of the written profile file
+   * @throws IOException if the profile cannot be derived or written
+   */
+  public static Path createFormatterProfile(Path directory, Map<String, String> settings)
+      throws IOException {
+    String profile = formatterProfileWithSettings(settings);
+    Path profilePath = directory.resolve(CUSTOM_PROFILE_FILENAME);
+    Files.writeString(profilePath, profile, StandardCharsets.UTF_8);
+    return profilePath;
   }
 }

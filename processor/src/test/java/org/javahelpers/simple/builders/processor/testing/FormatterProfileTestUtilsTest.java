@@ -24,37 +24,42 @@
 
 package org.javahelpers.simple.builders.processor.testing;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 /** Unit tests for {@link FormatterProfileTestUtils}. */
 class FormatterProfileTestUtilsTest {
 
   @Test
-  void formatterProfileWithSettings_replacesSettingValue() throws IOException {
-    String profile =
-        FormatterProfileTestUtils.formatterProfileWithSettings(
-            Map.of("org.eclipse.jdt.core.formatter.tabulation.char", "tab"));
-    assertTrue(
-        profile.contains(
-            "<setting id=\"org.eclipse.jdt.core.formatter.tabulation.char\" value=\"tab\"/>"),
-        "The requested setting value should be replaced");
-    assertTrue(
-        !profile.contains(
-            "<setting id=\"org.eclipse.jdt.core.formatter.tabulation.char\" value=\"space\"/>"),
-        "The original setting value should no longer be present");
-  }
-
-  @Test
-  void formatterProfileWithSettings_unknownSetting_throwsIllegalArgumentException() {
+  void createFormatterProfile_unknownSetting_throwsIllegalArgumentException(@TempDir Path tempDir) {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            FormatterProfileTestUtils.formatterProfileWithSettings(
-                Map.of("no.such.formatter.setting", "x")));
+            FormatterProfileTestUtils.createFormatterProfile(
+                tempDir, Map.of("no.such.formatter.setting", "x")));
+  }
+
+  @Test
+  void createFormatterProfile_writesProfileWithSetting(@TempDir Path tempDir) throws IOException {
+    Path profilePath =
+        FormatterProfileTestUtils.createFormatterProfile(
+            tempDir, Map.of("org.eclipse.jdt.core.formatter.tabulation.char", "tab"));
+    assertEquals(
+        tempDir.resolve("custom-eclipse-profile.xml"),
+        profilePath,
+        "The profile should be created with the fixed filename in the given directory");
+    assertTrue(
+        Files.readString(profilePath)
+            .contains(
+                "<setting id=\"org.eclipse.jdt.core.formatter.tabulation.char\" value=\"tab\"/>"),
+        "The written profile should contain the requested setting value");
   }
 }

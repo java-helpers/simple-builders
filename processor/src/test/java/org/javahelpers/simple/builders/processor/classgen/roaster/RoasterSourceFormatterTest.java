@@ -23,14 +23,13 @@
  */
 package org.javahelpers.simple.builders.processor.classgen.roaster;
 
-import static org.javahelpers.simple.builders.processor.testing.FormatterProfileTestUtils.formatterProfileWithSettings;
+import static org.javahelpers.simple.builders.processor.testing.FormatterProfileTestUtils.createFormatterProfile;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -571,13 +570,12 @@ class RoasterSourceFormatterTest {
 
   @Test
   void constructor_fileSystemProfile_isUsedForFormatting(@TempDir Path tempDir) throws IOException {
-    String profile =
-        formatterProfileWithSettings(
+    Path profilePath =
+        createFormatterProfile(
+            tempDir,
             Map.of(
                 "org.eclipse.jdt.core.formatter.tabulation.char", "tab",
                 "org.eclipse.jdt.core.formatter.tabulation.size", "4"));
-    Path profilePath = tempDir.resolve("custom-eclipse-profile.xml");
-    Files.writeString(profilePath, profile);
 
     CapturingProcessingLogger capturing = CapturingProcessingLogger.createDebugEnabled();
     RoasterSourceFormatter formatter =

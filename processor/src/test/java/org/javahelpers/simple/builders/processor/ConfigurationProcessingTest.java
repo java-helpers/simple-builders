@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.testing.compile.Compilation;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
@@ -98,11 +97,9 @@ class ConfigurationProcessingTest {
   @Test
   void compilerArguments_FormatterProfile_UsesCustomProfile(@TempDir Path tempDir)
       throws IOException {
-    String profile =
-        FormatterProfileTestUtils.formatterProfileWithSettings(
-            Map.of("org.eclipse.jdt.core.formatter.tabulation.char", "tab"));
-    Path profilePath = tempDir.resolve("custom-eclipse-profile.xml");
-    Files.writeString(profilePath, profile);
+    Path profilePath =
+        FormatterProfileTestUtils.createFormatterProfile(
+            tempDir, Map.of("org.eclipse.jdt.core.formatter.tabulation.char", "tab"));
 
     JavaFileObject source =
         ProcessorTestUtils.simpleBuilderClass(
