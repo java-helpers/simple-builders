@@ -107,19 +107,6 @@ public final class ProcessorAsserts {
   }
 
   /**
-   * Asserts that the compilation contains all the specified note messages. Useful for verifying
-   * debug or info logging output.
-   *
-   * @param compilation the compilation result
-   * @param noteMessages the note messages to check for
-   */
-  public static void assertHadNoteContaining(Compilation compilation, String... noteMessages) {
-    for (String noteMessage : noteMessages) {
-      assertThat(compilation).hadNoteContaining(noteMessage);
-    }
-  }
-
-  /**
    * Asserts that the compilation's notes match the expected substrings in order and count.
    *
    * <p>Each expected substring is matched against the corresponding note message (by position). The
