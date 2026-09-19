@@ -7,15 +7,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.testing.compile.Compilation;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.Set;
 import javax.tools.JavaFileObject;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.core.enums.FormattingMode;
 import org.javahelpers.simple.builders.core.enums.OptionState;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
+import org.javahelpers.simple.builders.processor.testing.FormatterProfileTestUtils;
 import org.javahelpers.simple.builders.processor.testing.ProcessorAsserts;
 import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
 import org.junit.jupiter.api.Test;
@@ -98,15 +99,8 @@ class ConfigurationProcessingTest {
   void compilerArguments_FormatterProfile_UsesCustomProfile(@TempDir Path tempDir)
       throws IOException {
     String profile =
-        new String(
-                ConfigurationProcessingTest.class
-                    .getClassLoader()
-                    .getResourceAsStream("eclipse-java-format.xml")
-                    .readAllBytes(),
-                StandardCharsets.UTF_8)
-            .replace(
-                "<setting id=\"org.eclipse.jdt.core.formatter.tabulation.char\" value=\"space\"/>",
-                "<setting id=\"org.eclipse.jdt.core.formatter.tabulation.char\" value=\"tab\"/>");
+        FormatterProfileTestUtils.formatterProfileWithSettings(
+            Map.of("org.eclipse.jdt.core.formatter.tabulation.char", "tab"));
     Path profilePath = tempDir.resolve("custom-eclipse-profile.xml");
     Files.writeString(profilePath, profile);
 

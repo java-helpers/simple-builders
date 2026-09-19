@@ -59,7 +59,6 @@ import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto
 import org.javahelpers.simple.builders.processor.model.type.NestedTypeDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameArray;
-import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 import org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker;
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 import org.javahelpers.simple.builders.processor.util.ImportCollector;
@@ -92,16 +91,35 @@ public class RoasterCodeGenerator {
       new EnumMap<>(FormattingMode.class);
 
   /**
-   * Creates a code generator from the processing context.
+   * Creates a code generator using the bundled default Eclipse formatter profile.
    *
-   * @param context processing context providing the environment, logger, performance tracker, and
-   *     formatter profile
+   * @param processingEnv the processing environment providing filer and element utilities
+   * @param logger logger for debug output during code generation
+   * @param tracker performance tracker for sub-phase timing
    */
-  public RoasterCodeGenerator(ProcessingContext context) {
-    this.processingEnv = context.getProcessingEnvironment();
-    this.logger = context.getLogger();
-    this.performanceTracker = context.getPerformanceTracker();
-    this.formatterProfile = context.getFormatterProfile();
+  public RoasterCodeGenerator(
+      ProcessingEnvironment processingEnv, ProcessingLogger logger, PerformanceTracker tracker) {
+    this(processingEnv, logger, tracker, null);
+  }
+
+  /**
+   * Creates a code generator with an optional Eclipse formatter profile override.
+   *
+   * @param processingEnv the processing environment providing filer and element utilities
+   * @param logger logger for debug output during code generation
+   * @param tracker performance tracker for sub-phase timing
+   * @param formatterProfile file system path or classpath resource for the Eclipse formatter
+   *     profile; blank or null values use the bundled default
+   */
+  public RoasterCodeGenerator(
+      ProcessingEnvironment processingEnv,
+      ProcessingLogger logger,
+      PerformanceTracker tracker,
+      String formatterProfile) {
+    this.processingEnv = processingEnv;
+    this.logger = logger;
+    this.performanceTracker = tracker;
+    this.formatterProfile = formatterProfile;
   }
 
   /**

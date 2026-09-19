@@ -24,6 +24,8 @@
 
 package org.javahelpers.simple.builders.processor.testing;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -72,7 +74,22 @@ public final class CapturingProcessingLogger {
    */
   public static CapturingProcessingLogger create() {
     List<String> messages = new ArrayList<>();
-    ProcessingLogger logger = new ProcessingLogger(createCapturingEnvironment(messages));
+    ProcessingLogger logger =
+        new ProcessingLogger(createCapturingEnvironment(messages, Collections.emptyMap()));
+    return new CapturingProcessingLogger(messages, logger);
+  }
+
+  /**
+   * Creates a new capturing logger with debug logging enabled via {@code
+   * simplebuilder.verbose=true}.
+   *
+   * @return a new debug-enabled capturing logger instance
+   */
+  public static CapturingProcessingLogger createDebugEnabled() {
+    List<String> messages = new ArrayList<>();
+    ProcessingLogger logger =
+        new ProcessingLogger(
+            createCapturingEnvironment(messages, Map.of("simplebuilder.verbose", "true")));
     return new CapturingProcessingLogger(messages, logger);
   }
 
@@ -94,12 +111,28 @@ public final class CapturingProcessingLogger {
     return logger;
   }
 
+  /**
+   * Asserts that the given exact message was captured. Extra messages and ordering are ignored.
+   *
+   * @param expectedMessage the full expected message including the diagnostic kind prefix
+   */
+  public void assertMessage(String expectedMessage) {
+    assertTrue(
+        messages.contains(expectedMessage),
+        () ->
+            "Expected captured message not found: "
+                + expectedMessage
+                + "\nActual messages: "
+                + messages);
+  }
+
   /** Creates a ProcessingEnvironment whose Messager captures all messages into the list. */
-  private static ProcessingEnvironment createCapturingEnvironment(List<String> messages) {
+  private static ProcessingEnvironment createCapturingEnvironment(
+      List<String> messages, Map<String, String> options) {
     return new ProcessingEnvironment() {
       @Override
       public Map<String, String> getOptions() {
-        return Collections.emptyMap();
+        return options;
       }
 
       @Override

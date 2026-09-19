@@ -1139,18 +1139,18 @@ public class PersonDto { ... }
 
 **Default**: `eclipse-java-format.xml` (bundled) | **Compiler Option**: `-Asimplebuilder.formatterProfile=path/to/profile.xml`
 
-Specifies an external Eclipse formatter profile for JDT formatting. The processor uses the path as given, without placeholder substitution; Maven interpolates `${project.basedir}` in `pom.xml` before invoking javac, while relative paths are resolved against javac's working directory (the module directory under Maven). A file system path is tried first, then a classpath resource. If neither can be loaded, a warning is logged and the bundled profile is used. This is a project-wide compiler option and cannot be overridden by an annotation.
+> **Note**: This is a **processor-level option** only. It cannot be set per-annotation via
+> `@SimpleBuilder.Options`.
 
-**Maven**:
-```xml
-<compilerArgs>
-  <arg>-Asimplebuilder.formatterProfile=${project.basedir}/config/eclipse-formatter.xml</arg>
-</compilerArgs>
-```
+Specifies an external Eclipse formatter profile for JDT formatting. A file system path is tried first, then a classpath resource. If neither can be loaded, a warning is logged and the bundled `eclipse-java-format.xml` profile is used.
 
-**Gradle**:
-```groovy
-options.compilerArgs << "-Asimplebuilder.formatterProfile=${project.projectDir}/config/eclipse-formatter.xml"
+**Example**:
+```bash
+# Maven
+mvn compile -Dsimplebuilder.formatterProfile=config/eclipse-formatter.xml
+
+# Or via compiler arg
+-Asimplebuilder.formatterProfile=config/eclipse-formatter.xml
 ```
 
 ## Examples

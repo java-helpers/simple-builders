@@ -87,11 +87,21 @@ public final class RoasterSourceFormatter {
     this.formattingMode = Objects.requireNonNull(formattingMode, "formattingMode must not be null");
     this.formatterProfileResource =
         StringUtils.defaultIfBlank(formatterProfile, DEFAULT_FORMATTER_PROFILE_RESOURCE);
-    this.formatterProperties = loadFormatterProperties();
-    this.formatterProfileAvailable = !formatterProperties.isEmpty();
-    if (formattingMode == FormattingMode.JDT && !formatterProfileAvailable) {
-      logger.warning(
-          "simple-builders: JDT formatting requested but Eclipse formatter profile is unavailable; falling back to lightweight formatting.");
+    if (formattingMode == FormattingMode.JDT) {
+      this.formatterProperties = loadFormatterProperties();
+      this.formatterProfileAvailable = !formatterProperties.isEmpty();
+      if (!formatterProfileAvailable) {
+        logger.warning(
+            "simple-builders: JDT formatting requested but Eclipse formatter profile is unavailable; falling back to lightweight formatting.");
+      }
+    } else {
+      this.formatterProperties = new Properties();
+      this.formatterProfileAvailable = false;
+      if (formattingMode == FormattingMode.LIGHTWEIGHT) {
+        logger.debug("Using lightweight source formatting.");
+      } else {
+        logger.debug("Source formatting is disabled.");
+      }
     }
   }
 
@@ -441,6 +451,7 @@ public final class RoasterSourceFormatter {
             location);
         return Optional.empty();
       }
+      logger.debug("Using JDT source formatting with Eclipse formatter profile '%s'.", location);
       return properties;
     } catch (IOException | RuntimeException ex) {
       logger.warning(
@@ -455,6 +466,9 @@ public final class RoasterSourceFormatter {
     try {
       Optional<Properties> properties = readProfile(DEFAULT_FORMATTER_PROFILE_RESOURCE);
       if (properties.isPresent()) {
+        logger.debug(
+            "Using JDT source formatting with Eclipse formatter profile '%s'.",
+            DEFAULT_FORMATTER_PROFILE_RESOURCE);
         return properties.get();
       }
       logger.warning(

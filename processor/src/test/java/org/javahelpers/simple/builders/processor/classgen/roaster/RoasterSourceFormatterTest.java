@@ -23,15 +23,16 @@
  */
 package org.javahelpers.simple.builders.processor.classgen.roaster;
 
+import static org.javahelpers.simple.builders.processor.testing.FormatterProfileTestUtils.formatterProfileWithSettings;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.stream.Stream;
 import org.javahelpers.simple.builders.core.enums.FormattingMode;
 import org.javahelpers.simple.builders.processor.testing.CapturingProcessingLogger;
@@ -521,7 +522,9 @@ class RoasterSourceFormatterTest {
 
   @Test
   void format_noneMode_doesNotConvertTabs() {
-    RoasterSourceFormatter formatter = createFormatter(FormattingMode.NONE);
+    CapturingProcessingLogger capturing = CapturingProcessingLogger.createDebugEnabled();
+    RoasterSourceFormatter formatter =
+        new RoasterSourceFormatter(capturing.logger(), FormattingMode.NONE);
     String input =
         """
         package test;
@@ -530,11 +533,12 @@ class RoasterSourceFormatterTest {
         """;
     String result = formatter.format(input);
     assertTrue(result.contains("\t"), "NONE mode should preserve tabs");
+    capturing.assertMessage("OTHER: [DEBUG] Source formatting is disabled.");
   }
 
   @Test
   void format_jdtMode_withProfile_producesFormattedOutput() {
-    CapturingProcessingLogger capturing = CapturingProcessingLogger.create();
+    CapturingProcessingLogger capturing = CapturingProcessingLogger.createDebugEnabled();
     RoasterSourceFormatter formatter =
         new RoasterSourceFormatter(capturing.logger(), FormattingMode.JDT);
     String input =
@@ -545,82 +549,72 @@ class RoasterSourceFormatterTest {
         """;
     String result = formatter.format(input);
     assertNotNull(result, "Format should always return a non-null string");
-    assertTrue(
-        capturing.messages().stream().noneMatch(w -> w.contains("JDT formatting requested")),
-        "No fallback warning should be logged when formatter profile is available on classpath");
+    capturing.assertMessage(
+        "OTHER: [DEBUG] Using JDT source formatting with Eclipse formatter profile 'eclipse-java-format.xml'.");
   }
 
   @Test
   void constructor_lightweightMode_missingProfile_noFallbackWarning() {
-    CapturingProcessingLogger capturing = CapturingProcessingLogger.create();
+    CapturingProcessingLogger capturing = CapturingProcessingLogger.createDebugEnabled();
     new RoasterSourceFormatter(
         capturing.logger(), FormattingMode.LIGHTWEIGHT, "nonexistent-profile.xml");
-    assertTrue(
-        capturing.messages().stream().noneMatch(w -> w.contains("JDT formatting requested")),
-        "LIGHTWEIGHT mode should not log JDT fallback warning even if profile is missing");
+    capturing.assertMessage("OTHER: [DEBUG] Using lightweight source formatting.");
   }
 
   @Test
   void constructor_missingProfile_logsProfileNotFoundWarning() {
     CapturingProcessingLogger capturing = CapturingProcessingLogger.create();
     new RoasterSourceFormatter(capturing.logger(), FormattingMode.JDT, "nonexistent-profile.xml");
-    assertTrue(
-        capturing.messages().stream()
-            .anyMatch(w -> w.contains("not found") && w.contains("nonexistent-profile.xml")),
-        "Missing formatter profile should log 'not found' warning with resource name");
+    capturing.assertMessage(
+        "WARNING: simple-builders: Eclipse formatter profile 'nonexistent-profile.xml' was not found as a file or classpath resource; falling back to the bundled profile.");
   }
 
   @Test
   void constructor_fileSystemProfile_isUsedForFormatting(@TempDir Path tempDir) throws IOException {
     String profile =
-        new String(
-                RoasterSourceFormatter.class
-                    .getClassLoader()
-                    .getResourceAsStream(RoasterSourceFormatter.DEFAULT_FORMATTER_PROFILE_RESOURCE)
-                    .readAllBytes(),
-                StandardCharsets.UTF_8)
-            .replace(
-                "<setting id=\"org.eclipse.jdt.core.formatter.tabulation.char\" value=\"space\"/>",
-                "<setting id=\"org.eclipse.jdt.core.formatter.tabulation.char\" value=\"tab\"/>")
-            .replace(
-                "<setting id=\"org.eclipse.jdt.core.formatter.tabulation.size\" value=\"2\"/>",
-                "<setting id=\"org.eclipse.jdt.core.formatter.tabulation.size\" value=\"4\"/>");
+        formatterProfileWithSettings(
+            Map.of(
+                "org.eclipse.jdt.core.formatter.tabulation.char", "tab",
+                "org.eclipse.jdt.core.formatter.tabulation.size", "4"));
     Path profilePath = tempDir.resolve("custom-eclipse-profile.xml");
     Files.writeString(profilePath, profile);
 
-    CapturingProcessingLogger capturing = CapturingProcessingLogger.create();
+    CapturingProcessingLogger capturing = CapturingProcessingLogger.createDebugEnabled();
     RoasterSourceFormatter formatter =
         new RoasterSourceFormatter(capturing.logger(), FormattingMode.JDT, profilePath.toString());
     RoasterSourceFormatter defaultFormatter = createFormatter(FormattingMode.JDT);
     String input =
         """
         package test;
-        public class Foo {
-        public void bar() {
-        }
+        \tpublic class Foo {
+        \tpublic void bar() {
+        \t}
         }
         """;
     String result = formatter.format(input);
     String defaultResult = defaultFormatter.format(input);
     assertTrue(result.contains("\t"), "Custom tab profile should produce tab indentation");
     assertTrue(!defaultResult.contains("\t"), "Bundled profile should produce spaces");
-    assertTrue(
-        capturing.messages().isEmpty(), "A valid filesystem profile should not log warnings");
+    capturing.assertMessage(
+        "OTHER: [DEBUG] Using JDT source formatting with Eclipse formatter profile '"
+            + profilePath
+            + "'.");
   }
 
   @Test
   void constructor_classpathProfile_explicitDefaultName_noWarning() {
-    CapturingProcessingLogger capturing = CapturingProcessingLogger.create();
+    CapturingProcessingLogger capturing = CapturingProcessingLogger.createDebugEnabled();
     new RoasterSourceFormatter(
         capturing.logger(),
         FormattingMode.JDT,
         RoasterSourceFormatter.DEFAULT_FORMATTER_PROFILE_RESOURCE);
-    assertTrue(capturing.messages().isEmpty(), "The bundled classpath profile should load cleanly");
+    capturing.assertMessage(
+        "OTHER: [DEBUG] Using JDT source formatting with Eclipse formatter profile 'eclipse-java-format.xml'.");
   }
 
   @Test
   void constructor_missingProfile_fallsBackToBundledProfile() {
-    CapturingProcessingLogger capturing = CapturingProcessingLogger.create();
+    CapturingProcessingLogger capturing = CapturingProcessingLogger.createDebugEnabled();
     RoasterSourceFormatter formatter =
         new RoasterSourceFormatter(capturing.logger(), FormattingMode.JDT, "does/not/exist.xml");
     String input =
@@ -630,34 +624,35 @@ class RoasterSourceFormatterTest {
         \t}
         """;
     String result = formatter.format(input);
-    assertTrue(
-        capturing.messages().stream()
-            .anyMatch(w -> w.contains("not found") && w.contains("does/not/exist.xml")),
-        "Missing formatter profile should log a not-found warning");
-    assertTrue(
-        capturing.messages().stream().noneMatch(w -> w.contains("JDT formatting requested")),
-        "Bundled profile fallback should keep JDT formatting available");
+    capturing.assertMessage(
+        "WARNING:      simple-builders: Eclipse formatter profile 'does/not/exist.xml' was not found as a file or classpath resource; falling back to the bundled profile.");
+    capturing.assertMessage(
+        "OTHER: [DEBUG] Using JDT source formatting with Eclipse formatter profile 'eclipse-java-format.xml'.");
     assertTrue(!result.contains("\t"), "Bundled profile should produce spaces");
   }
 
   @Test
   void constructor_blankProfile_usesBundledDefault() {
-    CapturingProcessingLogger capturing = CapturingProcessingLogger.create();
+    CapturingProcessingLogger capturing = CapturingProcessingLogger.createDebugEnabled();
     new RoasterSourceFormatter(capturing.logger(), FormattingMode.JDT, "  ");
-    assertTrue(capturing.messages().isEmpty(), "Blank profile should use the bundled default");
+    capturing.assertMessage(
+        "OTHER: [DEBUG] Using JDT source formatting with Eclipse formatter profile 'eclipse-java-format.xml'.");
   }
 
   @Test
   void constructor_malformedProfile_logsLoadFailureWarning() {
-    CapturingProcessingLogger capturing = CapturingProcessingLogger.create();
+    CapturingProcessingLogger capturing = CapturingProcessingLogger.createDebugEnabled();
     new RoasterSourceFormatter(
         capturing.logger(), FormattingMode.JDT, "eclipse-java-format-malformed.xml");
     assertTrue(
         capturing.messages().stream()
             .anyMatch(
                 w ->
-                    w.contains("Failed to load")
-                        && w.contains("eclipse-java-format-malformed.xml")),
+                    w.startsWith(
+                            "WARNING:      simple-builders: Failed to load Eclipse formatter profile 'eclipse-java-format-malformed.xml': ")
+                        && w.endsWith("; falling back to the bundled profile.")),
         "Malformed formatter profile should log 'Failed to load' warning");
+    capturing.assertMessage(
+        "OTHER: [DEBUG] Using JDT source formatting with Eclipse formatter profile 'eclipse-java-format.xml'.");
   }
 }

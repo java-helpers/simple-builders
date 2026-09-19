@@ -108,6 +108,7 @@ When debug logging is enabled, you'll see detailed output with visual separators
 [INFO] [DEBUG] │  │  └─ Fields added: 2 fields
 [INFO] [DEBUG] │  ├─ Adding Methods for 4 candidates
 [INFO] [DEBUG] │  │  └─ 4 Methods added
+[INFO] [DEBUG] │  ├─ Using JDT source formatting with Eclipse formatter profile 'eclipse-java-format.xml'.
 [INFO] [DEBUG] │  ├─ Writing builder class to file: org.example.PersonDtoBuilder
 [INFO] [DEBUG] │  └─ Successfully generated builder: PersonDtoBuilder
 [INFO] [DEBUG] Processing element: OrderDto
