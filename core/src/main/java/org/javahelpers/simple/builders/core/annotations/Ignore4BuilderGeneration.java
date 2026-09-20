@@ -40,6 +40,11 @@ import java.lang.annotation.Target;
  * generation for the exact type it is placed on and does not cascade to further subclasses, which
  * may therefore still get a builder from an inherited {@code @SimpleBuilder} or template
  * annotation.
+ *
+ * <p>This is the per-type opt-out. To restrict generation to whole packages instead (including
+ * types whose {@code @SimpleBuilder} is inherited or applied via a template), use {@code
+ * builderGenerationPackages} in {@link SimpleBuilder.Options} or the {@code
+ * simplebuilder.builderGenerationPackages} compiler option.
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.CLASS)

@@ -41,6 +41,7 @@ package org.javahelpers.simple.builders.processor.processing.logging;
 public interface PerformanceTracker {
 
   // Top-level phases
+  String PHASE_ELEMENT_COLLECTION = "Element Collection";
   String PHASE_CONFIGURATION_RESOLUTION = "Configuration Resolution";
   String PHASE_BUILDER_DEFINITION_EXTRACTION = "Builder Definition Extraction";
   String PHASE_DTO_MAPPING = "DTO Mapping";

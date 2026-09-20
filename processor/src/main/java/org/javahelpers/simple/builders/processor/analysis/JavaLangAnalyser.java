@@ -153,19 +153,6 @@ public final class JavaLangAnalyser {
   }
 
   /**
-   * Checks whether the given {@link TypeElement} declares generic type parameters.
-   *
-   * @param typeElement the type element to inspect
-   * @return {@code true} if the type declares one or more type parameters; {@code false} otherwise
-   */
-  public static boolean hasGenericTypes(TypeElement typeElement) {
-    if (typeElement == null) {
-      return false;
-    }
-    return CollectionUtils.isNotEmpty(typeElement.getTypeParameters());
-  }
-
-  /**
    * Checks whether the given {@link ExecutableElement} declares generic type parameters.
    *
    * @param executableElement the executable element to inspect
@@ -230,6 +217,53 @@ public final class JavaLangAnalyser {
     }
 
     return Optional.empty();
+  }
+
+  /**
+   * Checks whether the given type has a no-arg {@code build()} method returning the expected type.
+   * This is part of the builder contract used when the built value is retrieved.
+   *
+   * <p>The check is annotation-agnostic and avoids false positives like {@code StringBuilder} for
+   * {@code String}.
+   *
+   * @param builderType the candidate builder type element to check
+   * @param expectedReturnType the qualified name of the type that {@code build()} must return
+   * @param context the processing context, used to access all members
+   * @return {@code true} if the type declares or inherits a matching {@code build()} method
+   */
+  public static boolean hasBuildMethodReturning(
+      TypeElement builderType, String expectedReturnType, ProcessingContext context) {
+    if (builderType == null) {
+      return false;
+    }
+    return ElementFilter.methodsIn(context.getAllMembers(builderType)).stream()
+        .anyMatch(
+            method ->
+                method.getSimpleName().contentEquals("build")
+                    && method.getParameters().isEmpty()
+                    && method.getReturnType().getKind() != VOID
+                    && method.getReturnType().toString().equals(expectedReturnType));
+  }
+
+  /**
+   * Checks whether the given type has a constructor accepting the expected type. This is part of
+   * the builder contract used when the field already has a value that is passed to the builder.
+   *
+   * @param builderType the candidate builder type element to check
+   * @param expectedType the qualified name of the type the constructor must accept
+   * @param context the processing context, used to access all members
+   * @return {@code true} if the type declares or inherits a matching constructor
+   */
+  public static boolean hasConstructorAccepting(
+      TypeElement builderType, String expectedType, ProcessingContext context) {
+    if (builderType == null) {
+      return false;
+    }
+    return ElementFilter.constructorsIn(context.getAllMembers(builderType)).stream()
+        .anyMatch(
+            constructor ->
+                constructor.getParameters().size() == 1
+                    && constructor.getParameters().get(0).asType().toString().equals(expectedType));
   }
 
   /**

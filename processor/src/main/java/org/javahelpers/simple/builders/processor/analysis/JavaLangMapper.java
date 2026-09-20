@@ -23,15 +23,10 @@
  */
 package org.javahelpers.simple.builders.processor.analysis;
 
-import static javax.lang.model.element.Modifier.DEFAULT;
-import static javax.lang.model.element.Modifier.PROTECTED;
-import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.type.TypeKind.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.Set;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
@@ -44,8 +39,6 @@ import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.SimpleTypeVisitor14;
-import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration;
-import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.GenericParameterDto;
@@ -64,41 +57,6 @@ public final class JavaLangMapper {
   /** Private constructor to prevent instantiation of utility class. */
   private JavaLangMapper() {
     // Utility class
-  }
-
-  /**
-   * Mapper for {@code java.util.Set<javax.lang.model.element.Modifier>} to extract the relevant
-   * modifier. If there is a public modifier, this is returned. If there is a protected modifier,
-   * this will be returned. Default is returned in all other cases.
-   *
-   * @param modifier Set of modifiers to be checked
-   * @return DEFAULT, PUBLIC or PROTECTED
-   */
-  public static Modifier mapRelevantModifier(Set<Modifier> modifier) {
-    if (modifier.contains(PUBLIC)) {
-      return PUBLIC;
-    } else if (modifier.contains(PROTECTED)) {
-      return PROTECTED;
-    }
-    return DEFAULT;
-  }
-
-  /**
-   * Maps an AccessModifier enum value to a javax.lang.model.element.Modifier.
-   *
-   * @param accessModifier the access modifier to map
-   * @return the corresponding Modifier, or null for package-private
-   */
-  public static Modifier mapAccessModifier(AccessModifier accessModifier) {
-    if (accessModifier == null) {
-      return null;
-    }
-    return switch (accessModifier) {
-      case PUBLIC, DEFAULT -> Modifier.PUBLIC;
-      case PROTECTED -> Modifier.PROTECTED;
-      case PRIVATE -> Modifier.PRIVATE;
-      case PACKAGE_PRIVATE -> null; // Package-private has no explicit modifier
-    };
   }
 
   /**
@@ -202,36 +160,24 @@ public final class JavaLangMapper {
    */
   private static void setBuilderAndConstructorInfo(
       TypeName typeName, TypeElement typeElement, ProcessingContext context) {
-    setBuilderTypeIfAnnotated(typeName, typeElement, context);
+    setBuilderTypeIfScopeMatches(typeName, typeElement, context);
     setEmptyConstructorInfoIfAvailable(typeName, typeElement, context);
-    setElementBuilderTypeForGenericCollections(typeName, context);
+    setElementBuilderTypeIfScopeMatches(typeName, context);
   }
 
   /**
-   * Sets the builder type if the type element has @SimpleBuilder annotation.
+   * Sets the builder type if the type element's package is in the configured builder scope.
    *
    * @param typeName the TypeName to enhance
    * @param typeElement the type element to check
    * @param context the processing context
    */
-  private static void setBuilderTypeIfAnnotated(
+  private static void setBuilderTypeIfScopeMatches(
       TypeName typeName, TypeElement typeElement, ProcessingContext context) {
-    // Types explicitly opted out must never be referenced as builders by other DTOs.
-    if (JavaLangAnalyser.findAnnotation(typeElement, Ignore4BuilderGeneration.class).isPresent()) {
-      return;
-    }
-
-    Optional<javax.lang.model.element.AnnotationMirror> foundBuilderAnnotation =
-        JavaLangAnalyser.findAnnotation(
-            typeElement, org.javahelpers.simple.builders.core.annotations.SimpleBuilder.class);
-
-    // Type element must have @SimpleBuilder annotation
-    if (foundBuilderAnnotation.isEmpty()) {
-      return;
-    }
-
-    TypeName builderType = createBuilderTypeName(typeElement, context);
-    typeName.setBuilderType(builderType);
+    context
+        .getBuilderScopeResolver()
+        .resolveUsableBuilderType(typeElement)
+        .ifPresent(typeName::setBuilderType);
   }
 
   /**
@@ -251,12 +197,13 @@ public final class JavaLangMapper {
   }
 
   /**
-   * Sets element builder type for generic collections with @SimpleBuilder annotated elements.
+   * Sets the element builder type for generic collections when the element type's package is in the
+   * configured builder scope.
    *
    * @param typeName the TypeName to enhance
    * @param context the processing context
    */
-  private static void setElementBuilderTypeForGenericCollections(
+  private static void setElementBuilderTypeIfScopeMatches(
       TypeName typeName, ProcessingContext context) {
     // Only process generic types
     if (!(typeName instanceof TypeNameGeneric genericType)) {
@@ -277,20 +224,11 @@ public final class JavaLangMapper {
       return;
     }
 
-    // Opted-out element types must never be referenced as element builders.
-    if (JavaLangAnalyser.findAnnotation(elementTypeElement, Ignore4BuilderGeneration.class)
-        .isPresent()) {
-      return;
-    }
-
-    // Element type must have @SimpleBuilder annotation
-    if (!hasSimpleBuilderAnnotation(elementTypeElement)) {
-      return;
-    }
-
-    // Set the element builder type
-    TypeName elementBuilderType = createBuilderTypeName(elementTypeElement, context);
-    genericType.setElementBuilderType(elementBuilderType);
+    // Resolve usable element builder type through the scope resolver
+    context
+        .getBuilderScopeResolver()
+        .resolveUsableBuilderType(elementTypeElement)
+        .ifPresent(genericType::setElementBuilderType);
   }
 
   /**
@@ -307,42 +245,30 @@ public final class JavaLangMapper {
   }
 
   /**
-   * Checks if a TypeElement has the @SimpleBuilder annotation.
-   *
-   * @param typeElement the type element to check
-   * @return true if the element has @SimpleBuilder annotation
-   */
-  private static boolean hasSimpleBuilderAnnotation(TypeElement typeElement) {
-    Optional<javax.lang.model.element.AnnotationMirror> annotation =
-        JavaLangAnalyser.findAnnotation(
-            typeElement, org.javahelpers.simple.builders.core.annotations.SimpleBuilder.class);
-    return annotation.isPresent();
-  }
-
-  /**
-   * Creates a TypeName for the builder of a given TypeElement.
+   * Creates a TypeName for the builder of a given TypeElement using the configured builder suffix.
    *
    * @param typeElement the type element to create builder name for
    * @param context the processing context
    * @return the TypeName for the builder
    */
-  private static TypeName createBuilderTypeName(
-      TypeElement typeElement, ProcessingContext context) {
-    String builderClassName =
-        typeElement.getSimpleName().toString() + context.getConfiguration().getBuilderSuffix();
-    String packageName = extractPackageName(typeElement.getQualifiedName().toString());
-    return new TypeName(packageName, builderClassName);
+  public static TypeName createBuilderTypeName(TypeElement typeElement, ProcessingContext context) {
+    return createBuilderTypeName(
+        typeElement, context, context.getConfiguration().getBuilderSuffix());
   }
 
   /**
-   * Extracts the package name from a qualified class name.
+   * Creates a TypeName for the builder of a given TypeElement using an explicit suffix.
    *
-   * @param qualifiedName the fully qualified class name (e.g., "com.example.MyClass")
-   * @return the package name (e.g., "com.example"), or empty string if no package
+   * @param typeElement the type element to create builder name for
+   * @param context the processing context
+   * @param suffix the builder class name suffix to append
+   * @return the TypeName for the builder
    */
-  private static String extractPackageName(String qualifiedName) {
-    int lastDot = qualifiedName.lastIndexOf('.');
-    return lastDot > 0 ? qualifiedName.substring(0, lastDot) : "";
+  public static TypeName createBuilderTypeName(
+      TypeElement typeElement, ProcessingContext context, String suffix) {
+    String builderClassName = typeElement.getSimpleName().toString() + suffix;
+    String packageName = context.getPackageName(typeElement);
+    return new TypeName(packageName, builderClassName);
   }
 
   /**
