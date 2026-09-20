@@ -153,8 +153,7 @@ public final class JavadocExampleValues {
   }
 
   private static Optional<String> resolveOptional(TypeName typeName) {
-    if ("java.util.Optional".equals(typeName.getFullQualifiedName())
-        || "Optional".equals(typeName.getClassName())) {
+    if (typeName.is(Optional.class)) {
       return typeName
           .getInnerType()
           .flatMap(JavadocExampleValues::getExampleValue)
@@ -172,8 +171,7 @@ public final class JavadocExampleValues {
   }
 
   private static Optional<String> resolveString(TypeName typeName) {
-    if ("java.lang.String".equals(typeName.getFullQualifiedName())
-        || "String".equals(typeName.getClassName())) {
+    if (typeName.is(String.class)) {
       return Optional.of(STRING_EXAMPLE);
     }
     return Optional.empty();

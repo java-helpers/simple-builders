@@ -190,6 +190,32 @@ public class TypeName {
   }
 
   /**
+   * Checks whether this type name refers to the given class.
+   *
+   * <p>Matches on the simple class name and either an equal package name or an empty package name,
+   * so unqualified type names like {@code TypeName("", "String")} still match.
+   *
+   * @param type the class to compare against, must not be null
+   * @return true if this type name refers to the given class
+   */
+  public boolean is(Class<?> type) {
+    requireNonNull(type);
+    return className.equals(type.getSimpleName())
+        && (packageName.isEmpty() || packageName.equals(type.getPackageName()));
+  }
+
+  /**
+   * Checks whether this type name refers to any of the given classes.
+   *
+   * @param types the classes to compare against, must not be null
+   * @return true if this type name refers to at least one of the given classes
+   */
+  public boolean isAnyOf(Class<?>... types) {
+    requireNonNull(types);
+    return java.util.Arrays.stream(types).anyMatch(this::is);
+  }
+
+  /**
    * Creates a new instance of {@code TypeName} from an existing {@code Class}.
    *
    * @param clazz existing class to retrieve package and class-name from

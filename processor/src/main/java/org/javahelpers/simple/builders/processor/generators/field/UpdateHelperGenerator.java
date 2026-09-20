@@ -136,16 +136,14 @@ public class UpdateHelperGenerator implements MethodGenerator {
   }
 
   private static String getUpdateExample(TypeName fieldType) {
-    String fullyQualifiedName = fieldType.getFullQualifiedName();
-    if ("java.lang.String".equals(fullyQualifiedName)
-        || "String".equals(fieldType.getClassName())) {
+    if (fieldType.is(String.class)) {
       return "String::trim";
     }
     if (fieldType instanceof TypeNamePrimitive primitive
         && isNumericPrimitive(primitive.getType())) {
       return "Math::abs";
     }
-    if (isNumericWrapper(fullyQualifiedName)) {
+    if (isNumericWrapper(fieldType)) {
       return "Math::abs";
     }
     return "UnaryOperator.identity()";
@@ -158,10 +156,7 @@ public class UpdateHelperGenerator implements MethodGenerator {
         || type == PrimitiveTypeEnum.DOUBLE;
   }
 
-  private static boolean isNumericWrapper(String fullyQualifiedName) {
-    return "java.lang.Integer".equals(fullyQualifiedName)
-        || "java.lang.Long".equals(fullyQualifiedName)
-        || "java.lang.Float".equals(fullyQualifiedName)
-        || "java.lang.Double".equals(fullyQualifiedName);
+  private static boolean isNumericWrapper(TypeName fieldType) {
+    return fieldType.isAnyOf(Integer.class, Long.class, Float.class, Double.class);
   }
 }
