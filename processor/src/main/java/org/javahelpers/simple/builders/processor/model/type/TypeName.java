@@ -192,15 +192,22 @@ public class TypeName {
   /**
    * Checks whether this type name refers to the given class.
    *
-   * <p>Matches on the simple class name and either an equal package name or an empty package name,
-   * so unqualified type names like {@code TypeName("", "String")} still match.
+   * <p>Matches on the rendered base type: either the exact simple name or a generic simple name
+   * starting with {@code SimpleName<}, combined with either an equal package name or an empty
+   * package name, so unqualified type names like {@code TypeName("", "String")} still match. Array
+   * types never match their element class.
    *
    * @param type the class to compare against, must not be null
    * @return true if this type name refers to the given class
    */
   public boolean is(Class<?> type) {
     requireNonNull(type);
-    return className.equals(type.getSimpleName())
+    if (this instanceof TypeNameArray) {
+      return false;
+    }
+    String renderedName = getSimpleNameWithGenerics();
+    String simpleName = type.getSimpleName();
+    return (renderedName.equals(simpleName) || renderedName.startsWith(simpleName + "<"))
         && (packageName.isEmpty() || packageName.equals(type.getPackageName()));
   }
 

@@ -27,6 +27,7 @@ package org.javahelpers.simple.builders.processor.model.type;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /** Unit tests for {@link TypeName}. */
@@ -47,6 +48,20 @@ class TypeNameTest {
   @Test
   void is_emptyPackage_matchesBySimpleName() {
     assertTrue(new TypeName("", "String").is(String.class));
+  }
+
+  @Test
+  void is_arrayType_doesNotMatchElementClass() {
+    assertFalse(new TypeNameArray("java.lang", "String").is(String.class));
+    assertFalse(new TypeNameArray("", "String").is(String.class));
+  }
+
+  @Test
+  void is_genericType_matchesRawClass() {
+    TypeNameGeneric optionalOfString =
+        new TypeNameGeneric("java.util", "Optional", List.of(new TypeName("java.lang", "String")));
+    assertTrue(optionalOfString.is(java.util.Optional.class));
+    assertFalse(optionalOfString.is(String.class));
   }
 
   @Test
