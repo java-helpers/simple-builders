@@ -155,6 +155,8 @@ class BuilderProcessorTest {
         "[DEBUG] │  │  ├─ Generated nested type: With",
         "[DEBUG] │  │  └─ Nested types added",
         "[DEBUG] │  ├─ Class-level annotations added",
+        "[DEBUG] │  ├─ Using JDT source formatting with Eclipse formatter"
+            + " profile 'eclipse-java-format.xml'.",
         "[DEBUG] │  ├─ Writing class to file: test.VerboseTestBuilder",
         "[DEBUG] │  └─ Successfully generated class: VerboseTestBuilder",
         "[DEBUG] ├─ Jackson module entry added",

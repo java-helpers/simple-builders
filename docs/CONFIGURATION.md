@@ -1165,6 +1165,24 @@ Per-annotation override:
 public class PersonDto { ... }
 ```
 
+#### `formatterProfile`
+
+**Default**: `eclipse-java-format.xml` (bundled) | **Compiler Option**: `-Asimplebuilder.formatterProfile=path/to/profile.xml`
+
+> **Note**: This is a **processor-level option** only. It cannot be set per-annotation via
+> `@SimpleBuilder.Options`.
+
+Specifies an external Eclipse formatter profile for JDT formatting. This option only affects [`JDT` formatting](#formattingmode); it is ignored for `LIGHTWEIGHT` and `NONE`. A file system path is tried first, then a classpath resource. If neither can be loaded, a warning is logged and the bundled `eclipse-java-format.xml` profile is used.
+
+**Example**:
+```bash
+# Maven
+mvn compile -Dsimplebuilder.formatterProfile=config/eclipse-formatter.xml
+
+# Or via compiler arg
+-Asimplebuilder.formatterProfile=config/eclipse-formatter.xml
+```
+
 ## Examples
 
 ### Minimal Builder
@@ -1565,6 +1583,7 @@ methodAccess = AccessModifier.PRIVATE
 
 # Performance Optimization
 -Asimplebuilder.formattingMode=JDT|LIGHTWEIGHT|NONE
+-Asimplebuilder.formatterProfile=path/to/profile.xml
 ```
 
 ### Complete Options Example

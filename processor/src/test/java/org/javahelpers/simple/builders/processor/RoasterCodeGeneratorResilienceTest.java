@@ -27,30 +27,20 @@ package org.javahelpers.simple.builders.processor;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.util.Collections;
-import java.util.Locale;
-import java.util.Map;
-import javax.annotation.processing.Filer;
-import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.SourceVersion;
-import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.AnnotationValue;
-import javax.lang.model.element.Element;
-import javax.lang.model.util.Elements;
-import javax.lang.model.util.Types;
-import javax.tools.Diagnostic;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterCodeGenerator;
 import org.javahelpers.simple.builders.processor.classgen.roaster.exceptions.RoasterMapperException;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
+import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.core.GenerationTargetClassDto;
 import org.javahelpers.simple.builders.processor.model.method.ConstructorDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodCodeDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodCodePlaceholder;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.processing.logging.NoOpPerformanceTracker;
+import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
+import org.javahelpers.simple.builders.processor.testing.ProcessingEnvironmentStub;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -85,77 +75,13 @@ class RoasterCodeGeneratorResilienceTest {
     constructor.setMethodCodeDto(code);
     classDef.addConstructor(constructor);
 
-    ProcessingEnvironment env = new NoopProcessingEnvironment();
-    RoasterCodeGenerator generator =
-        new RoasterCodeGenerator(env, new ProcessingLogger(env), new NoOpPerformanceTracker());
+    ProcessingEnvironment env = ProcessingEnvironmentStub.createEmpty();
+    ProcessingLogger logger = new ProcessingLogger(env);
+    ProcessingContext context = new ProcessingContext(logger, BuilderConfiguration.DEFAULT, env);
+    RoasterCodeGenerator generator = new RoasterCodeGenerator(context, env);
 
     BuilderException thrown =
         assertThrows(BuilderException.class, () -> generator.generateClass(classDef));
     assertInstanceOf(RoasterMapperException.class, thrown.getCause());
-  }
-
-  /**
-   * Minimal {@link ProcessingEnvironment} that only supplies a no-op messager and empty options.
-   */
-  private static final class NoopProcessingEnvironment implements ProcessingEnvironment {
-    @Override
-    public Map<String, String> getOptions() {
-      return Collections.emptyMap();
-    }
-
-    @Override
-    public Messager getMessager() {
-      return new NoopMessager();
-    }
-
-    @Override
-    public Filer getFiler() {
-      return null;
-    }
-
-    @Override
-    public Elements getElementUtils() {
-      return null;
-    }
-
-    @Override
-    public Types getTypeUtils() {
-      return null;
-    }
-
-    @Override
-    public SourceVersion getSourceVersion() {
-      return SourceVersion.latest();
-    }
-
-    @Override
-    public Locale getLocale() {
-      return Locale.getDefault();
-    }
-  }
-
-  /** No-op {@link Messager} used so logging during generation does not require a real compiler. */
-  private static final class NoopMessager implements Messager {
-    @Override
-    public void printMessage(Diagnostic.Kind kind, CharSequence msg) {
-      // no-op
-    }
-
-    @Override
-    public void printMessage(Diagnostic.Kind kind, CharSequence msg, Element e) {
-      // no-op
-    }
-
-    @Override
-    public void printMessage(
-        Diagnostic.Kind kind, CharSequence msg, Element e, AnnotationMirror a) {
-      // no-op
-    }
-
-    @Override
-    public void printMessage(
-        Diagnostic.Kind kind, CharSequence msg, Element e, AnnotationMirror a, AnnotationValue v) {
-      // no-op
-    }
   }
 }
