@@ -58,7 +58,6 @@ public final class RoasterSourceFormatter {
   private final ProcessingLogger logger;
   private final FormattingMode formattingMode;
   private final Properties formatterProperties;
-  private final boolean formatterProfileAvailable;
   private final String formatterProfileResource;
 
   /**
@@ -87,22 +86,34 @@ public final class RoasterSourceFormatter {
     this.formattingMode = Objects.requireNonNull(formattingMode, "formattingMode must not be null");
     this.formatterProfileResource =
         StringUtils.defaultIfBlank(formatterProfile, DEFAULT_FORMATTER_PROFILE_RESOURCE);
-    if (formattingMode == FormattingMode.JDT) {
-      this.formatterProperties = loadFormatterProperties();
-      this.formatterProfileAvailable = !formatterProperties.isEmpty();
-      if (!formatterProfileAvailable) {
-        logger.warning(
-            "simple-builders: JDT formatting requested but Eclipse formatter profile is unavailable; falling back to lightweight formatting.");
-      }
-    } else {
-      this.formatterProperties = new Properties();
-      this.formatterProfileAvailable = false;
-      if (formattingMode == FormattingMode.LIGHTWEIGHT) {
+    this.formatterProperties = initializeFormatterProperties(formattingMode);
+  }
+
+  /**
+   * Initializes formatter properties for the given mode. Only {@link FormattingMode#JDT} loads an
+   * Eclipse formatter profile; the other modes use lightweight or no formatting.
+   */
+  private Properties initializeFormatterProperties(FormattingMode mode) {
+    return switch (mode) {
+      case JDT -> loadJdtFormatterProperties();
+      case LIGHTWEIGHT -> {
         logger.debug("Using lightweight source formatting.");
-      } else {
-        logger.debug("Source formatting is disabled.");
+        yield new Properties();
       }
+      case NONE -> {
+        logger.debug("Source formatting is disabled.");
+        yield new Properties();
+      }
+    };
+  }
+
+  private Properties loadJdtFormatterProperties() {
+    Properties properties = loadFormatterProperties();
+    if (properties.isEmpty()) {
+      logger.warning(
+          "JDT formatting requested but Eclipse formatter profile is unavailable; falling back to lightweight formatting.");
     }
+    return properties;
   }
 
   /**
@@ -122,7 +133,7 @@ public final class RoasterSourceFormatter {
     if (formattingMode == FormattingMode.LIGHTWEIGHT) {
       return lightweightFormat(rawSource);
     }
-    if (!formatterProfileAvailable) {
+    if (formatterProperties.isEmpty()) {
       return lightweightFormat(rawSource);
     }
     return Roaster.format(formatterProperties, rawSource);
@@ -437,7 +448,8 @@ public final class RoasterSourceFormatter {
   }
 
   /**
-   * Loads the user-configured profile; warns and returns empty when it cannot be loaded.
+   * Loads the user-configured profile; warns and returns empty when it cannot be loaded. Invoked
+   * only for {@link FormattingMode#JDT} formatting.
    *
    * @param location file system path or classpath resource
    * @return the loaded formatter properties, or empty when loading fails
@@ -447,7 +459,7 @@ public final class RoasterSourceFormatter {
       Optional<Properties> properties = readProfile(location);
       if (properties.isEmpty()) {
         logger.warning(
-            "simple-builders: Eclipse formatter profile '%s' was not found as a file or classpath resource; falling back to the bundled profile.",
+            "Eclipse formatter profile '%s' was not found as a file or classpath resource; falling back to the bundled profile.",
             location);
         return Optional.empty();
       }
@@ -455,13 +467,17 @@ public final class RoasterSourceFormatter {
       return properties;
     } catch (IOException | RuntimeException ex) {
       logger.warning(
-          "simple-builders: Failed to load Eclipse formatter profile '%s': %s; falling back to the bundled profile.",
-          location, describe(ex));
+          "Failed to load Eclipse formatter profile '%s': %s; falling back to the bundled profile.",
+          location, getExceptionDetails(ex));
       return Optional.empty();
     }
   }
 
-  /** Loads the bundled profile; warns and returns empty properties when it cannot be loaded. */
+  /**
+   * Loads the bundled profile; warns and returns empty properties when it cannot be loaded. Invoked
+   * only for {@link FormattingMode#JDT} formatting, either directly or as fallback for a configured
+   * profile that could not be loaded.
+   */
   private Properties loadBundledProfile() {
     try {
       Optional<Properties> properties = readProfile(DEFAULT_FORMATTER_PROFILE_RESOURCE);
@@ -472,12 +488,12 @@ public final class RoasterSourceFormatter {
         return properties.get();
       }
       logger.warning(
-          "simple-builders: Bundled Eclipse formatter profile '%s' was not found on the processor classpath.",
+          "Bundled Eclipse formatter profile resource '%s' was not found on the processor classpath.",
           DEFAULT_FORMATTER_PROFILE_RESOURCE);
     } catch (IOException | RuntimeException ex) {
       logger.warning(
-          "simple-builders: Failed to load bundled Eclipse formatter profile '%s': %s.",
-          DEFAULT_FORMATTER_PROFILE_RESOURCE, describe(ex));
+          "Failed to load bundled Eclipse formatter profile '%s': %s.",
+          DEFAULT_FORMATTER_PROFILE_RESOURCE, getExceptionDetails(ex));
     }
     return new Properties();
   }
@@ -492,8 +508,26 @@ public final class RoasterSourceFormatter {
     }
   }
 
-  private String describe(Exception ex) {
-    return StringUtils.defaultIfBlank(ex.getMessage(), ex.getClass().getSimpleName());
+  /**
+   * Renders throwable details for warnings: simple class name and non-blank message, plus the root
+   * cause's simple name and non-blank message when a distinct cause exists.
+   */
+  private static String getExceptionDetails(Throwable throwable) {
+    StringBuilder details = new StringBuilder(throwable.getClass().getSimpleName());
+    if (StringUtils.isNotBlank(throwable.getMessage())) {
+      details.append(": ").append(throwable.getMessage());
+    }
+    Throwable rootCause = throwable;
+    while (rootCause.getCause() != null) {
+      rootCause = rootCause.getCause();
+    }
+    if (rootCause != throwable) {
+      details.append("; caused by ").append(rootCause.getClass().getSimpleName());
+      if (StringUtils.isNotBlank(rootCause.getMessage())) {
+        details.append(": ").append(rootCause.getMessage());
+      }
+    }
+    return details.toString();
   }
 
   private InputStream openProfileStream(String location) throws IOException {

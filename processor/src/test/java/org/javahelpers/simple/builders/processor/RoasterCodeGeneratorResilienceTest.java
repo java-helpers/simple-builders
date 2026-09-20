@@ -44,12 +44,13 @@ import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterCodeGenerator;
 import org.javahelpers.simple.builders.processor.classgen.roaster.exceptions.RoasterMapperException;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
+import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.core.GenerationTargetClassDto;
 import org.javahelpers.simple.builders.processor.model.method.ConstructorDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodCodeDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodCodePlaceholder;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.processing.logging.NoOpPerformanceTracker;
+import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 import org.junit.jupiter.api.Test;
 
@@ -87,8 +88,8 @@ class RoasterCodeGeneratorResilienceTest {
 
     ProcessingEnvironment env = new NoopProcessingEnvironment();
     ProcessingLogger logger = new ProcessingLogger(env);
-    RoasterCodeGenerator generator =
-        new RoasterCodeGenerator(env, logger, new NoOpPerformanceTracker());
+    ProcessingContext context = new ProcessingContext(logger, BuilderConfiguration.DEFAULT, env);
+    RoasterCodeGenerator generator = new RoasterCodeGenerator(context);
 
     BuilderException thrown =
         assertThrows(BuilderException.class, () -> generator.generateClass(classDef));

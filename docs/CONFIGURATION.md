@@ -1142,7 +1142,7 @@ public class PersonDto { ... }
 > **Note**: This is a **processor-level option** only. It cannot be set per-annotation via
 > `@SimpleBuilder.Options`.
 
-Specifies an external Eclipse formatter profile for JDT formatting. A file system path is tried first, then a classpath resource. If neither can be loaded, a warning is logged and the bundled `eclipse-java-format.xml` profile is used.
+Specifies an external Eclipse formatter profile for JDT formatting. This option only affects [`JDT` formatting](#formattingmode); it is ignored for `LIGHTWEIGHT` and `NONE`. A file system path is tried first, then a classpath resource. If neither can be loaded, a warning is logged and the bundled `eclipse-java-format.xml` profile is used.
 
 **Example**:
 ```bash

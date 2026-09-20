@@ -24,6 +24,7 @@
 
 package org.javahelpers.simple.builders.processor.processing;
 
+import java.io.IOException;
 import java.util.List;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
@@ -32,8 +33,11 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+import javax.tools.JavaFileObject;
 import org.apache.commons.lang3.StringUtils;
+import org.javahelpers.simple.builders.core.enums.FormattingMode;
 import org.javahelpers.simple.builders.processor.analysis.BuilderScopeResolver;
+import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterSourceFormatter;
 import org.javahelpers.simple.builders.processor.generators.registry.GeneratorRegistry;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
@@ -148,12 +152,43 @@ public final class ProcessingContext {
   }
 
   /**
-   * Gets the configured Eclipse formatter profile.
-   *
-   * @return the formatter profile path or classpath resource, or null for the bundled default
+   * Starts a new performance tracking phase. The phase name is passed to {@link
+   * #endPerformancePhase(String)} for recording.
    */
-  public String getFormatterProfile() {
-    return formatterProfile;
+  public void startPerformancePhase() {
+    performanceTracker.startPhase();
+  }
+
+  /**
+   * Ends the current performance tracking phase and records its duration under the given name.
+   *
+   * @param phase the phase name to record
+   */
+  public void endPerformancePhase(String phase) {
+    performanceTracker.endPhase(phase);
+  }
+
+  /**
+   * Creates a new source file for the given fully qualified type name via the processing
+   * environment's filer.
+   *
+   * @param qualifiedName the fully qualified name of the type to create
+   * @return the created source file object
+   * @throws IOException if the file cannot be created
+   */
+  public JavaFileObject createSourceFile(String qualifiedName) throws IOException {
+    return processingEnv.getFiler().createSourceFile(qualifiedName);
+  }
+
+  /**
+   * Creates a {@link RoasterSourceFormatter} for the given formatting mode, applying the configured
+   * Eclipse formatter profile when one is set.
+   *
+   * @param mode the formatting mode
+   * @return a new formatter instance
+   */
+  public RoasterSourceFormatter createSourceFormatter(FormattingMode mode) {
+    return new RoasterSourceFormatter(logger, mode, formatterProfile);
   }
 
   /**

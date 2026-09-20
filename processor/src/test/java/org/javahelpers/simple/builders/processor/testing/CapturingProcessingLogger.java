@@ -31,6 +31,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.Predicate;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -122,6 +123,22 @@ public final class CapturingProcessingLogger {
         () ->
             "Expected captured message not found: "
                 + expectedMessage
+                + "\nActual messages: "
+                + messages);
+  }
+
+  /**
+   * Asserts that at least one captured message matches the given predicate.
+   *
+   * @param matcher predicate applied to each captured message
+   * @param expectation description of the expected message, used in the failure text
+   */
+  public void assertMessageMatching(Predicate<String> matcher, String expectation) {
+    assertTrue(
+        messages.stream().anyMatch(matcher),
+        () ->
+            "Expected captured message not found: "
+                + expectation
                 + "\nActual messages: "
                 + messages);
   }
