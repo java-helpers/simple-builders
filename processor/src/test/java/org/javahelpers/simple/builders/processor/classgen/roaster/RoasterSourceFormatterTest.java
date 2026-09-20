@@ -650,7 +650,7 @@ class RoasterSourceFormatterTest {
         w ->
             w.startsWith(
                     "WARNING:      Failed to load Eclipse formatter profile 'eclipse-java-format-malformed.xml': ")
-                && w.contains("SAXParseException")
+                && w.contains("java.io.IOException")
                 && w.endsWith("; falling back to the bundled profile."),
         "a 'Failed to load' warning for the malformed formatter profile");
     capturing.assertMessage(

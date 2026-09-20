@@ -468,7 +468,7 @@ public final class RoasterSourceFormatter {
     } catch (IOException | RuntimeException ex) {
       logger.warning(
           "Failed to load Eclipse formatter profile '%s': %s; falling back to the bundled profile.",
-          location, getExceptionDetails(ex));
+          location, ex);
       return Optional.empty();
     }
   }
@@ -493,7 +493,7 @@ public final class RoasterSourceFormatter {
     } catch (IOException | RuntimeException ex) {
       logger.warning(
           "Failed to load bundled Eclipse formatter profile '%s': %s.",
-          DEFAULT_FORMATTER_PROFILE_RESOURCE, getExceptionDetails(ex));
+          DEFAULT_FORMATTER_PROFILE_RESOURCE, ex);
     }
     return new Properties();
   }
@@ -506,28 +506,6 @@ public final class RoasterSourceFormatter {
       }
       return Optional.of(FormatterProfileReader.fromEclipseXml(inputStream).getDefaultProperties());
     }
-  }
-
-  /**
-   * Renders throwable details for warnings: simple class name and non-blank message, plus the root
-   * cause's simple name and non-blank message when a distinct cause exists.
-   */
-  private static String getExceptionDetails(Throwable throwable) {
-    StringBuilder details = new StringBuilder(throwable.getClass().getSimpleName());
-    if (StringUtils.isNotBlank(throwable.getMessage())) {
-      details.append(": ").append(throwable.getMessage());
-    }
-    Throwable rootCause = throwable;
-    while (rootCause.getCause() != null) {
-      rootCause = rootCause.getCause();
-    }
-    if (rootCause != throwable) {
-      details.append("; caused by ").append(rootCause.getClass().getSimpleName());
-      if (StringUtils.isNotBlank(rootCause.getMessage())) {
-        details.append(": ").append(rootCause.getMessage());
-      }
-    }
-    return details.toString();
   }
 
   private InputStream openProfileStream(String location) throws IOException {

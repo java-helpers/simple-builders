@@ -93,7 +93,7 @@ public class BuilderProcessor extends AbstractProcessor {
     logger.debug("Loaded global configuration from compiler arguments: %s", globalConfig);
 
     this.context = new ProcessingContext(logger, globalConfig, processingEnv);
-    this.codeGenerator = new RoasterCodeGenerator(context);
+    this.codeGenerator = new RoasterCodeGenerator(context, processingEnv);
     this.jacksonModuleGenerator = new JacksonModuleGenerator(processingEnv, logger, globalConfig);
 
     // Initialize GeneratorRegistry once during processor initialization

@@ -24,7 +24,6 @@
 
 package org.javahelpers.simple.builders.processor.processing;
 
-import java.io.IOException;
 import java.util.List;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
@@ -33,7 +32,6 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
-import javax.tools.JavaFileObject;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.enums.FormattingMode;
 import org.javahelpers.simple.builders.processor.analysis.BuilderScopeResolver;
@@ -166,18 +164,6 @@ public final class ProcessingContext {
    */
   public void endPerformancePhase(String phase) {
     performanceTracker.endPhase(phase);
-  }
-
-  /**
-   * Creates a new source file for the given fully qualified type name via the processing
-   * environment's filer.
-   *
-   * @param qualifiedName the fully qualified name of the type to create
-   * @return the created source file object
-   * @throws IOException if the file cannot be created
-   */
-  public JavaFileObject createSourceFile(String qualifiedName) throws IOException {
-    return processingEnv.getFiler().createSourceFile(qualifiedName);
   }
 
   /**

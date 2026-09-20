@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.TypeElement;
 import javax.tools.JavaFileObject;
 import org.apache.commons.collections4.CollectionUtils;
@@ -73,21 +74,26 @@ import org.jboss.forge.roaster.model.source.TypeVariableSource;
 
 /** Roaster-based code generator for builder source files. */
 public class RoasterCodeGenerator {
-  /** Processing context providing environment, logger, performance tracking and profile. */
+  /** Processing context providing logger, performance tracking, type lookup and profile. */
   private final ProcessingContext context;
+
+  /** Processing environment for creating generated source files via its filer. */
+  private final ProcessingEnvironment processingEnv;
 
   /** Cached formatters per formatting mode (at most 3 instances, created lazily). */
   private final EnumMap<FormattingMode, RoasterSourceFormatter> formatterCache =
       new EnumMap<>(FormattingMode.class);
 
   /**
-   * Creates a code generator using the given processing context.
+   * Creates a code generator using the given processing context and environment.
    *
-   * @param context processing context providing environment, logger, performance tracking and
+   * @param context processing context providing logger, performance tracking, type lookup and
    *     formatter profile
+   * @param processingEnv processing environment providing the filer for generated source files
    */
-  public RoasterCodeGenerator(ProcessingContext context) {
+  public RoasterCodeGenerator(ProcessingContext context, ProcessingEnvironment processingEnv) {
     this.context = Objects.requireNonNull(context, "context must not be null");
+    this.processingEnv = Objects.requireNonNull(processingEnv, "processingEnv must not be null");
   }
 
   /**
@@ -583,7 +589,7 @@ public class RoasterCodeGenerator {
     }
 
     try {
-      JavaFileObject file = context.createSourceFile(qualifiedName);
+      JavaFileObject file = processingEnv.getFiler().createSourceFile(qualifiedName);
       try (Writer writer = file.openWriter()) {
         writer.write(sourceCode);
       }
