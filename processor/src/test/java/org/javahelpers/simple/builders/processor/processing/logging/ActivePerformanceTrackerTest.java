@@ -364,16 +364,8 @@ class ActivePerformanceTrackerTest {
     JsonNode genStats = root.get("generatorStats");
     assertEquals(2, genStats.size());
 
-    // Find GenA by name (stats are sorted by elapsed time, so index is unpredictable)
-    JsonNode genA = null;
-    for (int i = 0; i < genStats.size(); i++) {
-      if ("GenA".equals(genStats.get(i).get("name").asText())) {
-        genA = genStats.get(i);
-        break;
-      }
-    }
-    assertNotNull(genA, "GenA should be present in generator stats");
-    assertEquals(2, genA.get("calls").asInt(), "GenA was called twice");
+    JsonNode genA = genStats.get(genStats.get(0).get("name").asText().equals("GenA") ? 0 : 1);
+    assertEquals(2, genA.get("calls").asInt());
   }
 
   @Test
