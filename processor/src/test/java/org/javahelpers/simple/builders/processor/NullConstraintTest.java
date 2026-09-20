@@ -75,7 +75,14 @@ class NullConstraintTest {
     ProcessorAsserts.assertGenerationSucceeded(compilation, "PersonBuilder", generatedCode);
 
     // Verify NO validation for constructor field without @NotNull (can be left unset → null passed)
-    ProcessorAsserts.assertNotContaining(generatedCode, "Required field 'name' must be set");
+    // The update helper's unset guard uses the same isSet() condition, so the full required-field
+    // block including its message must be asserted absent.
+    ProcessorAsserts.assertNotContaining(
+        generatedCode,
+        """
+        if (!this.name.isSet()) {
+          throw new IllegalStateException("Required field 'name' must be set before calling build()");
+        }""");
   }
 
   @Test

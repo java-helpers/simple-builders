@@ -34,7 +34,6 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  *     .name(sb -> sb.append("text"))
  *     .nameUpdate(String::trim)
  *     .sponsoren(t -> t.add(sponsorDtoBuilder -> sponsorDtoBuilder))
- *     .sponsorenUpdate(UnaryOperator.identity())
  *     .build();
  * }</pre>
  */
@@ -193,7 +192,7 @@ public class MannschaftDtoBuilder implements IBuilderBase<MannschaftDto> {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.nameUpdate(String::trim);
+   * builder.name("example value").nameUpdate(String::trim);
    * }</pre>
    * 
    * @param nameUpdater operator applied to the current value; its result becomes the new value
@@ -279,12 +278,6 @@ public class MannschaftDtoBuilder implements IBuilderBase<MannschaftDto> {
    * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from setter {@link MannschaftDto#setSponsoren(Set) setSponsoren(Set<SponsorDto> sponsoren)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.sponsorenUpdate(UnaryOperator.identity());
-   * }</pre>
    * 
    * @param sponsorenUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder

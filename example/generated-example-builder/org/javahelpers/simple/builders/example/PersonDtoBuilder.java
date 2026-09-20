@@ -37,21 +37,17 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  *     .nameUpdate(String::trim)
  *     .birthdate(LocalDate.now())
  *     .birthdate(() -> LocalDate.now())
- *     .birthdateUpdate(UnaryOperator.identity())
+ *     .birthdateUpdate(value -> value.plusDays(1))
  *     .mannschaft(new MannschaftDto())
  *     .mannschaft(MannschaftDto::new)
  *     .mannschaft(mannschaftDtoBuilder -> mannschaftDtoBuilder)
- *     .mannschaftUpdate(UnaryOperator.identity())
  *     .nickNames(List.of("example value"))
  *     .nickNames(() -> List.of("example value"))
  *     .nickNames(t -> t.add("example value"))
  *     .nickNames("example value", "example value")
  *     .add2NickNames("example value")
- *     .nickNamesUpdate(UnaryOperator.identity())
+ *     .nickNamesUpdate(List::copyOf)
  *     .nickNames2("example value")
- *     .nickNames2(() -> "example value")
- *     .nickNames2("example value")
- *     .nickNames2Update(String::trim)
  *     .build();
  * }</pre>
  */
@@ -188,7 +184,7 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.birthdateUpdate(UnaryOperator.identity());
+   * builder.birthdate(LocalDate.now()).birthdateUpdate(value -> value.plusDays(1));
    * }</pre>
    * 
    * @param birthdateUpdater operator applied to the current value; its result becomes the new value
@@ -268,15 +264,10 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
    * Updates the current value of <code>mannschaft</code> in place by applying the given operator, instead of reading it
    * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance).
+   * value must have been set before (directly or via an existing instance). For changing multiple values of a nested
+   * DTO, prefer the corresponding builder-consumer helper.
    * <p>
    * Generated from setter {@link PersonDto#setMannschaft(MannschaftDto) setMannschaft(MannschaftDto mannschaft)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.mannschaftUpdate(UnaryOperator.identity());
-   * }</pre>
    * 
    * @param mannschaftUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
@@ -381,7 +372,7 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.nameUpdate(String::trim);
+   * builder.name("example value").nameUpdate(String::trim);
    * }</pre>
    * 
    * @param nameUpdater operator applied to the current value; its result becomes the new value
@@ -481,12 +472,6 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
    * <p>
    * Generated from setter {@link PersonDto#setNickNames2(String) setNickNames2(String nickNames2)}
    * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.nickNames2("example value");
-   * }</pre>
-   * 
    * @param nickNames2 nickNames2
    * @return current instance of builder
    */
@@ -539,12 +524,6 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
    * <p>
    * Generated from setter {@link PersonDto#setNickNames2(String) setNickNames2(String nickNames2)}
    * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.nickNames2(() -> "example value");
-   * }</pre>
-   * 
    * @param nickNames2Supplier supplier for nickNames2
    * @return current instance of builder
    */
@@ -560,12 +539,6 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
    * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from setter {@link PersonDto#setNickNames2(String) setNickNames2(String nickNames2)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.nickNames2Update(String::trim);
-   * }</pre>
    * 
    * @param nickNames2Updater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
@@ -590,7 +563,7 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.nickNamesUpdate(UnaryOperator.identity());
+   * builder.nickNames(List.of("example value")).nickNamesUpdate(List::copyOf);
    * }</pre>
    * 
    * @param nickNamesUpdater operator applied to the current value; its result becomes the new value

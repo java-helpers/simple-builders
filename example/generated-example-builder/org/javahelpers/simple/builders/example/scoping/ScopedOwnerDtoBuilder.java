@@ -30,14 +30,11 @@ import org.javahelpers.simple.builders.example.library.LibraryHelperDto;
  * ScopedOwnerDto result = ScopedOwnerDtoBuilder.create()
  *     .library(new LibraryHelperDto())
  *     .library(LibraryHelperDto::new)
- *     .libraryUpdate(UnaryOperator.identity())
  *     .sponsor(new SponsorDto())
  *     .sponsor(SponsorDto::new)
- *     .sponsorUpdate(UnaryOperator.identity())
  *     .trusted(new TrustedHelperDto())
  *     .trusted(TrustedHelperDto::new)
  *     .trusted(trustedHelperDtoBuilder -> trustedHelperDtoBuilder)
- *     .trustedUpdate(UnaryOperator.identity())
  *     .build();
  * }</pre>
  */
@@ -151,12 +148,6 @@ public class ScopedOwnerDtoBuilder implements IBuilderBase<ScopedOwnerDto> {
    * <p>
    * Generated from setter {@link ScopedOwnerDto#setLibrary(LibraryHelperDto) setLibrary(LibraryHelperDto library)}
    * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.libraryUpdate(UnaryOperator.identity());
-   * }</pre>
-   * 
    * @param libraryUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
    * @throws IllegalStateException if <code>library</code> has not been set yet
@@ -229,12 +220,6 @@ public class ScopedOwnerDtoBuilder implements IBuilderBase<ScopedOwnerDto> {
    * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from setter {@link ScopedOwnerDto#setSponsor(SponsorDto) setSponsor(SponsorDto sponsor)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.sponsorUpdate(UnaryOperator.identity());
-   * }</pre>
    * 
    * @param sponsorUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
@@ -313,15 +298,10 @@ public class ScopedOwnerDtoBuilder implements IBuilderBase<ScopedOwnerDto> {
    * Updates the current value of <code>trusted</code> in place by applying the given operator, instead of reading it
    * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance).
+   * value must have been set before (directly or via an existing instance). For changing multiple values of a nested
+   * DTO, prefer the corresponding builder-consumer helper.
    * <p>
    * Generated from setter {@link ScopedOwnerDto#setTrusted(TrustedHelperDto) setTrusted(TrustedHelperDto trusted)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.trustedUpdate(UnaryOperator.identity());
-   * }</pre>
    * 
    * @param trustedUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder

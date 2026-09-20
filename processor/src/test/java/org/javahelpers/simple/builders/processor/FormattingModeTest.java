@@ -25,10 +25,10 @@ package org.javahelpers.simple.builders.processor;
 
 import static com.google.testing.compile.CompilationSubject.assertThat;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils.loadGeneratedSource;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.google.testing.compile.Compilation;
 import javax.tools.JavaFileObject;
-import org.javahelpers.simple.builders.processor.testing.ProcessorAsserts;
 import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
 import org.junit.jupiter.api.Test;
 
@@ -104,6 +104,7 @@ class FormattingModeTest {
         import java.util.function.BooleanSupplier;
         import java.util.function.Consumer;
         import java.util.function.Supplier;
+        import java.util.function.UnaryOperator;
         import javax.annotation.processing.Generated;
         import org.apache.commons.lang3.builder.ToStringBuilder;
         import org.javahelpers.simple.builders.core.annotations.BuilderImplementation;
@@ -124,8 +125,10 @@ class FormattingModeTest {
          *     .name("Hello %s", "World")
          *     .name(() -> "example value")
          *     .name(sb -> sb.append("text"))
+         *     .nameUpdate(String::trim)
          *     .count(42)
          *     .count(() -> 42)
+         *     .countUpdate(Math::abs)
          *     .build();
          * }</pre>
          */
@@ -200,6 +203,27 @@ class FormattingModeTest {
           }
 
           /**
+           * Updates the current value of <code>count</code> in place by applying the given operator, instead of reading it out, changing it and setting it again.
+           * Useful for adjustments relative to the current value, e.g. trimming, upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow.
+           * The value must have been set before (directly or via an existing instance).
+           * <p>Generated from parameter in constructor {@link FormatTestDto#FormatTestDto(String, int) FormatTestDto(String name, int count)}
+           *
+           * <h4>Example:</h4><pre>{@code
+           * builder.count(42).countUpdate(Math::abs);
+           * }</pre>
+           * @param countUpdater operator applied to the current value; its result becomes the new value
+           * @return current instance of builder
+           * @throws IllegalStateException if <code>count</code> has not been set yet
+           */
+          public FormatTestDtoBuilder countUpdate(UnaryOperator<Integer> countUpdater) {
+            if (!this.count.isSet()) {
+              throw new IllegalStateException("Cannot update 'count' before it is set");
+            }
+            this.count = changedValue(countUpdater.apply(this.count.value()));
+            return this;
+          }
+
+          /**
            * Sets the value for <code>name</code>.
            * <p>Generated from parameter in constructor {@link FormatTestDto#FormatTestDto(String, int) FormatTestDto(String name, int count)}
            *
@@ -260,6 +284,27 @@ class FormattingModeTest {
            */
           public FormatTestDtoBuilder name(String format, Object... args) {
             this.name = changedValue(String.format(format, args));
+            return this;
+          }
+
+          /**
+           * Updates the current value of <code>name</code> in place by applying the given operator, instead of reading it out, changing it and setting it again.
+           * Useful for adjustments relative to the current value, e.g. trimming, upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow.
+           * The value must have been set before (directly or via an existing instance).
+           * <p>Generated from parameter in constructor {@link FormatTestDto#FormatTestDto(String, int) FormatTestDto(String name, int count)}
+           *
+           * <h4>Example:</h4><pre>{@code
+           * builder.name("example value").nameUpdate(String::trim);
+           * }</pre>
+           * @param nameUpdater operator applied to the current value; its result becomes the new value
+           * @return current instance of builder
+           * @throws IllegalStateException if <code>name</code> has not been set yet
+           */
+          public FormatTestDtoBuilder nameUpdate(UnaryOperator<String> nameUpdater) {
+            if (!this.name.isSet()) {
+              throw new IllegalStateException("Cannot update 'name' before it is set");
+            }
+            this.name = changedValue(nameUpdater.apply(this.name.value()));
             return this;
           }
 
@@ -356,11 +401,10 @@ class FormattingModeTest {
             }
           }
         }""";
-    ProcessorAsserts.assertContaining(
+    assertEquals(
+        expectedCode,
         generatedCode,
-        "import java.util.function.UnaryOperator;",
-        "public FormatTestDtoBuilder nameUpdate(UnaryOperator<String> nameUpdater)",
-        "public FormatTestDtoBuilder countUpdate(UnaryOperator<Integer> countUpdater)");
+        "Generated code with lightweight formatting should match the expected lightweight-formatted output");
   }
 
   @Test
@@ -401,7 +445,7 @@ class FormattingModeTest {
     String[] lines = generatedCode.split("\n", -1);
 
     // Section 1: package + imports + class-level javadoc + class declaration
-    String section1 = String.join("\n", java.util.Arrays.copyOfRange(lines, 0, 36));
+    String section1 = String.join("\n", java.util.Arrays.copyOfRange(lines, 0, 38));
     String expectedSection1 =
         """
         package test;
@@ -412,6 +456,7 @@ class FormattingModeTest {
         import java.util.function.BooleanSupplier;
         import java.util.function.Consumer;
         import java.util.function.Supplier;
+        import java.util.function.UnaryOperator;
         import javax.annotation.processing.Generated;
         import org.apache.commons.lang3.builder.ToStringBuilder;
         import org.javahelpers.simple.builders.core.annotations.BuilderImplementation;
@@ -434,20 +479,20 @@ class FormattingModeTest {
          *     .value("Hello %s", "World")
          *     .value(() -> "example value")
          *     .value(sb -> sb.append("text"))
+         *     .valueUpdate(String::trim)
          *     .build();
          * }</pre>
          */
         @Generated("Generated by org.javahelpers.simple.builders.processor.BuilderProcessor")
         @BuilderImplementation(forClass = DefaultFormatDto.class)
         public class DefaultFormatDtoBuilder implements IBuilderBase<DefaultFormatDto> {""";
-    ProcessorAsserts.assertContaining(
-        generatedCode,
-        "import java.util.function.UnaryOperator;",
-        " *     .valueUpdate(String::trim)",
-        "public class DefaultFormatDtoBuilder implements IBuilderBase<DefaultFormatDto> {");
+    assertEquals(
+        expectedSection1,
+        section1,
+        "Eclipse-formatted section 1 (package/imports/class javadoc/declaration) mismatch");
 
     // Section 2: class body — the closing brace at 0 indentation anchors the common prefix
-    String section2 = String.join("\n", java.util.Arrays.copyOfRange(lines, 36, lines.length));
+    String section2 = String.join("\n", java.util.Arrays.copyOfRange(lines, 38, lines.length));
     String expectedSection2 =
         """
 
@@ -571,6 +616,33 @@ class FormattingModeTest {
           }
 
           /**
+           * Updates the current value of <code>value</code> in place by applying the given operator, instead of reading it out,
+           * changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+           * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+           * value must have been set before (directly or via an existing instance).
+           * <p>
+           * Generated from parameter in constructor {@link DefaultFormatDto#DefaultFormatDto(String) DefaultFormatDto(String
+           * value)}
+           *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.value("example value").valueUpdate(String::trim);
+           * }</pre>
+           *
+           * @param valueUpdater operator applied to the current value; its result becomes the new value
+           * @return current instance of builder
+           * @throws IllegalStateException if <code>value</code> has not been set yet
+           */
+          public DefaultFormatDtoBuilder valueUpdate(UnaryOperator<String> valueUpdater) {
+            if (!this.value.isSet()) {
+              throw new IllegalStateException("Cannot update 'value' before it is set");
+            }
+            this.value = changedValue(valueUpdater.apply(this.value.value()));
+            return this;
+          }
+
+          /**
            * Conditionally applies builder modifications if the condition is true.
            *
            * @param condition the condition to evaluate
@@ -665,9 +737,6 @@ class FormattingModeTest {
             }
           }
         }""";
-    ProcessorAsserts.assertContaining(
-        generatedCode,
-        "public DefaultFormatDtoBuilder valueUpdate(UnaryOperator<String> valueUpdater)",
-        "return this;");
+    assertEquals(expectedSection2, section2, "Eclipse-formatted section 2 (class body) mismatch");
   }
 }

@@ -135,7 +135,7 @@ public class JacksonIntegrationDtoBuilder implements IBuilderBase<JacksonIntegra
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.ageUpdate(Math::abs);
+   * builder.age(42).ageUpdate(Math::abs);
    * }</pre>
    * 
    * @param ageUpdater operator applied to the current value; its result becomes the new value
@@ -246,7 +246,7 @@ public class JacksonIntegrationDtoBuilder implements IBuilderBase<JacksonIntegra
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.nameUpdate(String::trim);
+   * builder.name("example value").nameUpdate(String::trim);
    * }</pre>
    * 
    * @param nameUpdater operator applied to the current value; its result becomes the new value

@@ -182,7 +182,7 @@ public class OrderWithDefaultsBuilder implements IBuilderBase<OrderWithDefaults>
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.idUpdate(String::trim);
+   * builder.id("example value").idUpdate(String::trim);
    * }</pre>
    * 
    * @param idUpdater operator applied to the current value; its result becomes the new value
@@ -246,7 +246,7 @@ public class OrderWithDefaultsBuilder implements IBuilderBase<OrderWithDefaults>
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.priorityUpdate(Math::abs);
+   * builder.priority(42).priorityUpdate(Math::abs);
    * }</pre>
    * 
    * @param priorityUpdater operator applied to the current value; its result becomes the new value
@@ -352,7 +352,7 @@ public class OrderWithDefaultsBuilder implements IBuilderBase<OrderWithDefaults>
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.statusUpdate(String::trim);
+   * builder.status("example value").statusUpdate(String::trim);
    * }</pre>
    * 
    * @param statusUpdater operator applied to the current value; its result becomes the new value

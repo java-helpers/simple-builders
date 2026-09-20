@@ -163,7 +163,7 @@ public class SponsorDtoBuilder implements IBuilderBase<SponsorDto> {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.nameUpdate(String::trim);
+   * builder.name("example value").nameUpdate(String::trim);
    * }</pre>
    * 
    * @param nameUpdater operator applied to the current value; its result becomes the new value

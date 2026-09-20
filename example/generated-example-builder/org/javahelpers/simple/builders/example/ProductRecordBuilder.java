@@ -186,7 +186,7 @@ public class ProductRecordBuilder implements IBuilderBase<ProductRecord> {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.categoryUpdate(String::trim);
+   * builder.category("example value").categoryUpdate(String::trim);
    * }</pre>
    * 
    * @param categoryUpdater operator applied to the current value; its result becomes the new value
@@ -297,7 +297,7 @@ public class ProductRecordBuilder implements IBuilderBase<ProductRecord> {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.nameUpdate(String::trim);
+   * builder.name("example value").nameUpdate(String::trim);
    * }</pre>
    * 
    * @param nameUpdater operator applied to the current value; its result becomes the new value
@@ -364,7 +364,7 @@ public class ProductRecordBuilder implements IBuilderBase<ProductRecord> {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.priceUpdate(Math::abs);
+   * builder.price(3.14).priceUpdate(Math::abs);
    * }</pre>
    * 
    * @param priceUpdater operator applied to the current value; its result becomes the new value

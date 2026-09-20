@@ -29,37 +29,31 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  *     .author("example value")
  *     .authorUpdate(String::trim)
  *     .available(true)
- *     .availableUpdate(UnaryOperator.identity())
+ *     .availableUpdate(value -> !value)
  *     .category('x')
- *     .categoryUpdate(UnaryOperator.identity())
  *     .discount(3.14f)
  *     .discountUpdate(Math::abs)
- *     .editionUpdate(UnaryOperator.identity())
  *     .exactPrice(BigDecimal.valueOf(3.14))
- *     .exactPriceUpdate(UnaryOperator.identity())
  *     .genres(Set.of("example value"))
- *     .genresUpdate(UnaryOperator.identity())
+ *     .genresUpdate(Set::copyOf)
  *     .isbn("example value")
  *     .isbnUpdate(String::trim)
  *     .lastUpdated(LocalDateTime.now())
- *     .lastUpdatedUpdate(UnaryOperator.identity())
+ *     .lastUpdatedUpdate(value -> value.plusDays(1))
  *     .metadata(Map.of("example value", "example value"))
- *     .metadataUpdate(UnaryOperator.identity())
+ *     .metadataUpdate(Map::copyOf)
  *     .pages(42)
  *     .pagesUpdate(Math::abs)
  *     .price(3.14)
  *     .priceUpdate(Math::abs)
  *     .publishDate(LocalDate.now())
- *     .publishDateUpdate(UnaryOperator.identity())
+ *     .publishDateUpdate(value -> value.plusDays(1))
  *     .publisher(PersonDtoBuilder.create().build())
- *     .publisherUpdate(UnaryOperator.identity())
- *     .ratingUpdate(UnaryOperator.identity())
  *     .salesCount(42L)
  *     .salesCountUpdate(Math::abs)
  *     .subtitle(Optional.of("example value"))
- *     .subtitleUpdate(UnaryOperator.identity())
  *     .tags(List.of("example value"))
- *     .tagsUpdate(UnaryOperator.identity())
+ *     .tagsUpdate(List::copyOf)
  *     .title("example value")
  *     .titleUpdate(String::trim)
  *     .build();
@@ -222,7 +216,7 @@ public class BookDtoBuilder {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.authorUpdate(String::trim);
+   * builder.author("example value").authorUpdate(String::trim);
    * }</pre>
    * 
    * @param authorUpdater operator applied to the current value; its result becomes the new value
@@ -267,7 +261,7 @@ public class BookDtoBuilder {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.availableUpdate(UnaryOperator.identity());
+   * builder.available(true).availableUpdate(value -> !value);
    * }</pre>
    * 
    * @param availableUpdater operator applied to the current value; its result becomes the new value
@@ -308,12 +302,6 @@ public class BookDtoBuilder {
    * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from setter {@link BookDto#setCategory(char) setCategory(char category)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.categoryUpdate(UnaryOperator.identity());
-   * }</pre>
    * 
    * @param categoryUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
@@ -357,7 +345,7 @@ public class BookDtoBuilder {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.discountUpdate(Math::abs);
+   * builder.discount(3.14f).discountUpdate(Math::abs);
    * }</pre>
    * 
    * @param discountUpdater operator applied to the current value; its result becomes the new value
@@ -392,12 +380,6 @@ public class BookDtoBuilder {
    * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from setter {@link BookDto#setEdition(short) setEdition(short edition)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.editionUpdate(UnaryOperator.identity());
-   * }</pre>
    * 
    * @param editionUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
@@ -437,12 +419,6 @@ public class BookDtoBuilder {
    * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from setter {@link BookDto#setExactPrice(BigDecimal) setExactPrice(BigDecimal exactPrice)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.exactPriceUpdate(UnaryOperator.identity());
-   * }</pre>
    * 
    * @param exactPriceUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
@@ -486,7 +462,7 @@ public class BookDtoBuilder {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.genresUpdate(UnaryOperator.identity());
+   * builder.genres(Set.of("example value")).genresUpdate(Set::copyOf);
    * }</pre>
    * 
    * @param genresUpdater operator applied to the current value; its result becomes the new value
@@ -531,7 +507,7 @@ public class BookDtoBuilder {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.isbnUpdate(String::trim);
+   * builder.isbn("example value").isbnUpdate(String::trim);
    * }</pre>
    * 
    * @param isbnUpdater operator applied to the current value; its result becomes the new value
@@ -576,7 +552,7 @@ public class BookDtoBuilder {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.lastUpdatedUpdate(UnaryOperator.identity());
+   * builder.lastUpdated(LocalDateTime.now()).lastUpdatedUpdate(value -> value.plusDays(1));
    * }</pre>
    * 
    * @param lastUpdatedUpdater operator applied to the current value; its result becomes the new value
@@ -621,7 +597,7 @@ public class BookDtoBuilder {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.metadataUpdate(UnaryOperator.identity());
+   * builder.metadata(Map.of("example value", "example value")).metadataUpdate(Map::copyOf);
    * }</pre>
    * 
    * @param metadataUpdater operator applied to the current value; its result becomes the new value
@@ -666,7 +642,7 @@ public class BookDtoBuilder {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.pagesUpdate(Math::abs);
+   * builder.pages(42).pagesUpdate(Math::abs);
    * }</pre>
    * 
    * @param pagesUpdater operator applied to the current value; its result becomes the new value
@@ -711,7 +687,7 @@ public class BookDtoBuilder {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.priceUpdate(Math::abs);
+   * builder.price(3.14).priceUpdate(Math::abs);
    * }</pre>
    * 
    * @param priceUpdater operator applied to the current value; its result becomes the new value
@@ -756,7 +732,7 @@ public class BookDtoBuilder {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.publishDateUpdate(UnaryOperator.identity());
+   * builder.publishDate(LocalDate.now()).publishDateUpdate(value -> value.plusDays(1));
    * }</pre>
    * 
    * @param publishDateUpdater operator applied to the current value; its result becomes the new value
@@ -794,15 +770,10 @@ public class BookDtoBuilder {
    * Updates the current value of <code>publisher</code> in place by applying the given operator, instead of reading it
    * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance).
+   * value must have been set before (directly or via an existing instance). For changing multiple values of a nested
+   * DTO, prefer the corresponding builder-consumer helper.
    * <p>
    * Generated from setter {@link BookDto#setPublisher(PersonDto) setPublisher(PersonDto publisher)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.publisherUpdate(UnaryOperator.identity());
-   * }</pre>
    * 
    * @param publisherUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
@@ -836,12 +807,6 @@ public class BookDtoBuilder {
    * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from setter {@link BookDto#setRating(byte) setRating(byte rating)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.ratingUpdate(UnaryOperator.identity());
-   * }</pre>
    * 
    * @param ratingUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
@@ -885,7 +850,7 @@ public class BookDtoBuilder {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.salesCountUpdate(Math::abs);
+   * builder.salesCount(42L).salesCountUpdate(Math::abs);
    * }</pre>
    * 
    * @param salesCountUpdater operator applied to the current value; its result becomes the new value
@@ -926,12 +891,6 @@ public class BookDtoBuilder {
    * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from setter {@link BookDto#setSubtitle(Optional) setSubtitle(Optional<String> subtitle)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.subtitleUpdate(UnaryOperator.identity());
-   * }</pre>
    * 
    * @param subtitleUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
@@ -975,7 +934,7 @@ public class BookDtoBuilder {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.tagsUpdate(UnaryOperator.identity());
+   * builder.tags(List.of("example value")).tagsUpdate(List::copyOf);
    * }</pre>
    * 
    * @param tagsUpdater operator applied to the current value; its result becomes the new value
@@ -1020,7 +979,7 @@ public class BookDtoBuilder {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.titleUpdate(String::trim);
+   * builder.title("example value").titleUpdate(String::trim);
    * }</pre>
    * 
    * @param titleUpdater operator applied to the current value; its result becomes the new value
