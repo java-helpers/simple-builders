@@ -444,6 +444,7 @@ class ConfigurationProcessingTest {
         import java.util.function.BooleanSupplier;
         import java.util.function.Consumer;
         import java.util.function.Supplier;
+        import java.util.function.UnaryOperator;
         import javax.annotation.processing.Generated;
         import org.apache.commons.lang3.builder.ToStringBuilder;
         import org.javahelpers.simple.builders.core.annotations.BuilderImplementation;
@@ -487,6 +488,14 @@ class ConfigurationProcessingTest {
 
           public PersonDtoBuilder name(String format, Object... args) {
             this.name = changedValue(String.format(format, args));
+            return this;
+          }
+
+          public PersonDtoBuilder nameUpdate(UnaryOperator<String> nameUpdater) {
+            if (!this.name.isSet()) {
+              throw new IllegalStateException("Cannot update 'name' before it is set");
+            }
+            this.name = changedValue(nameUpdater.apply(this.name.value()));
             return this;
           }
 
@@ -542,10 +551,7 @@ class ConfigurationProcessingTest {
           }
         }""";
 
-    ProcessorAsserts.assertContaining(
-        generatedCode,
-        "import java.util.function.UnaryOperator;",
-        "public PersonDtoBuilder nameUpdate(UnaryOperator<String> nameUpdater)");
+    assertEquals(expectedCode, generatedCode);
   }
 
   /**

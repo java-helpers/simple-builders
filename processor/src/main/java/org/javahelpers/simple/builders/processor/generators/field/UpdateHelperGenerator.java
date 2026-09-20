@@ -89,24 +89,30 @@ public class UpdateHelperGenerator implements MethodGenerator {
   private static final String NESTED_DTO_GUIDANCE =
       "For changing multiple values of a nested DTO, prefer the corresponding builder-consumer helper.";
 
+  /** Update operator example for numeric types. */
+  private static final String MATH_ABS_EXAMPLE = "Math::abs";
+
+  /** Update operator example for boolean types. */
+  private static final String NEGATION_EXAMPLE = "value -> !value";
+
   /** Update operator examples for primitive field types. */
   private static final Map<PrimitiveTypeEnum, String> PRIMITIVE_UPDATE_EXAMPLES =
       Map.of(
-          PrimitiveTypeEnum.INT, "Math::abs",
-          PrimitiveTypeEnum.LONG, "Math::abs",
-          PrimitiveTypeEnum.FLOAT, "Math::abs",
-          PrimitiveTypeEnum.DOUBLE, "Math::abs",
-          PrimitiveTypeEnum.BOOLEAN, "value -> !value");
+          PrimitiveTypeEnum.INT, MATH_ABS_EXAMPLE,
+          PrimitiveTypeEnum.LONG, MATH_ABS_EXAMPLE,
+          PrimitiveTypeEnum.FLOAT, MATH_ABS_EXAMPLE,
+          PrimitiveTypeEnum.DOUBLE, MATH_ABS_EXAMPLE,
+          PrimitiveTypeEnum.BOOLEAN, NEGATION_EXAMPLE);
 
   /** Update operator examples for common JDK reference types, resolved via {@link TypeName#is}. */
   private static final Map<Class<?>, String> REFERENCE_UPDATE_EXAMPLES =
       Map.ofEntries(
           Map.entry(String.class, "String::trim"),
-          Map.entry(Integer.class, "Math::abs"),
-          Map.entry(Long.class, "Math::abs"),
-          Map.entry(Float.class, "Math::abs"),
-          Map.entry(Double.class, "Math::abs"),
-          Map.entry(Boolean.class, "value -> !value"),
+          Map.entry(Integer.class, MATH_ABS_EXAMPLE),
+          Map.entry(Long.class, MATH_ABS_EXAMPLE),
+          Map.entry(Float.class, MATH_ABS_EXAMPLE),
+          Map.entry(Double.class, MATH_ABS_EXAMPLE),
+          Map.entry(Boolean.class, NEGATION_EXAMPLE),
           Map.entry(LocalDate.class, "value -> value.plusDays(1)"),
           Map.entry(LocalTime.class, "value -> value.plusHours(1)"),
           Map.entry(LocalDateTime.class, "value -> value.plusDays(1)"),
