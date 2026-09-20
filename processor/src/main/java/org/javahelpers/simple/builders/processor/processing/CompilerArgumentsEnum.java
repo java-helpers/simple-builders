@@ -177,6 +177,13 @@ public enum CompilerArgumentsEnum {
    */
   FORMATTING_MODE("formattingMode", string(Builder::formattingMode)),
 
+  /**
+   * Option for an external Eclipse formatter profile XML (file system path or classpath resource).
+   * Processor-level only: it is read directly from compiler arguments and cannot be set per
+   * annotation.
+   */
+  FORMATTER_PROFILE("formatterProfile"),
+
   // === Performance Tracking ===
   /** Option for performance tracking during annotation processing. */
   PERFORMANCE_TRACKING("performanceTracking"),
@@ -208,10 +215,11 @@ public enum CompilerArgumentsEnum {
    * Constructs a CompilerArgumentsEnum constant for an argument that is not a builder configuration
    * option.
    *
-   * <p>These are process-control flags (e.g. {@code VERBOSE}, {@code PERFORMANCE_TRACKING}, {@code
-   * PERFORMANCE_OUTPUT_FILE}, {@code DEACTIVATE_GENERATION_COMPONENTS}) that are read directly via
-   * {@link CompilerArgumentsReader#readValue} or {@link CompilerArgumentsReader#readBooleanValue}
-   * rather than applied to a {@link BuilderConfiguration.Builder}. The {@code null} applier is
+   * <p>These are process-control or processor-level options (e.g. {@code VERBOSE}, {@code
+   * PERFORMANCE_TRACKING}, {@code PERFORMANCE_OUTPUT_FILE}, {@code
+   * DEACTIVATE_GENERATION_COMPONENTS}, {@code FORMATTER_PROFILE}) that are read directly via {@link
+   * CompilerArgumentsReader#readValue} or {@link CompilerArgumentsReader#readBooleanValue} rather
+   * than applied to a {@link BuilderConfiguration.Builder}. The {@code null} applier is
    * intentional: {@link #apply} is a no-op for these constants, and {@link #hasValueApplier()}
    * returns {@code false} so {@link BuilderConfigurationReader} skips them when parsing annotation
    * attributes.
@@ -278,9 +286,9 @@ public enum CompilerArgumentsEnum {
    * Returns whether this enum constant has a value applier that maps the raw option value to a
    * {@link BuilderConfiguration.Builder} setter.
    *
-   * <p>Not all enum constants have an applier. Process-control flags like {@code VERBOSE}, {@code
-   * PERFORMANCE_TRACKING}, {@code PERFORMANCE_OUTPUT_FILE}, and {@code
-   * DEACTIVATE_GENERATION_COMPONENTS} are read directly via {@link
+   * <p>Not all enum constants have an applier. Process-control or processor-level options like
+   * {@code VERBOSE}, {@code PERFORMANCE_TRACKING}, {@code PERFORMANCE_OUTPUT_FILE}, {@code
+   * DEACTIVATE_GENERATION_COMPONENTS}, and {@code FORMATTER_PROFILE} are read directly via {@link
    * CompilerArgumentsReader#readValue} or {@link CompilerArgumentsReader#readBooleanValue} instead
    * of being applied to a builder configuration. For these, the single-argument constructor sets
    * the applier to {@code null}, {@link #apply} is a no-op, and this method returns {@code false}.
