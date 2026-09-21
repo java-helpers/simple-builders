@@ -27,7 +27,7 @@ package org.javahelpers.simple.builders.processor.model.type;
 import static java.util.Objects.requireNonNull;
 
 import java.util.Optional;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
@@ -202,8 +202,8 @@ public class TypeName {
   public boolean is(Class<?> type) {
     requireNonNull(type);
     return !(this instanceof TypeNameArray)
-        && StringUtils.equals(className, type.getSimpleName())
-        && StringUtils.equals(packageName, type.getPackageName());
+        && Strings.CS.equals(className, type.getSimpleName())
+        && Strings.CS.equals(packageName, type.getPackageName());
   }
 
   /**
