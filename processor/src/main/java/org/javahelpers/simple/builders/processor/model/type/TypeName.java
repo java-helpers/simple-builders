@@ -27,6 +27,7 @@ package org.javahelpers.simple.builders.processor.model.type;
 import static java.util.Objects.requireNonNull;
 
 import java.util.Optional;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
@@ -192,23 +193,17 @@ public class TypeName {
   /**
    * Checks whether this type name refers to the given class.
    *
-   * <p>Matches on the rendered base type: either the exact simple name or a generic simple name
-   * starting with {@code SimpleName<}, combined with either an equal package name or an empty
-   * package name, so unqualified type names like {@code TypeName("", "String")} still match. Array
-   * types never match their element class.
+   * <p>Compares the base class name ({@code List} for {@code List<String>}) and the package name
+   * with the given class. Array types never match their element class.
    *
    * @param type the class to compare against, must not be null
    * @return true if this type name refers to the given class
    */
   public boolean is(Class<?> type) {
     requireNonNull(type);
-    if (this instanceof TypeNameArray) {
-      return false;
-    }
-    String renderedName = getSimpleNameWithGenerics();
-    String simpleName = type.getSimpleName();
-    return (renderedName.equals(simpleName) || renderedName.startsWith(simpleName + "<"))
-        && (packageName.isEmpty() || packageName.equals(type.getPackageName()));
+    return !(this instanceof TypeNameArray)
+        && StringUtils.equals(className, type.getSimpleName())
+        && StringUtils.equals(packageName, type.getPackageName());
   }
 
   /**

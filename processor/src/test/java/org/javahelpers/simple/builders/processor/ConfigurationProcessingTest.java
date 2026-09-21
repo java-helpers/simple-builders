@@ -418,8 +418,7 @@ class ConfigurationProcessingTest {
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
             import org.javahelpers.simple.builders.core.enums.OptionState;
 
-            @SimpleBuilder(options = @SimpleBuilder.Options(
-                generateJavaDoc = OptionState.DISABLED))
+            @SimpleBuilder(options = @SimpleBuilder.Options(generateJavaDoc = OptionState.DISABLED))
             public class PersonDto {
                 private String name;
 

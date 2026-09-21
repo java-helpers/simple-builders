@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.UnaryOperator;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.generators.util.JavadocConstants;
@@ -81,13 +82,24 @@ import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
  */
 public class UpdateHelperGenerator implements MethodGenerator {
 
-  private static final int PRIORITY = 20;
+  // Runs before AddToCollectionGenerator (30) so update fragments precede add-helpers in the
+  // class-level example chain.
+  private static final int PRIORITY = 31;
 
   /**
    * Guidance appended to update methods for fields backed by a nested {@code @SimpleBuilder} DTO.
    */
   private static final String NESTED_DTO_GUIDANCE =
-      "For changing multiple values of a nested DTO, prefer the corresponding builder-consumer helper.";
+      "For changing multiple values of a nested DTO, prefer the builder-consumer helper"
+          + " {@link #%s(Consumer)}.";
+
+  /**
+   * Guidance appended to update methods for collections whose element type has a
+   * {@code @SimpleBuilder} builder.
+   */
+  private static final String COLLECTION_ELEMENT_DTO_GUIDANCE =
+      "For changing multiple elements of a nested DTO, prefer the builder-consumer helper"
+          + " {@link #%s(Consumer)}.";
 
   /** Update operator example for numeric types. */
   private static final String MATH_ABS_EXAMPLE = "Math::abs";
@@ -116,11 +128,12 @@ public class UpdateHelperGenerator implements MethodGenerator {
           Map.entry(LocalDate.class, "value -> value.plusDays(1)"),
           Map.entry(LocalTime.class, "value -> value.plusHours(1)"),
           Map.entry(LocalDateTime.class, "value -> value.plusDays(1)"),
-          Map.entry(List.class, "List::copyOf"),
-          Map.entry(ArrayList.class, "ArrayList::new"),
-          Map.entry(LinkedList.class, "LinkedList::new"),
-          Map.entry(Set.class, "Set::copyOf"),
+          Map.entry(List.class, "list -> list.stream().sorted().toList()"),
+          Map.entry(ArrayList.class, "list -> new ArrayList<>(list.stream().sorted().toList())"),
+          Map.entry(LinkedList.class, "list -> new LinkedList<>(list.stream().sorted().toList())"),
+          Map.entry(Set.class, "TreeSet::new"),
           Map.entry(HashSet.class, "HashSet::new"),
+          Map.entry(TreeSet.class, "TreeSet::new"),
           Map.entry(Map.class, "Map::copyOf"),
           Map.entry(HashMap.class, "HashMap::new"));
 
@@ -174,9 +187,7 @@ public class UpdateHelperGenerator implements MethodGenerator {
         """
             .strip()
             .formatted(originalFieldName);
-    if (field.getFieldType().getBuilderType().isPresent()) {
-      description += "\n" + NESTED_DTO_GUIDANCE;
-    }
+    description += builderConsumerGuidance(field, context);
     methodDto.setJavadoc(
         new JavadocDto(description)
             .addParam(
@@ -192,14 +203,40 @@ public class UpdateHelperGenerator implements MethodGenerator {
   }
 
   /**
-   * Attaches Javadoc examples for the update method when both an initial value and a meaningful
-   * update expression exist for the field type.
+   * Returns Javadoc guidance pointing to the builder-consumer overload when such a helper will be
+   * generated for this field (nested DTO or collection of nested DTOs).
+   */
+  private static String builderConsumerGuidance(FieldDto field, ProcessingContext context) {
+    if (!context.getConfiguration().shouldGenerateBuilderConsumer()) {
+      return "";
+    }
+    TypeName fieldType = field.getFieldType();
+    String methodName = generateBuilderMethodName(field.getOriginalFieldName(), context);
+    if (fieldType.getBuilderType().isPresent()) {
+      return "\n" + NESTED_DTO_GUIDANCE.formatted(methodName);
+    }
+    if (fieldType instanceof TypeNameGeneric genericType
+        && genericType.getElementBuilderType().isPresent()) {
+      return "\n" + COLLECTION_ELEMENT_DTO_GUIDANCE.formatted(methodName);
+    }
+    return "";
+  }
+
+  /**
+   * Attaches Javadoc examples for the update method when a meaningful update expression exists for
+   * the field type. The fluent-chain fragment for the class-level example is always added; the
+   * method-level example additionally requires an example value for setting the field first.
    */
   private static void addUpdateExample(
       BuilderMethodDto methodDto, FieldDto field, ProcessingContext context) {
-    Optional<String> initialValue = JavadocExampleValues.getExampleValue(field.getFieldType());
     Optional<String> updateExpression = getUpdateExample(field.getFieldType());
-    if (initialValue.isEmpty() || updateExpression.isEmpty()) {
+    if (updateExpression.isEmpty()) {
+      return;
+    }
+    addExampleChainFragmentTemplate(methodDto, "#{methodName}(" + updateExpression.get() + ")");
+
+    Optional<String> initialValue = JavadocExampleValues.getExampleValue(field.getFieldType());
+    if (initialValue.isEmpty()) {
       return;
     }
     JavadocCodeBlockDto methodExample = new JavadocCodeBlockDto();
@@ -211,7 +248,6 @@ public class UpdateHelperGenerator implements MethodGenerator {
                 methodDto.getMethodName(),
                 updateExpression.get()));
     methodDto.getJavadoc().setExampleUsageCodeBlock(methodExample);
-    addExampleChainFragmentTemplate(methodDto, "#{methodName}(" + updateExpression.get() + ")");
   }
 
   /**

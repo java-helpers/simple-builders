@@ -46,8 +46,8 @@ class TypeNameTest {
   }
 
   @Test
-  void is_emptyPackage_matchesBySimpleName() {
-    assertTrue(new TypeName("", "String").is(String.class));
+  void is_emptyPackage_doesNotMatchPackagedClass() {
+    assertFalse(new TypeName("", "String").is(String.class));
   }
 
   @Test

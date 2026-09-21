@@ -27,6 +27,8 @@ package org.javahelpers.simple.builders.processor.generators.util;
 import java.util.Map;
 import java.util.Optional;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.simple.builders.processor.model.type.TypeNameArray;
+import org.javahelpers.simple.builders.processor.model.type.TypeNameCollection;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameList;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameMap;
 import org.javahelpers.simple.builders.processor.model.type.TypeNamePrimitive;
@@ -114,6 +116,7 @@ public final class JavadocExampleValues {
   public static Optional<String> getExampleValue(TypeName typeName) {
     return resolvePrimitive(typeName)
         .or(() -> resolveCollection(typeName))
+        .or(() -> resolveArray(typeName))
         .or(() -> resolveOptional(typeName))
         .or(() -> resolveCommonType(typeName))
         .or(() -> resolveString(typeName))
@@ -130,15 +133,37 @@ public final class JavadocExampleValues {
 
   private static Optional<String> resolveCollection(TypeName typeName) {
     if (typeName instanceof TypeNameList listType && listType.isParameterized()) {
-      return getExampleValue(listType.getElementType())
-          .map(elementExample -> "List.of(" + elementExample + ")");
+      return getElementExample(listType).map(elementExample -> "List.of(" + elementExample + ")");
     }
     if (typeName instanceof TypeNameSet setType && setType.isParameterized()) {
-      return getExampleValue(setType.getElementType())
-          .map(elementExample -> "Set.of(" + elementExample + ")");
+      return getElementExample(setType).map(elementExample -> "Set.of(" + elementExample + ")");
     }
     if (typeName instanceof TypeNameMap mapType && mapType.isParameterized()) {
       return resolveMap(mapType);
+    }
+    return Optional.empty();
+  }
+
+  /**
+   * Resolves an example for a collection element type, falling back to the element's builder type
+   * (e.g. {@code SponsorDtoBuilder.create().build()}) when no direct example value exists.
+   */
+  private static Optional<String> getElementExample(TypeNameCollection collectionType) {
+    return getExampleValue(collectionType.getElementType())
+        .or(
+            () ->
+                collectionType
+                    .getElementBuilderType()
+                    .map(builderType -> builderType.getClassName() + ".create().build()"));
+  }
+
+  private static Optional<String> resolveArray(TypeName typeName) {
+    if (typeName instanceof TypeNameArray arrayType) {
+      TypeName elementType = arrayType.getTypeOfArray();
+      return getExampleValue(elementType)
+          .map(
+              elementExample ->
+                  "new " + elementType.getClassName() + "[] {" + elementExample + "}");
     }
     return Optional.empty();
   }

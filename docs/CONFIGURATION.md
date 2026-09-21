@@ -505,8 +505,6 @@ wins and the update helper is omitted with a conflict warning.
 
 **When DISABLED**: No update methods are generated.
 
-> **Note**: `@SimpleMinimalBuilder` disables update helpers along with all other optional features.
-
 ---
 
 #### `generateAddToCollectionHelpers`

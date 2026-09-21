@@ -106,8 +106,8 @@ class BuilderJavadocExampleTest {
         *     .tags(() -> List.of("example value"))
         *     .tags(t -> t.add("example value"))
         *     .tags("example value", "example value")
+        *     .tagsUpdate(list -> list.stream().sorted().toList())
         *     .add2Tags("example value")
-        *     .tagsUpdate(List::copyOf)
         *     .title("example value")
         *     .title("Hello %s", "World")
         *     .title(() -> "example value")
@@ -381,6 +381,7 @@ class BuilderJavadocExampleTest {
     Compilation compilation = compile(dto, helper);
     String generatedCode = loadGeneratedSource(compilation, builderClassName);
     assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
     // The class-level kitchen-sink chain includes ONLY the resolvable field (title).
     // The helper field (HelperPlain) has no example value and must be omitted.
     // HelperPlain has only a parameterized constructor (no empty constructor) and no builder.

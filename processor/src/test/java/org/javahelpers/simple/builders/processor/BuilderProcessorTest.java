@@ -118,7 +118,7 @@ class BuilderProcessorTest {
         "[DEBUG] │  │  │  │  ├─ Applying: StringFormatHelperGenerator (priority: 80)",
         "[DEBUG] │  │  │  │  ├─ Applying: SupplierMethodGenerator (priority: 60)",
         "[DEBUG] │  │  │  │  ├─ Applying: StringBuilderConsumerGenerator (priority: 45)",
-        "[DEBUG] │  │  │  │  ├─ Applying: UpdateHelperGenerator (priority: 20)",
+        "[DEBUG] │  │  │  │  ├─ Applying: UpdateHelperGenerator (priority: 31)",
         "[DEBUG] │  │  │  │  └─ Generated 5 methods",
         "[DEBUG] │  │  │  └─ Adding field: name (type: java.lang.String)",
         "[DEBUG] │  │  └─ Processed 1 possible setters: added 1 fields, skipped 0",

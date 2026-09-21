@@ -35,7 +35,7 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  *     .discountUpdate(Math::abs)
  *     .exactPrice(BigDecimal.valueOf(3.14))
  *     .genres(Set.of("example value"))
- *     .genresUpdate(Set::copyOf)
+ *     .genresUpdate(TreeSet::new)
  *     .isbn("example value")
  *     .isbnUpdate(String::trim)
  *     .lastUpdated(LocalDateTime.now())
@@ -53,7 +53,7 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  *     .salesCountUpdate(Math::abs)
  *     .subtitle(Optional.of("example value"))
  *     .tags(List.of("example value"))
- *     .tagsUpdate(List::copyOf)
+ *     .tagsUpdate(list -> list.stream().sorted().toList())
  *     .title("example value")
  *     .titleUpdate(String::trim)
  *     .build();
@@ -462,7 +462,7 @@ public class BookDtoBuilder {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.genres(Set.of("example value")).genresUpdate(Set::copyOf);
+   * builder.genres(Set.of("example value")).genresUpdate(TreeSet::new);
    * }</pre>
    * 
    * @param genresUpdater operator applied to the current value; its result becomes the new value
@@ -770,8 +770,7 @@ public class BookDtoBuilder {
    * Updates the current value of <code>publisher</code> in place by applying the given operator, instead of reading it
    * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance). For changing multiple values of a nested
-   * DTO, prefer the corresponding builder-consumer helper.
+   * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from setter {@link BookDto#setPublisher(PersonDto) setPublisher(PersonDto publisher)}
    * 
@@ -934,7 +933,7 @@ public class BookDtoBuilder {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.tags(List.of("example value")).tagsUpdate(List::copyOf);
+   * builder.tags(List.of("example value")).tagsUpdate(list -> list.stream().sorted().toList());
    * }</pre>
    * 
    * @param tagsUpdater operator applied to the current value; its result becomes the new value

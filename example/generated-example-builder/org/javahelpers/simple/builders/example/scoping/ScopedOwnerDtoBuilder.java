@@ -299,7 +299,7 @@ public class ScopedOwnerDtoBuilder implements IBuilderBase<ScopedOwnerDto> {
    * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
    * value must have been set before (directly or via an existing instance). For changing multiple values of a nested
-   * DTO, prefer the corresponding builder-consumer helper.
+   * DTO, prefer the builder-consumer helper {@link #trusted(Consumer)}.
    * <p>
    * Generated from setter {@link ScopedOwnerDto#setTrusted(TrustedHelperDto) setTrusted(TrustedHelperDto trusted)}
    * 

@@ -45,8 +45,10 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  *     .nickNames(() -> List.of("example value"))
  *     .nickNames(t -> t.add("example value"))
  *     .nickNames("example value", "example value")
+ *     .nickNamesUpdate(list -> list.stream().sorted().toList())
  *     .add2NickNames("example value")
- *     .nickNamesUpdate(List::copyOf)
+ *     .nickNames2(new String[]{"example value"})
+ *     .nickNames2(() -> new String[]{"example value"})
  *     .nickNames2("example value")
  *     .build();
  * }</pre>
@@ -265,7 +267,7 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
    * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
    * value must have been set before (directly or via an existing instance). For changing multiple values of a nested
-   * DTO, prefer the corresponding builder-consumer helper.
+   * DTO, prefer the builder-consumer helper {@link #mannschaft(Consumer)}.
    * <p>
    * Generated from setter {@link PersonDto#setMannschaft(MannschaftDto) setMannschaft(MannschaftDto mannschaft)}
    * 
@@ -472,6 +474,12 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
    * <p>
    * Generated from setter {@link PersonDto#setNickNames2(String) setNickNames2(String nickNames2)}
    * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.nickNames2(new String[]{"example value"});
+   * }</pre>
+   * 
    * @param nickNames2 nickNames2
    * @return current instance of builder
    */
@@ -524,6 +532,12 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
    * <p>
    * Generated from setter {@link PersonDto#setNickNames2(String) setNickNames2(String nickNames2)}
    * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.nickNames2(() -> new String[]{"example value"});
+   * }</pre>
+   * 
    * @param nickNames2Supplier supplier for nickNames2
    * @return current instance of builder
    */
@@ -563,7 +577,7 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.nickNames(List.of("example value")).nickNamesUpdate(List::copyOf);
+   * builder.nickNames(List.of("example value")).nickNamesUpdate(list -> list.stream().sorted().toList());
    * }</pre>
    * 
    * @param nickNamesUpdater operator applied to the current value; its result becomes the new value

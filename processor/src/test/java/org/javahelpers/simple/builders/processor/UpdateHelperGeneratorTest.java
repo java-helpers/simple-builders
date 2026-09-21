@@ -263,7 +263,8 @@ class UpdateHelperGeneratorTest {
         generated, "builder.date(LocalDate.now()).dateUpdate(value -> value.plusDays(1));");
     ProcessorAsserts.assertContaining(generated, "builder.flag(true).flagUpdate(value -> !value);");
     ProcessorAsserts.assertContaining(
-        generated, "builder.tags(List.of(\"example value\")).tagsUpdate(List::copyOf);");
+        generated,
+        "builder.tags(List.of(\"example value\")).tagsUpdate(list -> list.stream().sorted().toList());");
     ProcessorAsserts.assertContaining(
         generated, "builder.title(\"example value\").titleUpdate(String::trim);");
 
@@ -281,7 +282,7 @@ class UpdateHelperGeneratorTest {
         generated,
         "public KitchenSinkDtoBuilder teamUpdate(UnaryOperator<Mannschaft> teamUpdater)");
     ProcessorAsserts.assertContaining(
-        generated, "prefer the corresponding builder-consumer helper.");
+        generated, "prefer the builder-consumer helper {@link #team(Consumer)}.");
     ProcessorAsserts.assertNotContaining(generated, ".teamUpdate(");
   }
 

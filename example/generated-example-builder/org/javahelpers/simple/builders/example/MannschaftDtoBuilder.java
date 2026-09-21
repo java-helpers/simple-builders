@@ -33,7 +33,10 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  *     .name(() -> "example value")
  *     .name(sb -> sb.append("text"))
  *     .nameUpdate(String::trim)
+ *     .sponsoren(Set.of(SponsorDtoBuilder.create().build()))
+ *     .sponsoren(() -> Set.of(SponsorDtoBuilder.create().build()))
  *     .sponsoren(t -> t.add(sponsorDtoBuilder -> sponsorDtoBuilder))
+ *     .sponsorenUpdate(TreeSet::new)
  *     .build();
  * }</pre>
  */
@@ -225,6 +228,12 @@ public class MannschaftDtoBuilder implements IBuilderBase<MannschaftDto> {
    * <p>
    * Generated from setter {@link MannschaftDto#setSponsoren(Set) setSponsoren(Set<SponsorDto> sponsoren)}
    * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.sponsoren(Set.of(SponsorDtoBuilder.create().build()));
+   * }</pre>
+   * 
    * @param sponsoren sponsoren
    * @return current instance of builder
    */
@@ -263,6 +272,12 @@ public class MannschaftDtoBuilder implements IBuilderBase<MannschaftDto> {
    * <p>
    * Generated from setter {@link MannschaftDto#setSponsoren(Set) setSponsoren(Set<SponsorDto> sponsoren)}
    * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.sponsoren(() -> Set.of(SponsorDtoBuilder.create().build()));
+   * }</pre>
+   * 
    * @param sponsorenSupplier supplier for sponsoren
    * @return current instance of builder
    */
@@ -275,9 +290,16 @@ public class MannschaftDtoBuilder implements IBuilderBase<MannschaftDto> {
    * Updates the current value of <code>sponsoren</code> in place by applying the given operator, instead of reading it
    * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance).
+   * value must have been set before (directly or via an existing instance). For changing multiple elements of a nested
+   * DTO, prefer the builder-consumer helper {@link #sponsoren(Consumer)}.
    * <p>
    * Generated from setter {@link MannschaftDto#setSponsoren(Set) setSponsoren(Set<SponsorDto> sponsoren)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.sponsoren(Set.of(SponsorDtoBuilder.create().build())).sponsorenUpdate(TreeSet::new);
+   * }</pre>
    * 
    * @param sponsorenUpdater operator applied to the current value; its result becomes the new value
    * @return current instance of builder
