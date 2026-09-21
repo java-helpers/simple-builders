@@ -6,6 +6,7 @@ import static org.javahelpers.simple.builders.core.util.TrackedValue.unsetValue;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 import javax.annotation.processing.Generated;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.javahelpers.simple.builders.core.annotations.BuilderImplementation;
@@ -140,6 +141,26 @@ public class ScopedOwnerDtoBuilder implements IBuilderBase<ScopedOwnerDto> {
   }
 
   /**
+   * Updates the current value of <code>library</code> in place by applying the given operator, instead of reading it
+   * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance).
+   * <p>
+   * Generated from setter {@link ScopedOwnerDto#setLibrary(LibraryHelperDto) setLibrary(LibraryHelperDto library)}
+   * 
+   * @param libraryUpdater operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>library</code> has not been set yet
+   */
+  public ScopedOwnerDtoBuilder libraryUpdate(UnaryOperator<LibraryHelperDto> libraryUpdater) {
+    if (!this.library.isSet()) {
+      throw new IllegalStateException("Cannot update 'library' before it is set");
+    }
+    this.library = changedValue(libraryUpdater.apply(this.library.value()));
+    return this;
+  }
+
+  /**
    * Sets the value for <code>sponsor</code>.
    * <p>
    * Generated from setter {@link ScopedOwnerDto#setSponsor(SponsorDto) setSponsor(SponsorDto sponsor)}
@@ -189,6 +210,26 @@ public class ScopedOwnerDtoBuilder implements IBuilderBase<ScopedOwnerDto> {
    */
   public ScopedOwnerDtoBuilder sponsor(Supplier<SponsorDto> sponsorSupplier) {
     this.sponsor = changedValue(sponsorSupplier.get());
+    return this;
+  }
+
+  /**
+   * Updates the current value of <code>sponsor</code> in place by applying the given operator, instead of reading it
+   * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance).
+   * <p>
+   * Generated from setter {@link ScopedOwnerDto#setSponsor(SponsorDto) setSponsor(SponsorDto sponsor)}
+   * 
+   * @param sponsorUpdater operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>sponsor</code> has not been set yet
+   */
+  public ScopedOwnerDtoBuilder sponsorUpdate(UnaryOperator<SponsorDto> sponsorUpdater) {
+    if (!this.sponsor.isSet()) {
+      throw new IllegalStateException("Cannot update 'sponsor' before it is set");
+    }
+    this.sponsor = changedValue(sponsorUpdater.apply(this.sponsor.value()));
     return this;
   }
 
@@ -250,6 +291,27 @@ public class ScopedOwnerDtoBuilder implements IBuilderBase<ScopedOwnerDto> {
    */
   public ScopedOwnerDtoBuilder trusted(Supplier<TrustedHelperDto> trustedSupplier) {
     this.trusted = changedValue(trustedSupplier.get());
+    return this;
+  }
+
+  /**
+   * Updates the current value of <code>trusted</code> in place by applying the given operator, instead of reading it
+   * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance). For changing multiple values of a nested
+   * DTO, prefer the builder-consumer helper {@link #trusted(Consumer)}.
+   * <p>
+   * Generated from setter {@link ScopedOwnerDto#setTrusted(TrustedHelperDto) setTrusted(TrustedHelperDto trusted)}
+   * 
+   * @param trustedUpdater operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>trusted</code> has not been set yet
+   */
+  public ScopedOwnerDtoBuilder trustedUpdate(UnaryOperator<TrustedHelperDto> trustedUpdater) {
+    if (!this.trusted.isSet()) {
+      throw new IllegalStateException("Cannot update 'trusted' before it is set");
+    }
+    this.trusted = changedValue(trustedUpdater.apply(this.trusted.value()));
     return this;
   }
 

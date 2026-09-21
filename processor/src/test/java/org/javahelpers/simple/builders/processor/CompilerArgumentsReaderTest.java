@@ -235,6 +235,7 @@ class CompilerArgumentsReaderTest {
             .put("simplebuilder.builderConstructorAccess", "private")
             .put("simplebuilder.methodAccess", "package-private")
             .put("simplebuilder.generateVarArgsHelpers", "disabled")
+            .put("simplebuilder.generateUpdateHelpers", "enabled")
             .put("simplebuilder.copyTypeAnnotations", "enabled")
             .put("simplebuilder.builderSuffix", "Factory")
             .put("simplebuilder.setterSuffix", "with")
@@ -253,6 +254,7 @@ class CompilerArgumentsReaderTest {
     assertEquals(AccessModifier.PRIVATE, config.getBuilderConstructorAccess());
     assertEquals(AccessModifier.PACKAGE_PRIVATE, config.getMethodAccess());
     assertEquals(OptionState.DISABLED, config.generateVarArgsHelpers());
+    assertEquals(OptionState.ENABLED, config.generateUpdateHelpers());
     assertEquals(OptionState.ENABLED, config.copyTypeAnnotations());
     assertEquals("Factory", config.getBuilderSuffix());
     assertEquals("with", config.getSetterSuffix());

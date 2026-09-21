@@ -27,6 +27,7 @@ package org.javahelpers.simple.builders.processor.model.type;
 import static java.util.Objects.requireNonNull;
 
 import java.util.Optional;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
@@ -187,6 +188,33 @@ public class TypeName {
    */
   public Optional<TypeName> getInnerType() {
     return Optional.empty();
+  }
+
+  /**
+   * Checks whether this type name refers to the given class.
+   *
+   * <p>Compares the base class name ({@code List} for {@code List<String>}) and the package name
+   * with the given class. Array types never match their element class.
+   *
+   * @param type the class to compare against, must not be null
+   * @return true if this type name refers to the given class
+   */
+  public boolean is(Class<?> type) {
+    requireNonNull(type);
+    return !(this instanceof TypeNameArray)
+        && Strings.CS.equals(className, type.getSimpleName())
+        && Strings.CS.equals(packageName, type.getPackageName());
+  }
+
+  /**
+   * Checks whether this type name refers to any of the given classes.
+   *
+   * @param types the classes to compare against, must not be null
+   * @return true if this type name refers to at least one of the given classes
+   */
+  public boolean isAnyOf(Class<?>... types) {
+    requireNonNull(types);
+    return java.util.Arrays.stream(types).anyMatch(this::is);
   }
 
   /**

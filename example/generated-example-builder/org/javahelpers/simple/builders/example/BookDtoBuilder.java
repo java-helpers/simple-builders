@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.UnaryOperator;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.javahelpers.simple.builders.core.util.BuilderToStringStyle;
 import org.javahelpers.simple.builders.core.util.TrackedValue;
@@ -26,22 +27,35 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  * <pre>{@code
  * BookDto result = BookDtoBuilder.create()
  *     .author("example value")
+ *     .authorUpdate(String::trim)
  *     .available(true)
+ *     .availableUpdate(value -> !value)
  *     .category('x')
  *     .discount(3.14f)
+ *     .discountUpdate(Math::abs)
  *     .exactPrice(BigDecimal.valueOf(3.14))
  *     .genres(Set.of("example value"))
+ *     .genresUpdate(TreeSet::new)
  *     .isbn("example value")
+ *     .isbnUpdate(String::trim)
  *     .lastUpdated(LocalDateTime.now())
+ *     .lastUpdatedUpdate(value -> value.plusDays(1))
  *     .metadata(Map.of("example value", "example value"))
+ *     .metadataUpdate(Map::copyOf)
  *     .pages(42)
+ *     .pagesUpdate(Math::abs)
  *     .price(3.14)
+ *     .priceUpdate(Math::abs)
  *     .publishDate(LocalDate.now())
+ *     .publishDateUpdate(value -> value.plusDays(1))
  *     .publisher(PersonDtoBuilder.create().build())
  *     .salesCount(42L)
+ *     .salesCountUpdate(Math::abs)
  *     .subtitle(Optional.of("example value"))
  *     .tags(List.of("example value"))
+ *     .tagsUpdate(list -> list.stream().sorted().toList())
  *     .title("example value")
+ *     .titleUpdate(String::trim)
  *     .build();
  * }</pre>
  */
@@ -192,6 +206,32 @@ public class BookDtoBuilder {
   }
 
   /**
+   * Updates the current value of <code>author</code> in place by applying the given operator, instead of reading it
+   * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance).
+   * <p>
+   * Generated from setter {@link BookDto#setAuthor(String) setAuthor(String author)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.author("example value").authorUpdate(String::trim);
+   * }</pre>
+   * 
+   * @param authorUpdater operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>author</code> has not been set yet
+   */
+  public BookDtoBuilder authorUpdate(UnaryOperator<String> authorUpdater) {
+    if (!this.author.isSet()) {
+      throw new IllegalStateException("Cannot update 'author' before it is set");
+    }
+    this.author = changedValue(authorUpdater.apply(this.author.value()));
+    return this;
+  }
+
+  /**
    * Sets the value for <code>available</code>.
    * <p>
    * Generated from setter {@link BookDto#setAvailable(boolean) setAvailable(boolean available)}
@@ -207,6 +247,32 @@ public class BookDtoBuilder {
    */
   public BookDtoBuilder available(boolean available) {
     this.available = changedValue(available);
+    return this;
+  }
+
+  /**
+   * Updates the current value of <code>available</code> in place by applying the given operator, instead of reading it
+   * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance).
+   * <p>
+   * Generated from setter {@link BookDto#setAvailable(boolean) setAvailable(boolean available)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.available(true).availableUpdate(value -> !value);
+   * }</pre>
+   * 
+   * @param availableUpdater operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>available</code> has not been set yet
+   */
+  public BookDtoBuilder availableUpdate(UnaryOperator<Boolean> availableUpdater) {
+    if (!this.available.isSet()) {
+      throw new IllegalStateException("Cannot update 'available' before it is set");
+    }
+    this.available = changedValue(availableUpdater.apply(this.available.value()));
     return this;
   }
 
@@ -230,6 +296,26 @@ public class BookDtoBuilder {
   }
 
   /**
+   * Updates the current value of <code>category</code> in place by applying the given operator, instead of reading it
+   * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance).
+   * <p>
+   * Generated from setter {@link BookDto#setCategory(char) setCategory(char category)}
+   * 
+   * @param categoryUpdater operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>category</code> has not been set yet
+   */
+  public BookDtoBuilder categoryUpdate(UnaryOperator<Character> categoryUpdater) {
+    if (!this.category.isSet()) {
+      throw new IllegalStateException("Cannot update 'category' before it is set");
+    }
+    this.category = changedValue(categoryUpdater.apply(this.category.value()));
+    return this;
+  }
+
+  /**
    * Sets the value for <code>discount</code>.
    * <p>
    * Generated from setter {@link BookDto#setDiscount(float) setDiscount(float discount)}
@@ -249,6 +335,32 @@ public class BookDtoBuilder {
   }
 
   /**
+   * Updates the current value of <code>discount</code> in place by applying the given operator, instead of reading it
+   * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance).
+   * <p>
+   * Generated from setter {@link BookDto#setDiscount(float) setDiscount(float discount)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.discount(3.14f).discountUpdate(Math::abs);
+   * }</pre>
+   * 
+   * @param discountUpdater operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>discount</code> has not been set yet
+   */
+  public BookDtoBuilder discountUpdate(UnaryOperator<Float> discountUpdater) {
+    if (!this.discount.isSet()) {
+      throw new IllegalStateException("Cannot update 'discount' before it is set");
+    }
+    this.discount = changedValue(discountUpdater.apply(this.discount.value()));
+    return this;
+  }
+
+  /**
    * Sets the value for <code>edition</code>.
    * <p>
    * Generated from setter {@link BookDto#setEdition(short) setEdition(short edition)}
@@ -258,6 +370,26 @@ public class BookDtoBuilder {
    */
   public BookDtoBuilder edition(short edition) {
     this.edition = changedValue(edition);
+    return this;
+  }
+
+  /**
+   * Updates the current value of <code>edition</code> in place by applying the given operator, instead of reading it
+   * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance).
+   * <p>
+   * Generated from setter {@link BookDto#setEdition(short) setEdition(short edition)}
+   * 
+   * @param editionUpdater operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>edition</code> has not been set yet
+   */
+  public BookDtoBuilder editionUpdate(UnaryOperator<Short> editionUpdater) {
+    if (!this.edition.isSet()) {
+      throw new IllegalStateException("Cannot update 'edition' before it is set");
+    }
+    this.edition = changedValue(editionUpdater.apply(this.edition.value()));
     return this;
   }
 
@@ -281,6 +413,26 @@ public class BookDtoBuilder {
   }
 
   /**
+   * Updates the current value of <code>exactPrice</code> in place by applying the given operator, instead of reading it
+   * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance).
+   * <p>
+   * Generated from setter {@link BookDto#setExactPrice(BigDecimal) setExactPrice(BigDecimal exactPrice)}
+   * 
+   * @param exactPriceUpdater operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>exactPrice</code> has not been set yet
+   */
+  public BookDtoBuilder exactPriceUpdate(UnaryOperator<BigDecimal> exactPriceUpdater) {
+    if (!this.exactPrice.isSet()) {
+      throw new IllegalStateException("Cannot update 'exactPrice' before it is set");
+    }
+    this.exactPrice = changedValue(exactPriceUpdater.apply(this.exactPrice.value()));
+    return this;
+  }
+
+  /**
    * Sets the value for <code>genres</code>.
    * <p>
    * Generated from setter {@link BookDto#setGenres(Set) setGenres(Set<String> genres)}
@@ -296,6 +448,32 @@ public class BookDtoBuilder {
    */
   public BookDtoBuilder genres(Set<String> genres) {
     this.genres = changedValue(genres);
+    return this;
+  }
+
+  /**
+   * Updates the current value of <code>genres</code> in place by applying the given operator, instead of reading it
+   * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance).
+   * <p>
+   * Generated from setter {@link BookDto#setGenres(Set) setGenres(Set<String> genres)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.genres(Set.of("example value")).genresUpdate(TreeSet::new);
+   * }</pre>
+   * 
+   * @param genresUpdater operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>genres</code> has not been set yet
+   */
+  public BookDtoBuilder genresUpdate(UnaryOperator<Set<String>> genresUpdater) {
+    if (!this.genres.isSet()) {
+      throw new IllegalStateException("Cannot update 'genres' before it is set");
+    }
+    this.genres = changedValue(genresUpdater.apply(this.genres.value()));
     return this;
   }
 
@@ -319,6 +497,32 @@ public class BookDtoBuilder {
   }
 
   /**
+   * Updates the current value of <code>isbn</code> in place by applying the given operator, instead of reading it out,
+   * changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance).
+   * <p>
+   * Generated from setter {@link BookDto#setIsbn(String) setIsbn(String isbn)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.isbn("example value").isbnUpdate(String::trim);
+   * }</pre>
+   * 
+   * @param isbnUpdater operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>isbn</code> has not been set yet
+   */
+  public BookDtoBuilder isbnUpdate(UnaryOperator<String> isbnUpdater) {
+    if (!this.isbn.isSet()) {
+      throw new IllegalStateException("Cannot update 'isbn' before it is set");
+    }
+    this.isbn = changedValue(isbnUpdater.apply(this.isbn.value()));
+    return this;
+  }
+
+  /**
    * Sets the value for <code>lastUpdated</code>.
    * <p>
    * Generated from setter {@link BookDto#setLastUpdated(LocalDateTime) setLastUpdated(LocalDateTime lastUpdated)}
@@ -334,6 +538,32 @@ public class BookDtoBuilder {
    */
   public BookDtoBuilder lastUpdated(LocalDateTime lastUpdated) {
     this.lastUpdated = changedValue(lastUpdated);
+    return this;
+  }
+
+  /**
+   * Updates the current value of <code>lastUpdated</code> in place by applying the given operator, instead of reading
+   * it out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance).
+   * <p>
+   * Generated from setter {@link BookDto#setLastUpdated(LocalDateTime) setLastUpdated(LocalDateTime lastUpdated)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.lastUpdated(LocalDateTime.now()).lastUpdatedUpdate(value -> value.plusDays(1));
+   * }</pre>
+   * 
+   * @param lastUpdatedUpdater operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>lastUpdated</code> has not been set yet
+   */
+  public BookDtoBuilder lastUpdatedUpdate(UnaryOperator<LocalDateTime> lastUpdatedUpdater) {
+    if (!this.lastUpdated.isSet()) {
+      throw new IllegalStateException("Cannot update 'lastUpdated' before it is set");
+    }
+    this.lastUpdated = changedValue(lastUpdatedUpdater.apply(this.lastUpdated.value()));
     return this;
   }
 
@@ -357,6 +587,32 @@ public class BookDtoBuilder {
   }
 
   /**
+   * Updates the current value of <code>metadata</code> in place by applying the given operator, instead of reading it
+   * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance).
+   * <p>
+   * Generated from setter {@link BookDto#setMetadata(Map) setMetadata(Map<String, String> metadata)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.metadata(Map.of("example value", "example value")).metadataUpdate(Map::copyOf);
+   * }</pre>
+   * 
+   * @param metadataUpdater operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>metadata</code> has not been set yet
+   */
+  public BookDtoBuilder metadataUpdate(UnaryOperator<Map<String, String>> metadataUpdater) {
+    if (!this.metadata.isSet()) {
+      throw new IllegalStateException("Cannot update 'metadata' before it is set");
+    }
+    this.metadata = changedValue(metadataUpdater.apply(this.metadata.value()));
+    return this;
+  }
+
+  /**
    * Sets the value for <code>pages</code>.
    * <p>
    * Generated from setter {@link BookDto#setPages(int) setPages(int pages)}
@@ -372,6 +628,32 @@ public class BookDtoBuilder {
    */
   public BookDtoBuilder pages(int pages) {
     this.pages = changedValue(pages);
+    return this;
+  }
+
+  /**
+   * Updates the current value of <code>pages</code> in place by applying the given operator, instead of reading it out,
+   * changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance).
+   * <p>
+   * Generated from setter {@link BookDto#setPages(int) setPages(int pages)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.pages(42).pagesUpdate(Math::abs);
+   * }</pre>
+   * 
+   * @param pagesUpdater operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>pages</code> has not been set yet
+   */
+  public BookDtoBuilder pagesUpdate(UnaryOperator<Integer> pagesUpdater) {
+    if (!this.pages.isSet()) {
+      throw new IllegalStateException("Cannot update 'pages' before it is set");
+    }
+    this.pages = changedValue(pagesUpdater.apply(this.pages.value()));
     return this;
   }
 
@@ -395,6 +677,32 @@ public class BookDtoBuilder {
   }
 
   /**
+   * Updates the current value of <code>price</code> in place by applying the given operator, instead of reading it out,
+   * changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance).
+   * <p>
+   * Generated from setter {@link BookDto#setPrice(double) setPrice(double price)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.price(3.14).priceUpdate(Math::abs);
+   * }</pre>
+   * 
+   * @param priceUpdater operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>price</code> has not been set yet
+   */
+  public BookDtoBuilder priceUpdate(UnaryOperator<Double> priceUpdater) {
+    if (!this.price.isSet()) {
+      throw new IllegalStateException("Cannot update 'price' before it is set");
+    }
+    this.price = changedValue(priceUpdater.apply(this.price.value()));
+    return this;
+  }
+
+  /**
    * Sets the value for <code>publishDate</code>.
    * <p>
    * Generated from setter {@link BookDto#setPublishDate(LocalDate) setPublishDate(LocalDate publishDate)}
@@ -410,6 +718,32 @@ public class BookDtoBuilder {
    */
   public BookDtoBuilder publishDate(LocalDate publishDate) {
     this.publishDate = changedValue(publishDate);
+    return this;
+  }
+
+  /**
+   * Updates the current value of <code>publishDate</code> in place by applying the given operator, instead of reading
+   * it out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance).
+   * <p>
+   * Generated from setter {@link BookDto#setPublishDate(LocalDate) setPublishDate(LocalDate publishDate)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.publishDate(LocalDate.now()).publishDateUpdate(value -> value.plusDays(1));
+   * }</pre>
+   * 
+   * @param publishDateUpdater operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>publishDate</code> has not been set yet
+   */
+  public BookDtoBuilder publishDateUpdate(UnaryOperator<LocalDate> publishDateUpdater) {
+    if (!this.publishDate.isSet()) {
+      throw new IllegalStateException("Cannot update 'publishDate' before it is set");
+    }
+    this.publishDate = changedValue(publishDateUpdater.apply(this.publishDate.value()));
     return this;
   }
 
@@ -433,6 +767,26 @@ public class BookDtoBuilder {
   }
 
   /**
+   * Updates the current value of <code>publisher</code> in place by applying the given operator, instead of reading it
+   * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance).
+   * <p>
+   * Generated from setter {@link BookDto#setPublisher(PersonDto) setPublisher(PersonDto publisher)}
+   * 
+   * @param publisherUpdater operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>publisher</code> has not been set yet
+   */
+  public BookDtoBuilder publisherUpdate(UnaryOperator<PersonDto> publisherUpdater) {
+    if (!this.publisher.isSet()) {
+      throw new IllegalStateException("Cannot update 'publisher' before it is set");
+    }
+    this.publisher = changedValue(publisherUpdater.apply(this.publisher.value()));
+    return this;
+  }
+
+  /**
    * Sets the value for <code>rating</code>.
    * <p>
    * Generated from setter {@link BookDto#setRating(byte) setRating(byte rating)}
@@ -442,6 +796,26 @@ public class BookDtoBuilder {
    */
   public BookDtoBuilder rating(byte rating) {
     this.rating = changedValue(rating);
+    return this;
+  }
+
+  /**
+   * Updates the current value of <code>rating</code> in place by applying the given operator, instead of reading it
+   * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance).
+   * <p>
+   * Generated from setter {@link BookDto#setRating(byte) setRating(byte rating)}
+   * 
+   * @param ratingUpdater operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>rating</code> has not been set yet
+   */
+  public BookDtoBuilder ratingUpdate(UnaryOperator<Byte> ratingUpdater) {
+    if (!this.rating.isSet()) {
+      throw new IllegalStateException("Cannot update 'rating' before it is set");
+    }
+    this.rating = changedValue(ratingUpdater.apply(this.rating.value()));
     return this;
   }
 
@@ -465,6 +839,32 @@ public class BookDtoBuilder {
   }
 
   /**
+   * Updates the current value of <code>salesCount</code> in place by applying the given operator, instead of reading it
+   * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance).
+   * <p>
+   * Generated from setter {@link BookDto#setSalesCount(long) setSalesCount(long salesCount)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.salesCount(42L).salesCountUpdate(Math::abs);
+   * }</pre>
+   * 
+   * @param salesCountUpdater operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>salesCount</code> has not been set yet
+   */
+  public BookDtoBuilder salesCountUpdate(UnaryOperator<Long> salesCountUpdater) {
+    if (!this.salesCount.isSet()) {
+      throw new IllegalStateException("Cannot update 'salesCount' before it is set");
+    }
+    this.salesCount = changedValue(salesCountUpdater.apply(this.salesCount.value()));
+    return this;
+  }
+
+  /**
    * Sets the value for <code>subtitle</code>.
    * <p>
    * Generated from setter {@link BookDto#setSubtitle(Optional) setSubtitle(Optional<String> subtitle)}
@@ -480,6 +880,26 @@ public class BookDtoBuilder {
    */
   public BookDtoBuilder subtitle(Optional<String> subtitle) {
     this.subtitle = changedValue(subtitle);
+    return this;
+  }
+
+  /**
+   * Updates the current value of <code>subtitle</code> in place by applying the given operator, instead of reading it
+   * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance).
+   * <p>
+   * Generated from setter {@link BookDto#setSubtitle(Optional) setSubtitle(Optional<String> subtitle)}
+   * 
+   * @param subtitleUpdater operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>subtitle</code> has not been set yet
+   */
+  public BookDtoBuilder subtitleUpdate(UnaryOperator<Optional<String>> subtitleUpdater) {
+    if (!this.subtitle.isSet()) {
+      throw new IllegalStateException("Cannot update 'subtitle' before it is set");
+    }
+    this.subtitle = changedValue(subtitleUpdater.apply(this.subtitle.value()));
     return this;
   }
 
@@ -503,6 +923,32 @@ public class BookDtoBuilder {
   }
 
   /**
+   * Updates the current value of <code>tags</code> in place by applying the given operator, instead of reading it out,
+   * changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance).
+   * <p>
+   * Generated from setter {@link BookDto#setTags(List) setTags(List<String> tags)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.tags(List.of("example value")).tagsUpdate(list -> list.stream().sorted().toList());
+   * }</pre>
+   * 
+   * @param tagsUpdater operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>tags</code> has not been set yet
+   */
+  public BookDtoBuilder tagsUpdate(UnaryOperator<List<String>> tagsUpdater) {
+    if (!this.tags.isSet()) {
+      throw new IllegalStateException("Cannot update 'tags' before it is set");
+    }
+    this.tags = changedValue(tagsUpdater.apply(this.tags.value()));
+    return this;
+  }
+
+  /**
    * Sets the value for <code>title</code>.
    * <p>
    * Generated from setter {@link BookDto#setTitle(String) setTitle(String title)}
@@ -518,6 +964,32 @@ public class BookDtoBuilder {
    */
   public BookDtoBuilder title(String title) {
     this.title = changedValue(title);
+    return this;
+  }
+
+  /**
+   * Updates the current value of <code>title</code> in place by applying the given operator, instead of reading it out,
+   * changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance).
+   * <p>
+   * Generated from setter {@link BookDto#setTitle(String) setTitle(String title)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.title("example value").titleUpdate(String::trim);
+   * }</pre>
+   * 
+   * @param titleUpdater operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>title</code> has not been set yet
+   */
+  public BookDtoBuilder titleUpdate(UnaryOperator<String> titleUpdater) {
+    if (!this.title.isSet()) {
+      throw new IllegalStateException("Cannot update 'title' before it is set");
+    }
+    this.title = changedValue(titleUpdater.apply(this.title.value()));
     return this;
   }
 

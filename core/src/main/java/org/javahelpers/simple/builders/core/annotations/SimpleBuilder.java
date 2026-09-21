@@ -57,8 +57,8 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
  *   <li><b>Conditional Logic:</b> generateConditionalHelper (default: true)
  *   <li><b>Access Control:</b> builderAccess, builderConstructorAccess, methodAccess (default:
  *       PUBLIC)
- *   <li><b>Collection Helpers:</b> generateVarArgsHelpers, usingArrayListBuilder,
- *       usingArrayListBuilderWithElementBuilders, usingHashSetBuilder,
+ *   <li><b>Collection Helpers:</b> generateVarArgsHelpers, generateUpdateHelpers,
+ *       usingArrayListBuilder, usingArrayListBuilderWithElementBuilders, usingHashSetBuilder,
  *       usingHashSetBuilderWithElementBuilders, usingHashMapBuilder (all default: true)
  *   <li><b>Builder Scoping:</b> builderGenerationPackages, builderUsagePackages, builderUsageSuffix
  *       (default: empty)
@@ -332,6 +332,26 @@ public @interface SimpleBuilder {
      * Compiler option: -Asimplebuilder.generateStringFormatHelpers
      */
     OptionState generateStringFormatHelpers() default OptionState.UNSET;
+
+    /**
+     * Generate update helper methods for all fields. The generated method has the parameter type
+     * {@code UnaryOperator<T>} and transforms the current field value using the supplied operator.
+     *
+     * <p>Example:
+     *
+     * <pre>{@code
+     * PersonDto person = PersonDtoBuilder.create()
+     *     .name("  bob ")
+     *     .nameUpdate(String::trim)
+     *     .quantity(10)
+     *     .quantityUpdate(Math::abs)
+     *     .build();
+     * }</pre>
+     *
+     * <p>Default: ENABLED <br>
+     * Compiler option: -Asimplebuilder.generateUpdateHelpers
+     */
+    OptionState generateUpdateHelpers() default OptionState.UNSET;
 
     /**
      * Generate add2FieldName helper methods for List and Set fields. <br>

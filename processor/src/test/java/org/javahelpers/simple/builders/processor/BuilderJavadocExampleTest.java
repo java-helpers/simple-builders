@@ -101,15 +101,18 @@ class BuilderJavadocExampleTest {
         * BookDto result = BookDtoBuilder.create()
         *     .pages(42)
         *     .pages(() -> 42)
+        *     .pagesUpdate(Math::abs)
         *     .tags(List.of("example value"))
         *     .tags(() -> List.of("example value"))
         *     .tags(t -> t.add("example value"))
         *     .tags("example value", "example value")
+        *     .tagsUpdate(list -> list.stream().sorted().toList())
         *     .add2Tags("example value")
         *     .title("example value")
         *     .title("Hello %s", "World")
         *     .title(() -> "example value")
         *     .title(sb -> sb.append("text"))
+        *     .titleUpdate(String::trim)
         *     .build();
         * }</pre>
         """);
@@ -382,6 +385,8 @@ class BuilderJavadocExampleTest {
     // The class-level kitchen-sink chain includes ONLY the resolvable field (title).
     // The helper field (HelperPlain) has no example value and must be omitted.
     // HelperPlain has only a parameterized constructor (no empty constructor) and no builder.
+    // Its update helper gets no chain fragment either, since no meaningful update expression
+    // exists.
     ProcessorAsserts.assertContaining(
         generatedCode,
         """
@@ -391,12 +396,13 @@ class BuilderJavadocExampleTest {
         *     .title("Hello %s", "World")
         *     .title(() -> "example value")
         *     .title(sb -> sb.append("text"))
+        *     .titleUpdate(String::trim)
         *     .build();
         * }</pre>
         """);
 
-    // No `.helper(...)` call in the class example chain
-    ProcessorAsserts.assertNotContaining(generatedCode, ".helper(");
+    // No `.helper(...)` or `.helperUpdate(...)` call in the class example chain
+    ProcessorAsserts.assertNotContaining(generatedCode, ".helper(", ".helperUpdate(");
   }
 
   @Test

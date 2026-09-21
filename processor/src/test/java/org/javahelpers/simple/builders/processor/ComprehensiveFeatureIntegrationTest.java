@@ -52,6 +52,7 @@ import org.junit.jupiter.api.Test;
  *   <li>Unboxed optional helpers
  *   <li>ArrayList/HashSet/HashMap builders
  *   <li>Nested DTO builders
+ *   <li>Update helpers ({@code UnaryOperator<T>})
  *   <li>Conditional helpers
  *   <li>With interface
  * </ul>
@@ -162,6 +163,7 @@ class ComprehensiveFeatureIntegrationTest {
         import java.util.function.BooleanSupplier;
         import java.util.function.Consumer;
         import java.util.function.Supplier;
+        import java.util.function.UnaryOperator;
         import javax.annotation.processing.Generated;
         import org.apache.commons.lang3.builder.ToStringBuilder;
         import org.javahelpers.simple.builders.core.annotations.BuilderImplementation;
@@ -188,8 +190,10 @@ class ComprehensiveFeatureIntegrationTest {
          *     .name("Hello %s", "World")
          *     .name(() -> "example value")
          *     .name(sb -> sb.append("text"))
+         *     .nameUpdate(String::trim)
          *     .age(42)
          *     .age(() -> 42)
+         *     .ageUpdate(Math::abs)
          *     .email(Optional.of("example value"))
          *     .email("Hello %s", "World")
          *     .email("example value")
@@ -199,23 +203,30 @@ class ComprehensiveFeatureIntegrationTest {
          *     .nicknames(() -> List.of("example value"))
          *     .nicknames(t -> t.add("example value"))
          *     .nicknames("example value", "example value")
+         *     .nicknamesUpdate(list -> list.stream().sorted().toList())
          *     .add2Nicknames("example value")
          *     .tags(Set.of("example value"))
          *     .tags(() -> Set.of("example value"))
          *     .tags(t -> t.add("example value"))
          *     .tags("example value", "example value")
+         *     .tagsUpdate(TreeSet::new)
          *     .add2Tags("example value")
          *     .metadata(Map.of("example value", "example value"))
          *     .metadata(() -> Map.of("example value", "example value"))
          *     .metadata(Map.entry("key", "example value"))
+         *     .metadataUpdate(Map::copyOf)
          *     .address(AddressDtoBuilder.create().build())
          *     .address(() -> AddressDtoBuilder.create().build())
          *     .address(addressDtoBuilder -> addressDtoBuilder)
+         *     .previousAddresses(List.of(AddressDtoBuilder.create().build()))
+         *     .previousAddresses(() -> List.of(AddressDtoBuilder.create().build()))
          *     .previousAddresses(t -> t.add(addressDtoBuilder -> addressDtoBuilder))
+         *     .previousAddressesUpdate(list -> list.stream().sorted().toList())
          *     .phoneNumbers(List.of("example value"))
          *     .phoneNumbers(() -> List.of("example value"))
          *     .phoneNumbers(t -> t.add("example value"))
          *     .phoneNumbers("example value", "example value")
+         *     .phoneNumbersUpdate(list -> new LinkedList<>(list.stream().sorted().toList()))
          *     .add2PhoneNumbers("example value")
          *     .build();
          * }</pre>
@@ -480,6 +491,30 @@ class ComprehensiveFeatureIntegrationTest {
           }
 
           /**
+           * Updates the current value of <code>address</code> in place by applying the given operator, instead of reading it
+           * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+           * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+           * value must have been set before (directly or via an existing instance). For changing multiple values of a nested
+           * DTO, prefer the builder-consumer helper {@link #address(Consumer)}.
+           * <p>
+           * Generated from parameter in constructor
+           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
+           * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
+           * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
+           *
+           * @param addressUpdater operator applied to the current value; its result becomes the new value
+           * @return current instance of builder
+           * @throws IllegalStateException if <code>address</code> has not been set yet
+           */
+          public PersonDtoBuilder addressUpdate(UnaryOperator<AddressDto> addressUpdater) {
+            if (!this.address.isSet()) {
+              throw new IllegalStateException("Cannot update 'address' before it is set");
+            }
+            this.address = changedValue(addressUpdater.apply(this.address.value()));
+            return this;
+          }
+
+          /**
            * Sets the value for <code>age</code>.
            * <p>
            * Generated from parameter in constructor
@@ -520,6 +555,35 @@ class ComprehensiveFeatureIntegrationTest {
            */
           public PersonDtoBuilder age(Supplier<Integer> ageSupplier) {
             this.age = changedValue(ageSupplier.get());
+            return this;
+          }
+
+          /**
+           * Updates the current value of <code>age</code> in place by applying the given operator, instead of reading it out,
+           * changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+           * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+           * value must have been set before (directly or via an existing instance).
+           * <p>
+           * Generated from parameter in constructor
+           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
+           * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
+           * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
+           *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.age(42).ageUpdate(Math::abs);
+           * }</pre>
+           *
+           * @param ageUpdater operator applied to the current value; its result becomes the new value
+           * @return current instance of builder
+           * @throws IllegalStateException if <code>age</code> has not been set yet
+           */
+          public PersonDtoBuilder ageUpdate(UnaryOperator<Integer> ageUpdater) {
+            if (!this.age.isSet()) {
+              throw new IllegalStateException("Cannot update 'age' before it is set");
+            }
+            this.age = changedValue(ageUpdater.apply(this.age.value()));
             return this;
           }
 
@@ -638,6 +702,29 @@ class ComprehensiveFeatureIntegrationTest {
           }
 
           /**
+           * Updates the current value of <code>email</code> in place by applying the given operator, instead of reading it out,
+           * changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+           * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+           * value must have been set before (directly or via an existing instance).
+           * <p>
+           * Generated from parameter in constructor
+           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
+           * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
+           * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
+           *
+           * @param emailUpdater operator applied to the current value; its result becomes the new value
+           * @return current instance of builder
+           * @throws IllegalStateException if <code>email</code> has not been set yet
+           */
+          public PersonDtoBuilder emailUpdate(UnaryOperator<Optional<String>> emailUpdater) {
+            if (!this.email.isSet()) {
+              throw new IllegalStateException("Cannot update 'email' before it is set");
+            }
+            this.email = changedValue(emailUpdater.apply(this.email.value()));
+            return this;
+          }
+
+          /**
            * Sets the value for <code>metadata</code>.
            * <p>
            * Generated from parameter in constructor
@@ -720,6 +807,35 @@ class ComprehensiveFeatureIntegrationTest {
            */
           public PersonDtoBuilder metadata(Supplier<Map<String, String>> metadataSupplier) {
             this.metadata = changedValue(metadataSupplier.get());
+            return this;
+          }
+
+          /**
+           * Updates the current value of <code>metadata</code> in place by applying the given operator, instead of reading it
+           * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+           * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+           * value must have been set before (directly or via an existing instance).
+           * <p>
+           * Generated from parameter in constructor
+           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
+           * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
+           * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
+           *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.metadata(Map.of("example value", "example value")).metadataUpdate(Map::copyOf);
+           * }</pre>
+           *
+           * @param metadataUpdater operator applied to the current value; its result becomes the new value
+           * @return current instance of builder
+           * @throws IllegalStateException if <code>metadata</code> has not been set yet
+           */
+          public PersonDtoBuilder metadataUpdate(UnaryOperator<Map<String, String>> metadataUpdater) {
+            if (!this.metadata.isSet()) {
+              throw new IllegalStateException("Cannot update 'metadata' before it is set");
+            }
+            this.metadata = changedValue(metadataUpdater.apply(this.metadata.value()));
             return this;
           }
 
@@ -816,6 +932,35 @@ class ComprehensiveFeatureIntegrationTest {
           }
 
           /**
+           * Updates the current value of <code>name</code> in place by applying the given operator, instead of reading it out,
+           * changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+           * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+           * value must have been set before (directly or via an existing instance).
+           * <p>
+           * Generated from parameter in constructor
+           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
+           * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
+           * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
+           *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.name("example value").nameUpdate(String::trim);
+           * }</pre>
+           *
+           * @param nameUpdater operator applied to the current value; its result becomes the new value
+           * @return current instance of builder
+           * @throws IllegalStateException if <code>name</code> has not been set yet
+           */
+          public PersonDtoBuilder nameUpdate(UnaryOperator<String> nameUpdater) {
+            if (!this.name.isSet()) {
+              throw new IllegalStateException("Cannot update 'name' before it is set");
+            }
+            this.name = changedValue(nameUpdater.apply(this.name.value()));
+            return this;
+          }
+
+          /**
            * Sets the value for <code>nicknames</code>.
            * <p>
            * Generated from parameter in constructor
@@ -904,6 +1049,35 @@ class ComprehensiveFeatureIntegrationTest {
            */
           public PersonDtoBuilder nicknames(Supplier<List<String>> nicknamesSupplier) {
             this.nicknames = changedValue(nicknamesSupplier.get());
+            return this;
+          }
+
+          /**
+           * Updates the current value of <code>nicknames</code> in place by applying the given operator, instead of reading it
+           * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+           * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+           * value must have been set before (directly or via an existing instance).
+           * <p>
+           * Generated from parameter in constructor
+           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
+           * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
+           * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
+           *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.nicknames(List.of("example value")).nicknamesUpdate(list -> list.stream().sorted().toList());
+           * }</pre>
+           *
+           * @param nicknamesUpdater operator applied to the current value; its result becomes the new value
+           * @return current instance of builder
+           * @throws IllegalStateException if <code>nicknames</code> has not been set yet
+           */
+          public PersonDtoBuilder nicknamesUpdate(UnaryOperator<List<String>> nicknamesUpdater) {
+            if (!this.nicknames.isSet()) {
+              throw new IllegalStateException("Cannot update 'nicknames' before it is set");
+            }
+            this.nicknames = changedValue(nicknamesUpdater.apply(this.nicknames.value()));
             return this;
           }
 
@@ -1000,6 +1174,36 @@ class ComprehensiveFeatureIntegrationTest {
           }
 
           /**
+           * Updates the current value of <code>phoneNumbers</code> in place by applying the given operator, instead of reading
+           * it out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+           * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+           * value must have been set before (directly or via an existing instance).
+           * <p>
+           * Generated from parameter in constructor
+           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
+           * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
+           * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
+           *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.phoneNumbers(List.of("example value"))
+           *        .phoneNumbersUpdate(list -> new LinkedList<>(list.stream().sorted().toList()));
+           * }</pre>
+           *
+           * @param phoneNumbersUpdater operator applied to the current value; its result becomes the new value
+           * @return current instance of builder
+           * @throws IllegalStateException if <code>phoneNumbers</code> has not been set yet
+           */
+          public PersonDtoBuilder phoneNumbersUpdate(UnaryOperator<LinkedList<String>> phoneNumbersUpdater) {
+            if (!this.phoneNumbers.isSet()) {
+              throw new IllegalStateException("Cannot update 'phoneNumbers' before it is set");
+            }
+            this.phoneNumbers = changedValue(phoneNumbersUpdater.apply(this.phoneNumbers.value()));
+            return this;
+          }
+
+          /**
            * Sets the value for <code>previousAddresses</code>.
            * <p>
            * Generated from parameter in constructor
@@ -1022,6 +1226,12 @@ class ComprehensiveFeatureIntegrationTest {
            * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
            * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
            * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
+           *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.previousAddresses(List.of(AddressDtoBuilder.create().build()));
+           * }</pre>
            *
            * @param previousAddresses previousAddresses
            * @return current instance of builder
@@ -1067,11 +1277,48 @@ class ComprehensiveFeatureIntegrationTest {
            * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
            * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
            *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.previousAddresses(() -> List.of(AddressDtoBuilder.create().build()));
+           * }</pre>
+           *
            * @param previousAddressesSupplier supplier for previousAddresses
            * @return current instance of builder
            */
           public PersonDtoBuilder previousAddresses(Supplier<List<AddressDto>> previousAddressesSupplier) {
             this.previousAddresses = changedValue(previousAddressesSupplier.get());
+            return this;
+          }
+
+          /**
+           * Updates the current value of <code>previousAddresses</code> in place by applying the given operator, instead of
+           * reading it out, changing it and setting it again. Useful for adjustments relative to the current value, e.g.
+           * trimming, upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify
+           * flow. The value must have been set before (directly or via an existing instance). For changing multiple elements of
+           * a nested DTO, prefer the builder-consumer helper {@link #previousAddresses(Consumer)}.
+           * <p>
+           * Generated from parameter in constructor
+           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
+           * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
+           * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
+           *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.previousAddresses(List.of(AddressDtoBuilder.create().build()))
+           *        .previousAddressesUpdate(list -> list.stream().sorted().toList());
+           * }</pre>
+           *
+           * @param previousAddressesUpdater operator applied to the current value; its result becomes the new value
+           * @return current instance of builder
+           * @throws IllegalStateException if <code>previousAddresses</code> has not been set yet
+           */
+          public PersonDtoBuilder previousAddressesUpdate(UnaryOperator<List<AddressDto>> previousAddressesUpdater) {
+            if (!this.previousAddresses.isSet()) {
+              throw new IllegalStateException("Cannot update 'previousAddresses' before it is set");
+            }
+            this.previousAddresses = changedValue(previousAddressesUpdater.apply(this.previousAddresses.value()));
             return this;
           }
 
@@ -1164,6 +1411,35 @@ class ComprehensiveFeatureIntegrationTest {
            */
           public PersonDtoBuilder tags(Supplier<Set<String>> tagsSupplier) {
             this.tags = changedValue(tagsSupplier.get());
+            return this;
+          }
+
+          /**
+           * Updates the current value of <code>tags</code> in place by applying the given operator, instead of reading it out,
+           * changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+           * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+           * value must have been set before (directly or via an existing instance).
+           * <p>
+           * Generated from parameter in constructor
+           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
+           * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
+           * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
+           *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.tags(Set.of("example value")).tagsUpdate(TreeSet::new);
+           * }</pre>
+           *
+           * @param tagsUpdater operator applied to the current value; its result becomes the new value
+           * @return current instance of builder
+           * @throws IllegalStateException if <code>tags</code> has not been set yet
+           */
+          public PersonDtoBuilder tagsUpdate(UnaryOperator<Set<String>> tagsUpdater) {
+            if (!this.tags.isSet()) {
+              throw new IllegalStateException("Cannot update 'tags' before it is set");
+            }
+            this.tags = changedValue(tagsUpdater.apply(this.tags.value()));
             return this;
           }
 

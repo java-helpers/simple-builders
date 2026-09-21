@@ -80,6 +80,9 @@ public enum CompilerArgumentsEnum {
   GENERATE_STRING_FORMAT_HELPERS(
       "generateStringFormatHelpers", optionState(Builder::generateStringFormatHelpers)),
 
+  /** Option for update helper generation. */
+  GENERATE_UPDATE_HELPERS("generateUpdateHelpers", optionState(Builder::generateUpdateHelpers)),
+
   /** Option for add to collection helper generation. */
   GENERATE_ADD_TO_COLLECTION_HELPERS(
       "generateAddToCollectionHelpers", optionState(Builder::generateAddToCollectionHelpers)),
