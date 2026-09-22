@@ -150,9 +150,15 @@ public class BuilderProcessor extends AbstractProcessor {
             .toList();
     tracker.endPhase(PHASE_ELEMENT_COLLECTION);
 
-    context.debug(
-        "simple-builders: Processing round started. Found %d annotated elements and %d @SimpleBuilderFor holders.",
-        elementsToProcess.size(), externalTypeHolders.size());
+    context.debug("simple-builders: Processing round started.");
+    context.debug("simple-builders: Found %d annotated elements.", elementsToProcess.size());
+    if (externalTypeHolders.isEmpty()) {
+      context.debug("simple-builders: No @SimpleBuilderFor types detected.");
+    } else {
+      context.debug(
+          "simple-builders: Found %d type(s) for generation with @SimpleBuilderFor.",
+          externalTypeHolders.size());
+    }
 
     // Resolve configuration and apply generation scopes before processing any builder. This lets
     // the scope resolver know every builder that will be generated in this round.
@@ -262,8 +268,7 @@ public class BuilderProcessor extends AbstractProcessor {
           continue;
         }
         plannedBuilderNames.add(builderQualifiedName(annotatedElement, null, config));
-        elementsToGenerate.add(
-            new ElementToGenerate(annotatedElement, config, null, annotatedElement));
+        elementsToGenerate.add(new ElementToGenerate(annotatedElement, config, annotatedElement));
       } catch (BuilderException ex) {
         // By default builder generation failures are warnings so other builders are still
         // generated. In opt-in strict mode they are promoted to errors that fail the build.
@@ -354,7 +359,7 @@ public class BuilderProcessor extends AbstractProcessor {
             builderName);
         continue;
       }
-      result.add(new ElementToGenerate(target, config, builderPackage, holder));
+      result.add(new ElementToGenerate(target, config, holder));
     }
     return result;
   }
@@ -411,9 +416,9 @@ public class BuilderProcessor extends AbstractProcessor {
         continue;
       }
       String builderPackage =
-          elementToGenerate.builderPackage() != null
-              ? elementToGenerate.builderPackage()
-              : context.getPackageName(targetType);
+          elementToGenerate.reportingElement() == targetType
+              ? context.getPackageName(targetType)
+              : context.getPackageName(elementToGenerate.reportingElement());
       generatedBuilders.put(
           targetType.getQualifiedName().toString(),
           new TypeName(
@@ -432,7 +437,7 @@ public class BuilderProcessor extends AbstractProcessor {
       context.debugStartOperation("Processing element: " + annotatedElement.getSimpleName());
       tracker.startClass(annotatedElement.getSimpleName().toString());
       try {
-        process(annotatedElement, elementToGenerate.config(), elementToGenerate.builderPackage());
+        process(annotatedElement, elementToGenerate.config(), builderPackageOf(elementToGenerate));
         successfulGenerations++;
       } catch (BuilderException ex) {
         // By default builder generation failures are warnings so other builders are still
@@ -517,16 +522,21 @@ public class BuilderProcessor extends AbstractProcessor {
    *
    * @param element the type element to generate the builder for
    * @param config the resolved builder configuration
-   * @param builderPackage the package the builder is generated into, or {@code null} to use the
-   *     target type's own package
    * @param reportingElement the element diagnostics are reported on - the {@code @SimpleBuilderFor}
    *     holder for external types, otherwise the type itself
    */
   private record ElementToGenerate(
-      Element element,
-      BuilderConfiguration config,
-      String builderPackage,
-      Element reportingElement) {}
+      Element element, BuilderConfiguration config, Element reportingElement) {}
+
+  /**
+   * The package the builder is generated into: the holder's package for {@code @SimpleBuilderFor}
+   * targets, {@code null} (meaning the target's own package) for directly annotated types.
+   */
+  private String builderPackageOf(ElementToGenerate elementToGenerate) {
+    return elementToGenerate.reportingElement() == elementToGenerate.element()
+        ? null
+        : context.getPackageName(elementToGenerate.reportingElement());
+  }
 
   /**
    * Checks whether the provided SourceVersion is at least Java 17 in a backwards compatible way.

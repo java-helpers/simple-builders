@@ -186,15 +186,9 @@ public class ExternalBuilders {
 }
 ```
 
-Behavior notes:
+The generated builders are placed in the package of the holder class. `options` reuses `@SimpleBuilder.Options` and is optional - compiler defaults apply when omitted; the external type's own annotations are not consulted.
 
-- **Builder location**: the generated builders are placed in the package of the holder class, not in the external type's package.
-- **Configuration**: only the `options` attribute of `@SimpleBuilderFor` (optional, defaults to compiler defaults) and project-wide compiler options apply. The external type's own annotations are not consulted, because it is treated as foreign code.
-- **Explicit declaration wins over scopes**: a type listed in `@SimpleBuilderFor` always gets a builder, even when its builder package is outside `builderGenerationPackages` (a warning is issued for that contradictory configuration). Builders generated this way are trusted like any other builder from the same compilation - referencing builders consume them regardless of `builderUsagePackages`.
-- **Accessibility**: the target type must be constructible through accessible Java APIs from the builder's package - it must be visible and have an accessible constructor. Members (setters, getters) that are not accessible from the builder's package, such as package-private members of a foreign package, are silently left out of the builder. If no accessible constructor exists, generation fails with a clear compile-time diagnostic (a warning, or an error in strict mode).
-- **Opt-out**: listing a type annotated with `@Ignore4BuilderGeneration` is skipped with a warning.
-- **Not inherited**: `@SimpleBuilderFor` is not `@Inherited` and the holder class itself never gets a builder.
-- **Conflicts**: if a builder with the same name is already generated (direct annotation or another holder), the `@SimpleBuilderFor` entry is skipped with a warning.
+The target type must be constructible through accessible Java APIs from the holder's package: it needs a visible type and an accessible constructor, otherwise generation fails with a compile-time diagnostic. `@Ignore4BuilderGeneration` targets are skipped, `@SimpleBuilderFor` is not `@Inherited`, and the holder class itself never gets a builder.
 
 ## Compiler Options
 
