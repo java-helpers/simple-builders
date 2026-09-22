@@ -32,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import com.google.testing.compile.Compilation;
 import com.google.testing.compile.Compiler;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import javax.annotation.processing.AbstractProcessor;
@@ -117,8 +118,11 @@ class BuilderScopeResolverTest {
     assertThat(compilation).succeeded();
     // With usage scope "other" (not "lib") and no registration → empty
     assertEquals(Optional.empty(), ResolverProbeProcessor.beforeRegistration);
-    // Registration alone is not enough — the type must also be in the usage scope
-    assertEquals(Optional.empty(), ResolverProbeProcessor.afterRegistration);
+    // Registered types are trusted and exempt from the usage scope — a builder this
+    // processor generates is always used
+    assertEquals(
+        "lib.LibHelperBuilder",
+        ResolverProbeProcessor.afterRegistration.get().getFullQualifiedName());
     // With usage scope "lib" but no registration → empty (builder not on classpath)
     assertEquals(Optional.empty(), ResolverProbeProcessor.usageBeforeRegistration);
     // With usage scope "lib" AND registration → builder resolved
@@ -270,7 +274,7 @@ class BuilderScopeResolverTest {
       first = resolver.resolveUsableBuilderType(helper);
       second = resolver.resolveUsableBuilderType(helper);
       // Clear registration before testing scope-only behavior
-      resolver.registerGeneratedTypes(List.of());
+      resolver.registerGeneratedBuilders(Map.of());
       context.initConfigurationForProcessingTarget(configuration("other", "OtherBuilder"));
       afterConfigurationChange = resolver.resolveUsableBuilderType(helper);
       context.initConfigurationForProcessingTarget(usageOnlyConfiguration("other"));
@@ -280,13 +284,13 @@ class BuilderScopeResolverTest {
       afterRegistration = resolver.resolveUsableBuilderType(helper);
       // Clear registration for usage-scope classpath lookup tests
       context.initConfigurationForProcessingTarget(usageOnlyConfiguration("lib"));
-      resolver.registerGeneratedTypes(List.of());
+      resolver.registerGeneratedBuilders(Map.of());
       usageBeforeRegistration = resolver.resolveUsableBuilderType(helper);
       resolver.registerGeneratedTypes(List.of(helper));
       usageAfterRegistration = resolver.resolveUsableBuilderType(helper);
       // Usage scope without @SimpleBuilder annotation — type existence check only
       context.initConfigurationForProcessingTarget(usageOnlyConfiguration("lib"));
-      resolver.registerGeneratedTypes(List.of());
+      resolver.registerGeneratedBuilders(Map.of());
       usageWithoutAnnotation = resolver.resolveUsableBuilderType(helper);
       // Usage scope with builderUsageSuffix="Factory"
       context.initConfigurationForProcessingTarget(usageWithSuffixConfiguration("lib", "Factory"));

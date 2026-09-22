@@ -486,7 +486,8 @@ public final class JavaLangAnalyser {
       String name = candidate.getSimpleName().toString();
       if (Strings.CI.equalsAny(name, fieldName, "is" + fieldName, "get" + fieldName)
           && candidate.getParameters().isEmpty()
-          && context.isSameType(candidate.getReturnType(), fieldTypeMirror)) {
+          && context.isSameType(candidate.getReturnType(), fieldTypeMirror)
+          && context.isMemberAccessibleFromBuilderPackage(candidate, dtoType)) {
         return Optional.of(candidate);
       }
     }
@@ -550,7 +551,8 @@ public final class JavaLangAnalyser {
     for (ExecutableElement candidate : methods) {
       if (candidate.getSimpleName().contentEquals(setterName)
           && candidate.getParameters().size() == 1
-          && candidate.getReturnType().getKind() == VOID) {
+          && candidate.getReturnType().getKind() == VOID
+          && context.isMemberAccessibleFromBuilderPackage(candidate, dtoType)) {
         return Optional.of(candidate);
       }
     }
@@ -570,7 +572,9 @@ public final class JavaLangAnalyser {
   public static Optional<ExecutableElement> findConstructorForBuilder(
       TypeElement annotatedType, ProcessingContext context) {
     List<ExecutableElement> ctors =
-        ElementFilter.constructorsIn(context.getAllMembers(annotatedType));
+        ElementFilter.constructorsIn(context.getAllMembers(annotatedType)).stream()
+            .filter(ctor -> context.isMemberAccessibleFromBuilderPackage(ctor, annotatedType))
+            .toList();
 
     // First, check if any constructor is annotated with @SimpleBuilderConstructor
     for (ExecutableElement ctor : ctors) {
@@ -590,5 +594,20 @@ public final class JavaLangAnalyser {
       }
     }
     return (selected != null && maxParams > 0) ? Optional.of(selected) : Optional.empty();
+  }
+
+  /**
+   * Checks whether the given type has at least one constructor that is accessible from the package
+   * the generated builder is written to. A type without an accessible constructor cannot be
+   * instantiated by generated code.
+   *
+   * @param typeElement the type element to check
+   * @param context the processing context providing access to elements and types utilities
+   * @return {@code true} if an accessible constructor exists
+   */
+  public static boolean hasAccessibleConstructor(
+      TypeElement typeElement, ProcessingContext context) {
+    return ElementFilter.constructorsIn(context.getAllMembers(typeElement)).stream()
+        .anyMatch(ctor -> context.isMemberAccessibleFromBuilderPackage(ctor, typeElement));
   }
 }

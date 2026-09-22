@@ -25,8 +25,13 @@
 package org.javahelpers.simple.builders.processor.processing;
 
 import java.util.List;
+import java.util.Map;
 import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
@@ -61,6 +66,7 @@ public final class ProcessingContext {
   private final BuilderScopeResolver builderScopeResolver;
   private GeneratorRegistry generatorRegistry;
   private BuilderConfiguration configurationForProcessingTarget;
+  private String builderPackageForProcessingTarget;
 
   /**
    * Creates a new processing context.
@@ -110,6 +116,70 @@ public final class ProcessingContext {
    */
   public BuilderConfiguration getConfiguration() {
     return this.configurationForProcessingTarget;
+  }
+
+  /**
+   * Sets the package the generated builder is written to for the current processing target.
+   *
+   * <p>When {@code null}, the builder is generated in the package of the processed type itself (the
+   * default for {@code @SimpleBuilder} targets). For {@code @SimpleBuilderFor} targets the package
+   * of the holder class is passed, so generated builders stay in user-controlled packages even for
+   * types from foreign packages.
+   *
+   * @param builderPackage the package for the generated builder, or {@code null} to use the
+   *     processed type's own package
+   */
+  public void initBuilderPackageForProcessingTarget(String builderPackage) {
+    // Verbatim storage: an empty string is a valid builder package (the default package).
+    this.builderPackageForProcessingTarget = builderPackage;
+  }
+
+  /**
+   * Gets the package the builder for the given target is generated in: the explicit builder package
+   * of the current processing target, or the target's own package when none is set.
+   *
+   * @param targetElement the type the builder is generated for
+   * @return the qualified package name of the generated builder
+   */
+  public String getBuilderPackageName(Element targetElement) {
+    return builderPackageForProcessingTarget != null
+        ? builderPackageForProcessingTarget
+        : getPackageName(targetElement);
+  }
+
+  /**
+   * Checks whether a member (constructor, method) is accessible from the package the generated
+   * builder is written to.
+   *
+   * <p>Public members are always accessible. Private members are never accessible - the generated
+   * builder is a separate top-level class. Package-private and protected members are only
+   * accessible when the member's declaring package equals the builder package (protected access
+   * through inheritance does not apply, as the builder does not extend the target type).
+   *
+   * @param member the member to check
+   * @param targetElement the type the builder is generated for, used to resolve the effective
+   *     builder package when no explicit builder package is set
+   * @return {@code true} if generated code in the builder package may call the member
+   */
+  public boolean isMemberAccessibleFromBuilderPackage(Element member, Element targetElement) {
+    if (member.getModifiers().contains(Modifier.PUBLIC)) {
+      return true;
+    }
+    if (member.getModifiers().contains(Modifier.PRIVATE)) {
+      return false;
+    }
+    return getPackageName(member).equals(getBuilderPackageName(targetElement));
+  }
+
+  /**
+   * Returns the annotation values of an annotation mirror, including default values.
+   *
+   * @param annotationMirror the annotation mirror to read
+   * @return the annotation's element values keyed by their method element
+   */
+  public Map<? extends ExecutableElement, ? extends AnnotationValue> getElementValuesWithDefaults(
+      AnnotationMirror annotationMirror) {
+    return elementUtils.getElementValuesWithDefaults(annotationMirror);
   }
 
   /**

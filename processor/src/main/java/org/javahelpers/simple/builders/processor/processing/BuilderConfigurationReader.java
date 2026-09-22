@@ -140,6 +140,38 @@ public class BuilderConfigurationReader {
   }
 
   /**
+   * Resolves the complete builder configuration for a type listed in {@code @SimpleBuilderFor}.
+   *
+   * <p>Unlike {@link #resolveConfiguration(Element)}, no template annotations of the target type
+   * are considered - the type is typically external and must not be modified, so its annotations
+   * (if any) do not participate in configuration. The configuration is composed of the built-in
+   * defaults, the global compiler arguments, and the {@code options()} of the given
+   * {@code @SimpleBuilderFor} annotation mirror.
+   *
+   * @param element the element associated with this configuration (used for validation messages)
+   * @param simpleBuilderForMirror the {@code @SimpleBuilderFor} annotation mirror carrying the
+   *     {@code options} attribute
+   * @return the fully resolved configuration with all sources merged
+   */
+  public BuilderConfiguration resolveExternalConfiguration(
+      Element element, AnnotationMirror simpleBuilderForMirror) throws BuilderException {
+    String elementName = element.getSimpleName().toString();
+    logger.debugStartOperation(
+        "Resolving configuration for @SimpleBuilderFor target: %s", elementName);
+
+    BuilderConfiguration optionsConfig = extractOptionsFromAnnotationMirror(simpleBuilderForMirror);
+
+    BuilderConfiguration result =
+        BuilderConfiguration.DEFAULT.merge(globalConfiguration).merge(optionsConfig);
+
+    // Validate access modifiers and warn about problematic configurations
+    validateAccessModifiers(element, result);
+
+    logger.debugEndOperation("Resulting configuration resolved: %s", result.toString());
+    return result;
+  }
+
+  /**
    * Reads the highest-priority template configuration for the element in the requested scope.
    *
    * <p>If {@code @SimpleBuilder} is present in the scope, its effective configuration (built-in
