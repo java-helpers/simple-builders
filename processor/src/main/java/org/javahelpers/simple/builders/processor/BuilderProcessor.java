@@ -82,6 +82,9 @@ import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLo
 @AutoService(Processor.class)
 @SupportedAnnotationTypes("*")
 public class BuilderProcessor extends AbstractProcessor {
+  private static final String MSG_FAILED_TO_GENERATE =
+      "simple-builders: Failed to generate builder - %s";
+
   private ProcessingContext context;
   private ProcessingLogger logger;
   private RoasterCodeGenerator codeGenerator;
@@ -272,8 +275,7 @@ public class BuilderProcessor extends AbstractProcessor {
       } catch (BuilderException ex) {
         // By default builder generation failures are warnings so other builders are still
         // generated. In opt-in strict mode they are promoted to errors that fail the build.
-        context.reportBasedOnStrictMode(
-            annotatedElement, "simple-builders: Failed to generate builder - %s", ex.getMessage());
+        context.reportBasedOnStrictMode(annotatedElement, MSG_FAILED_TO_GENERATE, ex.getMessage());
       } finally {
         context.debugEndOperation();
       }
@@ -285,8 +287,7 @@ public class BuilderProcessor extends AbstractProcessor {
         elementsToGenerate.addAll(
             resolveExternalTypeTargets(holder, reader, plannedBuilderNames, tracker));
       } catch (BuilderException ex) {
-        context.reportBasedOnStrictMode(
-            holder, "simple-builders: Failed to generate builder - %s", ex.getMessage());
+        context.reportBasedOnStrictMode(holder, MSG_FAILED_TO_GENERATE, ex.getMessage());
       } finally {
         context.debugEndOperation();
       }
@@ -329,39 +330,52 @@ public class BuilderProcessor extends AbstractProcessor {
     String builderPackage = context.getPackageName(holder);
     List<ElementToGenerate> result = new ArrayList<>();
     for (TypeElement target : targets) {
-      if (JavaLangAnalyser.findAnnotation(target, Ignore4BuilderGeneration.class).isPresent()) {
-        context.warning(
-            holder,
-            "simple-builders: skipping '%s' declared in @SimpleBuilderFor on '%s' - opted out via @Ignore4BuilderGeneration",
-            target.getQualifiedName(),
-            holder.getSimpleName());
-        continue;
-      }
-      // An explicit declaration in @SimpleBuilderFor always generates a builder - the
-      // builderGenerationPackages scope only filters annotated types. A scope that would
-      // exclude an explicitly named type is a contradictory configuration, so warn.
-      if (!config.builderGenerationPackages().isEmpty()
-          && !config.builderGenerationPackages().includes(builderPackage)) {
-        context.warning(
-            holder,
-            "simple-builders: @SimpleBuilderFor on '%s' generates builder for '%s' in package '%s', which is outside builderGenerationPackages - the explicit declaration takes precedence",
-            holder.getSimpleName(),
-            target.getQualifiedName(),
-            builderPackage);
-      }
-      String builderName = builderQualifiedName(target, builderPackage, config);
-      if (!plannedBuilderNames.add(builderName)) {
-        context.warning(
-            holder,
-            "simple-builders: skipping '%s' declared in @SimpleBuilderFor on '%s' - builder '%s' is already generated elsewhere",
-            target.getQualifiedName(),
-            holder.getSimpleName(),
-            builderName);
-        continue;
-      }
-      result.add(new ElementToGenerate(target, config, holder));
+      planExternalTarget(target, holder, config, builderPackage, plannedBuilderNames)
+          .ifPresent(result::add);
     }
     return result;
+  }
+
+  /**
+   * Plans a builder for a single type listed in {@code @SimpleBuilderFor}, or reports on the holder
+   * why no builder is generated for it. An explicit declaration always generates a builder - the
+   * {@code builderGenerationPackages} scope only filters annotated types, so a scope that would
+   * exclude an explicitly named type is a contradictory configuration and only warns.
+   */
+  private Optional<ElementToGenerate> planExternalTarget(
+      TypeElement target,
+      Element holder,
+      BuilderConfiguration config,
+      String builderPackage,
+      Set<String> plannedBuilderNames) {
+    if (JavaLangAnalyser.findAnnotation(target, Ignore4BuilderGeneration.class).isPresent()) {
+      context.warning(
+          holder,
+          "simple-builders: skipping '%s' declared in @SimpleBuilderFor on '%s' - opted out via @Ignore4BuilderGeneration",
+          target.getQualifiedName(),
+          holder.getSimpleName());
+      return Optional.empty();
+    }
+    if (!config.builderGenerationPackages().isEmpty()
+        && !config.builderGenerationPackages().includes(builderPackage)) {
+      context.warning(
+          holder,
+          "simple-builders: @SimpleBuilderFor on '%s' generates builder for '%s' in package '%s', which is outside builderGenerationPackages - the explicit declaration takes precedence",
+          holder.getSimpleName(),
+          target.getQualifiedName(),
+          builderPackage);
+    }
+    String builderName = builderQualifiedName(target, builderPackage, config);
+    if (!plannedBuilderNames.add(builderName)) {
+      context.warning(
+          holder,
+          "simple-builders: skipping '%s' declared in @SimpleBuilderFor on '%s' - builder '%s' is already generated elsewhere",
+          target.getQualifiedName(),
+          holder.getSimpleName(),
+          builderName);
+      return Optional.empty();
+    }
+    return Optional.of(new ElementToGenerate(target, config, holder));
   }
 
   /**
@@ -370,28 +384,30 @@ public class BuilderProcessor extends AbstractProcessor {
    */
   private List<TypeElement> extractExternalTargetTypes(Element holder, AnnotationMirror mirror)
       throws BuilderException {
-    List<TypeElement> targets = new ArrayList<>();
-    for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry :
+    AnnotationValue valueAttribute = null;
+    for (Map.Entry<ExecutableElement, AnnotationValue> entry :
         context.getElementValuesWithDefaults(mirror).entrySet()) {
-      if (!entry.getKey().getSimpleName().contentEquals("value")) {
-        continue;
+      if (entry.getKey().getSimpleName().contentEquals("value")) {
+        valueAttribute = entry.getValue();
+        break;
       }
-      if (!(entry.getValue().getValue() instanceof List<?> values)) {
-        continue;
+    }
+    List<TypeElement> targets = new ArrayList<>();
+    if (valueAttribute == null || !(valueAttribute.getValue() instanceof List<?> values)) {
+      return targets;
+    }
+    for (Object item : values) {
+      Object typeValue = item instanceof AnnotationValue value ? value.getValue() : null;
+      Element resolved =
+          typeValue instanceof TypeMirror typeMirror ? context.asElement(typeMirror) : null;
+      if (!(resolved instanceof TypeElement targetType)) {
+        throw new BuilderException(
+            holder,
+            "Value '%s' in @SimpleBuilderFor on '%s' could not be resolved to a type",
+            typeValue,
+            holder.getSimpleName());
       }
-      for (Object item : values) {
-        Object typeValue = item instanceof AnnotationValue value ? value.getValue() : null;
-        Element resolved =
-            typeValue instanceof TypeMirror typeMirror ? context.asElement(typeMirror) : null;
-        if (!(resolved instanceof TypeElement targetType)) {
-          throw new BuilderException(
-              holder,
-              "Value '%s' in @SimpleBuilderFor on '%s' could not be resolved to a type",
-              typeValue,
-              holder.getSimpleName());
-        }
-        targets.add(targetType);
-      }
+      targets.add(targetType);
     }
     return targets;
   }
@@ -443,9 +459,7 @@ public class BuilderProcessor extends AbstractProcessor {
         // By default builder generation failures are warnings so other builders are still
         // generated. In opt-in strict mode they are promoted to errors that fail the build.
         context.reportBasedOnStrictMode(
-            elementToGenerate.reportingElement(),
-            "simple-builders: Failed to generate builder - %s",
-            ex.getMessage());
+            elementToGenerate.reportingElement(), MSG_FAILED_TO_GENERATE, ex.getMessage());
       } finally {
         context.debugEndOperation();
       }

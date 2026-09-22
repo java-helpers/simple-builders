@@ -24,6 +24,7 @@
 
 package org.javahelpers.simple.builders.processor.processing;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -177,9 +178,11 @@ public final class ProcessingContext {
    * @param annotationMirror the annotation mirror to read
    * @return the annotation's element values keyed by their method element
    */
-  public Map<? extends ExecutableElement, ? extends AnnotationValue> getElementValuesWithDefaults(
+  public Map<ExecutableElement, AnnotationValue> getElementValuesWithDefaults(
       AnnotationMirror annotationMirror) {
-    return elementUtils.getElementValuesWithDefaults(annotationMirror);
+    Map<ExecutableElement, AnnotationValue> elementValues = new HashMap<>();
+    elementUtils.getElementValuesWithDefaults(annotationMirror).forEach(elementValues::put);
+    return elementValues;
   }
 
   /**
