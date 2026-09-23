@@ -42,12 +42,10 @@ class ScopedOwnerDtoBuilderTest {
   @Test
   void exposesScopedBuilderConsumerOverloads() {
     assertTrue(hasBuilderConsumerMethod("trusted", TrustedHelperDtoBuilder.class.getName()));
-    // SponsorDto's builder is generated in the same compilation, so it is trusted and used
-    // regardless of the usage scope
-    assertTrue(hasBuilderConsumerMethod("sponsor", SponsorDtoBuilder.class.getName()));
     assertFalse(
         hasBuilderConsumerMethod(
             "library", "org.javahelpers.simple.builders.example.library.LibraryHelperDtoBuilder"));
+    assertFalse(hasBuilderConsumerMethod("sponsor", SponsorDtoBuilder.class.getName()));
 
     assertTrue(hasMethod("trusted", TrustedHelperDto.class));
     assertTrue(hasMethod("library", LibraryHelperDto.class));

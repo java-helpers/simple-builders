@@ -484,7 +484,7 @@ A runnable example demonstrating package-scoped builder generation and usage:
 - **Source DTO**: [`ScopedOwnerDto.java`](example/src/main/java/org/javahelpers/simple/builders/example/scoping/ScopedOwnerDto.java) - Configures both package scopes inline and demonstrates the generation-scope, usage-scope, and out-of-scope field cases
 - **Trusted helper**: [`TrustedHelperDto.java`](example/src/main/java/org/javahelpers/simple/builders/example/scoping/TrustedHelperDto.java) - In-generation-scope helper whose builder is referenced as a builder consumer
 - **Library helper**: [`library/LibraryHelperDto.java`](example/src/main/java/org/javahelpers/simple/builders/example/library/LibraryHelperDto.java) - Annotated but outside the generation scope, so no builder exists and the owner falls back to a plain setter
-- **Generated Builder**: [`ScopedOwnerDtoBuilder.java`](example/generated-example-builder/org/javahelpers/simple/builders/example/scoping/ScopedOwnerDtoBuilder.java) - Shows builder consumers for `trusted` and `sponsor` (generated in the same round, always trusted) and a plain setter for `library`
+- **Generated Builder**: [`ScopedOwnerDtoBuilder.java`](example/generated-example-builder/org/javahelpers/simple/builders/example/scoping/ScopedOwnerDtoBuilder.java) - Shows the consumer overload for `trusted` and plain setters for `library` and `sponsor`
 - **Tests**: [`ScopedOwnerDtoBuilderTest.java`](example/src/test/java/org/javahelpers/simple/builders/example/scoping/ScopedOwnerDtoBuilderTest.java) - Asserts the generated API shape
 
 These examples serve as both documentation and integration tests for the annotation processor.

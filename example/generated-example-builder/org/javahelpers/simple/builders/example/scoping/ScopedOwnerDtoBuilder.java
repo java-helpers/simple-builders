@@ -14,7 +14,6 @@ import org.javahelpers.simple.builders.core.interfaces.IBuilderBase;
 import org.javahelpers.simple.builders.core.util.BuilderToStringStyle;
 import org.javahelpers.simple.builders.core.util.TrackedValue;
 import org.javahelpers.simple.builders.example.SponsorDto;
-import org.javahelpers.simple.builders.example.SponsorDtoBuilder;
 import org.javahelpers.simple.builders.example.library.LibraryHelperDto;
 
 /**
@@ -33,7 +32,6 @@ import org.javahelpers.simple.builders.example.library.LibraryHelperDto;
  *     .library(LibraryHelperDto::new)
  *     .sponsor(new SponsorDto())
  *     .sponsor(SponsorDto::new)
- *     .sponsor(sponsorDtoBuilder -> sponsorDtoBuilder)
  *     .trusted(new TrustedHelperDto())
  *     .trusted(TrustedHelperDto::new)
  *     .trusted(trustedHelperDtoBuilder -> trustedHelperDtoBuilder)
@@ -182,25 +180,17 @@ public class ScopedOwnerDtoBuilder implements IBuilderBase<ScopedOwnerDto> {
   }
 
   /**
-   * Sets the value for <code>sponsor</code> using a builder consumer that produces the value.
+   * Sets the value for <code>sponsor</code> by executing the provided consumer.
    * <p>
    * Generated from setter {@link ScopedOwnerDto#setSponsor(SponsorDto) setSponsor(SponsorDto sponsor)}
    * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.sponsor(sponsorDtoBuilder -> sponsorDtoBuilder);
-   * }</pre>
-   * 
-   * @param sponsorBuilderConsumer consumer providing an instance of a builder for sponsor
+   * @param sponsorConsumer consumer providing an instance of sponsor
    * @return current instance of builder
    */
-  public ScopedOwnerDtoBuilder sponsor(Consumer<SponsorDtoBuilder> sponsorBuilderConsumer) {
-    SponsorDtoBuilder builder = this.sponsor.isSet()
-        ? new SponsorDtoBuilder(this.sponsor.value())
-        : new SponsorDtoBuilder();
-    sponsorBuilderConsumer.accept(builder);
-    this.sponsor = changedValue(builder.build());
+  public ScopedOwnerDtoBuilder sponsor(Consumer<SponsorDto> sponsorConsumer) {
+    SponsorDto consumer = this.sponsor.isSet() ? this.sponsor.value() : new SponsorDto();
+    sponsorConsumer.accept(consumer);
+    this.sponsor = changedValue(consumer);
     return this;
   }
 
@@ -227,8 +217,7 @@ public class ScopedOwnerDtoBuilder implements IBuilderBase<ScopedOwnerDto> {
    * Updates the current value of <code>sponsor</code> in place by applying the given operator, instead of reading it
    * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance). For changing multiple values of a nested
-   * DTO, prefer the builder-consumer helper {@link #sponsor(Consumer)}.
+   * value must have been set before (directly or via an existing instance).
    * <p>
    * Generated from setter {@link ScopedOwnerDto#setSponsor(SponsorDto) setSponsor(SponsorDto sponsor)}
    * 
