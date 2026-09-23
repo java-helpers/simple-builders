@@ -451,10 +451,11 @@ public class BuilderProcessor extends AbstractProcessor {
       if (!(elementToGenerate.element() instanceof TypeElement targetType)) {
         continue;
       }
-      String builderPackage =
+      Element builderPackageAnchor =
           elementToGenerate.reportingElement() == targetType
-              ? context.getPackageName(targetType)
-              : context.getPackageName(elementToGenerate.reportingElement());
+              ? targetType
+              : elementToGenerate.reportingElement();
+      String builderPackage = context.getPackageName(builderPackageAnchor);
       generatedBuilders.put(
           targetType.getQualifiedName().toString(),
           new TypeName(
