@@ -33,16 +33,17 @@ import java.lang.annotation.Target;
  * Annotation to generate builders for types that cannot or should not be modified, such as classes
  * from third-party libraries.
  *
- * <p>Place this annotation on a dedicated holder class and list the external types in {@link
- * #value()}. For every listed type a builder is generated following the same naming and generation
- * conventions as for {@link SimpleBuilder} annotated classes, without changing the target type and
- * without runtime reflection.
+ * <p>Place this annotation on a dedicated holder class or on the package itself (in {@code
+ * package-info.java}) and list the external types in {@link #value()}. For every listed type a
+ * builder is generated following the same naming and generation conventions as for {@link
+ * SimpleBuilder} annotated classes, without changing the target type and without runtime
+ * reflection.
  *
- * <p>The generated builder is placed in the package of the class carrying this annotation. Only
- * members of the target type that are accessible from that package (e.g. public constructors and
- * setters, or package-visible members when the holder shares the target's package) are used for
- * builder generation. If no suitable construction mechanism is available, generation fails with a
- * compile-time error.
+ * <p>The generated builder is placed in the package of the class or package carrying this
+ * annotation. Only members of the target type that are accessible from that package (e.g. public
+ * constructors and setters, or package-visible members when the holder shares the target's package)
+ * are used for builder generation. If no suitable construction mechanism is available, generation
+ * fails with a compile-time error.
  *
  * <p>Example:
  *
@@ -95,7 +96,7 @@ import java.lang.annotation.Target;
  * @see SimpleBuilder.Options
  * @see Ignore4BuilderGeneration
  */
-@Target(ElementType.TYPE)
+@Target({ElementType.TYPE, ElementType.PACKAGE})
 @Retention(RetentionPolicy.CLASS)
 public @interface SimpleBuilderFor {
 

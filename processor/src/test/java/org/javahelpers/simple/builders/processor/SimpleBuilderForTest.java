@@ -27,6 +27,7 @@ package org.javahelpers.simple.builders.processor;
 import static com.google.testing.compile.CompilationSubject.assertThat;
 
 import com.google.testing.compile.Compilation;
+import com.google.testing.compile.JavaFileObjects;
 import javax.tools.JavaFileObject;
 import org.javahelpers.simple.builders.processor.testing.ProcessorAsserts;
 import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
@@ -294,6 +295,25 @@ class SimpleBuilderForTest {
     assertThat(compilation).succeededWithoutWarnings();
     String generated = ProcessorTestUtils.loadGeneratedSource(compilation, "ExternalPointBuilder");
     ProcessorAsserts.assertContaining(generated, "package test;", "public ExternalPoint build()");
+  }
+
+  @Test
+  void packageInfo_GeneratesBuildersIntoAnnotatedPackage() {
+    JavaFileObject packageInfo =
+        JavaFileObjects.forSourceLines(
+            "test.package-info",
+            "@SimpleBuilderFor(ext.ExternalUser.class)",
+            "package test;",
+            "",
+            "import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFor;");
+
+    Compilation compilation =
+        ProcessorTestUtils.createCompiler().compile(externalDto(), packageInfo);
+
+    assertThat(compilation).succeededWithoutWarnings();
+    String generated = ProcessorTestUtils.loadGeneratedSource(compilation, "ExternalUserBuilder");
+    ProcessorAsserts.assertContaining(
+        generated, "package test;", "public ExternalUserBuilder name(String name)");
   }
 
   private static JavaFileObject externalDto() {

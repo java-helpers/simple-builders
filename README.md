@@ -472,7 +472,7 @@ Examples demonstrating special annotations and nested object relationships:
 
 A runnable example of `@SimpleBuilderFor`, which generates builders for types that cannot carry `@SimpleBuilder` themselves:
 
-- **Holder**: [`ExternalTypeBuilders.java`](example/src/main/java/org/javahelpers/simple/builders/example/ExternalTypeBuilders.java) - Declares `@SimpleBuilderFor(ExternalAddress.class)`; generated builders land in the holder's package
+- **Holder**: [`ExternalTypeBuilders.java`](example/src/main/java/org/javahelpers/simple/builders/example/ExternalTypeBuilders.java) - Declares `@SimpleBuilderFor(ExternalAddress.class)`; generated builders land in the holder's package. The annotation may also be placed in `package-info.java` to generate builders into the annotated package itself
 - **External type**: [`external/ExternalAddress.java`](example/src/main/java/org/javahelpers/simple/builders/example/external/ExternalAddress.java) - Plain class simulating third-party code, no annotations
 - **Generated Builder**: [`ExternalAddressBuilder.java`](example/generated-example-builder/org/javahelpers/simple/builders/example/ExternalAddressBuilder.java)
 - **Tests**: [`ExternalAddressBuilderTest.java`](example/src/test/java/org/javahelpers/simple/builders/example/ExternalAddressBuilderTest.java)

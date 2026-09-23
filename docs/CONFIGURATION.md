@@ -172,7 +172,7 @@ A type marked with `@Ignore4BuilderGeneration` is treated as having **no builder
 
 ## Generating Builders for External Types
 
-`@SimpleBuilder` has to be placed on the type itself, which is not possible for types you cannot modify - for example classes or records from third-party libraries. `@SimpleBuilderFor` covers this case: put it on a holder class in your own code and list the types a builder is generated for.
+`@SimpleBuilder` has to be placed on the type itself, which is not possible for types you cannot modify - for example classes or records from third-party libraries. `@SimpleBuilderFor` covers this case: put it on a holder class in your own code (or on the package itself in `package-info.java`) and list the types a builder is generated for.
 
 ```java
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
@@ -186,7 +186,7 @@ public class ExternalBuilders {
 }
 ```
 
-The generated builders are placed in the package of the holder class. `options` reuses `@SimpleBuilder.Options` and is optional - compiler defaults apply when omitted; the external type's own annotations are not consulted.
+The generated builders are placed in the package of the holder class - or in the annotated package itself when the annotation is declared in `package-info.java`. `options` reuses `@SimpleBuilder.Options` and is optional - compiler defaults apply when omitted; the external type's own annotations are not consulted.
 
 The target type must be constructible through accessible Java APIs from the holder's package: it needs a visible type and an accessible constructor, otherwise generation fails with a compile-time diagnostic. `@Ignore4BuilderGeneration` targets are skipped, `@SimpleBuilderFor` is not `@Inherited`, and the holder class itself never gets a builder.
 
