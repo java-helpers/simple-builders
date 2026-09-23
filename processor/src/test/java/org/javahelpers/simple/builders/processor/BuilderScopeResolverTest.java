@@ -117,8 +117,11 @@ class BuilderScopeResolverTest {
     assertThat(compilation).succeeded();
     // With usage scope "other" (not "lib") and no registration → empty
     assertEquals(Optional.empty(), ResolverProbeProcessor.beforeRegistration);
-    // Registration alone is not enough — the type must also be in the usage scope
-    assertEquals(Optional.empty(), ResolverProbeProcessor.afterRegistration);
+    // Registered types are trusted and exempt from the usage scope — a builder this
+    // processor generates is always used
+    assertEquals(
+        "lib.LibHelperBuilder",
+        ResolverProbeProcessor.afterRegistration.get().getFullQualifiedName());
     // With usage scope "lib" but no registration → empty (builder not on classpath)
     assertEquals(Optional.empty(), ResolverProbeProcessor.usageBeforeRegistration);
     // With usage scope "lib" AND registration → builder resolved
