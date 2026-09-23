@@ -263,15 +263,8 @@ public class BuilderProcessor extends AbstractProcessor {
     for (Element annotatedElement : sortedElements) {
       context.debugStartOperation("Processing element: " + annotatedElement.getSimpleName());
       try {
-        tracker.startPhase();
-        BuilderConfiguration config = reader.resolveConfiguration(annotatedElement);
-        tracker.endPhase(PHASE_CONFIGURATION_RESOLUTION);
-
-        if (!context.getBuilderScopeResolver().isInGenerationScope(annotatedElement, config)) {
-          continue;
-        }
-        plannedBuilderNames.add(builderQualifiedName(annotatedElement, null, config));
-        elementsToGenerate.add(new ElementToGenerate(annotatedElement, config, annotatedElement));
+        planAnnotatedElement(annotatedElement, reader, plannedBuilderNames, tracker)
+            .ifPresent(elementsToGenerate::add);
       } catch (BuilderException ex) {
         // By default builder generation failures are warnings so other builders are still
         // generated. In opt-in strict mode they are promoted to errors that fail the build.
@@ -293,6 +286,27 @@ public class BuilderProcessor extends AbstractProcessor {
       }
     }
     return elementsToGenerate;
+  }
+
+  /**
+   * Resolves the configuration of one annotated element and plans its builder, or returns empty
+   * when the element is outside the {@code builderGenerationPackages} scope.
+   */
+  private Optional<ElementToGenerate> planAnnotatedElement(
+      Element annotatedElement,
+      BuilderConfigurationReader reader,
+      Set<String> plannedBuilderNames,
+      PerformanceTracker tracker)
+      throws BuilderException {
+    tracker.startPhase();
+    BuilderConfiguration config = reader.resolveConfiguration(annotatedElement);
+    tracker.endPhase(PHASE_CONFIGURATION_RESOLUTION);
+
+    if (!context.getBuilderScopeResolver().isInGenerationScope(annotatedElement, config)) {
+      return Optional.empty();
+    }
+    plannedBuilderNames.add(builderQualifiedName(annotatedElement, null, config));
+    return Optional.of(new ElementToGenerate(annotatedElement, config, annotatedElement));
   }
 
   /**
@@ -397,19 +411,25 @@ public class BuilderProcessor extends AbstractProcessor {
       return targets;
     }
     for (Object item : values) {
-      Object typeValue = item instanceof AnnotationValue value ? value.getValue() : null;
-      Element resolved =
-          typeValue instanceof TypeMirror typeMirror ? context.asElement(typeMirror) : null;
-      if (!(resolved instanceof TypeElement targetType)) {
-        throw new BuilderException(
-            holder,
-            "Value '%s' in @SimpleBuilderFor on '%s' could not be resolved to a type",
-            typeValue,
-            holder.getSimpleName());
-      }
-      targets.add(targetType);
+      targets.add(resolveExternalTargetType(holder, item));
     }
     return targets;
+  }
+
+  /** Resolves one entry of a {@code @SimpleBuilderFor} {@code value} attribute to its type. */
+  private TypeElement resolveExternalTargetType(Element holder, Object item)
+      throws BuilderException {
+    Object typeValue = item instanceof AnnotationValue value ? value.getValue() : null;
+    Element resolved =
+        typeValue instanceof TypeMirror typeMirror ? context.asElement(typeMirror) : null;
+    if (!(resolved instanceof TypeElement targetType)) {
+      throw new BuilderException(
+          holder,
+          "Value '%s' in @SimpleBuilderFor on '%s' could not be resolved to a type",
+          typeValue,
+          holder.getSimpleName());
+    }
+    return targetType;
   }
 
   /** Computes the qualified name of the builder a given target type would produce. */
