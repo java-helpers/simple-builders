@@ -265,35 +265,32 @@ class BuilderScopeResolverTest {
       context.initProcessingTarget(new ProcessingTarget(configuration("lib", "Builder"), ""));
       BuilderScopeResolver resolver = context.getBuilderScopeResolver();
       // Register the type as generated, mirroring the real processor which calls
-      // the GeneratedBuilders registry before any resolution happens.
-      resolver
-          .generatedBuilders()
-          .add(new TypeName("lib", "LibHelper"), new TypeName("lib", "LibHelperBuilder"));
+      // registerGeneratedBuilder before any resolution happens.
+      resolver.registerGeneratedBuilder(
+          new TypeName("lib", "LibHelper"), new TypeName("lib", "LibHelperBuilder"));
       first = resolver.resolveUsableBuilderType(helper);
       second = resolver.resolveUsableBuilderType(helper);
       // Clear registration before testing scope-only behavior
-      resolver.generatedBuilders().clear();
+      resolver.resetGeneratedBuilders();
       context.initProcessingTarget(
           new ProcessingTarget(configuration("other", "OtherBuilder"), ""));
       afterConfigurationChange = resolver.resolveUsableBuilderType(helper);
       context.initProcessingTarget(new ProcessingTarget(usageOnlyConfiguration("other"), ""));
       beforeRegistration = resolver.resolveUsableBuilderType(helper);
       // Registration alone is not enough — the type must be in scope
-      resolver
-          .generatedBuilders()
-          .add(new TypeName("lib", "LibHelper"), new TypeName("lib", "LibHelperBuilder"));
+      resolver.registerGeneratedBuilder(
+          new TypeName("lib", "LibHelper"), new TypeName("lib", "LibHelperBuilder"));
       afterRegistration = resolver.resolveUsableBuilderType(helper);
       // Clear registration for usage-scope classpath lookup tests
       context.initProcessingTarget(new ProcessingTarget(usageOnlyConfiguration("lib"), ""));
-      resolver.generatedBuilders().clear();
+      resolver.resetGeneratedBuilders();
       usageBeforeRegistration = resolver.resolveUsableBuilderType(helper);
-      resolver
-          .generatedBuilders()
-          .add(new TypeName("lib", "LibHelper"), new TypeName("lib", "LibHelperBuilder"));
+      resolver.registerGeneratedBuilder(
+          new TypeName("lib", "LibHelper"), new TypeName("lib", "LibHelperBuilder"));
       usageAfterRegistration = resolver.resolveUsableBuilderType(helper);
       // Usage scope without @SimpleBuilder annotation — type existence check only
       context.initProcessingTarget(new ProcessingTarget(usageOnlyConfiguration("lib"), ""));
-      resolver.generatedBuilders().clear();
+      resolver.resetGeneratedBuilders();
       usageWithoutAnnotation = resolver.resolveUsableBuilderType(helper);
       // Usage scope with builderUsageSuffix="Factory"
       context.initProcessingTarget(

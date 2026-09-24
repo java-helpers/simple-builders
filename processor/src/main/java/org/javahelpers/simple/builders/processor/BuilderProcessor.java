@@ -36,7 +36,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import javax.annotation.processing.AbstractProcessor;
@@ -48,13 +47,12 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder.Template;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFor;
-import org.javahelpers.simple.builders.processor.analysis.GeneratedBuilders;
+import org.javahelpers.simple.builders.processor.analysis.BuilderScopeResolver;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyser;
 import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterCodeGenerator;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
@@ -256,11 +254,14 @@ public class BuilderProcessor extends AbstractProcessor {
       BuilderConfigurationReader reader,
       PerformanceTracker tracker) {
     List<ElementToGenerate> elementsToGenerate = new ArrayList<>();
-    Set<TypeName> plannedBuilderNames = new HashSet<>();
+    // Builder names already planned in this round: needed for conflict detection, so a directly
+    // annotated type wins over an external-type declaration producing the same builder name
+    // (the conflicting @SimpleBuilderFor entry is skipped with a warning).
+    Set<TypeName> alreadyPlannedBuilders = new HashSet<>();
     for (Element annotatedElement : sortedElements) {
       context.debugStartOperation("Processing element: " + annotatedElement.getSimpleName());
       try {
-        planAnnotatedElement(annotatedElement, reader, plannedBuilderNames, tracker)
+        planGenerationOfAnnotatedElement(annotatedElement, reader, alreadyPlannedBuilders, tracker)
             .ifPresent(elementsToGenerate::add);
       } catch (BuilderException ex) {
         // By default builder generation failures are warnings so other builders are still
@@ -275,7 +276,7 @@ public class BuilderProcessor extends AbstractProcessor {
       context.debugStartOperation("Processing @SimpleBuilderFor holder: " + holder.getSimpleName());
       try {
         elementsToGenerate.addAll(
-            resolveExternalTypeTargets(holder, reader, plannedBuilderNames, tracker));
+            planGenerationOfTypeByHolder(holder, reader, alreadyPlannedBuilders, tracker));
       } catch (BuilderException ex) {
         context.reportBasedOnStrictMode(holder, MSG_FAILED_TO_GENERATE, ex.getMessage());
       } finally {
@@ -289,10 +290,10 @@ public class BuilderProcessor extends AbstractProcessor {
    * Resolves the configuration of one annotated element and plans its builder, or returns empty
    * when the element is outside the {@code builderGenerationPackages} scope.
    */
-  private Optional<ElementToGenerate> planAnnotatedElement(
+  private Optional<ElementToGenerate> planGenerationOfAnnotatedElement(
       Element annotatedElement,
       BuilderConfigurationReader reader,
-      Set<TypeName> plannedBuilderNames,
+      Set<TypeName> alreadyPlannedBuilders,
       PerformanceTracker tracker)
       throws BuilderException {
     tracker.startPhase();
@@ -302,7 +303,7 @@ public class BuilderProcessor extends AbstractProcessor {
     if (!context.getBuilderScopeResolver().isInGenerationScope(annotatedElement, config)) {
       return Optional.empty();
     }
-    plannedBuilderNames.add(
+    alreadyPlannedBuilders.add(
         builderTypeName(annotatedElement, context.getPackageName(annotatedElement), config));
     return Optional.of(new ElementToGenerate(annotatedElement, config, annotatedElement));
   }
@@ -312,10 +313,10 @@ public class BuilderProcessor extends AbstractProcessor {
    * attribute and plans a builder for each of them. The generated builder is placed in the holder's
    * package.
    */
-  private List<ElementToGenerate> resolveExternalTypeTargets(
+  private List<ElementToGenerate> planGenerationOfTypeByHolder(
       Element holder,
       BuilderConfigurationReader reader,
-      Set<TypeName> plannedBuilderNames,
+      Set<TypeName> alreadyPlannedBuilders,
       PerformanceTracker tracker)
       throws BuilderException {
     List<TypeElement> targets = extractExternalTargetTypes(holder);
@@ -328,16 +329,16 @@ public class BuilderProcessor extends AbstractProcessor {
     }
 
     tracker.startPhase();
-    BuilderConfiguration config = reader.resolveExternalConfiguration(holder);
+    BuilderConfiguration config = reader.resolveSimpleBuilderForConfiguration(holder);
     tracker.endPhase(PHASE_CONFIGURATION_RESOLUTION);
 
     String builderPackage = context.getPackageName(holder);
-    List<ElementToGenerate> result = new ArrayList<>();
+    List<ElementToGenerate> results = new ArrayList<>();
     for (TypeElement target : targets) {
-      planExternalTarget(target, holder, config, builderPackage, plannedBuilderNames)
-          .ifPresent(result::add);
+      planExternalTarget(target, holder, config, builderPackage, alreadyPlannedBuilders)
+          .ifPresent(results::add);
     }
-    return result;
+    return results;
   }
 
   /**
@@ -352,7 +353,7 @@ public class BuilderProcessor extends AbstractProcessor {
       Element holder,
       BuilderConfiguration config,
       String builderPackage,
-      Set<TypeName> plannedBuilderNames) {
+      Set<TypeName> alreadyPlannedBuilders) {
     if (!config.builderGenerationPackages().isEmpty()
         && !config.builderGenerationPackages().includes(builderPackage)) {
       context.warning(
@@ -363,7 +364,7 @@ public class BuilderProcessor extends AbstractProcessor {
           builderPackage);
     }
     TypeName builderName = builderTypeName(target, builderPackage, config);
-    if (!plannedBuilderNames.add(builderName)) {
+    if (!alreadyPlannedBuilders.add(builderName)) {
       context.warning(
           holder,
           "simple-builders: skipping '%s' declared in @SimpleBuilderFor on '%s' - builder '%s' is already generated elsewhere",
@@ -380,24 +381,22 @@ public class BuilderProcessor extends AbstractProcessor {
    * resolves each entry to the {@link TypeElement} the builder is generated for.
    */
   private List<TypeElement> extractExternalTargetTypes(Element holder) throws BuilderException {
-    List<TypeElement> targets = new ArrayList<>();
     Optional<AnnotationMirror> mirror =
         JavaLangAnalyser.findAnnotation(holder, SimpleBuilderFor.class);
     if (mirror.isEmpty()) {
-      return targets;
+      return List.of();
     }
-    AnnotationValue valueAttribute = null;
-    for (Map.Entry<ExecutableElement, AnnotationValue> entry :
-        context.getElementValuesWithDefaults(mirror.get()).entrySet()) {
-      if (entry.getKey().getSimpleName().contentEquals("value")) {
-        valueAttribute = entry.getValue();
-        break;
-      }
+    Optional<AnnotationValue> valueAttribute =
+        JavaLangAnalyser.findAnnotationAttribute(mirror.get(), "value", context);
+    if (valueAttribute.isEmpty()) {
+      return List.of();
     }
-    if (valueAttribute == null || !(valueAttribute.getValue() instanceof List<?> values)) {
-      return targets;
-    }
-    for (Object item : values) {
+    // For an array-valued attribute javac always delivers a list, even for a single entry;
+    // a plain single value is accepted too for robustness.
+    Object value = valueAttribute.get().getValue();
+    List<?> items = value instanceof List<?> values ? values : List.of(value);
+    List<TypeElement> targets = new ArrayList<>();
+    for (Object item : items) {
       targets.add(resolveExternalTargetType(holder, item));
     }
     return targets;
@@ -406,7 +405,7 @@ public class BuilderProcessor extends AbstractProcessor {
   /** Resolves one entry of a {@code @SimpleBuilderFor} {@code value} attribute to its type. */
   private TypeElement resolveExternalTargetType(Element holder, Object item)
       throws BuilderException {
-    Object typeValue = item instanceof AnnotationValue value ? value.getValue() : null;
+    Object typeValue = item instanceof AnnotationValue value ? value.getValue() : item;
     Element resolved =
         typeValue instanceof TypeMirror typeMirror ? context.asElement(typeMirror) : null;
     if (!(resolved instanceof TypeElement targetType)) {
@@ -431,13 +430,13 @@ public class BuilderProcessor extends AbstractProcessor {
    * differ from the target's package for {@code @SimpleBuilderFor} targets.
    */
   private void registerGeneratedTypes(List<ElementToGenerate> elementsToGenerate) {
-    GeneratedBuilders generatedBuilders = context.getBuilderScopeResolver().generatedBuilders();
-    generatedBuilders.clear();
+    BuilderScopeResolver scopeResolver = context.getBuilderScopeResolver();
+    scopeResolver.resetGeneratedBuilders();
     for (ElementToGenerate elementToGenerate : elementsToGenerate) {
       if (!(elementToGenerate.element() instanceof TypeElement targetType)) {
         continue;
       }
-      generatedBuilders.add(
+      scopeResolver.registerGeneratedBuilder(
           new TypeName(context.getPackageName(targetType), targetType.getSimpleName().toString()),
           new TypeName(
               context.getPackageName(elementToGenerate.reportingElement()),

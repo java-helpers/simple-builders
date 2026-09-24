@@ -30,8 +30,10 @@ import static javax.lang.model.type.TypeKind.VOID;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -216,6 +218,25 @@ public final class JavaLangAnalyser {
       }
     }
 
+    return Optional.empty();
+  }
+
+  /**
+   * Reads the value of one attribute of an annotation mirror, including default values.
+   *
+   * @param annotationMirror the annotation to read
+   * @param attributeName the simple name of the attribute (e.g. {@code "value"})
+   * @param context the processing context providing element utilities
+   * @return the attribute's value, or empty if the annotation has no such attribute
+   */
+  public static Optional<AnnotationValue> findAnnotationAttribute(
+      AnnotationMirror annotationMirror, String attributeName, ProcessingContext context) {
+    for (Map.Entry<ExecutableElement, AnnotationValue> entry :
+        context.getElementValuesWithDefaults(annotationMirror).entrySet()) {
+      if (entry.getKey().getSimpleName().contentEquals(attributeName)) {
+        return Optional.of(entry.getValue());
+      }
+    }
     return Optional.empty();
   }
 

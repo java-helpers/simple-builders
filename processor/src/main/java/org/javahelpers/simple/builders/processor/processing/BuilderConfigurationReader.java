@@ -153,7 +153,7 @@ public class BuilderConfigurationReader {
    * @param element the {@code @SimpleBuilderFor} holder (used for validation messages)
    * @return the fully resolved configuration with all sources merged
    */
-  public BuilderConfiguration resolveExternalConfiguration(Element element)
+  public BuilderConfiguration resolveSimpleBuilderForConfiguration(Element element)
       throws BuilderException {
     String elementName = element.getSimpleName().toString();
     logger.debugStartOperation(
