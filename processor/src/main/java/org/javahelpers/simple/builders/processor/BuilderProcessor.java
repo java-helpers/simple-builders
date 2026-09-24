@@ -71,6 +71,7 @@ import org.javahelpers.simple.builders.processor.processing.BuilderConfiguration
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsEnum;
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsReader;
 import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
+import org.javahelpers.simple.builders.processor.processing.ProcessingTarget;
 import org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker;
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 
@@ -484,8 +485,7 @@ public class BuilderProcessor extends AbstractProcessor {
 
   private void process(Element annotatedElement, BuilderConfiguration config, String builderPackage)
       throws BuilderException {
-    context.initConfigurationForProcessingTarget(config);
-    context.initBuilderPackageForProcessingTarget(builderPackage);
+    context.initProcessingTarget(new ProcessingTarget(config, builderPackage));
     PerformanceTracker tracker = context.getPerformanceTracker();
     // Track Builder Definition Extraction
     tracker.startPhase();

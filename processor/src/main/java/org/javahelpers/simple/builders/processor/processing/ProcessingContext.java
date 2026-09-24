@@ -66,8 +66,7 @@ public final class ProcessingContext {
   private final String formatterProfile;
   private final BuilderScopeResolver builderScopeResolver;
   private GeneratorRegistry generatorRegistry;
-  private BuilderConfiguration configurationForProcessingTarget;
-  private String builderPackageForProcessingTarget;
+  private ProcessingTarget processingTarget;
 
   /**
    * Creates a new processing context.
@@ -102,12 +101,13 @@ public final class ProcessingContext {
   }
 
   /**
-   * Initializes the configuration for the current processing target.
+   * Initializes the per-target state ({@link ProcessingTarget}) for the type whose builder is
+   * currently being generated. Called once per target before extraction starts.
    *
-   * @param config the builder configuration for the target being processed
+   * @param processingTarget the resolved configuration and builder package of the current target
    */
-  public void initConfigurationForProcessingTarget(BuilderConfiguration config) {
-    this.configurationForProcessingTarget = config;
+  public void initProcessingTarget(ProcessingTarget processingTarget) {
+    this.processingTarget = processingTarget;
   }
 
   /**
@@ -116,20 +116,7 @@ public final class ProcessingContext {
    * @return the builder configuration for the target being processed
    */
   public BuilderConfiguration getConfiguration() {
-    return this.configurationForProcessingTarget;
-  }
-
-  /**
-   * Sets the package the generated builder is written to for the current processing target.
-   *
-   * <p>For {@code @SimpleBuilder} targets this is the processed type's own package; for
-   * {@code @SimpleBuilderFor} targets it is the package of the holder, so generated builders stay
-   * in user-controlled packages even for types from foreign packages.
-   *
-   * @param builderPackage the package for the generated builder
-   */
-  public void initBuilderPackageForProcessingTarget(String builderPackage) {
-    this.builderPackageForProcessingTarget = builderPackage;
+    return this.processingTarget.configuration();
   }
 
   /**
@@ -138,7 +125,7 @@ public final class ProcessingContext {
    * @return the qualified package name of the generated builder
    */
   public String getBuilderPackageName() {
-    return builderPackageForProcessingTarget;
+    return this.processingTarget.builderPackage();
   }
 
   /**
