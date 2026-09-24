@@ -34,7 +34,6 @@ import static org.javahelpers.simple.builders.processor.processing.logging.Perfo
 import com.google.auto.service.AutoService;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -55,6 +54,7 @@ import javax.lang.model.type.TypeMirror;
 import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder.Template;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFor;
+import org.javahelpers.simple.builders.processor.analysis.GeneratedBuilders;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyser;
 import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterCodeGenerator;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
@@ -431,18 +431,18 @@ public class BuilderProcessor extends AbstractProcessor {
    * differ from the target's package for {@code @SimpleBuilderFor} targets.
    */
   private void registerGeneratedTypes(List<ElementToGenerate> elementsToGenerate) {
-    Map<TypeName, TypeName> generatedBuilders = new HashMap<>();
+    GeneratedBuilders generatedBuilders = context.getBuilderScopeResolver().generatedBuilders();
+    generatedBuilders.clear();
     for (ElementToGenerate elementToGenerate : elementsToGenerate) {
       if (!(elementToGenerate.element() instanceof TypeElement targetType)) {
         continue;
       }
-      generatedBuilders.put(
+      generatedBuilders.add(
           new TypeName(context.getPackageName(targetType), targetType.getSimpleName().toString()),
           new TypeName(
               context.getPackageName(elementToGenerate.reportingElement()),
               targetType.getSimpleName() + elementToGenerate.config().getBuilderSuffix()));
     }
-    context.getBuilderScopeResolver().registerGeneratedBuilders(generatedBuilders);
   }
 
   /** Generates a builder for each planned element and returns the number of successes. */

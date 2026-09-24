@@ -52,8 +52,8 @@ public final class BuilderScopeResolver {
   private final ProcessingContext context;
   private BuilderConfiguration cachedConfiguration;
   private PackageScopes usagePackages = PackageScopes.unscoped();
-  private Map<String, TypeName> generatedBuilderTypes = Map.of();
   private final Map<String, Optional<TypeName>> resolvedBuilderTypes = new HashMap<>();
+  private final GeneratedBuilders generatedBuilders;
 
   /**
    * Creates a new resolver for the given processing context.
@@ -62,6 +62,7 @@ public final class BuilderScopeResolver {
    */
   public BuilderScopeResolver(ProcessingContext context) {
     this.context = context;
+    this.generatedBuilders = new GeneratedBuilders(resolvedBuilderTypes::clear);
   }
 
   /**
@@ -81,8 +82,8 @@ public final class BuilderScopeResolver {
    *       be referenced. The usage scope includes generation-scope packages automatically. When the
    *       scope is empty, any package is allowed (backward compatibility).
    *   <li>If the referenced type's builder is generated in the current processing round (registered
-   *       via {@link #registerGeneratedBuilders}), the registered builder name is returned
-   *       immediately — trusted without a classpath lookup or contract check.
+   *       via {@link #generatedBuilders()}), the registered builder name is returned immediately —
+   *       trusted without a classpath lookup or contract check.
    *   <li>Otherwise, the candidate builder name is constructed using {@code builderUsageSuffix}
    *       (falling back to {@code builderSuffix} if not configured). The candidate is looked up on
    *       the classpath and returned if it satisfies the builder contract: a constructor accepting
@@ -138,21 +139,16 @@ public final class BuilderScopeResolver {
   }
 
   /**
-   * Registers the builders generated for the given target types in the current processing round.
+   * Returns the registry of builders generated in the current processing round.
    *
-   * <p>The value is the generated builder's type name, which may differ from the default naming in
-   * the target type's own package - for example for {@code @SimpleBuilderFor} targets, whose
-   * builders are generated in the package of the annotated holder class.
+   * <p>The processor adds an entry per planned builder before resolution starts, so generated
+   * builders are trusted without a classpath lookup. Mutations invalidate the resolver's per-type
+   * resolution cache automatically.
    *
-   * @param generatedBuilders map from target type name to the generated builder's type name
+   * @return the generated-builders registry
    */
-  public void registerGeneratedBuilders(Map<TypeName, TypeName> generatedBuilders) {
-    Map<String, TypeName> registeredBuilders = new HashMap<>();
-    for (Map.Entry<TypeName, TypeName> entry : generatedBuilders.entrySet()) {
-      registeredBuilders.put(entry.getKey().getFullQualifiedName(), entry.getValue());
-    }
-    generatedBuilderTypes = registeredBuilders;
-    resolvedBuilderTypes.clear();
+  public GeneratedBuilders generatedBuilders() {
+    return generatedBuilders;
   }
 
   private Optional<TypeName> resolve(TypeElement referencedType) {
@@ -173,9 +169,9 @@ public final class BuilderScopeResolver {
     // Types whose builders are generated in the current processing round are trusted
     // immediately — our own generators always produce the builder contract, so no
     // classpath lookup or contract check is needed.
-    TypeName generatedBuilder = generatedBuilderTypes.get(referencedTypeFqn);
-    if (generatedBuilder != null) {
-      return Optional.of(generatedBuilder);
+    Optional<TypeName> generatedBuilder = generatedBuilders.findBuilder(referencedTypeFqn);
+    if (generatedBuilder.isPresent()) {
+      return generatedBuilder;
     }
 
     // For types not generated in this round, look up the candidate on the classpath using
