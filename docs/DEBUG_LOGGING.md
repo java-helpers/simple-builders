@@ -131,7 +131,6 @@ When debug logging is enabled, you'll see detailed output with visual separators
 [INFO] [DEBUG] simple-builders: Processing round started.
 [INFO] [DEBUG] simple-builders: Found 0 annotated elements.
 [INFO] [DEBUG] simple-builders: Found 0 type(s) for generation with @SimpleBuilderFor.
-[INFO] [DEBUG] simple-builders: No elements to process.
 [INFO] [DEBUG] simple-builders: 0 of 0 annotated element(s) are inside the builderGenerationPackages scope.
 ```
 

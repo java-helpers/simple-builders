@@ -158,9 +158,6 @@ public class BuilderProcessor extends AbstractProcessor {
     context.debug(
         "simple-builders: Found %d type(s) for generation with @SimpleBuilderFor.",
         externalTypeHolders.size());
-    if (elementsToProcess.isEmpty() && externalTypeHolders.isEmpty()) {
-      context.debug("simple-builders: No elements to process.");
-    }
 
     // Resolve configuration and apply generation scopes before processing any builder. This lets
     // the scope resolver know every builder that will be generated in this round.
@@ -258,7 +255,7 @@ public class BuilderProcessor extends AbstractProcessor {
       BuilderConfigurationReader reader,
       PerformanceTracker tracker) {
     List<ElementToGenerate> elementsToGenerate = new ArrayList<>();
-    Set<String> plannedBuilderNames = new HashSet<>();
+    Set<TypeName> plannedBuilderNames = new HashSet<>();
     for (Element annotatedElement : sortedElements) {
       context.debugStartOperation("Processing element: " + annotatedElement.getSimpleName());
       try {
@@ -294,7 +291,7 @@ public class BuilderProcessor extends AbstractProcessor {
   private Optional<ElementToGenerate> planAnnotatedElement(
       Element annotatedElement,
       BuilderConfigurationReader reader,
-      Set<String> plannedBuilderNames,
+      Set<TypeName> plannedBuilderNames,
       PerformanceTracker tracker)
       throws BuilderException {
     tracker.startPhase();
@@ -304,7 +301,8 @@ public class BuilderProcessor extends AbstractProcessor {
     if (!context.getBuilderScopeResolver().isInGenerationScope(annotatedElement, config)) {
       return Optional.empty();
     }
-    plannedBuilderNames.add(builderQualifiedName(annotatedElement, null, config));
+    plannedBuilderNames.add(
+        builderTypeName(annotatedElement, context.getPackageName(annotatedElement), config));
     return Optional.of(new ElementToGenerate(annotatedElement, config, annotatedElement));
   }
 
@@ -316,7 +314,7 @@ public class BuilderProcessor extends AbstractProcessor {
   private List<ElementToGenerate> resolveExternalTypeTargets(
       Element holder,
       BuilderConfigurationReader reader,
-      Set<String> plannedBuilderNames,
+      Set<TypeName> plannedBuilderNames,
       PerformanceTracker tracker)
       throws BuilderException {
     List<TypeElement> targets = extractExternalTargetTypes(holder);
@@ -353,7 +351,7 @@ public class BuilderProcessor extends AbstractProcessor {
       Element holder,
       BuilderConfiguration config,
       String builderPackage,
-      Set<String> plannedBuilderNames) {
+      Set<TypeName> plannedBuilderNames) {
     if (!config.builderGenerationPackages().isEmpty()
         && !config.builderGenerationPackages().includes(builderPackage)) {
       context.warning(
@@ -363,14 +361,14 @@ public class BuilderProcessor extends AbstractProcessor {
           target.getQualifiedName(),
           builderPackage);
     }
-    String builderName = builderQualifiedName(target, builderPackage, config);
+    TypeName builderName = builderTypeName(target, builderPackage, config);
     if (!plannedBuilderNames.add(builderName)) {
       context.warning(
           holder,
           "simple-builders: skipping '%s' declared in @SimpleBuilderFor on '%s' - builder '%s' is already generated elsewhere",
           target.getQualifiedName(),
           holder.getSimpleName(),
-          builderName);
+          builderName.getFullQualifiedName());
       return Optional.empty();
     }
     return Optional.of(new ElementToGenerate(target, config, holder));
@@ -420,12 +418,10 @@ public class BuilderProcessor extends AbstractProcessor {
     return targetType;
   }
 
-  /** Computes the qualified name of the builder a given target type would produce. */
-  private String builderQualifiedName(
+  /** Computes the type name of the builder a given target type would produce. */
+  private TypeName builderTypeName(
       Element target, String builderPackage, BuilderConfiguration config) {
-    String packageName = builderPackage != null ? builderPackage : context.getPackageName(target);
-    String simpleName = target.getSimpleName() + config.getBuilderSuffix();
-    return packageName.isEmpty() ? simpleName : packageName + "." + simpleName;
+    return new TypeName(builderPackage, target.getSimpleName() + config.getBuilderSuffix());
   }
 
   /**

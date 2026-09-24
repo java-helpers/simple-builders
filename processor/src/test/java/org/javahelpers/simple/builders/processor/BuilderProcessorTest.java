@@ -169,7 +169,6 @@ class BuilderProcessorTest {
         "[DEBUG] simple-builders: Processing round started.",
         "[DEBUG] simple-builders: Found 0 annotated elements.",
         "[DEBUG] simple-builders: Found 0 type(s) for generation with @SimpleBuilderFor.",
-        "[DEBUG] simple-builders: No elements to process.",
         "[DEBUG] simple-builders: 0 of 0 annotated element(s) are inside the"
             + " builderGenerationPackages scope.");
   }
