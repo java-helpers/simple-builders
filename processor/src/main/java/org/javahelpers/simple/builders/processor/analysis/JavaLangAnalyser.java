@@ -487,7 +487,7 @@ public final class JavaLangAnalyser {
       if (Strings.CI.equalsAny(name, fieldName, "is" + fieldName, "get" + fieldName)
           && candidate.getParameters().isEmpty()
           && context.isSameType(candidate.getReturnType(), fieldTypeMirror)
-          && context.isMemberAccessibleFromBuilderPackage(candidate, dtoType)) {
+          && context.isMemberAccessibleFromBuilderPackage(candidate)) {
         return Optional.of(candidate);
       }
     }
@@ -552,7 +552,7 @@ public final class JavaLangAnalyser {
       if (candidate.getSimpleName().contentEquals(setterName)
           && candidate.getParameters().size() == 1
           && candidate.getReturnType().getKind() == VOID
-          && context.isMemberAccessibleFromBuilderPackage(candidate, dtoType)) {
+          && context.isMemberAccessibleFromBuilderPackage(candidate)) {
         return Optional.of(candidate);
       }
     }
@@ -573,7 +573,7 @@ public final class JavaLangAnalyser {
       TypeElement annotatedType, ProcessingContext context) {
     List<ExecutableElement> ctors =
         ElementFilter.constructorsIn(context.getAllMembers(annotatedType)).stream()
-            .filter(ctor -> context.isMemberAccessibleFromBuilderPackage(ctor, annotatedType))
+            .filter(ctor -> context.isMemberAccessibleFromBuilderPackage(ctor))
             .toList();
 
     // First, check if any constructor is annotated with @SimpleBuilderConstructor
@@ -608,6 +608,6 @@ public final class JavaLangAnalyser {
   public static boolean hasAccessibleConstructor(
       TypeElement typeElement, ProcessingContext context) {
     return ElementFilter.constructorsIn(context.getAllMembers(typeElement)).stream()
-        .anyMatch(ctor -> context.isMemberAccessibleFromBuilderPackage(ctor, typeElement));
+        .anyMatch(ctor -> context.isMemberAccessibleFromBuilderPackage(ctor));
   }
 }

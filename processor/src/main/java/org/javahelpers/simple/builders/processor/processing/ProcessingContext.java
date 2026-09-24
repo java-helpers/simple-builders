@@ -122,30 +122,23 @@ public final class ProcessingContext {
   /**
    * Sets the package the generated builder is written to for the current processing target.
    *
-   * <p>When {@code null}, the builder is generated in the package of the processed type itself (the
-   * default for {@code @SimpleBuilder} targets). For {@code @SimpleBuilderFor} targets the package
-   * of the holder class is passed, so generated builders stay in user-controlled packages even for
-   * types from foreign packages.
+   * <p>For {@code @SimpleBuilder} targets this is the processed type's own package; for
+   * {@code @SimpleBuilderFor} targets it is the package of the holder, so generated builders stay
+   * in user-controlled packages even for types from foreign packages.
    *
-   * @param builderPackage the package for the generated builder, or {@code null} to use the
-   *     processed type's own package
+   * @param builderPackage the package for the generated builder
    */
   public void initBuilderPackageForProcessingTarget(String builderPackage) {
-    // Verbatim storage: an empty string is a valid builder package (the default package).
     this.builderPackageForProcessingTarget = builderPackage;
   }
 
   /**
-   * Gets the package the builder for the given target is generated in: the explicit builder package
-   * of the current processing target, or the target's own package when none is set.
+   * Gets the package the builder of the current processing target is generated in.
    *
-   * @param targetElement the type the builder is generated for
    * @return the qualified package name of the generated builder
    */
-  public String getBuilderPackageName(Element targetElement) {
-    return builderPackageForProcessingTarget != null
-        ? builderPackageForProcessingTarget
-        : getPackageName(targetElement);
+  public String getBuilderPackageName() {
+    return builderPackageForProcessingTarget;
   }
 
   /**
@@ -158,18 +151,16 @@ public final class ProcessingContext {
    * through inheritance does not apply, as the builder does not extend the target type).
    *
    * @param member the member to check
-   * @param targetElement the type the builder is generated for, used to resolve the effective
-   *     builder package when no explicit builder package is set
    * @return {@code true} if generated code in the builder package may call the member
    */
-  public boolean isMemberAccessibleFromBuilderPackage(Element member, Element targetElement) {
+  public boolean isMemberAccessibleFromBuilderPackage(Element member) {
     if (member.getModifiers().contains(Modifier.PUBLIC)) {
       return true;
     }
     if (member.getModifiers().contains(Modifier.PRIVATE)) {
       return false;
     }
-    return getPackageName(member).equals(getBuilderPackageName(targetElement));
+    return getPackageName(member).equals(getBuilderPackageName());
   }
 
   /**

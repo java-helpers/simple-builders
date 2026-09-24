@@ -155,12 +155,11 @@ public class BuilderProcessor extends AbstractProcessor {
 
     context.debug("simple-builders: Processing round started.");
     context.debug("simple-builders: Found %d annotated elements.", elementsToProcess.size());
-    if (externalTypeHolders.isEmpty()) {
-      context.debug("simple-builders: No @SimpleBuilderFor types detected.");
-    } else {
-      context.debug(
-          "simple-builders: Found %d type(s) for generation with @SimpleBuilderFor.",
-          externalTypeHolders.size());
+    context.debug(
+        "simple-builders: Found %d type(s) for generation with @SimpleBuilderFor.",
+        externalTypeHolders.size());
+    if (elementsToProcess.isEmpty() && externalTypeHolders.isEmpty()) {
+      context.debug("simple-builders: No elements to process.");
     }
 
     // Resolve configuration and apply generation scopes before processing any builder. This lets
@@ -320,14 +319,7 @@ public class BuilderProcessor extends AbstractProcessor {
       Set<String> plannedBuilderNames,
       PerformanceTracker tracker)
       throws BuilderException {
-    AnnotationMirror simpleBuilderForMirror =
-        JavaLangAnalyser.findAnnotation(holder, SimpleBuilderFor.class)
-            .orElseThrow(
-                () ->
-                    new BuilderException(
-                        holder, "No @SimpleBuilderFor annotation found on '%s'", holder));
-
-    List<TypeElement> targets = extractExternalTargetTypes(holder, simpleBuilderForMirror);
+    List<TypeElement> targets = extractExternalTargetTypes(holder);
     if (targets.isEmpty()) {
       context.warning(
           holder,
@@ -337,8 +329,7 @@ public class BuilderProcessor extends AbstractProcessor {
     }
 
     tracker.startPhase();
-    BuilderConfiguration config =
-        reader.resolveExternalConfiguration(holder, simpleBuilderForMirror);
+    BuilderConfiguration config = reader.resolveExternalConfiguration(holder);
     tracker.endPhase(PHASE_CONFIGURATION_RESOLUTION);
 
     String builderPackage = context.getPackageName(holder);
@@ -353,8 +344,9 @@ public class BuilderProcessor extends AbstractProcessor {
   /**
    * Plans a builder for a single type listed in {@code @SimpleBuilderFor}, or reports on the holder
    * why no builder is generated for it. An explicit declaration always generates a builder - the
-   * {@code builderGenerationPackages} scope only filters annotated types, so a scope that would
-   * exclude an explicitly named type is a contradictory configuration and only warns.
+   * target type's own annotations (such as {@code @Ignore4BuilderGeneration}) are not consulted,
+   * and the {@code builderGenerationPackages} scope only filters annotated types, so a scope that
+   * would exclude an explicitly named type is a contradictory configuration and only warns.
    */
   private Optional<ElementToGenerate> planExternalTarget(
       TypeElement target,
@@ -362,14 +354,6 @@ public class BuilderProcessor extends AbstractProcessor {
       BuilderConfiguration config,
       String builderPackage,
       Set<String> plannedBuilderNames) {
-    if (JavaLangAnalyser.findAnnotation(target, Ignore4BuilderGeneration.class).isPresent()) {
-      context.warning(
-          holder,
-          "simple-builders: skipping '%s' declared in @SimpleBuilderFor on '%s' - opted out via @Ignore4BuilderGeneration",
-          target.getQualifiedName(),
-          holder.getSimpleName());
-      return Optional.empty();
-    }
     if (!config.builderGenerationPackages().isEmpty()
         && !config.builderGenerationPackages().includes(builderPackage)) {
       context.warning(
@@ -393,20 +377,24 @@ public class BuilderProcessor extends AbstractProcessor {
   }
 
   /**
-   * Reads the {@code value} attribute of a {@code @SimpleBuilderFor} annotation mirror and resolves
-   * each entry to the {@link TypeElement} the builder is generated for.
+   * Reads the {@code value} attribute of the {@code @SimpleBuilderFor} annotation on the holder and
+   * resolves each entry to the {@link TypeElement} the builder is generated for.
    */
-  private List<TypeElement> extractExternalTargetTypes(Element holder, AnnotationMirror mirror)
-      throws BuilderException {
+  private List<TypeElement> extractExternalTargetTypes(Element holder) throws BuilderException {
+    List<TypeElement> targets = new ArrayList<>();
+    Optional<AnnotationMirror> mirror =
+        JavaLangAnalyser.findAnnotation(holder, SimpleBuilderFor.class);
+    if (mirror.isEmpty()) {
+      return targets;
+    }
     AnnotationValue valueAttribute = null;
     for (Map.Entry<ExecutableElement, AnnotationValue> entry :
-        context.getElementValuesWithDefaults(mirror).entrySet()) {
+        context.getElementValuesWithDefaults(mirror.get()).entrySet()) {
       if (entry.getKey().getSimpleName().contentEquals("value")) {
         valueAttribute = entry.getValue();
         break;
       }
     }
-    List<TypeElement> targets = new ArrayList<>();
     if (valueAttribute == null || !(valueAttribute.getValue() instanceof List<?> values)) {
       return targets;
     }
@@ -446,20 +434,15 @@ public class BuilderProcessor extends AbstractProcessor {
    * differ from the target's package for {@code @SimpleBuilderFor} targets.
    */
   private void registerGeneratedTypes(List<ElementToGenerate> elementsToGenerate) {
-    Map<String, TypeName> generatedBuilders = new HashMap<>();
+    Map<TypeName, TypeName> generatedBuilders = new HashMap<>();
     for (ElementToGenerate elementToGenerate : elementsToGenerate) {
       if (!(elementToGenerate.element() instanceof TypeElement targetType)) {
         continue;
       }
-      Element builderPackageAnchor =
-          elementToGenerate.reportingElement() == targetType
-              ? targetType
-              : elementToGenerate.reportingElement();
-      String builderPackage = context.getPackageName(builderPackageAnchor);
       generatedBuilders.put(
-          targetType.getQualifiedName().toString(),
+          new TypeName(context.getPackageName(targetType), targetType.getSimpleName().toString()),
           new TypeName(
-              builderPackage,
+              context.getPackageName(elementToGenerate.reportingElement()),
               targetType.getSimpleName() + elementToGenerate.config().getBuilderSuffix()));
     }
     context.getBuilderScopeResolver().registerGeneratedBuilders(generatedBuilders);
@@ -564,13 +547,12 @@ public class BuilderProcessor extends AbstractProcessor {
       Element element, BuilderConfiguration config, Element reportingElement) {}
 
   /**
-   * The package the builder is generated into: the holder's package for {@code @SimpleBuilderFor}
-   * targets, {@code null} (meaning the target's own package) for directly annotated types.
+   * The package the builder is generated into: the package of the element the generation is
+   * reported on - the {@code @SimpleBuilderFor} holder for external types, the annotated type
+   * itself otherwise.
    */
   private String builderPackageOf(ElementToGenerate elementToGenerate) {
-    return elementToGenerate.reportingElement() == elementToGenerate.element()
-        ? null
-        : context.getPackageName(elementToGenerate.reportingElement());
+    return context.getPackageName(elementToGenerate.reportingElement());
   }
 
   /**

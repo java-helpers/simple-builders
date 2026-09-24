@@ -101,7 +101,7 @@ class BuilderProcessorTest {
         "simple-builders: PROCESSING ROUND START",
         "[DEBUG] simple-builders: Processing round started.",
         "[DEBUG] simple-builders: Found 1 annotated elements.",
-        "[DEBUG] simple-builders: No @SimpleBuilderFor types detected.",
+        "[DEBUG] simple-builders: Found 0 type(s) for generation with @SimpleBuilderFor.",
         // Round 1 — configuration resolution
         "[DEBUG] Processing element: VerboseTest",
         "[DEBUG] ├─ Resolving configuration for element: VerboseTest",
@@ -168,7 +168,8 @@ class BuilderProcessorTest {
         "simple-builders: PROCESSING ROUND START",
         "[DEBUG] simple-builders: Processing round started.",
         "[DEBUG] simple-builders: Found 0 annotated elements.",
-        "[DEBUG] simple-builders: No @SimpleBuilderFor types detected.",
+        "[DEBUG] simple-builders: Found 0 type(s) for generation with @SimpleBuilderFor.",
+        "[DEBUG] simple-builders: No elements to process.",
         "[DEBUG] simple-builders: 0 of 0 annotated element(s) are inside the"
             + " builderGenerationPackages scope.");
   }

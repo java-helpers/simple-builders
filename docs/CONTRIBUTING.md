@@ -241,7 +241,7 @@ For complete documentation, see [DEBUG_LOGGING.md](DEBUG_LOGGING.md).
 --- NOTES ---
 [DEBUG] simple-builders: Processing round started.
 [DEBUG] simple-builders: Found 1 annotated elements.
-[DEBUG] simple-builders: No @SimpleBuilderFor types detected.
+[DEBUG] simple-builders: Found 0 type(s) for generation with @SimpleBuilderFor.
 [DEBUG] simple-builders: 1 of 1 annotated element(s) are inside the builderGenerationPackages scope.
 [DEBUG] Processing element: Project
 [DEBUG] ├─ Extracting builder definition from: test.Project

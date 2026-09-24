@@ -222,7 +222,7 @@ class SimpleBuilderForTest {
   }
 
   @Test
-  void ignore4BuilderGenerationOnTarget_SkipsWithWarning() {
+  void ignore4BuilderGenerationOnTarget_ExplicitDeclarationStillGenerates() {
     JavaFileObject optedOut =
         ProcessorTestUtils.forSource(
             """
@@ -238,10 +238,11 @@ class SimpleBuilderForTest {
         ProcessorTestUtils.createCompiler()
             .compile(optedOut, holder("test", "Builders", "ext.OptedOut"));
 
-    assertThat(compilation).succeeded();
-    assertThat(compilation).hadWarningContaining("@Ignore4BuilderGeneration");
-    ProcessorAsserts.assertNoBuilderGenerated(
-        compilation, "OptedOut", "An opted-out type must not get a builder");
+    // The explicit @SimpleBuilderFor declaration wins - the target type's own annotations
+    // (including @Ignore4BuilderGeneration) are not consulted
+    assertThat(compilation).succeededWithoutWarnings();
+    String generated = ProcessorTestUtils.loadGeneratedSource(compilation, "OptedOutBuilder");
+    ProcessorAsserts.assertGenerationSucceeded(compilation, "OptedOutBuilder", generated);
   }
 
   @Test

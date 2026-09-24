@@ -22,17 +22,13 @@
  * SOFTWARE.
  */
 
+/**
+ * Declares builders for types that cannot carry {@code @SimpleBuilder} themselves - for example
+ * classes from third-party libraries. The generated builders are placed in this package, {@code
+ * org.javahelpers.simple.builders.example}.
+ */
+@SimpleBuilderFor(ExternalAddress.class)
 package org.javahelpers.simple.builders.example;
 
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFor;
 import org.javahelpers.simple.builders.example.external.ExternalAddress;
-
-/**
- * Holder class declaring builders for types that cannot carry {@code @SimpleBuilder} themselves -
- * for example classes from third-party libraries.
- *
- * <p>The generated builders are placed in the package of this holder class, here {@code
- * org.javahelpers.simple.builders.example}.
- */
-@SimpleBuilderFor(ExternalAddress.class)
-public class ExternalTypeBuilders {}

@@ -43,23 +43,23 @@ import java.lang.annotation.Target;
  * annotation. Only members of the target type that are accessible from that package (e.g. public
  * constructors and setters, or package-visible members when the holder shares the target's package)
  * are used for builder generation. If no suitable construction mechanism is available, generation
- * fails with a compile-time error.
+ * fails with a compile-time error. The target type's own annotations are not consulted - the
+ * explicit declaration wins, so even an {@link Ignore4BuilderGeneration} on the target does not
+ * suppress generation.
  *
- * <p>Example:
+ * <p>Example, declared on the package in {@code package-info.java} (generates the builder into
+ * {@code com.example}):
  *
  * <pre>{@code
- * package com.vendor.api;
- *
- * public class ExternalUser {
- *     public ExternalUser(String name, String email) {
- *         // ...
- *     }
- * }
- *
- * package com.example;
- *
  * @SimpleBuilderFor(ExternalUser.class)
- * class ExternalBuilders {
+ * package com.example;
+ * }</pre>
+ *
+ * <p>or on a dedicated provider class:
+ *
+ * <pre>{@code
+ * @SimpleBuilderFor(ExternalUser.class)
+ * public class ExternalBuildersProvider {
  * }
  *
  * // Generated usage:
@@ -74,7 +74,7 @@ import java.lang.annotation.Target;
  *
  * <pre>{@code
  * @SimpleBuilderFor({ExternalUser.class, ExternalOrder.class})
- * class ExternalBuilders {
+ * public class ExternalBuildersProvider {
  * }
  * }</pre>
  *
@@ -88,7 +88,7 @@ import java.lang.annotation.Target;
  *         builderSuffix = "Factory"
  *     )
  * )
- * class ExternalBuilders {
+ * public class ExternalBuildersProvider {
  * }
  * }</pre>
  *

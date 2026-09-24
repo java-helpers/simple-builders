@@ -23,7 +23,6 @@
  */
 package org.javahelpers.simple.builders.processor.analysis;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -82,9 +81,8 @@ public final class BuilderScopeResolver {
    *       be referenced. The usage scope includes generation-scope packages automatically. When the
    *       scope is empty, any package is allowed (backward compatibility).
    *   <li>If the referenced type's builder is generated in the current processing round (registered
-   *       via {@link #registerGeneratedTypes} or {@link #registerGeneratedBuilders}), the
-   *       registered builder name is returned immediately — trusted without a classpath lookup or
-   *       contract check.
+   *       via {@link #registerGeneratedBuilders}), the registered builder name is returned
+   *       immediately — trusted without a classpath lookup or contract check.
    *   <li>Otherwise, the candidate builder name is constructed using {@code builderUsageSuffix}
    *       (falling back to {@code builderSuffix} if not configured). The candidate is looked up on
    *       the classpath and returned if it satisfies the builder contract: a constructor accepting
@@ -140,32 +138,20 @@ public final class BuilderScopeResolver {
   }
 
   /**
-   * Registers the types whose builders are generated in the current processing round.
+   * Registers the builders generated for the given target types in the current processing round.
    *
-   * @param generatedTypes types whose builders will be generated in this round
+   * <p>The value is the generated builder's type name, which may differ from the default naming in
+   * the target type's own package - for example for {@code @SimpleBuilderFor} targets, whose
+   * builders are generated in the package of the annotated holder class.
+   *
+   * @param generatedBuilders map from target type name to the generated builder's type name
    */
-  public void registerGeneratedTypes(Collection<? extends TypeElement> generatedTypes) {
-    Map<String, TypeName> registeredTypes = new HashMap<>();
-    for (TypeElement generatedType : generatedTypes) {
-      registeredTypes.put(
-          generatedType.getQualifiedName().toString(),
-          JavaLangMapper.createBuilderTypeName(
-              generatedType, context, context.getConfiguration().getBuilderSuffix()));
+  public void registerGeneratedBuilders(Map<TypeName, TypeName> generatedBuilders) {
+    Map<String, TypeName> registeredBuilders = new HashMap<>();
+    for (Map.Entry<TypeName, TypeName> entry : generatedBuilders.entrySet()) {
+      registeredBuilders.put(entry.getKey().getFullQualifiedName(), entry.getValue());
     }
-    registerGeneratedBuilders(registeredTypes);
-  }
-
-  /**
-   * Registers the builder type names generated for the given target types in the current processing
-   * round. Use this overload when the generated builder does not follow the default naming in the
-   * target type's own package - for example for {@code @SimpleBuilderFor} targets, whose builders
-   * are generated in the package of the annotated holder class.
-   *
-   * @param generatedBuilders map from target type qualified name to the generated builder's type
-   *     name
-   */
-  public void registerGeneratedBuilders(Map<String, TypeName> generatedBuilders) {
-    generatedBuilderTypes = new HashMap<>(generatedBuilders);
+    generatedBuilderTypes = registeredBuilders;
     resolvedBuilderTypes.clear();
   }
 

@@ -97,13 +97,13 @@ public class BuilderDefinitionCreator {
 
     // The generated builder is a separate top-level class; it can only reference the target
     // type itself and constructors that are accessible from the builder's package.
-    if (!context.isMemberAccessibleFromBuilderPackage(annotatedType, annotatedType)) {
+    if (!context.isMemberAccessibleFromBuilderPackage(annotatedType)) {
       throw new BuilderException(
           annotatedElement,
           "The type '%s' is not accessible from the package '%s' its builder is generated in. "
               + "Only types constructible through accessible Java APIs can get a builder.",
           annotatedType.getQualifiedName(),
-          context.getBuilderPackageName(annotatedType));
+          context.getBuilderPackageName());
     }
     if (!JavaLangAnalyser.hasAccessibleConstructor(annotatedType, context)) {
       throw new BuilderException(
@@ -458,7 +458,7 @@ public class BuilderDefinitionCreator {
       TypeElement annotatedType, ProcessingContext context) {
     BuilderDefinitionDto result = new BuilderDefinitionDto();
     String packageName = context.getPackageName(annotatedType);
-    String builderPackageName = context.getBuilderPackageName(annotatedType);
+    String builderPackageName = context.getBuilderPackageName();
     String simpleClassName = annotatedType.getSimpleName().toString();
     String builderSuffix = context.getConfiguration().getBuilderSuffix();
     result.setBuilderTypeName(new TypeName(builderPackageName, simpleClassName + builderSuffix));
@@ -622,7 +622,7 @@ public class BuilderDefinitionCreator {
       context.debug("Skipping: is static");
       return false;
     }
-    if (!context.isMemberAccessibleFromBuilderPackage(mth, annotatedType)) {
+    if (!context.isMemberAccessibleFromBuilderPackage(mth)) {
       context.debug("Skipping: not accessible from the generated builder's package");
       return false;
     }
