@@ -99,7 +99,7 @@ public class JacksonModuleGenerator {
   private String getTargetPackage(BuilderConfiguration config, BuilderDefinitionDto builderDef) {
     String targetPackage = config.getJacksonModulePackage();
     if (targetPackage == null) {
-      targetPackage = builderDef.getBuildingTargetTypeName().getPackageName();
+      targetPackage = builderDef.getBuilderTypeName().getPackageName();
     }
     return targetPackage;
   }

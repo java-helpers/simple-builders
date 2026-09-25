@@ -99,7 +99,9 @@ class BuilderProcessorTest {
         "[DEBUG] └─ Initialized GeneratorRegistry with 15 method generators and 9 builder",
         // Round 1 — start
         "simple-builders: PROCESSING ROUND START",
-        "[DEBUG] simple-builders: Processing round started. Found 1 annotated elements.",
+        "[DEBUG] simple-builders: Processing round started.",
+        "[DEBUG] simple-builders: Found 1 annotated elements.",
+        "[DEBUG] simple-builders: Found 0 type(s) for generation with @SimpleBuilderFor.",
         // Round 1 — configuration resolution
         "[DEBUG] Processing element: VerboseTest",
         "[DEBUG] ├─ Resolving configuration for element: VerboseTest",
@@ -164,7 +166,9 @@ class BuilderProcessorTest {
         "simple-builders: Successfully generated 1 builder(s) in this processing round",
         // Round 2 — no new elements
         "simple-builders: PROCESSING ROUND START",
-        "[DEBUG] simple-builders: Processing round started. Found 0 annotated elements.",
+        "[DEBUG] simple-builders: Processing round started.",
+        "[DEBUG] simple-builders: Found 0 annotated elements.",
+        "[DEBUG] simple-builders: Found 0 type(s) for generation with @SimpleBuilderFor.",
         "[DEBUG] simple-builders: 0 of 0 annotated element(s) are inside the"
             + " builderGenerationPackages scope.");
   }

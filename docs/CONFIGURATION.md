@@ -8,6 +8,7 @@ Simple-builders supports fine-grained configuration through the `@SimpleBuilder.
 - [Annotation Configuration](#annotation-configuration)
 - [Template Annotations](#template-annotations)
 - [Excluding Types from Builder Generation](#excluding-types-from-builder-generation)
+- [Generating Builders for External Types](#generating-builders-for-external-types)
 - [Compiler Options](#compiler-options)
   - [Maven Configuration](#maven-configuration)
   - [Gradle Configuration](#gradle-configuration)
@@ -168,6 +169,25 @@ public class IgnoredDto extends ParentDto {
 ```
 
 A type marked with `@Ignore4BuilderGeneration` is treated as having **no builder available**. Other builders that reference it will fall back to plain setters instead of emitting nested-builder consumers. The annotation is intentionally **not** `@Inherited`, so it only suppresses the exact type it is placed on and does not cascade to further subclasses.
+
+## Generating Builders for External Types
+
+`@SimpleBuilder` has to be placed on the type itself, which is not possible for types you cannot modify - for example classes or records from third-party libraries. `@SimpleBuilderFor` covers this case: declare it on the package itself in `package-info.java` (or on a dedicated provider class in your own code) and list the types a builder is generated for.
+
+```java
+// package-info.java - generates ExternalUserFactory and ExternalOrderFactory into this package
+@SimpleBuilderFor(
+    value = {ExternalUser.class, ExternalOrder.class},
+    options = @SimpleBuilder.Options(builderSuffix = "Factory"))
+package com.example;
+
+import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFor;
+```
+
+The generated builders are placed in the annotated package - or in the package of the provider class when a class is annotated instead. `options` reuses `@SimpleBuilder.Options` and is optional - compiler defaults apply when omitted.
+
+The target type must be constructible through accessible Java APIs from the builder's package: it needs a visible type and an accessible constructor, otherwise generation fails with a compile-time diagnostic. The target type's own annotations are not consulted - the explicit declaration wins, so `@Ignore4BuilderGeneration` on the target does not suppress generation either. `@SimpleBuilderFor` is not `@Inherited`, and the provider class or package itself never gets a builder.
 
 ## Compiler Options
 

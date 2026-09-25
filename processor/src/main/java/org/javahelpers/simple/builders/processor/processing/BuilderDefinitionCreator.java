@@ -95,6 +95,25 @@ public class BuilderDefinitionCreator {
     context.debugStartOperation(
         "Extracting builder definition from: %s", annotatedType.getQualifiedName());
 
+    // The generated builder is a separate top-level class; it can only reference the target
+    // type itself and constructors that are accessible from the builder's package.
+    if (!context.isMemberAccessibleFromBuilderPackage(annotatedType)) {
+      throw new BuilderException(
+          annotatedElement,
+          "The type '%s' is not accessible from the package '%s' its builder is generated in. "
+              + "Only types constructible through accessible Java APIs can get a builder.",
+          annotatedType.getQualifiedName(),
+          context.getBuilderPackageName());
+    }
+    if (!JavaLangAnalyser.hasAccessibleConstructor(annotatedType, context)) {
+      throw new BuilderException(
+          annotatedElement,
+          "No accessible constructor found on '%s'. A builder can only be generated for types "
+              + "that can be constructed through accessible Java APIs (e.g. a public or "
+              + "package-visible constructor reachable from the generated builder).",
+          annotatedType.getQualifiedName());
+    }
+
     BuilderDefinitionDto result = initializeBuilderDefinition(annotatedType, context);
 
     // Track field names to resolve conflicts during field creation
@@ -439,14 +458,15 @@ public class BuilderDefinitionCreator {
       TypeElement annotatedType, ProcessingContext context) {
     BuilderDefinitionDto result = new BuilderDefinitionDto();
     String packageName = context.getPackageName(annotatedType);
+    String builderPackageName = context.getBuilderPackageName();
     String simpleClassName = annotatedType.getSimpleName().toString();
     String builderSuffix = context.getConfiguration().getBuilderSuffix();
-    result.setBuilderTypeName(new TypeName(packageName, simpleClassName + builderSuffix));
+    result.setBuilderTypeName(new TypeName(builderPackageName, simpleClassName + builderSuffix));
     result.setBuildingTargetTypeName(new TypeName(packageName, simpleClassName));
     result.setConfiguration(context.getConfiguration());
 
     context.debug(
-        "Builder will be generated as: %s.%s", packageName, simpleClassName + builderSuffix);
+        "Builder will be generated as: %s.%s", builderPackageName, simpleClassName + builderSuffix);
 
     // Extract generics from the annotated type via mapper (stream-based)
     JavaLangMapper.map2GenericParameterDtos(annotatedType, context).forEach(result::addGeneric);
@@ -600,6 +620,10 @@ public class BuilderDefinitionCreator {
     }
     if (!isNotStatic(mth)) {
       context.debug("Skipping: is static");
+      return false;
+    }
+    if (!context.isMemberAccessibleFromBuilderPackage(mth)) {
+      context.debug("Skipping: not accessible from the generated builder's package");
       return false;
     }
     return true;
