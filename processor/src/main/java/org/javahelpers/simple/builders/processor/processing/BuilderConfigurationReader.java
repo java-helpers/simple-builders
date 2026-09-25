@@ -154,8 +154,7 @@ public class BuilderConfigurationReader {
    * @param element the {@code @SimpleBuilderFor} holder (used for validation messages)
    * @return the fully resolved configuration with all sources merged
    */
-  public BuilderConfiguration resolveSimpleBuilderForConfiguration(Element element)
-      throws BuilderException {
+  public BuilderConfiguration resolveHolderConfiguration(Element element) throws BuilderException {
     Objects.requireNonNull(element, "element must not be null");
     String elementName = element.getSimpleName().toString();
     logger.debugStartOperation(

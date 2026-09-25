@@ -331,7 +331,7 @@ public class BuilderProcessor extends AbstractProcessor {
     }
 
     tracker.startPhase();
-    BuilderConfiguration config = reader.resolveSimpleBuilderForConfiguration(holder);
+    BuilderConfiguration config = reader.resolveHolderConfiguration(holder);
     tracker.endPhase(PHASE_CONFIGURATION_RESOLUTION);
 
     String builderPackage = context.getPackageName(holder);
@@ -390,24 +390,21 @@ public class BuilderProcessor extends AbstractProcessor {
     }
     Optional<AnnotationValue> valueAttribute =
         JavaLangAnalyser.findAnnotationAttribute(mirror.get(), "value", context);
-    if (valueAttribute.isEmpty()) {
-      return List.of();
+    List<TypeElement> results = new ArrayList<>();
+    // For an array-valued attribute javac always delivers a list, even for a single entry.
+    if (valueAttribute.isEmpty() || !(valueAttribute.get().getValue() instanceof List<?> items)) {
+      return results;
     }
-    // For an array-valued attribute javac always delivers a list, even for a single entry;
-    // a plain single value is accepted too for robustness.
-    Object value = valueAttribute.get().getValue();
-    List<?> items = value instanceof List<?> values ? values : List.of(value);
-    List<TypeElement> targets = new ArrayList<>();
     for (Object item : items) {
-      targets.add(resolveExternalTargetType(holder, item));
+      results.add(resolveExternalTargetType(holder, item));
     }
-    return targets;
+    return results;
   }
 
   /** Resolves one entry of a {@code @SimpleBuilderFor} {@code value} attribute to its type. */
   private TypeElement resolveExternalTargetType(Element holder, Object item)
       throws BuilderException {
-    Object typeValue = item instanceof AnnotationValue value ? value.getValue() : item;
+    Object typeValue = item instanceof AnnotationValue value ? value.getValue() : null;
     Element resolved =
         typeValue instanceof TypeMirror typeMirror ? context.asElement(typeMirror) : null;
     if (!(resolved instanceof TypeElement targetType)) {
