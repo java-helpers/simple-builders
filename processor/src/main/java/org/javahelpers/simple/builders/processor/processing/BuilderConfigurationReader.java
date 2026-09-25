@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
@@ -155,6 +156,7 @@ public class BuilderConfigurationReader {
    */
   public BuilderConfiguration resolveSimpleBuilderForConfiguration(Element element)
       throws BuilderException {
+    Objects.requireNonNull(element, "element must not be null");
     String elementName = element.getSimpleName().toString();
     logger.debugStartOperation(
         "Resolving configuration for @SimpleBuilderFor target: %s", elementName);

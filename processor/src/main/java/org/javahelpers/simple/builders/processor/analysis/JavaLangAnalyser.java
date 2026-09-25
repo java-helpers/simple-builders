@@ -594,7 +594,7 @@ public final class JavaLangAnalyser {
       TypeElement annotatedType, ProcessingContext context) {
     List<ExecutableElement> ctors =
         ElementFilter.constructorsIn(context.getAllMembers(annotatedType)).stream()
-            .filter(ctor -> context.isMemberAccessibleFromBuilderPackage(ctor))
+            .filter(context::isMemberAccessibleFromBuilderPackage)
             .toList();
 
     // First, check if any constructor is annotated with @SimpleBuilderConstructor
@@ -629,6 +629,6 @@ public final class JavaLangAnalyser {
   public static boolean hasAccessibleConstructor(
       TypeElement typeElement, ProcessingContext context) {
     return ElementFilter.constructorsIn(context.getAllMembers(typeElement)).stream()
-        .anyMatch(ctor -> context.isMemberAccessibleFromBuilderPackage(ctor));
+        .anyMatch(context::isMemberAccessibleFromBuilderPackage);
   }
 }

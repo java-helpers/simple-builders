@@ -548,7 +548,7 @@ public class BuilderDefinitionCreator {
     for (ExecutableElement mth : methods) {
       context.debugStartOperation("Analyzing method: %s", mth.toString());
 
-      if (isMethodRelevantForBuilder(mth, annotatedType, context)) {
+      if (isMethodRelevantForBuilder(mth, context)) {
         // Extract the original field name from the setter method (before any renaming)
         String methodName = mth.getSimpleName().toString();
         String originalFieldName =
@@ -601,7 +601,7 @@ public class BuilderDefinitionCreator {
   }
 
   private static boolean isMethodRelevantForBuilder(
-      ExecutableElement mth, TypeElement annotatedType, ProcessingContext context) {
+      ExecutableElement mth, ProcessingContext context) {
     if (!hasNoThrowablesDeclared(mth)) {
       context.debug("Skipping: declares throwables");
       return false;

@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import javax.annotation.processing.AbstractProcessor;
@@ -319,6 +320,7 @@ public class BuilderProcessor extends AbstractProcessor {
       Set<TypeName> alreadyPlannedBuilders,
       PerformanceTracker tracker)
       throws BuilderException {
+    Objects.requireNonNull(holder, "holder must not be null");
     List<TypeElement> targets = extractExternalTargetTypes(holder);
     if (targets.isEmpty()) {
       context.warning(
