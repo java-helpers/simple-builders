@@ -111,9 +111,11 @@ public @interface SimpleBuilderFor {
 
   /**
    * Configuration options for the generated builders, reusing the {@link SimpleBuilder.Options}
-   * model. When omitted, the compiler defaults apply.
+   * model. When omitted, all members keep their {@code UNSET} default, so each option resolves as
+   * documented for the corresponding {@link SimpleBuilder.Options} member — falling back to the
+   * {@code -Asimplebuilder.*} compiler argument and then to the built-in default listed there.
    *
-   * @return the configuration options, or default (all UNSET) if not specified
+   * @return the configuration options, defaulting to all members {@code UNSET}
    */
   SimpleBuilder.Options options() default @SimpleBuilder.Options;
 }

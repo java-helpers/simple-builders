@@ -393,6 +393,10 @@ public class BuilderProcessor extends AbstractProcessor {
     List<TypeElement> results = new ArrayList<>();
     // For an array-valued attribute javac always delivers a list, even for a single entry.
     if (valueAttribute.isEmpty() || !(valueAttribute.get().getValue() instanceof List<?> items)) {
+      context.warning(
+          holder,
+          "simple-builders: could not read the 'value' attribute of @SimpleBuilderFor on '%s' - nothing to generate",
+          holder.getSimpleName());
       return results;
     }
     for (Object item : items) {
