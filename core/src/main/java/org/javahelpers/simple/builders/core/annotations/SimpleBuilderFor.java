@@ -45,7 +45,8 @@ import java.lang.annotation.Target;
  * are used for builder generation. If no suitable construction mechanism is available, generation
  * fails with a compile-time error. The target type's own annotations are not consulted - the
  * explicit declaration wins, so even an {@link Ignore4BuilderGeneration} on the target does not
- * suppress generation.
+ * suppress generation. This annotation is intentionally not {@code @Inherited}: it declares
+ * generation for exactly the types listed on the annotated element.
  *
  * <p>See also the <a
  * href="https://github.com/java-helpers/simple-builders/blob/main/docs/CONFIGURATION.md#generating-builders-for-external-types">
