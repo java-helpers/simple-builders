@@ -633,8 +633,7 @@ public class RoasterCodeGenerator implements ClassCodeGenerator {
    */
   private boolean builderClassAlreadyExists(String qualifiedName) {
     try {
-      TypeElement existingType =
-          processingEnv.getElementUtils().getTypeElement(qualifiedName);
+      TypeElement existingType = processingEnv.getElementUtils().getTypeElement(qualifiedName);
       return existingType != null;
     } catch (Exception e) {
       logger.debug(
