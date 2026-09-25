@@ -48,9 +48,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  * start} pushes a timestamp onto the stack, and the matching {@code end} pops it and accumulates
  * the elapsed time. This allows nested calls without passing identifiers.
  *
- * <p>The tracker maintains per-phase totals (with a hardcoded hierarchy defined by {@link
- * #PHASE_CHILDREN} for report display), per-generator and per-enhancer totals with call counts, and
- * per-class metrics including field and collection counts.
+ * <p>The tracker maintains per-phase totals (with a phase hierarchy supplied at construction for
+ * report display), per-generator and per-enhancer totals with call counts, and per-class metrics
+ * including field and collection counts.
  *
  * <p>When an output file path is provided, {@link #generateReport(ProcessingLogger)} writes a
  * structured JSON report with hierarchical phase breakdown, class metrics, and generator/enhancer
@@ -64,36 +64,13 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public final class ActivePerformanceTracker implements PerformanceTracker {
 
-  /** Hardcoded phase hierarchy for report display. Order defines display order. */
-  private static final List<String> TOP_LEVEL_PHASES =
-      List.of(
-          PHASE_ELEMENT_COLLECTION,
-          PHASE_CONFIGURATION_RESOLUTION,
-          PHASE_BUILDER_DEFINITION_EXTRACTION,
-          PHASE_DTO_MAPPING,
-          PHASE_CODE_GENERATION);
-
   private static final String JSON_KEY_ELAPSED_NANOS = "elapsedNanos";
 
-  private static final Map<String, List<String>> PHASE_CHILDREN = new LinkedHashMap<>();
+  /** Top-level phases for report display, in display order. */
+  private final List<String> topLevelPhases;
 
-  static {
-    PHASE_CHILDREN.put(
-        PHASE_CODE_GENERATION, List.of(PHASE_SOURCE_CONSTRUCTION, PHASE_FILE_WRITING));
-    PHASE_CHILDREN.put(
-        PHASE_SOURCE_CONSTRUCTION,
-        List.of(PHASE_ELEMENT_BUILDING, PHASE_STRING_GENERATION, PHASE_FORMATTING));
-    PHASE_CHILDREN.put(
-        PHASE_ELEMENT_BUILDING,
-        List.of(
-            PHASE_CLASS_CREATION,
-            PHASE_CLASS_METADATA,
-            PHASE_FIELDS,
-            PHASE_CONSTRUCTORS,
-            PHASE_METHODS,
-            PHASE_NESTED_TYPES,
-            PHASE_CLASS_ANNOTATIONS));
-  }
+  /** Phase hierarchy for report display: parent phase to ordered child phases. */
+  private final Map<String, List<String>> phaseChildren;
 
   private final Map<String, Long> phaseTimes = new ConcurrentHashMap<>();
   private final Map<String, Long> generatorTimes = new ConcurrentHashMap<>();
@@ -121,8 +98,22 @@ public final class ActivePerformanceTracker implements PerformanceTracker {
    * @param outputFilePath optional path for JSON report output; null or empty disables file output
    */
   public ActivePerformanceTracker(String outputFilePath) {
+    this(outputFilePath, List.of(), Map.of());
+  }
+
+  /**
+   * Creates a new ActivePerformanceTracker with a phase hierarchy for report display.
+   *
+   * @param outputFilePath optional path for JSON report output; null or empty disables file output
+   * @param topLevelPhases top-level phases in display order
+   * @param phaseChildren parent phase to ordered child phases
+   */
+  public ActivePerformanceTracker(
+      String outputFilePath, List<String> topLevelPhases, Map<String, List<String>> phaseChildren) {
     this.totalStartTime = System.nanoTime();
     this.outputFilePath = outputFilePath;
+    this.topLevelPhases = topLevelPhases;
+    this.phaseChildren = phaseChildren;
   }
 
   @Override
@@ -211,9 +202,8 @@ public final class ActivePerformanceTracker implements PerformanceTracker {
 
     // Phase breakdown (hierarchical, using hardcoded hierarchy)
     logger.info("Phase breakdown:");
-    for (int i = 0; i < TOP_LEVEL_PHASES.size(); i++) {
-      reportPhase(
-          logger, TOP_LEVEL_PHASES.get(i), totalSeconds, "", i == TOP_LEVEL_PHASES.size() - 1);
+    for (int i = 0; i < topLevelPhases.size(); i++) {
+      reportPhase(logger, topLevelPhases.get(i), totalSeconds, "", i == topLevelPhases.size() - 1);
     }
     logger.info("");
 
@@ -356,7 +346,7 @@ public final class ActivePerformanceTracker implements PerformanceTracker {
     logger.info(
         String.format(
             Locale.US, "%s%s%s: %.1fs (%.1f%%)", prefix, connector, phase, seconds, percentage));
-    List<String> children = PHASE_CHILDREN.get(phase);
+    List<String> children = phaseChildren.get(phase);
     if (children != null) {
       String childPrefix = prefix + (isLast ? "   " : "│  ");
       for (int i = 0; i < children.size(); i++) {
@@ -388,7 +378,7 @@ public final class ActivePerformanceTracker implements PerformanceTracker {
 
     // Phase breakdown (hierarchical)
     Map<String, Object> phaseBreakdown = new LinkedHashMap<>();
-    for (String phase : TOP_LEVEL_PHASES) {
+    for (String phase : topLevelPhases) {
       phaseBreakdown.put(phase, buildPhaseJson(phase, totalNanos));
     }
     root.put("phaseBreakdown", phaseBreakdown);
@@ -435,7 +425,7 @@ public final class ActivePerformanceTracker implements PerformanceTracker {
     phaseMap.put(JSON_KEY_ELAPSED_NANOS, nanos);
     phaseMap.put("elapsedSeconds", seconds);
     phaseMap.put("percentage", percentage);
-    List<String> children = PHASE_CHILDREN.get(phase);
+    List<String> children = phaseChildren.get(phase);
     if (children != null && !children.isEmpty()) {
       Map<String, Object> childrenMap = new LinkedHashMap<>();
       for (String child : children) {

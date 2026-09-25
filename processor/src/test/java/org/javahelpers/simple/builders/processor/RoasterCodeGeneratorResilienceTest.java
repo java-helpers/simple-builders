@@ -29,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
+import org.javahelpers.simple.builders.processor.classgen.GenerationEnvironment;
 import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterCodeGenerator;
 import org.javahelpers.simple.builders.processor.classgen.roaster.exceptions.RoasterMapperException;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
@@ -76,9 +77,12 @@ class RoasterCodeGeneratorResilienceTest {
     classDef.addConstructor(constructor);
 
     ProcessingEnvironment env = ProcessingEnvironmentStub.createEmpty();
-    ProcessingLogger logger = new ProcessingLogger(env);
+    ProcessingLogger logger = new ProcessingLogger(env, false);
     ProcessingContext context = new ProcessingContext(logger, BuilderConfiguration.DEFAULT, env);
-    RoasterCodeGenerator generator = new RoasterCodeGenerator(context, env);
+    RoasterCodeGenerator generator =
+        new RoasterCodeGenerator(
+            new GenerationEnvironment(env, logger, context.getPerformanceTracker()),
+            context::createSourceFormatter);
 
     BuilderException thrown =
         assertThrows(BuilderException.class, () -> generator.generateClass(classDef));

@@ -25,11 +25,11 @@
 package org.javahelpers.simple.builders.processor;
 
 import static org.javahelpers.simple.builders.processor.processing.BuilderDefinitionCreator.extractFromElement;
-import static org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker.PHASE_BUILDER_DEFINITION_EXTRACTION;
-import static org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker.PHASE_CODE_GENERATION;
-import static org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker.PHASE_CONFIGURATION_RESOLUTION;
-import static org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker.PHASE_DTO_MAPPING;
-import static org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker.PHASE_ELEMENT_COLLECTION;
+import static org.javahelpers.simple.builders.processor.processing.ProcessingPhases.PHASE_BUILDER_DEFINITION_EXTRACTION;
+import static org.javahelpers.simple.builders.processor.processing.ProcessingPhases.PHASE_CODE_GENERATION;
+import static org.javahelpers.simple.builders.processor.processing.ProcessingPhases.PHASE_CONFIGURATION_RESOLUTION;
+import static org.javahelpers.simple.builders.processor.processing.ProcessingPhases.PHASE_DTO_MAPPING;
+import static org.javahelpers.simple.builders.processor.processing.ProcessingPhases.PHASE_ELEMENT_COLLECTION;
 
 import com.google.auto.service.AutoService;
 import java.util.ArrayList;
@@ -50,6 +50,8 @@ import javax.lang.model.element.TypeElement;
 import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder.Template;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyser;
+import org.javahelpers.simple.builders.processor.classgen.ClassCodeGenerator;
+import org.javahelpers.simple.builders.processor.classgen.GenerationEnvironment;
 import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterCodeGenerator;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 import org.javahelpers.simple.builders.processor.generators.integration.JacksonModuleGenerator;
@@ -77,23 +79,27 @@ import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLo
 public class BuilderProcessor extends AbstractProcessor {
   private ProcessingContext context;
   private ProcessingLogger logger;
-  private RoasterCodeGenerator codeGenerator;
+  private ClassCodeGenerator codeGenerator;
   private JacksonModuleGenerator jacksonModuleGenerator;
   private boolean supportedJdk = true;
 
   @Override
   public synchronized void init(ProcessingEnvironment processingEnv) {
     super.init(processingEnv);
-    this.logger = new ProcessingLogger(processingEnv);
-    logger.debug("Starting BuilderProcessor...");
-
     // Read global configuration from compiler arguments
     CompilerArgumentsReader reader = new CompilerArgumentsReader(processingEnv);
-    BuilderConfiguration globalConfig = reader.readBuilderConfiguration(logger);
+    this.logger =
+        new ProcessingLogger(processingEnv, reader.readBooleanValue(CompilerArgumentsEnum.VERBOSE));
+    logger.debug("Starting BuilderProcessor...");
+    BuilderConfiguration globalConfig =
+        BuilderConfigurationReader.readBuilderConfiguration(reader, logger);
     logger.debug("Loaded global configuration from compiler arguments: %s", globalConfig);
 
     this.context = new ProcessingContext(logger, globalConfig, processingEnv);
-    this.codeGenerator = new RoasterCodeGenerator(context, processingEnv);
+    this.codeGenerator =
+        new RoasterCodeGenerator(
+            new GenerationEnvironment(processingEnv, logger, context.getPerformanceTracker()),
+            context::createSourceFormatter);
     this.jacksonModuleGenerator = new JacksonModuleGenerator(processingEnv, logger, globalConfig);
 
     // Initialize GeneratorRegistry once during processor initialization

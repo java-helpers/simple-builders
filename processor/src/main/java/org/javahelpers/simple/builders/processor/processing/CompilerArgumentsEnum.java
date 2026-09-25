@@ -44,7 +44,7 @@ import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLo
  *
  * <p>Each enum constant provides the option name and the full compiler argument.
  */
-public enum CompilerArgumentsEnum {
+public enum CompilerArgumentsEnum implements CompilerOption {
   // === Field Setter Generation ===
   /** Option for field supplier generation. */
   GENERATE_FIELD_SUPPLIER("generateFieldSupplier", optionState(Builder::generateSupplier)),
@@ -255,6 +255,7 @@ public enum CompilerArgumentsEnum {
    *
    * @return The option name
    */
+  @Override
   public String getOptionName() {
     return optionName;
   }
@@ -266,6 +267,7 @@ public enum CompilerArgumentsEnum {
    *
    * @return The full compiler argument
    */
+  @Override
   public String getCompilerArgument() {
     return OPTION_PREFIX + optionName;
   }

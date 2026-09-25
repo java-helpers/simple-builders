@@ -76,21 +76,19 @@ public final class CapturingProcessingLogger {
   public static CapturingProcessingLogger create() {
     List<String> messages = new ArrayList<>();
     ProcessingLogger logger =
-        new ProcessingLogger(createCapturingEnvironment(messages, Collections.emptyMap()));
+        new ProcessingLogger(createCapturingEnvironment(messages, Collections.emptyMap()), false);
     return new CapturingProcessingLogger(messages, logger);
   }
 
   /**
-   * Creates a new capturing logger with debug logging enabled via {@code
-   * simplebuilder.verbose=true}.
+   * Creates a new capturing logger with debug logging enabled.
    *
    * @return a new debug-enabled capturing logger instance
    */
   public static CapturingProcessingLogger createDebugEnabled() {
     List<String> messages = new ArrayList<>();
     ProcessingLogger logger =
-        new ProcessingLogger(
-            createCapturingEnvironment(messages, Map.of("simplebuilder.verbose", "true")));
+        new ProcessingLogger(createCapturingEnvironment(messages, Collections.emptyMap()), true);
     return new CapturingProcessingLogger(messages, logger);
   }
 

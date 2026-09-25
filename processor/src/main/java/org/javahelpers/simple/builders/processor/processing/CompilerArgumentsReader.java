@@ -24,18 +24,14 @@
 
 package org.javahelpers.simple.builders.processor.processing;
 
-import java.util.stream.Stream;
 import javax.annotation.processing.ProcessingEnvironment;
 import org.apache.commons.lang3.Strings;
-import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
-import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 
 /**
  * Utility class for reading compiler arguments from the annotation processing environment.
  *
- * <p>This class provides a centralized way to read compiler arguments using {@link
- * CompilerArgumentsEnum} values, ensuring consistent handling of option names and values across the
- * processor.
+ * <p>This class provides a centralized way to read compiler arguments using {@link CompilerOption}
+ * values, ensuring consistent handling of option names and values across the processor.
  */
 public class CompilerArgumentsReader {
   private final ProcessingEnvironment processingEnv;
@@ -58,10 +54,10 @@ public class CompilerArgumentsReader {
    * property is available when the build tool runs javac in-process and is not available with
    * {@code <fork>true</fork>}.
    *
-   * @param argument the compiler argument enum to read
+   * @param argument the compiler argument to read
    * @return the value of the compiler argument, or null if not set
    */
-  public String readValue(CompilerArgumentsEnum argument) {
+  public String readValue(CompilerOption argument) {
     // Try the -D JVM system property first (e.g., -Dsimplebuilder.verbose)
     String value = System.getProperty(argument.getCompilerArgument());
 
@@ -81,59 +77,13 @@ public class CompilerArgumentsReader {
   /**
    * Reads the value of a compiler argument as a boolean.
    *
-   * <p>Returns true if the value equals "true" (case-insensitive), false otherwise.
+   * <p>Returns true if the value equals "true" or "enabled" (case-insensitive), false otherwise.
    *
-   * @param argument the compiler argument enum to read
-   * @return true if the value is "true" (case-insensitive), false otherwise
+   * @param argument the compiler argument to read
+   * @return true if the value is "true" or "enabled" (case-insensitive), false otherwise
    */
-  public boolean readBooleanValue(CompilerArgumentsEnum argument) {
+  public boolean readBooleanValue(CompilerOption argument) {
     String value = readValue(argument);
     return Strings.CI.equalsAny(value, "true", "enabled");
-  }
-
-  /**
-   * Reads a complete BuilderConfiguration from compiler arguments.
-   *
-   * <p>This method reads all configuration options from compiler arguments like:
-   *
-   * <ul>
-   *   <li>{@code -Dsimplebuilder.generateFieldSupplier=true} (JVM system property, highest
-   *       precedence)
-   *   <li>{@code -Asimplebuilder.generateFieldSupplier=true} (compiler argument)
-   *   <li>{@code -AgenerateFieldSupplier=true} (bare option name, backward compatibility)
-   *   <li>{@code -Asimplebuilder.builderAccess=public}
-   *   <li>etc.
-   * </ul>
-   *
-   * <p>Options set via {@code @SimpleBuilder.Options} on the annotated type are not handled here;
-   * they are read by {@link BuilderConfigurationReader} and merged on top of this global
-   * configuration.
-   *
-   * <p>All values default to UNSET or DEFAULT if not specified in compiler arguments.
-   *
-   * <p><b>Adding a new option:</b> every {@link CompilerArgumentsEnum} constant is applied; those
-   * without a builder applier are no-ops in {@link CompilerArgumentsEnum#apply}, so wiring a new
-   * option means declaring the applier on the enum constant once — no change is needed here or in
-   * {@code BuilderConfigurationReader}. The remaining checklist when adding a new option:
-   *
-   * <ol>
-   *   <li>{@code CompilerArgumentsEnum} — add the enum constant with its applier.
-   *   <li>{@code BuilderConfiguration} — add the field, builder method, merge logic, and a typed
-   *       accessor (e.g. {@code formattingModeEnum}) if enum conversion is needed. Set the default
-   *       in {@code BuilderConfiguration.DEFAULT}.
-   *   <li>{@code ProcessingContext} — should NOT need a dedicated field or getter. The resolved
-   *       per-target config ({@code context.getConfiguration()}) and global config ({@code
-   *       context.getConfigurationReader().getGlobalConfiguration()}) carry all option values.
-   *       Special-casing outside {@code BuilderConfiguration} breaks the merge chain and bypasses
-   *       annotation overrides.
-   * </ol>
-   *
-   * @return a BuilderConfiguration with values read from compiler arguments
-   */
-  public BuilderConfiguration readBuilderConfiguration(ProcessingLogger logger) {
-    BuilderConfiguration.Builder builder = BuilderConfiguration.builder();
-    Stream.of(CompilerArgumentsEnum.values())
-        .forEach(option -> option.apply(builder, readValue(option), logger));
-    return builder.build();
   }
 }
