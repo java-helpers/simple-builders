@@ -28,8 +28,6 @@ import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.tools.Diagnostic;
-import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsEnum;
-import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsReader;
 
 /**
  * Logger for all messages during annotation processing. Providing util-functions for posting
@@ -48,18 +46,17 @@ public class ProcessingLogger {
 
   /**
    * Constructs a new ProcessingLogger with the specified ProcessingEnvironment. The Messager is
-   * used to report errors, warnings, and other notices during annotation processing. Debug logging
-   * is enabled by setting the compiler argument: -Averbose=true or -Asimplebuilder.verbose=true
+   * used to report errors, warnings, and other notices during annotation processing.
    *
    * @param processingEnv the processing environment providing messager and options
+   * @param debugEnabled whether debug-level messages are emitted
    */
-  public ProcessingLogger(ProcessingEnvironment processingEnv) {
+  public ProcessingLogger(ProcessingEnvironment processingEnv, boolean debugEnabled) {
     // Reset ThreadLocal state to ensure clean state between test runs
     resetThreadLocalState();
 
     this.messager = processingEnv.getMessager();
-    CompilerArgumentsReader reader = new CompilerArgumentsReader(processingEnv);
-    this.debugEnabled = reader.readBooleanValue(CompilerArgumentsEnum.VERBOSE);
+    this.debugEnabled = debugEnabled;
   }
 
   /** Resets ThreadLocal state to ensure clean state between test runs. */

@@ -46,11 +46,13 @@ import javax.lang.model.type.TypeMirror;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.javahelpers.simple.builders.core.annotations.IgnoreInBuilder;
+import org.javahelpers.simple.builders.core.annotations.SimpleBuilderConstructor;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.core.util.TrackedValue;
 import org.javahelpers.simple.builders.processor.analysis.FieldAnnotationExtractor;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyser;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
+import org.javahelpers.simple.builders.processor.analysis.MapperOptions;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 import org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
@@ -449,7 +451,8 @@ public class BuilderDefinitionCreator {
         "Builder will be generated as: %s.%s", packageName, simpleClassName + builderSuffix);
 
     // Extract generics from the annotated type via mapper (stream-based)
-    JavaLangMapper.map2GenericParameterDtos(annotatedType, context).forEach(result::addGeneric);
+    JavaLangMapper.map2GenericParameterDtos(annotatedType, mapperOptions(context), context)
+        .forEach(result::addGeneric);
 
     return result;
   }
@@ -469,7 +472,8 @@ public class BuilderDefinitionCreator {
       ProcessingContext context,
       Map<String, FieldDto> fieldNameRegistry) {
     List<FieldDto> constructorFields = new LinkedList<>();
-    Optional<ExecutableElement> constructorOpt = findConstructorForBuilder(annotatedType, context);
+    Optional<ExecutableElement> constructorOpt =
+        findConstructorForBuilder(annotatedType, SimpleBuilderConstructor.class, context);
     if (constructorOpt.isPresent()) {
       ExecutableElement ctor = constructorOpt.get();
       context.debugStartOperation(
@@ -634,7 +638,7 @@ public class BuilderDefinitionCreator {
 
     VariableElement fieldParameter = parameters.get(0);
     TypeElement dtoTypeElement = (TypeElement) mth.getEnclosingElement();
-    TypeName dtoType = JavaLangMapper.map2TypeName(dtoTypeElement, context);
+    TypeName dtoType = JavaLangMapper.map2TypeName(dtoTypeElement, mapperOptions(context), context);
 
     // Extract only the @param Javadoc for the single setter parameter (if present)
     String fullJavaDoc = context.getDocComment(mth);
@@ -688,7 +692,7 @@ public class BuilderDefinitionCreator {
         JavaLangAnalyser.extractParamJavaDoc(context.getDocComment(annotatedType), param);
 
     // Convert TypeElement to TypeName once
-    TypeName dtoType = JavaLangMapper.map2TypeName(annotatedType, context);
+    TypeName dtoType = JavaLangMapper.map2TypeName(annotatedType, mapperOptions(context), context);
 
     // Check for field name conflicts and rename if necessary
     String finalFieldName = resolveFieldNameConflict(fieldName, param, fieldNameRegistry, context);
@@ -729,7 +733,7 @@ public class BuilderDefinitionCreator {
     }
 
     // Conflict detected: rename the new field by appending the simple type name
-    MethodParameterDto paramDto = map2MethodParameter(param, context);
+    MethodParameterDto paramDto = map2MethodParameter(param, mapperOptions(context), context);
     if (paramDto == null) {
       // If we can't determine the type, just return the original name
       return fieldName;
@@ -781,7 +785,7 @@ public class BuilderDefinitionCreator {
       TypeName dtoType,
       TypeName builderType,
       ProcessingContext context) {
-    MethodParameterDto paramDto = map2MethodParameter(param, context);
+    MethodParameterDto paramDto = map2MethodParameter(param, mapperOptions(context), context);
     if (paramDto == null || dtoType == null) {
       return Optional.empty();
     }
@@ -1155,9 +1159,24 @@ public class BuilderDefinitionCreator {
    * @param context processing context
    * @return {@code true} if the selected constructor is deprecated
    */
+  /**
+   * Builds the {@link MapperOptions} for type mapping from the processing context: annotation
+   * copying follows the resolved configuration and generated-type resolution delegates to the
+   * builder scope resolver.
+   *
+   * @param context the processing context
+   * @return the mapper options for this processing round
+   */
+  private static MapperOptions mapperOptions(ProcessingContext context) {
+    return new MapperOptions(
+        context.getConfiguration().shouldCopyTypeAnnotations(),
+        context.getBuilderScopeResolver()::resolveUsableBuilderType);
+  }
+
   private static boolean isConstructorDeprecated(
       TypeElement annotatedType, ProcessingContext context) {
-    return JavaLangAnalyser.findConstructorForBuilder(annotatedType, context)
+    return JavaLangAnalyser.findConstructorForBuilder(
+            annotatedType, SimpleBuilderConstructor.class, context)
         .filter(ctor -> ctor.getAnnotation(Deprecated.class) != null)
         .isPresent();
   }

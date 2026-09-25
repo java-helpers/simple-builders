@@ -1,5 +1,4 @@
-/*
- * MIT License
+/* MIT License
  *
  * Copyright (c) 2026 Andreas Igel
  *
@@ -24,39 +23,26 @@
 
 package org.javahelpers.simple.builders.processor.processing;
 
-import java.util.List;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.PackageElement;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.Elements;
-import javax.lang.model.util.Types;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.enums.FormattingMode;
 import org.javahelpers.simple.builders.processor.analysis.BuilderScopeResolver;
 import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterSourceFormatter;
 import org.javahelpers.simple.builders.processor.generators.registry.GeneratorRegistry;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.logging.ActivePerformanceTracker;
 import org.javahelpers.simple.builders.processor.processing.logging.NoOpPerformanceTracker;
 import org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker;
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 
 /**
- * Context object that wraps Elements, Types, and logging utilities from annotation processing,
- * providing domain-specific methods for type and element operations.
- *
- * <p>This eliminates repetitive parameter passing and provides a cleaner API.
+ * Builder-specific processing context. Adds builder configuration, the generator registry and the
+ * builder scope resolver on top of the generic element/type/log utilities of {@link
+ * AnnotationProcessingContext}.
  */
-public final class ProcessingContext {
-  private final Elements elementUtils;
-  private final Types typeUtils;
-  private final ProcessingLogger logger;
+public final class ProcessingContext extends AnnotationProcessingContext {
   private final BuilderConfigurationReader configurationReader;
-  private final ProcessingEnvironment processingEnv;
-  private final PerformanceTracker performanceTracker;
   private final String formatterProfile;
   private final BuilderScopeResolver builderScopeResolver;
   private GeneratorRegistry generatorRegistry;
@@ -73,25 +59,33 @@ public final class ProcessingContext {
       ProcessingLogger logger,
       BuilderConfiguration globalConfiguration,
       ProcessingEnvironment processingEnv) {
-    this.elementUtils = processingEnv.getElementUtils();
-    this.typeUtils = processingEnv.getTypeUtils();
-    this.logger = logger;
-    this.processingEnv = processingEnv;
+    super(logger, processingEnv, createPerformanceTracker(processingEnv));
     this.configurationReader =
-        new BuilderConfigurationReader(globalConfiguration, logger, elementUtils);
-    // Initialize performance tracker based on compiler argument
+        new BuilderConfigurationReader(globalConfiguration, logger, getElementUtils());
+    this.formatterProfile =
+        StringUtils.trimToNull(
+            new CompilerArgumentsReader(processingEnv)
+                .readValue(CompilerArgumentsEnum.FORMATTER_PROFILE));
+    this.builderScopeResolver = new BuilderScopeResolver(this);
+    // GeneratorRegistry will be lazily initialized on first access
+  }
+
+  /**
+   * Creates the performance tracker based on the builder compiler arguments.
+   *
+   * @param processingEnv the processing environment providing compiler options
+   * @return an {@link ActivePerformanceTracker} when enabled, a {@link NoOpPerformanceTracker}
+   *     otherwise
+   */
+  private static PerformanceTracker createPerformanceTracker(ProcessingEnvironment processingEnv) {
     CompilerArgumentsReader argReader = new CompilerArgumentsReader(processingEnv);
     boolean perfTrackingEnabled =
         argReader.readBooleanValue(CompilerArgumentsEnum.PERFORMANCE_TRACKING);
     String perfOutputFile = argReader.readValue(CompilerArgumentsEnum.PERFORMANCE_OUTPUT_FILE);
-    this.formatterProfile =
-        StringUtils.trimToNull(argReader.readValue(CompilerArgumentsEnum.FORMATTER_PROFILE));
-    this.performanceTracker =
-        perfTrackingEnabled
-            ? new ActivePerformanceTracker(perfOutputFile)
-            : new NoOpPerformanceTracker();
-    this.builderScopeResolver = new BuilderScopeResolver(this);
-    // GeneratorRegistry will be lazily initialized on first access
+    return perfTrackingEnabled
+        ? new ActivePerformanceTracker(
+            perfOutputFile, ProcessingPhases.TOP_LEVEL_PHASES, ProcessingPhases.PHASE_CHILDREN)
+        : new NoOpPerformanceTracker();
   }
 
   /**
@@ -131,39 +125,9 @@ public final class ProcessingContext {
    */
   public GeneratorRegistry getGeneratorRegistry() {
     if (generatorRegistry == null) {
-      generatorRegistry = new GeneratorRegistry(this, processingEnv);
+      generatorRegistry = new GeneratorRegistry(this, getProcessingEnvironment());
     }
     return generatorRegistry;
-  }
-
-  /**
-   * Gets the performance tracker for this processing context.
-   *
-   * <p>When performance tracking is disabled, returns a {@link NoOpPerformanceTracker} that has
-   * zero overhead. When enabled via {@code -Asimplebuilder.performanceTracking=true}, returns an
-   * {@link ActivePerformanceTracker} that measures execution times.
-   *
-   * @return the performance tracker instance
-   */
-  public PerformanceTracker getPerformanceTracker() {
-    return performanceTracker;
-  }
-
-  /**
-   * Starts a new performance tracking phase. The phase name is passed to {@link
-   * #endPerformancePhase(String)} for recording.
-   */
-  public void startPerformancePhase() {
-    performanceTracker.startPhase();
-  }
-
-  /**
-   * Ends the current performance tracking phase and records its duration under the given name.
-   *
-   * @param phase the phase name to record
-   */
-  public void endPerformancePhase(String phase) {
-    performanceTracker.endPhase(phase);
   }
 
   /**
@@ -174,7 +138,7 @@ public final class ProcessingContext {
    * @return a new formatter instance
    */
   public RoasterSourceFormatter createSourceFormatter(FormattingMode mode) {
-    return new RoasterSourceFormatter(logger, mode, formatterProfile);
+    return new RoasterSourceFormatter(getLogger(), mode, formatterProfile);
   }
 
   /**
@@ -187,217 +151,6 @@ public final class ProcessingContext {
    */
   public BuilderScopeResolver getBuilderScopeResolver() {
     return builderScopeResolver;
-  }
-
-  /**
-   * Get the TypeElement for a given qualified class name.
-   *
-   * @param qualifiedName the canonical class name (e.g., "java.lang.String")
-   * @return the type element, or null if not found
-   */
-  public TypeElement getTypeElement(String qualifiedName) {
-    return elementUtils.getTypeElement(qualifiedName);
-  }
-
-  /**
-   * Get the TypeElement for a given TypeName.
-   *
-   * @param typeName the TypeName containing package and class name
-   * @return the type element, or null if not found
-   */
-  public TypeElement getTypeElement(TypeName typeName) {
-    if (typeName == null) {
-      return null;
-    }
-    return getTypeElement(typeName.getFullQualifiedName());
-  }
-
-  /**
-   * Get the package containing an element.
-   *
-   * @param element the element
-   * @return the package element
-   */
-  public PackageElement getPackageOf(Element element) {
-    return elementUtils.getPackageOf(element);
-  }
-
-  /**
-   * Get the package name of an element.
-   *
-   * @param element the element
-   * @return the qualified package name
-   */
-  public String getPackageName(Element element) {
-    return elementUtils.getPackageOf(element).getQualifiedName().toString();
-  }
-
-  /**
-   * Get all members of a type, including inherited members.
-   *
-   * @param typeElement the type to inspect
-   * @return list of all members
-   */
-  @SuppressWarnings("java:S1452")
-  public List<? extends Element> getAllMembers(TypeElement typeElement) {
-    return elementUtils.getAllMembers(typeElement);
-  }
-
-  /**
-   * Get the Javadoc comment for an element.
-   *
-   * @param element the element
-   * @return the doc comment, or null if none
-   */
-  public String getDocComment(Element element) {
-    return elementUtils.getDocComment(element);
-  }
-
-  /**
-   * Convert a type mirror to its corresponding element.
-   *
-   * @param typeMirror the type mirror
-   * @return the element, or null if not representable as an element
-   */
-  public Element asElement(TypeMirror typeMirror) {
-    return typeUtils.asElement(typeMirror);
-  }
-
-  /**
-   * Check if two types are the same type.
-   *
-   * @param type1 first type
-   * @param type2 second type
-   * @return true if the types are the same
-   */
-  public boolean isSameType(TypeMirror type1, TypeMirror type2) {
-    return typeUtils.isSameType(type1, type2);
-  }
-
-  /**
-   * Get the erasure of a type (removes generic type information).
-   *
-   * @param typeMirror the type to erase
-   * @return the erasure of the type
-   */
-  public TypeMirror erasure(TypeMirror typeMirror) {
-    return typeUtils.erasure(typeMirror);
-  }
-
-  /**
-   * Check if one type is assignable to another.
-   *
-   * @param type1 the type to check
-   * @param type2 the target type
-   * @return true if type1 is assignable to type2
-   */
-  public boolean isAssignable(TypeMirror type1, TypeMirror type2) {
-    return typeUtils.isAssignable(type1, type2);
-  }
-
-  /**
-   * Returns the direct supertypes of a type.
-   *
-   * @param typeMirror the type
-   * @return list of direct supertypes
-   */
-  public java.util.List<? extends TypeMirror> directSupertypes(TypeMirror typeMirror) {
-    return typeUtils.directSupertypes(typeMirror);
-  }
-
-  /**
-   * Logs an info-level message that appears in normal Maven output.
-   *
-   * @param message the info message to log
-   */
-  public void info(String message) {
-    logger.info(message);
-  }
-
-  /**
-   * Logs an info-level message with a formatted string.
-   *
-   * @param format the format string
-   * @param args arguments referenced by the format specifiers in the format string
-   */
-  public void info(String format, Object... args) {
-    logger.info(format, args);
-  }
-
-  /**
-   * Logs a debug message visible when Maven is run with -X flag.
-   *
-   * @param message the debug message to log
-   */
-  public void debug(String message) {
-    logger.debug(message);
-  }
-
-  /**
-   * Logs a debug message with a formatted string. Only visible when enabled via -Averbose=true or
-   * -Asimplebuilder.verbose=true.
-   *
-   * @param format the format string
-   * @param args arguments referenced by the format specifiers in the format string
-   */
-  public void debug(String format, Object... args) {
-    logger.debug(format, args);
-  }
-
-  /**
-   * Starts a new hierarchical operation context for logging with formatted message.
-   *
-   * @param format the format string for the operation message
-   * @param args arguments referenced by the format specifiers
-   */
-  public void debugStartOperation(String format, Object... args) {
-    logger.debugStartOperation(format, args);
-  }
-
-  /** Ends the current hierarchical operation context for logging. */
-  public void debugEndOperation() {
-    logger.debugEndOperation();
-  }
-
-  /** Ends the current hierarchical operation context with a closing message for logging. */
-  public void debugEndOperation(String format, Object... args) {
-    logger.debugEndOperation(format, args);
-  }
-
-  /** Resets the indentation level to prevent cascading errors between processing runs. */
-  public void resetIndentation() {
-    logger.resetIndentation();
-  }
-
-  /**
-   * Logs a warning message without requiring a specific element context.
-   *
-   * @param format the format string
-   * @param args arguments referenced by the format specifiers in the format string
-   */
-  public void warning(String format, Object... args) {
-    logger.warning(null, format, args);
-  }
-
-  /**
-   * Reports a warning at the location of the given element with a formatted message.
-   *
-   * @param element the element where the warning occurred, used for location information
-   * @param format the format string
-   * @param args arguments referenced by the format specifiers in the format string
-   */
-  public void warning(Element element, String format, Object... args) {
-    logger.warning(element, format, args);
-  }
-
-  /**
-   * Reports an error with a formatted message.
-   *
-   * @param format the format string
-   * @param args arguments referenced by the format specifiers in the format string
-   */
-  public void error(String format, Object... args) {
-    logger.error(format, args);
   }
 
   /**
@@ -420,9 +173,9 @@ public final class ProcessingContext {
    */
   public void reportBasedOnStrictMode(Element element, String format, Object... args) {
     if (isStrictModeEnabled()) {
-      logger.error(element, format, args);
+      error(element, format, args);
     } else {
-      logger.warning(element, format, args);
+      warning(element, format, args);
     }
   }
 
@@ -434,9 +187,9 @@ public final class ProcessingContext {
    */
   public void reportBasedOnStrictMode(String format, Object... args) {
     if (isStrictModeEnabled()) {
-      logger.error(format, args);
+      error(format, args);
     } else {
-      logger.warning(format, args);
+      warning(format, args);
     }
   }
 }

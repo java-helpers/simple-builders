@@ -29,6 +29,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
@@ -97,6 +98,55 @@ public class BuilderConfigurationReader {
    */
   public BuilderConfiguration getGlobalConfiguration() {
     return globalConfiguration;
+  }
+
+  /**
+   * Reads a complete BuilderConfiguration from compiler arguments.
+   *
+   * <p>This method reads all configuration options from compiler arguments like:
+   *
+   * <ul>
+   *   <li>{@code -Dsimplebuilder.generateFieldSupplier=true} (JVM system property, highest
+   *       precedence)
+   *   <li>{@code -Asimplebuilder.generateFieldSupplier=true} (compiler argument)
+   *   <li>{@code -AgenerateFieldSupplier=true} (bare option name, backward compatibility)
+   *   <li>{@code -Asimplebuilder.builderAccess=public}
+   *   <li>etc.
+   * </ul>
+   *
+   * <p>Options set via {@code @SimpleBuilder.Options} on the annotated type are not handled here;
+   * they are read by {@link #resolveConfiguration(Element)} and merged on top of this global
+   * configuration.
+   *
+   * <p>All values default to UNSET or DEFAULT if not specified in compiler arguments.
+   *
+   * <p><b>Adding a new option:</b> every {@link CompilerArgumentsEnum} constant is applied; those
+   * without a builder applier are no-ops in {@link CompilerArgumentsEnum#apply}, so wiring a new
+   * option means declaring the applier on the enum constant once — no change is needed here. The
+   * remaining checklist when adding a new option:
+   *
+   * <ol>
+   *   <li>{@code CompilerArgumentsEnum} — add the enum constant with its applier.
+   *   <li>{@code BuilderConfiguration} — add the field, builder method, merge logic, and a typed
+   *       accessor (e.g. {@code formattingModeEnum}) if enum conversion is needed. Set the default
+   *       in {@code BuilderConfiguration.DEFAULT}.
+   *   <li>{@code ProcessingContext} — should NOT need a dedicated field or getter. The resolved
+   *       per-target config ({@code context.getConfiguration()}) and global config ({@code
+   *       context.getConfigurationReader().getGlobalConfiguration()}) carry all option values.
+   *       Special-casing outside {@code BuilderConfiguration} breaks the merge chain and bypasses
+   *       annotation overrides.
+   * </ol>
+   *
+   * @param reader the compiler arguments reader to obtain raw option values from
+   * @param logger the logger for debug output
+   * @return a BuilderConfiguration with values read from compiler arguments
+   */
+  public static BuilderConfiguration readBuilderConfiguration(
+      CompilerArgumentsReader reader, ProcessingLogger logger) {
+    BuilderConfiguration.Builder builder = BuilderConfiguration.builder();
+    Stream.of(CompilerArgumentsEnum.values())
+        .forEach(option -> option.apply(builder, reader.readValue(option), logger));
+    return builder.build();
   }
 
   /**

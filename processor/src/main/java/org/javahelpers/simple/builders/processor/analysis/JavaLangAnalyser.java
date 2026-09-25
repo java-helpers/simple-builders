@@ -42,8 +42,7 @@ import javax.lang.model.util.ElementFilter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
-import org.javahelpers.simple.builders.core.annotations.SimpleBuilderConstructor;
-import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
+import org.javahelpers.simple.builders.processor.processing.AnnotationProcessingContext;
 
 /** Helperclass for extrating specific information from existing classes. */
 public final class JavaLangAnalyser {
@@ -74,7 +73,7 @@ public final class JavaLangAnalyser {
    * @return filtered list excluding Object class methods
    */
   public static List<ExecutableElement> findAllPossibleSettersOfClass(
-      TypeElement typeElement, ProcessingContext context) {
+      TypeElement typeElement, AnnotationProcessingContext context) {
     return ElementFilter.methodsIn(context.getAllMembers(typeElement)).stream()
         .filter(JavaLangAnalyser::isNoMethodOfObjectClass)
         .filter(JavaLangAnalyser::isSetterForField)
@@ -187,7 +186,8 @@ public final class JavaLangAnalyser {
    * @param context processing context
    * @return {@code true}, if the element has an empty constructor
    */
-  public static boolean hasEmptyConstructor(TypeElement typeElement, ProcessingContext context) {
+  public static boolean hasEmptyConstructor(
+      TypeElement typeElement, AnnotationProcessingContext context) {
     List<ExecutableElement> constructors =
         ElementFilter.constructorsIn(context.getAllMembers(typeElement));
     return constructors.stream().anyMatch(c -> c.getParameters().isEmpty());
@@ -232,7 +232,7 @@ public final class JavaLangAnalyser {
    * @return {@code true} if the type declares or inherits a matching {@code build()} method
    */
   public static boolean hasBuildMethodReturning(
-      TypeElement builderType, String expectedReturnType, ProcessingContext context) {
+      TypeElement builderType, String expectedReturnType, AnnotationProcessingContext context) {
     if (builderType == null) {
       return false;
     }
@@ -255,7 +255,7 @@ public final class JavaLangAnalyser {
    * @return {@code true} if the type declares or inherits a matching constructor
    */
   public static boolean hasConstructorAccepting(
-      TypeElement builderType, String expectedType, ProcessingContext context) {
+      TypeElement builderType, String expectedType, AnnotationProcessingContext context) {
     if (builderType == null) {
       return false;
     }
@@ -474,7 +474,7 @@ public final class JavaLangAnalyser {
       TypeElement dtoType,
       String fieldName,
       TypeMirror fieldTypeMirror,
-      ProcessingContext context) {
+      AnnotationProcessingContext context) {
     if (dtoType == null || fieldName == null || fieldTypeMirror == null) {
       return Optional.empty();
     }
@@ -541,7 +541,7 @@ public final class JavaLangAnalyser {
    * @return Optional containing the setter ExecutableElement if found
    */
   public static Optional<ExecutableElement> findSetterForField(
-      TypeElement dtoType, String fieldName, ProcessingContext context) {
+      TypeElement dtoType, String fieldName, AnnotationProcessingContext context) {
     if (dtoType == null || fieldName == null) {
       return Optional.empty();
     }
@@ -559,22 +559,26 @@ public final class JavaLangAnalyser {
 
   /**
    * Determines which constructor to use for builder initialization. Prioritizes constructors
-   * annotated with {@link SimpleBuilderConstructor}. If none is annotated, selects the constructor
+   * annotated with {@code constructorAnnotation}. If none is annotated, selects the constructor
    * with the highest number of parameters. Returns empty if no constructor has parameters (i.e.,
    * only default constructor or none found).
    *
    * @param annotatedType the type element to search for constructors
+   * @param constructorAnnotation the annotation type marking a preferred constructor, may be {@code
+   *     null} to skip the annotation check
    * @param context the processing context providing access to elements and types utilities
    * @return Optional containing the selected constructor, or empty if none suitable
    */
   public static Optional<ExecutableElement> findConstructorForBuilder(
-      TypeElement annotatedType, ProcessingContext context) {
+      TypeElement annotatedType,
+      Class<? extends Annotation> constructorAnnotation,
+      AnnotationProcessingContext context) {
     List<ExecutableElement> ctors =
         ElementFilter.constructorsIn(context.getAllMembers(annotatedType));
 
-    // First, check if any constructor is annotated with @SimpleBuilderConstructor
+    // First, check if any constructor is annotated with the constructor annotation
     for (ExecutableElement ctor : ctors) {
-      if (ctor.getAnnotation(SimpleBuilderConstructor.class) != null) {
+      if (constructorAnnotation != null && ctor.getAnnotation(constructorAnnotation) != null) {
         return Optional.of(ctor);
       }
     }
