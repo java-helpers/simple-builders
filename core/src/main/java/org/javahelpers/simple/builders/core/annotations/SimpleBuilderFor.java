@@ -47,6 +47,10 @@ import java.lang.annotation.Target;
  * explicit declaration wins, so even an {@link Ignore4BuilderGeneration} on the target does not
  * suppress generation.
  *
+ * <p>See also the <a
+ * href="https://github.com/java-helpers/simple-builders/blob/main/docs/CONFIGURATION.md#generating-builders-for-external-types">
+ * Generating Builders for External Types section in CONFIGURATION.md</a>.
+ *
  * <p>Example, declared on the package in {@code package-info.java} (generates the builder into
  * {@code com.example}):
  *
@@ -113,7 +117,10 @@ public @interface SimpleBuilderFor {
    * Configuration options for the generated builders, reusing the {@link SimpleBuilder.Options}
    * model. When omitted, all members keep their {@code UNSET} default, so each option resolves as
    * documented for the corresponding {@link SimpleBuilder.Options} member — falling back to the
-   * {@code -Asimplebuilder.*} compiler argument and then to the built-in default listed there.
+   * {@code -Asimplebuilder.*} compiler argument and then to the built-in default listed there. See
+   * the <a
+   * href="https://github.com/java-helpers/simple-builders/blob/main/docs/CONFIGURATION.md#compiler-options">
+   * Compiler Options section in CONFIGURATION.md</a>.
    *
    * @return the configuration options, defaulting to all members {@code UNSET}
    */
