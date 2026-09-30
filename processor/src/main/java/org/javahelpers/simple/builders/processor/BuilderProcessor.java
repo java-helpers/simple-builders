@@ -304,7 +304,6 @@ public class BuilderProcessor extends AbstractProcessor {
     if (!context.getBuilderScopeResolver().isInGenerationScope(annotatedElement, config)) {
       return Optional.empty();
     }
-    validateBuilderPackage(annotatedElement, config);
     alreadyPlannedBuilders.add(
         builderTypeName(
             annotatedElement, effectiveBuilderPackage(annotatedElement, config), config));
@@ -336,7 +335,6 @@ public class BuilderProcessor extends AbstractProcessor {
     BuilderConfiguration config = reader.resolveHolderConfiguration(holder);
     tracker.endPhase(PHASE_CONFIGURATION_RESOLUTION);
 
-    validateBuilderPackage(holder, config);
     String builderPackage = effectiveBuilderPackage(holder, config);
     List<ElementToGenerate> results = new ArrayList<>();
     for (TypeElement target : targets) {
@@ -566,18 +564,6 @@ public class BuilderProcessor extends AbstractProcessor {
   private String effectiveBuilderPackage(Element reportingElement, BuilderConfiguration config) {
     String configured = config.getPackageName();
     return configured == null ? context.getPackageName(reportingElement) : configured;
-  }
-
-  /**
-   * Ensures the configured {@code packageName} option is a syntactically valid Java package name.
-   */
-  private void validateBuilderPackage(Element element, BuilderConfiguration config)
-      throws BuilderException {
-    String packageName = config.getPackageName();
-    if (packageName != null && !SourceVersion.isName(packageName)) {
-      throw new BuilderException(
-          element, "Option packageName '%s' is not a valid Java package name", packageName);
-    }
   }
 
   /**
