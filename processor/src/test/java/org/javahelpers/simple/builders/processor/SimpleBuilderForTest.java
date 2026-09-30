@@ -397,6 +397,20 @@ class SimpleBuilderForTest {
         compilation, "ExternalWidgetBuilder", "No accessible constructor - no builder");
   }
 
+  @Test
+  void packageName_GlobalCompilerArgumentIsIgnored() {
+    // packageName is annotation-only: a global -A/-D value must not collapse all builders into
+    // a single package.
+    Compilation compilation =
+        ProcessorTestUtils.createCompiler()
+            .withOptions("-Asimplebuilder.packageName=com.example.generated")
+            .compile(externalDto(), holder("test", "Builders", "ext.ExternalUser"));
+
+    assertThat(compilation).succeededWithoutWarnings();
+    String generated = ProcessorTestUtils.loadGeneratedSource(compilation, "ExternalUserBuilder");
+    ProcessorAsserts.assertContaining(generated, "package test;");
+  }
+
   private static JavaFileObject externalDto() {
     return ProcessorTestUtils.forSource(
         """

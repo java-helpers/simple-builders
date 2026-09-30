@@ -144,8 +144,11 @@ public enum CompilerArgumentsEnum {
   /** Option for Jackson Module package name. */
   JACKSON_MODULE_PACKAGE("jacksonModulePackage", string(Builder::jacksonModulePackage)),
 
-  /** Option for the package generated builders are placed in. */
-  PACKAGE_NAME("packageName", string(Builder::packageName)),
+  /**
+   * Option for the package generated builders are placed in. Annotation-only: a global {@code
+   * packageName} would collapse all builders into a single package.
+   */
+  PACKAGE_NAME("packageName", string(Builder::packageName), true),
 
   // === Builder Scoping ===
   /** Option for builder generation packages. */
@@ -218,6 +221,12 @@ public enum CompilerArgumentsEnum {
   private final OptionApplier builderApplier;
 
   /**
+   * Whether this option may only be set per annotation and is ignored in compiler arguments ({@code
+   * -Asimplebuilder.*} / {@code -D}).
+   */
+  private final boolean annotationOnly;
+
+  /**
    * Constructs a CompilerArgumentsEnum constant for an argument that is not a builder configuration
    * option.
    *
@@ -247,8 +256,20 @@ public enum CompilerArgumentsEnum {
    * @param builderApplier applies the raw option value to the configuration builder
    */
   CompilerArgumentsEnum(String optionName, OptionApplier builderApplier) {
+    this(optionName, builderApplier, false);
+  }
+
+  /**
+   * Constructs a CompilerArgumentsEnum constant for a builder configuration option.
+   *
+   * @param optionName The option name
+   * @param builderApplier applies the raw option value to the configuration builder
+   * @param annotationOnly {@code true} to restrict the option to annotation usage
+   */
+  CompilerArgumentsEnum(String optionName, OptionApplier builderApplier, boolean annotationOnly) {
     this.optionName = optionName;
     this.builderApplier = builderApplier;
+    this.annotationOnly = annotationOnly;
   }
 
   /**
@@ -305,6 +326,16 @@ public enum CompilerArgumentsEnum {
    */
   public boolean hasValueApplier() {
     return builderApplier != null;
+  }
+
+  /**
+   * Returns whether this option is only valid as an annotation member and is ignored when set
+   * through compiler arguments.
+   *
+   * @return {@code true} if the option must not be read from compiler arguments
+   */
+  public boolean isAnnotationOnly() {
+    return annotationOnly;
   }
 
   /**

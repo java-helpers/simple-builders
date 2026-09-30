@@ -1048,7 +1048,8 @@ public class OwnerDto {
 #### `packageName`
 
 **Default**: `""` (empty — the package of the annotated type, resp. of the element carrying
-`@SimpleBuilderFor`) | **Compiler Option**: `-Asimplebuilder.packageName=com.example.generated`
+`@SimpleBuilderFor`) | **Annotation only** — a global `-Asimplebuilder.packageName` is
+deliberately not supported: it would collapse all generated builders into a single package.
 
 Places generated builder classes into the given package instead of the default package.
 Useful to collect builders in a central package, or to keep a third-party target's builder

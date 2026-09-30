@@ -702,7 +702,7 @@ public @interface SimpleBuilder {
      *
      * <p>Default: "" (empty - the package of the annotated type, resp. of the element carrying
      * {@code @SimpleBuilderFor}) <br>
-     * Compiler option: -Asimplebuilder.packageName
+     * Annotation-only: a global value would collapse all generated builders into a single package.
      *
      * @return the package generated builders are placed in
      */
