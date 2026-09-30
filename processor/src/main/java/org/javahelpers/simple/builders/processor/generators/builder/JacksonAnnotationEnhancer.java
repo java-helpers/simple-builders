@@ -47,7 +47,7 @@ import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
  * <p>This enhancer is disabled by default and can be activated by setting the configuration flag
  * {@code usingJacksonDeserializerAnnotation} to {@code ENABLED}. For detailed usage instructions,
  * see the <a
- * href="https://github.com/andreasigel/simple-builders/blob/main/CONFIGURATION.md#jackson-support">
+ * href="https://github.com/java-helpers/simple-builders/blob/main/docs/CONFIGURATION.md#jackson-support">
  * Jackson Support section in CONFIGURATION.md</a>.
  *
  * <h3>Example to demonstrate the generated annotation</h3>

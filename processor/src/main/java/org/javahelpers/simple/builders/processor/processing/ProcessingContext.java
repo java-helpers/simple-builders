@@ -24,9 +24,15 @@
 
 package org.javahelpers.simple.builders.processor.processing;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
@@ -60,7 +66,7 @@ public final class ProcessingContext {
   private final String formatterProfile;
   private final BuilderScopeResolver builderScopeResolver;
   private GeneratorRegistry generatorRegistry;
-  private BuilderConfiguration configurationForProcessingTarget;
+  private ProcessingTarget processingTarget;
 
   /**
    * Creates a new processing context.
@@ -95,12 +101,13 @@ public final class ProcessingContext {
   }
 
   /**
-   * Initializes the configuration for the current processing target.
+   * Initializes the per-target state ({@link ProcessingTarget}) for the type whose builder is
+   * currently being generated. Called once per target before extraction starts.
    *
-   * @param config the builder configuration for the target being processed
+   * @param processingTarget the resolved configuration and builder package of the current target
    */
-  public void initConfigurationForProcessingTarget(BuilderConfiguration config) {
-    this.configurationForProcessingTarget = config;
+  public void initProcessingTarget(ProcessingTarget processingTarget) {
+    this.processingTarget = processingTarget;
   }
 
   /**
@@ -109,7 +116,51 @@ public final class ProcessingContext {
    * @return the builder configuration for the target being processed
    */
   public BuilderConfiguration getConfiguration() {
-    return this.configurationForProcessingTarget;
+    return this.processingTarget.configuration();
+  }
+
+  /**
+   * Gets the package the builder of the current processing target is generated in.
+   *
+   * @return the qualified package name of the generated builder
+   */
+  public String getBuilderPackageName() {
+    return this.processingTarget.builderPackage();
+  }
+
+  /**
+   * Checks whether a member (constructor, method) is accessible from the package the generated
+   * builder is written to.
+   *
+   * <p>Public members are always accessible. Private members are never accessible - the generated
+   * builder is a separate top-level class. Package-private and protected members are only
+   * accessible when the member's declaring package equals the builder package (protected access
+   * through inheritance does not apply, as the builder does not extend the target type).
+   *
+   * @param member the member to check
+   * @return {@code true} if generated code in the builder package may call the member
+   */
+  public boolean isMemberAccessibleFromBuilderPackage(Element member) {
+    if (member.getModifiers().contains(Modifier.PUBLIC)) {
+      return true;
+    }
+    if (member.getModifiers().contains(Modifier.PRIVATE)) {
+      return false;
+    }
+    return getPackageName(member).equals(getBuilderPackageName());
+  }
+
+  /**
+   * Returns the annotation values of an annotation mirror, including default values.
+   *
+   * @param annotationMirror the annotation mirror to read
+   * @return the annotation's element values keyed by their method element
+   */
+  public Map<ExecutableElement, AnnotationValue> getElementValuesWithDefaults(
+      AnnotationMirror annotationMirror) {
+    Map<ExecutableElement, AnnotationValue> elementValues = new HashMap<>();
+    elementUtils.getElementValuesWithDefaults(annotationMirror).forEach(elementValues::put);
+    return elementValues;
   }
 
   /**
