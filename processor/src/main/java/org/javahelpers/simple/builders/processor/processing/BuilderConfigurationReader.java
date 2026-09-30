@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
@@ -137,6 +138,7 @@ public class BuilderConfigurationReader {
 
     // Validate access modifiers and warn about problematic configurations
     validateAccessModifiers(element, result);
+    validatePackageName(element, result);
 
     logger.debugEndOperation("Resulting configuration resolved: %s", result.toString());
     return result;
@@ -170,6 +172,7 @@ public class BuilderConfigurationReader {
 
     // Validate access modifiers and warn about problematic configurations
     validateAccessModifiers(element, result);
+    validatePackageName(element, result);
 
     logger.debugEndOperation("Resulting configuration resolved: %s", result.toString());
     return result;
@@ -425,6 +428,23 @@ public class BuilderConfigurationReader {
               + "inaccessible and the builder unusable. "
               + "Use PUBLIC or PACKAGE_PRIVATE instead.",
           elementName);
+    }
+  }
+
+  /**
+   * Validates the {@code packageName} option and throws an exception for values that are not a
+   * valid Java package name.
+   *
+   * @param element the element being processed
+   * @param config the resolved configuration
+   * @throws BuilderException if the configured package name is invalid
+   */
+  private static void validatePackageName(Element element, BuilderConfiguration config)
+      throws BuilderException {
+    String packageName = config.getPackageName();
+    if (packageName != null && !SourceVersion.isName(packageName)) {
+      throw new BuilderException(
+          element, "Option packageName '%s' is not a valid Java package name", packageName);
     }
   }
 }

@@ -106,6 +106,7 @@ public record BuilderConfiguration(
     OptionState generateJacksonModule,
     OptionState generateJavaDoc,
     String jacksonModulePackage,
+    String packageName,
     PackageScopes builderGenerationPackages,
     PackageScopes builderUsagePackages,
     String builderSuffix,
@@ -264,6 +265,16 @@ public record BuilderConfiguration(
   }
 
   /**
+   * The package generated builders are placed in, or {@code null} when the default applies (the
+   * package of the annotated type, resp. of the {@code @SimpleBuilderFor} holder).
+   *
+   * @return the configured builder package, or {@code null} if unset
+   */
+  public String getPackageName() {
+    return packageName;
+  }
+
+  /**
    * Returns the parsed set of builder generation package scopes.
    *
    * @return set of package names and their subpackages, empty if unset
@@ -373,6 +384,7 @@ public record BuilderConfiguration(
             mergeOptionState(other.generateJacksonModule, this.generateJacksonModule))
         .generateJavaDoc(mergeOptionState(other.generateJavaDoc, this.generateJavaDoc))
         .jacksonModulePackage(mergeString(other.jacksonModulePackage, this.jacksonModulePackage))
+        .packageName(mergeString(other.packageName, this.packageName))
         .builderGenerationPackages(
             overrideScopes(other.builderGenerationPackages, this.builderGenerationPackages))
         .builderUsagePackages(overrideScopes(other.builderUsagePackages, this.builderUsagePackages))
@@ -462,6 +474,7 @@ public record BuilderConfiguration(
         .appendValueIfSet("generateJacksonModule", generateJacksonModule)
         .appendValueIfSet("generateJavaDoc", generateJavaDoc)
         .appendIfNotEmpty("jacksonModulePackage", jacksonModulePackage)
+        .appendIfNotEmpty("packageName", packageName)
         .appendIfNotEmpty("builderGenerationPackages", builderGenerationPackages.toString())
         .appendIfNotEmpty("builderUsagePackages", builderUsagePackages.toString())
         .appendIfNotEmpty("builderSuffix", builderSuffix)
@@ -546,6 +559,7 @@ public record BuilderConfiguration(
     private OptionState generateJacksonModule = OptionState.UNSET;
     private OptionState generateJavaDoc = OptionState.UNSET;
     private String jacksonModulePackage = null;
+    private String packageName = null;
 
     // === Naming ===
     private String builderSuffix = null;
@@ -645,6 +659,11 @@ public record BuilderConfiguration(
 
     public Builder jacksonModulePackage(String value) {
       this.jacksonModulePackage = StringUtils.trimToNull(value);
+      return this;
+    }
+
+    public Builder packageName(String value) {
+      this.packageName = StringUtils.trimToNull(value);
       return this;
     }
 
@@ -896,6 +915,7 @@ public record BuilderConfiguration(
           generateJacksonModule,
           generateJavaDoc,
           jacksonModulePackage,
+          packageName,
           builderGenerationPackages,
           builderUsagePackages,
           builderSuffix,

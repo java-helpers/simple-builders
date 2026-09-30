@@ -690,6 +690,25 @@ public @interface SimpleBuilder {
     String jacksonModulePackage() default "";
 
     /**
+     * The package generated builder classes are placed in. <br>
+     * Useful to collect builders in a central package or to generate a builder for a type whose
+     * package is not suitable, e.g. a third-party package.
+     *
+     * <p>Example: {@code "com.example.generated"}
+     *
+     * <p>Only members of the target type that are accessible from the configured package are used
+     * for builder generation - package-private and protected constructors, setters and getters are
+     * then not reachable and are treated as if absent.
+     *
+     * <p>Default: "" (empty - the package of the annotated type, resp. of the element carrying
+     * {@code @SimpleBuilderFor}) <br>
+     * Annotation-only: a global value would collapse all generated builders into a single package.
+     *
+     * @return the package generated builders are placed in
+     */
+    String packageName() default "";
+
+    /**
      * Generate Javadoc comments on the generated builder class and its members. <br>
      * When disabled, no class, field, constructor or method Javadoc is emitted, producing smaller
      * generated files.

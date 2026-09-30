@@ -117,7 +117,8 @@ public class CompilerArgumentsReader {
    * {@code BuilderConfigurationReader}. The remaining checklist when adding a new option:
    *
    * <ol>
-   *   <li>{@code CompilerArgumentsEnum} — add the enum constant with its applier.
+   *   <li>{@code CompilerArgumentsEnum} — add the enum constant with its applier (or pass {@code
+   *       annotationOnly = true} if the option must not be set globally).
    *   <li>{@code BuilderConfiguration} — add the field, builder method, merge logic, and a typed
    *       accessor (e.g. {@code formattingModeEnum}) if enum conversion is needed. Set the default
    *       in {@code BuilderConfiguration.DEFAULT}.
@@ -133,6 +134,7 @@ public class CompilerArgumentsReader {
   public BuilderConfiguration readBuilderConfiguration(ProcessingLogger logger) {
     BuilderConfiguration.Builder builder = BuilderConfiguration.builder();
     Stream.of(CompilerArgumentsEnum.values())
+        .filter(option -> !option.isAnnotationOnly())
         .forEach(option -> option.apply(builder, readValue(option), logger));
     return builder.build();
   }
