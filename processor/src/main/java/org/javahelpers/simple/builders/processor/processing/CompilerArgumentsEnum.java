@@ -144,6 +144,9 @@ public enum CompilerArgumentsEnum {
   /** Option for Jackson Module package name. */
   JACKSON_MODULE_PACKAGE("jacksonModulePackage", string(Builder::jacksonModulePackage)),
 
+  /** Option for the package generated builders are placed in. */
+  PACKAGE_NAME("packageName", string(Builder::packageName)),
+
   // === Builder Scoping ===
   /** Option for builder generation packages. */
   BUILDER_GENERATION_PACKAGES(

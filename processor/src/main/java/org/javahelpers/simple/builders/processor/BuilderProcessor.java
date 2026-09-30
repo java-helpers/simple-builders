@@ -304,15 +304,17 @@ public class BuilderProcessor extends AbstractProcessor {
     if (!context.getBuilderScopeResolver().isInGenerationScope(annotatedElement, config)) {
       return Optional.empty();
     }
+    validateBuilderPackage(annotatedElement, config);
     alreadyPlannedBuilders.add(
-        builderTypeName(annotatedElement, context.getPackageName(annotatedElement), config));
+        builderTypeName(
+            annotatedElement, effectiveBuilderPackage(annotatedElement, config), config));
     return Optional.of(new ElementToGenerate(annotatedElement, config, annotatedElement));
   }
 
   /**
    * Expands a {@code @SimpleBuilderFor} holder into the external types listed in its {@code value}
-   * attribute and plans a builder for each of them. The generated builder is placed in the holder's
-   * package.
+   * attribute and plans a builder for each of them. The generated builder is placed in the
+   * configured {@code packageName} or the holder's package.
    */
   private List<ElementToGenerate> planGenerationOfTypeByHolder(
       Element holder,
@@ -334,7 +336,8 @@ public class BuilderProcessor extends AbstractProcessor {
     BuilderConfiguration config = reader.resolveHolderConfiguration(holder);
     tracker.endPhase(PHASE_CONFIGURATION_RESOLUTION);
 
-    String builderPackage = context.getPackageName(holder);
+    validateBuilderPackage(holder, config);
+    String builderPackage = effectiveBuilderPackage(holder, config);
     List<ElementToGenerate> results = new ArrayList<>();
     for (TypeElement target : targets) {
       planExternalTarget(target, holder, config, builderPackage, alreadyPlannedBuilders)
@@ -441,9 +444,11 @@ public class BuilderProcessor extends AbstractProcessor {
       }
       scopeResolver.registerGeneratedBuilder(
           new TypeName(context.getPackageName(targetType), targetType.getSimpleName().toString()),
-          new TypeName(
-              context.getPackageName(elementToGenerate.reportingElement()),
-              targetType.getSimpleName() + elementToGenerate.config().getBuilderSuffix()));
+          builderTypeName(
+              targetType,
+              effectiveBuilderPackage(
+                  elementToGenerate.reportingElement(), elementToGenerate.config()),
+              elementToGenerate.config()));
     }
   }
 
@@ -545,12 +550,34 @@ public class BuilderProcessor extends AbstractProcessor {
       Element element, BuilderConfiguration config, Element reportingElement) {}
 
   /**
-   * The package the builder is generated into: the package of the element the generation is
-   * reported on - the {@code @SimpleBuilderFor} holder for external types, the annotated type
-   * itself otherwise.
+   * The package the builder is generated into: the configured {@code packageName} option when set,
+   * otherwise the package of the element the generation is reported on - the
+   * {@code @SimpleBuilderFor} holder for external types, the annotated type itself otherwise.
    */
   private String builderPackageOf(ElementToGenerate elementToGenerate) {
-    return context.getPackageName(elementToGenerate.reportingElement());
+    return effectiveBuilderPackage(
+        elementToGenerate.reportingElement(), elementToGenerate.config());
+  }
+
+  /**
+   * The effective builder package: the configured {@code packageName} option when set, otherwise
+   * the package of the given element.
+   */
+  private String effectiveBuilderPackage(Element reportingElement, BuilderConfiguration config) {
+    String configured = config.getPackageName();
+    return configured == null ? context.getPackageName(reportingElement) : configured;
+  }
+
+  /**
+   * Ensures the configured {@code packageName} option is a syntactically valid Java package name.
+   */
+  private void validateBuilderPackage(Element element, BuilderConfiguration config)
+      throws BuilderException {
+    String packageName = config.getPackageName();
+    if (packageName != null && !SourceVersion.isName(packageName)) {
+      throw new BuilderException(
+          element, "Option packageName '%s' is not a valid Java package name", packageName);
+    }
   }
 
   /**

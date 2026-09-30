@@ -317,6 +317,86 @@ class SimpleBuilderForTest {
         generated, "package test;", "public ExternalUserBuilder name(String name)");
   }
 
+  @Test
+  void packageName_GeneratesBuilderIntoConfiguredPackage() {
+    JavaFileObject holder =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFor;
+            @SimpleBuilderFor(
+                value = ext.ExternalUser.class,
+                options = @SimpleBuilder.Options(packageName = "com.example.generated"))
+            public class Builders {}
+            """);
+
+    Compilation compilation = ProcessorTestUtils.createCompiler().compile(externalDto(), holder);
+
+    assertThat(compilation).succeededWithoutWarnings();
+    String generated = ProcessorTestUtils.loadGeneratedSource(compilation, "ExternalUserBuilder");
+    ProcessorAsserts.assertContaining(
+        generated,
+        "package com.example.generated;",
+        "import ext.ExternalUser;",
+        "public ExternalUserBuilder name(String name)");
+  }
+
+  @Test
+  void packageName_Invalid_ProducesDiagnosticAndNoBuilder() {
+    JavaFileObject holder =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFor;
+            @SimpleBuilderFor(
+                value = ext.ExternalUser.class,
+                options = @SimpleBuilder.Options(packageName = "com.example..broken"))
+            public class Builders {}
+            """);
+
+    Compilation compilation = ProcessorTestUtils.createCompiler().compile(externalDto(), holder);
+
+    assertThat(compilation).succeeded();
+    assertThat(compilation).hadWarningContaining("is not a valid Java package name");
+    ProcessorAsserts.assertNoBuilderGenerated(
+        compilation, "ExternalUserBuilder", "An invalid packageName must not produce a builder");
+  }
+
+  @Test
+  void packageName_PackagePrivateConstructorIsNotReachable() {
+    // With the builder placed in another package, package-private members of the target are no
+    // longer reachable - they are treated as if absent, so no accessible constructor remains.
+    JavaFileObject packagePrivateCtor =
+        ProcessorTestUtils.forSource(
+            """
+            package ext;
+            public class ExternalWidget {
+              ExternalWidget() {}
+            }
+            """);
+    JavaFileObject holder =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFor;
+            @SimpleBuilderFor(
+                value = ext.ExternalWidget.class,
+                options = @SimpleBuilder.Options(packageName = "com.example.generated"))
+            public class Builders {}
+            """);
+
+    Compilation compilation =
+        ProcessorTestUtils.createCompiler().compile(packagePrivateCtor, holder);
+
+    assertThat(compilation).succeeded();
+    assertThat(compilation).hadWarningContaining("No accessible constructor");
+    ProcessorAsserts.assertNoBuilderGenerated(
+        compilation, "ExternalWidgetBuilder", "No accessible constructor - no builder");
+  }
+
   private static JavaFileObject externalDto() {
     return ProcessorTestUtils.forSource(
         """

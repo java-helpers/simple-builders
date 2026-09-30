@@ -1045,6 +1045,32 @@ public class OwnerDto {
 
 ---
 
+#### `packageName`
+
+**Default**: `""` (empty — the package of the annotated type, resp. of the element carrying
+`@SimpleBuilderFor`) | **Compiler Option**: `-Asimplebuilder.packageName=com.example.generated`
+
+Places generated builder classes into the given package instead of the default package.
+Useful to collect builders in a central package, or to keep a third-party target's builder
+in your own namespace when using `@SimpleBuilderFor`.
+
+Only members of the target type that are accessible from the configured package are used for
+builder generation — package-private and protected constructors, setters and getters are
+then not reachable and are treated as if absent. The value must be a valid Java package
+name; an invalid value produces a compile-time diagnostic.
+
+**Example**:
+```java
+@SimpleBuilderFor(
+    value = ExternalUser.class,
+    options = @SimpleBuilder.Options(packageName = "com.example.generated"))
+public class ExternalBuilders { }
+
+// Generated class: com.example.generated.ExternalUserBuilder
+```
+
+---
+
 #### `setterSuffix`
 
 **Default**: `""` (empty) | **Compiler Option**: `-Asimplebuilder.setterSuffix=customPrefix`

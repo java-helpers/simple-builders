@@ -34,9 +34,10 @@ import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration
  * can reach it without threading both values through every call.
  *
  * @param configuration the resolved builder configuration for the current target
- * @param builderPackage the package the generated builder is written to. For {@code @SimpleBuilder}
- *     targets this is the processed type's own package; for {@code @SimpleBuilderFor} targets it is
- *     the holder's package. The latter cannot be derived from the processed element itself, which
- *     is why it is carried explicitly here
+ * @param builderPackage the package the generated builder is written to. This is the configured
+ *     {@code packageName} option when set; otherwise the processed type's own package for
+ *     {@code @SimpleBuilder} targets, resp. the holder's package for {@code @SimpleBuilderFor}
+ *     targets. It cannot always be derived from the processed element itself, which is why it is
+ *     carried explicitly here
  */
 public record ProcessingTarget(BuilderConfiguration configuration, String builderPackage) {}

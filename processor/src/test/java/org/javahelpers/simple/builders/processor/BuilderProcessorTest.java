@@ -3696,4 +3696,28 @@ class BuilderProcessorTest {
     assertThat(compilation)
         .hadWarningContaining("Field 'value' has field-specific generics, so it will be ignored");
   }
+
+  @Test
+  void packageName_GeneratesBuilderIntoConfiguredPackage() {
+    JavaFileObject source =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+            @SimpleBuilder(options = @SimpleBuilder.Options(packageName = "com.example.generated"))
+            public class Person {
+              private String name;
+              public Person() {}
+              public String getName() { return name; }
+              public void setName(String name) { this.name = name; }
+            }
+            """);
+
+    Compilation compilation = ProcessorTestUtils.createCompiler().compile(source);
+
+    assertThat(compilation).succeededWithoutWarnings();
+    String generated = loadGeneratedSource(compilation, "PersonBuilder");
+    ProcessorAsserts.assertContaining(
+        generated, "package com.example.generated;", "import test.Person;");
+  }
 }
