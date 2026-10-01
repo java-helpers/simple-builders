@@ -236,12 +236,11 @@ public final class BuilderScopeResolver {
   }
 
   private void refreshForConfigurationIfNeeded() {
-    ResolutionInputs inputs =
-        new ResolutionInputs(context.getConfiguration(), context.getBuilderPackageName());
+    BuilderConfiguration configuration = context.getConfiguration();
+    ResolutionInputs inputs = new ResolutionInputs(configuration, context.getBuilderPackageName());
     if (inputs.equals(resolutionInputs)) {
       return;
     }
-    BuilderConfiguration configuration = inputs.configuration();
     // The effective usage scope combines builderUsagePackages and builderGenerationPackages,
     // since generation-scope packages are automatically included in the usage scope.
     PackageScopes generation =
