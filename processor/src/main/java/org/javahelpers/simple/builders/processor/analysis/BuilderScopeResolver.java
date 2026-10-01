@@ -86,10 +86,10 @@ public final class BuilderScopeResolver {
    *   <li>Otherwise, the candidate builder name is constructed using {@code builderUsageSuffix}
    *       (falling back to {@code builderSuffix} if not configured). The candidate is looked up on
    *       the classpath and returned if it satisfies the builder contract: a constructor accepting
-   *       the referenced type and a no-arg {@code build()} method returning it. The contract check
-   *       is annotation-agnostic, so builders generated with custom template annotations, external
-   *       tools, or different suffixes are supported. The referenced type must not be opted out
-   *       with {@code @Ignore4BuilderGeneration}.
+   *       the referenced type, a no-arg constructor, and a no-arg {@code build()} method returning
+   *       it. The contract check is annotation-agnostic, so builders generated with custom template
+   *       annotations, external tools, or different suffixes are supported. The referenced type
+   *       must not be opted out with {@code @Ignore4BuilderGeneration}.
    * </ol>
    *
    * @param referencedType the type element being referenced as a field or collection element
@@ -199,10 +199,11 @@ public final class BuilderScopeResolver {
 
   /**
    * Looks up the candidate builder type on the classpath and verifies it satisfies the builder
-   * contract: a constructor accepting the referenced type and a no-arg {@code build()} method
-   * returning it. The contract check is annotation-agnostic, so builders generated with custom
-   * template annotations or from external sources are supported as long as they follow the builder
-   * contract. It also avoids false positives like {@code String} → {@code StringBuilder}.
+   * contract: a constructor accepting the referenced type, a no-arg constructor, and a no-arg
+   * {@code build()} method returning it. The contract check is annotation-agnostic, so builders
+   * generated with custom template annotations or from external sources are supported as long as
+   * they follow the builder contract. It also avoids false positives like {@code String} → {@code
+   * StringBuilder}.
    *
    * @param candidate the candidate builder type name to look up
    * @param expectedType the qualified name of the referenced type the builder must accept and
@@ -215,6 +216,9 @@ public final class BuilderScopeResolver {
       return Optional.empty();
     }
     if (!JavaLangAnalyser.hasConstructorAccepting(builderTypeElement, expectedType, context)) {
+      return Optional.empty();
+    }
+    if (!JavaLangAnalyser.hasEmptyConstructor(builderTypeElement, context)) {
       return Optional.empty();
     }
     if (!JavaLangAnalyser.hasBuildMethodReturning(builderTypeElement, expectedType, context)) {

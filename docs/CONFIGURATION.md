@@ -745,8 +745,8 @@ case.
 
 The processor constructs the candidate builder name using `builderUsageSuffix`
 (or `builderSuffix` if not configured) and verifies the builder contract: a
-constructor accepting the referenced type and a no-arg `build()` method returning
-it. Any class with the expected name and a matching contract qualifies, allowing
+constructor accepting the referenced type, a no-arg constructor, and a no-arg
+`build()` method returning it. Any class with the expected name and a matching contract qualifies, allowing
 references to builders generated with custom template annotations, external tools,
 or different suffixes. If the candidate builder cannot be found, the field falls
 back to a plain setter.
@@ -1023,8 +1023,8 @@ If empty, `builderSuffix` is used instead. This allows referencing builders that
 with a different suffix (e.g. by another module using `"Factory"` as suffix) without changing
 the suffix used for own builder generation.
 
-The candidate class must provide a constructor accepting the referenced type and a no-arg
-`build()` method returning it. The contract check is annotation-agnostic, so builders
+The candidate class must provide a constructor accepting the referenced type, a no-arg
+constructor, and a no-arg `build()` method returning it. The contract check is annotation-agnostic, so builders
 generated with custom template annotations or external tools are supported. If the
 candidate class does not exist or does not satisfy this contract, the field falls back
 to a plain setter.

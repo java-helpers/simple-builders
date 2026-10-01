@@ -157,6 +157,33 @@ class BuilderScopeResolverTest {
   }
 
   @Test
+  void resolverUsageScope_RejectsBuilderWithoutNoArgConstructor() {
+    ResolverProbeProcessor.reset();
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelper { public LibHelper() {} }
+                    """),
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelperBuilder {
+                      public LibHelperBuilder(LibHelper value) {}
+                      public LibHelper build() { return new LibHelper(); }
+                    }
+                    """));
+
+    assertThat(compilation).succeeded();
+    // ctor(T) + build() but no no-arg ctor: generated consumer code calls `new
+    // LibHelperBuilder()`, so the builder must not qualify
+    assertEquals(Optional.empty(), ResolverProbeProcessor.usageWithoutAnnotation);
+  }
+
+  @Test
   void resolverUsageScope_UsesBuilderUsageSuffixWhenConfigured() {
     ResolverProbeProcessor.reset();
     Compilation compilation =
