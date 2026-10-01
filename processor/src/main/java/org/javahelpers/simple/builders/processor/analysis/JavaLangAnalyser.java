@@ -183,16 +183,19 @@ public final class JavaLangAnalyser {
   }
 
   /**
-   * Check if the class (TypeElement) has an empty constructor.
+   * Check if the class (TypeElement) has an empty constructor accessible from the package the
+   * builder is generated into.
    *
    * @param typeElement the type element to check
    * @param context processing context
-   * @return {@code true}, if the element has an empty constructor
+   * @return {@code true}, if the element has an accessible empty constructor
    */
   public static boolean hasEmptyConstructor(TypeElement typeElement, ProcessingContext context) {
     List<ExecutableElement> constructors =
         ElementFilter.constructorsIn(context.getAllMembers(typeElement));
-    return constructors.stream().anyMatch(c -> c.getParameters().isEmpty());
+    return constructors.stream()
+        .filter(context::isMemberAccessibleFromBuilderPackage)
+        .anyMatch(c -> c.getParameters().isEmpty());
   }
 
   /**
@@ -258,6 +261,7 @@ public final class JavaLangAnalyser {
       return false;
     }
     return ElementFilter.methodsIn(context.getAllMembers(builderType)).stream()
+        .filter(context::isMemberAccessibleFromBuilderPackage)
         .anyMatch(
             method ->
                 method.getSimpleName().contentEquals("build")
@@ -281,6 +285,7 @@ public final class JavaLangAnalyser {
       return false;
     }
     return ElementFilter.constructorsIn(context.getAllMembers(builderType)).stream()
+        .filter(context::isMemberAccessibleFromBuilderPackage)
         .anyMatch(
             constructor ->
                 constructor.getParameters().size() == 1

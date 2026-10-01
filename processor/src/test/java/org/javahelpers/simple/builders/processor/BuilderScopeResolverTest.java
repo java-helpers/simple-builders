@@ -184,6 +184,66 @@ class BuilderScopeResolverTest {
   }
 
   @Test
+  void resolverUsageScope_RejectsBuilderWithPrivateConstructor() {
+    ResolverProbeProcessor.reset();
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelper { public LibHelper() {} }
+                    """),
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelperBuilder {
+                      private LibHelperBuilder() {}
+                      public LibHelperBuilder(LibHelper value) {}
+                      public LibHelper build() { return new LibHelper(); }
+                    }
+                    """));
+
+    assertThat(compilation).succeeded();
+    // The no-arg ctor exists but is private: generated code could not call it, so the builder
+    // must not qualify
+    assertEquals(Optional.empty(), ResolverProbeProcessor.usageWithoutAnnotation);
+  }
+
+  @Test
+  void resolverUsageScope_PackagePrivateMembers_AccessibleOnlyFromSamePackage() {
+    ResolverProbeProcessor.reset();
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelper { public LibHelper() {} }
+                    """),
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelperBuilder {
+                      LibHelperBuilder() {}
+                      LibHelperBuilder(LibHelper value) {}
+                      LibHelper build() { return new LibHelper(); }
+                    }
+                    """));
+
+    assertThat(compilation).succeeded();
+    // All contract members are package-private: accessible when the generated builder is in the
+    // same package (builderPackage "lib")...
+    assertEquals(
+        "lib.LibHelperBuilder",
+        ResolverProbeProcessor.usagePackagePrivate.get().getFullQualifiedName());
+    // ...but not from a different one (builderPackage unset)
+    assertEquals(Optional.empty(), ResolverProbeProcessor.usageWithoutAnnotation);
+  }
+
+  @Test
   void resolverUsageScope_UsesBuilderUsageSuffixWhenConfigured() {
     ResolverProbeProcessor.reset();
     Compilation compilation =
@@ -254,6 +314,7 @@ class BuilderScopeResolverTest {
     private static Optional<TypeName> usageWithoutAnnotation;
     private static Optional<TypeName> usageWithSuffix;
     private static Optional<TypeName> usageDefaultSuffix;
+    private static Optional<TypeName> usagePackagePrivate;
 
     private boolean captured;
 
@@ -268,6 +329,7 @@ class BuilderScopeResolverTest {
       usageWithoutAnnotation = null;
       usageWithSuffix = null;
       usageDefaultSuffix = null;
+      usagePackagePrivate = null;
     }
 
     @Override
@@ -326,6 +388,10 @@ class BuilderScopeResolverTest {
       // Usage scope with default suffix (no builderUsageSuffix configured)
       context.initProcessingTarget(new ProcessingTarget(usageOnlyConfiguration("lib"), ""));
       usageDefaultSuffix = resolver.resolveUsableBuilderType(helper);
+      // Generated builder in the same package as the referenced builder: package-private
+      // contract members are accessible
+      context.initProcessingTarget(new ProcessingTarget(usageOnlyConfiguration("lib"), "lib"));
+      usagePackagePrivate = resolver.resolveUsableBuilderType(helper);
       captured = true;
       return false;
     }
