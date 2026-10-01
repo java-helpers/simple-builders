@@ -56,7 +56,7 @@ public final class BuilderScopeResolver {
   private record ResolutionInputs(BuilderConfiguration configuration, String builderPackage) {}
 
   private final ProcessingContext context;
-  private ResolutionInputs resolutionInputs;
+  private ResolutionInputs cachedResolutionInputs;
   private PackageScopes usagePackages = PackageScopes.unscoped();
   private final Map<String, Optional<TypeName>> resolvedBuilderTypes = new HashMap<>();
   private final GeneratedBuilders generatedBuilders = new GeneratedBuilders();
@@ -238,7 +238,7 @@ public final class BuilderScopeResolver {
   private void refreshForConfigurationIfNeeded() {
     BuilderConfiguration configuration = context.getConfiguration();
     ResolutionInputs inputs = new ResolutionInputs(configuration, context.getBuilderPackageName());
-    if (inputs.equals(resolutionInputs)) {
+    if (inputs.equals(cachedResolutionInputs)) {
       return;
     }
     // The effective usage scope combines builderUsagePackages and builderGenerationPackages,
@@ -251,7 +251,7 @@ public final class BuilderScopeResolver {
         configuration == null ? PackageScopes.unscoped() : configuration.builderUsagePackages();
     usagePackages = PackageScopes.merge(generation, usage);
     resolvedBuilderTypes.clear();
-    resolutionInputs = inputs;
+    cachedResolutionInputs = inputs;
   }
 
   private static boolean isIgnoredForBuilderGeneration(TypeElement typeElement) {
