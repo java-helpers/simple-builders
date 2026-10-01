@@ -29,6 +29,7 @@ import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.type.TypeKind.VOID;
 
 import java.lang.annotation.Annotation;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -50,6 +51,7 @@ import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 /** Helperclass for extrating specific information from existing classes. */
 public final class JavaLangAnalyser {
 
+  private static final List<String> PREFERRED_FACTORY_NAMES = List.of("create", "of");
   private static final String PARAM_TAG = "@param ";
   private static final String DEPRECATED_TAG = "@deprecated";
 
@@ -268,6 +270,78 @@ public final class JavaLangAnalyser {
                     && method.getParameters().isEmpty()
                     && method.getReturnType().getKind() != VOID
                     && method.getReturnType().toString().equals(expectedReturnType));
+  }
+
+  /**
+   * Finds a static parameterless factory method on the given type returning the type itself, e.g.
+   * {@code public static B create()}. Factories named {@code create} or {@code of} are preferred
+   * over other matching methods.
+   *
+   * <p>Only methods accessible from the generated builder's package qualify. This is part of the
+   * builder contract and provides an instantiation path alongside the no-arg constructor.
+   *
+   * @param builderType the candidate builder type element to inspect
+   * @param context the processing context, used to access all members
+   * @return the factory method name, or empty if none is accessible
+   */
+  public static Optional<String> findStaticFactoryReturning(
+      TypeElement builderType, ProcessingContext context) {
+    if (builderType == null) {
+      return Optional.empty();
+    }
+    return findStaticFactory(builderType, 0, null, context);
+  }
+
+  /**
+   * Finds a static factory method on the given type accepting the expected type and returning the
+   * builder type, e.g. {@code public static B create(T value)}. Factories named {@code create} or
+   * {@code of} are preferred over other matching methods.
+   *
+   * <p>Only methods accessible from the generated builder's package qualify. This is part of the
+   * builder contract and provides the copy path alongside the constructor accepting the type.
+   *
+   * @param builderType the candidate builder type element to inspect
+   * @param expectedParameterType the qualified name of the type the factory must accept
+   * @param context the processing context, used to access all members
+   * @return the factory method name, or empty if none is accessible
+   */
+  public static Optional<String> findStaticFactoryAccepting(
+      TypeElement builderType, String expectedParameterType, ProcessingContext context) {
+    if (builderType == null) {
+      return Optional.empty();
+    }
+    return findStaticFactory(builderType, 1, expectedParameterType, context);
+  }
+
+  private static Optional<String> findStaticFactory(
+      TypeElement builderType,
+      int parameterCount,
+      String expectedParameterType,
+      ProcessingContext context) {
+    String builderTypeName = builderType.getQualifiedName().toString();
+    return ElementFilter.methodsIn(context.getAllMembers(builderType)).stream()
+        .filter(context::isMemberAccessibleFromBuilderPackage)
+        .filter(method -> method.getModifiers().contains(STATIC))
+        .filter(method -> method.getReturnType().toString().equals(builderTypeName))
+        .filter(
+            method ->
+                method.getParameters().size() == parameterCount
+                    && (expectedParameterType == null
+                        || method
+                            .getParameters()
+                            .get(0)
+                            .asType()
+                            .toString()
+                            .equals(expectedParameterType)))
+        .map(method -> method.getSimpleName().toString())
+        .min(
+            Comparator.comparingInt(JavaLangAnalyser::factoryNameRank)
+                .thenComparing(Comparator.naturalOrder()));
+  }
+
+  private static int factoryNameRank(String name) {
+    int index = PREFERRED_FACTORY_NAMES.indexOf(name);
+    return index < 0 ? PREFERRED_FACTORY_NAMES.size() : index;
   }
 
   /**

@@ -37,6 +37,7 @@ import org.javahelpers.simple.builders.core.builders.HashSetBuilderWithElementBu
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
+import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameSet;
@@ -120,19 +121,19 @@ public class SetConsumerGenerator implements MethodGenerator {
     }
 
     TypeName elementType = fieldTypeGeneric.getElementType();
-    Optional<TypeName> elementBuilderType = fieldTypeGeneric.getElementBuilderType();
+    Optional<ResolvedBuilder> elementBuilder = fieldTypeGeneric.getElementResolvedBuilder();
 
-    if (elementBuilderType.isPresent()
+    if (elementBuilder.isPresent()
         && context.getConfiguration().shouldUseHashSetBuilderWithElementBuilders()) {
       TypeName collectionBuilderType =
           new TypeNameGeneric(
               map2TypeName(HashSetBuilderWithElementBuilders.class),
               elementType,
-              elementBuilderType.get());
+              elementBuilder.get().typeName());
       BuilderMethodDto method =
           createFieldConsumerWithElementBuilders(
-              field, collectionBuilderType, elementBuilderType.get(), builderType, context);
-      addExampleToSetConsumerWithBuilder(method, elementBuilderType.get());
+              field, collectionBuilderType, elementBuilder.get(), builderType, context);
+      addExampleToSetConsumerWithBuilder(method, elementBuilder.get().typeName());
       return List.of(method);
     } else if (context.getConfiguration().shouldUseHashSetBuilder()) {
       TypeName hashSetBuilderType = map2TypeName(HashSetBuilder.class);
@@ -140,7 +141,7 @@ public class SetConsumerGenerator implements MethodGenerator {
       BuilderMethodDto method =
           createFieldConsumerWithBuilder(
               field,
-              builderTypeGeneric,
+              new ResolvedBuilder(builderTypeGeneric),
               "this.$fieldName:N.value()",
               "",
               Map.of(),

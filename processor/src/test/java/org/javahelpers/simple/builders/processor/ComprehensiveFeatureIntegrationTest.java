@@ -462,7 +462,7 @@ class ComprehensiveFeatureIntegrationTest {
           public PersonDtoBuilder address(Consumer<AddressDtoBuilder> addressBuilderConsumer) {
             AddressDtoBuilder builder = this.address.isSet()
                 ? new AddressDtoBuilder(this.address.value())
-                : new AddressDtoBuilder();
+                : AddressDtoBuilder.create();
             addressBuilderConsumer.accept(builder);
             this.address = changedValue(builder.build());
             return this;

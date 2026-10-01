@@ -744,10 +744,13 @@ comma-separated, each listed package includes all of its subpackages, and matchi
 case.
 
 The processor constructs the candidate builder name using `builderUsageSuffix`
-(or `builderSuffix` if not configured) and verifies the builder contract: a
-constructor accepting the referenced type, a no-arg constructor, and a no-arg
-`build()` method returning it — each accessible from the generated builder's
-package. Any class with the expected name and a matching contract qualifies, allowing
+(or `builderSuffix` if not configured) and verifies the builder contract: a way
+to create an empty builder (a no-arg constructor or a static parameterless
+factory like `create()`), a way to create one seeded with the value (a
+constructor accepting the referenced type or a static factory like `create(T)`
+or `of(T)`), and a no-arg `build()` method returning it — each accessible from
+the generated builder's package. Generated code calls a factory instead of
+`new` when the builder offers one. Any class with the expected name and a matching contract qualifies, allowing
 references to builders generated with custom template annotations, external tools,
 or different suffixes. If the candidate builder cannot be found, the field falls
 back to a plain setter.
@@ -1024,12 +1027,15 @@ If empty, `builderSuffix` is used instead. This allows referencing builders that
 with a different suffix (e.g. by another module using `"Factory"` as suffix) without changing
 the suffix used for own builder generation.
 
-The candidate class must provide a constructor accepting the referenced type, a no-arg
-constructor, and a no-arg `build()` method returning it — each accessible from the generated
-builder's package. The contract check is annotation-agnostic, so builders
-generated with custom template annotations or external tools are supported. If the
-candidate class does not exist or does not satisfy this contract, the field falls back
-to a plain setter.
+The candidate class must provide a way to create an empty builder (a no-arg
+constructor or a static parameterless factory like `create()`), a way to create
+one seeded with the value (a constructor accepting the referenced type or a
+static factory like `create(T)` or `of(T)`), and a no-arg `build()` method
+returning it — each accessible from the generated builder's package. Generated
+code calls a factory instead of `new` when the builder offers one. The contract
+check is annotation-agnostic, so builders generated with custom template
+annotations or external tools are supported. If the candidate class does not
+exist or does not satisfy this contract, the field falls back to a plain setter.
 
 **Example**:
 ```java

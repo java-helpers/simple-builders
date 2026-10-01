@@ -177,7 +177,7 @@ public final class JavaLangMapper {
     context
         .getBuilderScopeResolver()
         .resolveUsableBuilderType(typeElement)
-        .ifPresent(typeName::setBuilderType);
+        .ifPresent(typeName::setResolvedBuilder);
   }
 
   /**
@@ -228,7 +228,7 @@ public final class JavaLangMapper {
     context
         .getBuilderScopeResolver()
         .resolveUsableBuilderType(elementTypeElement)
-        .ifPresent(genericType::setElementBuilderType);
+        .ifPresent(genericType::setElementResolvedBuilder);
   }
 
   /**

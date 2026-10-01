@@ -253,6 +253,65 @@ class BuilderScopeProcessingTest {
   }
 
   @Test
+  void usageScope_InstantiatesViaStaticFactoryWhenPresent() {
+    JavaFileObject dto = dto("test", "FactoryUsageDto", "LibraryDto", "lib");
+    JavaFileObject libraryDto = unannotatedDto("lib", "LibraryDto");
+    JavaFileObject libraryDtoBuilder = manualBuilder("lib", "LibraryDtoBuilder", "LibraryDto");
+
+    Compilation compilation =
+        ProcessorTestUtils.createCompiler()
+            .withOptions(
+                "-Asimplebuilder.builderGenerationPackages=test",
+                "-Asimplebuilder.builderUsagePackages=lib")
+            .compile(dto, libraryDto, libraryDtoBuilder);
+
+    assertThat(compilation).succeeded();
+    String generated =
+        ProcessorTestUtils.loadGeneratedSource(compilation, "FactoryUsageDtoBuilder");
+    // The manualBuilder fixture offers a static create() but no create(T): the empty path calls
+    // the factory, the copy path still uses the constructor
+    ProcessorAsserts.assertContaining(generated, "LibraryDtoBuilder.create()");
+    ProcessorAsserts.assertContaining(generated, "new LibraryDtoBuilder(this.referenced.value())");
+  }
+
+  @Test
+  void usageScope_InstantiatesViaFactoriesOnly() {
+    JavaFileObject dto = dto("test", "FactoryOnlyDto", "LibraryDto", "lib");
+    JavaFileObject libraryDto = unannotatedDto("lib", "LibraryDto");
+    JavaFileObject libraryDtoBuilder =
+        ProcessorTestUtils.forSource(
+            """
+            package lib;
+            public class LibraryDtoBuilder {
+              private LibraryDto value;
+              private LibraryDtoBuilder() {}
+              public static LibraryDtoBuilder create() { return new LibraryDtoBuilder(); }
+              public static LibraryDtoBuilder of(LibraryDto v) {
+                LibraryDtoBuilder b = create();
+                b.value = v;
+                return b;
+              }
+              public LibraryDto build() { return value != null ? value : new LibraryDto(); }
+            }
+            """);
+
+    Compilation compilation =
+        ProcessorTestUtils.createCompiler()
+            .withOptions(
+                "-Asimplebuilder.builderGenerationPackages=test",
+                "-Asimplebuilder.builderUsagePackages=lib")
+            .compile(dto, libraryDto, libraryDtoBuilder);
+
+    assertThat(compilation).succeeded();
+    String generated = ProcessorTestUtils.loadGeneratedSource(compilation, "FactoryOnlyDtoBuilder");
+    // A builder whose only instantiation paths are static factories satisfies the contract and
+    // is emitted via factory calls, never via new
+    ProcessorAsserts.assertContaining(generated, "LibraryDtoBuilder.of(this.referenced.value())");
+    ProcessorAsserts.assertContaining(generated, "LibraryDtoBuilder.create()");
+    ProcessorAsserts.assertNotContaining(generated, "new LibraryDtoBuilder");
+  }
+
+  @Test
   void usageScope_DoesNotReferenceBuilderWhenClassNotFoundWithUsageSuffix() {
     JavaFileObject dto = dto("test", "MissingBuilderDto", "LibraryDto", "lib");
     JavaFileObject libraryDto = unannotatedDto("lib", "LibraryDto");

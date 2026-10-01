@@ -39,6 +39,7 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
 import org.javahelpers.simple.builders.processor.analysis.BuilderScopeResolver;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
+import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 import org.javahelpers.simple.builders.processor.processing.ProcessingTarget;
@@ -71,7 +72,9 @@ class BuilderScopeResolverTest {
 
     assertThat(compilation).succeeded();
     // First resolution with generation scope "lib" and registered → builder found
-    assertEquals("lib.LibHelperBuilder", ResolverProbeProcessor.first.get().getFullQualifiedName());
+    assertEquals(
+        "lib.LibHelperBuilder",
+        ResolverProbeProcessor.first.get().typeName().getFullQualifiedName());
     // After clearing registration and changing config to exclude "lib", the resolver returns
     // empty (not registered, not in scope)
     assertEquals(Optional.empty(), ResolverProbeProcessor.afterConfigurationChange);
@@ -124,7 +127,7 @@ class BuilderScopeResolverTest {
     // With usage scope "lib" AND registration → builder resolved
     assertEquals(
         "lib.LibHelperBuilder",
-        ResolverProbeProcessor.usageAfterRegistration.get().getFullQualifiedName());
+        ResolverProbeProcessor.usageAfterRegistration.get().typeName().getFullQualifiedName());
   }
 
   @Test
@@ -153,7 +156,7 @@ class BuilderScopeResolverTest {
     // Usage scope without @SimpleBuilder annotation — builder resolved by contract check
     assertEquals(
         "lib.LibHelperBuilder",
-        ResolverProbeProcessor.usageWithoutAnnotation.get().getFullQualifiedName());
+        ResolverProbeProcessor.usageWithoutAnnotation.get().typeName().getFullQualifiedName());
   }
 
   @Test
@@ -212,6 +215,37 @@ class BuilderScopeResolverTest {
   }
 
   @Test
+  void resolverUsageScope_AcceptsBuilderWithStaticFactories() {
+    ResolverProbeProcessor.reset();
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelper { public LibHelper() {} }
+                    """),
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelperBuilder {
+                      private LibHelperBuilder() {}
+                      public static LibHelperBuilder create() { return new LibHelperBuilder(); }
+                      public static LibHelperBuilder of(LibHelper value) { return create(); }
+                      public LibHelper build() { return new LibHelper(); }
+                    }
+                    """));
+
+    assertThat(compilation).succeeded();
+    // No accessible constructors: both instantiation paths come from the static factories
+    ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
+    assertEquals("lib.LibHelperBuilder", resolved.typeName().getFullQualifiedName());
+    assertEquals("create", resolved.emptyFactoryMethod().get());
+    assertEquals("of", resolved.copyFactoryMethod().get());
+  }
+
+  @Test
   void resolverUsageScope_PackagePrivateMembers_AccessibleOnlyFromSamePackage() {
     ResolverProbeProcessor.reset();
     Compilation compilation =
@@ -238,7 +272,7 @@ class BuilderScopeResolverTest {
     // same package (builderPackage "lib")...
     assertEquals(
         "lib.LibHelperBuilder",
-        ResolverProbeProcessor.usagePackagePrivate.get().getFullQualifiedName());
+        ResolverProbeProcessor.usagePackagePrivate.get().typeName().getFullQualifiedName());
     // ...but not from a different one (builderPackage unset)
     assertEquals(Optional.empty(), ResolverProbeProcessor.usageWithoutAnnotation);
   }
@@ -269,7 +303,7 @@ class BuilderScopeResolverTest {
     // With builderUsageSuffix="Factory", the candidate name uses "Factory"
     assertEquals(
         "lib.LibHelperFactory",
-        ResolverProbeProcessor.usageWithSuffix.get().getFullQualifiedName());
+        ResolverProbeProcessor.usageWithSuffix.get().typeName().getFullQualifiedName());
   }
 
   @Test
@@ -300,21 +334,21 @@ class BuilderScopeResolverTest {
     // Without builderUsageSuffix, the candidate name uses builderSuffix ("Builder")
     assertEquals(
         "lib.LibHelperBuilder",
-        ResolverProbeProcessor.usageDefaultSuffix.get().getFullQualifiedName());
+        ResolverProbeProcessor.usageDefaultSuffix.get().typeName().getFullQualifiedName());
   }
 
   private static final class ResolverProbeProcessor extends AbstractProcessor {
-    private static Optional<TypeName> first;
-    private static Optional<TypeName> second;
-    private static Optional<TypeName> afterConfigurationChange;
-    private static Optional<TypeName> beforeRegistration;
-    private static Optional<TypeName> afterRegistration;
-    private static Optional<TypeName> usageBeforeRegistration;
-    private static Optional<TypeName> usageAfterRegistration;
-    private static Optional<TypeName> usageWithoutAnnotation;
-    private static Optional<TypeName> usageWithSuffix;
-    private static Optional<TypeName> usageDefaultSuffix;
-    private static Optional<TypeName> usagePackagePrivate;
+    private static Optional<ResolvedBuilder> first;
+    private static Optional<ResolvedBuilder> second;
+    private static Optional<ResolvedBuilder> afterConfigurationChange;
+    private static Optional<ResolvedBuilder> beforeRegistration;
+    private static Optional<ResolvedBuilder> afterRegistration;
+    private static Optional<ResolvedBuilder> usageBeforeRegistration;
+    private static Optional<ResolvedBuilder> usageAfterRegistration;
+    private static Optional<ResolvedBuilder> usageWithoutAnnotation;
+    private static Optional<ResolvedBuilder> usageWithSuffix;
+    private static Optional<ResolvedBuilder> usageDefaultSuffix;
+    private static Optional<ResolvedBuilder> usagePackagePrivate;
 
     private boolean captured;
 
