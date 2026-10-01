@@ -25,7 +25,6 @@ package org.javahelpers.simple.builders.processor.analysis;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
@@ -49,9 +48,15 @@ import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
  */
 public final class BuilderScopeResolver {
 
+  /**
+   * The inputs the resolution cache was built under. Cached resolutions are valid only while both
+   * components are unchanged: the configuration determines the usage scope and the builder package
+   * determines which contract members are accessible.
+   */
+  private record ResolutionInputs(BuilderConfiguration configuration, String builderPackage) {}
+
   private final ProcessingContext context;
-  private BuilderConfiguration cachedConfiguration;
-  private String cachedBuilderPackage;
+  private ResolutionInputs resolutionInputs;
   private PackageScopes usagePackages = PackageScopes.unscoped();
   private final Map<String, Optional<TypeName>> resolvedBuilderTypes = new HashMap<>();
   private final GeneratedBuilders generatedBuilders = new GeneratedBuilders();
@@ -231,12 +236,12 @@ public final class BuilderScopeResolver {
   }
 
   private void refreshForConfigurationIfNeeded() {
-    BuilderConfiguration configuration = context.getConfiguration();
-    String builderPackage = context.getBuilderPackageName();
-    if (Objects.equals(cachedConfiguration, configuration)
-        && Objects.equals(cachedBuilderPackage, builderPackage)) {
+    ResolutionInputs inputs =
+        new ResolutionInputs(context.getConfiguration(), context.getBuilderPackageName());
+    if (inputs.equals(resolutionInputs)) {
       return;
     }
+    BuilderConfiguration configuration = inputs.configuration();
     // The effective usage scope combines builderUsagePackages and builderGenerationPackages,
     // since generation-scope packages are automatically included in the usage scope.
     PackageScopes generation =
@@ -246,11 +251,8 @@ public final class BuilderScopeResolver {
     PackageScopes usage =
         configuration == null ? PackageScopes.unscoped() : configuration.builderUsagePackages();
     usagePackages = PackageScopes.merge(generation, usage);
-    // The resolution cache must be dropped on builderPackage changes too: contract member
-    // accessibility is checked relative to the generated builder's package.
     resolvedBuilderTypes.clear();
-    cachedConfiguration = configuration;
-    cachedBuilderPackage = builderPackage;
+    resolutionInputs = inputs;
   }
 
   private static boolean isIgnoredForBuilderGeneration(TypeElement typeElement) {
