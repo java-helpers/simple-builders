@@ -51,6 +51,7 @@ public final class BuilderScopeResolver {
 
   private final ProcessingContext context;
   private BuilderConfiguration cachedConfiguration;
+  private String cachedBuilderPackage;
   private PackageScopes usagePackages = PackageScopes.unscoped();
   private final Map<String, Optional<TypeName>> resolvedBuilderTypes = new HashMap<>();
   private final GeneratedBuilders generatedBuilders = new GeneratedBuilders();
@@ -87,9 +88,10 @@ public final class BuilderScopeResolver {
    *       (falling back to {@code builderSuffix} if not configured). The candidate is looked up on
    *       the classpath and returned if it satisfies the builder contract: a constructor accepting
    *       the referenced type, a no-arg constructor, and a no-arg {@code build()} method returning
-   *       it. The contract check is annotation-agnostic, so builders generated with custom template
-   *       annotations, external tools, or different suffixes are supported. The referenced type
-   *       must not be opted out with {@code @Ignore4BuilderGeneration}.
+   *       it - each accessible from the generated builder's package. The contract check is
+   *       annotation-agnostic, so builders generated with custom template annotations, external
+   *       tools, or different suffixes are supported. The referenced type must not be opted out
+   *       with {@code @Ignore4BuilderGeneration}.
    * </ol>
    *
    * @param referencedType the type element being referenced as a field or collection element
@@ -200,10 +202,11 @@ public final class BuilderScopeResolver {
   /**
    * Looks up the candidate builder type on the classpath and verifies it satisfies the builder
    * contract: a constructor accepting the referenced type, a no-arg constructor, and a no-arg
-   * {@code build()} method returning it. The contract check is annotation-agnostic, so builders
-   * generated with custom template annotations or from external sources are supported as long as
-   * they follow the builder contract. It also avoids false positives like {@code String} → {@code
-   * StringBuilder}.
+   * {@code build()} method returning it - each accessible from the generated builder's package,
+   * since the generated code calls them from there. The contract check is annotation-agnostic, so
+   * builders generated with custom template annotations or from external sources are supported as
+   * long as they follow the builder contract. It also avoids false positives like {@code String} →
+   * {@code StringBuilder}.
    *
    * @param candidate the candidate builder type name to look up
    * @param expectedType the qualified name of the referenced type the builder must accept and
@@ -229,7 +232,9 @@ public final class BuilderScopeResolver {
 
   private void refreshForConfigurationIfNeeded() {
     BuilderConfiguration configuration = context.getConfiguration();
-    if (Objects.equals(cachedConfiguration, configuration)) {
+    String builderPackage = context.getBuilderPackageName();
+    if (Objects.equals(cachedConfiguration, configuration)
+        && Objects.equals(cachedBuilderPackage, builderPackage)) {
       return;
     }
     // The effective usage scope combines builderUsagePackages and builderGenerationPackages,
@@ -241,8 +246,11 @@ public final class BuilderScopeResolver {
     PackageScopes usage =
         configuration == null ? PackageScopes.unscoped() : configuration.builderUsagePackages();
     usagePackages = PackageScopes.merge(generation, usage);
+    // The resolution cache must be dropped on builderPackage changes too: contract member
+    // accessibility is checked relative to the generated builder's package.
     resolvedBuilderTypes.clear();
     cachedConfiguration = configuration;
+    cachedBuilderPackage = builderPackage;
   }
 
   private static boolean isIgnoredForBuilderGeneration(TypeElement typeElement) {
