@@ -1,0 +1,77 @@
+/*
+ * Copyright 2025 Andreas Igel
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.javahelpers.simple.builders.processor.model.type;
+
+/**
+ * The instantiation path generated code uses to obtain an instance of a resolved builder.
+ *
+ * <p>The resolver records the concrete decision made while checking the builder contract, so
+ * generation sites emit exactly the path that was resolved - constructor call or static factory
+ * call - instead of silently falling back between the two.
+ */
+public sealed interface BuilderInstantiation {
+
+  /**
+   * Renders the code obtaining a builder instance of {@code builderTypeExpression} invoked with
+   * {@code arguments}.
+   *
+   * @param builderTypeExpression expression evaluating to the builder type, may be a template
+   *     placeholder like {@code $helperType:T}
+   * @param arguments the arguments for the constructor or factory call
+   * @return the instantiation code
+   */
+  String instantiationCode(String builderTypeExpression, String arguments);
+
+  /**
+   * Renders a method reference obtaining a builder instance (e.g. {@code B::new} or {@code
+   * B::create}).
+   *
+   * @param builderTypeExpression expression evaluating to the builder type, may be a template
+   *     placeholder like {@code $elementBuilderType:T}
+   * @return the method reference
+   */
+  String methodReference(String builderTypeExpression);
+
+  /** Instantiation through a constructor: {@code new B(arguments)}. */
+  record ConstructorCall() implements BuilderInstantiation {
+    @Override
+    public String instantiationCode(String builderTypeExpression, String arguments) {
+      return "new " + builderTypeExpression + "(" + arguments + ")";
+    }
+
+    @Override
+    public String methodReference(String builderTypeExpression) {
+      return builderTypeExpression + "::new";
+    }
+  }
+
+  /**
+   * Instantiation through a static factory method on the builder: {@code B.methodName(arguments)}.
+   *
+   * @param methodName name of the static factory method (e.g. {@code create}, {@code of})
+   */
+  record StaticFactoryCall(String methodName) implements BuilderInstantiation {
+    @Override
+    public String instantiationCode(String builderTypeExpression, String arguments) {
+      return builderTypeExpression + "." + methodName + "(" + arguments + ")";
+    }
+
+    @Override
+    public String methodReference(String builderTypeExpression) {
+      return builderTypeExpression + "::" + methodName;
+    }
+  }
+}

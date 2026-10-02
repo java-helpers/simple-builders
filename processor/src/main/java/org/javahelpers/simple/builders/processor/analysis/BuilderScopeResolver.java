@@ -31,6 +31,7 @@ import javax.lang.model.element.TypeElement;
 import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.core.PackageScopes;
+import org.javahelpers.simple.builders.processor.model.type.BuilderInstantiation;
 import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
@@ -199,7 +200,11 @@ public final class BuilderScopeResolver {
       // Our generators always emit a static create() and no create(T) - the empty path uses
       // the factory, the copy path the constructor
       return generatedBuilder.map(
-          builder -> new ResolvedBuilder(builder, Optional.of("create"), Optional.empty()));
+          builder ->
+              new ResolvedBuilder(
+                  builder,
+                  new BuilderInstantiation.StaticFactoryCall("create"),
+                  new BuilderInstantiation.ConstructorCall()));
     }
 
     // For types not generated in this round, look up the candidate on the classpath using
@@ -248,7 +253,15 @@ public final class BuilderScopeResolver {
     if (!JavaLangAnalyser.hasBuildMethodReturning(builderTypeElement, expectedType, context)) {
       return Optional.empty();
     }
-    return Optional.of(new ResolvedBuilder(candidate, emptyFactory, copyFactory));
+    return Optional.of(
+        new ResolvedBuilder(
+            candidate,
+            emptyFactory
+                .<BuilderInstantiation>map(BuilderInstantiation.StaticFactoryCall::new)
+                .orElseGet(BuilderInstantiation.ConstructorCall::new),
+            copyFactory
+                .<BuilderInstantiation>map(BuilderInstantiation.StaticFactoryCall::new)
+                .orElseGet(BuilderInstantiation.ConstructorCall::new)));
   }
 
   private void refreshForConfigurationIfNeeded() {

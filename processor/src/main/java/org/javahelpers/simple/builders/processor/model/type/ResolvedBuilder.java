@@ -15,25 +15,23 @@
  */
 package org.javahelpers.simple.builders.processor.model.type;
 
-import java.util.Optional;
-
 /**
  * A builder type resolved for a referenced field or element type, together with the instantiation
  * paths generated code must use to call it.
  *
- * <p>{@code emptyFactoryMethod} and {@code copyFactoryMethod} carry the name of a static factory on
- * the builder (e.g. {@code create} or {@code of}) when the contract check found one. When a
- * component is empty, generated code instantiates the builder through its constructor instead - the
- * builder contract guarantees the matching constructor exists then.
+ * <p>Each component records the concrete instantiation the contract check selected - constructor
+ * call or static factory call - so generation sites emit exactly what was resolved.
  *
  * @param typeName the builder type to reference
- * @param emptyFactoryMethod static parameterless factory returning the builder, or empty to
- *     instantiate via {@code new B()}
- * @param copyFactoryMethod static factory accepting the built type, or empty to instantiate via
- *     {@code new B(value)}
+ * @param emptyInstantiation how to obtain an empty builder instance (e.g. {@code new B()} or {@code
+ *     B.create()})
+ * @param copyInstantiation how to obtain a builder instance seeded with a value (e.g. {@code new
+ *     B(value)} or {@code B.of(value)})
  */
 public record ResolvedBuilder(
-    TypeName typeName, Optional<String> emptyFactoryMethod, Optional<String> copyFactoryMethod) {
+    TypeName typeName,
+    BuilderInstantiation emptyInstantiation,
+    BuilderInstantiation copyInstantiation) {
 
   /**
    * A resolution instantiated exclusively through constructors.
@@ -41,6 +39,9 @@ public record ResolvedBuilder(
    * @param typeName the builder type to reference
    */
   public ResolvedBuilder(TypeName typeName) {
-    this(typeName, Optional.empty(), Optional.empty());
+    this(
+        typeName,
+        new BuilderInstantiation.ConstructorCall(),
+        new BuilderInstantiation.ConstructorCall());
   }
 }

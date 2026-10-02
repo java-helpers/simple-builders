@@ -244,8 +244,12 @@ public final class MethodGeneratorUtil {
         return this;
         """
             .formatted(
-                instantiationCode(fieldBuilder.copyFactoryMethod(), existingValueConstructorArgs),
-                instantiationCode(fieldBuilder.emptyFactoryMethod(), emptyConstructorArgs)));
+                fieldBuilder
+                    .copyInstantiation()
+                    .instantiationCode("$helperType:T", existingValueConstructorArgs),
+                fieldBuilder
+                    .emptyInstantiation()
+                    .instantiationCode("$helperType:T", emptyConstructorArgs)));
     methodDto.addArgument("fieldName", field.getFieldNameInBuilder());
     methodDto.addArgument("dtoMethodParam", parameter.getParameterName());
     methodDto.addArgument("helperType", fieldBuilderType);
@@ -337,10 +341,10 @@ public final class MethodGeneratorUtil {
       ResolvedBuilder elementBuilder,
       TypeName returnBuilderType,
       ProcessingContext context) {
-    // The collection builder receives a supplier for element builders: the resolved factory
-    // method when present, the constructor reference otherwise
+    // The collection builder receives a supplier for element builders: the resolved
+    // instantiation path as a method reference
     String elementSupplier =
-        "$elementBuilderType:T::" + elementBuilder.emptyFactoryMethod().orElse("new");
+        elementBuilder.emptyInstantiation().methodReference("$elementBuilderType:T");
     return createFieldConsumerWithBuilder(
         field,
         new ResolvedBuilder(collectionBuilderType),
@@ -349,12 +353,6 @@ public final class MethodGeneratorUtil {
         Map.of("elementBuilderType", elementBuilder.typeName()),
         returnBuilderType,
         context);
-  }
-
-  private static String instantiationCode(Optional<String> factoryMethod, String arguments) {
-    return factoryMethod
-        .map(name -> "$helperType:T." + name + "(" + arguments + ")")
-        .orElse("new $helperType:T(" + arguments + ")");
   }
 
   /**

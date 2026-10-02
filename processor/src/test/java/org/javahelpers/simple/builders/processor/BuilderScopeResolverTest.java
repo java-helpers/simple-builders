@@ -26,6 +26,7 @@ package org.javahelpers.simple.builders.processor;
 
 import static com.google.testing.compile.CompilationSubject.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
@@ -39,6 +40,7 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
 import org.javahelpers.simple.builders.processor.analysis.BuilderScopeResolver;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
+import org.javahelpers.simple.builders.processor.model.type.BuilderInstantiation;
 import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
@@ -241,8 +243,15 @@ class BuilderScopeResolverTest {
     // No accessible constructors: both instantiation paths come from the static factories
     ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
     assertEquals("lib.LibHelperBuilder", resolved.typeName().getFullQualifiedName());
-    assertEquals("create", resolved.emptyFactoryMethod().get());
-    assertEquals("of", resolved.copyFactoryMethod().get());
+    assertEquals(
+        "create",
+        assertInstanceOf(
+                BuilderInstantiation.StaticFactoryCall.class, resolved.emptyInstantiation())
+            .methodName());
+    assertEquals(
+        "of",
+        assertInstanceOf(BuilderInstantiation.StaticFactoryCall.class, resolved.copyInstantiation())
+            .methodName());
   }
 
   @Test
