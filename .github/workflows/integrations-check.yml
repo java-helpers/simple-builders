@@ -13,6 +13,9 @@ name: 'Integration connectivity check'
 # CODECOV_TOKEN surfaces as a failed run (and the usual GitHub failure
 # notification) before it silently breaks a real CI/release run. Scheduled runs
 # check all integrations.
+#
+# Both jobs are restricted to the upstream repository: on forks the secrets are
+# absent, so the jobs are skipped instead of failing nightly on every fork.
 on:
   workflow_dispatch:
     inputs:
@@ -41,7 +44,7 @@ jobs:
   # check never blocks the Codecov check (and vice versa).
   sonarcloud:
     # Scheduled runs have no dispatch inputs, so always run both checks then.
-    if: ${{ github.event_name == 'schedule' || github.event.inputs.target == 'all' || github.event.inputs.target == 'sonarcloud' }}
+    if: ${{ github.repository == 'java-helpers/simple-builders' && (github.event_name == 'schedule' || github.event.inputs.target == 'all' || github.event.inputs.target == 'sonarcloud') }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
@@ -73,7 +76,7 @@ jobs:
 
   codecov:
     # Scheduled runs have no dispatch inputs, so always run both checks then.
-    if: ${{ github.event_name == 'schedule' || github.event.inputs.target == 'all' || github.event.inputs.target == 'codecov' }}
+    if: ${{ github.repository == 'java-helpers/simple-builders' && (github.event_name == 'schedule' || github.event.inputs.target == 'all' || github.event.inputs.target == 'codecov') }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
