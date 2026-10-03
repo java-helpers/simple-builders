@@ -30,6 +30,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Predicate;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
@@ -68,6 +69,7 @@ public final class BuilderScopeResolver {
 
   // Factory method names preferred when a builder offers several candidates
   private static final List<String> PREFERRED_FACTORY_NAMES = List.of("create", "of");
+  private static final char[] UPPERCASE_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
 
   private final ProcessingContext context;
   private ResolutionInputs cachedResolutionInputs;
@@ -373,7 +375,7 @@ public final class BuilderScopeResolver {
     Map<String, Integer> prefixCounts = new LinkedHashMap<>();
     for (ExecutableElement method : fieldFunctions) {
       String name = method.getSimpleName().toString();
-      int boundary = firstUpperCaseIndex(name);
+      int boundary = StringUtils.indexOfAny(name, UPPERCASE_CHARS);
       if (boundary > 0) {
         prefixCounts.merge(StringUtils.substring(name, 0, boundary), 1, Integer::sum);
       }
@@ -383,7 +385,7 @@ public final class BuilderScopeResolver {
     prefixCounts.entrySet().stream()
         .filter(entry -> entry.getValue() >= minOccurrences)
         .map(Map.Entry::getKey)
-        .filter(prefix -> !prefixes.contains(prefix))
+        .filter(Predicate.not(prefixes::contains))
         .forEach(prefixes::add);
     prefixes.sort(
         Comparator.comparingInt((String prefix) -> coveredCount(properties, fieldFunctions, prefix))
@@ -404,15 +406,6 @@ public final class BuilderScopeResolver {
       List<ExecutableElement> fieldFunctions,
       String prefix) {
     return collectPrefilledFields(properties, fieldFunctions, prefix).size();
-  }
-
-  private static int firstUpperCaseIndex(String name) {
-    for (int i = 0; i < name.length(); i++) {
-      if (Character.isUpperCase(name.charAt(i))) {
-        return i;
-      }
-    }
-    return -1;
   }
 
   /**
