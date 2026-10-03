@@ -29,3 +29,4 @@ org.javahelpers.simple.builders.processor.generators.builder.CoreMethodsEnhancer
 org.javahelpers.simple.builders.processor.generators.builder.ConstructorEnhancer
 org.javahelpers.simple.builders.processor.generators.builder.WithInterfaceEnhancer
 org.javahelpers.simple.builders.processor.generators.builder.ConditionalEnhancer
+org.javahelpers.simple.builders.processor.generators.builder.FieldSeedingEnhancer

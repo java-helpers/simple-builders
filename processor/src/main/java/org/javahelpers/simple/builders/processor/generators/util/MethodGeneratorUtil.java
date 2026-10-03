@@ -35,6 +35,7 @@ import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
+import org.javahelpers.simple.builders.processor.model.type.BuilderInstantiation;
 import org.javahelpers.simple.builders.processor.model.type.GenericParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
@@ -247,6 +248,7 @@ public final class MethodGeneratorUtil {
             .formatted(
                 fieldBuilder
                     .funcForPrefilledBuilder()
+                    .orElseThrow()
                     .instantiationCode("$helperType:T", existingValueConstructorArgs),
                 fieldBuilder
                     .funcForEmptyBuilder()
@@ -269,6 +271,41 @@ public final class MethodGeneratorUtil {
                 fieldJavadocDesc)
             .addReturn(JavadocConstants.RETURN_BUILDER_INSTANCE));
 
+    return methodDto;
+  }
+
+  /**
+   * Creates the private seeding method backing a {@link BuilderInstantiation.FieldSeedingCall}:
+   * obtains an empty builder and calls one field function per readable property of the value.
+   *
+   * @param seedingCall the resolved field-seeding instantiation
+   * @return the method DTO for the seeding method
+   */
+  public static BuilderMethodDto createFieldSeedingMethod(
+      BuilderInstantiation.FieldSeedingCall seedingCall) {
+    MethodParameterDto parameter = new MethodParameterDto();
+    parameter.setParameterName("value");
+    parameter.setParameterTypeName(seedingCall.sourceType());
+    BuilderMethodDto methodDto = new BuilderMethodDto();
+    methodDto.setModifier(AccessModifier.PRIVATE);
+    methodDto.setMethodName(seedingCall.methodName());
+    methodDto.setReturnType(seedingCall.builderType());
+    methodDto.addParameter(parameter);
+    StringBuilder code = new StringBuilder();
+    code.append("$builderType:T builder = ")
+        .append(seedingCall.funcForEmptyBuilder().instantiationCode("$builderType:T", ""))
+        .append(";\n");
+    for (BuilderInstantiation.FieldSeedingCall.SeededField seededField :
+        seedingCall.seededFields()) {
+      code.append("builder.")
+          .append(seededField.builderMethod())
+          .append("(value.")
+          .append(seededField.accessor())
+          .append(");\n");
+    }
+    code.append("return builder;");
+    methodDto.setCode(code.toString());
+    methodDto.addArgument("builderType", seedingCall.builderType());
     return methodDto;
   }
 

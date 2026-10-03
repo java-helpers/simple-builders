@@ -158,7 +158,7 @@ class BuilderScopeResolverTest {
     ResolvedBuilder resolved = probeResult.get().get();
     assertEquals(expectedBuilder, resolved.typeName().getFullQualifiedName());
     BuilderInstantiation empty = resolved.funcForEmptyBuilder();
-    BuilderInstantiation prefilled = resolved.funcForPrefilledBuilder();
+    BuilderInstantiation prefilled = resolved.funcForPrefilledBuilder().get();
     assertInstanceOf(expectedEmptyPath, empty);
     assertInstanceOf(expectedPrefilledPath, prefilled);
     assertFactoryMethod(expectedEmptyMethod, empty);
@@ -267,7 +267,7 @@ class BuilderScopeResolverTest {
     assertEquals("builder", empty.methodName());
     assertEquals("lib.LibHelper", empty.anchor().getFullQualifiedName());
     assertInstanceOf(
-        BuilderInstantiation.ConstructorCall.class, resolved.funcForPrefilledBuilder());
+        BuilderInstantiation.ConstructorCall.class, resolved.funcForPrefilledBuilder().get());
   }
 
   @Test
@@ -346,7 +346,7 @@ class BuilderScopeResolverTest {
     assertInstanceOf(BuilderInstantiation.AnchorFactoryCall.class, resolved.funcForEmptyBuilder());
     BuilderInstantiation.AnchorFactoryCall prefilled =
         assertInstanceOf(
-            BuilderInstantiation.AnchorFactoryCall.class, resolved.funcForPrefilledBuilder());
+            BuilderInstantiation.AnchorFactoryCall.class, resolved.funcForPrefilledBuilder().get());
     assertEquals("builder", prefilled.methodName());
   }
 
@@ -376,7 +376,7 @@ class BuilderScopeResolverTest {
     assertEquals("lib.LibHelper.LibHelperBuilder", resolved.typeName().getFullQualifiedName());
     BuilderInstantiation.ValueFactoryCall prefilled =
         assertInstanceOf(
-            BuilderInstantiation.ValueFactoryCall.class, resolved.funcForPrefilledBuilder());
+            BuilderInstantiation.ValueFactoryCall.class, resolved.funcForPrefilledBuilder().get());
     assertEquals("toBuilder", prefilled.methodName());
   }
 
@@ -416,7 +416,7 @@ class BuilderScopeResolverTest {
     assertEquals("lib.LibHelper.LibHelperBuilder", resolved.typeName().getFullQualifiedName());
     assertInstanceOf(BuilderInstantiation.ConstructorCall.class, resolved.funcForEmptyBuilder());
     assertInstanceOf(
-        BuilderInstantiation.ConstructorCall.class, resolved.funcForPrefilledBuilder());
+        BuilderInstantiation.ConstructorCall.class, resolved.funcForPrefilledBuilder().get());
   }
 
   @Test
@@ -446,7 +446,7 @@ class BuilderScopeResolverTest {
     assertInstanceOf(BuilderInstantiation.AnchorFactoryCall.class, resolved.funcForEmptyBuilder());
     BuilderInstantiation.ValueFactoryCall prefilled =
         assertInstanceOf(
-            BuilderInstantiation.ValueFactoryCall.class, resolved.funcForPrefilledBuilder());
+            BuilderInstantiation.ValueFactoryCall.class, resolved.funcForPrefilledBuilder().get());
     assertEquals("toBuilder", prefilled.methodName());
   }
 
@@ -480,7 +480,114 @@ class BuilderScopeResolverTest {
     assertEquals("lib.LibHelperBuilder", resolved.typeName().getFullQualifiedName());
     assertInstanceOf(BuilderInstantiation.ConstructorCall.class, resolved.funcForEmptyBuilder());
     assertInstanceOf(
-        BuilderInstantiation.ConstructorCall.class, resolved.funcForPrefilledBuilder());
+        BuilderInstantiation.ConstructorCall.class, resolved.funcForPrefilledBuilder().get());
+  }
+
+  @Test
+  void resolverUsageScope_ResolvesFreeBuilderShape() {
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelper {
+                      public String getName() { return ""; }
+                      public static class Builder {
+                        public Builder() {}
+                        public Builder mergeFrom(LibHelper value) { return this; }
+                        public Builder name(String name) { return this; }
+                        public Builder setName(String name) { return name(name); }
+                        public LibHelper build() { return new LibHelper(); }
+                      }
+                    }
+                    """));
+
+    assertThat(compilation).succeeded();
+    // org.inferred.freebuilder generated shape: the nested Builder offers no ctor(T) and
+    // mergeFrom is an instance method, but its field functions cover every readable property,
+    // so the generated builder seeds the instance itself — the unprefixed name wins over setName
+    ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
+    assertEquals("lib.LibHelper.Builder", resolved.typeName().getFullQualifiedName());
+    assertInstanceOf(BuilderInstantiation.ConstructorCall.class, resolved.funcForEmptyBuilder());
+    BuilderInstantiation.FieldSeedingCall prefilled =
+        assertInstanceOf(
+            BuilderInstantiation.FieldSeedingCall.class, resolved.funcForPrefilledBuilder().get());
+    assertEquals("name", prefilled.seededFields().get(0).builderMethod());
+    assertEquals("getName()", prefilled.seededFields().get(0).accessor());
+  }
+
+  @Test
+  void resolverUsageScope_ResolvesAutoValueShape() {
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelper {
+                      public static AutoValue_LibHelper.Builder create() {
+                        return new AutoValue_LibHelper.Builder();
+                      }
+                      public String getName() { return ""; }
+                    }
+                    """),
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class AutoValue_LibHelper {
+                      public static class Builder {
+                        Builder() {}
+                        public Builder setName(String name) { return this; }
+                        public LibHelper build() { return new LibHelper(); }
+                      }
+                    }
+                    """));
+
+    assertThat(compilation).succeeded();
+    // com.google.auto.value generated shape: create() anchors the builder on the generated
+    // sibling; the JavaBeans setName convention covers the readable properties, so the
+    // generated builder seeds the instance itself
+    ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
+    assertEquals("lib.AutoValue_LibHelper.Builder", resolved.typeName().getFullQualifiedName());
+    assertInstanceOf(BuilderInstantiation.AnchorFactoryCall.class, resolved.funcForEmptyBuilder());
+    BuilderInstantiation.FieldSeedingCall prefilled =
+        assertInstanceOf(
+            BuilderInstantiation.FieldSeedingCall.class, resolved.funcForPrefilledBuilder().get());
+    assertEquals("setName", prefilled.seededFields().get(0).builderMethod());
+  }
+
+  @Test
+  void resolverUsageScope_ResolvesWithoutSeededPathWhenPropertyUncovered() {
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelper {
+                      public String getName() { return ""; }
+                    }
+                    """),
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelperBuilder {
+                      public LibHelperBuilder() {}
+                      public LibHelper build() { return new LibHelper(); }
+                    }
+                    """));
+
+    assertThat(compilation).succeeded();
+    // No seeded path and name has no field function: the builder still resolves, but
+    // funcForPrefilledBuilder stays empty so only helpers not needing a seeded path generate
+    ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
+    assertEquals("lib.LibHelperBuilder", resolved.typeName().getFullQualifiedName());
+    assertInstanceOf(BuilderInstantiation.ConstructorCall.class, resolved.funcForEmptyBuilder());
+    assertEquals(Optional.empty(), resolved.funcForPrefilledBuilder());
   }
 
   @Test
@@ -514,7 +621,7 @@ class BuilderScopeResolverTest {
     assertEquals("lib.LibHelperBuilder", generated.typeName().getFullQualifiedName());
     assertInstanceOf(BuilderInstantiation.StaticFactoryCall.class, generated.funcForEmptyBuilder());
     assertInstanceOf(
-        BuilderInstantiation.ConstructorCall.class, generated.funcForPrefilledBuilder());
+        BuilderInstantiation.ConstructorCall.class, generated.funcForPrefilledBuilder().get());
   }
 
   private static final String LIB_HELPER =
@@ -698,47 +805,6 @@ class BuilderScopeResolverTest {
                 public static LibHelperBuilder builder() { return new LibHelperBuilder(); }
                 public static class LibHelperBuilder {
                   LibHelperBuilder() {}
-                  public LibHelper build() { return new LibHelper(); }
-                }
-              }
-              """
-                }),
-        // org.inferred.freebuilder generated shape: nested Builder with a public ctor and
-        // mergeFrom(T) — mergeFrom is an instance method, so the contract's seeded path fails
-        Arguments.argumentSet(
-            "FreeBuilderShape",
-            (Object)
-                new String[] {
-                  """
-              package lib;
-              public class LibHelper {
-                public static class Builder {
-                  public Builder() {}
-                  public Builder mergeFrom(LibHelper value) { return this; }
-                  public LibHelper build() { return new LibHelper(); }
-                }
-              }
-              """
-                }),
-        // com.google.auto.value generated shape: create() anchors a builder on the generated
-        // sibling, but AutoValue offers no seeded path (no ctor(T), no toBuilder)
-        Arguments.argumentSet(
-            "AutoValueShape",
-            (Object)
-                new String[] {
-                  """
-              package lib;
-              public class LibHelper {
-                public static AutoValue_LibHelper.Builder create() {
-                  return new AutoValue_LibHelper.Builder();
-                }
-              }
-              """,
-                  """
-              package lib;
-              public class AutoValue_LibHelper {
-                public static class Builder {
-                  Builder() {}
                   public LibHelper build() { return new LibHelper(); }
                 }
               }

@@ -95,8 +95,8 @@ class BuilderProcessorTest {
         "[DEBUG] Starting BuilderProcessor...",
         "[DEBUG] Loaded global configuration from compiler arguments: BuilderConfiguration[]",
         "[DEBUG] Initializing generator registry",
-        "[DEBUG] ├─ Loaded 15 method generators and 9 builder enhancers total",
-        "[DEBUG] └─ Initialized GeneratorRegistry with 15 method generators and 9 builder",
+        "[DEBUG] ├─ Loaded 15 method generators and 10 builder enhancers total",
+        "[DEBUG] └─ Initialized GeneratorRegistry with 15 method generators and 10 builder",
         // Round 1 — start
         "simple-builders: PROCESSING ROUND START",
         "[DEBUG] simple-builders: Processing round started.",

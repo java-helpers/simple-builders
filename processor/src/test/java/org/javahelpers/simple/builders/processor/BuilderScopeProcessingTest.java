@@ -312,6 +312,85 @@ class BuilderScopeProcessingTest {
   }
 
   @Test
+  void usageScope_SeedsViaFieldFunctionsWhenNoSeededPath() {
+    JavaFileObject dto = dto("test", "SeedingUsageDto", "LibraryDto", "lib");
+    JavaFileObject libraryDto =
+        ProcessorTestUtils.forSource(
+            """
+            package lib;
+            public class LibraryDto {
+              private String name;
+              public String getName() { return name; }
+            }
+            """);
+    JavaFileObject libraryDtoBuilder =
+        ProcessorTestUtils.forSource(
+            """
+            package lib;
+            public class LibraryDtoBuilder {
+              private String name;
+              public LibraryDtoBuilder() {}
+              public LibraryDtoBuilder name(String name) { this.name = name; return this; }
+              public LibraryDto build() { return new LibraryDto(); }
+            }
+            """);
+
+    Compilation compilation =
+        ProcessorTestUtils.createCompiler()
+            .withOptions(
+                "-Asimplebuilder.builderGenerationPackages=test",
+                "-Asimplebuilder.builderUsagePackages=lib")
+            .compile(dto, libraryDto, libraryDtoBuilder);
+
+    assertThat(compilation).succeeded();
+    String generated =
+        ProcessorTestUtils.loadGeneratedSource(compilation, "SeedingUsageDtoBuilder");
+    // No ctor(T) or factory(T): the generated builder seeds the referenced builder itself via
+    // its field functions, one per readable property
+    ProcessorAsserts.assertContaining(
+        generated,
+        "seedLibraryDtoBuilder(this.referenced.value())",
+        "private LibraryDtoBuilder seedLibraryDtoBuilder(LibraryDto value)",
+        "builder.name(value.getName())");
+  }
+
+  @Test
+  void usageScope_SkipsConsumerWhenPropertiesUncovered() {
+    JavaFileObject dto = dto("test", "UncoveredUsageDto", "LibraryDto", "lib");
+    JavaFileObject libraryDto =
+        ProcessorTestUtils.forSource(
+            """
+            package lib;
+            public class LibraryDto {
+              private String name;
+              public String getName() { return name; }
+            }
+            """);
+    JavaFileObject libraryDtoBuilder =
+        ProcessorTestUtils.forSource(
+            """
+            package lib;
+            public class LibraryDtoBuilder {
+              public LibraryDtoBuilder() {}
+              public LibraryDto build() { return new LibraryDto(); }
+            }
+            """);
+
+    Compilation compilation =
+        ProcessorTestUtils.createCompiler()
+            .withOptions(
+                "-Asimplebuilder.builderGenerationPackages=test",
+                "-Asimplebuilder.builderUsagePackages=lib")
+            .compile(dto, libraryDto, libraryDtoBuilder);
+
+    assertThat(compilation).succeeded();
+    // name has no field function on the builder: seeding is unsafe, so the consumer helper is
+    // not generated — the plain setter still is
+    assertNoBuilderConsumer(
+        compilation, "UncoveredUsageDtoBuilder", "LibraryDto", "LibraryDtoBuilder");
+  }
+
+  @Test
   void usageScope_DoesNotReferenceBuilderWhenClassNotFoundWithUsageSuffix() {
     JavaFileObject dto = dto("test", "MissingBuilderDto", "LibraryDto", "lib");
     JavaFileObject libraryDto = unannotatedDto("lib", "LibraryDto");

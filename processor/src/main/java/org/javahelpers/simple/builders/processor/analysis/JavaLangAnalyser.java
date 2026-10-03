@@ -30,6 +30,7 @@ import static javax.lang.model.type.TypeKind.VOID;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -39,6 +40,7 @@ import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.RecordComponentElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
@@ -398,6 +400,75 @@ public final class JavaLangAnalyser {
 
   private static boolean hasType(TypeMirror typeMirror, TypeName expectedType) {
     return typeMirror.toString().equals(expectedType.getFullQualifiedName());
+  }
+
+  /**
+   * A readable property of a type: the name used to match field functions ({@code name} or {@code
+   * setName}), how the property is read from a value, and the type it carries.
+   *
+   * @param name the property name
+   * @param accessor how the property is read (e.g. {@code name()}, {@code getName()} or {@code
+   *     name})
+   * @param typeMirror the property's type
+   */
+  public record ReadableProperty(String name, String accessor, TypeMirror typeMirror) {}
+
+  /**
+   * Collects the readable properties of a type in declaration order: record components, accessible
+   * parameterless non-static methods returning a value (getters {@code getX()}/{@code isX()} or
+   * record-style accessors {@code x()}) and accessible non-static fields. Method-derived property
+   * names strip the {@code get}/{@code is} prefix; the first source found wins when several spell
+   * out the same property.
+   *
+   * @param typeElement the type to inspect
+   * @param context the processing context, used to access all members
+   * @return the readable properties in declaration order
+   */
+  public static List<ReadableProperty> findReadableProperties(
+      TypeElement typeElement, ProcessingContext context) {
+    Map<String, ReadableProperty> properties = new LinkedHashMap<>();
+    for (RecordComponentElement component : typeElement.getRecordComponents()) {
+      String name = component.getSimpleName().toString();
+      properties.put(name, new ReadableProperty(name, name + "()", component.asType()));
+    }
+    for (ExecutableElement method : ElementFilter.methodsIn(context.getAllMembers(typeElement))) {
+      if (isNotStatic(method)
+          && hasNoParameters(method)
+          && method.getReturnType().getKind() != VOID
+          && isNoMethodOfObjectClass(method, context)
+          && context.isMemberAccessibleFromBuilderPackage(method)) {
+        String name = propertyNameOf(method);
+        properties.putIfAbsent(
+            name,
+            new ReadableProperty(name, method.getSimpleName() + "()", method.getReturnType()));
+      }
+    }
+    for (VariableElement field : ElementFilter.fieldsIn(context.getAllMembers(typeElement))) {
+      if (!field.getModifiers().contains(STATIC)
+          && context.isMemberAccessibleFromBuilderPackage(field)) {
+        String name = field.getSimpleName().toString();
+        properties.putIfAbsent(name, new ReadableProperty(name, name, field.asType()));
+      }
+    }
+    return List.copyOf(properties.values());
+  }
+
+  /**
+   * Derives the property name of an accessor method: {@code getX()}/{@code isX()} map to {@code x},
+   * any other name is used unchanged.
+   *
+   * @param method the accessor method to derive the property name from
+   * @return the property name
+   */
+  private static String propertyNameOf(ExecutableElement method) {
+    String name = method.getSimpleName().toString();
+    if (name.startsWith("get") && name.length() > 3 && Character.isUpperCase(name.charAt(3))) {
+      return StringUtils.uncapitalize(name.substring(3));
+    }
+    if (name.startsWith("is") && name.length() > 2 && Character.isUpperCase(name.charAt(2))) {
+      return StringUtils.uncapitalize(name.substring(2));
+    }
+    return name;
   }
 
   /**

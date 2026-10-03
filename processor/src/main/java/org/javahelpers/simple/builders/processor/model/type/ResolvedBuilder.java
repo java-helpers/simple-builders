@@ -15,6 +15,8 @@
  */
 package org.javahelpers.simple.builders.processor.model.type;
 
+import java.util.Optional;
+
 /**
  * A builder type resolved for a referenced field or element type, together with the instantiation
  * paths generated code must use to call it.
@@ -26,14 +28,15 @@ package org.javahelpers.simple.builders.processor.model.type;
  * @param funcForEmptyBuilder how to obtain an empty builder instance (e.g. {@code new B()} or
  *     {@code B.create()})
  * @param funcForPrefilledBuilder how to obtain a builder instance seeded with a value (e.g. {@code
- *     new B(value)} or {@code B.of(value)})
+ *     new B(value)} or {@code B.of(value)}), or empty when the builder offers no seeded path;
+ *     helpers needing one are then not generated
  * @param buildMethodName the name of the parameterless method returning the built value (e.g.
  *     {@code build})
  */
 public record ResolvedBuilder(
     TypeName typeName,
     BuilderInstantiation funcForEmptyBuilder,
-    BuilderInstantiation funcForPrefilledBuilder,
+    Optional<BuilderInstantiation> funcForPrefilledBuilder,
     String buildMethodName) {
 
   /**
@@ -61,6 +64,22 @@ public record ResolvedBuilder(
       BuilderInstantiation funcForEmptyBuilder,
       BuilderInstantiation funcForPrefilledBuilder) {
     this(typeName, funcForEmptyBuilder, funcForPrefilledBuilder, "build");
+  }
+
+  /**
+   * A resolution with a custom-named terminal build method.
+   *
+   * @param typeName the builder type to reference
+   * @param funcForEmptyBuilder how to obtain an empty builder instance
+   * @param funcForPrefilledBuilder how to obtain a builder instance seeded with a value
+   * @param buildMethodName the name of the parameterless method returning the built value
+   */
+  public ResolvedBuilder(
+      TypeName typeName,
+      BuilderInstantiation funcForEmptyBuilder,
+      BuilderInstantiation funcForPrefilledBuilder,
+      String buildMethodName) {
+    this(typeName, funcForEmptyBuilder, Optional.of(funcForPrefilledBuilder), buildMethodName);
   }
 
   /**

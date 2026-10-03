@@ -763,8 +763,10 @@ are checked first (e.g. `Person.PersonBuilder` or `Person.Builder`), then a
 static parameterless factory on the type — `builder()` preferred — whose return
 type must be accessible and declare a no-arg `build()` method (Lombok/Immutables
 style). The factory itself is the empty-instantiation path; the seeded path is
-the builder's own contract path, a static `builder(T)`-style method, or an
-instance method on the value like `toBuilder()`.
+the builder's own contract path, a static `builder(T)`-style method, an
+instance method on the value like `toBuilder()`, or — when every readable
+property of the type has a matching `name(v)`/`setName(v)` field function —
+seeding by field functions.
 
 The processor constructs the candidate builder name using `builderUsageSuffix`
 (or `builderSuffix` if not configured) and verifies the builder contract: a way
@@ -773,7 +775,12 @@ factory like `create()`), a way to create one seeded with the value (a
 constructor accepting the referenced type or a static factory like `create(T)`
 or `of(T)`), and a no-arg `build()` method returning it — each accessible from
 the generated builder's package. Generated code calls a factory instead of
-`new` when the builder offers one. Any class with the expected name and a
+`new` when the builder offers one. When no seeded path exists but every
+readable property has a matching field function (`name(v)` or `setName(v)`),
+the generated builder seeds the instance itself in a private `seed<Builder>`
+method; with partial coverage the builder still resolves, but helpers that
+would silently drop state (builder consumers) are skipped and a debug note is
+logged. Any class with the expected name and a
 matching contract qualifies, allowing references to builders generated with
 custom template annotations, external tools, or different suffixes. If the
 candidate builder cannot be found, the field falls back to a plain setter.
