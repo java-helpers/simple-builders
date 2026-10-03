@@ -271,13 +271,19 @@ public final class BuilderScopeResolver {
         resolveFuncForEmptyBuilder(builderTypeElement);
     Optional<BuilderInstantiation> funcForPrefilledBuilder =
         resolveFuncForPrefilledBuilder(builderTypeElement, expectedType);
+    Optional<ExecutableElement> buildMethod =
+        JavaLangAnalyser.findBuildMethod(builderTypeElement, expectedType, context);
     if (funcForEmptyBuilder.isEmpty()
         || funcForPrefilledBuilder.isEmpty()
-        || !JavaLangAnalyser.hasBuildMethodReturning(builderTypeElement, expectedType, context)) {
+        || buildMethod.isEmpty()) {
       return Optional.empty();
     }
     return Optional.of(
-        new ResolvedBuilder(candidate, funcForEmptyBuilder.get(), funcForPrefilledBuilder.get()));
+        new ResolvedBuilder(
+            candidate,
+            funcForEmptyBuilder.get(),
+            funcForPrefilledBuilder.get(),
+            buildMethod.get().getSimpleName().toString()));
   }
 
   /**
@@ -398,9 +404,9 @@ public final class BuilderScopeResolver {
     for (ExecutableElement factory : factories) {
       TypeElement builderElement =
           (TypeElement) ((DeclaredType) factory.getReturnType()).asElement();
-      if (!context.isMemberAccessibleFromBuilderPackage(builderElement)
-          || !JavaLangAnalyser.hasBuildMethodReturning(
-              builderElement, referencedTypeName, context)) {
+      Optional<ExecutableElement> buildMethod =
+          JavaLangAnalyser.findBuildMethod(builderElement, referencedTypeName, context);
+      if (!context.isMemberAccessibleFromBuilderPackage(builderElement) || buildMethod.isEmpty()) {
         continue;
       }
       Optional<BuilderInstantiation> funcForPrefilledBuilder =
@@ -411,7 +417,8 @@ public final class BuilderScopeResolver {
                 JavaLangMapper.mapToTypeName(builderElement, context),
                 new BuilderInstantiation.AnchorFactoryCall(
                     referencedTypeName, factory.getSimpleName().toString()),
-                funcForPrefilledBuilder.get()));
+                funcForPrefilledBuilder.get(),
+                buildMethod.get().getSimpleName().toString()));
       }
     }
     return Optional.empty();

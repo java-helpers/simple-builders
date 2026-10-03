@@ -783,6 +783,63 @@ class BuilderScopeResolverTest {
     assertEquals(
         "lib.LibHelperBuilder",
         ResolverProbeProcessor.contractResult.get().typeName().getFullQualifiedName());
+    assertEquals("toTarget", ResolverProbeProcessor.contractResult.get().buildMethodName());
+  }
+
+  @Test
+  void resolverUsageScope_PrefersBuildNamedMethodAmongCandidates() {
+    ResolverProbeProcessor.reset();
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelper { public LibHelper() {} }
+                    """),
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelperBuilder {
+                      public LibHelperBuilder() {}
+                      public LibHelperBuilder(LibHelper value) {}
+                      public LibHelper assemble() { return new LibHelper(); }
+                      public LibHelper build() { return new LibHelper(); }
+                    }
+                    """));
+
+    assertThat(compilation).succeeded();
+    // `build` wins over other signature-matching methods even if they sort earlier by name
+    assertEquals("build", ResolverProbeProcessor.contractResult.get().buildMethodName());
+  }
+
+  @Test
+  void resolverUsageScope_PicksAlphabeticallyFirstMethodWhenNoBuildExists() {
+    ResolverProbeProcessor.reset();
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelper { public LibHelper() {} }
+                    """),
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelperBuilder {
+                      public LibHelperBuilder() {}
+                      public LibHelperBuilder(LibHelper value) {}
+                      public LibHelper toTarget() { return new LibHelper(); }
+                      public LibHelper assemble() { return new LibHelper(); }
+                    }
+                    """));
+
+    assertThat(compilation).succeeded();
+    // Without a `build` method, the pick is deterministic: the alphabetically first name
+    assertEquals("assemble", ResolverProbeProcessor.contractResult.get().buildMethodName());
   }
 
   @Test

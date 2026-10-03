@@ -29,6 +29,7 @@ import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.type.TypeKind.VOID;
 
 import java.lang.annotation.Annotation;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -244,9 +245,10 @@ public final class JavaLangAnalyser {
   }
 
   /**
-   * Checks whether the given type has a build method: a public, non-static, no-arg method returning
+   * Finds the build method on the given type: an accessible, non-static, no-arg method returning
    * the expected type, regardless of its name. This is part of the builder contract used when the
-   * built value is retrieved.
+   * built value is retrieved. When several candidates exist, {@code build} is preferred, then the
+   * alphabetically first name.
    *
    * <p>The check is annotation-agnostic and avoids false positives like {@code StringBuilder} for
    * {@code String}.
@@ -254,12 +256,17 @@ public final class JavaLangAnalyser {
    * @param builderType the candidate builder type element to check
    * @param expectedReturnType the type that the build method must return
    * @param context the processing context, used to access all members
-   * @return {@code true} if the type declares or inherits a matching build method
+   * @return the selected build method, or empty if the type declares or inherits no matching method
    */
-  public static boolean hasBuildMethodReturning(
+  public static Optional<ExecutableElement> findBuildMethod(
       TypeElement builderType, TypeName expectedReturnType, ProcessingContext context) {
     return findMethods(builderType, List.of(), expectedReturnType, context).stream()
-        .anyMatch(method -> isNotStatic(method) && !isObjectMethod(method, context));
+        .filter(method -> isNotStatic(method) && !isObjectMethod(method, context))
+        .min(
+            Comparator.comparingInt(
+                    (ExecutableElement method) ->
+                        "build".contentEquals(method.getSimpleName()) ? 0 : 1)
+                .thenComparing(method -> method.getSimpleName().toString()));
   }
 
   /**

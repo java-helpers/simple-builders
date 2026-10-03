@@ -232,7 +232,8 @@ public final class MethodGeneratorUtil {
         createBuilderMethod(field.getOriginalFieldName(), parentBuilderType, context);
     methodDto.addParameter(parameter);
 
-    String buildExpression = calculateBuildExpression(field.getFieldType());
+    String buildExpression =
+        calculateBuildExpression(field.getFieldType(), fieldBuilder.buildMethodName());
 
     methodDto.setCode(
         """
@@ -285,10 +286,11 @@ public final class MethodGeneratorUtil {
    * Calculates the build expression for a field type, wrapping concrete collections if needed.
    *
    * @param fieldType the field type
+   * @param buildMethodName the name of the builder method returning the built value
    * @return the build expression
    */
-  private static String calculateBuildExpression(TypeName fieldType) {
-    return wrapConcreteCollectionType(fieldType, "builder.build()");
+  private static String calculateBuildExpression(TypeName fieldType, String buildMethodName) {
+    return wrapConcreteCollectionType(fieldType, "builder." + buildMethodName + "()");
   }
 
   /**
