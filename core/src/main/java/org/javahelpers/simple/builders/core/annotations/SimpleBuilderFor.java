@@ -137,7 +137,8 @@ public @interface SimpleBuilderFor {
    * declared in a listed package gets a builder, without listing the types one by one in {@link
    * #value()}. Interfaces, abstract classes, enums and annotation types are skipped; nested types
    * keep requiring an explicit {@link #value()} entry. Types a package contributes are ordered by
-   * qualified name.
+   * qualified name. These are the packages the types come <em>from</em> — the package the builders
+   * are generated <em>into</em> is {@link SimpleBuilder.Options#packageName()}.
    *
    * @return the packages whose top-level types get builders
    */
