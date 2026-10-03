@@ -762,18 +762,27 @@ same-package candidate below. Accessible nested types satisfying the contract
 are checked first (e.g. `Person.PersonBuilder` or `Person.Builder`), then a
 static parameterless factory on the type — `builder()` preferred — whose return
 type must be accessible and declare a no-arg `build()` method (Lombok/Immutables
-style). The factory itself is the empty-instantiation path; the seeded path is
-the builder's own contract path, a static `builder(T)`-style method, or an
-instance method on the value like `toBuilder()`.
+style). The factory itself is the empty-instantiation path; the prefilled path is
+the builder's own contract path, a static `builder(T)`-style method, an
+instance method on the value like `toBuilder()`, or — with
+`usingFieldFunctionPrefill` enabled — prefilling by field functions.
 
 The processor constructs the candidate builder name using `builderUsageSuffix`
 (or `builderSuffix` if not configured) and verifies the builder contract: a way
 to create an empty builder (a no-arg constructor or a static parameterless
-factory like `create()`), a way to create one seeded with the value (a
+factory like `create()`), a way to create one prefilled with the value (a
 constructor accepting the referenced type or a static factory like `create(T)`
 or `of(T)`), and a no-arg `build()` method returning it — each accessible from
 the generated builder's package. Generated code calls a factory instead of
-`new` when the builder offers one. Any class with the expected name and a
+`new` when the builder offers one. With `usingFieldFunctionPrefill` enabled and
+no prefilled path found, the builder is tried against field-function prefilling:
+the generated builder emits a private static `prefill<Builder>` method that
+prefills each readable property having a matching field function (`name(v)`,
+`setName(v)`, or a detected convention like `withName(v)`); the convention is
+trusted once it covers the majority of the properties, uncovered ones stay
+unset. With less coverage or the option disabled, the builder still resolves,
+but helpers that would silently drop state (builder consumers) are skipped and
+a debug note is logged. Any class with the expected name and a
 matching contract qualifies, allowing references to builders generated with
 custom template annotations, external tools, or different suffixes. If the
 candidate builder cannot be found, the field falls back to a plain setter.
@@ -804,6 +813,22 @@ generated in the current processing round qualify and every other referenced
 type falls back to a plain setter, opting out of false-positive detections on
 types that coincidentally look like builders. `@SimpleMinimalBuilder` disables
 this option.
+
+#### `usingFieldFunctionPrefill`
+
+**Default**: `ENABLED` | **Compiler Option**: `-Asimplebuilder.usingFieldFunctionPrefill=DISABLED`
+
+Prefills a reused builder that offers no value-accepting creation path by
+calling one field function per readable property of the referenced type: the
+generated builder emits a private static `prefill<Builder>(T value)` method
+that obtains an empty instance and calls the field function matching each
+property. The naming convention is detected on the builder — fluent `name(v)`
+and JavaBeans `setName(v)` first, then any other camel-case prefix shared by
+several methods (e.g. `withName(v)`); a convention is trusted once it covers
+the majority of the properties, matched param-type-exact, void- or
+fluent-returning. Only consulted when `usingExistingBuilders` is enabled; the
+per-type analysis (property enumeration plus method scan) is a separate option
+because it adds compile cost. `@SimpleMinimalBuilder` disables this option.
 
 ### Component Filtering
 
@@ -1065,7 +1090,7 @@ the suffix used for own builder generation.
 
 The candidate class must provide a way to create an empty builder (a no-arg
 constructor or a static parameterless factory like `create()`), a way to create
-one seeded with the value (a constructor accepting the referenced type or a
+one prefilled with the value (a constructor accepting the referenced type or a
 static factory like `create(T)` or `of(T)`), and a no-arg `build()` method
 returning it — each accessible from the generated builder's package. Generated
 code calls a factory instead of `new` when the builder offers one. The contract

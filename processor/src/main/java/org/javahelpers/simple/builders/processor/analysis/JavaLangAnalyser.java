@@ -30,6 +30,7 @@ import static javax.lang.model.type.TypeKind.VOID;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -39,6 +40,7 @@ import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.RecordComponentElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
@@ -249,29 +251,43 @@ public final class JavaLangAnalyser {
       Class<? extends Annotation> annotationClass,
       Class<? extends Annotation> containerClass,
       ProcessingContext context) {
-    List<AnnotationMirror> instances = new ArrayList<>();
     if (element == null) {
-      return instances;
+      return List.of();
     }
+    List<AnnotationMirror> instances = new ArrayList<>();
     for (AnnotationMirror annotationMirror : element.getAnnotationMirrors()) {
       String annotationName = annotationMirror.getAnnotationType().toString();
       if (annotationName.equals(annotationClass.getCanonicalName())) {
         instances.add(annotationMirror);
       } else if (annotationName.equals(containerClass.getCanonicalName())) {
-        Optional<AnnotationValue> containerValue =
-            findAnnotationAttribute(annotationMirror, "value", context);
-        if (containerValue.isPresent()
-            && containerValue.get().getValue() instanceof List<?> entries) {
-          for (Object entry : entries) {
-            if (entry instanceof AnnotationValue entryValue
-                && entryValue.getValue() instanceof AnnotationMirror entryMirror) {
-              instances.add(entryMirror);
-            }
-          }
-        }
+        instances.addAll(unwrapContainerInstances(annotationMirror, context));
       }
     }
     return instances;
+  }
+
+  /**
+   * Unwraps the annotation instances repeated inside a container annotation's {@code value}
+   * attribute.
+   *
+   * @param containerMirror the container annotation to unwrap
+   * @param context the processing context providing element utilities
+   * @return the annotation mirrors wrapped by the container
+   */
+  private static List<AnnotationMirror> unwrapContainerInstances(
+      AnnotationMirror containerMirror, ProcessingContext context) {
+    Optional<AnnotationValue> containerValue =
+        findAnnotationAttribute(containerMirror, "value", context);
+    if (containerValue.isEmpty() || !(containerValue.get().getValue() instanceof List<?> entries)) {
+      return List.of();
+    }
+    return entries.stream()
+        .filter(AnnotationValue.class::isInstance)
+        .map(AnnotationValue.class::cast)
+        .map(AnnotationValue::getValue)
+        .filter(AnnotationMirror.class::isInstance)
+        .map(AnnotationMirror.class::cast)
+        .toList();
   }
 
   /**
@@ -398,6 +414,98 @@ public final class JavaLangAnalyser {
 
   private static boolean hasType(TypeMirror typeMirror, TypeName expectedType) {
     return typeMirror.toString().equals(expectedType.getFullQualifiedName());
+  }
+
+  /**
+   * A readable property of a type: the name used to match field functions ({@code name} or {@code
+   * setName}), how the property is read from a value, and the type it carries.
+   *
+   * @param name the property name
+   * @param accessor how the property is read (e.g. {@code name()}, {@code getName()} or {@code
+   *     name})
+   * @param typeMirror the property's type
+   */
+  public record ReadableProperty(String name, String accessor, TypeMirror typeMirror) {}
+
+  /**
+   * Collects the readable properties of a type in declaration order: record components, accessible
+   * parameterless non-static methods returning a value (getters {@code getX()}/{@code isX()} or
+   * record-style accessors {@code x()}) and accessible non-static fields. Method-derived property
+   * names strip the {@code get}/{@code is} prefix; the first source found wins when several spell
+   * out the same property.
+   *
+   * @param typeElement the type to inspect
+   * @param context the processing context, used to access all members
+   * @return the readable properties in declaration order
+   */
+  public static List<ReadableProperty> findReadableProperties(
+      TypeElement typeElement, ProcessingContext context) {
+    if (typeElement == null) {
+      return List.of();
+    }
+    Map<String, ReadableProperty> properties = new LinkedHashMap<>();
+    for (RecordComponentElement component :
+        Optional.ofNullable(typeElement.getRecordComponents()).orElse(List.of())) {
+      String name = component.getSimpleName().toString();
+      properties.put(name, new ReadableProperty(name, name + "()", component.asType()));
+    }
+    for (ExecutableElement method : ElementFilter.methodsIn(context.getAllMembers(typeElement))) {
+      if (isNotStatic(method)
+          && hasNoParameters(method)
+          && method.getReturnType().getKind() != VOID
+          && isNoMethodOfObjectClass(method, context)
+          && context.isMemberAccessibleFromBuilderPackage(method)) {
+        String name = propertyNameOf(method);
+        properties.putIfAbsent(
+            name,
+            new ReadableProperty(name, method.getSimpleName() + "()", method.getReturnType()));
+      }
+    }
+    for (VariableElement field : ElementFilter.fieldsIn(context.getAllMembers(typeElement))) {
+      if (!field.getModifiers().contains(STATIC)
+          && context.isMemberAccessibleFromBuilderPackage(field)) {
+        String name = field.getSimpleName().toString();
+        properties.putIfAbsent(name, new ReadableProperty(name, name, field.asType()));
+      }
+    }
+    return List.copyOf(properties.values());
+  }
+
+  /**
+   * Finds the builder's field functions: accessible non-static single-parameter methods that are
+   * not members of {@link Object}. These are the candidates a naming convention may use to prefill
+   * the builder property by property.
+   *
+   * @param type the builder type to inspect
+   * @param context the processing context, used to access all members
+   * @return the field functions in declaration order
+   */
+  public static List<ExecutableElement> findFieldFunctions(
+      TypeElement type, ProcessingContext context) {
+    return ElementFilter.methodsIn(context.getAllMembers(type)).stream()
+        .filter(JavaLangAnalyser::isNotStatic)
+        .filter(method -> isNoMethodOfObjectClass(method, context))
+        .filter(context::isMemberAccessibleFromBuilderPackage)
+        .filter(method -> method.getParameters().size() == 1)
+        .toList();
+  }
+
+  /**
+   * Derives the property name of an accessor method: {@code getX()}/{@code isX()} map to {@code x},
+   * any other name is used unchanged.
+   *
+   * @param method the accessor method to derive the property name from
+   * @return the property name
+   */
+  private static String propertyNameOf(ExecutableElement method) {
+    String name = method.getSimpleName().toString();
+    if (name.startsWith("get") && name.length() > 3 && Character.isUpperCase(name.charAt(3))) {
+      return StringUtils.uncapitalize(name.substring(3));
+    }
+    if (name.startsWith("is") && name.length() > 2 && Character.isUpperCase(name.charAt(2))) {
+      return StringUtils.uncapitalize(name.substring(2));
+    }
+    return name;
   }
 
   /**

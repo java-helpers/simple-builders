@@ -100,7 +100,7 @@ public class NestedBuilderConsumerGenerator implements MethodGenerator {
   public List<BuilderMethodDto> generateMethods(
       FieldDto field, TypeName builderType, ProcessingContext context) {
     Optional<ResolvedBuilder> fieldBuilderOpt = field.getFieldType().getResolvedBuilder();
-    if (fieldBuilderOpt.isEmpty()) {
+    if (fieldBuilderOpt.isEmpty() || fieldBuilderOpt.get().funcForPrefilledBuilder().isEmpty()) {
       return Collections.emptyList();
     }
 

@@ -158,7 +158,7 @@ class BuilderScopeResolverTest {
     ResolvedBuilder resolved = probeResult.get().get();
     assertEquals(expectedBuilder, resolved.typeName().getFullQualifiedName());
     BuilderInstantiation empty = resolved.funcForEmptyBuilder();
-    BuilderInstantiation prefilled = resolved.funcForPrefilledBuilder();
+    BuilderInstantiation prefilled = resolved.funcForPrefilledBuilder().get();
     assertInstanceOf(expectedEmptyPath, empty);
     assertInstanceOf(expectedPrefilledPath, prefilled);
     assertFactoryMethod(expectedEmptyMethod, empty);
@@ -258,7 +258,7 @@ class BuilderScopeResolverTest {
 
     assertThat(compilation).succeeded();
     // The type's own builder() declaration anchors the builder, even in another package:
-    // the empty path calls LibHelper.builder(), the seeded path the builder's ctor
+    // the empty path calls LibHelper.builder(), the prefilled path the builder's ctor
     ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
     assertEquals("builders.LibHelperBuilder", resolved.typeName().getFullQualifiedName());
     BuilderInstantiation.AnchorFactoryCall empty =
@@ -267,7 +267,7 @@ class BuilderScopeResolverTest {
     assertEquals("builder", empty.methodName());
     assertEquals("lib.LibHelper", empty.anchor().getFullQualifiedName());
     assertInstanceOf(
-        BuilderInstantiation.ConstructorCall.class, resolved.funcForPrefilledBuilder());
+        BuilderInstantiation.ConstructorCall.class, resolved.funcForPrefilledBuilder().get());
   }
 
   @Test
@@ -315,7 +315,7 @@ class BuilderScopeResolverTest {
   }
 
   @Test
-  void resolverUsageScope_ResolvesStaticSeededPath() {
+  void resolverUsageScope_ResolvesStaticPrefilledPath() {
     Compilation compilation =
         Compiler.javac()
             .withProcessors(new ResolverProbeProcessor())
@@ -339,19 +339,19 @@ class BuilderScopeResolverTest {
                     """));
 
     assertThat(compilation).succeeded();
-    // No seeded path on the builder itself: the type's static builder(T) becomes the seeded
+    // No prefilled path on the builder itself: the type's static builder(T) becomes the prefilled
     // path — two candidates match, the conventional name wins
     ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
     assertEquals("lib.LibHelper.LibHelperBuilder", resolved.typeName().getFullQualifiedName());
     assertInstanceOf(BuilderInstantiation.AnchorFactoryCall.class, resolved.funcForEmptyBuilder());
     BuilderInstantiation.AnchorFactoryCall prefilled =
         assertInstanceOf(
-            BuilderInstantiation.AnchorFactoryCall.class, resolved.funcForPrefilledBuilder());
+            BuilderInstantiation.AnchorFactoryCall.class, resolved.funcForPrefilledBuilder().get());
     assertEquals("builder", prefilled.methodName());
   }
 
   @Test
-  void resolverUsageScope_InstanceSeededPathPrefersToBuilder() {
+  void resolverUsageScope_InstancePrefilledPathPrefersToBuilder() {
     Compilation compilation =
         Compiler.javac()
             .withProcessors(new ResolverProbeProcessor())
@@ -376,7 +376,7 @@ class BuilderScopeResolverTest {
     assertEquals("lib.LibHelper.LibHelperBuilder", resolved.typeName().getFullQualifiedName());
     BuilderInstantiation.ValueFactoryCall prefilled =
         assertInstanceOf(
-            BuilderInstantiation.ValueFactoryCall.class, resolved.funcForPrefilledBuilder());
+            BuilderInstantiation.ValueFactoryCall.class, resolved.funcForPrefilledBuilder().get());
     assertEquals("toBuilder", prefilled.methodName());
   }
 
@@ -416,7 +416,7 @@ class BuilderScopeResolverTest {
     assertEquals("lib.LibHelper.LibHelperBuilder", resolved.typeName().getFullQualifiedName());
     assertInstanceOf(BuilderInstantiation.ConstructorCall.class, resolved.funcForEmptyBuilder());
     assertInstanceOf(
-        BuilderInstantiation.ConstructorCall.class, resolved.funcForPrefilledBuilder());
+        BuilderInstantiation.ConstructorCall.class, resolved.funcForPrefilledBuilder().get());
   }
 
   @Test
@@ -440,13 +440,13 @@ class BuilderScopeResolverTest {
 
     assertThat(compilation).succeeded();
     // Delombok output of @Builder(toBuilder = true): builder() anchors the empty path,
-    // toBuilder() the seeded one; the nested builder's package-private ctor is never called
+    // toBuilder() the prefilled one; the nested builder's package-private ctor is never called
     ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
     assertEquals("lib.LibHelper.LibHelperBuilder", resolved.typeName().getFullQualifiedName());
     assertInstanceOf(BuilderInstantiation.AnchorFactoryCall.class, resolved.funcForEmptyBuilder());
     BuilderInstantiation.ValueFactoryCall prefilled =
         assertInstanceOf(
-            BuilderInstantiation.ValueFactoryCall.class, resolved.funcForPrefilledBuilder());
+            BuilderInstantiation.ValueFactoryCall.class, resolved.funcForPrefilledBuilder().get());
     assertEquals("toBuilder", prefilled.methodName());
   }
 
@@ -480,7 +480,373 @@ class BuilderScopeResolverTest {
     assertEquals("lib.LibHelperBuilder", resolved.typeName().getFullQualifiedName());
     assertInstanceOf(BuilderInstantiation.ConstructorCall.class, resolved.funcForEmptyBuilder());
     assertInstanceOf(
-        BuilderInstantiation.ConstructorCall.class, resolved.funcForPrefilledBuilder());
+        BuilderInstantiation.ConstructorCall.class, resolved.funcForPrefilledBuilder().get());
+  }
+
+  @Test
+  void resolverUsageScope_ResolvesFreeBuilderShape() {
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelper {
+                      private String name;
+                      public String getName() { return name; }
+                      public static class Builder {
+                        private String name;
+                        public Builder() {}
+                        public Builder mergeFrom(LibHelper value) {
+                          name = value.getName();
+                          return this;
+                        }
+                        public Builder name(String name) { this.name = name; return this; }
+                        public Builder setName(String name) { return name(name); }
+                        public LibHelper build() {
+                          LibHelper helper = new LibHelper();
+                          helper.name = name;
+                          return helper;
+                        }
+                      }
+                    }
+                    """));
+
+    assertThat(compilation).succeeded();
+    // org.inferred.freebuilder generated shape: the nested Builder offers no ctor(T) and
+    // mergeFrom is an instance method, but its field functions cover every readable property,
+    // so the generated builder prefills the instance itself — the unprefixed name wins over setName
+    ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
+    assertEquals("lib.LibHelper.Builder", resolved.typeName().getFullQualifiedName());
+    assertInstanceOf(BuilderInstantiation.ConstructorCall.class, resolved.funcForEmptyBuilder());
+    BuilderInstantiation.PrefillCall prefilled =
+        assertInstanceOf(
+            BuilderInstantiation.PrefillCall.class, resolved.funcForPrefilledBuilder().get());
+    assertEquals("", prefilled.builderMethodPrefix());
+    assertEquals("name", prefilled.prefilledFields().get(0).property());
+    assertEquals("getName()", prefilled.prefilledFields().get(0).accessor());
+  }
+
+  @Test
+  void resolverUsageScope_SkipsFieldPrefillWhenDisabled() {
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelper {
+                      private String name;
+                      public String getName() { return name; }
+                      public static class Builder {
+                        private String name;
+                        public Builder() {}
+                        public Builder name(String name) { this.name = name; return this; }
+                        public LibHelper build() {
+                          LibHelper helper = new LibHelper();
+                          helper.name = name;
+                          return helper;
+                        }
+                      }
+                    }
+                    """));
+
+    assertThat(compilation).succeeded();
+    // usingFieldFunctionPrefill=DISABLED: field functions are not tried, so the builder resolves
+    // without a prefilled path
+    assertEquals(
+        Optional.empty(),
+        ResolverProbeProcessor.usagePrefillDisabled.get().funcForPrefilledBuilder());
+  }
+
+  @Test
+  void resolverUsageScope_ResolvesAutoValueShape() {
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelper {
+                      private final String name;
+                      private final boolean active;
+                      public LibHelper(String name, boolean active) {
+                        this.name = name;
+                        this.active = active;
+                      }
+                      public static AutoValue_LibHelper.Builder create() {
+                        return new AutoValue_LibHelper.Builder();
+                      }
+                      public String getName() { return name; }
+                      public boolean isActive() { return active; }
+                    }
+                    """),
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class AutoValue_LibHelper {
+                      public static class Builder {
+                        private String name;
+                        private boolean active;
+                        Builder() {}
+                        public Builder setName(String name) { this.name = name; return this; }
+                        public Builder setActive(boolean active) { this.active = active; return this; }
+                        public LibHelper build() { return new LibHelper(name, active); }
+                      }
+                    }
+                    """));
+
+    assertThat(compilation).succeeded();
+    // com.google.auto.value generated shape: create() anchors the builder on the generated
+    // sibling; the JavaBeans setName convention covers the readable properties, so the
+    // generated builder prefills the instance itself
+    ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
+    assertEquals("lib.AutoValue_LibHelper.Builder", resolved.typeName().getFullQualifiedName());
+    assertInstanceOf(BuilderInstantiation.AnchorFactoryCall.class, resolved.funcForEmptyBuilder());
+    BuilderInstantiation.PrefillCall prefilled =
+        assertInstanceOf(
+            BuilderInstantiation.PrefillCall.class, resolved.funcForPrefilledBuilder().get());
+    assertEquals("set", prefilled.builderMethodPrefix());
+    assertEquals("name", prefilled.prefilledFields().get(0).property());
+  }
+
+  @Test
+  void resolverUsageScope_ResolvesDetectedPrefixShape() {
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelper {
+                      private final String name;
+                      private final boolean active;
+                      public LibHelper(String name, boolean active) {
+                        this.name = name;
+                        this.active = active;
+                      }
+                      public String getName() { return name; }
+                      public boolean isActive() { return active; }
+                    }
+                    """),
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelperBuilder {
+                      private String name;
+                      private boolean active;
+                      public LibHelperBuilder() {}
+                      public LibHelperBuilder withName(String name) { this.name = name; return this; }
+                      public LibHelperBuilder withActive(boolean active) {
+                        this.active = active;
+                        return this;
+                      }
+                      public LibHelper build() { return new LibHelper(name, active); }
+                    }
+                    """));
+
+    assertThat(compilation).succeeded();
+    // Builder-framework style: several field functions share the camel-case prefix "with",
+    // which is detected as the builder's convention
+    ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
+    BuilderInstantiation.PrefillCall prefilled =
+        assertInstanceOf(
+            BuilderInstantiation.PrefillCall.class, resolved.funcForPrefilledBuilder().get());
+    assertEquals("with", prefilled.builderMethodPrefix());
+    assertEquals(2, prefilled.prefilledFields().size());
+  }
+
+  @Test
+  void resolverUsageScope_ResolvesDetectedPrefixForSingleProperty() {
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelper {
+                      private final String name;
+                      public LibHelper(String name) { this.name = name; }
+                      public String getName() { return name; }
+                    }
+                    """),
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelperBuilder {
+                      private String name;
+                      public LibHelperBuilder() {}
+                      public LibHelperBuilder putName(String name) { this.name = name; return this; }
+                      public LibHelper build() { return new LibHelper(name); }
+                    }
+                    """));
+
+    assertThat(compilation).succeeded();
+    // For a single-property type, one prefixed method is enough evidence for the convention
+    ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
+    BuilderInstantiation.PrefillCall prefilled =
+        assertInstanceOf(
+            BuilderInstantiation.PrefillCall.class, resolved.funcForPrefilledBuilder().get());
+    assertEquals("put", prefilled.builderMethodPrefix());
+  }
+
+  @Test
+  void resolverUsageScope_ResolvesRecordShape() {
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public record LibHelper(String name) {}
+                    """),
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelperBuilder {
+                      private String name;
+                      public LibHelperBuilder() {}
+                      public LibHelperBuilder name(String name) { this.name = name; return this; }
+                      public LibHelper build() { return new LibHelper(name); }
+                    }
+                    """));
+
+    assertThat(compilation).succeeded();
+    // Record components count as readable properties via the name() accessor
+    ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
+    BuilderInstantiation.PrefillCall prefilled =
+        assertInstanceOf(
+            BuilderInstantiation.PrefillCall.class, resolved.funcForPrefilledBuilder().get());
+    assertEquals("", prefilled.builderMethodPrefix());
+    assertEquals("name", prefilled.prefilledFields().get(0).property());
+    assertEquals("name()", prefilled.prefilledFields().get(0).accessor());
+  }
+
+  @Test
+  void resolverUsageScope_ResolvesFieldShape() {
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelper {
+                      public String name = "";
+                    }
+                    """),
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelperBuilder {
+                      private String name;
+                      public LibHelperBuilder() {}
+                      public LibHelperBuilder name(String name) { this.name = name; return this; }
+                      public LibHelper build() {
+                        LibHelper helper = new LibHelper();
+                        helper.name = name;
+                        return helper;
+                      }
+                    }
+                    """));
+
+    assertThat(compilation).succeeded();
+    // Accessible fields count as readable properties via direct name access
+    ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
+    BuilderInstantiation.PrefillCall prefilled =
+        assertInstanceOf(
+            BuilderInstantiation.PrefillCall.class, resolved.funcForPrefilledBuilder().get());
+    assertEquals("", prefilled.builderMethodPrefix());
+    assertEquals("name", prefilled.prefilledFields().get(0).property());
+    assertEquals("name", prefilled.prefilledFields().get(0).accessor());
+  }
+
+  @Test
+  void resolverUsageScope_ResolvesWithoutPrefilledPathWhenPropertyUncovered() {
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelper {
+                      public String getName() { return ""; }
+                    }
+                    """),
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelperBuilder {
+                      public LibHelperBuilder() {}
+                      public LibHelper build() { return new LibHelper(); }
+                    }
+                    """));
+
+    assertThat(compilation).succeeded();
+    // No prefilled path and name has no field function: the builder still resolves, but
+    // funcForPrefilledBuilder stays empty so only helpers not needing a prefilled path generate
+    ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
+    assertEquals("lib.LibHelperBuilder", resolved.typeName().getFullQualifiedName());
+    assertInstanceOf(BuilderInstantiation.ConstructorCall.class, resolved.funcForEmptyBuilder());
+    assertEquals(Optional.empty(), resolved.funcForPrefilledBuilder());
+  }
+
+  @Test
+  void resolverUsageScope_PrefillsCoveredFieldsWhenMajorityMatches() {
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelper {
+                      private final String name;
+                      private final boolean active;
+                      private final int age;
+                      public LibHelper(String name, boolean active, int age) {
+                        this.name = name;
+                        this.active = active;
+                        this.age = age;
+                      }
+                      public String getName() { return name; }
+                      public boolean isActive() { return active; }
+                      public int getAge() { return age; }
+                    }
+                    """),
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelperBuilder {
+                      private String name;
+                      private boolean active;
+                      public LibHelperBuilder() {}
+                      public LibHelperBuilder name(String name) { this.name = name; return this; }
+                      public LibHelperBuilder active(boolean active) {
+                        this.active = active;
+                        return this;
+                      }
+                      public LibHelper build() { return new LibHelper(name, active, 0); }
+                    }
+                    """));
+
+    assertThat(compilation).succeeded();
+    // age has no field function but two of three properties are covered: the convention is
+    // trusted and the covered fields are prefilled
+    ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
+    BuilderInstantiation.PrefillCall prefilled =
+        assertInstanceOf(
+            BuilderInstantiation.PrefillCall.class, resolved.funcForPrefilledBuilder().get());
+    assertEquals(2, prefilled.prefilledFields().size());
+    assertEquals("name", prefilled.prefilledFields().get(0).property());
+    assertEquals("active", prefilled.prefilledFields().get(1).property());
   }
 
   @Test
@@ -514,7 +880,7 @@ class BuilderScopeResolverTest {
     assertEquals("lib.LibHelperBuilder", generated.typeName().getFullQualifiedName());
     assertInstanceOf(BuilderInstantiation.StaticFactoryCall.class, generated.funcForEmptyBuilder());
     assertInstanceOf(
-        BuilderInstantiation.ConstructorCall.class, generated.funcForPrefilledBuilder());
+        BuilderInstantiation.ConstructorCall.class, generated.funcForPrefilledBuilder().get());
   }
 
   private static final String LIB_HELPER =
@@ -687,7 +1053,7 @@ class BuilderScopeResolverTest {
               """
                 }),
         // Delombok output of @Builder without toBuilder: builder() anchors the empty path,
-        // but no seeded path exists, so the anchored candidate is rejected
+        // but no prefilled path exists, so the anchored candidate is rejected
         Arguments.argumentSet(
             "LombokBuilderShapeWithoutToBuilder",
             (Object)
@@ -698,47 +1064,6 @@ class BuilderScopeResolverTest {
                 public static LibHelperBuilder builder() { return new LibHelperBuilder(); }
                 public static class LibHelperBuilder {
                   LibHelperBuilder() {}
-                  public LibHelper build() { return new LibHelper(); }
-                }
-              }
-              """
-                }),
-        // org.inferred.freebuilder generated shape: nested Builder with a public ctor and
-        // mergeFrom(T) — mergeFrom is an instance method, so the contract's seeded path fails
-        Arguments.argumentSet(
-            "FreeBuilderShape",
-            (Object)
-                new String[] {
-                  """
-              package lib;
-              public class LibHelper {
-                public static class Builder {
-                  public Builder() {}
-                  public Builder mergeFrom(LibHelper value) { return this; }
-                  public LibHelper build() { return new LibHelper(); }
-                }
-              }
-              """
-                }),
-        // com.google.auto.value generated shape: create() anchors a builder on the generated
-        // sibling, but AutoValue offers no seeded path (no ctor(T), no toBuilder)
-        Arguments.argumentSet(
-            "AutoValueShape",
-            (Object)
-                new String[] {
-                  """
-              package lib;
-              public class LibHelper {
-                public static AutoValue_LibHelper.Builder create() {
-                  return new AutoValue_LibHelper.Builder();
-                }
-              }
-              """,
-                  """
-              package lib;
-              public class AutoValue_LibHelper {
-                public static class Builder {
-                  Builder() {}
                   public LibHelper build() { return new LibHelper(); }
                 }
               }
@@ -950,6 +1275,7 @@ class BuilderScopeResolverTest {
     private static Optional<ResolvedBuilder> usagePackagePrivate;
     private static Optional<ResolvedBuilder> usageWithExistingDisabled;
     private static Optional<ResolvedBuilder> usageGeneratedWithExistingDisabled;
+    private static Optional<ResolvedBuilder> usagePrefillDisabled;
     private static Optional<ResolvedBuilder> contractResultString;
 
     private boolean captured;
@@ -968,6 +1294,7 @@ class BuilderScopeResolverTest {
       usagePackagePrivate = null;
       usageWithExistingDisabled = null;
       usageGeneratedWithExistingDisabled = null;
+      usagePrefillDisabled = null;
       contractResultString = null;
     }
 
@@ -1039,6 +1366,10 @@ class BuilderScopeResolverTest {
       resolver.registerGeneratedBuilder(
           new TypeName("lib", "LibHelper"), new TypeName("lib", "LibHelperBuilder"));
       usageGeneratedWithExistingDisabled = resolver.resolveUsableBuilderType(helper);
+      // usingFieldFunctionPrefill=DISABLED: field functions are not used as prefilled path
+      context.initProcessingTarget(new ProcessingTarget(prefillDisabledConfiguration("lib"), ""));
+      resolver.resetGeneratedBuilders();
+      usagePrefillDisabled = resolver.resolveUsableBuilderType(helper);
       // Builder-contract probe for java.lang.String: StringBuilder must not resolve because its
       // only parameterless method returning String is toString(), an Object signature
       context.initProcessingTarget(new ProcessingTarget(usageOnlyConfiguration("java.lang"), ""));
@@ -1061,6 +1392,14 @@ class BuilderScopeResolverTest {
     private static BuilderConfiguration usageOnlyConfiguration(String packageName) {
       return BuilderConfiguration.DEFAULT.merge(
           BuilderConfiguration.builder().builderUsagePackages(packageName).build());
+    }
+
+    private static BuilderConfiguration prefillDisabledConfiguration(String packageName) {
+      return BuilderConfiguration.DEFAULT.merge(
+          BuilderConfiguration.builder()
+              .builderUsagePackages(packageName)
+              .usingFieldFunctionPrefill(OptionState.DISABLED)
+              .build());
     }
 
     private static BuilderConfiguration existingBuildersDisabledConfiguration(String packageName) {

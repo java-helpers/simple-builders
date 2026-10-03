@@ -785,6 +785,26 @@ public @interface SimpleBuilder {
      */
     OptionState usingExistingBuilders() default OptionState.UNSET;
 
+    /**
+     * Prefill a reused builder that offers no value-accepting creation path by calling one of its
+     * field functions per readable property of the referenced type: the generated builder emits a
+     * private {@code prefill<Builder>(T value)} method that obtains an empty instance and calls the
+     * field function matching each property (fluent {@code name(v)}, JavaBeans {@code setName(v)},
+     * or a detected convention like {@code withName(v)}). Properties without a matching function
+     * stay unset; the convention is trusted once it covers the majority of the readable properties.
+     * <br>
+     * When disabled, such builders still resolve but helpers that would silently drop state are
+     * skipped. Only consulted when {@link #usingExistingBuilders()} is enabled; the analysis
+     * (property enumeration plus method scan per referenced type) is a separate option because it
+     * adds compile cost. {@link SimpleMinimalBuilder} deactivates this option.
+     *
+     * <p>Default: ENABLED <br>
+     * Compiler option: -Asimplebuilder.usingFieldFunctionPrefill
+     *
+     * @return the option state for prefilling builders through field functions
+     */
+    OptionState usingFieldFunctionPrefill() default OptionState.UNSET;
+
     // === Naming ===
     /**
      * Suffix to append to the DTO name to generate the builder class name. <br>

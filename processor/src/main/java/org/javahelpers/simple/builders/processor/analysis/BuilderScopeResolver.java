@@ -23,17 +23,21 @@
  */
 package org.javahelpers.simple.builders.processor.analysis;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Predicate;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.util.ElementFilter;
+import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.core.PackageScopes;
@@ -65,6 +69,7 @@ public final class BuilderScopeResolver {
 
   // Factory method names preferred when a builder offers several candidates
   private static final List<String> PREFERRED_FACTORY_NAMES = List.of("create", "of");
+  private static final char[] UPPERCASE_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
 
   private final ProcessingContext context;
   private ResolutionInputs cachedResolutionInputs;
@@ -104,13 +109,13 @@ public final class BuilderScopeResolver {
    *       same-package candidate: first accessible nested types satisfying the builder contract
    *       (e.g. {@code Person.PersonBuilder}), then static parameterless factory methods on the
    *       type returning a builder type with a no-arg {@code build()} (e.g. {@code
-   *       Person.builder()}), with a seeded path on the type ({@code builder(T)}/{@code
+   *       Person.builder()}), with a prefilled path on the type ({@code builder(T)}/{@code
    *       toBuilder()}) or on the builder.
    *   <li>Otherwise, the candidate builder name is constructed using {@code builderUsageSuffix}
    *       (falling back to {@code builderSuffix} if not configured). The candidate is looked up on
    *       the classpath and returned if it satisfies the builder contract: an instantiation path
    *       for an empty builder (no-arg constructor or static factory like {@code create()}), an
-   *       instantiation path seeded with the value (constructor accepting the referenced type or
+   *       instantiation path prefilled with the value (constructor accepting the referenced type or
    *       static factory like {@code create(T)}/{@code of(T)}), and an accessible, parameterless
    *       method returning it (the build method, regardless of name) - each accessible from the
    *       generated builder's package. The contract check is annotation-agnostic, so builders
@@ -242,47 +247,210 @@ public final class BuilderScopeResolver {
     // the builder contract.
     String suffix = context.getConfiguration().getBuilderUsageSuffix();
     TypeName candidate = JavaLangMapper.createBuilderTypeName(referencedType, context, suffix);
-    return resolveByBuilderContract(candidate, referencedTypeName);
+    return resolveByBuilderContract(candidate, referencedType, referencedTypeName);
   }
 
   /**
    * Looks up the candidate builder type on the classpath and verifies it satisfies the builder
    * contract: a way to create an empty instance (a no-arg constructor or a static parameterless
-   * factory like {@code create()}), a way to create an instance seeded with a value (a constructor
-   * accepting the referenced type or a static factory like {@code create(T)}/{@code of(T)}), and an
-   * accessible, parameterless method returning it (the build method, regardless of name) - each
-   * accessible from the generated builder's package, since the generated code calls them from
-   * there. The contract check is annotation-agnostic, so builders generated with custom template
-   * annotations or from external sources are supported as long as they follow the builder contract.
-   * It also avoids false positives like {@code String} → {@code StringBuilder}.
+   * factory like {@code create()}), a way to create an instance prefilled with a value (a
+   * constructor accepting the referenced type or a static factory like {@code create(T)}/{@code
+   * of(T)}), and an accessible, parameterless method returning it (the build method, regardless of
+   * name) - each accessible from the generated builder's package, since the generated code calls
+   * them from there. The contract check is annotation-agnostic, so builders generated with custom
+   * template annotations or from external sources are supported as long as they follow the builder
+   * contract. It also avoids false positives like {@code String} → {@code StringBuilder}.
    *
    * @param candidate the candidate builder type name to look up
+   * @param referencedType the type element being referenced
    * @param expectedType the referenced type the builder must accept and return
    * @return the resolved builder with the instantiation paths to call, or empty if no matching
    *     builder class exists on the classpath
    */
   private Optional<ResolvedBuilder> resolveByBuilderContract(
-      TypeName candidate, TypeName expectedType) {
+      TypeName candidate, TypeElement referencedType, TypeName expectedType) {
     TypeElement builderTypeElement = context.getTypeElement(candidate.getFullQualifiedName());
     if (builderTypeElement == null) {
       return Optional.empty();
     }
     Optional<BuilderInstantiation> funcForEmptyBuilder =
         resolveFuncForEmptyBuilder(builderTypeElement);
+    Optional<ExecutableElement> buildMethod = findBuildMethod(builderTypeElement, expectedType);
+    if (funcForEmptyBuilder.isEmpty() || buildMethod.isEmpty()) {
+      return Optional.empty();
+    }
     Optional<BuilderInstantiation> funcForPrefilledBuilder =
         resolveFuncForPrefilledBuilder(builderTypeElement, expectedType);
-    Optional<ExecutableElement> buildMethod = findBuildMethod(builderTypeElement, expectedType);
-    if (funcForEmptyBuilder.isEmpty()
-        || funcForPrefilledBuilder.isEmpty()
-        || buildMethod.isEmpty()) {
-      return Optional.empty();
+    // the builder can be created empty but offers no prefilled path: try its field functions
+    if (funcForPrefilledBuilder.isEmpty()
+        && context.getConfiguration().shouldUseFieldFunctionPrefill()) {
+      funcForPrefilledBuilder =
+          resolveFieldFunctionPrefill(
+              referencedType,
+              builderTypeElement,
+              candidate,
+              expectedType,
+              funcForEmptyBuilder.get());
+    }
+    if (funcForPrefilledBuilder.isEmpty()
+        && context.getConfiguration().shouldUseFieldFunctionPrefill()) {
+      context.debug(
+          "Builder %s for %s offers no way to prefill a value - consumer helpers are skipped",
+          candidate.getFullQualifiedName(), expectedType.getFullQualifiedName());
     }
     return Optional.of(
         new ResolvedBuilder(
             candidate,
             funcForEmptyBuilder.get(),
-            funcForPrefilledBuilder.get(),
+            funcForPrefilledBuilder,
             buildMethod.get().getSimpleName().toString()));
+  }
+
+  /**
+   * Resolves prefilling by field functions: the builder must offer a field function for the
+   * majority of the referenced type's readable properties, all sharing one naming convention -
+   * {@code name(v)}, {@code setName(v)}, or a detected prefix like {@code withName(v)}. The empty
+   * path is then reused and the generated builder prefills the instance property by property;
+   * properties the builder does not accept stay unset. Resolving less than the majority distrusts
+   * the convention, so a builder whose functions coincide by name is never picked. A type exposing
+   * no readable properties resolves empty as well - nothing is provably copyable.
+   *
+   * @param referencedType the type element being referenced
+   * @param builderElement the candidate builder type
+   * @param builderTypeName the candidate builder type name
+   * @param referencedTypeName the referenced type, prefilled into the builder
+   * @param funcForEmptyBuilder how the prefilling obtains the empty builder instance
+   * @return the prefilling instantiation to emit, or empty when the convention covers too little
+   */
+  private Optional<BuilderInstantiation> resolveFieldFunctionPrefill(
+      TypeElement referencedType,
+      TypeElement builderElement,
+      TypeName builderTypeName,
+      TypeName referencedTypeName,
+      BuilderInstantiation funcForEmptyBuilder) {
+    List<JavaLangAnalyser.ReadableProperty> properties =
+        JavaLangAnalyser.findReadableProperties(referencedType, context);
+    if (properties.isEmpty()) {
+      return Optional.empty();
+    }
+    List<ExecutableElement> fieldFunctions =
+        JavaLangAnalyser.findFieldFunctions(builderElement, context);
+    ConventionCoverage best =
+        candidatePrefixes(properties, fieldFunctions).stream()
+            .map(
+                prefix ->
+                    new ConventionCoverage(
+                        prefix, collectPrefilledFields(properties, fieldFunctions, prefix)))
+            .sorted(
+                Comparator.comparingInt(
+                        (ConventionCoverage convention) -> convention.prefilledFields().size())
+                    .reversed())
+            .findFirst()
+            .orElseThrow();
+    // a convention is trusted once it covers the majority of the readable properties
+    if (2 * best.prefilledFields().size() <= properties.size()) {
+      return Optional.empty();
+    }
+    return Optional.of(
+        new BuilderInstantiation.PrefillCall(
+            builderTypeName,
+            referencedTypeName,
+            funcForEmptyBuilder,
+            best.prefix(),
+            best.prefilledFields()));
+  }
+
+  /**
+   * A naming convention paired with the prefilled fields the builder covers under it: the
+   * convention the most properties follow wins.
+   */
+  private record ConventionCoverage(
+      String prefix, List<BuilderInstantiation.PrefillCall.Field> prefilledFields) {}
+
+  /**
+   * Candidate field-function prefixes: {@code ""} (fluent {@code name(v)}) and {@code set}
+   * (JavaBeans) are always tried, any other camel-case prefix found on the builder's
+   * single-parameter methods is only trusted when enough methods share it - one finding per
+   * property, at least two when there are several.
+   *
+   * @param properties the readable properties to cover
+   * @param fieldFunctions the builder's single-parameter non-static methods
+   * @return the prefixes to evaluate
+   */
+  private List<String> candidatePrefixes(
+      List<JavaLangAnalyser.ReadableProperty> properties, List<ExecutableElement> fieldFunctions) {
+    Map<String, Integer> prefixCounts = new LinkedHashMap<>();
+    for (ExecutableElement method : fieldFunctions) {
+      String name = method.getSimpleName().toString();
+      int boundary = StringUtils.indexOfAny(name, UPPERCASE_CHARS);
+      if (boundary > 0) {
+        prefixCounts.merge(StringUtils.substring(name, 0, boundary), 1, Integer::sum);
+      }
+    }
+    List<String> prefixes = new ArrayList<>(List.of("", "set"));
+    int minOccurrences = Math.min(2, properties.size());
+    prefixCounts.entrySet().stream()
+        .filter(entry -> entry.getValue() >= minOccurrences)
+        .map(Map.Entry::getKey)
+        .filter(Predicate.not(prefixes::contains))
+        .forEach(prefixes::add);
+    return prefixes;
+  }
+
+  /**
+   * Collects the prefilled fields whose properties the builder covers under one naming convention:
+   * {@code <property>(v)} when the prefix is empty, otherwise {@code <prefix><Property>(v)}.
+   *
+   * @param properties the readable properties to cover
+   * @param fieldFunctions the builder's single-parameter non-static methods
+   * @param prefix the naming convention to try
+   * @return the prefilled fields in property order
+   */
+  private List<BuilderInstantiation.PrefillCall.Field> collectPrefilledFields(
+      List<JavaLangAnalyser.ReadableProperty> properties,
+      List<ExecutableElement> fieldFunctions,
+      String prefix) {
+    return properties.stream()
+        .filter(property -> findFieldFunction(fieldFunctions, property, prefix).isPresent())
+        .map(BuilderScopeResolver::prefilledField)
+        .toList();
+  }
+
+  /**
+   * Creates the prefilled field for a property the builder covers: the property name plus how it is
+   * read from the source value.
+   *
+   * @param property the readable property to prefill
+   * @return the prefilled field to emit
+   */
+  private static BuilderInstantiation.PrefillCall.Field prefilledField(
+      JavaLangAnalyser.ReadableProperty property) {
+    return new BuilderInstantiation.PrefillCall.Field(property.name(), property.accessor());
+  }
+
+  /**
+   * Finds the builder's field function for one property under the given naming convention: a
+   * single-parameter method named {@code <property>} when the prefix is empty, otherwise {@code
+   * <prefix><Property>}, taking the property's type.
+   *
+   * @param fieldFunctions the builder's single-parameter non-static methods
+   * @param property the property to match
+   * @param prefix the naming convention to try
+   * @return the matching method, or empty
+   */
+  private Optional<ExecutableElement> findFieldFunction(
+      List<ExecutableElement> fieldFunctions,
+      JavaLangAnalyser.ReadableProperty property,
+      String prefix) {
+    String expected =
+        prefix.isEmpty() ? property.name() : prefix + StringUtils.capitalize(property.name());
+    return fieldFunctions.stream()
+        .filter(
+            method ->
+                expected.contentEquals(method.getSimpleName())
+                    && context.isSameType(
+                        method.getParameters().get(0).asType(), property.typeMirror()))
+        .findFirst();
   }
 
   /**
@@ -302,12 +470,12 @@ public final class BuilderScopeResolver {
   }
 
   /**
-   * Resolves the instantiation path for a builder instance seeded with a value of the referenced
+   * Resolves the instantiation path for a builder instance prefilled with a value of the referenced
    * type: a static factory accepting the type when the builder offers one, the constructor
    * accepting the type otherwise.
    *
    * @param builderTypeElement the candidate builder type to inspect
-   * @param expectedType the referenced type to seed the builder with
+   * @param expectedType the referenced type to prefill the builder with
    * @return the instantiation to emit, or empty when the builder offers neither
    */
   private Optional<BuilderInstantiation> resolveFuncForPrefilledBuilder(
@@ -336,7 +504,9 @@ public final class BuilderScopeResolver {
       TypeElement referencedType, TypeName referencedTypeName) {
     Optional<ResolvedBuilder> nestedBuilder =
         nestedBuilderCandidates(referencedType).stream()
-            .map(candidate -> resolveByBuilderContract(candidate, referencedTypeName))
+            .map(
+                candidate ->
+                    resolveByBuilderContract(candidate, referencedType, referencedTypeName))
             .flatMap(Optional::stream)
             .findFirst();
     return nestedBuilder.or(() -> resolveAnchoredBuilder(referencedType, referencedTypeName));
@@ -407,14 +577,17 @@ public final class BuilderScopeResolver {
       if (!context.isMemberAccessibleFromBuilderPackage(builderElement) || buildMethod.isEmpty()) {
         continue;
       }
+      BuilderInstantiation funcForEmptyBuilder =
+          new BuilderInstantiation.AnchorFactoryCall(
+              referencedTypeName, factory.getSimpleName().toString());
       Optional<BuilderInstantiation> funcForPrefilledBuilder =
-          resolveAnchoredPrefilledBuilder(referencedType, referencedTypeName, builderElement);
+          resolveAnchoredPrefilledBuilder(
+              referencedType, referencedTypeName, builderElement, funcForEmptyBuilder);
       if (funcForPrefilledBuilder.isPresent()) {
         return Optional.of(
             new ResolvedBuilder(
                 JavaLangMapper.mapToTypeName(builderElement, context),
-                new BuilderInstantiation.AnchorFactoryCall(
-                    referencedTypeName, factory.getSimpleName().toString()),
+                funcForEmptyBuilder,
                 funcForPrefilledBuilder.get(),
                 buildMethod.get().getSimpleName().toString()));
       }
@@ -423,38 +596,80 @@ public final class BuilderScopeResolver {
   }
 
   /**
-   * Resolves the seeded-instantiation path for an anchored builder: the builder's own contract path
-   * first, then a static factory on the referenced type accepting it (e.g. {@code
+   * Resolves the prefilled-instantiation path for an anchored builder: the builder's own contract
+   * path first, then a static factory on the referenced type accepting it (e.g. {@code
    * Person.builder(person)}), then an instance method on the value (e.g. {@code
-   * person.toBuilder()}).
+   * person.toBuilder()}), then prefilling by field functions.
    *
    * @param referencedType the type element being referenced
    * @param referencedTypeName the referenced type, passed to the contract check
    * @param builderElement the anchored builder type
-   * @return the instantiation to emit, or empty when no seeded path exists
+   * @param funcForEmptyBuilder how the empty builder is obtained, reused by field-function
+   *     prefilling
+   * @return the instantiation to emit, or empty when no prefilled path exists
    */
   private Optional<BuilderInstantiation> resolveAnchoredPrefilledBuilder(
-      TypeElement referencedType, TypeName referencedTypeName, TypeElement builderElement) {
+      TypeElement referencedType,
+      TypeName referencedTypeName,
+      TypeElement builderElement,
+      BuilderInstantiation funcForEmptyBuilder) {
+    TypeName builderTypeName = JavaLangMapper.mapToTypeName(builderElement, context);
     Optional<BuilderInstantiation> func =
         resolveFuncForPrefilledBuilder(builderElement, referencedTypeName);
-    if (func.isPresent()) {
-      return func;
+    if (func.isEmpty()) {
+      func = resolveAnchoredStaticFactory(referencedType, referencedTypeName, builderTypeName);
     }
-    TypeName builderTypeName = JavaLangMapper.mapToTypeName(builderElement, context);
-    func =
-        JavaLangAnalyser.findMethodsStatic(
-                referencedType, List.of(referencedTypeName), builderTypeName, context)
-            .stream()
-            .min(
-                Comparator.comparingInt(
-                    method -> "builder".contentEquals(method.getSimpleName()) ? 0 : 1))
-            .map(
-                method ->
-                    new BuilderInstantiation.AnchorFactoryCall(
-                        referencedTypeName, method.getSimpleName().toString()));
-    if (func.isPresent()) {
-      return func;
+    if (func.isEmpty()) {
+      func = resolveAnchoredInstanceFactory(referencedType, referencedTypeName, builderTypeName);
     }
+    if (func.isEmpty() && context.getConfiguration().shouldUseFieldFunctionPrefill()) {
+      func =
+          resolveFieldFunctionPrefill(
+              referencedType,
+              builderElement,
+              builderTypeName,
+              referencedTypeName,
+              funcForEmptyBuilder);
+    }
+    return func;
+  }
+
+  /**
+   * Resolves the prefilled path as a static factory anchored on the referenced type accepting the
+   * value (e.g. {@code Person.builder(person)}); a conventionally named {@code builder} method wins
+   * over other names.
+   *
+   * @param referencedType the type element being referenced
+   * @param referencedTypeName the referenced type, the factory's parameter
+   * @param builderTypeName the builder type the factory must return
+   * @return the instantiation calling the anchored factory, or empty
+   */
+  private Optional<BuilderInstantiation> resolveAnchoredStaticFactory(
+      TypeElement referencedType, TypeName referencedTypeName, TypeName builderTypeName) {
+    return JavaLangAnalyser.findMethodsStatic(
+            referencedType, List.of(referencedTypeName), builderTypeName, context)
+        .stream()
+        .min(
+            Comparator.comparingInt(
+                method -> "builder".contentEquals(method.getSimpleName()) ? 0 : 1))
+        .map(
+            method ->
+                new BuilderInstantiation.AnchorFactoryCall(
+                    referencedTypeName, method.getSimpleName().toString()));
+  }
+
+  /**
+   * Resolves the prefilled path as an instance method on the value returning the builder (e.g.
+   * {@code person.toBuilder()}); a conventionally named {@code toBuilder} method wins over other
+   * names.
+   *
+   * @param referencedType the type element being referenced
+   * @param referencedTypeName the referenced type, the instance's type
+   * @param builderTypeName the builder type the method must return
+   * @return the instantiation calling the instance factory, or empty
+   */
+  private Optional<BuilderInstantiation> resolveAnchoredInstanceFactory(
+      TypeElement referencedType, TypeName referencedTypeName, TypeName builderTypeName) {
     return JavaLangAnalyser.findMethods(referencedType, List.of(), builderTypeName, context)
         .stream()
         .filter(JavaLangAnalyser::isNotStatic)

@@ -15,6 +15,9 @@
  */
 package org.javahelpers.simple.builders.processor.model.type;
 
+import java.util.List;
+import org.apache.commons.lang3.StringUtils;
+
 /**
  * The instantiation path generated code uses to obtain an instance of a resolved builder.
  *
@@ -111,5 +114,69 @@ public sealed interface BuilderInstantiation {
     public String methodReference(String builderTypeExpression) {
       return anchor.getFullQualifiedName() + "::" + methodName;
     }
+  }
+
+  /**
+   * Instantiation by prefilling the builder through its field functions: a private static {@code
+   * prefill<Builder>} method on the generated builder obtains an empty instance via {@code
+   * funcForEmptyBuilder} and calls one field function per prefilled property of the source value.
+   * {@link #instantiationCode} renders the call to that generated method.
+   *
+   * @param builderType the resolved builder type (return type of the prefilling method)
+   * @param sourceType the referenced type the builder is prefilled from
+   * @param funcForEmptyBuilder how the prefilling method obtains the empty builder
+   * @param builderMethodPrefix the field-function prefix recognized on the builder ({@code ""} for
+   *     {@code name(v)}, {@code set} for {@code setName(v)}, or a detected convention like {@code
+   *     with})
+   * @param prefilledFields the properties to prefill, in the order of the source's properties
+   */
+  record PrefillCall(
+      TypeName builderType,
+      TypeName sourceType,
+      BuilderInstantiation funcForEmptyBuilder,
+      String builderMethodPrefix,
+      List<Field> prefilledFields)
+      implements BuilderInstantiation {
+
+    @Override
+    public String instantiationCode(String builderTypeExpression, String arguments) {
+      return methodName() + "(" + arguments + ")";
+    }
+
+    @Override
+    public String methodReference(String builderTypeExpression) {
+      return "this::" + methodName();
+    }
+
+    /**
+     * The name of the prefilling method generated on the target builder.
+     *
+     * @return {@code prefill} followed by the builder's class name
+     */
+    public String methodName() {
+      return "prefill" + builderType.getClassName();
+    }
+
+    /**
+     * The builder's field function for a prefilled field: {@code <property>} when the prefix is
+     * empty, otherwise {@code <prefix><Property>} (e.g. {@code setName} or {@code withName}).
+     *
+     * @param field the prefilled field
+     * @return the field function's name on the builder
+     */
+    public String builderMethodFor(Field field) {
+      return builderMethodPrefix.isEmpty()
+          ? field.property()
+          : builderMethodPrefix + StringUtils.capitalize(field.property());
+    }
+
+    /**
+     * One property prefilled inside the prefilling method: {@code
+     * builder.<fieldFunction>(value.<accessor>)}.
+     *
+     * @param property the property name (e.g. {@code name})
+     * @param accessor how the property is read from the value (e.g. {@code name()} or {@code name})
+     */
+    public record Field(String property, String accessor) {}
   }
 }
