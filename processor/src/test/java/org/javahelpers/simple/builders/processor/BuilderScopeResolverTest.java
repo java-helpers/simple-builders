@@ -843,6 +843,87 @@ class BuilderScopeResolverTest {
   }
 
   @Test
+  void resolverUsageScope_ResolvesBuilderWithInheritedBuildMethod() {
+    ResolverProbeProcessor.reset();
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelper { public LibHelper() {} }
+                    """),
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelperBase {
+                      public LibHelper toTarget() { return new LibHelper(); }
+                    }
+                    """),
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelperBuilder extends LibHelperBase {
+                      public LibHelperBuilder() {}
+                      public LibHelperBuilder(LibHelper value) {}
+                    }
+                    """));
+
+    assertThat(compilation).succeeded();
+    // Inherited members count for the contract: the build method declared on the superclass is
+    // selected and its name recorded
+    assertEquals("toTarget", ResolverProbeProcessor.contractResult.get().buildMethodName());
+  }
+
+  @Test
+  void resolverUsageScope_RejectsPackagePrivateBuildMethodForOtherPackageBuilder() {
+    ResolverProbeProcessor.reset();
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelper { public LibHelper() {} }
+                    """),
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelperBuilder {
+                      public LibHelperBuilder() {}
+                      public LibHelperBuilder(LibHelper value) {}
+                      LibHelper toTarget() { return new LibHelper(); }
+                    }
+                    """));
+
+    assertThat(compilation).succeeded();
+    // The probe generates builders in the default package, so a package-private build method in
+    // lib is not accessible and the contract fails
+    assertEquals(Optional.empty(), ResolverProbeProcessor.contractResult);
+  }
+
+  @Test
+  void resolverUsageScope_RejectsStringBuilderForString() {
+    ResolverProbeProcessor.reset();
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelper { public LibHelper() {} }
+                    """));
+
+    assertThat(compilation).succeeded();
+    // StringBuilder satisfies the instantiation contract for String, but its only parameterless
+    // method returning String is toString() - an Object signature, not a build method
+    assertEquals(Optional.empty(), ResolverProbeProcessor.contractResultString);
+  }
+
+  @Test
   void resolverUsageScope_RejectsBuilderWithoutParameterlessMethodReturningTarget() {
     ResolverProbeProcessor.reset();
     Compilation compilation =
@@ -913,6 +994,7 @@ class BuilderScopeResolverTest {
     private static Optional<ResolvedBuilder> usageWithExistingDisabled;
     private static Optional<ResolvedBuilder> usageGeneratedWithExistingDisabled;
     private static Optional<ResolvedBuilder> contractResult;
+    private static Optional<ResolvedBuilder> contractResultString;
 
     private boolean captured;
 
@@ -931,6 +1013,7 @@ class BuilderScopeResolverTest {
       usageWithExistingDisabled = null;
       usageGeneratedWithExistingDisabled = null;
       contractResult = null;
+      contractResultString = null;
     }
 
     @Override
@@ -1006,6 +1089,12 @@ class BuilderScopeResolverTest {
       context.initProcessingTarget(new ProcessingTarget(usageOnlyConfiguration("lib"), ""));
       resolver.resetGeneratedBuilders();
       contractResult = resolver.resolveUsableBuilderType(helper);
+      // Same probe for java.lang.String: StringBuilder must not resolve because its only
+      // parameterless method returning String is toString(), an Object signature
+      TypeElement stringElement =
+          processingEnv.getElementUtils().getTypeElement("java.lang.String");
+      context.initProcessingTarget(new ProcessingTarget(usageOnlyConfiguration("java.lang"), ""));
+      contractResultString = resolver.resolveUsableBuilderType(stringElement);
       captured = true;
       return false;
     }

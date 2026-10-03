@@ -514,7 +514,7 @@ public final class BuilderScopeResolver {
         .filter(
             method ->
                 JavaLangAnalyser.isNotStatic(method)
-                    && !JavaLangAnalyser.isMethodOfObjectClass(method, context))
+                    && JavaLangAnalyser.isNoMethodOfObjectClass(method, context))
         .min(
             Comparator.comparingInt(
                     (ExecutableElement method) ->

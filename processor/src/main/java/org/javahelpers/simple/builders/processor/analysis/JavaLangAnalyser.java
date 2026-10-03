@@ -58,37 +58,23 @@ public final class JavaLangAnalyser {
   private JavaLangAnalyser() {}
 
   /**
-   * Helper function to filter methods from {@code java.lang.Object}.
+   * Helper function to filter methods from {@code java.lang.Object}. The comparison is
+   * signature-based, so overrides like {@code StringBuilder#toString} count as Object methods too.
    *
    * @param mth ExecutableElement to be validated
-   * @return {@code true}, if it is no method from java.lang.Object
-   */
-  public static boolean isNoMethodOfObjectClass(ExecutableElement mth) {
-    String simpleNameOfParent = mth.getEnclosingElement().getSimpleName().toString();
-    return !(Strings.CS.equals("java.lang.Object", simpleNameOfParent)
-        || Strings.CS.equals("Object", simpleNameOfParent));
-  }
-
-  /**
-   * Checks whether the method's signature matches a method declared on {@link java.lang.Object}
-   * (e.g. {@code toString()}). Unlike {@link #isNoMethodOfObjectClass}, which filters by declaring
-   * type, this compares the signature and therefore also matches overrides like {@code
-   * StringBuilder#toString}.
-   *
-   * @param method ExecutableElement to be validated
    * @param context the processing context, used to resolve {@link java.lang.Object}'s methods
-   * @return {@code true}, if the method has the signature of an {@link java.lang.Object} method
+   * @return {@code true}, if it is no method with the signature of a java.lang.Object method
    */
-  public static boolean isMethodOfObjectClass(ExecutableElement method, ProcessingContext context) {
+  public static boolean isNoMethodOfObjectClass(ExecutableElement mth, ProcessingContext context) {
     TypeElement objectElement = context.getTypeElement(Object.class.getCanonicalName());
     if (objectElement == null) {
-      return false;
+      return true;
     }
     return ElementFilter.methodsIn(objectElement.getEnclosedElements()).stream()
-        .anyMatch(
+        .noneMatch(
             objectMethod ->
-                objectMethod.getSimpleName().equals(method.getSimpleName())
-                    && objectMethod.getParameters().size() == method.getParameters().size());
+                objectMethod.getSimpleName().equals(mth.getSimpleName())
+                    && objectMethod.getParameters().size() == mth.getParameters().size());
   }
 
   /**
@@ -102,7 +88,7 @@ public final class JavaLangAnalyser {
   public static List<ExecutableElement> findAllPossibleSettersOfClass(
       TypeElement typeElement, ProcessingContext context) {
     return ElementFilter.methodsIn(context.getAllMembers(typeElement)).stream()
-        .filter(JavaLangAnalyser::isNoMethodOfObjectClass)
+        .filter(mth -> isNoMethodOfObjectClass(mth, context))
         .filter(JavaLangAnalyser::isSetterForField)
         .sorted(
             (m1, m2) -> {
