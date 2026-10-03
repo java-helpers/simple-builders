@@ -440,6 +440,9 @@ public final class JavaLangAnalyser {
    */
   public static List<ReadableProperty> findReadableProperties(
       TypeElement typeElement, ProcessingContext context) {
+    if (typeElement == null) {
+      return List.of();
+    }
     Map<String, ReadableProperty> properties = new LinkedHashMap<>();
     for (RecordComponentElement component :
         Optional.ofNullable(typeElement.getRecordComponents()).orElse(List.of())) {
