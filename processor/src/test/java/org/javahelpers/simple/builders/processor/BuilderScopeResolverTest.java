@@ -40,6 +40,7 @@ import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
+import javax.tools.JavaFileObject;
 import org.javahelpers.simple.builders.core.enums.OptionState;
 import org.javahelpers.simple.builders.processor.analysis.BuilderScopeResolver;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
@@ -147,10 +148,9 @@ class BuilderScopeResolverTest {
       public class LibHelper { public LibHelper() {} }
       """;
 
-  @ParameterizedTest(name = "{0}")
+  @ParameterizedTest(name = "{argumentSetName}")
   @MethodSource("resolvedContractVariants")
   void resolverUsageScope_ResolvesContractVariants(
-      String name,
       String builderSource,
       Supplier<Optional<ResolvedBuilder>> probeResult,
       String expectedBuilder,
@@ -174,7 +174,7 @@ class BuilderScopeResolverTest {
   static Stream<Arguments> resolvedContractVariants() {
     return Stream.of(
         // Usage scope without @SimpleBuilder annotation — builder resolved by contract check
-        Arguments.of(
+        Arguments.argumentSet(
             "BuilderWithoutSimpleBuilderAnnotation",
             """
             package lib;
@@ -192,7 +192,7 @@ class BuilderScopeResolverTest {
             null),
         // No accessible constructors: both instantiation paths come from the static
         // factories — the second empty factory exercises the preferred-name ranking
-        Arguments.of(
+        Arguments.argumentSet(
             "StaticFactories",
             """
             package lib;
@@ -212,7 +212,7 @@ class BuilderScopeResolverTest {
             "of"),
         // Package-private contract members are accessible when the generated builder is in
         // the same package (builderPackage "lib")
-        Arguments.of(
+        Arguments.argumentSet(
             "PackagePrivateMembers_SamePackage",
             """
             package lib;
@@ -230,10 +230,10 @@ class BuilderScopeResolverTest {
             null));
   }
 
-  @ParameterizedTest(name = "{0}")
+  @ParameterizedTest(name = "{argumentSetName}")
   @MethodSource("rejectedContractVariants")
   void resolverUsageScope_RejectsContractVariants(
-      String name, String builderSource, Supplier<Optional<ResolvedBuilder>> probeResult) {
+      String builderSource, Supplier<Optional<ResolvedBuilder>> probeResult) {
     assertThat(compileWithBuilder(builderSource)).succeeded();
     assertEquals(Optional.empty(), probeResult.get());
   }
@@ -242,7 +242,7 @@ class BuilderScopeResolverTest {
     return Stream.of(
         // ctor(T) + build() but no no-arg ctor: generated consumer code calls `new
         // LibHelperBuilder()`, so the builder must not qualify
-        Arguments.of(
+        Arguments.argumentSet(
             "BuilderWithoutNoArgConstructor",
             """
             package lib;
@@ -253,7 +253,7 @@ class BuilderScopeResolverTest {
             """,
             probe(() -> ResolverProbeProcessor.usageWithoutAnnotation)),
         // The no-arg ctor exists but is private: generated code could not call it
-        Arguments.of(
+        Arguments.argumentSet(
             "BuilderWithPrivateConstructor",
             """
             package lib;
@@ -266,7 +266,7 @@ class BuilderScopeResolverTest {
             probe(() -> ResolverProbeProcessor.usageWithoutAnnotation)),
         // Package-private contract members are not accessible from a different package
         // (builderPackage unset)
-        Arguments.of(
+        Arguments.argumentSet(
             "PackagePrivateMembers_OtherPackage",
             """
             package lib;
@@ -280,10 +280,14 @@ class BuilderScopeResolverTest {
   }
 
   private static Compilation compileWithBuilder(String builderSource) {
+    return compileWithSources(LIB_HELPER, builderSource);
+  }
+
+  private static Compilation compileWithSources(String... sources) {
     return Compiler.javac()
         .withProcessors(new ResolverProbeProcessor())
         .compile(
-            ProcessorTestUtils.forSource(LIB_HELPER), ProcessorTestUtils.forSource(builderSource));
+            Stream.of(sources).map(ProcessorTestUtils::forSource).toArray(JavaFileObject[]::new));
   }
 
   private static Supplier<Optional<ResolvedBuilder>> probe(
@@ -399,34 +403,6 @@ class BuilderScopeResolverTest {
   }
 
   @Test
-  void resolverUsageScope_IgnoresInTypeAnchorWithoutContract() {
-    Compilation compilation =
-        Compiler.javac()
-            .withProcessors(new ResolverProbeProcessor())
-            .compile(
-                ProcessorTestUtils.forSource(
-                    """
-                    package lib;
-                    public class LibHelper {
-                      public static builders.NoContract builder() {
-                        return new builders.NoContract();
-                      }
-                    }
-                    """),
-                ProcessorTestUtils.forSource(
-                    """
-                    package builders;
-                    public class NoContract {
-                      public NoContract() {}
-                    }
-                    """));
-
-    assertThat(compilation).succeeded();
-    // The anchored type does not satisfy the contract, so resolution falls through
-    assertEquals(Optional.empty(), ResolverProbeProcessor.usageWithoutAnnotation);
-  }
-
-  @Test
   void resolverUsageScope_PrefersBuilderNamedInTypeFactory() {
     Compilation compilation =
         Compiler.javac()
@@ -536,6 +512,120 @@ class BuilderScopeResolverTest {
     assertEquals("toBuilder", prefilled.methodName());
   }
 
+  /** Fixtures where no contract-satisfying builder is reachable from the referenced type. */
+  @ParameterizedTest(name = "{argumentSetName}")
+  @MethodSource("fallBackVariants")
+  void resolverUsageScope_FallsBackToClasspathCandidate(String[] sources) {
+    assertThat(compileWithSources(sources)).succeeded();
+    assertEquals(Optional.empty(), ResolverProbeProcessor.usageWithoutAnnotation);
+  }
+
+  static Stream<Arguments> fallBackVariants() {
+    return Stream.of(
+        // The anchored type does not satisfy the contract, so resolution falls through
+        Arguments.argumentSet(
+            "InTypeAnchorWithoutContract",
+            (Object)
+                new String[] {
+                  """
+              package lib;
+              public class LibHelper {
+                public static builders.NoContract builder() {
+                  return new builders.NoContract();
+                }
+              }
+              """,
+                  """
+              package builders;
+              public class NoContract {
+                public NoContract() {}
+              }
+              """
+                }),
+        // Delombok output of @Builder without toBuilder: builder() anchors the empty path,
+        // but no seeded path exists, so the anchored candidate is rejected
+        Arguments.argumentSet(
+            "LombokBuilderShapeWithoutToBuilder",
+            (Object)
+                new String[] {
+                  """
+              package lib;
+              public class LibHelper {
+                public static LibHelperBuilder builder() { return new LibHelperBuilder(); }
+                public static class LibHelperBuilder {
+                  LibHelperBuilder() {}
+                  public LibHelper build() { return new LibHelper(); }
+                }
+              }
+              """
+                }),
+        // org.inferred.freebuilder generated shape: nested Builder with a public ctor and
+        // mergeFrom(T) — mergeFrom is an instance method, so the contract's seeded path fails
+        Arguments.argumentSet(
+            "FreeBuilderShape",
+            (Object)
+                new String[] {
+                  """
+              package lib;
+              public class LibHelper {
+                public static class Builder {
+                  public Builder() {}
+                  public Builder mergeFrom(LibHelper value) { return this; }
+                  public LibHelper build() { return new LibHelper(); }
+                }
+              }
+              """
+                }),
+        // com.google.auto.value generated shape: create() anchors a builder on the generated
+        // sibling, but AutoValue offers no seeded path (no ctor(T), no toBuilder)
+        Arguments.argumentSet(
+            "AutoValueShape",
+            (Object)
+                new String[] {
+                  """
+              package lib;
+              public class LibHelper {
+                public static AutoValue_LibHelper.Builder create() {
+                  return new AutoValue_LibHelper.Builder();
+                }
+              }
+              """,
+                  """
+              package lib;
+              public class AutoValue_LibHelper {
+                public static class Builder {
+                  Builder() {}
+                  public LibHelper build() { return new LibHelper(); }
+                }
+              }
+              """
+                }),
+        // org.immutables generated shape: builder() and toBuilder() live on the generated
+        // sibling ImmutableLibHelper, unreachable from the referenced type itself
+        Arguments.argumentSet(
+            "ImmutablesShape",
+            (Object)
+                new String[] {
+                  """
+              package lib;
+              public class LibHelper {
+                public LibHelper() {}
+              }
+              """,
+                  """
+              package lib;
+              public class ImmutableLibHelper {
+                public static Builder builder() { return new Builder(); }
+                public Builder toBuilder() { return new Builder(); }
+                public static class Builder {
+                  public Builder() {}
+                  public ImmutableLibHelper build() { return new ImmutableLibHelper(); }
+                }
+              }
+              """
+                }));
+  }
+
   @Test
   void resolverUsageScope_ResolvesNestedTypeBuilder() {
     Compilation compilation =
@@ -596,119 +686,6 @@ class BuilderScopeResolverTest {
         assertInstanceOf(
             BuilderInstantiation.ValueFactoryCall.class, resolved.funcForPrefilledBuilder());
     assertEquals("toBuilder", prefilled.methodName());
-  }
-
-  @Test
-  void resolverUsageScope_LombokBuilderShapeWithoutToBuilderFallsBack() {
-    Compilation compilation =
-        Compiler.javac()
-            .withProcessors(new ResolverProbeProcessor())
-            .compile(
-                ProcessorTestUtils.forSource(
-                    """
-                    package lib;
-                    public class LibHelper {
-                      public static LibHelperBuilder builder() { return new LibHelperBuilder(); }
-                      public static class LibHelperBuilder {
-                        LibHelperBuilder() {}
-                        public LibHelper build() { return new LibHelper(); }
-                      }
-                    }
-                    """));
-
-    assertThat(compilation).succeeded();
-    // Delombok output of @Builder without toBuilder: builder() anchors the empty path, but
-    // no seeded path exists, so the anchored candidate is rejected
-    assertEquals(Optional.empty(), ResolverProbeProcessor.usageWithoutAnnotation);
-  }
-
-  @Test
-  void resolverUsageScope_FreeBuilderShapeFallsBack() {
-    Compilation compilation =
-        Compiler.javac()
-            .withProcessors(new ResolverProbeProcessor())
-            .compile(
-                ProcessorTestUtils.forSource(
-                    """
-                    package lib;
-                    public class LibHelper {
-                      public static class Builder {
-                        public Builder() {}
-                        public Builder mergeFrom(LibHelper value) { return this; }
-                        public LibHelper build() { return new LibHelper(); }
-                      }
-                    }
-                    """));
-
-    assertThat(compilation).succeeded();
-    // org.inferred.freebuilder generated shape: nested Builder with a public ctor and
-    // mergeFrom(T) — mergeFrom is an instance method, so the contract's seeded path fails
-    // and resolution falls back to the classpath candidate (absent here)
-    assertEquals(Optional.empty(), ResolverProbeProcessor.usageWithoutAnnotation);
-  }
-
-  @Test
-  void resolverUsageScope_AutoValueShapeFallsBack() {
-    Compilation compilation =
-        Compiler.javac()
-            .withProcessors(new ResolverProbeProcessor())
-            .compile(
-                ProcessorTestUtils.forSource(
-                    """
-                    package lib;
-                    public class LibHelper {
-                      public static AutoValue_LibHelper.Builder create() {
-                        return new AutoValue_LibHelper.Builder();
-                      }
-                    }
-                    """),
-                ProcessorTestUtils.forSource(
-                    """
-                    package lib;
-                    public class AutoValue_LibHelper {
-                      public static class Builder {
-                        Builder() {}
-                        public LibHelper build() { return new LibHelper(); }
-                      }
-                    }
-                    """));
-
-    assertThat(compilation).succeeded();
-    // com.google.auto.value generated shape: create() anchors a builder on the generated
-    // sibling, but AutoValue offers no seeded path (no ctor(T), no toBuilder)
-    assertEquals(Optional.empty(), ResolverProbeProcessor.usageWithoutAnnotation);
-  }
-
-  @Test
-  void resolverUsageScope_ImmutablesShapeFallsBack() {
-    Compilation compilation =
-        Compiler.javac()
-            .withProcessors(new ResolverProbeProcessor())
-            .compile(
-                ProcessorTestUtils.forSource(
-                    """
-                    package lib;
-                    public class LibHelper {
-                      public LibHelper() {}
-                    }
-                    """),
-                ProcessorTestUtils.forSource(
-                    """
-                    package lib;
-                    public class ImmutableLibHelper {
-                      public static Builder builder() { return new Builder(); }
-                      public Builder toBuilder() { return new Builder(); }
-                      public static class Builder {
-                        public Builder() {}
-                        public ImmutableLibHelper build() { return new ImmutableLibHelper(); }
-                      }
-                    }
-                    """));
-
-    assertThat(compilation).succeeded();
-    // org.immutables generated shape: builder() and toBuilder() live on the generated
-    // sibling ImmutableLibHelper, unreachable from the referenced type itself
-    assertEquals(Optional.empty(), ResolverProbeProcessor.usageWithoutAnnotation);
   }
 
   @Test
