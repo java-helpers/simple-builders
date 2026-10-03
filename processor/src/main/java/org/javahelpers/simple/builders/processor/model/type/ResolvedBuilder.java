@@ -62,4 +62,15 @@ public record ResolvedBuilder(
       BuilderInstantiation funcForPrefilledBuilder) {
     this(typeName, funcForEmptyBuilder, funcForPrefilledBuilder, "build");
   }
+
+  /**
+   * Renders the terminal call producing the built value: {@code
+   * builderExpression.buildMethodName()}.
+   *
+   * @param builderExpression expression evaluating to the builder instance (e.g. {@code builder})
+   * @return the build call code
+   */
+  public String buildCall(String builderExpression) {
+    return builderExpression + "." + buildMethodName + "()";
+  }
 }
