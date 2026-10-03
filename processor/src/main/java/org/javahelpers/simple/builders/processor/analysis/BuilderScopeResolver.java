@@ -355,7 +355,7 @@ public final class BuilderScopeResolver {
    * Candidate field-function prefixes ordered by how many properties each covers, most findings
    * first: {@code ""} (fluent {@code name(v)}) and {@code set} (JavaBeans) are always tried, any
    * other camel-case prefix found on the builder's single-parameter methods is only trusted when
-   * several methods share it.
+   * enough methods share it - one finding per property, at least two when there are several.
    *
    * @param properties the readable properties to cover
    * @param fieldFunctions the builder's single-parameter non-static methods
@@ -372,8 +372,9 @@ public final class BuilderScopeResolver {
       }
     }
     List<String> prefixes = new ArrayList<>(List.of("", "set"));
+    int minOccurrences = Math.min(2, properties.size());
     prefixCounts.entrySet().stream()
-        .filter(entry -> entry.getValue() >= 2)
+        .filter(entry -> entry.getValue() >= minOccurrences)
         .map(Map.Entry::getKey)
         .filter(prefix -> !prefixes.contains(prefix))
         .forEach(prefixes::add);

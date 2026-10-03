@@ -600,7 +600,7 @@ class BuilderScopeResolverTest {
   }
 
   @Test
-  void resolverUsageScope_ResolvesWithoutSeededPathWhenPrefixOccursOnce() {
+  void resolverUsageScope_ResolvesDetectedPrefixForSingleProperty() {
     Compilation compilation =
         Compiler.javac()
             .withProcessors(new ResolverProbeProcessor())
@@ -623,9 +623,12 @@ class BuilderScopeResolverTest {
                     """));
 
     assertThat(compilation).succeeded();
-    // A prefix seen on a single method is not trusted as a convention: no seeded path
+    // For a single-property type, one prefixed method is enough evidence for the convention
     ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
-    assertEquals(Optional.empty(), resolved.funcForPrefilledBuilder());
+    BuilderInstantiation.FieldSeedingCall prefilled =
+        assertInstanceOf(
+            BuilderInstantiation.FieldSeedingCall.class, resolved.funcForPrefilledBuilder().get());
+    assertEquals("put", prefilled.builderMethodPrefix());
   }
 
   @Test
