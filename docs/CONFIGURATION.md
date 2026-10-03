@@ -744,9 +744,14 @@ comma-separated, each listed package includes all of its subpackages, and matchi
 case.
 
 Before constructing a candidate name, the processor checks the referenced type
-itself for an accessible static parameterless method returning a builder type
-— a method named `builder()` is preferred — whose return type must satisfy the
-same contract. This in-type anchor wins over the same-package candidate below.
+itself for an anchored builder — the type's own declaration wins over the
+same-package candidate below. Accessible nested types satisfying the contract
+are checked first (e.g. `Person.PersonBuilder` or `Person.Builder`), then a
+static parameterless factory on the type — `builder()` preferred — whose return
+type must be accessible and declare a no-arg `build()` method (Lombok/Immutables
+style). The factory itself is the empty-instantiation path; the seeded path is
+the builder's own contract path, a static `builder(T)`-style method, or an
+instance method on the value like `toBuilder()`.
 
 The processor constructs the candidate builder name using `builderUsageSuffix`
 (or `builderSuffix` if not configured) and verifies the builder contract: a way

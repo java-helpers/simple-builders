@@ -309,7 +309,31 @@ public final class JavaLangAnalyser {
         .toList();
   }
 
-  private static List<ExecutableElement> findMethods(
+  /**
+   * Finds accessible methods on the given type taking the expected parameter types, regardless of
+   * their return type and whether they are static.
+   *
+   * @param type the type element to inspect
+   * @param expectedParameterTypes the required parameter types
+   * @param context the processing context, used to access all members
+   * @return the matching methods, in declaration order
+   */
+  public static List<ExecutableElement> findMethods(
+      TypeElement type, List<TypeName> expectedParameterTypes, ProcessingContext context) {
+    return findMethods(type, expectedParameterTypes, mirror -> true, context);
+  }
+
+  /**
+   * Finds accessible methods on the given type taking the expected parameter types and returning
+   * the expected return type, whether they are static or instance methods.
+   *
+   * @param type the type element to inspect
+   * @param expectedParameterTypes the required parameter types
+   * @param expectedReturnType the required return type, or {@code null} for void-returning methods
+   * @param context the processing context, used to access all members
+   * @return the matching methods, in declaration order
+   */
+  public static List<ExecutableElement> findMethods(
       TypeElement type,
       List<TypeName> expectedParameterTypes,
       TypeName expectedReturnType,

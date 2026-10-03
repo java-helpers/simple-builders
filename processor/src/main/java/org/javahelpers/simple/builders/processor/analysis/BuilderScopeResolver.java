@@ -33,6 +33,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
+import javax.lang.model.util.ElementFilter;
 import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.core.PackageScopes;
@@ -99,9 +100,12 @@ public final class BuilderScopeResolver {
    *   <li>If the referenced type's builder is generated in the current processing round (registered
    *       via {@link #registerGeneratedBuilder}), the registered builder name is returned
    *       immediately — trusted without a classpath lookup or contract check.
-   *   <li>Otherwise, a static parameterless method on the referenced type itself returning a
-   *       contract-satisfying type (e.g. {@code builder()}) anchors the builder — the type's own
-   *       declaration wins over the same-package candidate.
+   *   <li>Otherwise, a builder anchored inside the referenced type itself wins over the
+   *       same-package candidate: first accessible nested types satisfying the builder contract
+   *       (e.g. {@code Person.PersonBuilder}), then static parameterless factory methods on the
+   *       type returning a builder type with a no-arg {@code build()} (e.g. {@code
+   *       Person.builder()}), with a seeded path on the type ({@code builder(T)}/{@code
+   *       toBuilder()}) or on the builder.
    *   <li>Otherwise, the candidate builder name is constructed using {@code builderUsageSuffix}
    *       (falling back to {@code builderSuffix} if not configured). The candidate is looked up on
    *       the classpath and returned if it satisfies the builder contract: an instantiation path
@@ -305,17 +309,72 @@ public final class BuilderScopeResolver {
   }
 
   /**
-   * Resolves a builder anchored inside the referenced type itself: an accessible static
-   * parameterless method on the type returning a type that satisfies the builder contract, like the
-   * Lombok/Immutables-style {@code Person.builder()} MapStruct also detects. The conventional
-   * {@code builder} method name wins over other candidate names; declaration order decides between
-   * equals.
+   * Resolves a builder anchored inside the referenced type itself, like the nested {@code
+   * Person.PersonBuilder} or the static {@code Person.builder()} factory that Lombok, Immutables or
+   * FreeBuilder produce. Nested types satisfying the full builder contract are checked first; then
+   * static parameterless factory methods on the type anchor the empty-instantiation path directly.
    *
    * @param referencedType the type element being referenced
    * @param referencedTypeName the referenced type, passed to the contract check
-   * @return the resolved builder, or empty when the type anchors no contract-satisfying builder
+   * @return the resolved builder, or empty when the type anchors no usable builder
    */
   private Optional<ResolvedBuilder> resolveInTypeBuilder(
+      TypeElement referencedType, TypeName referencedTypeName) {
+    Optional<ResolvedBuilder> nestedBuilder =
+        resolveNestedBuilder(referencedType, referencedTypeName);
+    if (nestedBuilder.isPresent()) {
+      return nestedBuilder;
+    }
+    return resolveAnchoredBuilder(referencedType, referencedTypeName);
+  }
+
+  /**
+   * Resolves a nested type of the referenced type satisfying the builder contract, like the {@code
+   * Person.PersonBuilder} or {@code Person.Builder} inner classes Lombok and FreeBuilder generate.
+   * Names built from the referenced type's simple name and the builder suffix rank first, the plain
+   * builder suffix second; declaration order decides between equals.
+   *
+   * @param referencedType the type element being referenced
+   * @param referencedTypeName the referenced type, passed to the contract check
+   * @return the resolved builder, or empty when no nested type satisfies the contract
+   */
+  private Optional<ResolvedBuilder> resolveNestedBuilder(
+      TypeElement referencedType, TypeName referencedTypeName) {
+    String builderSuffix = context.getConfiguration().getBuilderSuffix();
+    String preferredName = referencedType.getSimpleName() + builderSuffix;
+    List<TypeElement> nestedTypes =
+        ElementFilter.typesIn(context.getAllMembers(referencedType)).stream()
+            .filter(context::isMemberAccessibleFromBuilderPackage)
+            .sorted(
+                Comparator.comparingInt(
+                    nested ->
+                        preferredName.contentEquals(nested.getSimpleName())
+                            ? 0
+                            : builderSuffix.contentEquals(nested.getSimpleName()) ? 1 : 2))
+            .toList();
+    for (TypeElement nestedType : nestedTypes) {
+      Optional<ResolvedBuilder> resolved =
+          resolveByBuilderContract(
+              JavaLangMapper.mapToTypeName(nestedType, context), referencedTypeName);
+      if (resolved.isPresent()) {
+        return resolved;
+      }
+    }
+    return Optional.empty();
+  }
+
+  /**
+   * Resolves a builder obtained through a static parameterless factory method anchored on the
+   * referenced type itself (e.g. {@code Person.builder()}). The factory is the instantiation path;
+   * the returned type must be accessible and declare a no-arg {@code build()} method returning the
+   * referenced type. The conventional {@code builder} method name wins over other candidate names;
+   * declaration order decides between equals.
+   *
+   * @param referencedType the type element being referenced
+   * @param referencedTypeName the referenced type, matched against {@code build()}'s return type
+   * @return the resolved builder, or empty when no factory anchors a usable builder
+   */
+  private Optional<ResolvedBuilder> resolveAnchoredBuilder(
       TypeElement referencedType, TypeName referencedTypeName) {
     List<ExecutableElement> factories =
         JavaLangAnalyser.findMethodsStatic(referencedType, List.of(), context).stream()
@@ -325,15 +384,70 @@ public final class BuilderScopeResolver {
                     method -> "builder".contentEquals(method.getSimpleName()) ? 0 : 1))
             .toList();
     for (ExecutableElement factory : factories) {
-      TypeElement candidate = (TypeElement) ((DeclaredType) factory.getReturnType()).asElement();
-      Optional<ResolvedBuilder> resolved =
-          resolveByBuilderContract(
-              JavaLangMapper.mapToTypeName(candidate, context), referencedTypeName);
-      if (resolved.isPresent()) {
-        return resolved;
+      TypeElement builderElement =
+          (TypeElement) ((DeclaredType) factory.getReturnType()).asElement();
+      if (!context.isMemberAccessibleFromBuilderPackage(builderElement)
+          || !JavaLangAnalyser.hasBuildMethodReturning(
+              builderElement, referencedTypeName, context)) {
+        continue;
+      }
+      Optional<BuilderInstantiation> funcForPrefilledBuilder =
+          resolveAnchoredPrefilledBuilder(referencedType, referencedTypeName, builderElement);
+      if (funcForPrefilledBuilder.isPresent()) {
+        return Optional.of(
+            new ResolvedBuilder(
+                JavaLangMapper.mapToTypeName(builderElement, context),
+                new BuilderInstantiation.AnchorFactoryCall(
+                    referencedTypeName, factory.getSimpleName().toString()),
+                funcForPrefilledBuilder.get()));
       }
     }
     return Optional.empty();
+  }
+
+  /**
+   * Resolves the seeded-instantiation path for an anchored builder: the builder's own contract path
+   * first, then a static factory on the referenced type accepting it (e.g. {@code
+   * Person.builder(person)}), then an instance method on the value (e.g. {@code
+   * person.toBuilder()}).
+   *
+   * @param referencedType the type element being referenced
+   * @param referencedTypeName the referenced type, passed to the contract check
+   * @param builderElement the anchored builder type
+   * @return the instantiation to emit, or empty when no seeded path exists
+   */
+  private Optional<BuilderInstantiation> resolveAnchoredPrefilledBuilder(
+      TypeElement referencedType, TypeName referencedTypeName, TypeElement builderElement) {
+    Optional<BuilderInstantiation> func =
+        resolveFuncForPrefilledBuilder(builderElement, referencedTypeName);
+    if (func.isPresent()) {
+      return func;
+    }
+    TypeName builderTypeName = JavaLangMapper.mapToTypeName(builderElement, context);
+    func =
+        JavaLangAnalyser.findMethodsStatic(
+                referencedType, List.of(referencedTypeName), builderTypeName, context)
+            .stream()
+            .min(
+                Comparator.comparingInt(
+                    method -> "builder".contentEquals(method.getSimpleName()) ? 0 : 1))
+            .map(
+                method ->
+                    new BuilderInstantiation.AnchorFactoryCall(
+                        referencedTypeName, method.getSimpleName().toString()));
+    if (func.isPresent()) {
+      return func;
+    }
+    return JavaLangAnalyser.findMethods(referencedType, List.of(), builderTypeName, context)
+        .stream()
+        .filter(JavaLangAnalyser::isNotStatic)
+        .min(
+            Comparator.comparingInt(
+                method -> "toBuilder".contentEquals(method.getSimpleName()) ? 0 : 1))
+        .map(
+            method ->
+                new BuilderInstantiation.ValueFactoryCall(
+                    referencedTypeName, method.getSimpleName().toString()));
   }
 
   /**

@@ -140,8 +140,11 @@ public final class JavaLangMapper {
     if (typeElement == null) {
       return null;
     }
-    return new TypeName(
-        context.getPackageName(typeElement), typeElement.getSimpleName().toString());
+    String packageName = context.getPackageName(typeElement);
+    String qualifiedName = typeElement.getQualifiedName().toString();
+    String className =
+        packageName.isEmpty() ? qualifiedName : qualifiedName.substring(packageName.length() + 1);
+    return new TypeName(packageName, className);
   }
 
   /**

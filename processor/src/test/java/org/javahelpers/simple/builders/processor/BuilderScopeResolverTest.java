@@ -374,10 +374,15 @@ class BuilderScopeResolverTest {
                     """));
 
     assertThat(compilation).succeeded();
-    // The type's own builder() declaration anchors the builder, even in another package
+    // The type's own builder() declaration anchors the builder, even in another package:
+    // the empty path calls LibHelper.builder(), the seeded path the builder's ctor
     ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
     assertEquals("builders.LibHelperBuilder", resolved.typeName().getFullQualifiedName());
-    assertInstanceOf(BuilderInstantiation.ConstructorCall.class, resolved.funcForEmptyBuilder());
+    BuilderInstantiation.AnchorFactoryCall empty =
+        assertInstanceOf(
+            BuilderInstantiation.AnchorFactoryCall.class, resolved.funcForEmptyBuilder());
+    assertEquals("builder", empty.methodName());
+    assertEquals("lib.LibHelper", empty.anchor().getFullQualifiedName());
     assertInstanceOf(
         BuilderInstantiation.ConstructorCall.class, resolved.funcForPrefilledBuilder());
   }
@@ -454,6 +459,65 @@ class BuilderScopeResolverTest {
     assertEquals(
         "builders.LibHelperBuilder",
         ResolverProbeProcessor.usageWithoutAnnotation.get().typeName().getFullQualifiedName());
+  }
+
+  @Test
+  void resolverUsageScope_ResolvesNestedTypeBuilder() {
+    ResolverProbeProcessor.reset();
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelper {
+                      public static class LibHelperBuilder {
+                        public LibHelperBuilder() {}
+                        public LibHelperBuilder(LibHelper value) {}
+                        public LibHelper build() { return new LibHelper(); }
+                      }
+                    }
+                    """));
+
+    assertThat(compilation).succeeded();
+    // The nested type satisfies the full contract and wins over any anchored method
+    ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
+    assertEquals("lib.LibHelper.LibHelperBuilder", resolved.typeName().getFullQualifiedName());
+    assertInstanceOf(BuilderInstantiation.ConstructorCall.class, resolved.funcForEmptyBuilder());
+    assertInstanceOf(
+        BuilderInstantiation.ConstructorCall.class, resolved.funcForPrefilledBuilder());
+  }
+
+  @Test
+  void resolverUsageScope_ResolvesToBuilderAsSeededPath() {
+    ResolverProbeProcessor.reset();
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelper {
+                      public static LibHelperBuilder builder() { return new LibHelperBuilder(); }
+                      public LibHelperBuilder toBuilder() { return new LibHelperBuilder(); }
+                      public static class LibHelperBuilder {
+                        private LibHelperBuilder() {}
+                        public LibHelper build() { return new LibHelper(); }
+                      }
+                    }
+                    """));
+
+    assertThat(compilation).succeeded();
+    // Lombok-style shape: builder() anchors the empty path, toBuilder() the seeded one
+    ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
+    assertEquals("lib.LibHelper.LibHelperBuilder", resolved.typeName().getFullQualifiedName());
+    assertInstanceOf(BuilderInstantiation.AnchorFactoryCall.class, resolved.funcForEmptyBuilder());
+    BuilderInstantiation.ValueFactoryCall prefilled =
+        assertInstanceOf(
+            BuilderInstantiation.ValueFactoryCall.class, resolved.funcForPrefilledBuilder());
+    assertEquals("toBuilder", prefilled.methodName());
   }
 
   private static final class ResolverProbeProcessor extends AbstractProcessor {
