@@ -347,6 +347,115 @@ class BuilderScopeResolverTest {
         ResolverProbeProcessor.usageDefaultSuffix.get().typeName().getFullQualifiedName());
   }
 
+  @Test
+  void resolverUsageScope_ResolvesBuilderAnchoredInsideType() {
+    ResolverProbeProcessor.reset();
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelper {
+                      public static builders.LibHelperBuilder builder() {
+                        return new builders.LibHelperBuilder();
+                      }
+                    }
+                    """),
+                ProcessorTestUtils.forSource(
+                    """
+                    package builders;
+                    public class LibHelperBuilder {
+                      public LibHelperBuilder() {}
+                      public LibHelperBuilder(lib.LibHelper value) {}
+                      public lib.LibHelper build() { return new lib.LibHelper(); }
+                    }
+                    """));
+
+    assertThat(compilation).succeeded();
+    // The type's own builder() declaration anchors the builder, even in another package
+    ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
+    assertEquals("builders.LibHelperBuilder", resolved.typeName().getFullQualifiedName());
+    assertInstanceOf(BuilderInstantiation.ConstructorCall.class, resolved.funcForEmptyBuilder());
+    assertInstanceOf(
+        BuilderInstantiation.ConstructorCall.class, resolved.funcForPrefilledBuilder());
+  }
+
+  @Test
+  void resolverUsageScope_IgnoresInTypeAnchorWithoutContract() {
+    ResolverProbeProcessor.reset();
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelper {
+                      public static builders.NoContract builder() {
+                        return new builders.NoContract();
+                      }
+                    }
+                    """),
+                ProcessorTestUtils.forSource(
+                    """
+                    package builders;
+                    public class NoContract {
+                      public NoContract() {}
+                    }
+                    """));
+
+    assertThat(compilation).succeeded();
+    // The anchored type does not satisfy the contract, so resolution falls through
+    assertEquals(Optional.empty(), ResolverProbeProcessor.usageWithoutAnnotation);
+  }
+
+  @Test
+  void resolverUsageScope_PrefersBuilderNamedInTypeFactory() {
+    ResolverProbeProcessor.reset();
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelper {
+                      public static builders.OtherBuilder other() {
+                        return new builders.OtherBuilder();
+                      }
+                      public static builders.LibHelperBuilder builder() {
+                        return new builders.LibHelperBuilder();
+                      }
+                    }
+                    """),
+                ProcessorTestUtils.forSource(
+                    """
+                    package builders;
+                    public class OtherBuilder {
+                      public OtherBuilder() {}
+                      public OtherBuilder(lib.LibHelper value) {}
+                      public lib.LibHelper build() { return new lib.LibHelper(); }
+                    }
+                    """),
+                ProcessorTestUtils.forSource(
+                    """
+                    package builders;
+                    public class LibHelperBuilder {
+                      public LibHelperBuilder() {}
+                      public LibHelperBuilder(lib.LibHelper value) {}
+                      public lib.LibHelper build() { return new lib.LibHelper(); }
+                    }
+                    """));
+
+    assertThat(compilation).succeeded();
+    // Both candidates satisfy the contract; the conventional builder() name wins
+    assertEquals(
+        "builders.LibHelperBuilder",
+        ResolverProbeProcessor.usageWithoutAnnotation.get().typeName().getFullQualifiedName());
+  }
+
   private static final class ResolverProbeProcessor extends AbstractProcessor {
     private static Optional<ResolvedBuilder> first;
     private static Optional<ResolvedBuilder> second;

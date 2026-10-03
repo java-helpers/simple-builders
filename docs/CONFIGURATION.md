@@ -743,6 +743,11 @@ Controls which packages may provide builders as nested builder helpers. Packages
 comma-separated, each listed package includes all of its subpackages, and matching ignores
 case.
 
+Before constructing a candidate name, the processor checks the referenced type
+itself for an accessible static parameterless method returning a builder type
+— a method named `builder()` is preferred — whose return type must satisfy the
+same contract. This in-type anchor wins over the same-package candidate below.
+
 The processor constructs the candidate builder name using `builderUsageSuffix`
 (or `builderSuffix` if not configured) and verifies the builder contract: a way
 to create an empty builder (a no-arg constructor or a static parameterless

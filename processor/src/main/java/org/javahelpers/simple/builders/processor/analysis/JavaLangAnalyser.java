@@ -294,21 +294,45 @@ public final class JavaLangAnalyser {
         .toList();
   }
 
+  /**
+   * Finds accessible static methods on the given type taking the expected parameter types,
+   * regardless of their return type.
+   *
+   * @param type the type element to inspect
+   * @param expectedParameterTypes the required parameter types
+   * @param context the processing context, used to access all members
+   * @return the matching methods, in declaration order
+   */
+  public static List<ExecutableElement> findMethodsStatic(
+      TypeElement type, List<TypeName> expectedParameterTypes, ProcessingContext context) {
+    return findMethods(type, expectedParameterTypes, mirror -> true, context).stream()
+        .filter(Predicate.not(JavaLangAnalyser::isNotStatic))
+        .toList();
+  }
+
   private static List<ExecutableElement> findMethods(
       TypeElement type,
       List<TypeName> expectedParameterTypes,
       TypeName expectedReturnType,
+      ProcessingContext context) {
+    Predicate<TypeMirror> returnTypeMatcher =
+        expectedReturnType == null
+            ? mirror -> mirror.getKind() == VOID
+            : mirror -> hasType(mirror, expectedReturnType);
+    return findMethods(type, expectedParameterTypes, returnTypeMatcher, context);
+  }
+
+  private static List<ExecutableElement> findMethods(
+      TypeElement type,
+      List<TypeName> expectedParameterTypes,
+      Predicate<TypeMirror> returnTypeMatcher,
       ProcessingContext context) {
     if (type == null) {
       return List.of();
     }
     return ElementFilter.methodsIn(context.getAllMembers(type)).stream()
         .filter(context::isMemberAccessibleFromBuilderPackage)
-        .filter(
-            method ->
-                expectedReturnType == null
-                    ? method.getReturnType().getKind() == VOID
-                    : hasType(method.getReturnType(), expectedReturnType))
+        .filter(method -> returnTypeMatcher.test(method.getReturnType()))
         .filter(method -> hasParameters(method, expectedParameterTypes))
         .toList();
   }

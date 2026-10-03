@@ -29,7 +29,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
 import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.core.PackageScopes;
@@ -96,6 +99,9 @@ public final class BuilderScopeResolver {
    *   <li>If the referenced type's builder is generated in the current processing round (registered
    *       via {@link #registerGeneratedBuilder}), the registered builder name is returned
    *       immediately — trusted without a classpath lookup or contract check.
+   *   <li>Otherwise, a static parameterless method on the referenced type itself returning a
+   *       contract-satisfying type (e.g. {@code builder()}) anchors the builder — the type's own
+   *       declaration wins over the same-package candidate.
    *   <li>Otherwise, the candidate builder name is constructed using {@code builderUsageSuffix}
    *       (falling back to {@code builderSuffix} if not configured). The candidate is looked up on
    *       the classpath and returned if it satisfies the builder contract: an instantiation path
@@ -210,6 +216,15 @@ public final class BuilderScopeResolver {
                   new BuilderInstantiation.ConstructorCall()));
     }
 
+    // A type may anchor its builder inside itself: an accessible static parameterless method
+    // returning a contract-satisfying type (MapStruct-style `Person.builder()`). The type's own
+    // declaration wins over the same-package candidate below.
+    Optional<ResolvedBuilder> inTypeBuilder =
+        resolveInTypeBuilder(referencedType, referencedTypeName);
+    if (inTypeBuilder.isPresent()) {
+      return inTypeBuilder;
+    }
+
     // For types not generated in this round, look up the candidate on the classpath using
     // builderUsageSuffix (which falls back to builderSuffix if not configured) and verify
     // the builder contract.
@@ -260,6 +275,38 @@ public final class BuilderScopeResolver {
    * @param builderTypeElement the candidate builder type to inspect
    * @return the instantiation to emit, or empty when the builder offers neither
    */
+  /**
+   * Resolves a builder anchored inside the referenced type itself: an accessible static
+   * parameterless method on the type returning a type that satisfies the builder contract, like the
+   * Lombok/Immutables-style {@code Person.builder()} MapStruct also detects. The conventional
+   * {@code builder} method name wins over other candidate names; declaration order decides between
+   * equals.
+   *
+   * @param referencedType the type element being referenced
+   * @param referencedTypeName the referenced type, passed to the contract check
+   * @return the resolved builder, or empty when the type anchors no contract-satisfying builder
+   */
+  private Optional<ResolvedBuilder> resolveInTypeBuilder(
+      TypeElement referencedType, TypeName referencedTypeName) {
+    List<ExecutableElement> factories =
+        JavaLangAnalyser.findMethodsStatic(referencedType, List.of(), context).stream()
+            .filter(method -> method.getReturnType().getKind() == TypeKind.DECLARED)
+            .sorted(
+                Comparator.comparingInt(
+                    method -> "builder".contentEquals(method.getSimpleName()) ? 0 : 1))
+            .toList();
+    for (ExecutableElement factory : factories) {
+      TypeElement candidate = (TypeElement) ((DeclaredType) factory.getReturnType()).asElement();
+      Optional<ResolvedBuilder> resolved =
+          resolveByBuilderContract(
+              JavaLangMapper.mapToTypeName(candidate, context), referencedTypeName);
+      if (resolved.isPresent()) {
+        return resolved;
+      }
+    }
+    return Optional.empty();
+  }
+
   private Optional<BuilderInstantiation> resolveFuncForEmptyBuilder(
       TypeElement builderTypeElement) {
     Optional<BuilderInstantiation> func = findStaticFactoryCall(builderTypeElement, List.of());
