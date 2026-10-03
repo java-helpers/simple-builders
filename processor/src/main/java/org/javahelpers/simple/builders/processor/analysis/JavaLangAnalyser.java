@@ -265,7 +265,7 @@ public final class JavaLangAnalyser {
    * Single-parameter variant of {@link #findMethodsStatic(TypeElement, List, TypeName,
    * ProcessingContext)}.
    */
-  public static List<String> findMethodsStatic(
+  public static List<ExecutableElement> findMethodsStatic(
       TypeElement type,
       TypeName expectedParameterType,
       TypeName expectedReturnType,
@@ -281,16 +281,15 @@ public final class JavaLangAnalyser {
    * @param expectedParameterTypes the required parameter types
    * @param expectedReturnType the required return type, or {@code null} for void-returning methods
    * @param context the processing context, used to access all members
-   * @return the names of all matching methods, in declaration order
+   * @return the matching methods, in declaration order
    */
-  public static List<String> findMethodsStatic(
+  public static List<ExecutableElement> findMethodsStatic(
       TypeElement type,
       List<TypeName> expectedParameterTypes,
       TypeName expectedReturnType,
       ProcessingContext context) {
     return findMethods(type, expectedParameterTypes, expectedReturnType, context).stream()
         .filter(Predicate.not(JavaLangAnalyser::isNotStatic))
-        .map(method -> method.getSimpleName().toString())
         .toList();
   }
 

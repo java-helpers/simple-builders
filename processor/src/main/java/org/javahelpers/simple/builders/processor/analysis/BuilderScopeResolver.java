@@ -352,9 +352,13 @@ public final class BuilderScopeResolver {
             builderTypeElement, expectedParameterTypes, builderTypeName, context)
         .stream()
         .min(
-            Comparator.comparingInt(BuilderScopeResolver::preferredFactoryNameRank)
-                .thenComparing(Comparator.naturalOrder()))
-        .map(BuilderInstantiation.StaticFactoryCall::new);
+            Comparator.comparingInt(
+                    (ExecutableElement method) ->
+                        preferredFactoryNameRank(method.getSimpleName().toString()))
+                .thenComparing(method -> method.getSimpleName().toString()))
+        .map(
+            method ->
+                new BuilderInstantiation.StaticFactoryCall(method.getSimpleName().toString()));
   }
 
   private static int preferredFactoryNameRank(String name) {
