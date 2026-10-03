@@ -750,10 +750,10 @@ factory like `create()`), a way to create one seeded with the value (a
 constructor accepting the referenced type or a static factory like `create(T)`
 or `of(T)`), and a no-arg `build()` method returning it — each accessible from
 the generated builder's package. Generated code calls a factory instead of
-`new` when the builder offers one. Any class with the expected name and a matching contract qualifies, allowing
-references to builders generated with custom template annotations, external tools,
-or different suffixes. If the candidate builder cannot be found, the field falls
-back to a plain setter.
+`new` when the builder offers one. Any class with the expected name and a
+matching contract qualifies, allowing references to builders generated with
+custom template annotations, external tools, or different suffixes. If the
+candidate builder cannot be found, the field falls back to a plain setter.
 
 Packages listed in `builderGenerationPackages` are automatically included in the usage
 scope — their builders are generated in the same compilation and don't need to be listed
