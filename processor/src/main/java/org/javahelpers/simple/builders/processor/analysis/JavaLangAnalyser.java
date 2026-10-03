@@ -29,10 +29,10 @@ import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.type.TypeKind.VOID;
 
 import java.lang.annotation.Annotation;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Predicate;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
@@ -51,7 +51,6 @@ import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 /** Helperclass for extrating specific information from existing classes. */
 public final class JavaLangAnalyser {
 
-  private static final List<String> PREFERRED_FACTORY_NAMES = List.of("create", "of");
   private static final String PARAM_TAG = "@param ";
   private static final String DEPRECATED_TAG = "@deprecated";
 
@@ -193,11 +192,9 @@ public final class JavaLangAnalyser {
    * @return {@code true}, if the element has an accessible empty constructor
    */
   public static boolean hasEmptyConstructor(TypeElement typeElement, ProcessingContext context) {
-    List<ExecutableElement> constructors =
-        ElementFilter.constructorsIn(context.getAllMembers(typeElement));
-    return constructors.stream()
+    return ElementFilter.constructorsIn(context.getAllMembers(typeElement)).stream()
         .filter(context::isMemberAccessibleFromBuilderPackage)
-        .anyMatch(c -> c.getParameters().isEmpty());
+        .anyMatch(constructor -> hasParameters(constructor, List.of()));
   }
 
   /**
@@ -259,72 +256,69 @@ public final class JavaLangAnalyser {
    */
   public static boolean hasBuildMethodReturning(
       TypeElement builderType, String expectedReturnType, ProcessingContext context) {
-    if (builderType == null) {
-      return false;
-    }
-    return ElementFilter.methodsIn(context.getAllMembers(builderType)).stream()
-        .filter(context::isMemberAccessibleFromBuilderPackage)
-        .anyMatch(
-            method ->
-                method.getSimpleName().contentEquals("build")
-                    && method.getParameters().isEmpty()
-                    && method.getReturnType().getKind() != VOID
-                    && method.getReturnType().toString().equals(expectedReturnType));
+    return findFunctionsBySignature(builderType, List.of(), expectedReturnType, context).stream()
+        .anyMatch(method -> method.getSimpleName().contentEquals("build"));
   }
 
   /**
-   * Finds a static parameterless factory method on the given type returning the type itself, e.g.
-   * {@code public static B create()}. Factories named {@code create} or {@code of} are preferred
-   * over other matching methods.
+   * Finds accessible static functions on the given type taking a single parameter of the expected
+   * type and returning the expected return type.
    *
-   * <p>Only methods accessible from the generated builder's package qualify. This is part of the
-   * builder contract and provides an instantiation path alongside the no-arg constructor.
-   *
-   * @param builderType the candidate builder type element to inspect
+   * @param type the type element to inspect
+   * @param expectedParameterType the qualified name of the required parameter type
+   * @param expectedReturnType the qualified name of the required return type, or {@code null} for
+   *     void-returning functions
    * @param context the processing context, used to access all members
-   * @return the factory method name, or empty if none is accessible
+   * @return the names of all matching functions, in declaration order
    */
-  public static Optional<String> findStaticFactoryReturning(
-      TypeElement builderType, ProcessingContext context) {
-    if (builderType == null) {
-      return Optional.empty();
-    }
-    return findStaticFactory(builderType, List.of(), context);
+  public static List<String> findStaticFunction(
+      TypeElement type,
+      String expectedParameterType,
+      String expectedReturnType,
+      ProcessingContext context) {
+    return findStaticFunction(type, List.of(expectedParameterType), expectedReturnType, context);
   }
 
   /**
-   * Finds a static factory method on the given type accepting the expected type and returning the
-   * builder type, e.g. {@code public static B create(T value)}. Factories named {@code create} or
-   * {@code of} are preferred over other matching methods.
+   * Finds accessible static functions on the given type taking the expected parameter types and
+   * returning the expected return type.
    *
-   * <p>Only methods accessible from the generated builder's package qualify. This is part of the
-   * builder contract and provides the copy path alongside the constructor accepting the type.
-   *
-   * @param builderType the candidate builder type element to inspect
-   * @param expectedParameterType the qualified name of the type the factory must accept
+   * @param type the type element to inspect
+   * @param expectedParameterTypes qualified names of the required parameter types
+   * @param expectedReturnType the qualified name of the required return type, or {@code null} for
+   *     void-returning functions
    * @param context the processing context, used to access all members
-   * @return the factory method name, or empty if none is accessible
+   * @return the names of all matching functions, in declaration order
    */
-  public static Optional<String> findStaticFactoryAccepting(
-      TypeElement builderType, String expectedParameterType, ProcessingContext context) {
-    if (builderType == null) {
-      return Optional.empty();
-    }
-    return findStaticFactory(builderType, List.of(expectedParameterType), context);
-  }
-
-  private static Optional<String> findStaticFactory(
-      TypeElement builderType, List<String> expectedParameterTypes, ProcessingContext context) {
-    String builderTypeName = builderType.getQualifiedName().toString();
-    return ElementFilter.methodsIn(context.getAllMembers(builderType)).stream()
-        .filter(context::isMemberAccessibleFromBuilderPackage)
-        .filter(method -> method.getModifiers().contains(STATIC))
-        .filter(method -> method.getReturnType().toString().equals(builderTypeName))
-        .filter(method -> hasParameters(method, expectedParameterTypes))
+  public static List<String> findStaticFunction(
+      TypeElement type,
+      List<String> expectedParameterTypes,
+      String expectedReturnType,
+      ProcessingContext context) {
+    return findFunctionsBySignature(type, expectedParameterTypes, expectedReturnType, context)
+        .stream()
+        .filter(Predicate.not(JavaLangAnalyser::isNotStatic))
         .map(method -> method.getSimpleName().toString())
-        .min(
-            Comparator.comparingInt(JavaLangAnalyser::factoryNameRank)
-                .thenComparing(Comparator.naturalOrder()));
+        .toList();
+  }
+
+  private static List<ExecutableElement> findFunctionsBySignature(
+      TypeElement type,
+      List<String> expectedParameterTypes,
+      String expectedReturnType,
+      ProcessingContext context) {
+    if (type == null) {
+      return List.of();
+    }
+    return ElementFilter.methodsIn(context.getAllMembers(type)).stream()
+        .filter(context::isMemberAccessibleFromBuilderPackage)
+        .filter(
+            method ->
+                expectedReturnType == null
+                    ? method.getReturnType().getKind() == VOID
+                    : method.getReturnType().toString().equals(expectedReturnType))
+        .filter(method -> hasParameters(method, expectedParameterTypes))
+        .toList();
   }
 
   private static boolean hasParameters(
@@ -339,11 +333,6 @@ public final class JavaLangAnalyser {
       }
     }
     return true;
-  }
-
-  private static int factoryNameRank(String name) {
-    int index = PREFERRED_FACTORY_NAMES.indexOf(name);
-    return index < 0 ? PREFERRED_FACTORY_NAMES.size() : index;
   }
 
   /**
@@ -362,10 +351,7 @@ public final class JavaLangAnalyser {
     }
     return ElementFilter.constructorsIn(context.getAllMembers(builderType)).stream()
         .filter(context::isMemberAccessibleFromBuilderPackage)
-        .anyMatch(
-            constructor ->
-                constructor.getParameters().size() == 1
-                    && constructor.getParameters().get(0).asType().toString().equals(expectedType));
+        .anyMatch(constructor -> hasParameters(constructor, List.of(expectedType)));
   }
 
   /**
