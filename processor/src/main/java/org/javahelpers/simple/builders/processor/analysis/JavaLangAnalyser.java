@@ -262,14 +262,8 @@ public final class JavaLangAnalyser {
   }
 
   /**
-   * Finds accessible static methods on the given type taking a single parameter of the expected
-   * type and returning the expected return type.
-   *
-   * @param type the type element to inspect
-   * @param expectedParameterType the required parameter type
-   * @param expectedReturnType the required return type, or {@code null} for void-returning methods
-   * @param context the processing context, used to access all members
-   * @return the names of all matching methods, in declaration order
+   * Single-parameter variant of {@link #findMethodsStatic(TypeElement, List, TypeName,
+   * ProcessingContext)}.
    */
   public static List<String> findMethodsStatic(
       TypeElement type,
