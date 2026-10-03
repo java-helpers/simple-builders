@@ -485,13 +485,13 @@ class SimpleBuilderForTest {
   }
 
   @Test
-  void packages_GeneratesBuildersForTopLevelConstructibleTypes() {
+  void sourcePackages_GeneratesBuildersForTopLevelConstructibleTypes() {
     JavaFileObject holder =
         ProcessorTestUtils.forSource(
             """
             package test;
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFor;
-            @SimpleBuilderFor(packages = "pkg")
+            @SimpleBuilderFor(sourcePackages = "pkg")
             public class Builders {}
             """);
 
@@ -516,7 +516,7 @@ class SimpleBuilderForTest {
   }
 
   @Test
-  void packages_NestedTypeKeepsRequiringExplicitEntry() {
+  void sourcePackages_NestedTypeKeepsRequiringExplicitEntry() {
     JavaFileObject withNested =
         ProcessorTestUtils.forSource(
             """
@@ -533,7 +533,7 @@ class SimpleBuilderForTest {
             """
             package test;
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFor;
-            @SimpleBuilderFor(packages = "pkg")
+            @SimpleBuilderFor(sourcePackages = "pkg")
             public class Builders {}
             """);
 
@@ -548,7 +548,7 @@ class SimpleBuilderForTest {
   }
 
   @Test
-  void packages_WithOptions_GeneratesIntoOptionsPackage() {
+  void sourcePackages_WithOptions_GeneratesIntoOptionsPackage() {
     JavaFileObject holder =
         ProcessorTestUtils.forSource(
             """
@@ -556,7 +556,7 @@ class SimpleBuilderForTest {
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFor;
             @SimpleBuilderFor(
-                packages = "pkg",
+                sourcePackages = "pkg",
                 options = @SimpleBuilder.Options(packageName = "com.example.generated"))
             public class Builders {}
             """);
@@ -575,13 +575,13 @@ class SimpleBuilderForTest {
   }
 
   @Test
-  void packages_TypeAlsoInValue_GeneratesSingleBuilder() {
+  void sourcePackages_TypeAlsoInValue_GeneratesSingleBuilder() {
     JavaFileObject holder =
         ProcessorTestUtils.forSource(
             """
             package test;
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFor;
-            @SimpleBuilderFor(value = pkg.ExternalUser.class, packages = "pkg")
+            @SimpleBuilderFor(value = pkg.ExternalUser.class, sourcePackages = "pkg")
             public class Builders {}
             """);
 
@@ -599,13 +599,13 @@ class SimpleBuilderForTest {
   }
 
   @Test
-  void packages_Unresolvable_WarnsAndGeneratesFromValue() {
+  void sourcePackages_Unresolvable_WarnsAndGeneratesFromValue() {
     JavaFileObject holder =
         ProcessorTestUtils.forSource(
             """
             package test;
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFor;
-            @SimpleBuilderFor(value = ext.ExternalUser.class, packages = "does.not.exist")
+            @SimpleBuilderFor(value = ext.ExternalUser.class, sourcePackages = "does.not.exist")
             public class Builders {}
             """);
 

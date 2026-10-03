@@ -400,8 +400,8 @@ public class BuilderProcessor extends AbstractProcessor {
   /**
    * Resolves the types one {@code @SimpleBuilderFor} annotation instance declares builders for: the
    * types listed in {@code value} first (a type listed there wins over the same type found by
-   * scanning), then the constructible top-level types of every {@code packages} package, ordered by
-   * qualified name for deterministic output.
+   * scanning), then the constructible top-level types of every {@code sourcePackages} package,
+   * ordered by qualified name for deterministic output.
    */
   private List<TypeElement> extractExternalTargetTypes(
       Element holder, AnnotationMirror annotationInstance) throws BuilderException {
@@ -411,7 +411,7 @@ public class BuilderProcessor extends AbstractProcessor {
       TypeElement target = resolveExternalTargetType(holder, item);
       targets.put(target.getQualifiedName().toString(), target);
     }
-    for (String packageName : readPackageNames(annotationInstance)) {
+    for (String packageName : readSourcePackageNames(annotationInstance)) {
       for (TypeElement target : findPackageTargetTypes(holder, packageName)) {
         targets.putIfAbsent(target.getQualifiedName().toString(), target);
       }
@@ -428,9 +428,12 @@ public class BuilderProcessor extends AbstractProcessor {
         .orElse(List.of());
   }
 
-  /** Reads the {@code packages} attribute of one {@code @SimpleBuilderFor} annotation instance. */
-  private List<String> readPackageNames(AnnotationMirror annotationInstance) {
-    return readArrayAttribute(annotationInstance, "packages").stream()
+  /**
+   * Reads the {@code sourcePackages} attribute of one {@code @SimpleBuilderFor} annotation
+   * instance.
+   */
+  private List<String> readSourcePackageNames(AnnotationMirror annotationInstance) {
+    return readArrayAttribute(annotationInstance, "sourcePackages").stream()
         .map(item -> item instanceof AnnotationValue value ? value.getValue() : null)
         .filter(String.class::isInstance)
         .map(String.class::cast)
@@ -438,9 +441,9 @@ public class BuilderProcessor extends AbstractProcessor {
   }
 
   /**
-   * Finds the constructible top-level types of one {@code packages} entry: only concrete classes
-   * and records qualify; interfaces, abstract classes, enums and annotation types are skipped with
-   * a debug note.
+   * Finds the constructible top-level types of one {@code sourcePackages} entry: only concrete
+   * classes and records qualify; interfaces, abstract classes, enums and annotation types are
+   * skipped with a debug note.
    */
   private List<TypeElement> findPackageTargetTypes(Element holder, String packageName) {
     PackageElement packageElement = context.getPackageElement(packageName);

@@ -187,12 +187,12 @@ import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFor;
 
 The generated builders are placed in the annotated package - or in the package of the provider class when a class is annotated instead. `options` reuses `@SimpleBuilder.Options` and is optional - compiler defaults apply when omitted.
 
-`packages` lists whole packages to scan instead of naming types one by one: every top-level constructible type declared in a listed package gets a builder, combined with the types of `value` (an explicit `value` entry wins over the same type found by scanning; a `packages`-only declaration without `value` is valid):
+`sourcePackages` lists whole packages to scan instead of naming types one by one: every top-level constructible type declared in a listed package gets a builder, combined with the types of `value` (an explicit `value` entry wins over the same type found by scanning; a `sourcePackages`-only declaration without `value` is valid). It names the packages the types come *from* - not to be confused with `options.packageName`, the package builders are generated *into*:
 
 ```java
 // Generates a builder for every top-level class and record in com.thirdparty.users
 @SimpleBuilderFor(
-    packages = "com.thirdparty.users",
+    sourcePackages = "com.thirdparty.users",
     options = @SimpleBuilder.Options(packageName = "com.example.generated"))
 public class ExternalBuildersProvider {
 }
