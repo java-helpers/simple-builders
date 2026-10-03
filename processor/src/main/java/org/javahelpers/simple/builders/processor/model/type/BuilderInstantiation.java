@@ -16,6 +16,7 @@
 package org.javahelpers.simple.builders.processor.model.type;
 
 import java.util.List;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * The instantiation path generated code uses to obtain an instance of a resolved builder.
@@ -124,12 +125,16 @@ public sealed interface BuilderInstantiation {
    * @param builderType the resolved builder type (return type of the seeding method)
    * @param sourceType the referenced type the builder is seeded from
    * @param funcForEmptyBuilder how the seeding method obtains the empty builder
-   * @param seededFields field functions to call, in the order of the source's properties
+   * @param builderMethodPrefix the field-function prefix recognized on the builder ({@code ""} for
+   *     {@code name(v)}, {@code set} for {@code setName(v)}, or a detected convention like {@code
+   *     with})
+   * @param seededFields the properties to seed, in the order of the source's properties
    */
   record FieldSeedingCall(
       TypeName builderType,
       TypeName sourceType,
       BuilderInstantiation funcForEmptyBuilder,
+      String builderMethodPrefix,
       List<SeededField> seededFields)
       implements BuilderInstantiation {
 
@@ -153,12 +158,25 @@ public sealed interface BuilderInstantiation {
     }
 
     /**
-     * One field-function call inside the seeding method: {@code
-     * builder.<builderMethod>(value.<accessor>)}.
+     * The builder's field function for a seeded field: {@code <property>} when the prefix is empty,
+     * otherwise {@code <prefix><Property>} (e.g. {@code setName} or {@code withName}).
      *
-     * @param builderMethod the field function's name on the builder
+     * @param field the seeded field
+     * @return the field function's name on the builder
+     */
+    public String builderMethodFor(SeededField field) {
+      return builderMethodPrefix.isEmpty()
+          ? field.property()
+          : builderMethodPrefix + StringUtils.capitalize(field.property());
+    }
+
+    /**
+     * One property seeded inside the seeding method: {@code
+     * builder.<fieldFunction>(value.<accessor>)}.
+     *
+     * @param property the property name (e.g. {@code name})
      * @param accessor how the property is read from the value (e.g. {@code name()} or {@code name})
      */
-    public record SeededField(String builderMethod, String accessor) {}
+    public record SeededField(String property, String accessor) {}
   }
 }

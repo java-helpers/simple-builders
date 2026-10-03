@@ -514,7 +514,8 @@ class BuilderScopeResolverTest {
     BuilderInstantiation.FieldSeedingCall prefilled =
         assertInstanceOf(
             BuilderInstantiation.FieldSeedingCall.class, resolved.funcForPrefilledBuilder().get());
-    assertEquals("name", prefilled.seededFields().get(0).builderMethod());
+    assertEquals("", prefilled.builderMethodPrefix());
+    assertEquals("name", prefilled.seededFields().get(0).property());
     assertEquals("getName()", prefilled.seededFields().get(0).accessor());
   }
 
@@ -558,7 +559,73 @@ class BuilderScopeResolverTest {
     BuilderInstantiation.FieldSeedingCall prefilled =
         assertInstanceOf(
             BuilderInstantiation.FieldSeedingCall.class, resolved.funcForPrefilledBuilder().get());
-    assertEquals("setName", prefilled.seededFields().get(0).builderMethod());
+    assertEquals("set", prefilled.builderMethodPrefix());
+    assertEquals("name", prefilled.seededFields().get(0).property());
+  }
+
+  @Test
+  void resolverUsageScope_ResolvesDetectedPrefixShape() {
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelper {
+                      public String getName() { return ""; }
+                      public boolean isActive() { return true; }
+                    }
+                    """),
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelperBuilder {
+                      public LibHelperBuilder() {}
+                      public LibHelperBuilder withName(String name) { return this; }
+                      public LibHelperBuilder withActive(boolean active) { return this; }
+                      public LibHelper build() { return new LibHelper(); }
+                    }
+                    """));
+
+    assertThat(compilation).succeeded();
+    // Builder-framework style: several field functions share the camel-case prefix "with",
+    // which is detected as the builder's convention
+    ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
+    BuilderInstantiation.FieldSeedingCall prefilled =
+        assertInstanceOf(
+            BuilderInstantiation.FieldSeedingCall.class, resolved.funcForPrefilledBuilder().get());
+    assertEquals("with", prefilled.builderMethodPrefix());
+    assertEquals(2, prefilled.seededFields().size());
+  }
+
+  @Test
+  void resolverUsageScope_ResolvesWithoutSeededPathWhenPrefixOccursOnce() {
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelper {
+                      public String getName() { return ""; }
+                    }
+                    """),
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelperBuilder {
+                      public LibHelperBuilder() {}
+                      public LibHelperBuilder putName(String name) { return this; }
+                      public LibHelper build() { return new LibHelper(); }
+                    }
+                    """));
+
+    assertThat(compilation).succeeded();
+    // A prefix seen on a single method is not trusted as a convention: no seeded path
+    ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
+    assertEquals(Optional.empty(), resolved.funcForPrefilledBuilder());
   }
 
   @Test
@@ -588,7 +655,8 @@ class BuilderScopeResolverTest {
     BuilderInstantiation.FieldSeedingCall prefilled =
         assertInstanceOf(
             BuilderInstantiation.FieldSeedingCall.class, resolved.funcForPrefilledBuilder().get());
-    assertEquals("name", prefilled.seededFields().get(0).builderMethod());
+    assertEquals("", prefilled.builderMethodPrefix());
+    assertEquals("name", prefilled.seededFields().get(0).property());
     assertEquals("name()", prefilled.seededFields().get(0).accessor());
   }
 
@@ -621,7 +689,8 @@ class BuilderScopeResolverTest {
     BuilderInstantiation.FieldSeedingCall prefilled =
         assertInstanceOf(
             BuilderInstantiation.FieldSeedingCall.class, resolved.funcForPrefilledBuilder().get());
-    assertEquals("name", prefilled.seededFields().get(0).builderMethod());
+    assertEquals("", prefilled.builderMethodPrefix());
+    assertEquals("name", prefilled.seededFields().get(0).property());
     assertEquals("name", prefilled.seededFields().get(0).accessor());
   }
 

@@ -26,6 +26,7 @@ package org.javahelpers.simple.builders.processor.analysis;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -301,12 +302,13 @@ public final class BuilderScopeResolver {
   }
 
   /**
-   * Resolves seeding by field functions: every readable property of the referenced type must have a
-   * matching single-parameter field function on the builder - {@code name(value)} or {@code
-   * setName(value)}, preferred in that order. When coverage is complete, the empty path is reused
-   * and the generated builder seeds the instance property by property; partial coverage resolves
-   * empty, so a builder whose functions would silently drop state is never picked. A type exposing
-   * no readable properties resolves empty as well - nothing is provably copyable.
+   * Resolves seeding by field functions: the builder must offer a field function for every readable
+   * property of the referenced type, all sharing one naming convention - {@code name(v)}, {@code
+   * setName(v)}, or a detected prefix like {@code withName(v)}. When coverage is complete, the
+   * empty path is reused and the generated builder seeds the instance property by property; partial
+   * coverage resolves empty, so a builder whose functions would silently drop state is never
+   * picked. A type exposing no readable properties resolves empty as well - nothing is provably
+   * copyable.
    *
    * @param referencedType the type element being referenced
    * @param builderElement the candidate builder type
@@ -321,61 +323,102 @@ public final class BuilderScopeResolver {
       TypeName builderTypeName,
       TypeName referencedTypeName,
       BuilderInstantiation funcForEmptyBuilder) {
+    List<JavaLangAnalyser.ReadableProperty> properties =
+        JavaLangAnalyser.findReadableProperties(referencedType, context);
+    if (properties.isEmpty()) {
+      return Optional.empty();
+    }
+    List<ExecutableElement> fieldFunctions =
+        ElementFilter.methodsIn(context.getAllMembers(builderElement)).stream()
+            .filter(JavaLangAnalyser::isNotStatic)
+            .filter(method -> JavaLangAnalyser.isNoMethodOfObjectClass(method, context))
+            .filter(context::isMemberAccessibleFromBuilderPackage)
+            .filter(method -> method.getParameters().size() == 1)
+            .toList();
+    for (String prefix : candidatePrefixes(fieldFunctions)) {
+      Optional<List<BuilderInstantiation.FieldSeedingCall.SeededField>> seededFields =
+          matchByPrefix(properties, fieldFunctions, prefix);
+      if (seededFields.isPresent()) {
+        return Optional.of(
+            new BuilderInstantiation.FieldSeedingCall(
+                builderTypeName,
+                referencedTypeName,
+                funcForEmptyBuilder,
+                prefix,
+                seededFields.get()));
+      }
+    }
+    return Optional.empty();
+  }
+
+  /**
+   * Candidate field-function prefixes, preferred first: {@code ""} (fluent {@code name(v)}), then
+   * {@code set} (JavaBeans), then any other camel-case prefix found on the builder's single-
+   * parameter methods - a convention is only trusted when several methods share it.
+   *
+   * @param fieldFunctions the builder's single-parameter non-static methods
+   * @return the prefixes to try, in preference order
+   */
+  private List<String> candidatePrefixes(List<ExecutableElement> fieldFunctions) {
+    Map<String, Integer> prefixCounts = new LinkedHashMap<>();
+    for (ExecutableElement method : fieldFunctions) {
+      String name = method.getSimpleName().toString();
+      int boundary = firstUpperCaseIndex(name);
+      if (boundary > 0) {
+        prefixCounts.merge(name.substring(0, boundary), 1, Integer::sum);
+      }
+    }
+    List<String> prefixes = new ArrayList<>(List.of("", "set"));
+    prefixCounts.entrySet().stream()
+        .filter(entry -> entry.getValue() >= 2)
+        .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
+        .map(Map.Entry::getKey)
+        .filter(prefix -> !prefixes.contains(prefix))
+        .forEach(prefixes::add);
+    return prefixes;
+  }
+
+  private static int firstUpperCaseIndex(String name) {
+    for (int i = 0; i < name.length(); i++) {
+      if (Character.isUpperCase(name.charAt(i))) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  /**
+   * Matches every property against the builder's field functions under one naming convention:
+   * {@code <property>(v)} when the prefix is empty, otherwise {@code <prefix><Property>(v)}.
+   *
+   * @param properties the readable properties to cover
+   * @param fieldFunctions the builder's single-parameter non-static methods
+   * @param prefix the naming convention to try
+   * @return the seeded fields in property order when every property is covered, empty otherwise
+   */
+  private Optional<List<BuilderInstantiation.FieldSeedingCall.SeededField>> matchByPrefix(
+      List<JavaLangAnalyser.ReadableProperty> properties,
+      List<ExecutableElement> fieldFunctions,
+      String prefix) {
     List<BuilderInstantiation.FieldSeedingCall.SeededField> seededFields = new ArrayList<>();
-    for (JavaLangAnalyser.ReadableProperty property :
-        JavaLangAnalyser.findReadableProperties(referencedType, context)) {
-      Optional<String> fieldFunction = findFieldFunction(builderElement, property);
-      if (fieldFunction.isEmpty()) {
+    for (JavaLangAnalyser.ReadableProperty property : properties) {
+      String expected =
+          prefix.isEmpty() ? property.name() : prefix + StringUtils.capitalize(property.name());
+      boolean covered =
+          fieldFunctions.stream()
+              .anyMatch(
+                  method ->
+                      expected.contentEquals(method.getSimpleName())
+                          && context.isSameType(
+                              method.getParameters().get(0).asType(), property.typeMirror()));
+      if (!covered) {
         return Optional.empty();
       }
       seededFields.add(
           new BuilderInstantiation.FieldSeedingCall.SeededField(
-              fieldFunction.get(), property.accessor()));
+              property.name(), property.accessor()));
     }
-    if (seededFields.isEmpty()) {
-      return Optional.empty();
-    }
-    return Optional.of(
-        new BuilderInstantiation.FieldSeedingCall(
-            builderTypeName, referencedTypeName, funcForEmptyBuilder, seededFields));
-  }
-
-  /**
-   * Finds the field function on the builder accepting the given property: a single-parameter
-   * non-static method named {@code <property>} or {@code set<Property>}, preferred in that order.
-   *
-   * @param builderElement the builder type to inspect
-   * @param property the readable property to match
-   * @return the field function's name, or empty when none matches
-   */
-  private Optional<String> findFieldFunction(
-      TypeElement builderElement, JavaLangAnalyser.ReadableProperty property) {
-    String setterName = "set" + StringUtils.capitalize(property.name());
-    return ElementFilter.methodsIn(context.getAllMembers(builderElement)).stream()
-        .filter(JavaLangAnalyser::isNotStatic)
-        .filter(context::isMemberAccessibleFromBuilderPackage)
-        .filter(method -> takesProperty(method, property))
-        .filter(
-            method ->
-                property.name().contentEquals(method.getSimpleName())
-                    || setterName.contentEquals(method.getSimpleName()))
-        .min(
-            Comparator.comparingInt(
-                method -> property.name().contentEquals(method.getSimpleName()) ? 0 : 1))
-        .map(method -> method.getSimpleName().toString());
-  }
-
-  /**
-   * Checks whether the method accepts the property as its single parameter.
-   *
-   * @param method the method to check
-   * @param property the property whose type must be accepted
-   * @return true if the method takes exactly one parameter of the property's type
-   */
-  private boolean takesProperty(
-      ExecutableElement method, JavaLangAnalyser.ReadableProperty property) {
-    return method.getParameters().size() == 1
-        && context.isSameType(method.getParameters().get(0).asType(), property.typeMirror());
+    return Optional.of(seededFields);
   }
 
   /**

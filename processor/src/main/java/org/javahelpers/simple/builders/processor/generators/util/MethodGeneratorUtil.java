@@ -298,7 +298,7 @@ public final class MethodGeneratorUtil {
     for (BuilderInstantiation.FieldSeedingCall.SeededField seededField :
         seedingCall.seededFields()) {
       code.append("builder.")
-          .append(seededField.builderMethod())
+          .append(seedingCall.builderMethodFor(seededField))
           .append("(value.")
           .append(seededField.accessor())
           .append(");\n");
