@@ -194,7 +194,7 @@ public final class JavaLangAnalyser {
   public static boolean hasEmptyConstructor(TypeElement typeElement, ProcessingContext context) {
     return ElementFilter.constructorsIn(context.getAllMembers(typeElement)).stream()
         .filter(context::isMemberAccessibleFromBuilderPackage)
-        .anyMatch(constructor -> hasParameters(constructor, List.of()));
+        .anyMatch(JavaLangAnalyser::hasNoParameters);
   }
 
   /**
@@ -319,6 +319,10 @@ public final class JavaLangAnalyser {
                     : method.getReturnType().toString().equals(expectedReturnType))
         .filter(method -> hasParameters(method, expectedParameterTypes))
         .toList();
+  }
+
+  private static boolean hasNoParameters(ExecutableElement method) {
+    return method.getParameters().isEmpty();
   }
 
   private static boolean hasParameters(
