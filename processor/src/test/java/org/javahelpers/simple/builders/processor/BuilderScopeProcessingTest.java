@@ -340,7 +340,7 @@ class BuilderScopeProcessingTest {
             .withOptions(
                 "-Asimplebuilder.builderGenerationPackages=test",
                 "-Asimplebuilder.builderUsagePackages=lib",
-                "-Asimplebuilder.usingFieldFunctionSeeding=ENABLED")
+                "-Asimplebuilder.usingFieldFunctionPrefill=ENABLED")
             .compile(dto, libraryDto, libraryDtoBuilder);
 
     assertThat(compilation).succeeded();
@@ -382,7 +382,7 @@ class BuilderScopeProcessingTest {
             .withOptions(
                 "-Asimplebuilder.builderGenerationPackages=test",
                 "-Asimplebuilder.builderUsagePackages=lib",
-                "-Asimplebuilder.usingFieldFunctionSeeding=ENABLED")
+                "-Asimplebuilder.usingFieldFunctionPrefill=ENABLED")
             .compile(dto, libraryDto, libraryDtoBuilder);
 
     assertThat(compilation).succeeded();

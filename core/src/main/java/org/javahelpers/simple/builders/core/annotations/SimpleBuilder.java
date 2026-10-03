@@ -795,15 +795,15 @@ public @interface SimpleBuilder {
      * <br>
      * When disabled, such builders still resolve but helpers that would silently drop state are
      * skipped. Only consulted when {@link #usingExistingBuilders()} is enabled; the analysis
-     * (property enumeration plus method scan per referenced type) is opt-in because it adds compile
-     * cost.
+     * (property enumeration plus method scan per referenced type) is a separate option because it
+     * adds compile cost. {@link SimpleMinimalBuilder} deactivates this option.
      *
-     * <p>Default: DISABLED <br>
-     * Compiler option: -Asimplebuilder.usingFieldFunctionSeeding
+     * <p>Default: ENABLED <br>
+     * Compiler option: -Asimplebuilder.usingFieldFunctionPrefill
      *
      * @return the option state for prefilling builders through field functions
      */
-    OptionState usingFieldFunctionSeeding() default OptionState.UNSET;
+    OptionState usingFieldFunctionPrefill() default OptionState.UNSET;
 
     // === Naming ===
     /**

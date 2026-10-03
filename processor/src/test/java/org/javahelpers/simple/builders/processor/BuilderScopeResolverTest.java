@@ -539,11 +539,11 @@ class BuilderScopeResolverTest {
                     """));
 
     assertThat(compilation).succeeded();
-    // usingFieldFunctionSeeding=DISABLED: field functions are not tried, so the builder resolves
+    // usingFieldFunctionPrefill=DISABLED: field functions are not tried, so the builder resolves
     // without a seeded path
     assertEquals(
         Optional.empty(),
-        ResolverProbeProcessor.usageSeedingDisabled.get().funcForPrefilledBuilder());
+        ResolverProbeProcessor.usagePrefillDisabled.get().funcForPrefilledBuilder());
   }
 
   @Test
@@ -1219,7 +1219,7 @@ class BuilderScopeResolverTest {
     private static Optional<ResolvedBuilder> usagePackagePrivate;
     private static Optional<ResolvedBuilder> usageWithExistingDisabled;
     private static Optional<ResolvedBuilder> usageGeneratedWithExistingDisabled;
-    private static Optional<ResolvedBuilder> usageSeedingDisabled;
+    private static Optional<ResolvedBuilder> usagePrefillDisabled;
     private static Optional<ResolvedBuilder> contractResultString;
 
     private boolean captured;
@@ -1238,7 +1238,7 @@ class BuilderScopeResolverTest {
       usagePackagePrivate = null;
       usageWithExistingDisabled = null;
       usageGeneratedWithExistingDisabled = null;
-      usageSeedingDisabled = null;
+      usagePrefillDisabled = null;
       contractResultString = null;
     }
 
@@ -1310,10 +1310,10 @@ class BuilderScopeResolverTest {
       resolver.registerGeneratedBuilder(
           new TypeName("lib", "LibHelper"), new TypeName("lib", "LibHelperBuilder"));
       usageGeneratedWithExistingDisabled = resolver.resolveUsableBuilderType(helper);
-      // usingFieldFunctionSeeding=DISABLED: field functions are not used as seeded path
-      context.initProcessingTarget(new ProcessingTarget(seedingDisabledConfiguration("lib"), ""));
+      // usingFieldFunctionPrefill=DISABLED: field functions are not used as seeded path
+      context.initProcessingTarget(new ProcessingTarget(prefillDisabledConfiguration("lib"), ""));
       resolver.resetGeneratedBuilders();
-      usageSeedingDisabled = resolver.resolveUsableBuilderType(helper);
+      usagePrefillDisabled = resolver.resolveUsableBuilderType(helper);
       // Builder-contract probe for java.lang.String: StringBuilder must not resolve because its
       // only parameterless method returning String is toString(), an Object signature
       context.initProcessingTarget(new ProcessingTarget(usageOnlyConfiguration("java.lang"), ""));
@@ -1335,17 +1335,14 @@ class BuilderScopeResolverTest {
 
     private static BuilderConfiguration usageOnlyConfiguration(String packageName) {
       return BuilderConfiguration.DEFAULT.merge(
-          BuilderConfiguration.builder()
-              .builderUsagePackages(packageName)
-              .usingFieldFunctionSeeding(OptionState.ENABLED)
-              .build());
+          BuilderConfiguration.builder().builderUsagePackages(packageName).build());
     }
 
-    private static BuilderConfiguration seedingDisabledConfiguration(String packageName) {
+    private static BuilderConfiguration prefillDisabledConfiguration(String packageName) {
       return BuilderConfiguration.DEFAULT.merge(
           BuilderConfiguration.builder()
               .builderUsagePackages(packageName)
-              .usingFieldFunctionSeeding(OptionState.DISABLED)
+              .usingFieldFunctionPrefill(OptionState.DISABLED)
               .build());
     }
 

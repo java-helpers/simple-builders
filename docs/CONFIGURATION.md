@@ -765,7 +765,7 @@ type must be accessible and declare a no-arg `build()` method (Lombok/Immutables
 style). The factory itself is the empty-instantiation path; the seeded path is
 the builder's own contract path, a static `builder(T)`-style method, an
 instance method on the value like `toBuilder()`, or — with
-`usingFieldFunctionSeeding` enabled — seeding by field functions.
+`usingFieldFunctionPrefill` enabled — seeding by field functions.
 
 The processor constructs the candidate builder name using `builderUsageSuffix`
 (or `builderSuffix` if not configured) and verifies the builder contract: a way
@@ -774,7 +774,7 @@ factory like `create()`), a way to create one seeded with the value (a
 constructor accepting the referenced type or a static factory like `create(T)`
 or `of(T)`), and a no-arg `build()` method returning it — each accessible from
 the generated builder's package. Generated code calls a factory instead of
-`new` when the builder offers one. With `usingFieldFunctionSeeding` enabled and
+`new` when the builder offers one. With `usingFieldFunctionPrefill` enabled and
 no seeded path found, the builder is tried against field-function prefilling:
 the generated builder emits a private static `prefill<Builder>` method that
 seeds each readable property having a matching field function (`name(v)`,
@@ -814,9 +814,9 @@ type falls back to a plain setter, opting out of false-positive detections on
 types that coincidentally look like builders. `@SimpleMinimalBuilder` disables
 this option.
 
-#### `usingFieldFunctionSeeding`
+#### `usingFieldFunctionPrefill`
 
-**Default**: `DISABLED` | **Compiler Option**: `-Asimplebuilder.usingFieldFunctionSeeding=ENABLED`
+**Default**: `ENABLED` | **Compiler Option**: `-Asimplebuilder.usingFieldFunctionPrefill=DISABLED`
 
 Prefills a reused builder that offers no value-accepting creation path by
 calling one field function per readable property of the referenced type: the
@@ -827,8 +827,8 @@ and JavaBeans `setName(v)` first, then any other camel-case prefix shared by
 several methods (e.g. `withName(v)`); a convention is trusted once it covers
 the majority of the properties, matched param-type-exact, void- or
 fluent-returning. Only consulted when `usingExistingBuilders` is enabled; the
-per-type analysis (property enumeration plus method scan) is opt-in because it
-adds compile cost.
+per-type analysis (property enumeration plus method scan) is a separate option
+because it adds compile cost. `@SimpleMinimalBuilder` disables this option.
 
 ### Component Filtering
 

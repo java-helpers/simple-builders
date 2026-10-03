@@ -281,7 +281,7 @@ public final class BuilderScopeResolver {
         resolveFuncForPrefilledBuilder(builderTypeElement, expectedType);
     // the builder can be created empty but offers no seeded path: try its field functions
     if (funcForPrefilledBuilder.isEmpty()
-        && context.getConfiguration().shouldUseFieldFunctionSeeding()) {
+        && context.getConfiguration().shouldUseFieldFunctionPrefill()) {
       funcForPrefilledBuilder =
           resolveFieldSeeding(
               referencedType,
@@ -632,7 +632,7 @@ public final class BuilderScopeResolver {
     if (func.isEmpty()) {
       func = resolveAnchoredInstanceFactory(referencedType, referencedTypeName, builderTypeName);
     }
-    if (func.isEmpty() && context.getConfiguration().shouldUseFieldFunctionSeeding()) {
+    if (func.isEmpty() && context.getConfiguration().shouldUseFieldFunctionPrefill()) {
       func =
           resolveFieldSeeding(
               referencedType,

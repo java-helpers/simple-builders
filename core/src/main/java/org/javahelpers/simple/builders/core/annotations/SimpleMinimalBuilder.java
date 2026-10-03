@@ -95,6 +95,7 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
             copyTypeAnnotations = OptionState.DISABLED,
             implementsBuilderBase = OptionState.DISABLED,
             usingExistingBuilders = OptionState.DISABLED,
+            usingFieldFunctionPrefill = OptionState.DISABLED,
             builderSuffix = "Builder",
             setterSuffix = "",
             formattingMode = "lightweight"))

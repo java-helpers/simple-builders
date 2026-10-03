@@ -162,8 +162,8 @@ public enum CompilerArgumentsEnum {
   USING_EXISTING_BUILDERS("usingExistingBuilders", optionState(Builder::usingExistingBuilders)),
 
   /** Option for seeding reused builders through their field functions. */
-  USING_FIELD_FUNCTION_SEEDING(
-      "usingFieldFunctionSeeding", optionState(Builder::usingFieldFunctionSeeding)),
+  USING_FIELD_FUNCTION_PREFILL(
+      "usingFieldFunctionPrefill", optionState(Builder::usingFieldFunctionPrefill)),
 
   // === Naming ===
   /** Option for builder class name suffix. */
