@@ -511,24 +511,15 @@ public final class BuilderScopeResolver {
   private Optional<ExecutableElement> findBuildMethod(
       TypeElement builderType, TypeName expectedType) {
     return JavaLangAnalyser.findMethods(builderType, List.of(), expectedType, context).stream()
-        .filter(method -> JavaLangAnalyser.isNotStatic(method) && !isObjectMethod(method))
+        .filter(
+            method ->
+                JavaLangAnalyser.isNotStatic(method)
+                    && !JavaLangAnalyser.isMethodOfObjectClass(method, context))
         .min(
             Comparator.comparingInt(
                     (ExecutableElement method) ->
                         "build".contentEquals(method.getSimpleName()) ? 0 : 1)
                 .thenComparing(method -> method.getSimpleName().toString()));
-  }
-
-  private boolean isObjectMethod(ExecutableElement method) {
-    TypeElement objectElement = context.getTypeElement(Object.class.getCanonicalName());
-    if (objectElement == null) {
-      return false;
-    }
-    return ElementFilter.methodsIn(objectElement.getEnclosedElements()).stream()
-        .anyMatch(
-            objectMethod ->
-                objectMethod.getSimpleName().equals(method.getSimpleName())
-                    && objectMethod.getParameters().size() == method.getParameters().size());
   }
 
   private void refreshForConfigurationIfNeeded() {

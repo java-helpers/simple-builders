@@ -70,6 +70,28 @@ public final class JavaLangAnalyser {
   }
 
   /**
+   * Checks whether the method's signature matches a method declared on {@link java.lang.Object}
+   * (e.g. {@code toString()}). Unlike {@link #isNoMethodOfObjectClass}, which filters by declaring
+   * type, this compares the signature and therefore also matches overrides like {@code
+   * StringBuilder#toString}.
+   *
+   * @param method ExecutableElement to be validated
+   * @param context the processing context, used to resolve {@link java.lang.Object}'s methods
+   * @return {@code true}, if the method has the signature of an {@link java.lang.Object} method
+   */
+  public static boolean isMethodOfObjectClass(ExecutableElement method, ProcessingContext context) {
+    TypeElement objectElement = context.getTypeElement(Object.class.getCanonicalName());
+    if (objectElement == null) {
+      return false;
+    }
+    return ElementFilter.methodsIn(objectElement.getEnclosedElements()).stream()
+        .anyMatch(
+            objectMethod ->
+                objectMethod.getSimpleName().equals(method.getSimpleName())
+                    && objectMethod.getParameters().size() == method.getParameters().size());
+  }
+
+  /**
    * Gets all methods of a class, including inherited methods, excluding methods from {@code
    * java.lang.Object}.
    *
