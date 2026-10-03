@@ -48,6 +48,7 @@ import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 import org.javahelpers.simple.builders.processor.processing.ProcessingTarget;
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -58,9 +59,13 @@ import org.junit.jupiter.api.Test;
  */
 class BuilderScopeResolverTest {
 
+  @BeforeEach
+  void resetProbe() {
+    ResolverProbeProcessor.reset();
+  }
+
   @Test
   void resolverReturnsEmptyAfterConfigurationChangesToExcludePackage() {
-    ResolverProbeProcessor.reset();
     Compilation compilation =
         Compiler.javac()
             .withProcessors(new ResolverProbeProcessor())
@@ -87,7 +92,6 @@ class BuilderScopeResolverTest {
 
   @Test
   void resolverCachesResolvedOptionalInstancePerReferencedType() {
-    ResolverProbeProcessor.reset();
     Compilation compilation =
         Compiler.javac()
             .withProcessors(new ResolverProbeProcessor())
@@ -107,7 +111,6 @@ class BuilderScopeResolverTest {
 
   @Test
   void resolverClearsCacheOnRegistrationAndResolvesUsageScope() {
-    ResolverProbeProcessor.reset();
     Compilation compilation =
         Compiler.javac()
             .withProcessors(new ResolverProbeProcessor())
@@ -135,7 +138,6 @@ class BuilderScopeResolverTest {
 
   @Test
   void resolverUsageScope_ResolvesBuilderWithoutSimpleBuilderAnnotation() {
-    ResolverProbeProcessor.reset();
     Compilation compilation =
         Compiler.javac()
             .withProcessors(new ResolverProbeProcessor())
@@ -164,7 +166,6 @@ class BuilderScopeResolverTest {
 
   @Test
   void resolverUsageScope_RejectsBuilderWithoutNoArgConstructor() {
-    ResolverProbeProcessor.reset();
     Compilation compilation =
         Compiler.javac()
             .withProcessors(new ResolverProbeProcessor())
@@ -191,7 +192,6 @@ class BuilderScopeResolverTest {
 
   @Test
   void resolverUsageScope_RejectsBuilderWithPrivateConstructor() {
-    ResolverProbeProcessor.reset();
     Compilation compilation =
         Compiler.javac()
             .withProcessors(new ResolverProbeProcessor())
@@ -219,7 +219,6 @@ class BuilderScopeResolverTest {
 
   @Test
   void resolverUsageScope_AcceptsBuilderWithStaticFactories() {
-    ResolverProbeProcessor.reset();
     Compilation compilation =
         Compiler.javac()
             .withProcessors(new ResolverProbeProcessor())
@@ -258,7 +257,6 @@ class BuilderScopeResolverTest {
 
   @Test
   void resolverUsageScope_PackagePrivateMembers_AccessibleOnlyFromSamePackage() {
-    ResolverProbeProcessor.reset();
     Compilation compilation =
         Compiler.javac()
             .withProcessors(new ResolverProbeProcessor())
@@ -290,7 +288,6 @@ class BuilderScopeResolverTest {
 
   @Test
   void resolverUsageScope_UsesBuilderUsageSuffixWhenConfigured() {
-    ResolverProbeProcessor.reset();
     Compilation compilation =
         Compiler.javac()
             .withProcessors(new ResolverProbeProcessor())
@@ -319,7 +316,6 @@ class BuilderScopeResolverTest {
 
   @Test
   void resolverUsageScope_FallsBackToBuilderSuffixWhenUsageSuffixNotSet() {
-    ResolverProbeProcessor.reset();
     Compilation compilation =
         Compiler.javac()
             .withProcessors(new ResolverProbeProcessor())
@@ -350,7 +346,6 @@ class BuilderScopeResolverTest {
 
   @Test
   void resolverUsageScope_ResolvesBuilderAnchoredInsideType() {
-    ResolverProbeProcessor.reset();
     Compilation compilation =
         Compiler.javac()
             .withProcessors(new ResolverProbeProcessor())
@@ -390,7 +385,6 @@ class BuilderScopeResolverTest {
 
   @Test
   void resolverUsageScope_IgnoresInTypeAnchorWithoutContract() {
-    ResolverProbeProcessor.reset();
     Compilation compilation =
         Compiler.javac()
             .withProcessors(new ResolverProbeProcessor())
@@ -419,7 +413,6 @@ class BuilderScopeResolverTest {
 
   @Test
   void resolverUsageScope_PrefersBuilderNamedInTypeFactory() {
-    ResolverProbeProcessor.reset();
     Compilation compilation =
         Compiler.javac()
             .withProcessors(new ResolverProbeProcessor())
@@ -464,7 +457,6 @@ class BuilderScopeResolverTest {
 
   @Test
   void resolverUsageScope_ResolvesNestedTypeBuilder() {
-    ResolverProbeProcessor.reset();
     Compilation compilation =
         Compiler.javac()
             .withProcessors(new ResolverProbeProcessor())
@@ -492,7 +484,6 @@ class BuilderScopeResolverTest {
 
   @Test
   void resolverUsageScope_ResolvesLombokBuilderShape() {
-    ResolverProbeProcessor.reset();
     Compilation compilation =
         Compiler.javac()
             .withProcessors(new ResolverProbeProcessor())
@@ -524,7 +515,6 @@ class BuilderScopeResolverTest {
 
   @Test
   void resolverUsageScope_LombokBuilderShapeWithoutToBuilderFallsBack() {
-    ResolverProbeProcessor.reset();
     Compilation compilation =
         Compiler.javac()
             .withProcessors(new ResolverProbeProcessor())
@@ -549,7 +539,6 @@ class BuilderScopeResolverTest {
 
   @Test
   void resolverUsageScope_FreeBuilderShapeFallsBack() {
-    ResolverProbeProcessor.reset();
     Compilation compilation =
         Compiler.javac()
             .withProcessors(new ResolverProbeProcessor())
@@ -575,7 +564,6 @@ class BuilderScopeResolverTest {
 
   @Test
   void resolverUsageScope_AutoValueShapeFallsBack() {
-    ResolverProbeProcessor.reset();
     Compilation compilation =
         Compiler.javac()
             .withProcessors(new ResolverProbeProcessor())
@@ -608,7 +596,6 @@ class BuilderScopeResolverTest {
 
   @Test
   void resolverUsageScope_ImmutablesShapeFallsBack() {
-    ResolverProbeProcessor.reset();
     Compilation compilation =
         Compiler.javac()
             .withProcessors(new ResolverProbeProcessor())
@@ -641,7 +628,6 @@ class BuilderScopeResolverTest {
 
   @Test
   void resolverUsageScope_ResolvesRecordBuilderShape() {
-    ResolverProbeProcessor.reset();
     Compilation compilation =
         Compiler.javac()
             .withProcessors(new ResolverProbeProcessor())
@@ -675,7 +661,6 @@ class BuilderScopeResolverTest {
 
   @Test
   void resolverUsageScope_UsingExistingBuildersDisabled() {
-    ResolverProbeProcessor.reset();
     Compilation compilation =
         Compiler.javac()
             .withProcessors(new ResolverProbeProcessor())

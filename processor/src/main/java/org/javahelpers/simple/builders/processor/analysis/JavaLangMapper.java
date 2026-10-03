@@ -39,6 +39,7 @@ import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.SimpleTypeVisitor14;
+import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.GenericParameterDto;
@@ -142,8 +143,7 @@ public final class JavaLangMapper {
     }
     String packageName = context.getPackageName(typeElement);
     String qualifiedName = typeElement.getQualifiedName().toString();
-    String className =
-        packageName.isEmpty() ? qualifiedName : qualifiedName.substring(packageName.length() + 1);
+    String className = StringUtils.removeStart(qualifiedName, packageName + ".");
     return new TypeName(packageName, className);
   }
 
