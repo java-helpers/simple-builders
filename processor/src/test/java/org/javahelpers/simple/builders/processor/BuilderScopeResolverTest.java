@@ -142,12 +142,6 @@ class BuilderScopeResolverTest {
         ResolverProbeProcessor.usageAfterRegistration.get().typeName().getFullQualifiedName());
   }
 
-  private static final String LIB_HELPER =
-      """
-      package lib;
-      public class LibHelper { public LibHelper() {} }
-      """;
-
   @ParameterizedTest(name = "{argumentSetName}")
   @MethodSource("resolvedContractVariants")
   void resolverUsageScope_ResolvesContractVariants(
@@ -171,138 +165,12 @@ class BuilderScopeResolverTest {
     assertFactoryMethod(expectedPrefilledMethod, prefilled);
   }
 
-  static Stream<Arguments> resolvedContractVariants() {
-    return Stream.of(
-        // Usage scope without @SimpleBuilder annotation — builder resolved by contract check
-        Arguments.argumentSet(
-            "BuilderWithoutSimpleBuilderAnnotation",
-            """
-            package lib;
-            public class LibHelperBuilder {
-              public LibHelperBuilder() {}
-              public LibHelperBuilder(LibHelper value) {}
-              public LibHelper build() { return new LibHelper(); }
-            }
-            """,
-            probe(() -> ResolverProbeProcessor.usageWithoutAnnotation),
-            "lib.LibHelperBuilder",
-            BuilderInstantiation.ConstructorCall.class,
-            null,
-            BuilderInstantiation.ConstructorCall.class,
-            null),
-        // No accessible constructors: both instantiation paths come from the static
-        // factories — the second empty factory exercises the preferred-name ranking
-        Arguments.argumentSet(
-            "StaticFactories",
-            """
-            package lib;
-            public class LibHelperBuilder {
-              private LibHelperBuilder() {}
-              public static LibHelperBuilder create() { return new LibHelperBuilder(); }
-              public static LibHelperBuilder make() { return create(); }
-              public static LibHelperBuilder of(LibHelper value) { return create(); }
-              public LibHelper build() { return new LibHelper(); }
-            }
-            """,
-            probe(() -> ResolverProbeProcessor.usageWithoutAnnotation),
-            "lib.LibHelperBuilder",
-            BuilderInstantiation.StaticFactoryCall.class,
-            "create",
-            BuilderInstantiation.StaticFactoryCall.class,
-            "of"),
-        // Package-private contract members are accessible when the generated builder is in
-        // the same package (builderPackage "lib")
-        Arguments.argumentSet(
-            "PackagePrivateMembers_SamePackage",
-            """
-            package lib;
-            public class LibHelperBuilder {
-              LibHelperBuilder() {}
-              LibHelperBuilder(LibHelper value) {}
-              LibHelper build() { return new LibHelper(); }
-            }
-            """,
-            probe(() -> ResolverProbeProcessor.usagePackagePrivate),
-            "lib.LibHelperBuilder",
-            BuilderInstantiation.ConstructorCall.class,
-            null,
-            BuilderInstantiation.ConstructorCall.class,
-            null));
-  }
-
   @ParameterizedTest(name = "{argumentSetName}")
   @MethodSource("rejectedContractVariants")
   void resolverUsageScope_RejectsContractVariants(
       String builderSource, Supplier<Optional<ResolvedBuilder>> probeResult) {
     assertThat(compileWithBuilder(builderSource)).succeeded();
     assertEquals(Optional.empty(), probeResult.get());
-  }
-
-  static Stream<Arguments> rejectedContractVariants() {
-    return Stream.of(
-        // ctor(T) + build() but no no-arg ctor: generated consumer code calls `new
-        // LibHelperBuilder()`, so the builder must not qualify
-        Arguments.argumentSet(
-            "BuilderWithoutNoArgConstructor",
-            """
-            package lib;
-            public class LibHelperBuilder {
-              public LibHelperBuilder(LibHelper value) {}
-              public LibHelper build() { return new LibHelper(); }
-            }
-            """,
-            probe(() -> ResolverProbeProcessor.usageWithoutAnnotation)),
-        // The no-arg ctor exists but is private: generated code could not call it
-        Arguments.argumentSet(
-            "BuilderWithPrivateConstructor",
-            """
-            package lib;
-            public class LibHelperBuilder {
-              private LibHelperBuilder() {}
-              public LibHelperBuilder(LibHelper value) {}
-              public LibHelper build() { return new LibHelper(); }
-            }
-            """,
-            probe(() -> ResolverProbeProcessor.usageWithoutAnnotation)),
-        // Package-private contract members are not accessible from a different package
-        // (builderPackage unset)
-        Arguments.argumentSet(
-            "PackagePrivateMembers_OtherPackage",
-            """
-            package lib;
-            public class LibHelperBuilder {
-              LibHelperBuilder() {}
-              LibHelperBuilder(LibHelper value) {}
-              LibHelper build() { return new LibHelper(); }
-            }
-            """,
-            probe(() -> ResolverProbeProcessor.usageWithoutAnnotation)));
-  }
-
-  private static Compilation compileWithBuilder(String builderSource) {
-    return compileWithSources(LIB_HELPER, builderSource);
-  }
-
-  private static Compilation compileWithSources(String... sources) {
-    return Compiler.javac()
-        .withProcessors(new ResolverProbeProcessor())
-        .compile(
-            Stream.of(sources).map(ProcessorTestUtils::forSource).toArray(JavaFileObject[]::new));
-  }
-
-  private static Supplier<Optional<ResolvedBuilder>> probe(
-      Supplier<Optional<ResolvedBuilder>> field) {
-    return field;
-  }
-
-  private static void assertFactoryMethod(
-      String expectedMethod, BuilderInstantiation instantiation) {
-    if (expectedMethod != null) {
-      assertEquals(
-          expectedMethod,
-          assertInstanceOf(BuilderInstantiation.StaticFactoryCall.class, instantiation)
-              .methodName());
-    }
   }
 
   @Test
@@ -520,112 +388,6 @@ class BuilderScopeResolverTest {
     assertEquals(Optional.empty(), ResolverProbeProcessor.usageWithoutAnnotation);
   }
 
-  static Stream<Arguments> fallBackVariants() {
-    return Stream.of(
-        // The anchored type does not satisfy the contract, so resolution falls through
-        Arguments.argumentSet(
-            "InTypeAnchorWithoutContract",
-            (Object)
-                new String[] {
-                  """
-              package lib;
-              public class LibHelper {
-                public static builders.NoContract builder() {
-                  return new builders.NoContract();
-                }
-              }
-              """,
-                  """
-              package builders;
-              public class NoContract {
-                public NoContract() {}
-              }
-              """
-                }),
-        // Delombok output of @Builder without toBuilder: builder() anchors the empty path,
-        // but no seeded path exists, so the anchored candidate is rejected
-        Arguments.argumentSet(
-            "LombokBuilderShapeWithoutToBuilder",
-            (Object)
-                new String[] {
-                  """
-              package lib;
-              public class LibHelper {
-                public static LibHelperBuilder builder() { return new LibHelperBuilder(); }
-                public static class LibHelperBuilder {
-                  LibHelperBuilder() {}
-                  public LibHelper build() { return new LibHelper(); }
-                }
-              }
-              """
-                }),
-        // org.inferred.freebuilder generated shape: nested Builder with a public ctor and
-        // mergeFrom(T) — mergeFrom is an instance method, so the contract's seeded path fails
-        Arguments.argumentSet(
-            "FreeBuilderShape",
-            (Object)
-                new String[] {
-                  """
-              package lib;
-              public class LibHelper {
-                public static class Builder {
-                  public Builder() {}
-                  public Builder mergeFrom(LibHelper value) { return this; }
-                  public LibHelper build() { return new LibHelper(); }
-                }
-              }
-              """
-                }),
-        // com.google.auto.value generated shape: create() anchors a builder on the generated
-        // sibling, but AutoValue offers no seeded path (no ctor(T), no toBuilder)
-        Arguments.argumentSet(
-            "AutoValueShape",
-            (Object)
-                new String[] {
-                  """
-              package lib;
-              public class LibHelper {
-                public static AutoValue_LibHelper.Builder create() {
-                  return new AutoValue_LibHelper.Builder();
-                }
-              }
-              """,
-                  """
-              package lib;
-              public class AutoValue_LibHelper {
-                public static class Builder {
-                  Builder() {}
-                  public LibHelper build() { return new LibHelper(); }
-                }
-              }
-              """
-                }),
-        // org.immutables generated shape: builder() and toBuilder() live on the generated
-        // sibling ImmutableLibHelper, unreachable from the referenced type itself
-        Arguments.argumentSet(
-            "ImmutablesShape",
-            (Object)
-                new String[] {
-                  """
-              package lib;
-              public class LibHelper {
-                public LibHelper() {}
-              }
-              """,
-                  """
-              package lib;
-              public class ImmutableLibHelper {
-                public static Builder builder() { return new Builder(); }
-                public Builder toBuilder() { return new Builder(); }
-                public static class Builder {
-                  public Builder() {}
-                  public ImmutableLibHelper build() { return new ImmutableLibHelper(); }
-                }
-              }
-              """
-                }));
-  }
-
   @Test
   void resolverUsageScope_ResolvesNestedTypeBuilder() {
     Compilation compilation =
@@ -753,6 +515,245 @@ class BuilderScopeResolverTest {
     assertInstanceOf(BuilderInstantiation.StaticFactoryCall.class, generated.funcForEmptyBuilder());
     assertInstanceOf(
         BuilderInstantiation.ConstructorCall.class, generated.funcForPrefilledBuilder());
+  }
+
+  private static final String LIB_HELPER =
+      """
+      package lib;
+      public class LibHelper { public LibHelper() {} }
+      """;
+
+  static Stream<Arguments> resolvedContractVariants() {
+    return Stream.of(
+        // Usage scope without @SimpleBuilder annotation — builder resolved by contract check
+        Arguments.argumentSet(
+            "BuilderWithoutSimpleBuilderAnnotation",
+            """
+            package lib;
+            public class LibHelperBuilder {
+              public LibHelperBuilder() {}
+              public LibHelperBuilder(LibHelper value) {}
+              public LibHelper build() { return new LibHelper(); }
+            }
+            """,
+            probe(() -> ResolverProbeProcessor.usageWithoutAnnotation),
+            "lib.LibHelperBuilder",
+            BuilderInstantiation.ConstructorCall.class,
+            null,
+            BuilderInstantiation.ConstructorCall.class,
+            null),
+        // No accessible constructors: both instantiation paths come from the static
+        // factories — the second empty factory exercises the preferred-name ranking
+        Arguments.argumentSet(
+            "StaticFactories",
+            """
+            package lib;
+            public class LibHelperBuilder {
+              private LibHelperBuilder() {}
+              public static LibHelperBuilder create() { return new LibHelperBuilder(); }
+              public static LibHelperBuilder make() { return create(); }
+              public static LibHelperBuilder of(LibHelper value) { return create(); }
+              public LibHelper build() { return new LibHelper(); }
+            }
+            """,
+            probe(() -> ResolverProbeProcessor.usageWithoutAnnotation),
+            "lib.LibHelperBuilder",
+            BuilderInstantiation.StaticFactoryCall.class,
+            "create",
+            BuilderInstantiation.StaticFactoryCall.class,
+            "of"),
+        // Package-private contract members are accessible when the generated builder is in
+        // the same package (builderPackage "lib")
+        Arguments.argumentSet(
+            "PackagePrivateMembers_SamePackage",
+            """
+            package lib;
+            public class LibHelperBuilder {
+              LibHelperBuilder() {}
+              LibHelperBuilder(LibHelper value) {}
+              LibHelper build() { return new LibHelper(); }
+            }
+            """,
+            probe(() -> ResolverProbeProcessor.usagePackagePrivate),
+            "lib.LibHelperBuilder",
+            BuilderInstantiation.ConstructorCall.class,
+            null,
+            BuilderInstantiation.ConstructorCall.class,
+            null));
+  }
+
+  static Stream<Arguments> rejectedContractVariants() {
+    return Stream.of(
+        // ctor(T) + build() but no no-arg ctor: generated consumer code calls `new
+        // LibHelperBuilder()`, so the builder must not qualify
+        Arguments.argumentSet(
+            "BuilderWithoutNoArgConstructor",
+            """
+            package lib;
+            public class LibHelperBuilder {
+              public LibHelperBuilder(LibHelper value) {}
+              public LibHelper build() { return new LibHelper(); }
+            }
+            """,
+            probe(() -> ResolverProbeProcessor.usageWithoutAnnotation)),
+        // The no-arg ctor exists but is private: generated code could not call it
+        Arguments.argumentSet(
+            "BuilderWithPrivateConstructor",
+            """
+            package lib;
+            public class LibHelperBuilder {
+              private LibHelperBuilder() {}
+              public LibHelperBuilder(LibHelper value) {}
+              public LibHelper build() { return new LibHelper(); }
+            }
+            """,
+            probe(() -> ResolverProbeProcessor.usageWithoutAnnotation)),
+        // Package-private contract members are not accessible from a different package
+        // (builderPackage unset)
+        Arguments.argumentSet(
+            "PackagePrivateMembers_OtherPackage",
+            """
+            package lib;
+            public class LibHelperBuilder {
+              LibHelperBuilder() {}
+              LibHelperBuilder(LibHelper value) {}
+              LibHelper build() { return new LibHelper(); }
+            }
+            """,
+            probe(() -> ResolverProbeProcessor.usageWithoutAnnotation)));
+  }
+
+  static Stream<Arguments> fallBackVariants() {
+    return Stream.of(
+        // The anchored type does not satisfy the contract, so resolution falls through
+        Arguments.argumentSet(
+            "InTypeAnchorWithoutContract",
+            (Object)
+                new String[] {
+                  """
+              package lib;
+              public class LibHelper {
+                public static builders.NoContract builder() {
+                  return new builders.NoContract();
+                }
+              }
+              """,
+                  """
+              package builders;
+              public class NoContract {
+                public NoContract() {}
+              }
+              """
+                }),
+        // Delombok output of @Builder without toBuilder: builder() anchors the empty path,
+        // but no seeded path exists, so the anchored candidate is rejected
+        Arguments.argumentSet(
+            "LombokBuilderShapeWithoutToBuilder",
+            (Object)
+                new String[] {
+                  """
+              package lib;
+              public class LibHelper {
+                public static LibHelperBuilder builder() { return new LibHelperBuilder(); }
+                public static class LibHelperBuilder {
+                  LibHelperBuilder() {}
+                  public LibHelper build() { return new LibHelper(); }
+                }
+              }
+              """
+                }),
+        // org.inferred.freebuilder generated shape: nested Builder with a public ctor and
+        // mergeFrom(T) — mergeFrom is an instance method, so the contract's seeded path fails
+        Arguments.argumentSet(
+            "FreeBuilderShape",
+            (Object)
+                new String[] {
+                  """
+              package lib;
+              public class LibHelper {
+                public static class Builder {
+                  public Builder() {}
+                  public Builder mergeFrom(LibHelper value) { return this; }
+                  public LibHelper build() { return new LibHelper(); }
+                }
+              }
+              """
+                }),
+        // com.google.auto.value generated shape: create() anchors a builder on the generated
+        // sibling, but AutoValue offers no seeded path (no ctor(T), no toBuilder)
+        Arguments.argumentSet(
+            "AutoValueShape",
+            (Object)
+                new String[] {
+                  """
+              package lib;
+              public class LibHelper {
+                public static AutoValue_LibHelper.Builder create() {
+                  return new AutoValue_LibHelper.Builder();
+                }
+              }
+              """,
+                  """
+              package lib;
+              public class AutoValue_LibHelper {
+                public static class Builder {
+                  Builder() {}
+                  public LibHelper build() { return new LibHelper(); }
+                }
+              }
+              """
+                }),
+        // org.immutables generated shape: builder() and toBuilder() live on the generated
+        // sibling ImmutableLibHelper, unreachable from the referenced type itself
+        Arguments.argumentSet(
+            "ImmutablesShape",
+            (Object)
+                new String[] {
+                  """
+              package lib;
+              public class LibHelper {
+                public LibHelper() {}
+              }
+              """,
+                  """
+              package lib;
+              public class ImmutableLibHelper {
+                public static Builder builder() { return new Builder(); }
+                public Builder toBuilder() { return new Builder(); }
+                public static class Builder {
+                  public Builder() {}
+                  public ImmutableLibHelper build() { return new ImmutableLibHelper(); }
+                }
+              }
+              """
+                }));
+  }
+
+  private static Compilation compileWithSources(String... sources) {
+    return Compiler.javac()
+        .withProcessors(new ResolverProbeProcessor())
+        .compile(
+            Stream.of(sources).map(ProcessorTestUtils::forSource).toArray(JavaFileObject[]::new));
+  }
+
+  private static Compilation compileWithBuilder(String builderSource) {
+    return compileWithSources(LIB_HELPER, builderSource);
+  }
+
+
+  private static Supplier<Optional<ResolvedBuilder>> probe(
+      Supplier<Optional<ResolvedBuilder>> field) {
+    return field;
+  }
+
+  private static void assertFactoryMethod(
+      String expectedMethod, BuilderInstantiation instantiation) {
+    if (expectedMethod != null) {
+      assertEquals(
+          expectedMethod,
+          assertInstanceOf(BuilderInstantiation.StaticFactoryCall.class, instantiation)
+              .methodName());
+    }
   }
 
   private static final class ResolverProbeProcessor extends AbstractProcessor {
