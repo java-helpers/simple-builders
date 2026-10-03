@@ -29,6 +29,7 @@ import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.type.TypeKind.VOID;
 
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -230,6 +231,47 @@ public final class JavaLangAnalyser {
     }
 
     return Optional.empty();
+  }
+
+  /**
+   * Finds all instances of a repeatable annotation on an element: direct mirrors plus the entries
+   * wrapped in its container annotation, in declaration order.
+   *
+   * @param element Element to be checked
+   * @param annotationClass the repeatable annotation to be checked
+   * @param containerClass the container annotation wrapping repeats of {@code annotationClass}
+   * @param context the processing context providing element utilities
+   * @return the list of {@code javax.lang.model.element.AnnotationMirror} instances of
+   *     annotationClass found on the element
+   */
+  public static List<AnnotationMirror> findAnnotationInstances(
+      Element element,
+      Class<? extends Annotation> annotationClass,
+      Class<? extends Annotation> containerClass,
+      ProcessingContext context) {
+    List<AnnotationMirror> instances = new ArrayList<>();
+    if (element == null) {
+      return instances;
+    }
+    for (AnnotationMirror annotationMirror : element.getAnnotationMirrors()) {
+      String annotationName = annotationMirror.getAnnotationType().toString();
+      if (annotationName.equals(annotationClass.getCanonicalName())) {
+        instances.add(annotationMirror);
+      } else if (annotationName.equals(containerClass.getCanonicalName())) {
+        Optional<AnnotationValue> containerValue =
+            findAnnotationAttribute(annotationMirror, "value", context);
+        if (containerValue.isPresent()
+            && containerValue.get().getValue() instanceof List<?> entries) {
+          for (Object entry : entries) {
+            if (entry instanceof AnnotationValue entryValue
+                && entryValue.getValue() instanceof AnnotationMirror entryMirror) {
+              instances.add(entryMirror);
+            }
+          }
+        }
+      }
+    }
+    return instances;
   }
 
   /**

@@ -37,9 +37,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
-import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFor;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
-import org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyser;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
@@ -151,21 +149,22 @@ public class BuilderConfigurationReader {
    * are considered - the type is typically external and must not be modified, so its annotations
    * (if any) do not participate in configuration. The configuration is composed of the built-in
    * defaults, the global compiler arguments, and the {@code options()} of the
-   * {@code @SimpleBuilderFor} annotation found on the given element.
+   * {@code @SimpleBuilderFor} annotation instance found on the given element.
    *
    * @param element the {@code @SimpleBuilderFor} holder (used for validation messages)
+   * @param annotationInstance one {@code @SimpleBuilderFor} annotation instance on the element;
+   *     repeated declarations each resolve their own configuration
    * @return the fully resolved configuration with all sources merged
    */
-  public BuilderConfiguration resolveHolderConfiguration(Element element) throws BuilderException {
+  public BuilderConfiguration resolveHolderConfiguration(
+      Element element, AnnotationMirror annotationInstance) throws BuilderException {
     Objects.requireNonNull(element, "element must not be null");
+    Objects.requireNonNull(annotationInstance, "annotationInstance must not be null");
     String elementName = element.getSimpleName().toString();
     logger.debugStartOperation(
         "Resolving configuration for @SimpleBuilderFor target: %s", elementName);
 
-    BuilderConfiguration optionsConfig =
-        JavaLangAnalyser.findAnnotation(element, SimpleBuilderFor.class)
-            .map(this::extractOptionsFromAnnotationMirror)
-            .orElse(null);
+    BuilderConfiguration optionsConfig = extractOptionsFromAnnotationMirror(annotationInstance);
 
     BuilderConfiguration result =
         BuilderConfiguration.DEFAULT.merge(globalConfiguration).merge(optionsConfig);

@@ -53,6 +53,7 @@ import javax.lang.model.type.TypeMirror;
 import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder.Template;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFor;
+import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFors;
 import org.javahelpers.simple.builders.processor.analysis.BuilderScopeResolver;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyser;
 import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterCodeGenerator;
@@ -207,10 +208,13 @@ public class BuilderProcessor extends AbstractProcessor {
 
   /**
    * Collects all elements annotated with {@code @SimpleBuilderFor} in this round. These are holder
-   * classes declaring external types a builder is generated for.
+   * classes declaring external types a builder is generated for. Repeated declarations arrive
+   * wrapped in the {@code @SimpleBuilderFors} container, so both are collected.
    */
   private Set<Element> collectExternalTypeHolders(RoundEnvironment roundEnv) {
-    return new HashSet<>(roundEnv.getElementsAnnotatedWith(SimpleBuilderFor.class));
+    Set<Element> holders = new HashSet<>(roundEnv.getElementsAnnotatedWith(SimpleBuilderFor.class));
+    holders.addAll(roundEnv.getElementsAnnotatedWith(SimpleBuilderFors.class));
+    return holders;
   }
 
   /**
@@ -311,9 +315,11 @@ public class BuilderProcessor extends AbstractProcessor {
   }
 
   /**
-   * Expands a {@code @SimpleBuilderFor} holder into the external types listed in its {@code value}
-   * attribute and plans a builder for each of them. The generated builder is placed in the
-   * configured {@code packageName} or the holder's package.
+   * Expands a {@code @SimpleBuilderFor} holder into the external types listed in the {@code value}
+   * attributes of its annotation instances and plans a builder for each of them. Each instance
+   * resolves its own configuration, so repeated declarations may place their generated builders
+   * into different packages via {@code packageName}; without a configured package the holder's
+   * package is used.
    */
   private List<ElementToGenerate> planGenerationOfTypeByHolder(
       Element holder,
@@ -322,24 +328,30 @@ public class BuilderProcessor extends AbstractProcessor {
       PerformanceTracker tracker)
       throws BuilderException {
     Objects.requireNonNull(holder, "holder must not be null");
-    List<TypeElement> targets = extractExternalTargetTypes(holder);
-    if (targets.isEmpty()) {
-      context.warning(
-          holder,
-          "simple-builders: @SimpleBuilderFor on '%s' does not list any types - nothing to generate",
-          holder.getSimpleName());
-      return List.of();
-    }
+    List<AnnotationMirror> annotationInstances =
+        JavaLangAnalyser.findAnnotationInstances(
+            holder, SimpleBuilderFor.class, SimpleBuilderFors.class, context);
 
-    tracker.startPhase();
-    BuilderConfiguration config = reader.resolveHolderConfiguration(holder);
-    tracker.endPhase(PHASE_CONFIGURATION_RESOLUTION);
-
-    String builderPackage = effectiveBuilderPackage(holder, config);
     List<ElementToGenerate> results = new ArrayList<>();
-    for (TypeElement target : targets) {
-      planExternalTarget(target, holder, config, builderPackage, alreadyPlannedBuilders)
-          .ifPresent(results::add);
+    for (AnnotationMirror annotationInstance : annotationInstances) {
+      List<TypeElement> targets = extractExternalTargetTypes(holder, annotationInstance);
+      if (targets.isEmpty()) {
+        context.warning(
+            holder,
+            "simple-builders: @SimpleBuilderFor on '%s' does not list any types - nothing to generate",
+            holder.getSimpleName());
+        continue;
+      }
+
+      tracker.startPhase();
+      BuilderConfiguration config = reader.resolveHolderConfiguration(holder, annotationInstance);
+      tracker.endPhase(PHASE_CONFIGURATION_RESOLUTION);
+
+      String builderPackage = effectiveBuilderPackage(holder, config);
+      for (TypeElement target : targets) {
+        planExternalTarget(target, holder, config, builderPackage, alreadyPlannedBuilders)
+            .ifPresent(results::add);
+      }
     }
     return results;
   }
@@ -380,17 +392,13 @@ public class BuilderProcessor extends AbstractProcessor {
   }
 
   /**
-   * Reads the {@code value} attribute of the {@code @SimpleBuilderFor} annotation on the holder and
-   * resolves each entry to the {@link TypeElement} the builder is generated for.
+   * Reads the {@code value} attribute of one {@code @SimpleBuilderFor} annotation instance on the
+   * holder and resolves each entry to the {@link TypeElement} the builder is generated for.
    */
-  private List<TypeElement> extractExternalTargetTypes(Element holder) throws BuilderException {
-    Optional<AnnotationMirror> mirror =
-        JavaLangAnalyser.findAnnotation(holder, SimpleBuilderFor.class);
-    if (mirror.isEmpty()) {
-      return List.of();
-    }
+  private List<TypeElement> extractExternalTargetTypes(
+      Element holder, AnnotationMirror annotationInstance) throws BuilderException {
     Optional<AnnotationValue> valueAttribute =
-        JavaLangAnalyser.findAnnotationAttribute(mirror.get(), "value", context);
+        JavaLangAnalyser.findAnnotationAttribute(annotationInstance, "value", context);
     List<TypeElement> results = new ArrayList<>();
     // For an array-valued attribute javac always delivers a list, even for a single entry.
     if (valueAttribute.isEmpty() || !(valueAttribute.get().getValue() instanceof List<?> items)) {
