@@ -189,6 +189,19 @@ The generated builders are placed in the annotated package - or in the package o
 
 The target type must be constructible through accessible Java APIs from the builder's package: it needs a visible type and an accessible constructor, otherwise generation fails with a compile-time diagnostic. The target type's own annotations are not consulted - the explicit declaration wins, so `@Ignore4BuilderGeneration` on the target does not suppress generation either. `@SimpleBuilderFor` is not `@Inherited`, and the provider class or package itself never gets a builder.
 
+`@SimpleBuilderFor` is `@Repeatable`: several declarations may be placed on the same holder or `package-info.java` when the listed types need different options - for example a different `packageName` per declaration:
+
+```java
+@SimpleBuilderFor(
+    value = ExternalUser.class,
+    options = @SimpleBuilder.Options(packageName = "com.example.users"))
+@SimpleBuilderFor(
+    value = ExternalOrder.class,
+    options = @SimpleBuilder.Options(packageName = "com.example.orders"))
+public class ExternalBuildersProvider {
+}
+```
+
 ## Compiler Options
 
 Set project-wide defaults via compiler options. These apply to all builders unless overridden by annotations.

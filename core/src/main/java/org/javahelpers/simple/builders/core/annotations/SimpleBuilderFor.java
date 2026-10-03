@@ -25,6 +25,7 @@
 package org.javahelpers.simple.builders.core.annotations;
 
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
@@ -83,6 +84,21 @@ import java.lang.annotation.Target;
  * }
  * }</pre>
  *
+ * <p>The annotation is {@link Repeatable}: several declarations may be placed on the same holder
+ * (class or {@code package-info.java}) when the listed types need different {@link #options()}, for
+ * example a different {@code packageName} for the generated builders:
+ *
+ * <pre>{@code
+ * @SimpleBuilderFor(
+ *     value = ExternalUser.class,
+ *     options = @SimpleBuilder.Options(packageName = "com.example.users"))
+ * @SimpleBuilderFor(
+ *     value = ExternalOrder.class,
+ *     options = @SimpleBuilder.Options(packageName = "com.example.orders"))
+ * public class ExternalBuildersProvider {
+ * }
+ * }</pre>
+ *
  * <p>Configuration uses the existing {@link SimpleBuilder.Options} model and may be overridden via
  * compiler options:
  *
@@ -103,6 +119,7 @@ import java.lang.annotation.Target;
  */
 @Target({ElementType.TYPE, ElementType.PACKAGE})
 @Retention(RetentionPolicy.CLASS)
+@Repeatable(SimpleBuilderFors.class)
 public @interface SimpleBuilderFor {
 
   /**

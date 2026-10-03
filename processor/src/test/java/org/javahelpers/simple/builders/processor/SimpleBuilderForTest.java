@@ -411,6 +411,92 @@ class SimpleBuilderForTest {
     ProcessorAsserts.assertContaining(generated, "package test;");
   }
 
+  @Test
+  void repeatable_GeneratesBuildersIntoDifferentPackages() {
+    JavaFileObject holder =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFor;
+            @SimpleBuilderFor(
+                value = ext.ExternalUser.class,
+                options = @SimpleBuilder.Options(packageName = "com.example.users"))
+            @SimpleBuilderFor(
+                value = ext.ExternalOrder.class,
+                options = @SimpleBuilder.Options(packageName = "com.example.orders"))
+            public class Builders {}
+            """);
+
+    Compilation compilation =
+        ProcessorTestUtils.createCompiler().compile(externalDto(), externalOrderDto(), holder);
+
+    assertThat(compilation).succeededWithoutWarnings();
+    ProcessorAsserts.assertContaining(
+        ProcessorTestUtils.loadGeneratedSource(compilation, "users/ExternalUserBuilder"),
+        "package com.example.users;");
+    ProcessorAsserts.assertContaining(
+        ProcessorTestUtils.loadGeneratedSource(compilation, "orders/ExternalOrderBuilder"),
+        "package com.example.orders;");
+  }
+
+  @Test
+  void repeatable_OnPackageInfo_GeneratesBuildersIntoAnnotatedPackage() {
+    JavaFileObject packageInfo =
+        JavaFileObjects.forSourceLines(
+            "test.package-info",
+            "@SimpleBuilderFor(ext.ExternalUser.class)",
+            "@SimpleBuilderFor(ext.ExternalOrder.class)",
+            "package test;",
+            "",
+            "import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFor;");
+
+    Compilation compilation =
+        ProcessorTestUtils.createCompiler().compile(externalDto(), externalOrderDto(), packageInfo);
+
+    assertThat(compilation).succeededWithoutWarnings();
+    ProcessorAsserts.assertContaining(
+        ProcessorTestUtils.loadGeneratedSource(compilation, "ExternalUserBuilder"),
+        "package test;");
+    ProcessorAsserts.assertContaining(
+        ProcessorTestUtils.loadGeneratedSource(compilation, "ExternalOrderBuilder"),
+        "package test;");
+  }
+
+  @Test
+  void repeatable_DuplicateType_SecondDeclarationSkippedWithWarning() {
+    JavaFileObject holder =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFor;
+            @SimpleBuilderFor(ext.ExternalUser.class)
+            @SimpleBuilderFor(ext.ExternalUser.class)
+            public class Builders {}
+            """);
+
+    Compilation compilation = ProcessorTestUtils.createCompiler().compile(externalDto(), holder);
+
+    assertThat(compilation).succeeded();
+    assertThat(compilation).hadWarningContaining("already generated elsewhere");
+    // Exactly one ExternalUserBuilder was generated in package test
+    String generated = ProcessorTestUtils.loadGeneratedSource(compilation, "ExternalUserBuilder");
+    ProcessorAsserts.assertContaining(generated, "package test;");
+  }
+
+  private static JavaFileObject externalOrderDto() {
+    return ProcessorTestUtils.forSource(
+        """
+        package ext;
+        public class ExternalOrder {
+          private String id;
+          public ExternalOrder() {}
+          public String getId() { return id; }
+          public void setId(String id) { this.id = id; }
+        }
+        """);
+  }
+
   private static JavaFileObject externalDto() {
     return ProcessorTestUtils.forSource(
         """
