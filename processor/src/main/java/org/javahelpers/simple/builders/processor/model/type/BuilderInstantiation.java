@@ -135,7 +135,7 @@ public sealed interface BuilderInstantiation {
       TypeName sourceType,
       BuilderInstantiation funcForEmptyBuilder,
       String builderMethodPrefix,
-      List<PrefilledField> prefilledFields)
+      List<Field> prefilledFields)
       implements BuilderInstantiation {
 
     @Override
@@ -164,7 +164,7 @@ public sealed interface BuilderInstantiation {
      * @param field the prefilled field
      * @return the field function's name on the builder
      */
-    public String builderMethodFor(PrefilledField field) {
+    public String builderMethodFor(Field field) {
       return builderMethodPrefix.isEmpty()
           ? field.property()
           : builderMethodPrefix + StringUtils.capitalize(field.property());
@@ -177,6 +177,6 @@ public sealed interface BuilderInstantiation {
      * @param property the property name (e.g. {@code name})
      * @param accessor how the property is read from the value (e.g. {@code name()} or {@code name})
      */
-    public record PrefilledField(String property, String accessor) {}
+    public record Field(String property, String accessor) {}
   }
 }

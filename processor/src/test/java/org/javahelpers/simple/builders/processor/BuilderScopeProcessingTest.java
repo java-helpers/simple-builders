@@ -319,7 +319,8 @@ class BuilderScopeProcessingTest {
             """
             package lib;
             public class LibraryDto {
-              private String name;
+              private final String name;
+              public LibraryDto(String name) { this.name = name; }
               public String getName() { return name; }
             }
             """);
@@ -331,7 +332,7 @@ class BuilderScopeProcessingTest {
               private String name;
               public LibraryDtoBuilder() {}
               public LibraryDtoBuilder name(String name) { this.name = name; return this; }
-              public LibraryDto build() { return new LibraryDto(); }
+              public LibraryDto build() { return new LibraryDto(name); }
             }
             """);
 

@@ -493,13 +493,22 @@ class BuilderScopeResolverTest {
                     """
                     package lib;
                     public class LibHelper {
-                      public String getName() { return ""; }
+                      private String name;
+                      public String getName() { return name; }
                       public static class Builder {
+                        private String name;
                         public Builder() {}
-                        public Builder mergeFrom(LibHelper value) { return this; }
-                        public Builder name(String name) { return this; }
+                        public Builder mergeFrom(LibHelper value) {
+                          name = value.getName();
+                          return this;
+                        }
+                        public Builder name(String name) { this.name = name; return this; }
                         public Builder setName(String name) { return name(name); }
-                        public LibHelper build() { return new LibHelper(); }
+                        public LibHelper build() {
+                          LibHelper helper = new LibHelper();
+                          helper.name = name;
+                          return helper;
+                        }
                       }
                     }
                     """));
@@ -529,11 +538,17 @@ class BuilderScopeResolverTest {
                     """
                     package lib;
                     public class LibHelper {
-                      public String getName() { return ""; }
+                      private String name;
+                      public String getName() { return name; }
                       public static class Builder {
+                        private String name;
                         public Builder() {}
-                        public Builder name(String name) { return this; }
-                        public LibHelper build() { return new LibHelper(); }
+                        public Builder name(String name) { this.name = name; return this; }
+                        public LibHelper build() {
+                          LibHelper helper = new LibHelper();
+                          helper.name = name;
+                          return helper;
+                        }
                       }
                     }
                     """));
@@ -556,11 +571,17 @@ class BuilderScopeResolverTest {
                     """
                     package lib;
                     public class LibHelper {
+                      private final String name;
+                      private final boolean active;
+                      public LibHelper(String name, boolean active) {
+                        this.name = name;
+                        this.active = active;
+                      }
                       public static AutoValue_LibHelper.Builder create() {
                         return new AutoValue_LibHelper.Builder();
                       }
-                      public String getName() { return ""; }
-                      public boolean isActive() { return true; }
+                      public String getName() { return name; }
+                      public boolean isActive() { return active; }
                     }
                     """),
                 ProcessorTestUtils.forSource(
@@ -568,10 +589,12 @@ class BuilderScopeResolverTest {
                     package lib;
                     public class AutoValue_LibHelper {
                       public static class Builder {
+                        private String name;
+                        private boolean active;
                         Builder() {}
-                        public Builder setName(String name) { return this; }
-                        public Builder setActive(boolean active) { return this; }
-                        public LibHelper build() { return new LibHelper(); }
+                        public Builder setName(String name) { this.name = name; return this; }
+                        public Builder setActive(boolean active) { this.active = active; return this; }
+                        public LibHelper build() { return new LibHelper(name, active); }
                       }
                     }
                     """));
@@ -600,18 +623,29 @@ class BuilderScopeResolverTest {
                     """
                     package lib;
                     public class LibHelper {
-                      public String getName() { return ""; }
-                      public boolean isActive() { return true; }
+                      private final String name;
+                      private final boolean active;
+                      public LibHelper(String name, boolean active) {
+                        this.name = name;
+                        this.active = active;
+                      }
+                      public String getName() { return name; }
+                      public boolean isActive() { return active; }
                     }
                     """),
                 ProcessorTestUtils.forSource(
                     """
                     package lib;
                     public class LibHelperBuilder {
+                      private String name;
+                      private boolean active;
                       public LibHelperBuilder() {}
-                      public LibHelperBuilder withName(String name) { return this; }
-                      public LibHelperBuilder withActive(boolean active) { return this; }
-                      public LibHelper build() { return new LibHelper(); }
+                      public LibHelperBuilder withName(String name) { this.name = name; return this; }
+                      public LibHelperBuilder withActive(boolean active) {
+                        this.active = active;
+                        return this;
+                      }
+                      public LibHelper build() { return new LibHelper(name, active); }
                     }
                     """));
 
@@ -636,16 +670,19 @@ class BuilderScopeResolverTest {
                     """
                     package lib;
                     public class LibHelper {
-                      public String getName() { return ""; }
+                      private final String name;
+                      public LibHelper(String name) { this.name = name; }
+                      public String getName() { return name; }
                     }
                     """),
                 ProcessorTestUtils.forSource(
                     """
                     package lib;
                     public class LibHelperBuilder {
+                      private String name;
                       public LibHelperBuilder() {}
-                      public LibHelperBuilder putName(String name) { return this; }
-                      public LibHelper build() { return new LibHelper(); }
+                      public LibHelperBuilder putName(String name) { this.name = name; return this; }
+                      public LibHelper build() { return new LibHelper(name); }
                     }
                     """));
 
@@ -673,9 +710,10 @@ class BuilderScopeResolverTest {
                     """
                     package lib;
                     public class LibHelperBuilder {
+                      private String name;
                       public LibHelperBuilder() {}
-                      public LibHelperBuilder name(String name) { return this; }
-                      public LibHelper build() { return new LibHelper("x"); }
+                      public LibHelperBuilder name(String name) { this.name = name; return this; }
+                      public LibHelper build() { return new LibHelper(name); }
                     }
                     """));
 
@@ -707,9 +745,14 @@ class BuilderScopeResolverTest {
                     """
                     package lib;
                     public class LibHelperBuilder {
+                      private String name;
                       public LibHelperBuilder() {}
-                      public LibHelperBuilder name(String name) { return this; }
-                      public LibHelper build() { return new LibHelper(); }
+                      public LibHelperBuilder name(String name) { this.name = name; return this; }
+                      public LibHelper build() {
+                        LibHelper helper = new LibHelper();
+                        helper.name = name;
+                        return helper;
+                      }
                     }
                     """));
 
@@ -765,19 +808,32 @@ class BuilderScopeResolverTest {
                     """
                     package lib;
                     public class LibHelper {
-                      public String getName() { return ""; }
-                      public boolean isActive() { return true; }
-                      public int getAge() { return 0; }
+                      private final String name;
+                      private final boolean active;
+                      private final int age;
+                      public LibHelper(String name, boolean active, int age) {
+                        this.name = name;
+                        this.active = active;
+                        this.age = age;
+                      }
+                      public String getName() { return name; }
+                      public boolean isActive() { return active; }
+                      public int getAge() { return age; }
                     }
                     """),
                 ProcessorTestUtils.forSource(
                     """
                     package lib;
                     public class LibHelperBuilder {
+                      private String name;
+                      private boolean active;
                       public LibHelperBuilder() {}
-                      public LibHelperBuilder name(String name) { return this; }
-                      public LibHelperBuilder active(boolean active) { return this; }
-                      public LibHelper build() { return new LibHelper(); }
+                      public LibHelperBuilder name(String name) { this.name = name; return this; }
+                      public LibHelperBuilder active(boolean active) {
+                        this.active = active;
+                        return this;
+                      }
+                      public LibHelper build() { return new LibHelper(name, active, 0); }
                     }
                     """));
 

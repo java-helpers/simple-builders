@@ -365,7 +365,7 @@ public final class BuilderScopeResolver {
    * convention the most properties follow wins.
    */
   private record ConventionCoverage(
-      String prefix, List<BuilderInstantiation.PrefillCall.PrefilledField> prefilledFields) {}
+      String prefix, List<BuilderInstantiation.PrefillCall.Field> prefilledFields) {}
 
   /**
    * Candidate field-function prefixes: {@code ""} (fluent {@code name(v)}) and {@code set}
@@ -406,17 +406,26 @@ public final class BuilderScopeResolver {
    * @param prefix the naming convention to try
    * @return the prefilled fields in property order
    */
-  private List<BuilderInstantiation.PrefillCall.PrefilledField> collectPrefilledFields(
+  private List<BuilderInstantiation.PrefillCall.Field> collectPrefilledFields(
       List<JavaLangAnalyser.ReadableProperty> properties,
       List<ExecutableElement> fieldFunctions,
       String prefix) {
     return properties.stream()
         .filter(property -> findFieldFunction(fieldFunctions, property, prefix).isPresent())
-        .map(
-            property ->
-                new BuilderInstantiation.PrefillCall.PrefilledField(
-                    property.name(), property.accessor()))
+        .map(BuilderScopeResolver::prefilledField)
         .toList();
+  }
+
+  /**
+   * Creates the prefilled field for a property the builder covers: the property name plus how it is
+   * read from the source value.
+   *
+   * @param property the readable property to prefill
+   * @return the prefilled field to emit
+   */
+  private static BuilderInstantiation.PrefillCall.Field prefilledField(
+      JavaLangAnalyser.ReadableProperty property) {
+    return new BuilderInstantiation.PrefillCall.Field(property.name(), property.accessor());
   }
 
   /**

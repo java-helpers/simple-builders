@@ -297,8 +297,7 @@ public final class MethodGeneratorUtil {
     code.append("$builderType:T builder = ")
         .append(prefillCall.funcForEmptyBuilder().instantiationCode("$builderType:T", ""))
         .append(";\n");
-    for (BuilderInstantiation.PrefillCall.PrefilledField prefilledField :
-        prefillCall.prefilledFields()) {
+    for (BuilderInstantiation.PrefillCall.Field prefilledField : prefillCall.prefilledFields()) {
       code.append("builder.")
           .append(prefillCall.builderMethodFor(prefilledField))
           .append("(value.")
