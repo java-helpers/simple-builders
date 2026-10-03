@@ -314,10 +314,7 @@ public final class JavaLangAnalyser {
             method ->
                 expectedReturnType == null
                     ? method.getReturnType().getKind() == VOID
-                    : method
-                        .getReturnType()
-                        .toString()
-                        .equals(expectedReturnType.getFullQualifiedName()))
+                    : hasType(method.getReturnType(), expectedReturnType))
         .filter(method -> hasParameters(method, expectedParameterTypes))
         .toList();
   }
@@ -333,15 +330,15 @@ public final class JavaLangAnalyser {
       return false;
     }
     for (int i = 0; i < parameters.size(); i++) {
-      if (!parameters
-          .get(i)
-          .asType()
-          .toString()
-          .equals(expectedParameterTypes.get(i).getFullQualifiedName())) {
+      if (!hasType(parameters.get(i).asType(), expectedParameterTypes.get(i))) {
         return false;
       }
     }
     return true;
+  }
+
+  private static boolean hasType(TypeMirror typeMirror, TypeName expectedType) {
+    return typeMirror.toString().equals(expectedType.getFullQualifiedName());
   }
 
   /**
