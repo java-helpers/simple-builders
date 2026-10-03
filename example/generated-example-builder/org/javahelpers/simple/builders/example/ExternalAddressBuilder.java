@@ -96,25 +96,6 @@ public class ExternalAddressBuilder implements IBuilderBase<ExternalAddress> {
   }
 
   /**
-   * Sets the value for <code>city</code>.
-   * <p>
-   * Generated from setter {@link ExternalAddress#setCity(String) setCity(String city)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.city("example value");
-   * }</pre>
-   * 
-   * @param city city
-   * @return current instance of builder
-   */
-  public ExternalAddressBuilder city(String city) {
-    this.city = changedValue(city);
-    return this;
-  }
-
-  /**
    * Sets the value for <code>city</code> by executing the provided consumer.
    * <p>
    * Generated from setter {@link ExternalAddress#setCity(String) setCity(String city)}
@@ -176,6 +157,25 @@ public class ExternalAddressBuilder implements IBuilderBase<ExternalAddress> {
   }
 
   /**
+   * Sets the value for <code>city</code>.
+   * <p>
+   * Generated from setter {@link ExternalAddress#setCity(String) setCity(String city)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.city("example value");
+   * }</pre>
+   * 
+   * @param city city
+   * @return current instance of builder
+   */
+  public ExternalAddressBuilder city(String city) {
+    this.city = changedValue(city);
+    return this;
+  }
+
+  /**
    * Updates the current value of <code>city</code> in place by applying the given operator, instead of reading it out,
    * changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
@@ -198,25 +198,6 @@ public class ExternalAddressBuilder implements IBuilderBase<ExternalAddress> {
       throw new IllegalStateException("Cannot update 'city' before it is set");
     }
     this.city = changedValue(cityUpdater.apply(this.city.value()));
-    return this;
-  }
-
-  /**
-   * Sets the value for <code>street</code>.
-   * <p>
-   * Generated from setter {@link ExternalAddress#setStreet(String) setStreet(String street)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.street("example value");
-   * }</pre>
-   * 
-   * @param street street
-   * @return current instance of builder
-   */
-  public ExternalAddressBuilder street(String street) {
-    this.street = changedValue(street);
     return this;
   }
 
@@ -278,6 +259,25 @@ public class ExternalAddressBuilder implements IBuilderBase<ExternalAddress> {
    */
   public ExternalAddressBuilder street(String format, Object... args) {
     this.street = changedValue(String.format(format, args));
+    return this;
+  }
+
+  /**
+   * Sets the value for <code>street</code>.
+   * <p>
+   * Generated from setter {@link ExternalAddress#setStreet(String) setStreet(String street)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.street("example value");
+   * }</pre>
+   * 
+   * @param street street
+   * @return current instance of builder
+   */
+  public ExternalAddressBuilder street(String street) {
+    this.street = changedValue(street);
     return this;
   }
 
@@ -353,25 +353,6 @@ public class ExternalAddressBuilder implements IBuilderBase<ExternalAddress> {
   }
 
   /**
-   * Sets the value for <code>zipCode</code>.
-   * <p>
-   * Generated from setter {@link ExternalAddress#setZipCode(String) setZipCode(String zipCode)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.zipCode("example value");
-   * }</pre>
-   * 
-   * @param zipCode zipCode
-   * @return current instance of builder
-   */
-  public ExternalAddressBuilder zipCode(String zipCode) {
-    this.zipCode = changedValue(zipCode);
-    return this;
-  }
-
-  /**
    * Sets the value for <code>zipCode</code> by executing the provided consumer.
    * <p>
    * Generated from setter {@link ExternalAddress#setZipCode(String) setZipCode(String zipCode)}
@@ -429,6 +410,25 @@ public class ExternalAddressBuilder implements IBuilderBase<ExternalAddress> {
    */
   public ExternalAddressBuilder zipCode(String format, Object... args) {
     this.zipCode = changedValue(String.format(format, args));
+    return this;
+  }
+
+  /**
+   * Sets the value for <code>zipCode</code>.
+   * <p>
+   * Generated from setter {@link ExternalAddress#setZipCode(String) setZipCode(String zipCode)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.zipCode("example value");
+   * }</pre>
+   * 
+   * @param zipCode zipCode
+   * @return current instance of builder
+   */
+  public ExternalAddressBuilder zipCode(String zipCode) {
+    this.zipCode = changedValue(zipCode);
     return this;
   }
 

@@ -53,6 +53,9 @@ public class MethodDto {
   /** Ordering for method generation. Lower values appear first in generated class. */
   private int ordering = 1000;
 
+  /** Priority for method conflict resolution. Higher wins. */
+  private int priority = 0;
+
   /** Name of method. */
   private String methodName;
 
@@ -97,6 +100,7 @@ public class MethodDto {
    * are sorted using the following enhanced rules:
    *
    * <ol>
+   *   <li>Methods with lower priority come first
    *   <li>Methods with fewer parameters come first
    *   <li>Non-generic methods come before generic methods
    *   <li>Full method signature (name(paramType1,paramType2,...)) used for final ordering
@@ -106,6 +110,25 @@ public class MethodDto {
    */
   public void setOrdering(int ordering) {
     this.ordering = ordering;
+  }
+
+  /**
+   * Sets the priority for this method. Higher priorities sort after lower ones within the same
+   * ordering and name group, so the direct setter appears after its helper overloads.
+   *
+   * @param priority the priority value
+   */
+  public void setPriority(int priority) {
+    this.priority = priority;
+  }
+
+  /**
+   * Returns the priority of this method for conflict resolution.
+   *
+   * @return the priority value
+   */
+  public int getPriority() {
+    return priority;
   }
 
   /**
@@ -335,6 +358,7 @@ public class MethodDto {
    * <p>Sorting order for methods with same ordering and name:
    *
    * <ol>
+   *   <li>Methods with lower priority come first
    *   <li>Methods with fewer parameters come first
    *   <li>Non-generic methods come before generic methods
    *   <li>Full method signature (name(paramType1,paramType2,...)) used for final ordering
@@ -356,13 +380,19 @@ public class MethodDto {
         return nameCompare;
       }
 
-      // Tertiary sort: parameter count (fewer parameters first)
+      // Tertiary sort: priority (lower priority first, so the direct setter sorts last
+      // within a name group)
+      int priorityCompare = Integer.compare(m1.getPriority(), m2.getPriority());
+      if (priorityCompare != 0) {
+        return priorityCompare;
+      }
+
+      // Quaternary sort: parameter count (fewer parameters first)
       int paramCountCompare = Integer.compare(m1.getParameters().size(), m2.getParameters().size());
       if (paramCountCompare != 0) {
         return paramCountCompare;
       }
 
-      // Quaternary sort: generic vs non-generic (non-generic first)
       boolean m1Generic = hasGenericParameters(m1);
       boolean m2Generic = hasGenericParameters(m2);
       if (m1Generic != m2Generic) {

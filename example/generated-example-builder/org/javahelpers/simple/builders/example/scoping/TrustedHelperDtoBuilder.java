@@ -75,25 +75,6 @@ public class TrustedHelperDtoBuilder implements IBuilderBase<TrustedHelperDto> {
   }
 
   /**
-   * Sets the value for <code>name</code>.
-   * <p>
-   * Generated from setter {@link TrustedHelperDto#setName(String) setName(String name)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.name("example value");
-   * }</pre>
-   * 
-   * @param name name
-   * @return current instance of builder
-   */
-  public TrustedHelperDtoBuilder name(String name) {
-    this.name = changedValue(name);
-    return this;
-  }
-
-  /**
    * Sets the value for <code>name</code> by executing the provided consumer.
    * <p>
    * Generated from setter {@link TrustedHelperDto#setName(String) setName(String name)}
@@ -151,6 +132,25 @@ public class TrustedHelperDtoBuilder implements IBuilderBase<TrustedHelperDto> {
    */
   public TrustedHelperDtoBuilder name(String format, Object... args) {
     this.name = changedValue(String.format(format, args));
+    return this;
+  }
+
+  /**
+   * Sets the value for <code>name</code>.
+   * <p>
+   * Generated from setter {@link TrustedHelperDto#setName(String) setName(String name)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.name("example value");
+   * }</pre>
+   * 
+   * @param name name
+   * @return current instance of builder
+   */
+  public TrustedHelperDtoBuilder name(String name) {
+    this.name = changedValue(name);
     return this;
   }
 

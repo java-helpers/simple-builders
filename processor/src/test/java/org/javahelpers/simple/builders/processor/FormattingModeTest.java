@@ -173,21 +173,6 @@ class FormattingModeTest {
           }
 
           /**
-           * Sets the value for <code>count</code>.
-           * <p>Generated from parameter in constructor {@link FormatTestDto#FormatTestDto(String, int) FormatTestDto(String name, int count)}
-           *
-           * <h4>Example:</h4><pre>{@code
-           * builder.count(42);
-           * }</pre>
-           * @param count count
-           * @return current instance of builder
-           */
-          public FormatTestDtoBuilder count(int count) {
-            this.count = changedValue(count);
-            return this;
-          }
-
-          /**
            * Sets the value for <code>count</code> by invoking the provided supplier.
            * <p>Generated from parameter in constructor {@link FormatTestDto#FormatTestDto(String, int) FormatTestDto(String name, int count)}
            *
@@ -199,6 +184,21 @@ class FormattingModeTest {
            */
           public FormatTestDtoBuilder count(Supplier<Integer> countSupplier) {
             this.count = changedValue(countSupplier.get());
+            return this;
+          }
+
+          /**
+           * Sets the value for <code>count</code>.
+           * <p>Generated from parameter in constructor {@link FormatTestDto#FormatTestDto(String, int) FormatTestDto(String name, int count)}
+           *
+           * <h4>Example:</h4><pre>{@code
+           * builder.count(42);
+           * }</pre>
+           * @param count count
+           * @return current instance of builder
+           */
+          public FormatTestDtoBuilder count(int count) {
+            this.count = changedValue(count);
             return this;
           }
 
@@ -220,21 +220,6 @@ class FormattingModeTest {
               throw new IllegalStateException("Cannot update 'count' before it is set");
             }
             this.count = changedValue(countUpdater.apply(this.count.value()));
-            return this;
-          }
-
-          /**
-           * Sets the value for <code>name</code>.
-           * <p>Generated from parameter in constructor {@link FormatTestDto#FormatTestDto(String, int) FormatTestDto(String name, int count)}
-           *
-           * <h4>Example:</h4><pre>{@code
-           * builder.name("example value");
-           * }</pre>
-           * @param name name
-           * @return current instance of builder
-           */
-          public FormatTestDtoBuilder name(String name) {
-            this.name = changedValue(name);
             return this;
           }
 
@@ -284,6 +269,21 @@ class FormattingModeTest {
            */
           public FormatTestDtoBuilder name(String format, Object... args) {
             this.name = changedValue(String.format(format, args));
+            return this;
+          }
+
+          /**
+           * Sets the value for <code>name</code>.
+           * <p>Generated from parameter in constructor {@link FormatTestDto#FormatTestDto(String, int) FormatTestDto(String name, int count)}
+           *
+           * <h4>Example:</h4><pre>{@code
+           * builder.name("example value");
+           * }</pre>
+           * @param name name
+           * @return current instance of builder
+           */
+          public FormatTestDtoBuilder name(String name) {
+            this.name = changedValue(name);
             return this;
           }
 
@@ -532,26 +532,6 @@ class FormattingModeTest {
           }
 
           /**
-           * Sets the value for <code>value</code>.
-           * <p>
-           * Generated from parameter in constructor {@link DefaultFormatDto#DefaultFormatDto(String) DefaultFormatDto(String
-           * value)}
-           *
-           * <h4>Example:</h4>
-           *
-           * <pre>{@code
-           * builder.value("example value");
-           * }</pre>
-           *
-           * @param value value
-           * @return current instance of builder
-           */
-          public DefaultFormatDtoBuilder value(String value) {
-            this.value = changedValue(value);
-            return this;
-          }
-
-          /**
            * Sets the value for <code>value</code> by executing the provided consumer.
            * <p>
            * Generated from parameter in constructor {@link DefaultFormatDto#DefaultFormatDto(String) DefaultFormatDto(String
@@ -612,6 +592,26 @@ class FormattingModeTest {
            */
           public DefaultFormatDtoBuilder value(String format, Object... args) {
             this.value = changedValue(String.format(format, args));
+            return this;
+          }
+
+          /**
+           * Sets the value for <code>value</code>.
+           * <p>
+           * Generated from parameter in constructor {@link DefaultFormatDto#DefaultFormatDto(String) DefaultFormatDto(String
+           * value)}
+           *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.value("example value");
+           * }</pre>
+           *
+           * @param value value
+           * @return current instance of builder
+           */
+          public DefaultFormatDtoBuilder value(String value) {
+            this.value = changedValue(value);
             return this;
           }
 

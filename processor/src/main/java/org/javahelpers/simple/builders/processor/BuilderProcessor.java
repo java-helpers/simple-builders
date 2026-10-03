@@ -187,7 +187,9 @@ public class BuilderProcessor extends AbstractProcessor {
 
     // Reset indentation level at the end of each processing round to prevent cascading errors
     context.resetIndentation();
-    return true;
+    // Returning false leaves the annotations unclaimed so other processors on the
+    // processor path (e.g. MapStruct, AutoService) still see them.
+    return false;
   }
 
   /** Generates all Jackson modules after the last processing round and reports the metrics. */

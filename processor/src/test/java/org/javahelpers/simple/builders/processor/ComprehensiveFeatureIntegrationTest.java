@@ -314,7 +314,7 @@ class ComprehensiveFeatureIntegrationTest {
            * Adds a single element to <code>nicknames</code>.
            * <p>
            * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
            * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
            * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
            *
@@ -343,7 +343,7 @@ class ComprehensiveFeatureIntegrationTest {
            * Adds a single element to <code>phoneNumbers</code>.
            * <p>
            * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
            * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
            * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
            *
@@ -372,7 +372,7 @@ class ComprehensiveFeatureIntegrationTest {
            * Adds a single element to <code>previousAddresses</code>.
            * <p>
            * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
            * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
            * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
            *
@@ -395,7 +395,7 @@ class ComprehensiveFeatureIntegrationTest {
            * Adds a single element to <code>tags</code>.
            * <p>
            * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
            * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
            * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
            *
@@ -421,32 +421,10 @@ class ComprehensiveFeatureIntegrationTest {
           }
 
           /**
-           * Sets the value for <code>address</code>.
-           * <p>
-           * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
-           * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
-           * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
-           *
-           * <h4>Example:</h4>
-           *
-           * <pre>{@code
-           * builder.address(AddressDtoBuilder.create().build());
-           * }</pre>
-           *
-           * @param address address
-           * @return current instance of builder
-           */
-          public PersonDtoBuilder address(AddressDto address) {
-            this.address = changedValue(address);
-            return this;
-          }
-
-          /**
            * Sets the value for <code>address</code> using a builder consumer that produces the value.
            * <p>
            * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
            * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
            * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
            *
@@ -472,7 +450,7 @@ class ComprehensiveFeatureIntegrationTest {
            * Sets the value for <code>address</code> by invoking the provided supplier.
            * <p>
            * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
            * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
            * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
            *
@@ -491,6 +469,28 @@ class ComprehensiveFeatureIntegrationTest {
           }
 
           /**
+           * Sets the value for <code>address</code>.
+           * <p>
+           * Generated from parameter in constructor
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
+           * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
+           * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
+           *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.address(AddressDtoBuilder.create().build());
+           * }</pre>
+           *
+           * @param address address
+           * @return current instance of builder
+           */
+          public PersonDtoBuilder address(AddressDto address) {
+            this.address = changedValue(address);
+            return this;
+          }
+
+          /**
            * Updates the current value of <code>address</code> in place by applying the given operator, instead of reading it
            * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
            * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
@@ -498,7 +498,7 @@ class ComprehensiveFeatureIntegrationTest {
            * DTO, prefer the builder-consumer helper {@link #address(Consumer)}.
            * <p>
            * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
            * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
            * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
            *
@@ -515,32 +515,10 @@ class ComprehensiveFeatureIntegrationTest {
           }
 
           /**
-           * Sets the value for <code>age</code>.
-           * <p>
-           * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
-           * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
-           * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
-           *
-           * <h4>Example:</h4>
-           *
-           * <pre>{@code
-           * builder.age(42);
-           * }</pre>
-           *
-           * @param age age
-           * @return current instance of builder
-           */
-          public PersonDtoBuilder age(int age) {
-            this.age = changedValue(age);
-            return this;
-          }
-
-          /**
            * Sets the value for <code>age</code> by invoking the provided supplier.
            * <p>
            * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
            * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
            * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
            *
@@ -559,13 +537,35 @@ class ComprehensiveFeatureIntegrationTest {
           }
 
           /**
+           * Sets the value for <code>age</code>.
+           * <p>
+           * Generated from parameter in constructor
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
+           * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
+           * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
+           *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.age(42);
+           * }</pre>
+           *
+           * @param age age
+           * @return current instance of builder
+           */
+          public PersonDtoBuilder age(int age) {
+            this.age = changedValue(age);
+            return this;
+          }
+
+          /**
            * Updates the current value of <code>age</code> in place by applying the given operator, instead of reading it out,
            * changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
            * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
            * value must have been set before (directly or via an existing instance).
            * <p>
            * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
            * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
            * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
            *
@@ -588,54 +588,10 @@ class ComprehensiveFeatureIntegrationTest {
           }
 
           /**
-           * Sets the value for <code>email</code>.
-           * <p>
-           * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
-           * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
-           * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
-           *
-           * <h4>Example:</h4>
-           *
-           * <pre>{@code
-           * builder.email("example value");
-           * }</pre>
-           *
-           * @param email email
-           * @return current instance of builder
-           */
-          public PersonDtoBuilder email(String email) {
-            this.email = changedValue(Optional.ofNullable(email));
-            return this;
-          }
-
-          /**
-           * Sets the value for <code>email</code>.
-           * <p>
-           * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
-           * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
-           * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
-           *
-           * <h4>Example:</h4>
-           *
-           * <pre>{@code
-           * builder.email(Optional.of("example value"));
-           * }</pre>
-           *
-           * @param email email
-           * @return current instance of builder
-           */
-          public PersonDtoBuilder email(Optional<String> email) {
-            this.email = changedValue(email);
-            return this;
-          }
-
-          /**
            * Sets the value for <code>email</code> by executing the provided consumer.
            * <p>
            * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
            * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
            * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
            *
@@ -656,10 +612,32 @@ class ComprehensiveFeatureIntegrationTest {
           }
 
           /**
+           * Sets the value for <code>email</code>.
+           * <p>
+           * Generated from parameter in constructor
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
+           * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
+           * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
+           *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.email("example value");
+           * }</pre>
+           *
+           * @param email email
+           * @return current instance of builder
+           */
+          public PersonDtoBuilder email(String email) {
+            this.email = changedValue(Optional.ofNullable(email));
+            return this;
+          }
+
+          /**
            * Sets the value for <code>email</code> by invoking the provided supplier.
            * <p>
            * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
            * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
            * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
            *
@@ -682,7 +660,7 @@ class ComprehensiveFeatureIntegrationTest {
            * {@link String#format(String, Object...)} for details.
            * <p>
            * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
            * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
            * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
            *
@@ -702,13 +680,35 @@ class ComprehensiveFeatureIntegrationTest {
           }
 
           /**
+           * Sets the value for <code>email</code>.
+           * <p>
+           * Generated from parameter in constructor
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
+           * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
+           * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
+           *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.email(Optional.of("example value"));
+           * }</pre>
+           *
+           * @param email email
+           * @return current instance of builder
+           */
+          public PersonDtoBuilder email(Optional<String> email) {
+            this.email = changedValue(email);
+            return this;
+          }
+
+          /**
            * Updates the current value of <code>email</code> in place by applying the given operator, instead of reading it out,
            * changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
            * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
            * value must have been set before (directly or via an existing instance).
            * <p>
            * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
            * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
            * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
            *
@@ -725,10 +725,30 @@ class ComprehensiveFeatureIntegrationTest {
           }
 
           /**
+           * Sets the value for <code>metadata</code> using a builder consumer that produces the value.
+           * <p>
+           * Generated from parameter in constructor
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
+           * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
+           * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
+           *
+           * @param metadataBuilderConsumer consumer providing an instance of a builder for metadata
+           * @return current instance of builder
+           */
+          public PersonDtoBuilder metadata(Consumer<HashMapBuilder<String, String>> metadataBuilderConsumer) {
+            HashMapBuilder<String, String> builder = this.metadata.isSet()
+                ? new HashMapBuilder<String, String>(this.metadata.value())
+                : new HashMapBuilder<String, String>();
+            metadataBuilderConsumer.accept(builder);
+            this.metadata = changedValue(builder.build());
+            return this;
+          }
+
+          /**
            * Sets the value for <code>metadata</code>.
            * <p>
            * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
            * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
            * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
            *
@@ -747,52 +767,10 @@ class ComprehensiveFeatureIntegrationTest {
           }
 
           /**
-           * Sets the value for <code>metadata</code>.
-           * <p>
-           * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
-           * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
-           * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
-           *
-           * <h4>Example:</h4>
-           *
-           * <pre>{@code
-           * builder.metadata(Map.of("example value", "example value"));
-           * }</pre>
-           *
-           * @param metadata metadata
-           * @return current instance of builder
-           */
-          public PersonDtoBuilder metadata(Map<String, String> metadata) {
-            this.metadata = changedValue(metadata);
-            return this;
-          }
-
-          /**
-           * Sets the value for <code>metadata</code> using a builder consumer that produces the value.
-           * <p>
-           * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
-           * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
-           * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
-           *
-           * @param metadataBuilderConsumer consumer providing an instance of a builder for metadata
-           * @return current instance of builder
-           */
-          public PersonDtoBuilder metadata(Consumer<HashMapBuilder<String, String>> metadataBuilderConsumer) {
-            HashMapBuilder<String, String> builder = this.metadata.isSet()
-                ? new HashMapBuilder<String, String>(this.metadata.value())
-                : new HashMapBuilder<String, String>();
-            metadataBuilderConsumer.accept(builder);
-            this.metadata = changedValue(builder.build());
-            return this;
-          }
-
-          /**
            * Sets the value for <code>metadata</code> by invoking the provided supplier.
            * <p>
            * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
            * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
            * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
            *
@@ -811,13 +789,35 @@ class ComprehensiveFeatureIntegrationTest {
           }
 
           /**
+           * Sets the value for <code>metadata</code>.
+           * <p>
+           * Generated from parameter in constructor
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
+           * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
+           * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
+           *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.metadata(Map.of("example value", "example value"));
+           * }</pre>
+           *
+           * @param metadata metadata
+           * @return current instance of builder
+           */
+          public PersonDtoBuilder metadata(Map<String, String> metadata) {
+            this.metadata = changedValue(metadata);
+            return this;
+          }
+
+          /**
            * Updates the current value of <code>metadata</code> in place by applying the given operator, instead of reading it
            * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
            * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
            * value must have been set before (directly or via an existing instance).
            * <p>
            * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
            * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
            * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
            *
@@ -840,32 +840,10 @@ class ComprehensiveFeatureIntegrationTest {
           }
 
           /**
-           * Sets the value for <code>name</code>.
-           * <p>
-           * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
-           * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
-           * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
-           *
-           * <h4>Example:</h4>
-           *
-           * <pre>{@code
-           * builder.name("example value");
-           * }</pre>
-           *
-           * @param name name
-           * @return current instance of builder
-           */
-          public PersonDtoBuilder name(String name) {
-            this.name = changedValue(name);
-            return this;
-          }
-
-          /**
            * Sets the value for <code>name</code> by executing the provided consumer.
            * <p>
            * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
            * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
            * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
            *
@@ -889,7 +867,7 @@ class ComprehensiveFeatureIntegrationTest {
            * Sets the value for <code>name</code> by invoking the provided supplier.
            * <p>
            * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
            * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
            * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
            *
@@ -912,7 +890,7 @@ class ComprehensiveFeatureIntegrationTest {
            * {@link String#format(String, Object...)} for details.
            * <p>
            * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
            * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
            * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
            *
@@ -932,13 +910,35 @@ class ComprehensiveFeatureIntegrationTest {
           }
 
           /**
+           * Sets the value for <code>name</code>.
+           * <p>
+           * Generated from parameter in constructor
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
+           * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
+           * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
+           *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.name("example value");
+           * }</pre>
+           *
+           * @param name name
+           * @return current instance of builder
+           */
+          public PersonDtoBuilder name(String name) {
+            this.name = changedValue(name);
+            return this;
+          }
+
+          /**
            * Updates the current value of <code>name</code> in place by applying the given operator, instead of reading it out,
            * changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
            * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
            * value must have been set before (directly or via an existing instance).
            * <p>
            * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
            * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
            * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
            *
@@ -961,54 +961,10 @@ class ComprehensiveFeatureIntegrationTest {
           }
 
           /**
-           * Sets the value for <code>nicknames</code>.
-           * <p>
-           * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
-           * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
-           * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
-           *
-           * <h4>Example:</h4>
-           *
-           * <pre>{@code
-           * builder.nicknames("example value", "example value");
-           * }</pre>
-           *
-           * @param nicknames nicknames
-           * @return current instance of builder
-           */
-          public PersonDtoBuilder nicknames(String... nicknames) {
-            this.nicknames = changedValue(List.of(nicknames));
-            return this;
-          }
-
-          /**
-           * Sets the value for <code>nicknames</code>.
-           * <p>
-           * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
-           * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
-           * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
-           *
-           * <h4>Example:</h4>
-           *
-           * <pre>{@code
-           * builder.nicknames(List.of("example value"));
-           * }</pre>
-           *
-           * @param nicknames nicknames
-           * @return current instance of builder
-           */
-          public PersonDtoBuilder nicknames(List<String> nicknames) {
-            this.nicknames = changedValue(nicknames);
-            return this;
-          }
-
-          /**
            * Sets the value for <code>nicknames</code> using a builder consumer that produces the value.
            * <p>
            * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
            * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
            * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
            *
@@ -1031,10 +987,32 @@ class ComprehensiveFeatureIntegrationTest {
           }
 
           /**
+           * Sets the value for <code>nicknames</code>.
+           * <p>
+           * Generated from parameter in constructor
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
+           * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
+           * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
+           *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.nicknames("example value", "example value");
+           * }</pre>
+           *
+           * @param nicknames nicknames
+           * @return current instance of builder
+           */
+          public PersonDtoBuilder nicknames(String... nicknames) {
+            this.nicknames = changedValue(List.of(nicknames));
+            return this;
+          }
+
+          /**
            * Sets the value for <code>nicknames</code> by invoking the provided supplier.
            * <p>
            * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
            * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
            * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
            *
@@ -1053,13 +1031,35 @@ class ComprehensiveFeatureIntegrationTest {
           }
 
           /**
+           * Sets the value for <code>nicknames</code>.
+           * <p>
+           * Generated from parameter in constructor
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
+           * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
+           * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
+           *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.nicknames(List.of("example value"));
+           * }</pre>
+           *
+           * @param nicknames nicknames
+           * @return current instance of builder
+           */
+          public PersonDtoBuilder nicknames(List<String> nicknames) {
+            this.nicknames = changedValue(nicknames);
+            return this;
+          }
+
+          /**
            * Updates the current value of <code>nicknames</code> in place by applying the given operator, instead of reading it
            * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
            * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
            * value must have been set before (directly or via an existing instance).
            * <p>
            * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
            * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
            * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
            *
@@ -1082,54 +1082,10 @@ class ComprehensiveFeatureIntegrationTest {
           }
 
           /**
-           * Sets the value for <code>phoneNumbers</code>.
-           * <p>
-           * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
-           * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
-           * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
-           *
-           * <h4>Example:</h4>
-           *
-           * <pre>{@code
-           * builder.phoneNumbers("example value", "example value");
-           * }</pre>
-           *
-           * @param phoneNumbers phoneNumbers
-           * @return current instance of builder
-           */
-          public PersonDtoBuilder phoneNumbers(String... phoneNumbers) {
-            this.phoneNumbers = changedValue(new LinkedList<>(java.util.List.of(phoneNumbers)));
-            return this;
-          }
-
-          /**
-           * Sets the value for <code>phoneNumbers</code>.
-           * <p>
-           * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
-           * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
-           * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
-           *
-           * <h4>Example:</h4>
-           *
-           * <pre>{@code
-           * builder.phoneNumbers(List.of("example value"));
-           * }</pre>
-           *
-           * @param phoneNumbers phoneNumbers
-           * @return current instance of builder
-           */
-          public PersonDtoBuilder phoneNumbers(LinkedList<String> phoneNumbers) {
-            this.phoneNumbers = changedValue(phoneNumbers);
-            return this;
-          }
-
-          /**
            * Sets the value for <code>phoneNumbers</code> using a builder consumer that produces the value.
            * <p>
            * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
            * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
            * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
            *
@@ -1152,10 +1108,32 @@ class ComprehensiveFeatureIntegrationTest {
           }
 
           /**
+           * Sets the value for <code>phoneNumbers</code>.
+           * <p>
+           * Generated from parameter in constructor
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
+           * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
+           * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
+           *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.phoneNumbers("example value", "example value");
+           * }</pre>
+           *
+           * @param phoneNumbers phoneNumbers
+           * @return current instance of builder
+           */
+          public PersonDtoBuilder phoneNumbers(String... phoneNumbers) {
+            this.phoneNumbers = changedValue(new LinkedList<>(java.util.List.of(phoneNumbers)));
+            return this;
+          }
+
+          /**
            * Sets the value for <code>phoneNumbers</code> by invoking the provided supplier.
            * <p>
            * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
            * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
            * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
            *
@@ -1174,13 +1152,35 @@ class ComprehensiveFeatureIntegrationTest {
           }
 
           /**
+           * Sets the value for <code>phoneNumbers</code>.
+           * <p>
+           * Generated from parameter in constructor
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
+           * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
+           * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
+           *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.phoneNumbers(List.of("example value"));
+           * }</pre>
+           *
+           * @param phoneNumbers phoneNumbers
+           * @return current instance of builder
+           */
+          public PersonDtoBuilder phoneNumbers(LinkedList<String> phoneNumbers) {
+            this.phoneNumbers = changedValue(phoneNumbers);
+            return this;
+          }
+
+          /**
            * Updates the current value of <code>phoneNumbers</code> in place by applying the given operator, instead of reading
            * it out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
            * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
            * value must have been set before (directly or via an existing instance).
            * <p>
            * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
            * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
            * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
            *
@@ -1188,7 +1188,7 @@ class ComprehensiveFeatureIntegrationTest {
            *
            * <pre>{@code
            * builder.phoneNumbers(List.of("example value"))
-           *        .phoneNumbersUpdate(list -> new LinkedList<>(list.stream().sorted().toList()));
+           *     .phoneNumbersUpdate(list -> new LinkedList<>(list.stream().sorted().toList()));
            * }</pre>
            *
            * @param phoneNumbersUpdater operator applied to the current value; its result becomes the new value
@@ -1204,48 +1204,10 @@ class ComprehensiveFeatureIntegrationTest {
           }
 
           /**
-           * Sets the value for <code>previousAddresses</code>.
-           * <p>
-           * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
-           * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
-           * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
-           *
-           * @param previousAddresses previousAddresses
-           * @return current instance of builder
-           */
-          public PersonDtoBuilder previousAddresses(AddressDto... previousAddresses) {
-            this.previousAddresses = changedValue(List.of(previousAddresses));
-            return this;
-          }
-
-          /**
-           * Sets the value for <code>previousAddresses</code>.
-           * <p>
-           * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
-           * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
-           * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
-           *
-           * <h4>Example:</h4>
-           *
-           * <pre>{@code
-           * builder.previousAddresses(List.of(AddressDtoBuilder.create().build()));
-           * }</pre>
-           *
-           * @param previousAddresses previousAddresses
-           * @return current instance of builder
-           */
-          public PersonDtoBuilder previousAddresses(List<AddressDto> previousAddresses) {
-            this.previousAddresses = changedValue(previousAddresses);
-            return this;
-          }
-
-          /**
            * Sets the value for <code>previousAddresses</code> using a builder consumer that produces the value.
            * <p>
            * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
            * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
            * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
            *
@@ -1270,10 +1232,26 @@ class ComprehensiveFeatureIntegrationTest {
           }
 
           /**
+           * Sets the value for <code>previousAddresses</code>.
+           * <p>
+           * Generated from parameter in constructor
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
+           * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
+           * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
+           *
+           * @param previousAddresses previousAddresses
+           * @return current instance of builder
+           */
+          public PersonDtoBuilder previousAddresses(AddressDto... previousAddresses) {
+            this.previousAddresses = changedValue(List.of(previousAddresses));
+            return this;
+          }
+
+          /**
            * Sets the value for <code>previousAddresses</code> by invoking the provided supplier.
            * <p>
            * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
            * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
            * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
            *
@@ -1292,6 +1270,28 @@ class ComprehensiveFeatureIntegrationTest {
           }
 
           /**
+           * Sets the value for <code>previousAddresses</code>.
+           * <p>
+           * Generated from parameter in constructor
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
+           * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
+           * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
+           *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.previousAddresses(List.of(AddressDtoBuilder.create().build()));
+           * }</pre>
+           *
+           * @param previousAddresses previousAddresses
+           * @return current instance of builder
+           */
+          public PersonDtoBuilder previousAddresses(List<AddressDto> previousAddresses) {
+            this.previousAddresses = changedValue(previousAddresses);
+            return this;
+          }
+
+          /**
            * Updates the current value of <code>previousAddresses</code> in place by applying the given operator, instead of
            * reading it out, changing it and setting it again. Useful for adjustments relative to the current value, e.g.
            * trimming, upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify
@@ -1299,7 +1299,7 @@ class ComprehensiveFeatureIntegrationTest {
            * a nested DTO, prefer the builder-consumer helper {@link #previousAddresses(Consumer)}.
            * <p>
            * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
            * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
            * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
            *
@@ -1307,7 +1307,7 @@ class ComprehensiveFeatureIntegrationTest {
            *
            * <pre>{@code
            * builder.previousAddresses(List.of(AddressDtoBuilder.create().build()))
-           *        .previousAddressesUpdate(list -> list.stream().sorted().toList());
+           *     .previousAddressesUpdate(list -> list.stream().sorted().toList());
            * }</pre>
            *
            * @param previousAddressesUpdater operator applied to the current value; its result becomes the new value
@@ -1323,54 +1323,10 @@ class ComprehensiveFeatureIntegrationTest {
           }
 
           /**
-           * Sets the value for <code>tags</code>.
-           * <p>
-           * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
-           * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
-           * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
-           *
-           * <h4>Example:</h4>
-           *
-           * <pre>{@code
-           * builder.tags("example value", "example value");
-           * }</pre>
-           *
-           * @param tags tags
-           * @return current instance of builder
-           */
-          public PersonDtoBuilder tags(String... tags) {
-            this.tags = changedValue(Set.of(tags));
-            return this;
-          }
-
-          /**
-           * Sets the value for <code>tags</code>.
-           * <p>
-           * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
-           * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
-           * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
-           *
-           * <h4>Example:</h4>
-           *
-           * <pre>{@code
-           * builder.tags(Set.of("example value"));
-           * }</pre>
-           *
-           * @param tags tags
-           * @return current instance of builder
-           */
-          public PersonDtoBuilder tags(Set<String> tags) {
-            this.tags = changedValue(tags);
-            return this;
-          }
-
-          /**
            * Sets the value for <code>tags</code> using a builder consumer that produces the value.
            * <p>
            * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
            * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
            * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
            *
@@ -1393,10 +1349,32 @@ class ComprehensiveFeatureIntegrationTest {
           }
 
           /**
+           * Sets the value for <code>tags</code>.
+           * <p>
+           * Generated from parameter in constructor
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
+           * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
+           * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
+           *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.tags("example value", "example value");
+           * }</pre>
+           *
+           * @param tags tags
+           * @return current instance of builder
+           */
+          public PersonDtoBuilder tags(String... tags) {
+            this.tags = changedValue(Set.of(tags));
+            return this;
+          }
+
+          /**
            * Sets the value for <code>tags</code> by invoking the provided supplier.
            * <p>
            * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
            * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
            * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
            *
@@ -1415,13 +1393,35 @@ class ComprehensiveFeatureIntegrationTest {
           }
 
           /**
+           * Sets the value for <code>tags</code>.
+           * <p>
+           * Generated from parameter in constructor
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
+           * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
+           * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
+           *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.tags(Set.of("example value"));
+           * }</pre>
+           *
+           * @param tags tags
+           * @return current instance of builder
+           */
+          public PersonDtoBuilder tags(Set<String> tags) {
+            this.tags = changedValue(tags);
+            return this;
+          }
+
+          /**
            * Updates the current value of <code>tags</code> in place by applying the given operator, instead of reading it out,
            * changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
            * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
            * value must have been set before (directly or via an existing instance).
            * <p>
            * Generated from parameter in constructor
-           * {@link PersonDto#PersonDto(String,int,Optional,List,Set,Map,AddressDto,List,LinkedList) PersonDto(String
+           * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
            * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
            * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
            *
@@ -1559,8 +1559,7 @@ class ComprehensiveFeatureIntegrationTest {
               }
             }
           }
-        }
-        """;
+        }""";
 
     ProcessorAsserts.assertNormalizedEquals(
         expectedCode,
