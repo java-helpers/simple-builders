@@ -599,6 +599,44 @@ class SimpleBuilderForTest {
   }
 
   @Test
+  void sourcePackages_Multiple_GeneratesFromAllListedPackages() {
+    JavaFileObject otherType =
+        ProcessorTestUtils.forSource(
+            """
+            package other;
+            public class ExternalCustomer {
+              private String id;
+              public ExternalCustomer() {}
+              public String getId() { return id; }
+              public void setId(String id) { this.id = id; }
+            }
+            """);
+    JavaFileObject holder =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFor;
+            @SimpleBuilderFor(sourcePackages = {"pkg", "other"})
+            public class Builders {}
+            """);
+
+    Compilation compilation =
+        ProcessorTestUtils.createCompiler().compile(pkgUser(), pkgOrder(), otherType, holder);
+
+    assertThat(compilation).succeededWithoutWarnings();
+    // Every listed package contributes its top-level classes into the holder's package
+    ProcessorAsserts.assertContaining(
+        ProcessorTestUtils.loadGeneratedSource(compilation, "ExternalUserBuilder"),
+        "import pkg.ExternalUser;");
+    ProcessorAsserts.assertContaining(
+        ProcessorTestUtils.loadGeneratedSource(compilation, "ExternalOrderBuilder"),
+        "import pkg.ExternalOrder;");
+    ProcessorAsserts.assertContaining(
+        ProcessorTestUtils.loadGeneratedSource(compilation, "ExternalCustomerBuilder"),
+        "import other.ExternalCustomer;");
+  }
+
+  @Test
   void sourcePackages_Unresolvable_WarnsAndGeneratesFromValue() {
     JavaFileObject holder =
         ProcessorTestUtils.forSource(
