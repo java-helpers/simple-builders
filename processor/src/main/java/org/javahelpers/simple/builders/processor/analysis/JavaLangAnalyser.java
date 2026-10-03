@@ -29,7 +29,6 @@ import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.type.TypeKind.VOID;
 
 import java.lang.annotation.Annotation;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -242,48 +241,6 @@ public final class JavaLangAnalyser {
       }
     }
     return Optional.empty();
-  }
-
-  /**
-   * Finds the build method on the given type: an accessible, non-static, no-arg method returning
-   * the expected type, regardless of its name. This is part of the builder contract used when the
-   * built value is retrieved. When several candidates exist, {@code build} is preferred, then the
-   * alphabetically first name.
-   *
-   * <p>The check is annotation-agnostic and avoids false positives like {@code StringBuilder} for
-   * {@code String}.
-   *
-   * @param builderType the candidate builder type element to check
-   * @param expectedReturnType the type that the build method must return
-   * @param context the processing context, used to access all members
-   * @return the selected build method, or empty if the type declares or inherits no matching method
-   */
-  public static Optional<ExecutableElement> findBuildMethod(
-      TypeElement builderType, TypeName expectedReturnType, ProcessingContext context) {
-    return findMethods(builderType, List.of(), expectedReturnType, context).stream()
-        .filter(method -> isNotStatic(method) && !isObjectMethod(method, context))
-        .min(
-            Comparator.comparingInt(
-                    (ExecutableElement method) ->
-                        "build".contentEquals(method.getSimpleName()) ? 0 : 1)
-                .thenComparing(method -> method.getSimpleName().toString()));
-  }
-
-  /**
-   * Checks whether the method's signature matches a method declared on {@link java.lang.Object}
-   * (e.g. {@code toString()}), which must not count as a build method. This avoids false positives
-   * like {@code StringBuilder#toString} satisfying the builder contract for {@code String}.
-   */
-  private static boolean isObjectMethod(ExecutableElement method, ProcessingContext context) {
-    TypeElement objectElement = context.getTypeElement(Object.class.getCanonicalName());
-    if (objectElement == null) {
-      return false;
-    }
-    return ElementFilter.methodsIn(objectElement.getEnclosedElements()).stream()
-        .anyMatch(
-            objectMethod ->
-                objectMethod.getSimpleName().equals(method.getSimpleName())
-                    && objectMethod.getParameters().size() == method.getParameters().size());
   }
 
   /**

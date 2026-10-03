@@ -271,8 +271,7 @@ public final class BuilderScopeResolver {
         resolveFuncForEmptyBuilder(builderTypeElement);
     Optional<BuilderInstantiation> funcForPrefilledBuilder =
         resolveFuncForPrefilledBuilder(builderTypeElement, expectedType);
-    Optional<ExecutableElement> buildMethod =
-        JavaLangAnalyser.findBuildMethod(builderTypeElement, expectedType, context);
+    Optional<ExecutableElement> buildMethod = findBuildMethod(builderTypeElement, expectedType);
     if (funcForEmptyBuilder.isEmpty()
         || funcForPrefilledBuilder.isEmpty()
         || buildMethod.isEmpty()) {
@@ -404,8 +403,7 @@ public final class BuilderScopeResolver {
     for (ExecutableElement factory : factories) {
       TypeElement builderElement =
           (TypeElement) ((DeclaredType) factory.getReturnType()).asElement();
-      Optional<ExecutableElement> buildMethod =
-          JavaLangAnalyser.findBuildMethod(builderElement, referencedTypeName, context);
+      Optional<ExecutableElement> buildMethod = findBuildMethod(builderElement, referencedTypeName);
       if (!context.isMemberAccessibleFromBuilderPackage(builderElement) || buildMethod.isEmpty()) {
         continue;
       }
@@ -497,6 +495,40 @@ public final class BuilderScopeResolver {
   private static int preferredFactoryNameRank(String name) {
     int index = PREFERRED_FACTORY_NAMES.indexOf(name);
     return index < 0 ? PREFERRED_FACTORY_NAMES.size() : index;
+  }
+
+  /**
+   * Finds the build method on the builder type: an accessible, non-static, parameterless method
+   * returning the referenced type, regardless of its name. When several candidates exist, {@code
+   * build} is preferred, then the alphabetically first name. Methods whose signature matches a
+   * {@link java.lang.Object} method (e.g. {@code toString()}) are excluded so types like {@code
+   * StringBuilder} do not satisfy the contract for {@code String}.
+   *
+   * @param builderType the candidate builder type to inspect
+   * @param expectedType the referenced type the build method must return
+   * @return the selected build method, or empty if no matching method exists
+   */
+  private Optional<ExecutableElement> findBuildMethod(
+      TypeElement builderType, TypeName expectedType) {
+    return JavaLangAnalyser.findMethods(builderType, List.of(), expectedType, context).stream()
+        .filter(method -> JavaLangAnalyser.isNotStatic(method) && !isObjectMethod(method))
+        .min(
+            Comparator.comparingInt(
+                    (ExecutableElement method) ->
+                        "build".contentEquals(method.getSimpleName()) ? 0 : 1)
+                .thenComparing(method -> method.getSimpleName().toString()));
+  }
+
+  private boolean isObjectMethod(ExecutableElement method) {
+    TypeElement objectElement = context.getTypeElement(Object.class.getCanonicalName());
+    if (objectElement == null) {
+      return false;
+    }
+    return ElementFilter.methodsIn(objectElement.getEnclosedElements()).stream()
+        .anyMatch(
+            objectMethod ->
+                objectMethod.getSimpleName().equals(method.getSimpleName())
+                    && objectMethod.getParameters().size() == method.getParameters().size());
   }
 
   private void refreshForConfigurationIfNeeded() {
