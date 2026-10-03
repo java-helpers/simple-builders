@@ -93,19 +93,23 @@ public sealed interface BuilderInstantiation {
      * type: an accessible static function accepting the type and returning the builder type.
      *
      * @param builderType the builder type element to inspect
-     * @param expectedType the qualified name of the referenced type the factory must accept
+     * @param expectedType the referenced type the factory must accept
      * @param context the processing context, used to access all members
      * @return the instantiation calling the found factory, or empty when none exists
      */
     public static Optional<BuilderInstantiation> forPrefilledBuilder(
-        TypeElement builderType, String expectedType, ProcessingContext context) {
+        TypeElement builderType, TypeName expectedType, ProcessingContext context) {
       return find(builderType, List.of(expectedType), context);
     }
 
     private static Optional<BuilderInstantiation> find(
-        TypeElement builderType, List<String> parameterTypes, ProcessingContext context) {
-      return JavaLangAnalyser.findStaticFunction(
-              builderType, parameterTypes, builderType.getQualifiedName().toString(), context)
+        TypeElement builderType, List<TypeName> parameterTypes, ProcessingContext context) {
+      return JavaLangAnalyser.findMethodsStatic(
+              builderType,
+              parameterTypes,
+              new TypeName(
+                  context.getPackageName(builderType), builderType.getSimpleName().toString()),
+              context)
           .stream()
           .min(
               Comparator.comparingInt(StaticFactoryCall::nameRank)

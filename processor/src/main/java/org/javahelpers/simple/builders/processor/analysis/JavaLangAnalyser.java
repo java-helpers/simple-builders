@@ -46,6 +46,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilderConstructor;
+import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
 /** Helperclass for extrating specific information from existing classes. */
@@ -250,62 +251,59 @@ public final class JavaLangAnalyser {
    * {@code String}.
    *
    * @param builderType the candidate builder type element to check
-   * @param expectedReturnType the qualified name of the type that {@code build()} must return
+   * @param expectedReturnType the type that {@code build()} must return
    * @param context the processing context, used to access all members
    * @return {@code true} if the type declares or inherits a matching {@code build()} method
    */
   public static boolean hasBuildMethodReturning(
-      TypeElement builderType, String expectedReturnType, ProcessingContext context) {
-    return findFunctionsBySignature(builderType, List.of(), expectedReturnType, context).stream()
+      TypeElement builderType, TypeName expectedReturnType, ProcessingContext context) {
+    return findMethods(builderType, List.of(), expectedReturnType, context).stream()
         .anyMatch(method -> method.getSimpleName().contentEquals("build"));
   }
 
   /**
-   * Finds accessible static functions on the given type taking a single parameter of the expected
+   * Finds accessible static methods on the given type taking a single parameter of the expected
    * type and returning the expected return type.
    *
    * @param type the type element to inspect
-   * @param expectedParameterType the qualified name of the required parameter type
-   * @param expectedReturnType the qualified name of the required return type, or {@code null} for
-   *     void-returning functions
+   * @param expectedParameterType the required parameter type
+   * @param expectedReturnType the required return type, or {@code null} for void-returning methods
    * @param context the processing context, used to access all members
-   * @return the names of all matching functions, in declaration order
+   * @return the names of all matching methods, in declaration order
    */
-  public static List<String> findStaticFunction(
+  public static List<String> findMethodsStatic(
       TypeElement type,
-      String expectedParameterType,
-      String expectedReturnType,
+      TypeName expectedParameterType,
+      TypeName expectedReturnType,
       ProcessingContext context) {
-    return findStaticFunction(type, List.of(expectedParameterType), expectedReturnType, context);
+    return findMethodsStatic(type, List.of(expectedParameterType), expectedReturnType, context);
   }
 
   /**
-   * Finds accessible static functions on the given type taking the expected parameter types and
+   * Finds accessible static methods on the given type taking the expected parameter types and
    * returning the expected return type.
    *
    * @param type the type element to inspect
-   * @param expectedParameterTypes qualified names of the required parameter types
-   * @param expectedReturnType the qualified name of the required return type, or {@code null} for
-   *     void-returning functions
+   * @param expectedParameterTypes the required parameter types
+   * @param expectedReturnType the required return type, or {@code null} for void-returning methods
    * @param context the processing context, used to access all members
-   * @return the names of all matching functions, in declaration order
+   * @return the names of all matching methods, in declaration order
    */
-  public static List<String> findStaticFunction(
+  public static List<String> findMethodsStatic(
       TypeElement type,
-      List<String> expectedParameterTypes,
-      String expectedReturnType,
+      List<TypeName> expectedParameterTypes,
+      TypeName expectedReturnType,
       ProcessingContext context) {
-    return findFunctionsBySignature(type, expectedParameterTypes, expectedReturnType, context)
-        .stream()
+    return findMethods(type, expectedParameterTypes, expectedReturnType, context).stream()
         .filter(Predicate.not(JavaLangAnalyser::isNotStatic))
         .map(method -> method.getSimpleName().toString())
         .toList();
   }
 
-  private static List<ExecutableElement> findFunctionsBySignature(
+  private static List<ExecutableElement> findMethods(
       TypeElement type,
-      List<String> expectedParameterTypes,
-      String expectedReturnType,
+      List<TypeName> expectedParameterTypes,
+      TypeName expectedReturnType,
       ProcessingContext context) {
     if (type == null) {
       return List.of();
@@ -316,7 +314,10 @@ public final class JavaLangAnalyser {
             method ->
                 expectedReturnType == null
                     ? method.getReturnType().getKind() == VOID
-                    : method.getReturnType().toString().equals(expectedReturnType))
+                    : method
+                        .getReturnType()
+                        .toString()
+                        .equals(expectedReturnType.getFullQualifiedName()))
         .filter(method -> hasParameters(method, expectedParameterTypes))
         .toList();
   }
@@ -326,13 +327,17 @@ public final class JavaLangAnalyser {
   }
 
   private static boolean hasParameters(
-      ExecutableElement method, List<String> expectedParameterTypes) {
+      ExecutableElement method, List<TypeName> expectedParameterTypes) {
     List<? extends VariableElement> parameters = method.getParameters();
     if (parameters.size() != expectedParameterTypes.size()) {
       return false;
     }
     for (int i = 0; i < parameters.size(); i++) {
-      if (!parameters.get(i).asType().toString().equals(expectedParameterTypes.get(i))) {
+      if (!parameters
+          .get(i)
+          .asType()
+          .toString()
+          .equals(expectedParameterTypes.get(i).getFullQualifiedName())) {
         return false;
       }
     }
@@ -344,12 +349,12 @@ public final class JavaLangAnalyser {
    * the builder contract used when the field already has a value that is passed to the builder.
    *
    * @param builderType the candidate builder type element to check
-   * @param expectedType the qualified name of the type the constructor must accept
+   * @param expectedType the type the constructor must accept
    * @param context the processing context, used to access all members
    * @return {@code true} if the type declares or inherits a matching constructor
    */
   public static boolean hasConstructorAccepting(
-      TypeElement builderType, String expectedType, ProcessingContext context) {
+      TypeElement builderType, TypeName expectedType, ProcessingContext context) {
     if (builderType == null) {
       return false;
     }

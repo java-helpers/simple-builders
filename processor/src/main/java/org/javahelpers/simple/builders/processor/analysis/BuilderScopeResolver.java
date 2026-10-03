@@ -180,8 +180,9 @@ public final class BuilderScopeResolver {
       return Optional.empty();
     }
 
-    String referencedTypeFqn = referencedType.getQualifiedName().toString();
     String packageName = context.getPackageName(referencedType);
+    TypeName referencedTypeName =
+        new TypeName(packageName, referencedType.getSimpleName().toString());
 
     // The usage scope determines whether a type is eligible to be referenced as a builder
     // helper. When empty, any package is allowed (backward compatibility). When set, only
@@ -193,9 +194,7 @@ public final class BuilderScopeResolver {
     // Types whose builders are generated in the current processing round are trusted
     // immediately — our own generators always produce the builder contract, so no
     // classpath lookup or contract check is needed.
-    Optional<TypeName> generatedBuilder =
-        generatedBuilders.findBuilder(
-            new TypeName(packageName, referencedType.getSimpleName().toString()));
+    Optional<TypeName> generatedBuilder = generatedBuilders.findBuilder(referencedTypeName);
     if (generatedBuilder.isPresent()) {
       // Our generators always emit a static create() and no create(T) - the empty path uses
       // the factory, the copy path the constructor
@@ -212,7 +211,7 @@ public final class BuilderScopeResolver {
     // the builder contract.
     String suffix = context.getConfiguration().getBuilderUsageSuffix();
     TypeName candidate = JavaLangMapper.createBuilderTypeName(referencedType, context, suffix);
-    return resolveByBuilderContract(candidate, referencedTypeFqn);
+    return resolveByBuilderContract(candidate, referencedTypeName);
   }
 
   /**
@@ -227,13 +226,12 @@ public final class BuilderScopeResolver {
    * positives like {@code String} → {@code StringBuilder}.
    *
    * @param candidate the candidate builder type name to look up
-   * @param expectedType the qualified name of the referenced type the builder must accept and
-   *     return
+   * @param expectedType the referenced type the builder must accept and return
    * @return the resolved builder with the instantiation paths to call, or empty if no matching
    *     builder class exists on the classpath
    */
   private Optional<ResolvedBuilder> resolveByBuilderContract(
-      TypeName candidate, String expectedType) {
+      TypeName candidate, TypeName expectedType) {
     TypeElement builderTypeElement = context.getTypeElement(candidate.getFullQualifiedName());
     if (builderTypeElement == null) {
       return Optional.empty();
@@ -274,11 +272,11 @@ public final class BuilderScopeResolver {
    * accepting the type otherwise.
    *
    * @param builderTypeElement the candidate builder type to inspect
-   * @param expectedType the qualified name of the referenced type to seed the builder with
+   * @param expectedType the referenced type to seed the builder with
    * @return the instantiation to emit, or empty when the builder offers neither
    */
   private Optional<BuilderInstantiation> resolveFuncForPrefilledBuilder(
-      TypeElement builderTypeElement, String expectedType) {
+      TypeElement builderTypeElement, TypeName expectedType) {
     Optional<BuilderInstantiation> func =
         BuilderInstantiation.StaticFactoryCall.forPrefilledBuilder(
             builderTypeElement, expectedType, context);
