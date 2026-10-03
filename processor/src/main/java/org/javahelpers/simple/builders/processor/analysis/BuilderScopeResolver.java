@@ -186,8 +186,7 @@ public final class BuilderScopeResolver {
     }
 
     String packageName = context.getPackageName(referencedType);
-    TypeName referencedTypeName =
-        new TypeName(packageName, referencedType.getSimpleName().toString());
+    TypeName referencedTypeName = JavaLangMapper.mapToTypeName(referencedType, context);
 
     // The usage scope determines whether a type is eligible to be referenced as a builder
     // helper. When empty, any package is allowed (backward compatibility). When set, only
@@ -301,10 +300,7 @@ public final class BuilderScopeResolver {
    */
   private Optional<BuilderInstantiation> findStaticFactoryCall(
       TypeElement builderTypeElement, List<TypeName> expectedParameterTypes) {
-    TypeName builderTypeName =
-        new TypeName(
-            context.getPackageName(builderTypeElement),
-            builderTypeElement.getSimpleName().toString());
+    TypeName builderTypeName = JavaLangMapper.mapToTypeName(builderTypeElement, context);
     return JavaLangAnalyser.findMethodsStatic(
             builderTypeElement, expectedParameterTypes, builderTypeName, context)
         .stream()

@@ -129,6 +129,22 @@ public final class JavaLangMapper {
   }
 
   /**
+   * Maps a {@code TypeElement} to its {@code TypeName} holding package and simple name only,
+   * without resolving builder or constructor information.
+   *
+   * @param typeElement the TypeElement to map
+   * @param context the processing context
+   * @return TypeName of the type element, or null if the type element is null
+   */
+  public static TypeName mapToTypeName(TypeElement typeElement, ProcessingContext context) {
+    if (typeElement == null) {
+      return null;
+    }
+    return new TypeName(
+        context.getPackageName(typeElement), typeElement.getSimpleName().toString());
+  }
+
+  /**
    * Maps a {@code TypeElement} to a simple-builder {@code TypeName}.
    *
    * @param typeElement the TypeElement to map
