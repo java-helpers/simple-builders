@@ -311,8 +311,9 @@ public final class BuilderScopeResolver {
   /**
    * Resolves a builder anchored inside the referenced type itself, like the nested {@code
    * Person.PersonBuilder} or the static {@code Person.builder()} factory that Lombok, Immutables or
-   * FreeBuilder produce. Nested types satisfying the full builder contract are checked first; then
-   * static parameterless factory methods on the type anchor the empty-instantiation path directly.
+   * FreeBuilder produce. Nested types are ordinary contract candidates checked through {@link
+   * #resolveByBuilderContract} first; then static parameterless factory methods on the type anchor
+   * the empty-instantiation path directly.
    *
    * @param referencedType the type element being referenced
    * @param referencedTypeName the referenced type, passed to the contract check
@@ -321,46 +322,35 @@ public final class BuilderScopeResolver {
   private Optional<ResolvedBuilder> resolveInTypeBuilder(
       TypeElement referencedType, TypeName referencedTypeName) {
     Optional<ResolvedBuilder> nestedBuilder =
-        resolveNestedBuilder(referencedType, referencedTypeName);
-    if (nestedBuilder.isPresent()) {
-      return nestedBuilder;
-    }
-    return resolveAnchoredBuilder(referencedType, referencedTypeName);
+        nestedBuilderCandidates(referencedType).stream()
+            .map(candidate -> resolveByBuilderContract(candidate, referencedTypeName))
+            .flatMap(Optional::stream)
+            .findFirst();
+    return nestedBuilder.or(() -> resolveAnchoredBuilder(referencedType, referencedTypeName));
   }
 
   /**
-   * Resolves a nested type of the referenced type satisfying the builder contract, like the {@code
-   * Person.PersonBuilder} or {@code Person.Builder} inner classes Lombok and FreeBuilder generate.
-   * Names built from the referenced type's simple name and the builder suffix rank first, the plain
-   * builder suffix second; declaration order decides between equals.
+   * Collects the accessible nested types of the referenced type as builder candidates, like the
+   * {@code Person.PersonBuilder} or {@code Person.Builder} inner classes Lombok and FreeBuilder
+   * generate. Names built from the referenced type's simple name and the builder suffix rank first,
+   * the plain builder suffix second; declaration order decides between equals.
    *
    * @param referencedType the type element being referenced
-   * @param referencedTypeName the referenced type, passed to the contract check
-   * @return the resolved builder, or empty when no nested type satisfies the contract
+   * @return the nested type candidates in preference order
    */
-  private Optional<ResolvedBuilder> resolveNestedBuilder(
-      TypeElement referencedType, TypeName referencedTypeName) {
+  private List<TypeName> nestedBuilderCandidates(TypeElement referencedType) {
     String builderSuffix = context.getConfiguration().getBuilderSuffix();
     String preferredName = referencedType.getSimpleName() + builderSuffix;
-    List<TypeElement> nestedTypes =
-        ElementFilter.typesIn(context.getAllMembers(referencedType)).stream()
-            .filter(context::isMemberAccessibleFromBuilderPackage)
-            .sorted(
-                Comparator.comparingInt(
-                    nested ->
-                        preferredName.contentEquals(nested.getSimpleName())
-                            ? 0
-                            : builderSuffix.contentEquals(nested.getSimpleName()) ? 1 : 2))
-            .toList();
-    for (TypeElement nestedType : nestedTypes) {
-      Optional<ResolvedBuilder> resolved =
-          resolveByBuilderContract(
-              JavaLangMapper.mapToTypeName(nestedType, context), referencedTypeName);
-      if (resolved.isPresent()) {
-        return resolved;
-      }
-    }
-    return Optional.empty();
+    return ElementFilter.typesIn(context.getAllMembers(referencedType)).stream()
+        .filter(context::isMemberAccessibleFromBuilderPackage)
+        .sorted(
+            Comparator.comparingInt(
+                nested ->
+                    preferredName.contentEquals(nested.getSimpleName())
+                        ? 0
+                        : builderSuffix.contentEquals(nested.getSimpleName()) ? 1 : 2))
+        .map(nested -> JavaLangMapper.mapToTypeName(nested, context))
+        .toList();
   }
 
   /**
