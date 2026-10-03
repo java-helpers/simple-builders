@@ -292,7 +292,8 @@ public final class BuilderScopeResolver {
               expectedType,
               funcForEmptyBuilder.get());
     }
-    if (funcForPrefilledBuilder.isEmpty()) {
+    if (funcForPrefilledBuilder.isEmpty()
+        && context.getConfiguration().shouldUseFieldFunctionPrefill()) {
       context.debug(
           "Builder %s for %s offers no way to prefill a value - consumer helpers are skipped",
           candidate.getFullQualifiedName(), expectedType.getFullQualifiedName());
@@ -333,42 +334,48 @@ public final class BuilderScopeResolver {
       return Optional.empty();
     }
     List<ExecutableElement> fieldFunctions =
-        ElementFilter.methodsIn(context.getAllMembers(builderElement)).stream()
-            .filter(JavaLangAnalyser::isNotStatic)
-            .filter(this::isNoMethodOfObjectClass)
-            .filter(context::isMemberAccessibleFromBuilderPackage)
-            .filter(this::hasSingleParameter)
-            .toList();
-    for (String prefix : candidatePrefixes(properties, fieldFunctions)) {
-      List<BuilderInstantiation.PrefillCall.PrefilledField> prefilledFields =
-          collectPrefilledFields(properties, fieldFunctions, prefix);
-      // a convention is trusted once it covers the majority of the readable properties
-      if (2 * prefilledFields.size() > properties.size()) {
-        return Optional.of(
-            new BuilderInstantiation.PrefillCall(
-                builderTypeName, referencedTypeName, funcForEmptyBuilder, prefix, prefilledFields));
-      }
+        JavaLangAnalyser.findFieldFunctions(builderElement, context);
+    ConventionCoverage best =
+        candidatePrefixes(properties, fieldFunctions).stream()
+            .map(
+                prefix ->
+                    new ConventionCoverage(
+                        prefix, collectPrefilledFields(properties, fieldFunctions, prefix)))
+            .sorted(
+                Comparator.comparingInt(
+                        (ConventionCoverage convention) -> convention.prefilledFields().size())
+                    .reversed())
+            .findFirst()
+            .orElseThrow();
+    // a convention is trusted once it covers the majority of the readable properties
+    if (2 * best.prefilledFields().size() <= properties.size()) {
+      return Optional.empty();
     }
-    return Optional.empty();
-  }
-
-  private boolean isNoMethodOfObjectClass(ExecutableElement method) {
-    return JavaLangAnalyser.isNoMethodOfObjectClass(method, context);
-  }
-
-  private boolean hasSingleParameter(ExecutableElement method) {
-    return method.getParameters().size() == 1;
+    return Optional.of(
+        new BuilderInstantiation.PrefillCall(
+            builderTypeName,
+            referencedTypeName,
+            funcForEmptyBuilder,
+            best.prefix(),
+            best.prefilledFields()));
   }
 
   /**
-   * Candidate field-function prefixes ordered by how many properties each covers, most findings
-   * first: {@code ""} (fluent {@code name(v)}) and {@code set} (JavaBeans) are always tried, any
-   * other camel-case prefix found on the builder's single-parameter methods is only trusted when
-   * enough methods share it - one finding per property, at least two when there are several.
+   * A naming convention paired with the prefilled fields the builder covers under it: the
+   * convention the most properties follow wins.
+   */
+  private record ConventionCoverage(
+      String prefix, List<BuilderInstantiation.PrefillCall.PrefilledField> prefilledFields) {}
+
+  /**
+   * Candidate field-function prefixes: {@code ""} (fluent {@code name(v)}) and {@code set}
+   * (JavaBeans) are always tried, any other camel-case prefix found on the builder's
+   * single-parameter methods is only trusted when enough methods share it - one finding per
+   * property, at least two when there are several.
    *
    * @param properties the readable properties to cover
    * @param fieldFunctions the builder's single-parameter non-static methods
-   * @return the prefixes to try, in coverage order
+   * @return the prefixes to evaluate
    */
   private List<String> candidatePrefixes(
       List<JavaLangAnalyser.ReadableProperty> properties, List<ExecutableElement> fieldFunctions) {
@@ -387,25 +394,7 @@ public final class BuilderScopeResolver {
         .map(Map.Entry::getKey)
         .filter(Predicate.not(prefixes::contains))
         .forEach(prefixes::add);
-    prefixes.sort(
-        Comparator.comparingInt((String prefix) -> coveredCount(properties, fieldFunctions, prefix))
-            .reversed());
     return prefixes;
-  }
-
-  /**
-   * Counts the properties the builder covers under one naming convention.
-   *
-   * @param properties the readable properties to cover
-   * @param fieldFunctions the builder's single-parameter non-static methods
-   * @param prefix the naming convention to count
-   * @return how many properties have a matching field function
-   */
-  private int coveredCount(
-      List<JavaLangAnalyser.ReadableProperty> properties,
-      List<ExecutableElement> fieldFunctions,
-      String prefix) {
-    return collectPrefilledFields(properties, fieldFunctions, prefix).size();
   }
 
   /**

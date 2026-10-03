@@ -472,6 +472,25 @@ public final class JavaLangAnalyser {
   }
 
   /**
+   * Finds the builder's field functions: accessible non-static single-parameter methods that are
+   * not members of {@link Object}. These are the candidates a naming convention may use to prefill
+   * the builder property by property.
+   *
+   * @param type the builder type to inspect
+   * @param context the processing context, used to access all members
+   * @return the field functions in declaration order
+   */
+  public static List<ExecutableElement> findFieldFunctions(
+      TypeElement type, ProcessingContext context) {
+    return ElementFilter.methodsIn(context.getAllMembers(type)).stream()
+        .filter(JavaLangAnalyser::isNotStatic)
+        .filter(method -> isNoMethodOfObjectClass(method, context))
+        .filter(context::isMemberAccessibleFromBuilderPackage)
+        .filter(method -> method.getParameters().size() == 1)
+        .toList();
+  }
+
+  /**
    * Derives the property name of an accessor method: {@code getX()}/{@code isX()} map to {@code x},
    * any other name is used unchanged.
    *
