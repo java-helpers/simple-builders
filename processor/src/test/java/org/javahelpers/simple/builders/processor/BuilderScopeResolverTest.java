@@ -532,6 +532,7 @@ class BuilderScopeResolverTest {
                         return new AutoValue_LibHelper.Builder();
                       }
                       public String getName() { return ""; }
+                      public boolean isActive() { return true; }
                     }
                     """),
                 ProcessorTestUtils.forSource(
@@ -541,6 +542,7 @@ class BuilderScopeResolverTest {
                       public static class Builder {
                         Builder() {}
                         public Builder setName(String name) { return this; }
+                        public Builder setActive(boolean active) { return this; }
                         public LibHelper build() { return new LibHelper(); }
                       }
                     }
@@ -557,6 +559,70 @@ class BuilderScopeResolverTest {
         assertInstanceOf(
             BuilderInstantiation.FieldSeedingCall.class, resolved.funcForPrefilledBuilder().get());
     assertEquals("setName", prefilled.seededFields().get(0).builderMethod());
+  }
+
+  @Test
+  void resolverUsageScope_ResolvesRecordShape() {
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public record LibHelper(String name) {}
+                    """),
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelperBuilder {
+                      public LibHelperBuilder() {}
+                      public LibHelperBuilder name(String name) { return this; }
+                      public LibHelper build() { return new LibHelper("x"); }
+                    }
+                    """));
+
+    assertThat(compilation).succeeded();
+    // Record components count as readable properties via the name() accessor
+    ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
+    BuilderInstantiation.FieldSeedingCall prefilled =
+        assertInstanceOf(
+            BuilderInstantiation.FieldSeedingCall.class, resolved.funcForPrefilledBuilder().get());
+    assertEquals("name", prefilled.seededFields().get(0).builderMethod());
+    assertEquals("name()", prefilled.seededFields().get(0).accessor());
+  }
+
+  @Test
+  void resolverUsageScope_ResolvesFieldShape() {
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelper {
+                      public String name = "";
+                    }
+                    """),
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelperBuilder {
+                      public LibHelperBuilder() {}
+                      public LibHelperBuilder name(String name) { return this; }
+                      public LibHelper build() { return new LibHelper(); }
+                    }
+                    """));
+
+    assertThat(compilation).succeeded();
+    // Accessible fields count as readable properties via direct name access
+    ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
+    BuilderInstantiation.FieldSeedingCall prefilled =
+        assertInstanceOf(
+            BuilderInstantiation.FieldSeedingCall.class, resolved.funcForPrefilledBuilder().get());
+    assertEquals("name", prefilled.seededFields().get(0).builderMethod());
+    assertEquals("name", prefilled.seededFields().get(0).accessor());
   }
 
   @Test
