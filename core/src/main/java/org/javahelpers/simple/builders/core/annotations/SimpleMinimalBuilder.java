@@ -94,6 +94,7 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
             generateJavaDoc = OptionState.DISABLED,
             copyTypeAnnotations = OptionState.DISABLED,
             implementsBuilderBase = OptionState.DISABLED,
+            usingExistingBuilders = OptionState.DISABLED,
             builderSuffix = "Builder",
             setterSuffix = "",
             formattingMode = "lightweight"))
