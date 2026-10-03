@@ -261,8 +261,7 @@ public final class BuilderScopeResolver {
   private Optional<BuilderInstantiation> resolveFuncForEmptyBuilder(
       TypeElement builderTypeElement) {
     Optional<BuilderInstantiation> func =
-        JavaLangAnalyser.findStaticFactoryReturning(builderTypeElement, context)
-            .<BuilderInstantiation>map(BuilderInstantiation.StaticFactoryCall::new);
+        BuilderInstantiation.StaticFactoryCall.forEmptyBuilder(builderTypeElement, context);
     if (func.isEmpty() && JavaLangAnalyser.hasEmptyConstructor(builderTypeElement, context)) {
       func = Optional.of(new BuilderInstantiation.ConstructorCall());
     }
@@ -281,8 +280,8 @@ public final class BuilderScopeResolver {
   private Optional<BuilderInstantiation> resolveFuncForPrefilledBuilder(
       TypeElement builderTypeElement, String expectedType) {
     Optional<BuilderInstantiation> func =
-        JavaLangAnalyser.findStaticFactoryAccepting(builderTypeElement, expectedType, context)
-            .<BuilderInstantiation>map(BuilderInstantiation.StaticFactoryCall::new);
+        BuilderInstantiation.StaticFactoryCall.forPrefilledBuilder(
+            builderTypeElement, expectedType, context);
     if (func.isEmpty()
         && JavaLangAnalyser.hasConstructorAccepting(builderTypeElement, expectedType, context)) {
       func = Optional.of(new BuilderInstantiation.ConstructorCall());
