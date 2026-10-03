@@ -484,6 +484,140 @@ class SimpleBuilderForTest {
     ProcessorAsserts.assertContaining(generated, "package test;");
   }
 
+  @Test
+  void packages_GeneratesBuildersForTopLevelConstructibleTypes() {
+    JavaFileObject holder =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFor;
+            @SimpleBuilderFor(packages = "pkg")
+            public class Builders {}
+            """);
+
+    Compilation compilation =
+        ProcessorTestUtils.createCompiler()
+            .compile(pkgUser(), pkgOrder(), pkgInterface(), pkgEnum(), pkgAbstract(), holder);
+
+    assertThat(compilation).succeededWithoutWarnings();
+    // Only the two concrete top-level classes get builders; interface, enum and abstract class
+    // are skipped
+    String userBuilder = ProcessorTestUtils.loadGeneratedSource(compilation, "ExternalUserBuilder");
+    String orderBuilder =
+        ProcessorTestUtils.loadGeneratedSource(compilation, "ExternalOrderBuilder");
+    ProcessorAsserts.assertContaining(userBuilder, "package test;", "public ExternalUser build()");
+    ProcessorAsserts.assertContaining(
+        orderBuilder, "package test;", "public ExternalOrder build()");
+    ProcessorAsserts.assertNoBuilderGenerated(
+        compilation, "Contract", "an interface cannot be built");
+    ProcessorAsserts.assertNoBuilderGenerated(compilation, "State", "an enum cannot be built");
+    ProcessorAsserts.assertNoBuilderGenerated(
+        compilation, "BaseDto", "an abstract class cannot be built");
+  }
+
+  @Test
+  void packages_NestedTypeKeepsRequiringExplicitEntry() {
+    JavaFileObject withNested =
+        ProcessorTestUtils.forSource(
+            """
+            package pkg;
+            public class Wrapper {
+              public Wrapper() {}
+              public static class Inner {
+                public Inner() {}
+              }
+            }
+            """);
+    JavaFileObject holder =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFor;
+            @SimpleBuilderFor(packages = "pkg")
+            public class Builders {}
+            """);
+
+    Compilation compilation = ProcessorTestUtils.createCompiler().compile(withNested, holder);
+
+    assertThat(compilation).succeededWithoutWarnings();
+    // Only the top-level type is picked up; its nested class is not
+    String generated = ProcessorTestUtils.loadGeneratedSource(compilation, "WrapperBuilder");
+    ProcessorAsserts.assertContaining(generated, "public Wrapper build()");
+    ProcessorAsserts.assertNoBuilderGenerated(
+        compilation, "Inner", "nested types keep requiring an explicit value entry");
+  }
+
+  @Test
+  void packages_WithOptions_GeneratesIntoOptionsPackage() {
+    JavaFileObject holder =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFor;
+            @SimpleBuilderFor(
+                packages = "pkg",
+                options = @SimpleBuilder.Options(packageName = "com.example.generated"))
+            public class Builders {}
+            """);
+
+    Compilation compilation =
+        ProcessorTestUtils.createCompiler().compile(pkgUser(), pkgOrder(), holder);
+
+    assertThat(compilation).succeededWithoutWarnings();
+    // Every scanned type routes into the options package, as with value-listed types
+    ProcessorAsserts.assertContaining(
+        ProcessorTestUtils.loadGeneratedSource(compilation, "generated/ExternalUserBuilder"),
+        "package com.example.generated;");
+    ProcessorAsserts.assertContaining(
+        ProcessorTestUtils.loadGeneratedSource(compilation, "generated/ExternalOrderBuilder"),
+        "package com.example.generated;");
+  }
+
+  @Test
+  void packages_TypeAlsoInValue_GeneratesSingleBuilder() {
+    JavaFileObject holder =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFor;
+            @SimpleBuilderFor(value = pkg.ExternalUser.class, packages = "pkg")
+            public class Builders {}
+            """);
+
+    Compilation compilation =
+        ProcessorTestUtils.createCompiler().compile(pkgUser(), pkgOrder(), holder);
+
+    // The explicit listing and the scan overlap on ExternalUser: exactly one builder, no
+    // duplicate warning
+    assertThat(compilation).succeededWithoutWarnings();
+    String generated = ProcessorTestUtils.loadGeneratedSource(compilation, "ExternalUserBuilder");
+    ProcessorAsserts.assertContaining(generated, "package test;", "public ExternalUser build()");
+    ProcessorAsserts.assertContaining(
+        ProcessorTestUtils.loadGeneratedSource(compilation, "ExternalOrderBuilder"),
+        "public ExternalOrder build()");
+  }
+
+  @Test
+  void packages_Unresolvable_WarnsAndGeneratesFromValue() {
+    JavaFileObject holder =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFor;
+            @SimpleBuilderFor(value = ext.ExternalUser.class, packages = "does.not.exist")
+            public class Builders {}
+            """);
+
+    Compilation compilation = ProcessorTestUtils.createCompiler().compile(externalDto(), holder);
+
+    assertThat(compilation).succeeded();
+    assertThat(compilation).hadWarningContaining("could not be resolved");
+    // The unresolvable package is skipped; the value-listed type still generates
+    String generated = ProcessorTestUtils.loadGeneratedSource(compilation, "ExternalUserBuilder");
+    ProcessorAsserts.assertContaining(generated, "public ExternalUser build()");
+  }
+
   private static JavaFileObject externalOrderDto() {
     return ProcessorTestUtils.forSource(
         """
@@ -522,6 +656,62 @@ class SimpleBuilderForTest {
           public ExternalOrder() {}
           public String getId() { return id; }
           public void setId(String id) { this.id = id; }
+        }
+        """);
+  }
+
+  private static JavaFileObject pkgUser() {
+    return ProcessorTestUtils.forSource(
+        """
+        package pkg;
+        public class ExternalUser {
+          private String name;
+          public ExternalUser() {}
+          public String getName() { return name; }
+          public void setName(String name) { this.name = name; }
+        }
+        """);
+  }
+
+  private static JavaFileObject pkgOrder() {
+    return ProcessorTestUtils.forSource(
+        """
+        package pkg;
+        public class ExternalOrder {
+          private String id;
+          public ExternalOrder() {}
+          public String getId() { return id; }
+          public void setId(String id) { this.id = id; }
+        }
+        """);
+  }
+
+  private static JavaFileObject pkgInterface() {
+    return ProcessorTestUtils.forSource(
+        """
+        package pkg;
+        public interface Contract {
+          String getName();
+        }
+        """);
+  }
+
+  private static JavaFileObject pkgEnum() {
+    return ProcessorTestUtils.forSource(
+        """
+        package pkg;
+        public enum State {
+          OPEN, CLOSED
+        }
+        """);
+  }
+
+  private static JavaFileObject pkgAbstract() {
+    return ProcessorTestUtils.forSource(
+        """
+        package pkg;
+        public abstract class BaseDto {
+          public BaseDto() {}
         }
         """);
   }

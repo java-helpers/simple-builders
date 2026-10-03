@@ -274,6 +274,16 @@ public final class ProcessingContext {
   }
 
   /**
+   * Get the package element for a qualified package name.
+   *
+   * @param name the qualified package name
+   * @return the package element, or null if no such package is visible to the compilation
+   */
+  public PackageElement getPackageElement(String name) {
+    return elementUtils.getPackageElement(name);
+  }
+
+  /**
    * Get the package name of an element.
    *
    * @param element the element

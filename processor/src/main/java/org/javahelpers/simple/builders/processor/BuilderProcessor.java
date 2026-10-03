@@ -35,7 +35,9 @@ import com.google.auto.service.AutoService;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -48,8 +50,12 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.Modifier;
+import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.ElementFilter;
 import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder.Template;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFor;
@@ -338,7 +344,7 @@ public class BuilderProcessor extends AbstractProcessor {
       if (targets.isEmpty()) {
         context.warning(
             holder,
-            "simple-builders: @SimpleBuilderFor on '%s' does not list any types - nothing to generate",
+            "simple-builders: @SimpleBuilderFor on '%s' resolves no types - nothing to generate",
             holder.getSimpleName());
         continue;
       }
@@ -392,26 +398,83 @@ public class BuilderProcessor extends AbstractProcessor {
   }
 
   /**
-   * Reads the {@code value} attribute of one {@code @SimpleBuilderFor} annotation instance on the
-   * holder and resolves each entry to the {@link TypeElement} the builder is generated for.
+   * Resolves the types one {@code @SimpleBuilderFor} annotation instance declares builders for: the
+   * types listed in {@code value} first (a type listed there wins over the same type found by
+   * scanning), then the constructible top-level types of every {@code packages} package, ordered by
+   * qualified name for deterministic output.
    */
   private List<TypeElement> extractExternalTargetTypes(
       Element holder, AnnotationMirror annotationInstance) throws BuilderException {
-    Optional<AnnotationValue> valueAttribute =
-        JavaLangAnalyser.findAnnotationAttribute(annotationInstance, "value", context);
-    List<TypeElement> results = new ArrayList<>();
+    Map<String, TypeElement> targets = new LinkedHashMap<>();
     // For an array-valued attribute javac always delivers a list, even for a single entry.
-    if (valueAttribute.isEmpty() || !(valueAttribute.get().getValue() instanceof List<?> items)) {
+    for (Object item : readArrayAttribute(annotationInstance, "value")) {
+      TypeElement target = resolveExternalTargetType(holder, item);
+      targets.put(target.getQualifiedName().toString(), target);
+    }
+    for (String packageName : readPackageNames(annotationInstance)) {
+      for (TypeElement target : findPackageTargetTypes(holder, packageName)) {
+        targets.putIfAbsent(target.getQualifiedName().toString(), target);
+      }
+    }
+    return List.copyOf(targets.values());
+  }
+
+  /** Reads an array-typed attribute of an annotation mirror as the raw item list. */
+  private List<?> readArrayAttribute(AnnotationMirror annotationInstance, String attributeName) {
+    return JavaLangAnalyser.findAnnotationAttribute(annotationInstance, attributeName, context)
+        .map(AnnotationValue::getValue)
+        .filter(List.class::isInstance)
+        .map(List.class::cast)
+        .orElse(List.of());
+  }
+
+  /** Reads the {@code packages} attribute of one {@code @SimpleBuilderFor} annotation instance. */
+  private List<String> readPackageNames(AnnotationMirror annotationInstance) {
+    return readArrayAttribute(annotationInstance, "packages").stream()
+        .map(item -> item instanceof AnnotationValue value ? value.getValue() : null)
+        .filter(String.class::isInstance)
+        .map(String.class::cast)
+        .toList();
+  }
+
+  /**
+   * Finds the constructible top-level types of one {@code packages} entry: only concrete classes
+   * and records qualify; interfaces, abstract classes, enums and annotation types are skipped with
+   * a debug note.
+   */
+  private List<TypeElement> findPackageTargetTypes(Element holder, String packageName) {
+    PackageElement packageElement = context.getPackageElement(packageName);
+    if (packageElement == null) {
       context.warning(
           holder,
-          "simple-builders: could not read the 'value' attribute of @SimpleBuilderFor on '%s' - nothing to generate",
+          "simple-builders: package '%s' in @SimpleBuilderFor on '%s' could not be resolved - skipped",
+          packageName,
           holder.getSimpleName());
-      return results;
+      return List.of();
     }
-    for (Object item : items) {
-      results.add(resolveExternalTargetType(holder, item));
+    List<TypeElement> targets = new ArrayList<>();
+    for (TypeElement type : ElementFilter.typesIn(packageElement.getEnclosedElements())) {
+      if (isConstructibleTopLevelType(type)) {
+        targets.add(type);
+      } else {
+        context.debug(
+            "simple-builders: skipping %s '%s' in package '%s' declared by @SimpleBuilderFor on '%s' - no builder can be generated",
+            type.getKind().toString().toLowerCase(),
+            type.getQualifiedName(),
+            packageName,
+            holder.getSimpleName());
+      }
     }
-    return results;
+    targets.sort(Comparator.comparing(type -> type.getQualifiedName().toString()));
+    return targets;
+  }
+
+  /** Whether a package member is a type a builder can be generated for. */
+  private static boolean isConstructibleTopLevelType(TypeElement type) {
+    if (type.getKind() == ElementKind.RECORD) {
+      return true;
+    }
+    return type.getKind() == ElementKind.CLASS && !type.getModifiers().contains(Modifier.ABSTRACT);
   }
 
   /** Resolves one entry of a {@code @SimpleBuilderFor} {@code value} attribute to its type. */

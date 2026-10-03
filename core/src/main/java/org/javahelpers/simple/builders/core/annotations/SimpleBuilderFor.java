@@ -125,11 +125,23 @@ public @interface SimpleBuilderFor {
   /**
    * The types for which builders are generated. Every listed type must be resolvable on the
    * classpath or in the current compilation and must be constructible through accessible Java APIs
-   * (e.g. an accessible constructor). At least one type is required.
+   * (e.g. an accessible constructor). At least one of {@link #value()} or {@link #packages()} must
+   * be set.
    *
    * @return the external types to generate builders for
    */
-  Class<?>[] value();
+  Class<?>[] value() default {};
+
+  /**
+   * Packages scanned for types to generate builders for: every top-level constructible type
+   * declared in a listed package gets a builder, without listing the types one by one in {@link
+   * #value()}. Interfaces, abstract classes, enums and annotation types are skipped; nested types
+   * keep requiring an explicit {@link #value()} entry. Types a package contributes are ordered by
+   * qualified name.
+   *
+   * @return the packages whose top-level types get builders
+   */
+  String[] packages() default {};
 
   /**
    * Configuration options for the generated builders, reusing the {@link SimpleBuilder.Options}

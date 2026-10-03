@@ -187,6 +187,19 @@ import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFor;
 
 The generated builders are placed in the annotated package - or in the package of the provider class when a class is annotated instead. `options` reuses `@SimpleBuilder.Options` and is optional - compiler defaults apply when omitted.
 
+`packages` lists whole packages to scan instead of naming types one by one: every top-level constructible type declared in a listed package gets a builder, combined with the types of `value` (an explicit `value` entry wins over the same type found by scanning; a `packages`-only declaration without `value` is valid):
+
+```java
+// Generates a builder for every top-level class and record in com.thirdparty.users
+@SimpleBuilderFor(
+    packages = "com.thirdparty.users",
+    options = @SimpleBuilder.Options(packageName = "com.example.generated"))
+public class ExternalBuildersProvider {
+}
+```
+
+Interfaces, abstract classes, enums and annotation types are skipped (a debug log lists each skip), and package scanning only sees *top-level* types - nested types keep requiring an explicit `value` entry. Only packages visible to the compilation can be resolved: an unresolvable package name produces a warning and is skipped. Types a package contributes are ordered by qualified name, so the generated set is deterministic.
+
 The target type must be constructible through accessible Java APIs from the builder's package: it needs a visible type and an accessible constructor, otherwise generation fails with a compile-time diagnostic. The target type's own annotations are not consulted - the explicit declaration wins, so `@Ignore4BuilderGeneration` on the target does not suppress generation either. `@SimpleBuilderFor` is not `@Inherited`, and the provider class or package itself never gets a builder.
 
 `@SimpleBuilderFor` is `@Repeatable`: several declarations may be placed on the same holder or `package-info.java` when the listed types need different options - for example a different `packageName` per declaration:
