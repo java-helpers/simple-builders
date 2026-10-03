@@ -244,21 +244,39 @@ public final class JavaLangAnalyser {
   }
 
   /**
-   * Checks whether the given type has a no-arg {@code build()} method returning the expected type.
-   * This is part of the builder contract used when the built value is retrieved.
+   * Checks whether the given type has a build method: a public, non-static, no-arg method returning
+   * the expected type, regardless of its name. This is part of the builder contract used when the
+   * built value is retrieved.
    *
    * <p>The check is annotation-agnostic and avoids false positives like {@code StringBuilder} for
    * {@code String}.
    *
    * @param builderType the candidate builder type element to check
-   * @param expectedReturnType the type that {@code build()} must return
+   * @param expectedReturnType the type that the build method must return
    * @param context the processing context, used to access all members
-   * @return {@code true} if the type declares or inherits a matching {@code build()} method
+   * @return {@code true} if the type declares or inherits a matching build method
    */
   public static boolean hasBuildMethodReturning(
       TypeElement builderType, TypeName expectedReturnType, ProcessingContext context) {
     return findMethods(builderType, List.of(), expectedReturnType, context).stream()
-        .anyMatch(method -> method.getSimpleName().contentEquals("build"));
+        .anyMatch(method -> isNotStatic(method) && !isObjectMethod(method, context));
+  }
+
+  /**
+   * Checks whether the method's signature matches a method declared on {@link java.lang.Object}
+   * (e.g. {@code toString()}), which must not count as a build method. This avoids false positives
+   * like {@code StringBuilder#toString} satisfying the builder contract for {@code String}.
+   */
+  private static boolean isObjectMethod(ExecutableElement method, ProcessingContext context) {
+    TypeElement objectElement = context.getTypeElement(Object.class.getCanonicalName());
+    if (objectElement == null) {
+      return false;
+    }
+    return ElementFilter.methodsIn(objectElement.getEnclosedElements()).stream()
+        .anyMatch(
+            objectMethod ->
+                objectMethod.getSimpleName().equals(method.getSimpleName())
+                    && objectMethod.getParameters().size() == method.getParameters().size());
   }
 
   /**

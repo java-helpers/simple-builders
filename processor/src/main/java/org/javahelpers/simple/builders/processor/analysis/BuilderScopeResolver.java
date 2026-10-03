@@ -111,11 +111,12 @@ public final class BuilderScopeResolver {
    *       the classpath and returned if it satisfies the builder contract: an instantiation path
    *       for an empty builder (no-arg constructor or static factory like {@code create()}), an
    *       instantiation path seeded with the value (constructor accepting the referenced type or
-   *       static factory like {@code create(T)}/{@code of(T)}), and a no-arg {@code build()} method
-   *       returning it - each accessible from the generated builder's package. The contract check
-   *       is annotation-agnostic, so builders generated with custom template annotations, external
-   *       tools, or different suffixes are supported. The referenced type must not be opted out
-   *       with {@code @Ignore4BuilderGeneration}.
+   *       static factory like {@code create(T)}/{@code of(T)}), and an accessible, parameterless
+   *       method returning it (the build method, regardless of name) - each accessible from the
+   *       generated builder's package. The contract check is annotation-agnostic, so builders
+   *       generated with custom template annotations, external tools, or different suffixes are
+   *       supported. The referenced type must not be opted out with
+   *       {@code @Ignore4BuilderGeneration}.
    * </ol>
    *
    * @param referencedType the type element being referenced as a field or collection element
@@ -248,12 +249,12 @@ public final class BuilderScopeResolver {
    * Looks up the candidate builder type on the classpath and verifies it satisfies the builder
    * contract: a way to create an empty instance (a no-arg constructor or a static parameterless
    * factory like {@code create()}), a way to create an instance seeded with a value (a constructor
-   * accepting the referenced type or a static factory like {@code create(T)}/{@code of(T)}), and a
-   * no-arg {@code build()} method returning it - each accessible from the generated builder's
-   * package, since the generated code calls them from there. The contract check is
-   * annotation-agnostic, so builders generated with custom template annotations or from external
-   * sources are supported as long as they follow the builder contract. It also avoids false
-   * positives like {@code String} → {@code StringBuilder}.
+   * accepting the referenced type or a static factory like {@code create(T)}/{@code of(T)}), and an
+   * accessible, parameterless method returning it (the build method, regardless of name) - each
+   * accessible from the generated builder's package, since the generated code calls them from
+   * there. The contract check is annotation-agnostic, so builders generated with custom template
+   * annotations or from external sources are supported as long as they follow the builder contract.
+   * It also avoids false positives like {@code String} → {@code StringBuilder}.
    *
    * @param candidate the candidate builder type name to look up
    * @param expectedType the referenced type the builder must accept and return
