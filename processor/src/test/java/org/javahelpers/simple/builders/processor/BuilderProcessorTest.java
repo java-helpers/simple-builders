@@ -1394,7 +1394,7 @@ class BuilderProcessorTest {
         generatedCode,
         "private TrackedValue<HelperAnno> helper = unsetValue();",
         "helperBuilderConsumer",
-        "HelperAnnoBuilder builder = this.helper.isSet() ? new HelperAnnoBuilder(this.helper.value()) : new HelperAnnoBuilder();",
+        "HelperAnnoBuilder builder = this.helper.isSet() ? new HelperAnnoBuilder(this.helper.value()) : HelperAnnoBuilder.create();",
         "helperBuilderConsumer.accept(builder);",
         "this.helper = changedValue(builder.build());");
   }

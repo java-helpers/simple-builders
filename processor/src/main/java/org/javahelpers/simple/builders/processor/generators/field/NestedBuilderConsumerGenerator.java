@@ -34,6 +34,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
+import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
@@ -98,24 +99,18 @@ public class NestedBuilderConsumerGenerator implements MethodGenerator {
   @Override
   public List<BuilderMethodDto> generateMethods(
       FieldDto field, TypeName builderType, ProcessingContext context) {
-    Optional<TypeName> fieldBuilderOpt = field.getFieldType().getBuilderType();
+    Optional<ResolvedBuilder> fieldBuilderOpt = field.getFieldType().getResolvedBuilder();
     if (fieldBuilderOpt.isEmpty()) {
       return Collections.emptyList();
     }
 
-    TypeName fieldBuilderType = fieldBuilderOpt.get();
+    ResolvedBuilder fieldBuilder = fieldBuilderOpt.get();
     BuilderMethodDto method =
         createFieldConsumerWithBuilder(
-            field,
-            fieldBuilderType,
-            "this.$fieldName:N.value()",
-            "",
-            Map.of(),
-            builderType,
-            context);
+            field, fieldBuilder, "this.$fieldName:N.value()", "", Map.of(), builderType, context);
 
     // Add example fragment showing the consumer lambda pattern
-    String builderVar = StringUtils.uncapitalize(fieldBuilderType.getClassName());
+    String builderVar = StringUtils.uncapitalize(fieldBuilder.typeName().getClassName());
     addExampleChainFragmentTemplate(
         method, "#{methodName}(" + builderVar + " -> " + builderVar + ")");
 

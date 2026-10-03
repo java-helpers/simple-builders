@@ -269,7 +269,7 @@ public class ScopedOwnerDtoBuilder implements IBuilderBase<ScopedOwnerDto> {
   public ScopedOwnerDtoBuilder trusted(Consumer<TrustedHelperDtoBuilder> trustedBuilderConsumer) {
     TrustedHelperDtoBuilder builder = this.trusted.isSet()
         ? new TrustedHelperDtoBuilder(this.trusted.value())
-        : new TrustedHelperDtoBuilder();
+        : TrustedHelperDtoBuilder.create();
     trustedBuilderConsumer.accept(builder);
     this.trusted = changedValue(builder.build());
     return this;

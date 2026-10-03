@@ -23,7 +23,9 @@
  */
 package org.javahelpers.simple.builders.processor.analysis;
 
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import javax.lang.model.element.Element;
@@ -31,6 +33,8 @@ import javax.lang.model.element.TypeElement;
 import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.core.PackageScopes;
+import org.javahelpers.simple.builders.processor.model.type.BuilderInstantiation;
+import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
@@ -55,10 +59,13 @@ public final class BuilderScopeResolver {
    */
   private record ResolutionInputs(BuilderConfiguration configuration, String builderPackage) {}
 
+  // Factory method names preferred when a builder offers several candidates
+  private static final List<String> PREFERRED_FACTORY_NAMES = List.of("create", "of");
+
   private final ProcessingContext context;
   private ResolutionInputs cachedResolutionInputs;
   private PackageScopes usagePackages = PackageScopes.unscoped();
-  private final Map<String, Optional<TypeName>> resolvedBuilderTypes = new HashMap<>();
+  private final Map<String, Optional<ResolvedBuilder>> resolvedBuilderTypes = new HashMap<>();
   private final GeneratedBuilders generatedBuilders = new GeneratedBuilders();
 
   /**
@@ -91,18 +98,20 @@ public final class BuilderScopeResolver {
    *       immediately — trusted without a classpath lookup or contract check.
    *   <li>Otherwise, the candidate builder name is constructed using {@code builderUsageSuffix}
    *       (falling back to {@code builderSuffix} if not configured). The candidate is looked up on
-   *       the classpath and returned if it satisfies the builder contract: a constructor accepting
-   *       the referenced type, a no-arg constructor, and a no-arg {@code build()} method returning
-   *       it - each accessible from the generated builder's package. The contract check is
-   *       annotation-agnostic, so builders generated with custom template annotations, external
+   *       the classpath and returned if it satisfies the builder contract: an instantiation path
+   *       for an empty builder (no-arg constructor or static factory like {@code create()}), an
+   *       instantiation path seeded with the value (constructor accepting the referenced type or
+   *       static factory like {@code create(T)}/{@code of(T)}), and a no-arg {@code build()} method
+   *       returning it - each accessible from the generated builder's package. The contract check
+   *       is annotation-agnostic, so builders generated with custom template annotations, external
    *       tools, or different suffixes are supported. The referenced type must not be opted out
    *       with {@code @Ignore4BuilderGeneration}.
    * </ol>
    *
    * @param referencedType the type element being referenced as a field or collection element
-   * @return the builder type to reference, or empty if no builder should be referenced
+   * @return the resolved builder to reference, or empty if no builder should be referenced
    */
-  public Optional<TypeName> resolveUsableBuilderType(TypeElement referencedType) {
+  public Optional<ResolvedBuilder> resolveUsableBuilderType(TypeElement referencedType) {
     if (referencedType == null) {
       return Optional.empty();
     }
@@ -171,13 +180,13 @@ public final class BuilderScopeResolver {
     resolvedBuilderTypes.clear();
   }
 
-  private Optional<TypeName> resolve(TypeElement referencedType) {
+  private Optional<ResolvedBuilder> resolve(TypeElement referencedType) {
     if (referencedType == null || isIgnoredForBuilderGeneration(referencedType)) {
       return Optional.empty();
     }
 
-    String referencedTypeFqn = referencedType.getQualifiedName().toString();
     String packageName = context.getPackageName(referencedType);
+    TypeName referencedTypeName = JavaLangMapper.mapToTypeName(referencedType, context);
 
     // The usage scope determines whether a type is eligible to be referenced as a builder
     // helper. When empty, any package is allowed (backward compatibility). When set, only
@@ -189,11 +198,16 @@ public final class BuilderScopeResolver {
     // Types whose builders are generated in the current processing round are trusted
     // immediately — our own generators always produce the builder contract, so no
     // classpath lookup or contract check is needed.
-    Optional<TypeName> generatedBuilder =
-        generatedBuilders.findBuilder(
-            new TypeName(packageName, referencedType.getSimpleName().toString()));
+    Optional<TypeName> generatedBuilder = generatedBuilders.findBuilder(referencedTypeName);
     if (generatedBuilder.isPresent()) {
-      return generatedBuilder;
+      // Our generators always emit a static create() and no create(T) - the empty path uses
+      // the factory, the copy path the constructor
+      return generatedBuilder.map(
+          builder ->
+              new ResolvedBuilder(
+                  builder,
+                  new BuilderInstantiation.StaticFactoryCall("create"),
+                  new BuilderInstantiation.ConstructorCall()));
     }
 
     // For types not generated in this round, look up the candidate on the classpath using
@@ -201,38 +215,104 @@ public final class BuilderScopeResolver {
     // the builder contract.
     String suffix = context.getConfiguration().getBuilderUsageSuffix();
     TypeName candidate = JavaLangMapper.createBuilderTypeName(referencedType, context, suffix);
-    return resolveByBuilderContract(candidate, referencedTypeFqn);
+    return resolveByBuilderContract(candidate, referencedTypeName);
   }
 
   /**
    * Looks up the candidate builder type on the classpath and verifies it satisfies the builder
-   * contract: a constructor accepting the referenced type, a no-arg constructor, and a no-arg
-   * {@code build()} method returning it - each accessible from the generated builder's package,
-   * since the generated code calls them from there. The contract check is annotation-agnostic, so
-   * builders generated with custom template annotations or from external sources are supported as
-   * long as they follow the builder contract. It also avoids false positives like {@code String} →
-   * {@code StringBuilder}.
+   * contract: a way to create an empty instance (a no-arg constructor or a static parameterless
+   * factory like {@code create()}), a way to create an instance seeded with a value (a constructor
+   * accepting the referenced type or a static factory like {@code create(T)}/{@code of(T)}), and a
+   * no-arg {@code build()} method returning it - each accessible from the generated builder's
+   * package, since the generated code calls them from there. The contract check is
+   * annotation-agnostic, so builders generated with custom template annotations or from external
+   * sources are supported as long as they follow the builder contract. It also avoids false
+   * positives like {@code String} → {@code StringBuilder}.
    *
    * @param candidate the candidate builder type name to look up
-   * @param expectedType the qualified name of the referenced type the builder must accept and
-   *     return
-   * @return the candidate if a matching builder class exists on the classpath, empty otherwise
+   * @param expectedType the referenced type the builder must accept and return
+   * @return the resolved builder with the instantiation paths to call, or empty if no matching
+   *     builder class exists on the classpath
    */
-  private Optional<TypeName> resolveByBuilderContract(TypeName candidate, String expectedType) {
+  private Optional<ResolvedBuilder> resolveByBuilderContract(
+      TypeName candidate, TypeName expectedType) {
     TypeElement builderTypeElement = context.getTypeElement(candidate.getFullQualifiedName());
     if (builderTypeElement == null) {
       return Optional.empty();
     }
-    if (!JavaLangAnalyser.hasConstructorAccepting(builderTypeElement, expectedType, context)) {
+    Optional<BuilderInstantiation> funcForEmptyBuilder =
+        resolveFuncForEmptyBuilder(builderTypeElement);
+    Optional<BuilderInstantiation> funcForPrefilledBuilder =
+        resolveFuncForPrefilledBuilder(builderTypeElement, expectedType);
+    if (funcForEmptyBuilder.isEmpty()
+        || funcForPrefilledBuilder.isEmpty()
+        || !JavaLangAnalyser.hasBuildMethodReturning(builderTypeElement, expectedType, context)) {
       return Optional.empty();
     }
-    if (!JavaLangAnalyser.hasEmptyConstructor(builderTypeElement, context)) {
-      return Optional.empty();
+    return Optional.of(
+        new ResolvedBuilder(candidate, funcForEmptyBuilder.get(), funcForPrefilledBuilder.get()));
+  }
+
+  /**
+   * Resolves the instantiation path for an empty builder instance: a static parameterless factory
+   * when the builder offers one, the no-arg constructor otherwise.
+   *
+   * @param builderTypeElement the candidate builder type to inspect
+   * @return the instantiation to emit, or empty when the builder offers neither
+   */
+  private Optional<BuilderInstantiation> resolveFuncForEmptyBuilder(
+      TypeElement builderTypeElement) {
+    Optional<BuilderInstantiation> func = findStaticFactoryCall(builderTypeElement, List.of());
+    if (func.isEmpty() && JavaLangAnalyser.hasEmptyConstructor(builderTypeElement, context)) {
+      func = Optional.of(new BuilderInstantiation.ConstructorCall());
     }
-    if (!JavaLangAnalyser.hasBuildMethodReturning(builderTypeElement, expectedType, context)) {
-      return Optional.empty();
+    return func;
+  }
+
+  /**
+   * Resolves the instantiation path for a builder instance seeded with a value of the referenced
+   * type: a static factory accepting the type when the builder offers one, the constructor
+   * accepting the type otherwise.
+   *
+   * @param builderTypeElement the candidate builder type to inspect
+   * @param expectedType the referenced type to seed the builder with
+   * @return the instantiation to emit, or empty when the builder offers neither
+   */
+  private Optional<BuilderInstantiation> resolveFuncForPrefilledBuilder(
+      TypeElement builderTypeElement, TypeName expectedType) {
+    Optional<BuilderInstantiation> func =
+        findStaticFactoryCall(builderTypeElement, List.of(expectedType));
+    if (func.isEmpty()
+        && JavaLangAnalyser.hasConstructorAccepting(builderTypeElement, expectedType, context)) {
+      func = Optional.of(new BuilderInstantiation.ConstructorCall());
     }
-    return Optional.of(candidate);
+    return func;
+  }
+
+  /**
+   * Finds an accessible static method on the builder type taking the expected parameter types and
+   * returning the builder type itself. When several candidates exist, {@code create} and {@code of}
+   * are preferred in that order, then the alphabetically first name.
+   *
+   * @param builderTypeElement the builder type to inspect
+   * @param expectedParameterTypes the parameter types the factory must accept
+   * @return the instantiation calling the found factory, or empty when none exists
+   */
+  private Optional<BuilderInstantiation> findStaticFactoryCall(
+      TypeElement builderTypeElement, List<TypeName> expectedParameterTypes) {
+    TypeName builderTypeName = JavaLangMapper.mapToTypeName(builderTypeElement, context);
+    return JavaLangAnalyser.findMethodsStatic(
+            builderTypeElement, expectedParameterTypes, builderTypeName, context)
+        .stream()
+        .min(
+            Comparator.comparingInt(BuilderScopeResolver::preferredFactoryNameRank)
+                .thenComparing(Comparator.naturalOrder()))
+        .map(BuilderInstantiation.StaticFactoryCall::new);
+  }
+
+  private static int preferredFactoryNameRank(String name) {
+    int index = PREFERRED_FACTORY_NAMES.indexOf(name);
+    return index < 0 ? PREFERRED_FACTORY_NAMES.size() : index;
   }
 
   private void refreshForConfigurationIfNeeded() {

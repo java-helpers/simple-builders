@@ -237,7 +237,7 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
   public PersonDtoBuilder mannschaft(Consumer<MannschaftDtoBuilder> mannschaftBuilderConsumer) {
     MannschaftDtoBuilder builder = this.mannschaft.isSet()
         ? new MannschaftDtoBuilder(this.mannschaft.value())
-        : new MannschaftDtoBuilder();
+        : MannschaftDtoBuilder.create();
     mannschaftBuilderConsumer.accept(builder);
     this.mannschaft = changedValue(builder.build());
     return this;

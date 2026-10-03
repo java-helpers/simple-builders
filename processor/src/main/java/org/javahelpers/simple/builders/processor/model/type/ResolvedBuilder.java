@@ -1,0 +1,47 @@
+/*
+ * Copyright 2025 Andreas Igel
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.javahelpers.simple.builders.processor.model.type;
+
+/**
+ * A builder type resolved for a referenced field or element type, together with the instantiation
+ * paths generated code must use to call it.
+ *
+ * <p>Each component records the concrete instantiation the contract check selected - constructor
+ * call or static factory call - so generation sites emit exactly what was resolved.
+ *
+ * @param typeName the builder type to reference
+ * @param funcForEmptyBuilder how to obtain an empty builder instance (e.g. {@code new B()} or
+ *     {@code B.create()})
+ * @param funcForPrefilledBuilder how to obtain a builder instance seeded with a value (e.g. {@code
+ *     new B(value)} or {@code B.of(value)})
+ */
+public record ResolvedBuilder(
+    TypeName typeName,
+    BuilderInstantiation funcForEmptyBuilder,
+    BuilderInstantiation funcForPrefilledBuilder) {
+
+  /**
+   * A resolution instantiated exclusively through constructors.
+   *
+   * @param typeName the builder type to reference
+   */
+  public ResolvedBuilder(TypeName typeName) {
+    this(
+        typeName,
+        new BuilderInstantiation.ConstructorCall(),
+        new BuilderInstantiation.ConstructorCall());
+  }
+}

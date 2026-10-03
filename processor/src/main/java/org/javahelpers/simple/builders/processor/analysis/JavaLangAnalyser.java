@@ -32,6 +32,7 @@ import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Predicate;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
@@ -45,6 +46,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilderConstructor;
+import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
 /** Helperclass for extrating specific information from existing classes. */
@@ -191,11 +193,9 @@ public final class JavaLangAnalyser {
    * @return {@code true}, if the element has an accessible empty constructor
    */
   public static boolean hasEmptyConstructor(TypeElement typeElement, ProcessingContext context) {
-    List<ExecutableElement> constructors =
-        ElementFilter.constructorsIn(context.getAllMembers(typeElement));
-    return constructors.stream()
+    return ElementFilter.constructorsIn(context.getAllMembers(typeElement)).stream()
         .filter(context::isMemberAccessibleFromBuilderPackage)
-        .anyMatch(c -> c.getParameters().isEmpty());
+        .anyMatch(JavaLangAnalyser::hasNoParameters);
   }
 
   /**
@@ -251,23 +251,88 @@ public final class JavaLangAnalyser {
    * {@code String}.
    *
    * @param builderType the candidate builder type element to check
-   * @param expectedReturnType the qualified name of the type that {@code build()} must return
+   * @param expectedReturnType the type that {@code build()} must return
    * @param context the processing context, used to access all members
    * @return {@code true} if the type declares or inherits a matching {@code build()} method
    */
   public static boolean hasBuildMethodReturning(
-      TypeElement builderType, String expectedReturnType, ProcessingContext context) {
-    if (builderType == null) {
+      TypeElement builderType, TypeName expectedReturnType, ProcessingContext context) {
+    return findMethods(builderType, List.of(), expectedReturnType, context).stream()
+        .anyMatch(method -> method.getSimpleName().contentEquals("build"));
+  }
+
+  /**
+   * Single-parameter variant of {@link #findMethodsStatic(TypeElement, List, TypeName,
+   * ProcessingContext)}.
+   */
+  public static List<String> findMethodsStatic(
+      TypeElement type,
+      TypeName expectedParameterType,
+      TypeName expectedReturnType,
+      ProcessingContext context) {
+    return findMethodsStatic(type, List.of(expectedParameterType), expectedReturnType, context);
+  }
+
+  /**
+   * Finds accessible static methods on the given type taking the expected parameter types and
+   * returning the expected return type.
+   *
+   * @param type the type element to inspect
+   * @param expectedParameterTypes the required parameter types
+   * @param expectedReturnType the required return type, or {@code null} for void-returning methods
+   * @param context the processing context, used to access all members
+   * @return the names of all matching methods, in declaration order
+   */
+  public static List<String> findMethodsStatic(
+      TypeElement type,
+      List<TypeName> expectedParameterTypes,
+      TypeName expectedReturnType,
+      ProcessingContext context) {
+    return findMethods(type, expectedParameterTypes, expectedReturnType, context).stream()
+        .filter(Predicate.not(JavaLangAnalyser::isNotStatic))
+        .map(method -> method.getSimpleName().toString())
+        .toList();
+  }
+
+  private static List<ExecutableElement> findMethods(
+      TypeElement type,
+      List<TypeName> expectedParameterTypes,
+      TypeName expectedReturnType,
+      ProcessingContext context) {
+    if (type == null) {
+      return List.of();
+    }
+    return ElementFilter.methodsIn(context.getAllMembers(type)).stream()
+        .filter(context::isMemberAccessibleFromBuilderPackage)
+        .filter(
+            method ->
+                expectedReturnType == null
+                    ? method.getReturnType().getKind() == VOID
+                    : hasType(method.getReturnType(), expectedReturnType))
+        .filter(method -> hasParameters(method, expectedParameterTypes))
+        .toList();
+  }
+
+  private static boolean hasNoParameters(ExecutableElement method) {
+    return method.getParameters().isEmpty();
+  }
+
+  private static boolean hasParameters(
+      ExecutableElement method, List<TypeName> expectedParameterTypes) {
+    List<? extends VariableElement> parameters = method.getParameters();
+    if (parameters.size() != expectedParameterTypes.size()) {
       return false;
     }
-    return ElementFilter.methodsIn(context.getAllMembers(builderType)).stream()
-        .filter(context::isMemberAccessibleFromBuilderPackage)
-        .anyMatch(
-            method ->
-                method.getSimpleName().contentEquals("build")
-                    && method.getParameters().isEmpty()
-                    && method.getReturnType().getKind() != VOID
-                    && method.getReturnType().toString().equals(expectedReturnType));
+    for (int i = 0; i < parameters.size(); i++) {
+      if (!hasType(parameters.get(i).asType(), expectedParameterTypes.get(i))) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private static boolean hasType(TypeMirror typeMirror, TypeName expectedType) {
+    return typeMirror.toString().equals(expectedType.getFullQualifiedName());
   }
 
   /**
@@ -275,21 +340,18 @@ public final class JavaLangAnalyser {
    * the builder contract used when the field already has a value that is passed to the builder.
    *
    * @param builderType the candidate builder type element to check
-   * @param expectedType the qualified name of the type the constructor must accept
+   * @param expectedType the type the constructor must accept
    * @param context the processing context, used to access all members
    * @return {@code true} if the type declares or inherits a matching constructor
    */
   public static boolean hasConstructorAccepting(
-      TypeElement builderType, String expectedType, ProcessingContext context) {
+      TypeElement builderType, TypeName expectedType, ProcessingContext context) {
     if (builderType == null) {
       return false;
     }
     return ElementFilter.constructorsIn(context.getAllMembers(builderType)).stream()
         .filter(context::isMemberAccessibleFromBuilderPackage)
-        .anyMatch(
-            constructor ->
-                constructor.getParameters().size() == 1
-                    && constructor.getParameters().get(0).asType().toString().equals(expectedType));
+        .anyMatch(constructor -> hasParameters(constructor, List.of(expectedType)));
   }
 
   /**
