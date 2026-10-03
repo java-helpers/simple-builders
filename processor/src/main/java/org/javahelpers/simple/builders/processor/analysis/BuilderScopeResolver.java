@@ -335,7 +335,7 @@ public final class BuilderScopeResolver {
             .filter(context::isMemberAccessibleFromBuilderPackage)
             .filter(method -> method.getParameters().size() == 1)
             .toList();
-    for (String prefix : candidatePrefixes(fieldFunctions)) {
+    for (String prefix : candidatePrefixes(properties, fieldFunctions)) {
       Optional<List<BuilderInstantiation.FieldSeedingCall.SeededField>> seededFields =
           matchByPrefix(properties, fieldFunctions, prefix);
       if (seededFields.isPresent()) {
@@ -352,14 +352,17 @@ public final class BuilderScopeResolver {
   }
 
   /**
-   * Candidate field-function prefixes, preferred first: {@code ""} (fluent {@code name(v)}), then
-   * {@code set} (JavaBeans), then any other camel-case prefix found on the builder's single-
-   * parameter methods - a convention is only trusted when several methods share it.
+   * Candidate field-function prefixes ordered by how many properties each covers, most findings
+   * first: {@code ""} (fluent {@code name(v)}) and {@code set} (JavaBeans) are always tried, any
+   * other camel-case prefix found on the builder's single-parameter methods is only trusted when
+   * several methods share it.
    *
+   * @param properties the readable properties to cover
    * @param fieldFunctions the builder's single-parameter non-static methods
-   * @return the prefixes to try, in preference order
+   * @return the prefixes to try, in coverage order
    */
-  private List<String> candidatePrefixes(List<ExecutableElement> fieldFunctions) {
+  private List<String> candidatePrefixes(
+      List<JavaLangAnalyser.ReadableProperty> properties, List<ExecutableElement> fieldFunctions) {
     Map<String, Integer> prefixCounts = new LinkedHashMap<>();
     for (ExecutableElement method : fieldFunctions) {
       String name = method.getSimpleName().toString();
@@ -371,11 +374,34 @@ public final class BuilderScopeResolver {
     List<String> prefixes = new ArrayList<>(List.of("", "set"));
     prefixCounts.entrySet().stream()
         .filter(entry -> entry.getValue() >= 2)
-        .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
         .map(Map.Entry::getKey)
         .filter(prefix -> !prefixes.contains(prefix))
         .forEach(prefixes::add);
+    prefixes.sort(
+        Comparator.comparingInt((String prefix) -> coveredCount(properties, fieldFunctions, prefix))
+            .reversed());
     return prefixes;
+  }
+
+  /**
+   * Counts the properties the builder covers under one naming convention.
+   *
+   * @param properties the readable properties to cover
+   * @param fieldFunctions the builder's single-parameter non-static methods
+   * @param prefix the naming convention to count
+   * @return how many properties have a matching field function
+   */
+  private int coveredCount(
+      List<JavaLangAnalyser.ReadableProperty> properties,
+      List<ExecutableElement> fieldFunctions,
+      String prefix) {
+    int covered = 0;
+    for (JavaLangAnalyser.ReadableProperty property : properties) {
+      if (findFieldFunction(fieldFunctions, property, prefix).isPresent()) {
+        covered++;
+      }
+    }
+    return covered;
   }
 
   private static int firstUpperCaseIndex(String name) {
@@ -402,16 +428,7 @@ public final class BuilderScopeResolver {
       String prefix) {
     List<BuilderInstantiation.FieldSeedingCall.SeededField> seededFields = new ArrayList<>();
     for (JavaLangAnalyser.ReadableProperty property : properties) {
-      String expected =
-          prefix.isEmpty() ? property.name() : prefix + StringUtils.capitalize(property.name());
-      boolean covered =
-          fieldFunctions.stream()
-              .anyMatch(
-                  method ->
-                      expected.contentEquals(method.getSimpleName())
-                          && context.isSameType(
-                              method.getParameters().get(0).asType(), property.typeMirror()));
-      if (!covered) {
+      if (findFieldFunction(fieldFunctions, property, prefix).isEmpty()) {
         return Optional.empty();
       }
       seededFields.add(
@@ -419,6 +436,31 @@ public final class BuilderScopeResolver {
               property.name(), property.accessor()));
     }
     return Optional.of(seededFields);
+  }
+
+  /**
+   * Finds the builder's field function for one property under the given naming convention: a
+   * single-parameter method named {@code <property>} when the prefix is empty, otherwise {@code
+   * <prefix><Property>}, taking the property's type.
+   *
+   * @param fieldFunctions the builder's single-parameter non-static methods
+   * @param property the property to match
+   * @param prefix the naming convention to try
+   * @return the matching method, or empty
+   */
+  private Optional<ExecutableElement> findFieldFunction(
+      List<ExecutableElement> fieldFunctions,
+      JavaLangAnalyser.ReadableProperty property,
+      String prefix) {
+    String expected =
+        prefix.isEmpty() ? property.name() : prefix + StringUtils.capitalize(property.name());
+    return fieldFunctions.stream()
+        .filter(
+            method ->
+                expected.contentEquals(method.getSimpleName())
+                    && context.isSameType(
+                        method.getParameters().get(0).asType(), property.typeMirror()))
+        .findFirst();
   }
 
   /**
