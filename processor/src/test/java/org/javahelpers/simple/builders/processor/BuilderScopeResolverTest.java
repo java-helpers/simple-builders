@@ -190,7 +190,8 @@ class BuilderScopeResolverTest {
             null,
             BuilderInstantiation.ConstructorCall.class,
             null),
-        // No accessible constructors: both instantiation paths come from the static factories
+        // No accessible constructors: both instantiation paths come from the static
+        // factories — the second empty factory exercises the preferred-name ranking
         Arguments.of(
             "StaticFactories",
             """
@@ -198,6 +199,7 @@ class BuilderScopeResolverTest {
             public class LibHelperBuilder {
               private LibHelperBuilder() {}
               public static LibHelperBuilder create() { return new LibHelperBuilder(); }
+              public static LibHelperBuilder make() { return create(); }
               public static LibHelperBuilder of(LibHelper value) { return create(); }
               public LibHelper build() { return new LibHelper(); }
             }
@@ -469,6 +471,72 @@ class BuilderScopeResolverTest {
   }
 
   @Test
+  void resolverUsageScope_ResolvesStaticSeededPath() {
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelper {
+                      public static LibHelperBuilder builder() { return new LibHelperBuilder(); }
+                      public static LibHelperBuilder builder(LibHelper value) {
+                        return new LibHelperBuilder();
+                      }
+                      public static LibHelperBuilder builder2(LibHelper value) {
+                        return new LibHelperBuilder();
+                      }
+                      public static class LibHelperBuilder {
+                        private LibHelperBuilder() {}
+                        public LibHelper build() { return new LibHelper(); }
+                      }
+                    }
+                    """));
+
+    assertThat(compilation).succeeded();
+    // No seeded path on the builder itself: the type's static builder(T) becomes the seeded
+    // path — two candidates match, the conventional name wins
+    ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
+    assertEquals("lib.LibHelper.LibHelperBuilder", resolved.typeName().getFullQualifiedName());
+    assertInstanceOf(BuilderInstantiation.AnchorFactoryCall.class, resolved.funcForEmptyBuilder());
+    BuilderInstantiation.AnchorFactoryCall prefilled =
+        assertInstanceOf(
+            BuilderInstantiation.AnchorFactoryCall.class, resolved.funcForPrefilledBuilder());
+    assertEquals("builder", prefilled.methodName());
+  }
+
+  @Test
+  void resolverUsageScope_InstanceSeededPathPrefersToBuilder() {
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelper {
+                      public static LibHelperBuilder builder() { return new LibHelperBuilder(); }
+                      public LibHelperBuilder copy() { return new LibHelperBuilder(); }
+                      public LibHelperBuilder toBuilder() { return new LibHelperBuilder(); }
+                      public static class LibHelperBuilder {
+                        LibHelperBuilder() {}
+                        public LibHelper build() { return new LibHelper(); }
+                      }
+                    }
+                    """));
+
+    assertThat(compilation).succeeded();
+    // Two instance methods return the builder type; the conventional toBuilder name wins
+    ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
+    assertEquals("lib.LibHelper.LibHelperBuilder", resolved.typeName().getFullQualifiedName());
+    BuilderInstantiation.ValueFactoryCall prefilled =
+        assertInstanceOf(
+            BuilderInstantiation.ValueFactoryCall.class, resolved.funcForPrefilledBuilder());
+    assertEquals("toBuilder", prefilled.methodName());
+  }
+
+  @Test
   void resolverUsageScope_ResolvesNestedTypeBuilder() {
     Compilation compilation =
         Compiler.javac()
@@ -483,11 +551,15 @@ class BuilderScopeResolverTest {
                         public LibHelperBuilder(LibHelper value) {}
                         public LibHelper build() { return new LibHelper(); }
                       }
+                      public static class Other {
+                        public Other() {}
+                      }
                     }
                     """));
 
     assertThat(compilation).succeeded();
-    // The nested type satisfies the full contract and wins over any anchored method
+    // The preferred-name nested type satisfies the full contract and wins over any anchored
+    // method; the second nested type exercises the candidate ranking
     ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
     assertEquals("lib.LibHelper.LibHelperBuilder", resolved.typeName().getFullQualifiedName());
     assertInstanceOf(BuilderInstantiation.ConstructorCall.class, resolved.funcForEmptyBuilder());
