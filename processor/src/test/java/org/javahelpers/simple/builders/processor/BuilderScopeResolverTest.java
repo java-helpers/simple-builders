@@ -620,6 +620,47 @@ class BuilderScopeResolverTest {
               LibHelper build() { return new LibHelper(); }
             }
             """,
+            probe(() -> ResolverProbeProcessor.usageWithoutAnnotation)),
+        // Neither void build() nor build(String) is a parameterless method returning the
+        // referenced type
+        Arguments.argumentSet(
+            "NoParameterlessMethodReturningTarget",
+            """
+            package lib;
+            public class LibHelperBuilder {
+              public LibHelperBuilder() {}
+              public LibHelperBuilder(LibHelper value) {}
+              public void build() {}
+              public LibHelper build(String name) { return new LibHelper(); }
+            }
+            """,
+            probe(() -> ResolverProbeProcessor.usageWithoutAnnotation)),
+        // A static build() is a factory, not the terminal method; a private one is not
+        // accessible
+        Arguments.argumentSet(
+            "StaticOrPrivateBuildMethods",
+            """
+            package lib;
+            public class LibHelperBuilder {
+              public LibHelperBuilder() {}
+              public LibHelperBuilder(LibHelper value) {}
+              public static LibHelper build() { return new LibHelper(); }
+              private LibHelper toTarget() { return new LibHelper(); }
+            }
+            """,
+            probe(() -> ResolverProbeProcessor.usageWithoutAnnotation)),
+        // The terminal method is package-private: not accessible from the generated builder's
+        // package (builderPackage unset), even though the constructors are public
+        Arguments.argumentSet(
+            "PackagePrivateBuildMethod_OtherPackage",
+            """
+            package lib;
+            public class LibHelperBuilder {
+              public LibHelperBuilder() {}
+              public LibHelperBuilder(LibHelper value) {}
+              LibHelper toTarget() { return new LibHelper(); }
+            }
+            """,
             probe(() -> ResolverProbeProcessor.usageWithoutAnnotation)));
   }
 
@@ -740,7 +781,6 @@ class BuilderScopeResolverTest {
     return compileWithSources(LIB_HELPER, builderSource);
   }
 
-
   private static Supplier<Optional<ResolvedBuilder>> probe(
       Supplier<Optional<ResolvedBuilder>> field) {
     return field;
@@ -754,6 +794,146 @@ class BuilderScopeResolverTest {
           assertInstanceOf(BuilderInstantiation.StaticFactoryCall.class, instantiation)
               .methodName());
     }
+  }
+
+  @Test
+  void resolverUsageScope_ResolvesBuilderWhenReturningMethodNotNamedBuild() {
+    ResolverProbeProcessor.reset();
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelper { public LibHelper() {} }
+                    """),
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelperBuilder {
+                      public LibHelperBuilder() {}
+                      public LibHelperBuilder(LibHelper value) {}
+                      public LibHelper toTarget() { return new LibHelper(); }
+                    }
+                    """));
+
+    assertThat(compilation).succeeded();
+    // The build method is detected by signature, not by name: a public, parameterless method
+    // returning the referenced type satisfies the contract whatever it is called
+    assertEquals(
+        "lib.LibHelperBuilder",
+        ResolverProbeProcessor.usageWithoutAnnotation.get().typeName().getFullQualifiedName());
+    assertEquals("toTarget", ResolverProbeProcessor.usageWithoutAnnotation.get().buildMethodName());
+  }
+
+  @Test
+  void resolverUsageScope_PrefersBuildNamedMethodAmongCandidates() {
+    ResolverProbeProcessor.reset();
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelper { public LibHelper() {} }
+                    """),
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelperBuilder {
+                      public LibHelperBuilder() {}
+                      public LibHelperBuilder(LibHelper value) {}
+                      public LibHelper assemble() { return new LibHelper(); }
+                      public LibHelper build() { return new LibHelper(); }
+                    }
+                    """));
+
+    assertThat(compilation).succeeded();
+    // `build` wins over other signature-matching methods even if they sort earlier by name
+    assertEquals("build", ResolverProbeProcessor.usageWithoutAnnotation.get().buildMethodName());
+  }
+
+  @Test
+  void resolverUsageScope_PicksAlphabeticallyFirstMethodWhenNoBuildExists() {
+    ResolverProbeProcessor.reset();
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelper { public LibHelper() {} }
+                    """),
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelperBuilder {
+                      public LibHelperBuilder() {}
+                      public LibHelperBuilder(LibHelper value) {}
+                      public LibHelper toTarget() { return new LibHelper(); }
+                      public LibHelper assemble() { return new LibHelper(); }
+                    }
+                    """));
+
+    assertThat(compilation).succeeded();
+    // Without a `build` method, the pick is deterministic: the alphabetically first name
+    assertEquals("assemble", ResolverProbeProcessor.usageWithoutAnnotation.get().buildMethodName());
+  }
+
+  @Test
+  void resolverUsageScope_ResolvesBuilderWithInheritedBuildMethod() {
+    ResolverProbeProcessor.reset();
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelper { public LibHelper() {} }
+                    """),
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelperBase {
+                      public LibHelper toTarget() { return new LibHelper(); }
+                    }
+                    """),
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelperBuilder extends LibHelperBase {
+                      public LibHelperBuilder() {}
+                      public LibHelperBuilder(LibHelper value) {}
+                    }
+                    """));
+
+    assertThat(compilation).succeeded();
+    // Inherited members count for the contract: the build method declared on the superclass is
+    // selected and its name recorded
+    assertEquals("toTarget", ResolverProbeProcessor.usageWithoutAnnotation.get().buildMethodName());
+  }
+
+  @Test
+  void resolverUsageScope_RejectsStringBuilderForString() {
+    ResolverProbeProcessor.reset();
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelper { public LibHelper() {} }
+                    """));
+
+    assertThat(compilation).succeeded();
+    // StringBuilder satisfies the instantiation contract for String, but its only parameterless
+    // method returning String is toString() - an Object signature, not a build method
+    assertEquals(Optional.empty(), ResolverProbeProcessor.contractResultString);
   }
 
   private static final class ResolverProbeProcessor extends AbstractProcessor {
@@ -770,6 +950,7 @@ class BuilderScopeResolverTest {
     private static Optional<ResolvedBuilder> usagePackagePrivate;
     private static Optional<ResolvedBuilder> usageWithExistingDisabled;
     private static Optional<ResolvedBuilder> usageGeneratedWithExistingDisabled;
+    private static Optional<ResolvedBuilder> contractResultString;
 
     private boolean captured;
 
@@ -787,6 +968,7 @@ class BuilderScopeResolverTest {
       usagePackagePrivate = null;
       usageWithExistingDisabled = null;
       usageGeneratedWithExistingDisabled = null;
+      contractResultString = null;
     }
 
     @Override
@@ -857,6 +1039,13 @@ class BuilderScopeResolverTest {
       resolver.registerGeneratedBuilder(
           new TypeName("lib", "LibHelper"), new TypeName("lib", "LibHelperBuilder"));
       usageGeneratedWithExistingDisabled = resolver.resolveUsableBuilderType(helper);
+      // Builder-contract probe for java.lang.String: StringBuilder must not resolve because its
+      // only parameterless method returning String is toString(), an Object signature
+      context.initProcessingTarget(new ProcessingTarget(usageOnlyConfiguration("java.lang"), ""));
+      resolver.resetGeneratedBuilders();
+      TypeElement stringElement =
+          processingEnv.getElementUtils().getTypeElement("java.lang.String");
+      contractResultString = resolver.resolveUsableBuilderType(stringElement);
       captured = true;
       return false;
     }

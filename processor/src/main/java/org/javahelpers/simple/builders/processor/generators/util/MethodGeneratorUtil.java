@@ -232,7 +232,8 @@ public final class MethodGeneratorUtil {
         createBuilderMethod(field.getOriginalFieldName(), parentBuilderType, context);
     methodDto.addParameter(parameter);
 
-    String buildExpression = calculateBuildExpression(field.getFieldType());
+    String buildExpression =
+        wrapConcreteCollectionType(field.getFieldType(), fieldBuilder.buildCall("builder"));
 
     methodDto.setCode(
         """
@@ -279,16 +280,6 @@ public final class MethodGeneratorUtil {
    */
   public static TypeNameGeneric createConsumerType(TypeName builderType) {
     return new TypeNameGeneric(JavaLangMapper.map2TypeName(Consumer.class), builderType);
-  }
-
-  /**
-   * Calculates the build expression for a field type, wrapping concrete collections if needed.
-   *
-   * @param fieldType the field type
-   * @return the build expression
-   */
-  private static String calculateBuildExpression(TypeName fieldType) {
-    return wrapConcreteCollectionType(fieldType, "builder.build()");
   }
 
   /**

@@ -58,15 +58,23 @@ public final class JavaLangAnalyser {
   private JavaLangAnalyser() {}
 
   /**
-   * Helper function to filter methods from {@code java.lang.Object}.
+   * Helper function to filter methods from {@code java.lang.Object}. The comparison is
+   * signature-based, so overrides like {@code StringBuilder#toString} count as Object methods too.
    *
    * @param mth ExecutableElement to be validated
-   * @return {@code true}, if it is no method from java.lang.Object
+   * @param context the processing context, used to resolve {@link java.lang.Object}'s methods
+   * @return {@code true}, if it is no method with the signature of a java.lang.Object method
    */
-  public static boolean isNoMethodOfObjectClass(ExecutableElement mth) {
-    String simpleNameOfParent = mth.getEnclosingElement().getSimpleName().toString();
-    return !(Strings.CS.equals("java.lang.Object", simpleNameOfParent)
-        || Strings.CS.equals("Object", simpleNameOfParent));
+  public static boolean isNoMethodOfObjectClass(ExecutableElement mth, ProcessingContext context) {
+    TypeElement objectElement = context.getTypeElement(Object.class.getCanonicalName());
+    if (objectElement == null) {
+      return true;
+    }
+    return ElementFilter.methodsIn(objectElement.getEnclosedElements()).stream()
+        .noneMatch(
+            objectMethod ->
+                objectMethod.getSimpleName().equals(mth.getSimpleName())
+                    && objectMethod.getParameters().size() == mth.getParameters().size());
   }
 
   /**
@@ -80,7 +88,7 @@ public final class JavaLangAnalyser {
   public static List<ExecutableElement> findAllPossibleSettersOfClass(
       TypeElement typeElement, ProcessingContext context) {
     return ElementFilter.methodsIn(context.getAllMembers(typeElement)).stream()
-        .filter(JavaLangAnalyser::isNoMethodOfObjectClass)
+        .filter(mth -> isNoMethodOfObjectClass(mth, context))
         .filter(JavaLangAnalyser::isSetterForField)
         .sorted(
             (m1, m2) -> {
@@ -241,24 +249,6 @@ public final class JavaLangAnalyser {
       }
     }
     return Optional.empty();
-  }
-
-  /**
-   * Checks whether the given type has a no-arg {@code build()} method returning the expected type.
-   * This is part of the builder contract used when the built value is retrieved.
-   *
-   * <p>The check is annotation-agnostic and avoids false positives like {@code StringBuilder} for
-   * {@code String}.
-   *
-   * @param builderType the candidate builder type element to check
-   * @param expectedReturnType the type that {@code build()} must return
-   * @param context the processing context, used to access all members
-   * @return {@code true} if the type declares or inherits a matching {@code build()} method
-   */
-  public static boolean hasBuildMethodReturning(
-      TypeElement builderType, TypeName expectedReturnType, ProcessingContext context) {
-    return findMethods(builderType, List.of(), expectedReturnType, context).stream()
-        .anyMatch(method -> method.getSimpleName().contentEquals("build"));
   }
 
   /**

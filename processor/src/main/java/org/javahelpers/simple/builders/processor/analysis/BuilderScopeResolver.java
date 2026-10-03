@@ -111,11 +111,12 @@ public final class BuilderScopeResolver {
    *       the classpath and returned if it satisfies the builder contract: an instantiation path
    *       for an empty builder (no-arg constructor or static factory like {@code create()}), an
    *       instantiation path seeded with the value (constructor accepting the referenced type or
-   *       static factory like {@code create(T)}/{@code of(T)}), and a no-arg {@code build()} method
-   *       returning it - each accessible from the generated builder's package. The contract check
-   *       is annotation-agnostic, so builders generated with custom template annotations, external
-   *       tools, or different suffixes are supported. The referenced type must not be opted out
-   *       with {@code @Ignore4BuilderGeneration}.
+   *       static factory like {@code create(T)}/{@code of(T)}), and an accessible, parameterless
+   *       method returning it (the build method, regardless of name) - each accessible from the
+   *       generated builder's package. The contract check is annotation-agnostic, so builders
+   *       generated with custom template annotations, external tools, or different suffixes are
+   *       supported. The referenced type must not be opted out with
+   *       {@code @Ignore4BuilderGeneration}.
    * </ol>
    *
    * @param referencedType the type element being referenced as a field or collection element
@@ -248,12 +249,12 @@ public final class BuilderScopeResolver {
    * Looks up the candidate builder type on the classpath and verifies it satisfies the builder
    * contract: a way to create an empty instance (a no-arg constructor or a static parameterless
    * factory like {@code create()}), a way to create an instance seeded with a value (a constructor
-   * accepting the referenced type or a static factory like {@code create(T)}/{@code of(T)}), and a
-   * no-arg {@code build()} method returning it - each accessible from the generated builder's
-   * package, since the generated code calls them from there. The contract check is
-   * annotation-agnostic, so builders generated with custom template annotations or from external
-   * sources are supported as long as they follow the builder contract. It also avoids false
-   * positives like {@code String} → {@code StringBuilder}.
+   * accepting the referenced type or a static factory like {@code create(T)}/{@code of(T)}), and an
+   * accessible, parameterless method returning it (the build method, regardless of name) - each
+   * accessible from the generated builder's package, since the generated code calls them from
+   * there. The contract check is annotation-agnostic, so builders generated with custom template
+   * annotations or from external sources are supported as long as they follow the builder contract.
+   * It also avoids false positives like {@code String} → {@code StringBuilder}.
    *
    * @param candidate the candidate builder type name to look up
    * @param expectedType the referenced type the builder must accept and return
@@ -270,13 +271,18 @@ public final class BuilderScopeResolver {
         resolveFuncForEmptyBuilder(builderTypeElement);
     Optional<BuilderInstantiation> funcForPrefilledBuilder =
         resolveFuncForPrefilledBuilder(builderTypeElement, expectedType);
+    Optional<ExecutableElement> buildMethod = findBuildMethod(builderTypeElement, expectedType);
     if (funcForEmptyBuilder.isEmpty()
         || funcForPrefilledBuilder.isEmpty()
-        || !JavaLangAnalyser.hasBuildMethodReturning(builderTypeElement, expectedType, context)) {
+        || buildMethod.isEmpty()) {
       return Optional.empty();
     }
     return Optional.of(
-        new ResolvedBuilder(candidate, funcForEmptyBuilder.get(), funcForPrefilledBuilder.get()));
+        new ResolvedBuilder(
+            candidate,
+            funcForEmptyBuilder.get(),
+            funcForPrefilledBuilder.get(),
+            buildMethod.get().getSimpleName().toString()));
   }
 
   /**
@@ -397,9 +403,8 @@ public final class BuilderScopeResolver {
     for (ExecutableElement factory : factories) {
       TypeElement builderElement =
           (TypeElement) ((DeclaredType) factory.getReturnType()).asElement();
-      if (!context.isMemberAccessibleFromBuilderPackage(builderElement)
-          || !JavaLangAnalyser.hasBuildMethodReturning(
-              builderElement, referencedTypeName, context)) {
+      Optional<ExecutableElement> buildMethod = findBuildMethod(builderElement, referencedTypeName);
+      if (!context.isMemberAccessibleFromBuilderPackage(builderElement) || buildMethod.isEmpty()) {
         continue;
       }
       Optional<BuilderInstantiation> funcForPrefilledBuilder =
@@ -410,7 +415,8 @@ public final class BuilderScopeResolver {
                 JavaLangMapper.mapToTypeName(builderElement, context),
                 new BuilderInstantiation.AnchorFactoryCall(
                     referencedTypeName, factory.getSimpleName().toString()),
-                funcForPrefilledBuilder.get()));
+                funcForPrefilledBuilder.get(),
+                buildMethod.get().getSimpleName().toString()));
       }
     }
     return Optional.empty();
@@ -489,6 +495,31 @@ public final class BuilderScopeResolver {
   private static int preferredFactoryNameRank(String name) {
     int index = PREFERRED_FACTORY_NAMES.indexOf(name);
     return index < 0 ? PREFERRED_FACTORY_NAMES.size() : index;
+  }
+
+  /**
+   * Finds the build method on the builder type: an accessible, non-static, parameterless method
+   * returning the referenced type, regardless of its name. When several candidates exist, {@code
+   * build} is preferred, then the alphabetically first name. Methods whose signature matches a
+   * {@link java.lang.Object} method (e.g. {@code toString()}) are excluded so types like {@code
+   * StringBuilder} do not satisfy the contract for {@code String}.
+   *
+   * @param builderType the candidate builder type to inspect
+   * @param expectedType the referenced type the build method must return
+   * @return the selected build method, or empty if no matching method exists
+   */
+  private Optional<ExecutableElement> findBuildMethod(
+      TypeElement builderType, TypeName expectedType) {
+    return JavaLangAnalyser.findMethods(builderType, List.of(), expectedType, context).stream()
+        .filter(
+            method ->
+                JavaLangAnalyser.isNotStatic(method)
+                    && JavaLangAnalyser.isNoMethodOfObjectClass(method, context))
+        .min(
+            Comparator.comparingInt(
+                    (ExecutableElement method) ->
+                        "build".contentEquals(method.getSimpleName()) ? 0 : 1)
+                .thenComparing(method -> method.getSimpleName().toString()));
   }
 
   private void refreshForConfigurationIfNeeded() {
