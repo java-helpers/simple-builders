@@ -421,15 +421,13 @@ public final class BuilderScopeResolver {
       List<JavaLangAnalyser.ReadableProperty> properties,
       List<ExecutableElement> fieldFunctions,
       String prefix) {
-    List<BuilderInstantiation.PrefillCall.PrefilledField> prefilledFields = new ArrayList<>();
-    for (JavaLangAnalyser.ReadableProperty property : properties) {
-      if (findFieldFunction(fieldFunctions, property, prefix).isPresent()) {
-        prefilledFields.add(
-            new BuilderInstantiation.PrefillCall.PrefilledField(
-                property.name(), property.accessor()));
-      }
-    }
-    return prefilledFields;
+    return properties.stream()
+        .filter(property -> findFieldFunction(fieldFunctions, property, prefix).isPresent())
+        .map(
+            property ->
+                new BuilderInstantiation.PrefillCall.PrefilledField(
+                    property.name(), property.accessor()))
+        .toList();
   }
 
   /**

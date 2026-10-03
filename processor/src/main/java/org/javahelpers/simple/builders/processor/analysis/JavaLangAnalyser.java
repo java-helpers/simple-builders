@@ -251,29 +251,43 @@ public final class JavaLangAnalyser {
       Class<? extends Annotation> annotationClass,
       Class<? extends Annotation> containerClass,
       ProcessingContext context) {
-    List<AnnotationMirror> instances = new ArrayList<>();
     if (element == null) {
-      return instances;
+      return List.of();
     }
+    List<AnnotationMirror> instances = new ArrayList<>();
     for (AnnotationMirror annotationMirror : element.getAnnotationMirrors()) {
       String annotationName = annotationMirror.getAnnotationType().toString();
       if (annotationName.equals(annotationClass.getCanonicalName())) {
         instances.add(annotationMirror);
       } else if (annotationName.equals(containerClass.getCanonicalName())) {
-        Optional<AnnotationValue> containerValue =
-            findAnnotationAttribute(annotationMirror, "value", context);
-        if (containerValue.isPresent()
-            && containerValue.get().getValue() instanceof List<?> entries) {
-          for (Object entry : entries) {
-            if (entry instanceof AnnotationValue entryValue
-                && entryValue.getValue() instanceof AnnotationMirror entryMirror) {
-              instances.add(entryMirror);
-            }
-          }
-        }
+        instances.addAll(unwrapContainerInstances(annotationMirror, context));
       }
     }
     return instances;
+  }
+
+  /**
+   * Unwraps the annotation instances repeated inside a container annotation's {@code value}
+   * attribute.
+   *
+   * @param containerMirror the container annotation to unwrap
+   * @param context the processing context providing element utilities
+   * @return the annotation mirrors wrapped by the container
+   */
+  private static List<AnnotationMirror> unwrapContainerInstances(
+      AnnotationMirror containerMirror, ProcessingContext context) {
+    Optional<AnnotationValue> containerValue =
+        findAnnotationAttribute(containerMirror, "value", context);
+    if (containerValue.isEmpty() || !(containerValue.get().getValue() instanceof List<?> entries)) {
+      return List.of();
+    }
+    return entries.stream()
+        .filter(AnnotationValue.class::isInstance)
+        .map(AnnotationValue.class::cast)
+        .map(AnnotationValue::getValue)
+        .filter(AnnotationMirror.class::isInstance)
+        .map(AnnotationMirror.class::cast)
+        .toList();
   }
 
   /**
@@ -427,7 +441,8 @@ public final class JavaLangAnalyser {
   public static List<ReadableProperty> findReadableProperties(
       TypeElement typeElement, ProcessingContext context) {
     Map<String, ReadableProperty> properties = new LinkedHashMap<>();
-    for (RecordComponentElement component : typeElement.getRecordComponents()) {
+    for (RecordComponentElement component :
+        Optional.ofNullable(typeElement.getRecordComponents()).orElse(List.of())) {
       String name = component.getSimpleName().toString();
       properties.put(name, new ReadableProperty(name, name + "()", component.asType()));
     }
