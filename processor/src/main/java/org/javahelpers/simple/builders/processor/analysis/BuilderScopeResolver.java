@@ -273,10 +273,14 @@ public final class BuilderScopeResolver {
     }
     Optional<BuilderInstantiation> funcForEmptyBuilder =
         resolveFuncForEmptyBuilder(builderTypeElement);
+    Optional<ExecutableElement> buildMethod = findBuildMethod(builderTypeElement, expectedType);
+    if (funcForEmptyBuilder.isEmpty() || buildMethod.isEmpty()) {
+      return Optional.empty();
+    }
     Optional<BuilderInstantiation> funcForPrefilledBuilder =
         resolveFuncForPrefilledBuilder(builderTypeElement, expectedType);
+    // the builder can be created empty but offers no seeded path: try its field functions
     if (funcForPrefilledBuilder.isEmpty()
-        && funcForEmptyBuilder.isPresent()
         && context.getConfiguration().shouldUseFieldFunctionSeeding()) {
       funcForPrefilledBuilder =
           resolveFieldSeeding(
@@ -286,13 +290,9 @@ public final class BuilderScopeResolver {
               expectedType,
               funcForEmptyBuilder.get());
     }
-    Optional<ExecutableElement> buildMethod = findBuildMethod(builderTypeElement, expectedType);
-    if (funcForEmptyBuilder.isEmpty() || buildMethod.isEmpty()) {
-      return Optional.empty();
-    }
     if (funcForPrefilledBuilder.isEmpty()) {
       context.debug(
-          "Builder %s for %s offers no way to seed a value - consumer helpers are skipped",
+          "Builder %s for %s offers no way to prefill a value - consumer helpers are skipped",
           candidate.getFullQualifiedName(), expectedType.getFullQualifiedName());
     }
     return Optional.of(
@@ -304,20 +304,20 @@ public final class BuilderScopeResolver {
   }
 
   /**
-   * Resolves seeding by field functions: the builder must offer a field function for every readable
-   * property of the referenced type, all sharing one naming convention - {@code name(v)}, {@code
-   * setName(v)}, or a detected prefix like {@code withName(v)}. When coverage is complete, the
-   * empty path is reused and the generated builder seeds the instance property by property; partial
-   * coverage resolves empty, so a builder whose functions would silently drop state is never
-   * picked. A type exposing no readable properties resolves empty as well - nothing is provably
-   * copyable.
+   * Resolves prefilling by field functions: the builder must offer a field function for the
+   * majority of the referenced type's readable properties, all sharing one naming convention -
+   * {@code name(v)}, {@code setName(v)}, or a detected prefix like {@code withName(v)}. The empty
+   * path is then reused and the generated builder prefills the instance property by property;
+   * properties the builder does not accept stay unset. Resolving less than the majority distrusts
+   * the convention, so a builder whose functions coincide by name is never picked. A type exposing
+   * no readable properties resolves empty as well - nothing is provably copyable.
    *
    * @param referencedType the type element being referenced
    * @param builderElement the candidate builder type
    * @param builderTypeName the candidate builder type name
    * @param referencedTypeName the referenced type, seeded into the builder
    * @param funcForEmptyBuilder how the seeding obtains the empty builder instance
-   * @return the seeding instantiation to emit, or empty when a property has no field function
+   * @return the seeding instantiation to emit, or empty when the convention covers too little
    */
   private Optional<BuilderInstantiation> resolveFieldSeeding(
       TypeElement referencedType,
@@ -333,24 +333,29 @@ public final class BuilderScopeResolver {
     List<ExecutableElement> fieldFunctions =
         ElementFilter.methodsIn(context.getAllMembers(builderElement)).stream()
             .filter(JavaLangAnalyser::isNotStatic)
-            .filter(method -> JavaLangAnalyser.isNoMethodOfObjectClass(method, context))
+            .filter(this::isNoMethodOfObjectClass)
             .filter(context::isMemberAccessibleFromBuilderPackage)
-            .filter(method -> method.getParameters().size() == 1)
+            .filter(this::hasSingleParameter)
             .toList();
     for (String prefix : candidatePrefixes(properties, fieldFunctions)) {
-      Optional<List<BuilderInstantiation.FieldSeedingCall.SeededField>> seededFields =
-          matchByPrefix(properties, fieldFunctions, prefix);
-      if (seededFields.isPresent()) {
+      List<BuilderInstantiation.FieldSeedingCall.SeededField> seededFields =
+          collectSeededFields(properties, fieldFunctions, prefix);
+      // a convention is trusted once it covers the majority of the readable properties
+      if (2 * seededFields.size() > properties.size()) {
         return Optional.of(
             new BuilderInstantiation.FieldSeedingCall(
-                builderTypeName,
-                referencedTypeName,
-                funcForEmptyBuilder,
-                prefix,
-                seededFields.get()));
+                builderTypeName, referencedTypeName, funcForEmptyBuilder, prefix, seededFields));
       }
     }
     return Optional.empty();
+  }
+
+  private boolean isNoMethodOfObjectClass(ExecutableElement method) {
+    return JavaLangAnalyser.isNoMethodOfObjectClass(method, context);
+  }
+
+  private boolean hasSingleParameter(ExecutableElement method) {
+    return method.getParameters().size() == 1;
   }
 
   /**
@@ -370,7 +375,7 @@ public final class BuilderScopeResolver {
       String name = method.getSimpleName().toString();
       int boundary = firstUpperCaseIndex(name);
       if (boundary > 0) {
-        prefixCounts.merge(name.substring(0, boundary), 1, Integer::sum);
+        prefixCounts.merge(StringUtils.substring(name, 0, boundary), 1, Integer::sum);
       }
     }
     List<String> prefixes = new ArrayList<>(List.of("", "set"));
@@ -398,13 +403,7 @@ public final class BuilderScopeResolver {
       List<JavaLangAnalyser.ReadableProperty> properties,
       List<ExecutableElement> fieldFunctions,
       String prefix) {
-    int covered = 0;
-    for (JavaLangAnalyser.ReadableProperty property : properties) {
-      if (findFieldFunction(fieldFunctions, property, prefix).isPresent()) {
-        covered++;
-      }
-    }
-    return covered;
+    return collectSeededFields(properties, fieldFunctions, prefix).size();
   }
 
   private static int firstUpperCaseIndex(String name) {
@@ -417,28 +416,27 @@ public final class BuilderScopeResolver {
   }
 
   /**
-   * Matches every property against the builder's field functions under one naming convention:
+   * Collects the seeded fields whose properties the builder covers under one naming convention:
    * {@code <property>(v)} when the prefix is empty, otherwise {@code <prefix><Property>(v)}.
    *
    * @param properties the readable properties to cover
    * @param fieldFunctions the builder's single-parameter non-static methods
    * @param prefix the naming convention to try
-   * @return the seeded fields in property order when every property is covered, empty otherwise
+   * @return the seeded fields in property order
    */
-  private Optional<List<BuilderInstantiation.FieldSeedingCall.SeededField>> matchByPrefix(
+  private List<BuilderInstantiation.FieldSeedingCall.SeededField> collectSeededFields(
       List<JavaLangAnalyser.ReadableProperty> properties,
       List<ExecutableElement> fieldFunctions,
       String prefix) {
     List<BuilderInstantiation.FieldSeedingCall.SeededField> seededFields = new ArrayList<>();
     for (JavaLangAnalyser.ReadableProperty property : properties) {
-      if (findFieldFunction(fieldFunctions, property, prefix).isEmpty()) {
-        return Optional.empty();
+      if (findFieldFunction(fieldFunctions, property, prefix).isPresent()) {
+        seededFields.add(
+            new BuilderInstantiation.FieldSeedingCall.SeededField(
+                property.name(), property.accessor()));
       }
-      seededFields.add(
-          new BuilderInstantiation.FieldSeedingCall.SeededField(
-              property.name(), property.accessor()));
     }
-    return Optional.of(seededFields);
+    return seededFields;
   }
 
   /**
@@ -625,46 +623,72 @@ public final class BuilderScopeResolver {
       TypeName referencedTypeName,
       TypeElement builderElement,
       BuilderInstantiation funcForEmptyBuilder) {
+    TypeName builderTypeName = JavaLangMapper.mapToTypeName(builderElement, context);
     Optional<BuilderInstantiation> func =
         resolveFuncForPrefilledBuilder(builderElement, referencedTypeName);
-    if (func.isPresent()) {
-      return func;
+    if (func.isEmpty()) {
+      func = resolveAnchoredStaticFactory(referencedType, referencedTypeName, builderTypeName);
     }
-    TypeName builderTypeName = JavaLangMapper.mapToTypeName(builderElement, context);
-    func =
-        JavaLangAnalyser.findMethodsStatic(
-                referencedType, List.of(referencedTypeName), builderTypeName, context)
-            .stream()
-            .min(
-                Comparator.comparingInt(
-                    method -> "builder".contentEquals(method.getSimpleName()) ? 0 : 1))
-            .map(
-                method ->
-                    new BuilderInstantiation.AnchorFactoryCall(
-                        referencedTypeName, method.getSimpleName().toString()));
-    if (func.isPresent()) {
-      return func;
+    if (func.isEmpty()) {
+      func = resolveAnchoredInstanceFactory(referencedType, referencedTypeName, builderTypeName);
     }
+    if (func.isEmpty() && context.getConfiguration().shouldUseFieldFunctionSeeding()) {
+      func =
+          resolveFieldSeeding(
+              referencedType,
+              builderElement,
+              builderTypeName,
+              referencedTypeName,
+              funcForEmptyBuilder);
+    }
+    return func;
+  }
+
+  /**
+   * Resolves the seeded path as a static factory anchored on the referenced type accepting the
+   * value (e.g. {@code Person.builder(person)}); a conventionally named {@code builder} method wins
+   * over other names.
+   *
+   * @param referencedType the type element being referenced
+   * @param referencedTypeName the referenced type, the factory's parameter
+   * @param builderTypeName the builder type the factory must return
+   * @return the instantiation calling the anchored factory, or empty
+   */
+  private Optional<BuilderInstantiation> resolveAnchoredStaticFactory(
+      TypeElement referencedType, TypeName referencedTypeName, TypeName builderTypeName) {
+    return JavaLangAnalyser.findMethodsStatic(
+            referencedType, List.of(referencedTypeName), builderTypeName, context)
+        .stream()
+        .min(
+            Comparator.comparingInt(
+                method -> "builder".contentEquals(method.getSimpleName()) ? 0 : 1))
+        .map(
+            method ->
+                new BuilderInstantiation.AnchorFactoryCall(
+                    referencedTypeName, method.getSimpleName().toString()));
+  }
+
+  /**
+   * Resolves the seeded path as an instance method on the value returning the builder (e.g. {@code
+   * person.toBuilder()}); a conventionally named {@code toBuilder} method wins over other names.
+   *
+   * @param referencedType the type element being referenced
+   * @param referencedTypeName the referenced type, the instance's type
+   * @param builderTypeName the builder type the method must return
+   * @return the instantiation calling the instance factory, or empty
+   */
+  private Optional<BuilderInstantiation> resolveAnchoredInstanceFactory(
+      TypeElement referencedType, TypeName referencedTypeName, TypeName builderTypeName) {
     return JavaLangAnalyser.findMethods(referencedType, List.of(), builderTypeName, context)
         .stream()
         .filter(JavaLangAnalyser::isNotStatic)
         .min(
             Comparator.comparingInt(
                 method -> "toBuilder".contentEquals(method.getSimpleName()) ? 0 : 1))
-        .<BuilderInstantiation>map(
+        .map(
             method ->
                 new BuilderInstantiation.ValueFactoryCall(
-                    referencedTypeName, method.getSimpleName().toString()))
-        .or(
-            () ->
-                context.getConfiguration().shouldUseFieldFunctionSeeding()
-                    ? resolveFieldSeeding(
-                        referencedType,
-                        builderElement,
-                        builderTypeName,
-                        referencedTypeName,
-                        funcForEmptyBuilder)
-                    : Optional.empty());
+                    referencedTypeName, method.getSimpleName().toString()));
   }
 
   /**

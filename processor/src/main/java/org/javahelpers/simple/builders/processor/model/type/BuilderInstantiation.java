@@ -117,9 +117,9 @@ public sealed interface BuilderInstantiation {
   }
 
   /**
-   * Instantiation by seeding the builder through its field functions: a private {@code
-   * seed<Builder>} method on the generated builder obtains an empty instance via {@code
-   * funcForEmptyBuilder} and calls one field function per readable property of the source value.
+   * Instantiation by prefilling the builder through its field functions: a private static {@code
+   * prefill<Builder>} method on the generated builder obtains an empty instance via {@code
+   * funcForEmptyBuilder} and calls one field function per seeded property of the source value.
    * {@link #instantiationCode} renders the call to that generated method.
    *
    * @param builderType the resolved builder type (return type of the seeding method)
@@ -149,12 +149,12 @@ public sealed interface BuilderInstantiation {
     }
 
     /**
-     * The name of the seeding method generated on the target builder.
+     * The name of the prefilling method generated on the target builder.
      *
-     * @return {@code seed} followed by the builder's class name
+     * @return {@code prefill} followed by the builder's class name
      */
     public String methodName() {
-      return "seed" + builderType.getClassName();
+      return "prefill" + builderType.getClassName();
     }
 
     /**

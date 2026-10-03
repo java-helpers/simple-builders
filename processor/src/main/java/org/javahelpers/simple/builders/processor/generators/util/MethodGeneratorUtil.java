@@ -275,11 +275,11 @@ public final class MethodGeneratorUtil {
   }
 
   /**
-   * Creates the private seeding method backing a {@link BuilderInstantiation.FieldSeedingCall}:
-   * obtains an empty builder and calls one field function per readable property of the value.
+   * Creates the private prefilling method backing a {@link BuilderInstantiation.FieldSeedingCall}:
+   * obtains an empty builder and calls one field function per seeded property of the value.
    *
    * @param seedingCall the resolved field-seeding instantiation
-   * @return the method DTO for the seeding method
+   * @return the method DTO for the prefilling method
    */
   public static BuilderMethodDto createFieldSeedingMethod(
       BuilderInstantiation.FieldSeedingCall seedingCall) {
@@ -288,6 +288,8 @@ public final class MethodGeneratorUtil {
     parameter.setParameterTypeName(seedingCall.sourceType());
     BuilderMethodDto methodDto = new BuilderMethodDto();
     methodDto.setModifier(AccessModifier.PRIVATE);
+    methodDto.setStatic(true);
+    methodDto.setOrdering(2100); // last: private helpers go below toString
     methodDto.setMethodName(seedingCall.methodName());
     methodDto.setReturnType(seedingCall.builderType());
     methodDto.addParameter(parameter);

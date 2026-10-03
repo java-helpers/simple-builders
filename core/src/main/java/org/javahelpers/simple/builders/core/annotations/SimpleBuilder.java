@@ -786,11 +786,13 @@ public @interface SimpleBuilder {
     OptionState usingExistingBuilders() default OptionState.UNSET;
 
     /**
-     * Seed a reused builder that offers no value-accepting creation path by calling one of its
+     * Prefill a reused builder that offers no value-accepting creation path by calling one of its
      * field functions per readable property of the referenced type: the generated builder emits a
-     * private {@code seed<Builder>(T value)} method that obtains an empty instance and calls the
+     * private {@code prefill<Builder>(T value)} method that obtains an empty instance and calls the
      * field function matching each property (fluent {@code name(v)}, JavaBeans {@code setName(v)},
-     * or a detected convention like {@code withName(v)}). <br>
+     * or a detected convention like {@code withName(v)}). Properties without a matching function
+     * stay unset; the convention is trusted once it covers the majority of the readable properties.
+     * <br>
      * When disabled, such builders still resolve but helpers that would silently drop state are
      * skipped. Only consulted when {@link #usingExistingBuilders()} is enabled; the analysis
      * (property enumeration plus method scan per referenced type) is opt-in because it adds compile
@@ -799,7 +801,7 @@ public @interface SimpleBuilder {
      * <p>Default: DISABLED <br>
      * Compiler option: -Asimplebuilder.usingFieldFunctionSeeding
      *
-     * @return the option state for seeding builders through field functions
+     * @return the option state for prefilling builders through field functions
      */
     OptionState usingFieldFunctionSeeding() default OptionState.UNSET;
 

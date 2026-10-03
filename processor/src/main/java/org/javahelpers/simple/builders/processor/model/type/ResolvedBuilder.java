@@ -79,7 +79,11 @@ public record ResolvedBuilder(
       BuilderInstantiation funcForEmptyBuilder,
       BuilderInstantiation funcForPrefilledBuilder,
       String buildMethodName) {
-    this(typeName, funcForEmptyBuilder, Optional.of(funcForPrefilledBuilder), buildMethodName);
+    this(
+        typeName,
+        funcForEmptyBuilder,
+        Optional.ofNullable(funcForPrefilledBuilder),
+        buildMethodName);
   }
 
   /**

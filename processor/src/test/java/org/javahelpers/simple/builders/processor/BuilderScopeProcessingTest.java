@@ -346,12 +346,12 @@ class BuilderScopeProcessingTest {
     assertThat(compilation).succeeded();
     String generated =
         ProcessorTestUtils.loadGeneratedSource(compilation, "SeedingUsageDtoBuilder");
-    // No ctor(T) or factory(T): the generated builder seeds the referenced builder itself via
+    // No ctor(T) or factory(T): the generated builder prefills the referenced builder itself via
     // its field functions, one per readable property
     ProcessorAsserts.assertContaining(
         generated,
-        "seedLibraryDtoBuilder(this.referenced.value())",
-        "private LibraryDtoBuilder seedLibraryDtoBuilder(LibraryDto value)",
+        "prefillLibraryDtoBuilder(this.referenced.value())",
+        "private static LibraryDtoBuilder prefillLibraryDtoBuilder(LibraryDto value)",
         "builder.name(value.getName())");
   }
 

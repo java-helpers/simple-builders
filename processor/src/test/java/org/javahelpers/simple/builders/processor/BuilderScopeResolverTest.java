@@ -756,6 +756,44 @@ class BuilderScopeResolverTest {
   }
 
   @Test
+  void resolverUsageScope_SeedsCoveredFieldsWhenMajorityMatches() {
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelper {
+                      public String getName() { return ""; }
+                      public boolean isActive() { return true; }
+                      public int getAge() { return 0; }
+                    }
+                    """),
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelperBuilder {
+                      public LibHelperBuilder() {}
+                      public LibHelperBuilder name(String name) { return this; }
+                      public LibHelperBuilder active(boolean active) { return this; }
+                      public LibHelper build() { return new LibHelper(); }
+                    }
+                    """));
+
+    assertThat(compilation).succeeded();
+    // age has no field function but two of three properties are covered: the convention is
+    // trusted and the covered fields are prefilled
+    ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
+    BuilderInstantiation.FieldSeedingCall prefilled =
+        assertInstanceOf(
+            BuilderInstantiation.FieldSeedingCall.class, resolved.funcForPrefilledBuilder().get());
+    assertEquals(2, prefilled.seededFields().size());
+    assertEquals("name", prefilled.seededFields().get(0).property());
+    assertEquals("active", prefilled.seededFields().get(1).property());
+  }
+
+  @Test
   void resolverUsageScope_UsingExistingBuildersDisabled() {
     Compilation compilation =
         Compiler.javac()

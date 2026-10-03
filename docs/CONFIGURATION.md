@@ -775,13 +775,14 @@ constructor accepting the referenced type or a static factory like `create(T)`
 or `of(T)`), and a no-arg `build()` method returning it — each accessible from
 the generated builder's package. Generated code calls a factory instead of
 `new` when the builder offers one. With `usingFieldFunctionSeeding` enabled and
-no seeded path found, the builder is tried against field-function seeding: the
-generated builder seeds the instance itself in a private `seed<Builder>` method
-when every readable property has a matching field function (`name(v)`,
-`setName(v)`, or a detected convention like `withName(v)`). With partial
-coverage or the option disabled, the builder still resolves, but helpers that
-would silently drop state (builder consumers) are skipped and a debug note is
-logged. Any class with the expected name and a
+no seeded path found, the builder is tried against field-function prefilling:
+the generated builder emits a private static `prefill<Builder>` method that
+seeds each readable property having a matching field function (`name(v)`,
+`setName(v)`, or a detected convention like `withName(v)`); the convention is
+trusted once it covers the majority of the properties, uncovered ones stay
+unset. With less coverage or the option disabled, the builder still resolves,
+but helpers that would silently drop state (builder consumers) are skipped and
+a debug note is logged. Any class with the expected name and a
 matching contract qualifies, allowing references to builders generated with
 custom template annotations, external tools, or different suffixes. If the
 candidate builder cannot be found, the field falls back to a plain setter.
@@ -817,16 +818,17 @@ this option.
 
 **Default**: `DISABLED` | **Compiler Option**: `-Asimplebuilder.usingFieldFunctionSeeding=ENABLED`
 
-Seeds a reused builder that offers no value-accepting creation path by calling
-one field function per readable property of the referenced type: the generated
-builder emits a private `seed<Builder>(T value)` method that obtains an empty
-instance and calls the field function matching each property. The naming
-convention is detected on the builder — fluent `name(v)` and JavaBeans
-`setName(v)` first, then any other camel-case prefix shared by several methods
-(e.g. `withName(v)`); every property must be covered by one convention, matched
-param-type-exact, void- or fluent-returning. Only consulted when
-`usingExistingBuilders` is enabled; the per-type analysis (property enumeration
-plus method scan) is opt-in because it adds compile cost.
+Prefills a reused builder that offers no value-accepting creation path by
+calling one field function per readable property of the referenced type: the
+generated builder emits a private static `prefill<Builder>(T value)` method
+that obtains an empty instance and calls the field function matching each
+property. The naming convention is detected on the builder — fluent `name(v)`
+and JavaBeans `setName(v)` first, then any other camel-case prefix shared by
+several methods (e.g. `withName(v)`); a convention is trusted once it covers
+the majority of the properties, matched param-type-exact, void- or
+fluent-returning. Only consulted when `usingExistingBuilders` is enabled; the
+per-type analysis (property enumeration plus method scan) is opt-in because it
+adds compile cost.
 
 ### Component Filtering
 
