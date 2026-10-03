@@ -220,6 +220,13 @@ public final class BuilderScopeResolver {
                   new BuilderInstantiation.ConstructorCall()));
     }
 
+    // Reusing builders not generated in this round - nested or anchored inside the referenced
+    // type, or looked up on the classpath - is opt-out via usingExistingBuilders, so a type
+    // coincidentally looking like a builder cannot be picked up unwillingly.
+    if (!context.getConfiguration().shouldUseExistingBuilders()) {
+      return Optional.empty();
+    }
+
     // A type may anchor its builder inside itself: an accessible static parameterless method
     // returning a contract-satisfying type (MapStruct-style `Person.builder()`). The type's own
     // declaration wins over the same-package candidate below.

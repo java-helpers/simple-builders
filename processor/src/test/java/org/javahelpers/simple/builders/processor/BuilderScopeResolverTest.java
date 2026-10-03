@@ -38,6 +38,7 @@ import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
+import org.javahelpers.simple.builders.core.enums.OptionState;
 import org.javahelpers.simple.builders.processor.analysis.BuilderScopeResolver;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.type.BuilderInstantiation;
@@ -672,6 +673,41 @@ class BuilderScopeResolverTest {
         BuilderInstantiation.ConstructorCall.class, resolved.funcForPrefilledBuilder());
   }
 
+  @Test
+  void resolverUsageScope_UsingExistingBuildersDisabled() {
+    ResolverProbeProcessor.reset();
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelper {
+                      public LibHelper() {}
+                    }
+                    """),
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelperBuilder {
+                      public LibHelperBuilder() {}
+                      public LibHelperBuilder(LibHelper value) {}
+                      public LibHelper build() { return new LibHelper(); }
+                    }
+                    """));
+
+    assertThat(compilation).succeeded();
+    // usingExistingBuilders=DISABLED: the contract-satisfying classpath builder is not reused
+    assertEquals(Optional.empty(), ResolverProbeProcessor.usageWithExistingDisabled);
+    // ... but a builder generated in the current round is own generation and still resolves
+    ResolvedBuilder generated = ResolverProbeProcessor.usageGeneratedWithExistingDisabled.get();
+    assertEquals("lib.LibHelperBuilder", generated.typeName().getFullQualifiedName());
+    assertInstanceOf(BuilderInstantiation.StaticFactoryCall.class, generated.funcForEmptyBuilder());
+    assertInstanceOf(
+        BuilderInstantiation.ConstructorCall.class, generated.funcForPrefilledBuilder());
+  }
+
   private static final class ResolverProbeProcessor extends AbstractProcessor {
     private static Optional<ResolvedBuilder> first;
     private static Optional<ResolvedBuilder> second;
@@ -684,6 +720,8 @@ class BuilderScopeResolverTest {
     private static Optional<ResolvedBuilder> usageWithSuffix;
     private static Optional<ResolvedBuilder> usageDefaultSuffix;
     private static Optional<ResolvedBuilder> usagePackagePrivate;
+    private static Optional<ResolvedBuilder> usageWithExistingDisabled;
+    private static Optional<ResolvedBuilder> usageGeneratedWithExistingDisabled;
 
     private boolean captured;
 
@@ -699,6 +737,8 @@ class BuilderScopeResolverTest {
       usageWithSuffix = null;
       usageDefaultSuffix = null;
       usagePackagePrivate = null;
+      usageWithExistingDisabled = null;
+      usageGeneratedWithExistingDisabled = null;
     }
 
     @Override
@@ -761,6 +801,14 @@ class BuilderScopeResolverTest {
       // contract members are accessible
       context.initProcessingTarget(new ProcessingTarget(usageOnlyConfiguration("lib"), "lib"));
       usagePackagePrivate = resolver.resolveUsableBuilderType(helper);
+      // usingExistingBuilders=DISABLED: existing builders are not reused, but a builder
+      // generated in the current round is own generation and still resolves
+      context.initProcessingTarget(
+          new ProcessingTarget(existingBuildersDisabledConfiguration("lib"), ""));
+      usageWithExistingDisabled = resolver.resolveUsableBuilderType(helper);
+      resolver.registerGeneratedBuilder(
+          new TypeName("lib", "LibHelper"), new TypeName("lib", "LibHelperBuilder"));
+      usageGeneratedWithExistingDisabled = resolver.resolveUsableBuilderType(helper);
       captured = true;
       return false;
     }
@@ -776,6 +824,14 @@ class BuilderScopeResolverTest {
     private static BuilderConfiguration usageOnlyConfiguration(String packageName) {
       return BuilderConfiguration.DEFAULT.merge(
           BuilderConfiguration.builder().builderUsagePackages(packageName).build());
+    }
+
+    private static BuilderConfiguration existingBuildersDisabledConfiguration(String packageName) {
+      return BuilderConfiguration.DEFAULT.merge(
+          BuilderConfiguration.builder()
+              .builderUsagePackages(packageName)
+              .usingExistingBuilders(OptionState.DISABLED)
+              .build());
     }
 
     private static BuilderConfiguration usageWithSuffixConfiguration(
