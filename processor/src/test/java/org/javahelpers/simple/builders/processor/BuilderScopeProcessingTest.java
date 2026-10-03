@@ -339,7 +339,8 @@ class BuilderScopeProcessingTest {
         ProcessorTestUtils.createCompiler()
             .withOptions(
                 "-Asimplebuilder.builderGenerationPackages=test",
-                "-Asimplebuilder.builderUsagePackages=lib")
+                "-Asimplebuilder.builderUsagePackages=lib",
+                "-Asimplebuilder.usingFieldFunctionSeeding=ENABLED")
             .compile(dto, libraryDto, libraryDtoBuilder);
 
     assertThat(compilation).succeeded();
@@ -380,7 +381,8 @@ class BuilderScopeProcessingTest {
         ProcessorTestUtils.createCompiler()
             .withOptions(
                 "-Asimplebuilder.builderGenerationPackages=test",
-                "-Asimplebuilder.builderUsagePackages=lib")
+                "-Asimplebuilder.builderUsagePackages=lib",
+                "-Asimplebuilder.usingFieldFunctionSeeding=ENABLED")
             .compile(dto, libraryDto, libraryDtoBuilder);
 
     assertThat(compilation).succeeded();

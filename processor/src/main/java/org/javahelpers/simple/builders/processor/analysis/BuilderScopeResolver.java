@@ -275,7 +275,9 @@ public final class BuilderScopeResolver {
         resolveFuncForEmptyBuilder(builderTypeElement);
     Optional<BuilderInstantiation> funcForPrefilledBuilder =
         resolveFuncForPrefilledBuilder(builderTypeElement, expectedType);
-    if (funcForPrefilledBuilder.isEmpty() && funcForEmptyBuilder.isPresent()) {
+    if (funcForPrefilledBuilder.isEmpty()
+        && funcForEmptyBuilder.isPresent()
+        && context.getConfiguration().shouldUseFieldFunctionSeeding()) {
       funcForPrefilledBuilder =
           resolveFieldSeeding(
               referencedType,
@@ -655,12 +657,14 @@ public final class BuilderScopeResolver {
                     referencedTypeName, method.getSimpleName().toString()))
         .or(
             () ->
-                resolveFieldSeeding(
-                    referencedType,
-                    builderElement,
-                    builderTypeName,
-                    referencedTypeName,
-                    funcForEmptyBuilder));
+                context.getConfiguration().shouldUseFieldFunctionSeeding()
+                    ? resolveFieldSeeding(
+                        referencedType,
+                        builderElement,
+                        builderTypeName,
+                        referencedTypeName,
+                        funcForEmptyBuilder)
+                    : Optional.empty());
   }
 
   /**

@@ -764,9 +764,8 @@ static parameterless factory on the type — `builder()` preferred — whose ret
 type must be accessible and declare a no-arg `build()` method (Lombok/Immutables
 style). The factory itself is the empty-instantiation path; the seeded path is
 the builder's own contract path, a static `builder(T)`-style method, an
-instance method on the value like `toBuilder()`, or — when every readable
-property of the type has a matching `name(v)`/`setName(v)` field function —
-seeding by field functions.
+instance method on the value like `toBuilder()`, or — with
+`usingFieldFunctionSeeding` enabled — seeding by field functions.
 
 The processor constructs the candidate builder name using `builderUsageSuffix`
 (or `builderSuffix` if not configured) and verifies the builder contract: a way
@@ -775,10 +774,12 @@ factory like `create()`), a way to create one seeded with the value (a
 constructor accepting the referenced type or a static factory like `create(T)`
 or `of(T)`), and a no-arg `build()` method returning it — each accessible from
 the generated builder's package. Generated code calls a factory instead of
-`new` when the builder offers one. When no seeded path exists but every
-readable property has a matching field function (`name(v)` or `setName(v)`),
-the generated builder seeds the instance itself in a private `seed<Builder>`
-method; with partial coverage the builder still resolves, but helpers that
+`new` when the builder offers one. With `usingFieldFunctionSeeding` enabled and
+no seeded path found, the builder is tried against field-function seeding: the
+generated builder seeds the instance itself in a private `seed<Builder>` method
+when every readable property has a matching field function (`name(v)`,
+`setName(v)`, or a detected convention like `withName(v)`). With partial
+coverage or the option disabled, the builder still resolves, but helpers that
 would silently drop state (builder consumers) are skipped and a debug note is
 logged. Any class with the expected name and a
 matching contract qualifies, allowing references to builders generated with
@@ -811,6 +812,21 @@ generated in the current processing round qualify and every other referenced
 type falls back to a plain setter, opting out of false-positive detections on
 types that coincidentally look like builders. `@SimpleMinimalBuilder` disables
 this option.
+
+#### `usingFieldFunctionSeeding`
+
+**Default**: `DISABLED` | **Compiler Option**: `-Asimplebuilder.usingFieldFunctionSeeding=ENABLED`
+
+Seeds a reused builder that offers no value-accepting creation path by calling
+one field function per readable property of the referenced type: the generated
+builder emits a private `seed<Builder>(T value)` method that obtains an empty
+instance and calls the field function matching each property. The naming
+convention is detected on the builder — fluent `name(v)` and JavaBeans
+`setName(v)` first, then any other camel-case prefix shared by several methods
+(e.g. `withName(v)`); every property must be covered by one convention, matched
+param-type-exact, void- or fluent-returning. Only consulted when
+`usingExistingBuilders` is enabled; the per-type analysis (property enumeration
+plus method scan) is opt-in because it adds compile cost.
 
 ### Component Filtering
 

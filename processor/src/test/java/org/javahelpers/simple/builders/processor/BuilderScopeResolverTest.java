@@ -520,6 +520,33 @@ class BuilderScopeResolverTest {
   }
 
   @Test
+  void resolverUsageScope_SkipsFieldSeedingWhenDisabled() {
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new ResolverProbeProcessor())
+            .compile(
+                ProcessorTestUtils.forSource(
+                    """
+                    package lib;
+                    public class LibHelper {
+                      public String getName() { return ""; }
+                      public static class Builder {
+                        public Builder() {}
+                        public Builder name(String name) { return this; }
+                        public LibHelper build() { return new LibHelper(); }
+                      }
+                    }
+                    """));
+
+    assertThat(compilation).succeeded();
+    // usingFieldFunctionSeeding=DISABLED: field functions are not tried, so the builder resolves
+    // without a seeded path
+    assertEquals(
+        Optional.empty(),
+        ResolverProbeProcessor.usageSeedingDisabled.get().funcForPrefilledBuilder());
+  }
+
+  @Test
   void resolverUsageScope_ResolvesAutoValueShape() {
     Compilation compilation =
         Compiler.javac()
@@ -1154,6 +1181,7 @@ class BuilderScopeResolverTest {
     private static Optional<ResolvedBuilder> usagePackagePrivate;
     private static Optional<ResolvedBuilder> usageWithExistingDisabled;
     private static Optional<ResolvedBuilder> usageGeneratedWithExistingDisabled;
+    private static Optional<ResolvedBuilder> usageSeedingDisabled;
     private static Optional<ResolvedBuilder> contractResultString;
 
     private boolean captured;
@@ -1172,6 +1200,7 @@ class BuilderScopeResolverTest {
       usagePackagePrivate = null;
       usageWithExistingDisabled = null;
       usageGeneratedWithExistingDisabled = null;
+      usageSeedingDisabled = null;
       contractResultString = null;
     }
 
@@ -1243,6 +1272,10 @@ class BuilderScopeResolverTest {
       resolver.registerGeneratedBuilder(
           new TypeName("lib", "LibHelper"), new TypeName("lib", "LibHelperBuilder"));
       usageGeneratedWithExistingDisabled = resolver.resolveUsableBuilderType(helper);
+      // usingFieldFunctionSeeding=DISABLED: field functions are not used as seeded path
+      context.initProcessingTarget(new ProcessingTarget(seedingDisabledConfiguration("lib"), ""));
+      resolver.resetGeneratedBuilders();
+      usageSeedingDisabled = resolver.resolveUsableBuilderType(helper);
       // Builder-contract probe for java.lang.String: StringBuilder must not resolve because its
       // only parameterless method returning String is toString(), an Object signature
       context.initProcessingTarget(new ProcessingTarget(usageOnlyConfiguration("java.lang"), ""));
@@ -1264,7 +1297,18 @@ class BuilderScopeResolverTest {
 
     private static BuilderConfiguration usageOnlyConfiguration(String packageName) {
       return BuilderConfiguration.DEFAULT.merge(
-          BuilderConfiguration.builder().builderUsagePackages(packageName).build());
+          BuilderConfiguration.builder()
+              .builderUsagePackages(packageName)
+              .usingFieldFunctionSeeding(OptionState.ENABLED)
+              .build());
+    }
+
+    private static BuilderConfiguration seedingDisabledConfiguration(String packageName) {
+      return BuilderConfiguration.DEFAULT.merge(
+          BuilderConfiguration.builder()
+              .builderUsagePackages(packageName)
+              .usingFieldFunctionSeeding(OptionState.DISABLED)
+              .build());
     }
 
     private static BuilderConfiguration existingBuildersDisabledConfiguration(String packageName) {

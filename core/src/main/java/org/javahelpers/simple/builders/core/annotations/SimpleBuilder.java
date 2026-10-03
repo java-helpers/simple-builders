@@ -785,6 +785,24 @@ public @interface SimpleBuilder {
      */
     OptionState usingExistingBuilders() default OptionState.UNSET;
 
+    /**
+     * Seed a reused builder that offers no value-accepting creation path by calling one of its
+     * field functions per readable property of the referenced type: the generated builder emits a
+     * private {@code seed<Builder>(T value)} method that obtains an empty instance and calls the
+     * field function matching each property (fluent {@code name(v)}, JavaBeans {@code setName(v)},
+     * or a detected convention like {@code withName(v)}). <br>
+     * When disabled, such builders still resolve but helpers that would silently drop state are
+     * skipped. Only consulted when {@link #usingExistingBuilders()} is enabled; the analysis
+     * (property enumeration plus method scan per referenced type) is opt-in because it adds compile
+     * cost.
+     *
+     * <p>Default: DISABLED <br>
+     * Compiler option: -Asimplebuilder.usingFieldFunctionSeeding
+     *
+     * @return the option state for seeding builders through field functions
+     */
+    OptionState usingFieldFunctionSeeding() default OptionState.UNSET;
+
     // === Naming ===
     /**
      * Suffix to append to the DTO name to generate the builder class name. <br>
