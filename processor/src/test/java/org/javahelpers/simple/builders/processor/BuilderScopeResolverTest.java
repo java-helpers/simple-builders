@@ -34,6 +34,8 @@ import com.google.testing.compile.Compilation;
 import com.google.testing.compile.Compiler;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
@@ -50,6 +52,9 @@ import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLo
 import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 /**
  * Probe-based coverage of {@link BuilderScopeResolver} internals that generated-source assertions
@@ -136,154 +141,162 @@ class BuilderScopeResolverTest {
         ResolverProbeProcessor.usageAfterRegistration.get().typeName().getFullQualifiedName());
   }
 
-  @Test
-  void resolverUsageScope_ResolvesBuilderWithoutSimpleBuilderAnnotation() {
-    Compilation compilation =
-        Compiler.javac()
-            .withProcessors(new ResolverProbeProcessor())
-            .compile(
-                ProcessorTestUtils.forSource(
-                    """
-                    package lib;
-                    public class LibHelper { public LibHelper() {} }
-                    """),
-                ProcessorTestUtils.forSource(
-                    """
-                    package lib;
-                    public class LibHelperBuilder {
-                      public LibHelperBuilder() {}
-                      public LibHelperBuilder(LibHelper value) {}
-                      public LibHelper build() { return new LibHelper(); }
-                    }
-                    """));
+  private static final String LIB_HELPER =
+      """
+      package lib;
+      public class LibHelper { public LibHelper() {} }
+      """;
+
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("resolvedContractVariants")
+  void resolverUsageScope_ResolvesContractVariants(
+      String name,
+      String builderSource,
+      Supplier<Optional<ResolvedBuilder>> probeResult,
+      String expectedBuilder,
+      Class<?> expectedEmptyPath,
+      String expectedEmptyMethod,
+      Class<?> expectedPrefilledPath,
+      String expectedPrefilledMethod) {
+    Compilation compilation = compileWithBuilder(builderSource);
 
     assertThat(compilation).succeeded();
-    // Usage scope without @SimpleBuilder annotation — builder resolved by contract check
-    assertEquals(
-        "lib.LibHelperBuilder",
-        ResolverProbeProcessor.usageWithoutAnnotation.get().typeName().getFullQualifiedName());
+    ResolvedBuilder resolved = probeResult.get().get();
+    assertEquals(expectedBuilder, resolved.typeName().getFullQualifiedName());
+    BuilderInstantiation empty = resolved.funcForEmptyBuilder();
+    BuilderInstantiation prefilled = resolved.funcForPrefilledBuilder();
+    assertInstanceOf(expectedEmptyPath, empty);
+    assertInstanceOf(expectedPrefilledPath, prefilled);
+    assertFactoryMethod(expectedEmptyMethod, empty);
+    assertFactoryMethod(expectedPrefilledMethod, prefilled);
   }
 
-  @Test
-  void resolverUsageScope_RejectsBuilderWithoutNoArgConstructor() {
-    Compilation compilation =
-        Compiler.javac()
-            .withProcessors(new ResolverProbeProcessor())
-            .compile(
-                ProcessorTestUtils.forSource(
-                    """
-                    package lib;
-                    public class LibHelper { public LibHelper() {} }
-                    """),
-                ProcessorTestUtils.forSource(
-                    """
-                    package lib;
-                    public class LibHelperBuilder {
-                      public LibHelperBuilder(LibHelper value) {}
-                      public LibHelper build() { return new LibHelper(); }
-                    }
-                    """));
-
-    assertThat(compilation).succeeded();
-    // ctor(T) + build() but no no-arg ctor: generated consumer code calls `new
-    // LibHelperBuilder()`, so the builder must not qualify
-    assertEquals(Optional.empty(), ResolverProbeProcessor.usageWithoutAnnotation);
+  static Stream<Arguments> resolvedContractVariants() {
+    return Stream.of(
+        // Usage scope without @SimpleBuilder annotation — builder resolved by contract check
+        Arguments.of(
+            "BuilderWithoutSimpleBuilderAnnotation",
+            """
+            package lib;
+            public class LibHelperBuilder {
+              public LibHelperBuilder() {}
+              public LibHelperBuilder(LibHelper value) {}
+              public LibHelper build() { return new LibHelper(); }
+            }
+            """,
+            probe(() -> ResolverProbeProcessor.usageWithoutAnnotation),
+            "lib.LibHelperBuilder",
+            BuilderInstantiation.ConstructorCall.class,
+            null,
+            BuilderInstantiation.ConstructorCall.class,
+            null),
+        // No accessible constructors: both instantiation paths come from the static factories
+        Arguments.of(
+            "StaticFactories",
+            """
+            package lib;
+            public class LibHelperBuilder {
+              private LibHelperBuilder() {}
+              public static LibHelperBuilder create() { return new LibHelperBuilder(); }
+              public static LibHelperBuilder of(LibHelper value) { return create(); }
+              public LibHelper build() { return new LibHelper(); }
+            }
+            """,
+            probe(() -> ResolverProbeProcessor.usageWithoutAnnotation),
+            "lib.LibHelperBuilder",
+            BuilderInstantiation.StaticFactoryCall.class,
+            "create",
+            BuilderInstantiation.StaticFactoryCall.class,
+            "of"),
+        // Package-private contract members are accessible when the generated builder is in
+        // the same package (builderPackage "lib")
+        Arguments.of(
+            "PackagePrivateMembers_SamePackage",
+            """
+            package lib;
+            public class LibHelperBuilder {
+              LibHelperBuilder() {}
+              LibHelperBuilder(LibHelper value) {}
+              LibHelper build() { return new LibHelper(); }
+            }
+            """,
+            probe(() -> ResolverProbeProcessor.usagePackagePrivate),
+            "lib.LibHelperBuilder",
+            BuilderInstantiation.ConstructorCall.class,
+            null,
+            BuilderInstantiation.ConstructorCall.class,
+            null));
   }
 
-  @Test
-  void resolverUsageScope_RejectsBuilderWithPrivateConstructor() {
-    Compilation compilation =
-        Compiler.javac()
-            .withProcessors(new ResolverProbeProcessor())
-            .compile(
-                ProcessorTestUtils.forSource(
-                    """
-                    package lib;
-                    public class LibHelper { public LibHelper() {} }
-                    """),
-                ProcessorTestUtils.forSource(
-                    """
-                    package lib;
-                    public class LibHelperBuilder {
-                      private LibHelperBuilder() {}
-                      public LibHelperBuilder(LibHelper value) {}
-                      public LibHelper build() { return new LibHelper(); }
-                    }
-                    """));
-
-    assertThat(compilation).succeeded();
-    // The no-arg ctor exists but is private: generated code could not call it, so the builder
-    // must not qualify
-    assertEquals(Optional.empty(), ResolverProbeProcessor.usageWithoutAnnotation);
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("rejectedContractVariants")
+  void resolverUsageScope_RejectsContractVariants(
+      String name, String builderSource, Supplier<Optional<ResolvedBuilder>> probeResult) {
+    assertThat(compileWithBuilder(builderSource)).succeeded();
+    assertEquals(Optional.empty(), probeResult.get());
   }
 
-  @Test
-  void resolverUsageScope_AcceptsBuilderWithStaticFactories() {
-    Compilation compilation =
-        Compiler.javac()
-            .withProcessors(new ResolverProbeProcessor())
-            .compile(
-                ProcessorTestUtils.forSource(
-                    """
-                    package lib;
-                    public class LibHelper { public LibHelper() {} }
-                    """),
-                ProcessorTestUtils.forSource(
-                    """
-                    package lib;
-                    public class LibHelperBuilder {
-                      private LibHelperBuilder() {}
-                      public static LibHelperBuilder create() { return new LibHelperBuilder(); }
-                      public static LibHelperBuilder of(LibHelper value) { return create(); }
-                      public LibHelper build() { return new LibHelper(); }
-                    }
-                    """));
-
-    assertThat(compilation).succeeded();
-    // No accessible constructors: both instantiation paths come from the static factories
-    ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
-    assertEquals("lib.LibHelperBuilder", resolved.typeName().getFullQualifiedName());
-    assertEquals(
-        "create",
-        assertInstanceOf(
-                BuilderInstantiation.StaticFactoryCall.class, resolved.funcForEmptyBuilder())
-            .methodName());
-    assertEquals(
-        "of",
-        assertInstanceOf(
-                BuilderInstantiation.StaticFactoryCall.class, resolved.funcForPrefilledBuilder())
-            .methodName());
+  static Stream<Arguments> rejectedContractVariants() {
+    return Stream.of(
+        // ctor(T) + build() but no no-arg ctor: generated consumer code calls `new
+        // LibHelperBuilder()`, so the builder must not qualify
+        Arguments.of(
+            "BuilderWithoutNoArgConstructor",
+            """
+            package lib;
+            public class LibHelperBuilder {
+              public LibHelperBuilder(LibHelper value) {}
+              public LibHelper build() { return new LibHelper(); }
+            }
+            """,
+            probe(() -> ResolverProbeProcessor.usageWithoutAnnotation)),
+        // The no-arg ctor exists but is private: generated code could not call it
+        Arguments.of(
+            "BuilderWithPrivateConstructor",
+            """
+            package lib;
+            public class LibHelperBuilder {
+              private LibHelperBuilder() {}
+              public LibHelperBuilder(LibHelper value) {}
+              public LibHelper build() { return new LibHelper(); }
+            }
+            """,
+            probe(() -> ResolverProbeProcessor.usageWithoutAnnotation)),
+        // Package-private contract members are not accessible from a different package
+        // (builderPackage unset)
+        Arguments.of(
+            "PackagePrivateMembers_OtherPackage",
+            """
+            package lib;
+            public class LibHelperBuilder {
+              LibHelperBuilder() {}
+              LibHelperBuilder(LibHelper value) {}
+              LibHelper build() { return new LibHelper(); }
+            }
+            """,
+            probe(() -> ResolverProbeProcessor.usageWithoutAnnotation)));
   }
 
-  @Test
-  void resolverUsageScope_PackagePrivateMembers_AccessibleOnlyFromSamePackage() {
-    Compilation compilation =
-        Compiler.javac()
-            .withProcessors(new ResolverProbeProcessor())
-            .compile(
-                ProcessorTestUtils.forSource(
-                    """
-                    package lib;
-                    public class LibHelper { public LibHelper() {} }
-                    """),
-                ProcessorTestUtils.forSource(
-                    """
-                    package lib;
-                    public class LibHelperBuilder {
-                      LibHelperBuilder() {}
-                      LibHelperBuilder(LibHelper value) {}
-                      LibHelper build() { return new LibHelper(); }
-                    }
-                    """));
+  private static Compilation compileWithBuilder(String builderSource) {
+    return Compiler.javac()
+        .withProcessors(new ResolverProbeProcessor())
+        .compile(
+            ProcessorTestUtils.forSource(LIB_HELPER), ProcessorTestUtils.forSource(builderSource));
+  }
 
-    assertThat(compilation).succeeded();
-    // All contract members are package-private: accessible when the generated builder is in the
-    // same package (builderPackage "lib")...
-    assertEquals(
-        "lib.LibHelperBuilder",
-        ResolverProbeProcessor.usagePackagePrivate.get().typeName().getFullQualifiedName());
-    // ...but not from a different one (builderPackage unset)
-    assertEquals(Optional.empty(), ResolverProbeProcessor.usageWithoutAnnotation);
+  private static Supplier<Optional<ResolvedBuilder>> probe(
+      Supplier<Optional<ResolvedBuilder>> field) {
+    return field;
+  }
+
+  private static void assertFactoryMethod(
+      String expectedMethod, BuilderInstantiation instantiation) {
+    if (expectedMethod != null) {
+      assertEquals(
+          expectedMethod,
+          assertInstanceOf(BuilderInstantiation.StaticFactoryCall.class, instantiation)
+              .methodName());
+    }
   }
 
   @Test

@@ -352,12 +352,26 @@ public final class BuilderScopeResolver {
         .filter(context::isMemberAccessibleFromBuilderPackage)
         .sorted(
             Comparator.comparingInt(
-                nested ->
-                    preferredName.contentEquals(nested.getSimpleName())
-                        ? 0
-                        : builderSuffix.contentEquals(nested.getSimpleName()) ? 1 : 2))
+                nested -> nestedCandidateRank(nested, preferredName, builderSuffix)))
         .map(nested -> JavaLangMapper.mapToTypeName(nested, context))
         .toList();
+  }
+
+  /**
+   * Ranks a nested builder candidate by name: {@code <Simple><BuilderSuffix>} first, the plain
+   * builder suffix second, all other names last.
+   *
+   * @param nested the nested type to rank
+   * @param preferredName the preferred candidate name
+   * @param builderSuffix the builder suffix
+   * @return the rank, lower wins
+   */
+  private static int nestedCandidateRank(
+      Element nested, String preferredName, String builderSuffix) {
+    if (preferredName.contentEquals(nested.getSimpleName())) {
+      return 0;
+    }
+    return builderSuffix.contentEquals(nested.getSimpleName()) ? 1 : 2;
   }
 
   /**
