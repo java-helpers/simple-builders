@@ -15,13 +15,6 @@
  */
 package org.javahelpers.simple.builders.processor.model.type;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
-import javax.lang.model.element.TypeElement;
-import org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyser;
-import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
-
 /**
  * The instantiation path generated code uses to obtain an instance of a resolved builder.
  *
@@ -71,57 +64,6 @@ public sealed interface BuilderInstantiation {
    * @param methodName name of the static factory method (e.g. {@code create}, {@code of})
    */
   record StaticFactoryCall(String methodName) implements BuilderInstantiation {
-
-    // Factory method names preferred when a builder offers several candidates
-    private static final List<String> PREFERRED_NAMES = List.of("create", "of");
-
-    /**
-     * Finds the static factory creating an empty builder instance: an accessible static
-     * parameterless function on the builder type returning the builder type.
-     *
-     * @param builderType the builder type element to inspect
-     * @param context the processing context, used to access all members
-     * @return the instantiation calling the found factory, or empty when none exists
-     */
-    public static Optional<BuilderInstantiation> forEmptyBuilder(
-        TypeElement builderType, ProcessingContext context) {
-      return find(builderType, List.of(), context);
-    }
-
-    /**
-     * Finds the static factory creating a builder instance prefilled with a value of the referenced
-     * type: an accessible static function accepting the type and returning the builder type.
-     *
-     * @param builderType the builder type element to inspect
-     * @param expectedType the referenced type the factory must accept
-     * @param context the processing context, used to access all members
-     * @return the instantiation calling the found factory, or empty when none exists
-     */
-    public static Optional<BuilderInstantiation> forPrefilledBuilder(
-        TypeElement builderType, TypeName expectedType, ProcessingContext context) {
-      return find(builderType, List.of(expectedType), context);
-    }
-
-    private static Optional<BuilderInstantiation> find(
-        TypeElement builderType, List<TypeName> parameterTypes, ProcessingContext context) {
-      return JavaLangAnalyser.findMethodsStatic(
-              builderType,
-              parameterTypes,
-              new TypeName(
-                  context.getPackageName(builderType), builderType.getSimpleName().toString()),
-              context)
-          .stream()
-          .min(
-              Comparator.comparingInt(StaticFactoryCall::nameRank)
-                  .thenComparing(Comparator.naturalOrder()))
-          .<BuilderInstantiation>map(StaticFactoryCall::new);
-    }
-
-    private static int nameRank(String name) {
-      int index = PREFERRED_NAMES.indexOf(name);
-      return index < 0 ? PREFERRED_NAMES.size() : index;
-    }
-
     @Override
     public String instantiationCode(String builderTypeExpression, String arguments) {
       return builderTypeExpression + "." + methodName + "(" + arguments + ")";

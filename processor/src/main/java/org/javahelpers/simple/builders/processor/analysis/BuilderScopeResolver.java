@@ -23,7 +23,9 @@
  */
 package org.javahelpers.simple.builders.processor.analysis;
 
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import javax.lang.model.element.Element;
@@ -56,6 +58,9 @@ public final class BuilderScopeResolver {
    * determines which contract members are accessible.
    */
   private record ResolutionInputs(BuilderConfiguration configuration, String builderPackage) {}
+
+  // Factory method names preferred when a builder offers several candidates
+  private static final List<String> PREFERRED_FACTORY_NAMES = List.of("create", "of");
 
   private final ProcessingContext context;
   private ResolutionInputs cachedResolutionInputs;
@@ -258,8 +263,7 @@ public final class BuilderScopeResolver {
    */
   private Optional<BuilderInstantiation> resolveFuncForEmptyBuilder(
       TypeElement builderTypeElement) {
-    Optional<BuilderInstantiation> func =
-        BuilderInstantiation.StaticFactoryCall.forEmptyBuilder(builderTypeElement, context);
+    Optional<BuilderInstantiation> func = findStaticFactoryCall(builderTypeElement, List.of());
     if (func.isEmpty() && JavaLangAnalyser.hasEmptyConstructor(builderTypeElement, context)) {
       func = Optional.of(new BuilderInstantiation.ConstructorCall());
     }
@@ -278,13 +282,41 @@ public final class BuilderScopeResolver {
   private Optional<BuilderInstantiation> resolveFuncForPrefilledBuilder(
       TypeElement builderTypeElement, TypeName expectedType) {
     Optional<BuilderInstantiation> func =
-        BuilderInstantiation.StaticFactoryCall.forPrefilledBuilder(
-            builderTypeElement, expectedType, context);
+        findStaticFactoryCall(builderTypeElement, List.of(expectedType));
     if (func.isEmpty()
         && JavaLangAnalyser.hasConstructorAccepting(builderTypeElement, expectedType, context)) {
       func = Optional.of(new BuilderInstantiation.ConstructorCall());
     }
     return func;
+  }
+
+  /**
+   * Finds an accessible static method on the builder type taking the expected parameter types and
+   * returning the builder type itself. When several candidates exist, {@code create} and {@code of}
+   * are preferred in that order, then the alphabetically first name.
+   *
+   * @param builderTypeElement the builder type to inspect
+   * @param expectedParameterTypes the parameter types the factory must accept
+   * @return the instantiation calling the found factory, or empty when none exists
+   */
+  private Optional<BuilderInstantiation> findStaticFactoryCall(
+      TypeElement builderTypeElement, List<TypeName> expectedParameterTypes) {
+    TypeName builderTypeName =
+        new TypeName(
+            context.getPackageName(builderTypeElement),
+            builderTypeElement.getSimpleName().toString());
+    return JavaLangAnalyser.findMethodsStatic(
+            builderTypeElement, expectedParameterTypes, builderTypeName, context)
+        .stream()
+        .min(
+            Comparator.comparingInt(BuilderScopeResolver::preferredFactoryNameRank)
+                .thenComparing(Comparator.naturalOrder()))
+        .map(BuilderInstantiation.StaticFactoryCall::new);
+  }
+
+  private static int preferredFactoryNameRank(String name) {
+    int index = PREFERRED_FACTORY_NAMES.indexOf(name);
+    return index < 0 ? PREFERRED_FACTORY_NAMES.size() : index;
   }
 
   private void refreshForConfigurationIfNeeded() {
