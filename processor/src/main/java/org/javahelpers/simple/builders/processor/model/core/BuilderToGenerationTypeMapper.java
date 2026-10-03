@@ -138,6 +138,7 @@ public class BuilderToGenerationTypeMapper {
     method.setModifier(classMethod.getModifier().orElse(null));
     method.setStatic(classMethod.isStatic());
     method.setOrdering(classMethod.getOrdering());
+    method.setPriority(classMethod.getPriority());
 
     if (configuration.shouldGenerateJavaDoc()) {
       method.setJavadoc(buildMethodJavadoc(classMethod));

@@ -105,25 +105,6 @@ public class MannschaftDtoBuilder implements IBuilderBase<MannschaftDto> {
   }
 
   /**
-   * Sets the value for <code>name</code>.
-   * <p>
-   * Generated from setter {@link MannschaftDto#setName(String) setName(String name)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.name("example value");
-   * }</pre>
-   * 
-   * @param name name
-   * @return current instance of builder
-   */
-  public MannschaftDtoBuilder name(String name) {
-    this.name = changedValue(name);
-    return this;
-  }
-
-  /**
    * Sets the value for <code>name</code> by executing the provided consumer.
    * <p>
    * Generated from setter {@link MannschaftDto#setName(String) setName(String name)}
@@ -185,6 +166,25 @@ public class MannschaftDtoBuilder implements IBuilderBase<MannschaftDto> {
   }
 
   /**
+   * Sets the value for <code>name</code>.
+   * <p>
+   * Generated from setter {@link MannschaftDto#setName(String) setName(String name)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.name("example value");
+   * }</pre>
+   * 
+   * @param name name
+   * @return current instance of builder
+   */
+  public MannschaftDtoBuilder name(String name) {
+    this.name = changedValue(name);
+    return this;
+  }
+
+  /**
    * Updates the current value of <code>name</code> in place by applying the given operator, instead of reading it out,
    * changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
@@ -207,38 +207,6 @@ public class MannschaftDtoBuilder implements IBuilderBase<MannschaftDto> {
       throw new IllegalStateException("Cannot update 'name' before it is set");
     }
     this.name = changedValue(nameUpdater.apply(this.name.value()));
-    return this;
-  }
-
-  /**
-   * Sets the value for <code>sponsoren</code>.
-   * <p>
-   * Generated from setter {@link MannschaftDto#setSponsoren(Set) setSponsoren(Set<SponsorDto> sponsoren)}
-   * 
-   * @param sponsoren sponsoren
-   * @return current instance of builder
-   */
-  public MannschaftDtoBuilder sponsoren(SponsorDto... sponsoren) {
-    this.sponsoren = changedValue(Set.of(sponsoren));
-    return this;
-  }
-
-  /**
-   * Sets the value for <code>sponsoren</code>.
-   * <p>
-   * Generated from setter {@link MannschaftDto#setSponsoren(Set) setSponsoren(Set<SponsorDto> sponsoren)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.sponsoren(Set.of(SponsorDtoBuilder.create().build()));
-   * }</pre>
-   * 
-   * @param sponsoren sponsoren
-   * @return current instance of builder
-   */
-  public MannschaftDtoBuilder sponsoren(Set<SponsorDto> sponsoren) {
-    this.sponsoren = changedValue(sponsoren);
     return this;
   }
 
@@ -268,6 +236,19 @@ public class MannschaftDtoBuilder implements IBuilderBase<MannschaftDto> {
   }
 
   /**
+   * Sets the value for <code>sponsoren</code>.
+   * <p>
+   * Generated from setter {@link MannschaftDto#setSponsoren(Set) setSponsoren(Set<SponsorDto> sponsoren)}
+   * 
+   * @param sponsoren sponsoren
+   * @return current instance of builder
+   */
+  public MannschaftDtoBuilder sponsoren(SponsorDto... sponsoren) {
+    this.sponsoren = changedValue(Set.of(sponsoren));
+    return this;
+  }
+
+  /**
    * Sets the value for <code>sponsoren</code> by invoking the provided supplier.
    * <p>
    * Generated from setter {@link MannschaftDto#setSponsoren(Set) setSponsoren(Set<SponsorDto> sponsoren)}
@@ -283,6 +264,25 @@ public class MannschaftDtoBuilder implements IBuilderBase<MannschaftDto> {
    */
   public MannschaftDtoBuilder sponsoren(Supplier<Set<SponsorDto>> sponsorenSupplier) {
     this.sponsoren = changedValue(sponsorenSupplier.get());
+    return this;
+  }
+
+  /**
+   * Sets the value for <code>sponsoren</code>.
+   * <p>
+   * Generated from setter {@link MannschaftDto#setSponsoren(Set) setSponsoren(Set<SponsorDto> sponsoren)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.sponsoren(Set.of(SponsorDtoBuilder.create().build()));
+   * }</pre>
+   * 
+   * @param sponsoren sponsoren
+   * @return current instance of builder
+   */
+  public MannschaftDtoBuilder sponsoren(Set<SponsorDto> sponsoren) {
+    this.sponsoren = changedValue(sponsoren);
     return this;
   }
 

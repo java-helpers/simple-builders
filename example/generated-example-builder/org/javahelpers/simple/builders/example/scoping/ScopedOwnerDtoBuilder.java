@@ -88,25 +88,6 @@ public class ScopedOwnerDtoBuilder implements IBuilderBase<ScopedOwnerDto> {
   }
 
   /**
-   * Sets the value for <code>library</code>.
-   * <p>
-   * Generated from setter {@link ScopedOwnerDto#setLibrary(LibraryHelperDto) setLibrary(LibraryHelperDto library)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.library(new LibraryHelperDto());
-   * }</pre>
-   * 
-   * @param library library
-   * @return current instance of builder
-   */
-  public ScopedOwnerDtoBuilder library(LibraryHelperDto library) {
-    this.library = changedValue(library);
-    return this;
-  }
-
-  /**
    * Sets the value for <code>library</code> by executing the provided consumer.
    * <p>
    * Generated from setter {@link ScopedOwnerDto#setLibrary(LibraryHelperDto) setLibrary(LibraryHelperDto library)}
@@ -141,6 +122,25 @@ public class ScopedOwnerDtoBuilder implements IBuilderBase<ScopedOwnerDto> {
   }
 
   /**
+   * Sets the value for <code>library</code>.
+   * <p>
+   * Generated from setter {@link ScopedOwnerDto#setLibrary(LibraryHelperDto) setLibrary(LibraryHelperDto library)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.library(new LibraryHelperDto());
+   * }</pre>
+   * 
+   * @param library library
+   * @return current instance of builder
+   */
+  public ScopedOwnerDtoBuilder library(LibraryHelperDto library) {
+    this.library = changedValue(library);
+    return this;
+  }
+
+  /**
    * Updates the current value of <code>library</code> in place by applying the given operator, instead of reading it
    * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
@@ -157,25 +157,6 @@ public class ScopedOwnerDtoBuilder implements IBuilderBase<ScopedOwnerDto> {
       throw new IllegalStateException("Cannot update 'library' before it is set");
     }
     this.library = changedValue(libraryUpdater.apply(this.library.value()));
-    return this;
-  }
-
-  /**
-   * Sets the value for <code>sponsor</code>.
-   * <p>
-   * Generated from setter {@link ScopedOwnerDto#setSponsor(SponsorDto) setSponsor(SponsorDto sponsor)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.sponsor(new SponsorDto());
-   * }</pre>
-   * 
-   * @param sponsor sponsor
-   * @return current instance of builder
-   */
-  public ScopedOwnerDtoBuilder sponsor(SponsorDto sponsor) {
-    this.sponsor = changedValue(sponsor);
     return this;
   }
 
@@ -214,6 +195,25 @@ public class ScopedOwnerDtoBuilder implements IBuilderBase<ScopedOwnerDto> {
   }
 
   /**
+   * Sets the value for <code>sponsor</code>.
+   * <p>
+   * Generated from setter {@link ScopedOwnerDto#setSponsor(SponsorDto) setSponsor(SponsorDto sponsor)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.sponsor(new SponsorDto());
+   * }</pre>
+   * 
+   * @param sponsor sponsor
+   * @return current instance of builder
+   */
+  public ScopedOwnerDtoBuilder sponsor(SponsorDto sponsor) {
+    this.sponsor = changedValue(sponsor);
+    return this;
+  }
+
+  /**
    * Updates the current value of <code>sponsor</code> in place by applying the given operator, instead of reading it
    * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
@@ -230,25 +230,6 @@ public class ScopedOwnerDtoBuilder implements IBuilderBase<ScopedOwnerDto> {
       throw new IllegalStateException("Cannot update 'sponsor' before it is set");
     }
     this.sponsor = changedValue(sponsorUpdater.apply(this.sponsor.value()));
-    return this;
-  }
-
-  /**
-   * Sets the value for <code>trusted</code>.
-   * <p>
-   * Generated from setter {@link ScopedOwnerDto#setTrusted(TrustedHelperDto) setTrusted(TrustedHelperDto trusted)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.trusted(new TrustedHelperDto());
-   * }</pre>
-   * 
-   * @param trusted trusted
-   * @return current instance of builder
-   */
-  public ScopedOwnerDtoBuilder trusted(TrustedHelperDto trusted) {
-    this.trusted = changedValue(trusted);
     return this;
   }
 
@@ -291,6 +272,25 @@ public class ScopedOwnerDtoBuilder implements IBuilderBase<ScopedOwnerDto> {
    */
   public ScopedOwnerDtoBuilder trusted(Supplier<TrustedHelperDto> trustedSupplier) {
     this.trusted = changedValue(trustedSupplier.get());
+    return this;
+  }
+
+  /**
+   * Sets the value for <code>trusted</code>.
+   * <p>
+   * Generated from setter {@link ScopedOwnerDto#setTrusted(TrustedHelperDto) setTrusted(TrustedHelperDto trusted)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.trusted(new TrustedHelperDto());
+   * }</pre>
+   * 
+   * @param trusted trusted
+   * @return current instance of builder
+   */
+  public ScopedOwnerDtoBuilder trusted(TrustedHelperDto trusted) {
+    this.trusted = changedValue(trusted);
     return this;
   }
 

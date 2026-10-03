@@ -100,27 +100,6 @@ public class ProductWithDefaultsBuilder implements IBuilderBase<ProductWithDefau
   }
 
   /**
-   * Sets the value for <code>active</code>.
-   * <p>
-   * Generated from parameter in constructor
-   * {@link ProductWithDefaults#ProductWithDefaults(String, double, String, boolean) ProductWithDefaults(String name,
-   * double price, String category, boolean active)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.active(true);
-   * }</pre>
-   * 
-   * @param active active
-   * @return current instance of builder
-   */
-  public ProductWithDefaultsBuilder active(boolean active) {
-    this.active = changedValue(active);
-    return this;
-  }
-
-  /**
    * Sets the value for <code>active</code> by invoking the provided supplier.
    * <p>
    * Generated from parameter in constructor
@@ -138,6 +117,27 @@ public class ProductWithDefaultsBuilder implements IBuilderBase<ProductWithDefau
    */
   public ProductWithDefaultsBuilder active(Supplier<Boolean> activeSupplier) {
     this.active = changedValue(activeSupplier.get());
+    return this;
+  }
+
+  /**
+   * Sets the value for <code>active</code>.
+   * <p>
+   * Generated from parameter in constructor
+   * {@link ProductWithDefaults#ProductWithDefaults(String, double, String, boolean) ProductWithDefaults(String name,
+   * double price, String category, boolean active)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.active(true);
+   * }</pre>
+   * 
+   * @param active active
+   * @return current instance of builder
+   */
+  public ProductWithDefaultsBuilder active(boolean active) {
+    this.active = changedValue(active);
     return this;
   }
 
@@ -166,27 +166,6 @@ public class ProductWithDefaultsBuilder implements IBuilderBase<ProductWithDefau
       throw new IllegalStateException("Cannot update 'active' before it is set");
     }
     this.active = changedValue(activeUpdater.apply(this.active.value()));
-    return this;
-  }
-
-  /**
-   * Sets the value for <code>category</code>.
-   * <p>
-   * Generated from parameter in constructor
-   * {@link ProductWithDefaults#ProductWithDefaults(String, double, String, boolean) ProductWithDefaults(String name,
-   * double price, String category, boolean active)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.category("example value");
-   * }</pre>
-   * 
-   * @param category category
-   * @return current instance of builder
-   */
-  public ProductWithDefaultsBuilder category(String category) {
-    this.category = changedValue(category);
     return this;
   }
 
@@ -258,6 +237,27 @@ public class ProductWithDefaultsBuilder implements IBuilderBase<ProductWithDefau
   }
 
   /**
+   * Sets the value for <code>category</code>.
+   * <p>
+   * Generated from parameter in constructor
+   * {@link ProductWithDefaults#ProductWithDefaults(String, double, String, boolean) ProductWithDefaults(String name,
+   * double price, String category, boolean active)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.category("example value");
+   * }</pre>
+   * 
+   * @param category category
+   * @return current instance of builder
+   */
+  public ProductWithDefaultsBuilder category(String category) {
+    this.category = changedValue(category);
+    return this;
+  }
+
+  /**
    * Updates the current value of <code>category</code> in place by applying the given operator, instead of reading it
    * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
@@ -282,27 +282,6 @@ public class ProductWithDefaultsBuilder implements IBuilderBase<ProductWithDefau
       throw new IllegalStateException("Cannot update 'category' before it is set");
     }
     this.category = changedValue(categoryUpdater.apply(this.category.value()));
-    return this;
-  }
-
-  /**
-   * Sets the value for <code>name</code>.
-   * <p>
-   * Generated from parameter in constructor
-   * {@link ProductWithDefaults#ProductWithDefaults(String, double, String, boolean) ProductWithDefaults(String name,
-   * double price, String category, boolean active)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.name("example value");
-   * }</pre>
-   * 
-   * @param name name
-   * @return current instance of builder
-   */
-  public ProductWithDefaultsBuilder name(String name) {
-    this.name = changedValue(name);
     return this;
   }
 
@@ -374,6 +353,27 @@ public class ProductWithDefaultsBuilder implements IBuilderBase<ProductWithDefau
   }
 
   /**
+   * Sets the value for <code>name</code>.
+   * <p>
+   * Generated from parameter in constructor
+   * {@link ProductWithDefaults#ProductWithDefaults(String, double, String, boolean) ProductWithDefaults(String name,
+   * double price, String category, boolean active)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.name("example value");
+   * }</pre>
+   * 
+   * @param name name
+   * @return current instance of builder
+   */
+  public ProductWithDefaultsBuilder name(String name) {
+    this.name = changedValue(name);
+    return this;
+  }
+
+  /**
    * Updates the current value of <code>name</code> in place by applying the given operator, instead of reading it out,
    * changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
@@ -402,27 +402,6 @@ public class ProductWithDefaultsBuilder implements IBuilderBase<ProductWithDefau
   }
 
   /**
-   * Sets the value for <code>price</code>.
-   * <p>
-   * Generated from parameter in constructor
-   * {@link ProductWithDefaults#ProductWithDefaults(String, double, String, boolean) ProductWithDefaults(String name,
-   * double price, String category, boolean active)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.price(3.14);
-   * }</pre>
-   * 
-   * @param price price
-   * @return current instance of builder
-   */
-  public ProductWithDefaultsBuilder price(double price) {
-    this.price = changedValue(price);
-    return this;
-  }
-
-  /**
    * Sets the value for <code>price</code> by invoking the provided supplier.
    * <p>
    * Generated from parameter in constructor
@@ -440,6 +419,27 @@ public class ProductWithDefaultsBuilder implements IBuilderBase<ProductWithDefau
    */
   public ProductWithDefaultsBuilder price(Supplier<Double> priceSupplier) {
     this.price = changedValue(priceSupplier.get());
+    return this;
+  }
+
+  /**
+   * Sets the value for <code>price</code>.
+   * <p>
+   * Generated from parameter in constructor
+   * {@link ProductWithDefaults#ProductWithDefaults(String, double, String, boolean) ProductWithDefaults(String name,
+   * double price, String category, boolean active)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.price(3.14);
+   * }</pre>
+   * 
+   * @param price price
+   * @return current instance of builder
+   */
+  public ProductWithDefaultsBuilder price(double price) {
+    this.price = changedValue(price);
     return this;
   }
 

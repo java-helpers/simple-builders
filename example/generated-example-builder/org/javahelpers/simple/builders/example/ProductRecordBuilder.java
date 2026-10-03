@@ -91,26 +91,6 @@ public class ProductRecordBuilder implements IBuilderBase<ProductRecord> {
   }
 
   /**
-   * Sets the value for <code>category</code>.
-   * <p>
-   * Generated from parameter in constructor {@link ProductRecord#ProductRecord(String, double, String)
-   * ProductRecord(String name, double price, String category)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.category("example value");
-   * }</pre>
-   * 
-   * @param category category
-   * @return current instance of builder
-   */
-  public ProductRecordBuilder category(String category) {
-    this.category = changedValue(category);
-    return this;
-  }
-
-  /**
    * Sets the value for <code>category</code> by executing the provided consumer.
    * <p>
    * Generated from parameter in constructor {@link ProductRecord#ProductRecord(String, double, String)
@@ -175,6 +155,26 @@ public class ProductRecordBuilder implements IBuilderBase<ProductRecord> {
   }
 
   /**
+   * Sets the value for <code>category</code>.
+   * <p>
+   * Generated from parameter in constructor {@link ProductRecord#ProductRecord(String, double, String)
+   * ProductRecord(String name, double price, String category)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.category("example value");
+   * }</pre>
+   * 
+   * @param category category
+   * @return current instance of builder
+   */
+  public ProductRecordBuilder category(String category) {
+    this.category = changedValue(category);
+    return this;
+  }
+
+  /**
    * Updates the current value of <code>category</code> in place by applying the given operator, instead of reading it
    * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
@@ -198,26 +198,6 @@ public class ProductRecordBuilder implements IBuilderBase<ProductRecord> {
       throw new IllegalStateException("Cannot update 'category' before it is set");
     }
     this.category = changedValue(categoryUpdater.apply(this.category.value()));
-    return this;
-  }
-
-  /**
-   * Sets the value for <code>name</code>.
-   * <p>
-   * Generated from parameter in constructor {@link ProductRecord#ProductRecord(String, double, String)
-   * ProductRecord(String name, double price, String category)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.name("example value");
-   * }</pre>
-   * 
-   * @param name name
-   * @return current instance of builder
-   */
-  public ProductRecordBuilder name(String name) {
-    this.name = changedValue(name);
     return this;
   }
 
@@ -286,6 +266,26 @@ public class ProductRecordBuilder implements IBuilderBase<ProductRecord> {
   }
 
   /**
+   * Sets the value for <code>name</code>.
+   * <p>
+   * Generated from parameter in constructor {@link ProductRecord#ProductRecord(String, double, String)
+   * ProductRecord(String name, double price, String category)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.name("example value");
+   * }</pre>
+   * 
+   * @param name name
+   * @return current instance of builder
+   */
+  public ProductRecordBuilder name(String name) {
+    this.name = changedValue(name);
+    return this;
+  }
+
+  /**
    * Updates the current value of <code>name</code> in place by applying the given operator, instead of reading it out,
    * changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
@@ -313,26 +313,6 @@ public class ProductRecordBuilder implements IBuilderBase<ProductRecord> {
   }
 
   /**
-   * Sets the value for <code>price</code>.
-   * <p>
-   * Generated from parameter in constructor {@link ProductRecord#ProductRecord(String, double, String)
-   * ProductRecord(String name, double price, String category)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.price(3.14);
-   * }</pre>
-   * 
-   * @param price price
-   * @return current instance of builder
-   */
-  public ProductRecordBuilder price(double price) {
-    this.price = changedValue(price);
-    return this;
-  }
-
-  /**
    * Sets the value for <code>price</code> by invoking the provided supplier.
    * <p>
    * Generated from parameter in constructor {@link ProductRecord#ProductRecord(String, double, String)
@@ -349,6 +329,26 @@ public class ProductRecordBuilder implements IBuilderBase<ProductRecord> {
    */
   public ProductRecordBuilder price(Supplier<Double> priceSupplier) {
     this.price = changedValue(priceSupplier.get());
+    return this;
+  }
+
+  /**
+   * Sets the value for <code>price</code>.
+   * <p>
+   * Generated from parameter in constructor {@link ProductRecord#ProductRecord(String, double, String)
+   * ProductRecord(String name, double price, String category)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.price(3.14);
+   * }</pre>
+   * 
+   * @param price price
+   * @return current instance of builder
+   */
+  public ProductRecordBuilder price(double price) {
+    this.price = changedValue(price);
     return this;
   }
 
