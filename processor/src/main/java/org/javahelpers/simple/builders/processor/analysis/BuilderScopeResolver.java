@@ -275,6 +275,35 @@ public final class BuilderScopeResolver {
    * @param builderTypeElement the candidate builder type to inspect
    * @return the instantiation to emit, or empty when the builder offers neither
    */
+  private Optional<BuilderInstantiation> resolveFuncForEmptyBuilder(
+      TypeElement builderTypeElement) {
+    Optional<BuilderInstantiation> func = findStaticFactoryCall(builderTypeElement, List.of());
+    if (func.isEmpty() && JavaLangAnalyser.hasEmptyConstructor(builderTypeElement, context)) {
+      func = Optional.of(new BuilderInstantiation.ConstructorCall());
+    }
+    return func;
+  }
+
+  /**
+   * Resolves the instantiation path for a builder instance seeded with a value of the referenced
+   * type: a static factory accepting the type when the builder offers one, the constructor
+   * accepting the type otherwise.
+   *
+   * @param builderTypeElement the candidate builder type to inspect
+   * @param expectedType the referenced type to seed the builder with
+   * @return the instantiation to emit, or empty when the builder offers neither
+   */
+  private Optional<BuilderInstantiation> resolveFuncForPrefilledBuilder(
+      TypeElement builderTypeElement, TypeName expectedType) {
+    Optional<BuilderInstantiation> func =
+        findStaticFactoryCall(builderTypeElement, List.of(expectedType));
+    if (func.isEmpty()
+        && JavaLangAnalyser.hasConstructorAccepting(builderTypeElement, expectedType, context)) {
+      func = Optional.of(new BuilderInstantiation.ConstructorCall());
+    }
+    return func;
+  }
+
   /**
    * Resolves a builder anchored inside the referenced type itself: an accessible static
    * parameterless method on the type returning a type that satisfies the builder contract, like the
@@ -305,35 +334,6 @@ public final class BuilderScopeResolver {
       }
     }
     return Optional.empty();
-  }
-
-  private Optional<BuilderInstantiation> resolveFuncForEmptyBuilder(
-      TypeElement builderTypeElement) {
-    Optional<BuilderInstantiation> func = findStaticFactoryCall(builderTypeElement, List.of());
-    if (func.isEmpty() && JavaLangAnalyser.hasEmptyConstructor(builderTypeElement, context)) {
-      func = Optional.of(new BuilderInstantiation.ConstructorCall());
-    }
-    return func;
-  }
-
-  /**
-   * Resolves the instantiation path for a builder instance seeded with a value of the referenced
-   * type: a static factory accepting the type when the builder offers one, the constructor
-   * accepting the type otherwise.
-   *
-   * @param builderTypeElement the candidate builder type to inspect
-   * @param expectedType the referenced type to seed the builder with
-   * @return the instantiation to emit, or empty when the builder offers neither
-   */
-  private Optional<BuilderInstantiation> resolveFuncForPrefilledBuilder(
-      TypeElement builderTypeElement, TypeName expectedType) {
-    Optional<BuilderInstantiation> func =
-        findStaticFactoryCall(builderTypeElement, List.of(expectedType));
-    if (func.isEmpty()
-        && JavaLangAnalyser.hasConstructorAccepting(builderTypeElement, expectedType, context)) {
-      func = Optional.of(new BuilderInstantiation.ConstructorCall());
-    }
-    return func;
   }
 
   /**
