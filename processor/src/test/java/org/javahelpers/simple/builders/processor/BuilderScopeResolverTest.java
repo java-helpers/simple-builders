@@ -258,7 +258,7 @@ class BuilderScopeResolverTest {
 
     assertThat(compilation).succeeded();
     // The type's own builder() declaration anchors the builder, even in another package:
-    // the empty path calls LibHelper.builder(), the seeded path the builder's ctor
+    // the empty path calls LibHelper.builder(), the prefilled path the builder's ctor
     ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
     assertEquals("builders.LibHelperBuilder", resolved.typeName().getFullQualifiedName());
     BuilderInstantiation.AnchorFactoryCall empty =
@@ -315,7 +315,7 @@ class BuilderScopeResolverTest {
   }
 
   @Test
-  void resolverUsageScope_ResolvesStaticSeededPath() {
+  void resolverUsageScope_ResolvesStaticPrefilledPath() {
     Compilation compilation =
         Compiler.javac()
             .withProcessors(new ResolverProbeProcessor())
@@ -339,7 +339,7 @@ class BuilderScopeResolverTest {
                     """));
 
     assertThat(compilation).succeeded();
-    // No seeded path on the builder itself: the type's static builder(T) becomes the seeded
+    // No prefilled path on the builder itself: the type's static builder(T) becomes the prefilled
     // path — two candidates match, the conventional name wins
     ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
     assertEquals("lib.LibHelper.LibHelperBuilder", resolved.typeName().getFullQualifiedName());
@@ -351,7 +351,7 @@ class BuilderScopeResolverTest {
   }
 
   @Test
-  void resolverUsageScope_InstanceSeededPathPrefersToBuilder() {
+  void resolverUsageScope_InstancePrefilledPathPrefersToBuilder() {
     Compilation compilation =
         Compiler.javac()
             .withProcessors(new ResolverProbeProcessor())
@@ -440,7 +440,7 @@ class BuilderScopeResolverTest {
 
     assertThat(compilation).succeeded();
     // Delombok output of @Builder(toBuilder = true): builder() anchors the empty path,
-    // toBuilder() the seeded one; the nested builder's package-private ctor is never called
+    // toBuilder() the prefilled one; the nested builder's package-private ctor is never called
     ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
     assertEquals("lib.LibHelper.LibHelperBuilder", resolved.typeName().getFullQualifiedName());
     assertInstanceOf(BuilderInstantiation.AnchorFactoryCall.class, resolved.funcForEmptyBuilder());
@@ -507,20 +507,20 @@ class BuilderScopeResolverTest {
     assertThat(compilation).succeeded();
     // org.inferred.freebuilder generated shape: the nested Builder offers no ctor(T) and
     // mergeFrom is an instance method, but its field functions cover every readable property,
-    // so the generated builder seeds the instance itself — the unprefixed name wins over setName
+    // so the generated builder prefills the instance itself — the unprefixed name wins over setName
     ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
     assertEquals("lib.LibHelper.Builder", resolved.typeName().getFullQualifiedName());
     assertInstanceOf(BuilderInstantiation.ConstructorCall.class, resolved.funcForEmptyBuilder());
-    BuilderInstantiation.FieldSeedingCall prefilled =
+    BuilderInstantiation.PrefillCall prefilled =
         assertInstanceOf(
-            BuilderInstantiation.FieldSeedingCall.class, resolved.funcForPrefilledBuilder().get());
+            BuilderInstantiation.PrefillCall.class, resolved.funcForPrefilledBuilder().get());
     assertEquals("", prefilled.builderMethodPrefix());
-    assertEquals("name", prefilled.seededFields().get(0).property());
-    assertEquals("getName()", prefilled.seededFields().get(0).accessor());
+    assertEquals("name", prefilled.prefilledFields().get(0).property());
+    assertEquals("getName()", prefilled.prefilledFields().get(0).accessor());
   }
 
   @Test
-  void resolverUsageScope_SkipsFieldSeedingWhenDisabled() {
+  void resolverUsageScope_SkipsFieldPrefillWhenDisabled() {
     Compilation compilation =
         Compiler.javac()
             .withProcessors(new ResolverProbeProcessor())
@@ -540,7 +540,7 @@ class BuilderScopeResolverTest {
 
     assertThat(compilation).succeeded();
     // usingFieldFunctionPrefill=DISABLED: field functions are not tried, so the builder resolves
-    // without a seeded path
+    // without a prefilled path
     assertEquals(
         Optional.empty(),
         ResolverProbeProcessor.usagePrefillDisabled.get().funcForPrefilledBuilder());
@@ -579,15 +579,15 @@ class BuilderScopeResolverTest {
     assertThat(compilation).succeeded();
     // com.google.auto.value generated shape: create() anchors the builder on the generated
     // sibling; the JavaBeans setName convention covers the readable properties, so the
-    // generated builder seeds the instance itself
+    // generated builder prefills the instance itself
     ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
     assertEquals("lib.AutoValue_LibHelper.Builder", resolved.typeName().getFullQualifiedName());
     assertInstanceOf(BuilderInstantiation.AnchorFactoryCall.class, resolved.funcForEmptyBuilder());
-    BuilderInstantiation.FieldSeedingCall prefilled =
+    BuilderInstantiation.PrefillCall prefilled =
         assertInstanceOf(
-            BuilderInstantiation.FieldSeedingCall.class, resolved.funcForPrefilledBuilder().get());
+            BuilderInstantiation.PrefillCall.class, resolved.funcForPrefilledBuilder().get());
     assertEquals("set", prefilled.builderMethodPrefix());
-    assertEquals("name", prefilled.seededFields().get(0).property());
+    assertEquals("name", prefilled.prefilledFields().get(0).property());
   }
 
   @Test
@@ -619,11 +619,11 @@ class BuilderScopeResolverTest {
     // Builder-framework style: several field functions share the camel-case prefix "with",
     // which is detected as the builder's convention
     ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
-    BuilderInstantiation.FieldSeedingCall prefilled =
+    BuilderInstantiation.PrefillCall prefilled =
         assertInstanceOf(
-            BuilderInstantiation.FieldSeedingCall.class, resolved.funcForPrefilledBuilder().get());
+            BuilderInstantiation.PrefillCall.class, resolved.funcForPrefilledBuilder().get());
     assertEquals("with", prefilled.builderMethodPrefix());
-    assertEquals(2, prefilled.seededFields().size());
+    assertEquals(2, prefilled.prefilledFields().size());
   }
 
   @Test
@@ -652,9 +652,9 @@ class BuilderScopeResolverTest {
     assertThat(compilation).succeeded();
     // For a single-property type, one prefixed method is enough evidence for the convention
     ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
-    BuilderInstantiation.FieldSeedingCall prefilled =
+    BuilderInstantiation.PrefillCall prefilled =
         assertInstanceOf(
-            BuilderInstantiation.FieldSeedingCall.class, resolved.funcForPrefilledBuilder().get());
+            BuilderInstantiation.PrefillCall.class, resolved.funcForPrefilledBuilder().get());
     assertEquals("put", prefilled.builderMethodPrefix());
   }
 
@@ -682,12 +682,12 @@ class BuilderScopeResolverTest {
     assertThat(compilation).succeeded();
     // Record components count as readable properties via the name() accessor
     ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
-    BuilderInstantiation.FieldSeedingCall prefilled =
+    BuilderInstantiation.PrefillCall prefilled =
         assertInstanceOf(
-            BuilderInstantiation.FieldSeedingCall.class, resolved.funcForPrefilledBuilder().get());
+            BuilderInstantiation.PrefillCall.class, resolved.funcForPrefilledBuilder().get());
     assertEquals("", prefilled.builderMethodPrefix());
-    assertEquals("name", prefilled.seededFields().get(0).property());
-    assertEquals("name()", prefilled.seededFields().get(0).accessor());
+    assertEquals("name", prefilled.prefilledFields().get(0).property());
+    assertEquals("name()", prefilled.prefilledFields().get(0).accessor());
   }
 
   @Test
@@ -716,16 +716,16 @@ class BuilderScopeResolverTest {
     assertThat(compilation).succeeded();
     // Accessible fields count as readable properties via direct name access
     ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
-    BuilderInstantiation.FieldSeedingCall prefilled =
+    BuilderInstantiation.PrefillCall prefilled =
         assertInstanceOf(
-            BuilderInstantiation.FieldSeedingCall.class, resolved.funcForPrefilledBuilder().get());
+            BuilderInstantiation.PrefillCall.class, resolved.funcForPrefilledBuilder().get());
     assertEquals("", prefilled.builderMethodPrefix());
-    assertEquals("name", prefilled.seededFields().get(0).property());
-    assertEquals("name", prefilled.seededFields().get(0).accessor());
+    assertEquals("name", prefilled.prefilledFields().get(0).property());
+    assertEquals("name", prefilled.prefilledFields().get(0).accessor());
   }
 
   @Test
-  void resolverUsageScope_ResolvesWithoutSeededPathWhenPropertyUncovered() {
+  void resolverUsageScope_ResolvesWithoutPrefilledPathWhenPropertyUncovered() {
     Compilation compilation =
         Compiler.javac()
             .withProcessors(new ResolverProbeProcessor())
@@ -747,8 +747,8 @@ class BuilderScopeResolverTest {
                     """));
 
     assertThat(compilation).succeeded();
-    // No seeded path and name has no field function: the builder still resolves, but
-    // funcForPrefilledBuilder stays empty so only helpers not needing a seeded path generate
+    // No prefilled path and name has no field function: the builder still resolves, but
+    // funcForPrefilledBuilder stays empty so only helpers not needing a prefilled path generate
     ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
     assertEquals("lib.LibHelperBuilder", resolved.typeName().getFullQualifiedName());
     assertInstanceOf(BuilderInstantiation.ConstructorCall.class, resolved.funcForEmptyBuilder());
@@ -756,7 +756,7 @@ class BuilderScopeResolverTest {
   }
 
   @Test
-  void resolverUsageScope_SeedsCoveredFieldsWhenMajorityMatches() {
+  void resolverUsageScope_PrefillsCoveredFieldsWhenMajorityMatches() {
     Compilation compilation =
         Compiler.javac()
             .withProcessors(new ResolverProbeProcessor())
@@ -785,12 +785,12 @@ class BuilderScopeResolverTest {
     // age has no field function but two of three properties are covered: the convention is
     // trusted and the covered fields are prefilled
     ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
-    BuilderInstantiation.FieldSeedingCall prefilled =
+    BuilderInstantiation.PrefillCall prefilled =
         assertInstanceOf(
-            BuilderInstantiation.FieldSeedingCall.class, resolved.funcForPrefilledBuilder().get());
-    assertEquals(2, prefilled.seededFields().size());
-    assertEquals("name", prefilled.seededFields().get(0).property());
-    assertEquals("active", prefilled.seededFields().get(1).property());
+            BuilderInstantiation.PrefillCall.class, resolved.funcForPrefilledBuilder().get());
+    assertEquals(2, prefilled.prefilledFields().size());
+    assertEquals("name", prefilled.prefilledFields().get(0).property());
+    assertEquals("active", prefilled.prefilledFields().get(1).property());
   }
 
   @Test
@@ -997,7 +997,7 @@ class BuilderScopeResolverTest {
               """
                 }),
         // Delombok output of @Builder without toBuilder: builder() anchors the empty path,
-        // but no seeded path exists, so the anchored candidate is rejected
+        // but no prefilled path exists, so the anchored candidate is rejected
         Arguments.argumentSet(
             "LombokBuilderShapeWithoutToBuilder",
             (Object)
@@ -1310,7 +1310,7 @@ class BuilderScopeResolverTest {
       resolver.registerGeneratedBuilder(
           new TypeName("lib", "LibHelper"), new TypeName("lib", "LibHelperBuilder"));
       usageGeneratedWithExistingDisabled = resolver.resolveUsableBuilderType(helper);
-      // usingFieldFunctionPrefill=DISABLED: field functions are not used as seeded path
+      // usingFieldFunctionPrefill=DISABLED: field functions are not used as prefilled path
       context.initProcessingTarget(new ProcessingTarget(prefillDisabledConfiguration("lib"), ""));
       resolver.resetGeneratedBuilders();
       usagePrefillDisabled = resolver.resolveUsableBuilderType(helper);

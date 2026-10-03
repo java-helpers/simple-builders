@@ -27,9 +27,9 @@ import java.util.Optional;
  * @param typeName the builder type to reference
  * @param funcForEmptyBuilder how to obtain an empty builder instance (e.g. {@code new B()} or
  *     {@code B.create()})
- * @param funcForPrefilledBuilder how to obtain a builder instance seeded with a value (e.g. {@code
- *     new B(value)} or {@code B.of(value)}), or empty when the builder offers no seeded path;
- *     helpers needing one are then not generated
+ * @param funcForPrefilledBuilder how to obtain a builder instance prefilled with a value (e.g.
+ *     {@code new B(value)} or {@code B.of(value)}), or empty when the builder offers no prefilled
+ *     path; helpers needing one are then not generated
  * @param buildMethodName the name of the parameterless method returning the built value (e.g.
  *     {@code build})
  */
@@ -57,7 +57,7 @@ public record ResolvedBuilder(
    *
    * @param typeName the builder type to reference
    * @param funcForEmptyBuilder how to obtain an empty builder instance
-   * @param funcForPrefilledBuilder how to obtain a builder instance seeded with a value
+   * @param funcForPrefilledBuilder how to obtain a builder instance prefilled with a value
    */
   public ResolvedBuilder(
       TypeName typeName,
@@ -71,7 +71,7 @@ public record ResolvedBuilder(
    *
    * @param typeName the builder type to reference
    * @param funcForEmptyBuilder how to obtain an empty builder instance
-   * @param funcForPrefilledBuilder how to obtain a builder instance seeded with a value
+   * @param funcForPrefilledBuilder how to obtain a builder instance prefilled with a value
    * @param buildMethodName the name of the parameterless method returning the built value
    */
   public ResolvedBuilder(

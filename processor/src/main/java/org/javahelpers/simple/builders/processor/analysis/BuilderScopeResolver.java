@@ -107,13 +107,13 @@ public final class BuilderScopeResolver {
    *       same-package candidate: first accessible nested types satisfying the builder contract
    *       (e.g. {@code Person.PersonBuilder}), then static parameterless factory methods on the
    *       type returning a builder type with a no-arg {@code build()} (e.g. {@code
-   *       Person.builder()}), with a seeded path on the type ({@code builder(T)}/{@code
+   *       Person.builder()}), with a prefilled path on the type ({@code builder(T)}/{@code
    *       toBuilder()}) or on the builder.
    *   <li>Otherwise, the candidate builder name is constructed using {@code builderUsageSuffix}
    *       (falling back to {@code builderSuffix} if not configured). The candidate is looked up on
    *       the classpath and returned if it satisfies the builder contract: an instantiation path
    *       for an empty builder (no-arg constructor or static factory like {@code create()}), an
-   *       instantiation path seeded with the value (constructor accepting the referenced type or
+   *       instantiation path prefilled with the value (constructor accepting the referenced type or
    *       static factory like {@code create(T)}/{@code of(T)}), and an accessible, parameterless
    *       method returning it (the build method, regardless of name) - each accessible from the
    *       generated builder's package. The contract check is annotation-agnostic, so builders
@@ -251,13 +251,13 @@ public final class BuilderScopeResolver {
   /**
    * Looks up the candidate builder type on the classpath and verifies it satisfies the builder
    * contract: a way to create an empty instance (a no-arg constructor or a static parameterless
-   * factory like {@code create()}), a way to create an instance seeded with a value (a constructor
-   * accepting the referenced type or a static factory like {@code create(T)}/{@code of(T)}), and an
-   * accessible, parameterless method returning it (the build method, regardless of name) - each
-   * accessible from the generated builder's package, since the generated code calls them from
-   * there. The contract check is annotation-agnostic, so builders generated with custom template
-   * annotations or from external sources are supported as long as they follow the builder contract.
-   * It also avoids false positives like {@code String} → {@code StringBuilder}.
+   * factory like {@code create()}), a way to create an instance prefilled with a value (a
+   * constructor accepting the referenced type or a static factory like {@code create(T)}/{@code
+   * of(T)}), and an accessible, parameterless method returning it (the build method, regardless of
+   * name) - each accessible from the generated builder's package, since the generated code calls
+   * them from there. The contract check is annotation-agnostic, so builders generated with custom
+   * template annotations or from external sources are supported as long as they follow the builder
+   * contract. It also avoids false positives like {@code String} → {@code StringBuilder}.
    *
    * @param candidate the candidate builder type name to look up
    * @param referencedType the type element being referenced
@@ -279,11 +279,11 @@ public final class BuilderScopeResolver {
     }
     Optional<BuilderInstantiation> funcForPrefilledBuilder =
         resolveFuncForPrefilledBuilder(builderTypeElement, expectedType);
-    // the builder can be created empty but offers no seeded path: try its field functions
+    // the builder can be created empty but offers no prefilled path: try its field functions
     if (funcForPrefilledBuilder.isEmpty()
         && context.getConfiguration().shouldUseFieldFunctionPrefill()) {
       funcForPrefilledBuilder =
-          resolveFieldSeeding(
+          resolveFieldFunctionPrefill(
               referencedType,
               builderTypeElement,
               candidate,
@@ -315,11 +315,11 @@ public final class BuilderScopeResolver {
    * @param referencedType the type element being referenced
    * @param builderElement the candidate builder type
    * @param builderTypeName the candidate builder type name
-   * @param referencedTypeName the referenced type, seeded into the builder
-   * @param funcForEmptyBuilder how the seeding obtains the empty builder instance
-   * @return the seeding instantiation to emit, or empty when the convention covers too little
+   * @param referencedTypeName the referenced type, prefilled into the builder
+   * @param funcForEmptyBuilder how the prefilling obtains the empty builder instance
+   * @return the prefilling instantiation to emit, or empty when the convention covers too little
    */
-  private Optional<BuilderInstantiation> resolveFieldSeeding(
+  private Optional<BuilderInstantiation> resolveFieldFunctionPrefill(
       TypeElement referencedType,
       TypeElement builderElement,
       TypeName builderTypeName,
@@ -338,13 +338,13 @@ public final class BuilderScopeResolver {
             .filter(this::hasSingleParameter)
             .toList();
     for (String prefix : candidatePrefixes(properties, fieldFunctions)) {
-      List<BuilderInstantiation.FieldSeedingCall.SeededField> seededFields =
-          collectSeededFields(properties, fieldFunctions, prefix);
+      List<BuilderInstantiation.PrefillCall.PrefilledField> prefilledFields =
+          collectPrefilledFields(properties, fieldFunctions, prefix);
       // a convention is trusted once it covers the majority of the readable properties
-      if (2 * seededFields.size() > properties.size()) {
+      if (2 * prefilledFields.size() > properties.size()) {
         return Optional.of(
-            new BuilderInstantiation.FieldSeedingCall(
-                builderTypeName, referencedTypeName, funcForEmptyBuilder, prefix, seededFields));
+            new BuilderInstantiation.PrefillCall(
+                builderTypeName, referencedTypeName, funcForEmptyBuilder, prefix, prefilledFields));
       }
     }
     return Optional.empty();
@@ -403,7 +403,7 @@ public final class BuilderScopeResolver {
       List<JavaLangAnalyser.ReadableProperty> properties,
       List<ExecutableElement> fieldFunctions,
       String prefix) {
-    return collectSeededFields(properties, fieldFunctions, prefix).size();
+    return collectPrefilledFields(properties, fieldFunctions, prefix).size();
   }
 
   private static int firstUpperCaseIndex(String name) {
@@ -416,27 +416,27 @@ public final class BuilderScopeResolver {
   }
 
   /**
-   * Collects the seeded fields whose properties the builder covers under one naming convention:
+   * Collects the prefilled fields whose properties the builder covers under one naming convention:
    * {@code <property>(v)} when the prefix is empty, otherwise {@code <prefix><Property>(v)}.
    *
    * @param properties the readable properties to cover
    * @param fieldFunctions the builder's single-parameter non-static methods
    * @param prefix the naming convention to try
-   * @return the seeded fields in property order
+   * @return the prefilled fields in property order
    */
-  private List<BuilderInstantiation.FieldSeedingCall.SeededField> collectSeededFields(
+  private List<BuilderInstantiation.PrefillCall.PrefilledField> collectPrefilledFields(
       List<JavaLangAnalyser.ReadableProperty> properties,
       List<ExecutableElement> fieldFunctions,
       String prefix) {
-    List<BuilderInstantiation.FieldSeedingCall.SeededField> seededFields = new ArrayList<>();
+    List<BuilderInstantiation.PrefillCall.PrefilledField> prefilledFields = new ArrayList<>();
     for (JavaLangAnalyser.ReadableProperty property : properties) {
       if (findFieldFunction(fieldFunctions, property, prefix).isPresent()) {
-        seededFields.add(
-            new BuilderInstantiation.FieldSeedingCall.SeededField(
+        prefilledFields.add(
+            new BuilderInstantiation.PrefillCall.PrefilledField(
                 property.name(), property.accessor()));
       }
     }
-    return seededFields;
+    return prefilledFields;
   }
 
   /**
@@ -481,12 +481,12 @@ public final class BuilderScopeResolver {
   }
 
   /**
-   * Resolves the instantiation path for a builder instance seeded with a value of the referenced
+   * Resolves the instantiation path for a builder instance prefilled with a value of the referenced
    * type: a static factory accepting the type when the builder offers one, the constructor
    * accepting the type otherwise.
    *
    * @param builderTypeElement the candidate builder type to inspect
-   * @param expectedType the referenced type to seed the builder with
+   * @param expectedType the referenced type to prefill the builder with
    * @return the instantiation to emit, or empty when the builder offers neither
    */
   private Optional<BuilderInstantiation> resolveFuncForPrefilledBuilder(
@@ -607,16 +607,17 @@ public final class BuilderScopeResolver {
   }
 
   /**
-   * Resolves the seeded-instantiation path for an anchored builder: the builder's own contract path
-   * first, then a static factory on the referenced type accepting it (e.g. {@code
+   * Resolves the prefilled-instantiation path for an anchored builder: the builder's own contract
+   * path first, then a static factory on the referenced type accepting it (e.g. {@code
    * Person.builder(person)}), then an instance method on the value (e.g. {@code
-   * person.toBuilder()}), then seeding by field functions.
+   * person.toBuilder()}), then prefilling by field functions.
    *
    * @param referencedType the type element being referenced
    * @param referencedTypeName the referenced type, passed to the contract check
    * @param builderElement the anchored builder type
-   * @param funcForEmptyBuilder how the empty builder is obtained, reused by field-function seeding
-   * @return the instantiation to emit, or empty when no seeded path exists
+   * @param funcForEmptyBuilder how the empty builder is obtained, reused by field-function
+   *     prefilling
+   * @return the instantiation to emit, or empty when no prefilled path exists
    */
   private Optional<BuilderInstantiation> resolveAnchoredPrefilledBuilder(
       TypeElement referencedType,
@@ -634,7 +635,7 @@ public final class BuilderScopeResolver {
     }
     if (func.isEmpty() && context.getConfiguration().shouldUseFieldFunctionPrefill()) {
       func =
-          resolveFieldSeeding(
+          resolveFieldFunctionPrefill(
               referencedType,
               builderElement,
               builderTypeName,
@@ -645,7 +646,7 @@ public final class BuilderScopeResolver {
   }
 
   /**
-   * Resolves the seeded path as a static factory anchored on the referenced type accepting the
+   * Resolves the prefilled path as a static factory anchored on the referenced type accepting the
    * value (e.g. {@code Person.builder(person)}); a conventionally named {@code builder} method wins
    * over other names.
    *
@@ -669,8 +670,9 @@ public final class BuilderScopeResolver {
   }
 
   /**
-   * Resolves the seeded path as an instance method on the value returning the builder (e.g. {@code
-   * person.toBuilder()}); a conventionally named {@code toBuilder} method wins over other names.
+   * Resolves the prefilled path as an instance method on the value returning the builder (e.g.
+   * {@code person.toBuilder()}); a conventionally named {@code toBuilder} method wins over other
+   * names.
    *
    * @param referencedType the type element being referenced
    * @param referencedTypeName the referenced type, the instance's type

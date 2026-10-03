@@ -762,22 +762,22 @@ same-package candidate below. Accessible nested types satisfying the contract
 are checked first (e.g. `Person.PersonBuilder` or `Person.Builder`), then a
 static parameterless factory on the type — `builder()` preferred — whose return
 type must be accessible and declare a no-arg `build()` method (Lombok/Immutables
-style). The factory itself is the empty-instantiation path; the seeded path is
+style). The factory itself is the empty-instantiation path; the prefilled path is
 the builder's own contract path, a static `builder(T)`-style method, an
 instance method on the value like `toBuilder()`, or — with
-`usingFieldFunctionPrefill` enabled — seeding by field functions.
+`usingFieldFunctionPrefill` enabled — prefilling by field functions.
 
 The processor constructs the candidate builder name using `builderUsageSuffix`
 (or `builderSuffix` if not configured) and verifies the builder contract: a way
 to create an empty builder (a no-arg constructor or a static parameterless
-factory like `create()`), a way to create one seeded with the value (a
+factory like `create()`), a way to create one prefilled with the value (a
 constructor accepting the referenced type or a static factory like `create(T)`
 or `of(T)`), and a no-arg `build()` method returning it — each accessible from
 the generated builder's package. Generated code calls a factory instead of
 `new` when the builder offers one. With `usingFieldFunctionPrefill` enabled and
-no seeded path found, the builder is tried against field-function prefilling:
+no prefilled path found, the builder is tried against field-function prefilling:
 the generated builder emits a private static `prefill<Builder>` method that
-seeds each readable property having a matching field function (`name(v)`,
+prefills each readable property having a matching field function (`name(v)`,
 `setName(v)`, or a detected convention like `withName(v)`); the convention is
 trusted once it covers the majority of the properties, uncovered ones stay
 unset. With less coverage or the option disabled, the builder still resolves,
@@ -1090,7 +1090,7 @@ the suffix used for own builder generation.
 
 The candidate class must provide a way to create an empty builder (a no-arg
 constructor or a static parameterless factory like `create()`), a way to create
-one seeded with the value (a constructor accepting the referenced type or a
+one prefilled with the value (a constructor accepting the referenced type or a
 static factory like `create(T)` or `of(T)`), and a no-arg `build()` method
 returning it — each accessible from the generated builder's package. Generated
 code calls a factory instead of `new` when the builder offers one. The contract

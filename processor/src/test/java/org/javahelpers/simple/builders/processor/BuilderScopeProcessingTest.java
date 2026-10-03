@@ -312,8 +312,8 @@ class BuilderScopeProcessingTest {
   }
 
   @Test
-  void usageScope_SeedsViaFieldFunctionsWhenNoSeededPath() {
-    JavaFileObject dto = dto("test", "SeedingUsageDto", "LibraryDto", "lib");
+  void usageScope_PrefillsViaFieldFunctionsWhenNoPrefilledPath() {
+    JavaFileObject dto = dto("test", "PrefillUsageDto", "LibraryDto", "lib");
     JavaFileObject libraryDto =
         ProcessorTestUtils.forSource(
             """
@@ -345,7 +345,7 @@ class BuilderScopeProcessingTest {
 
     assertThat(compilation).succeeded();
     String generated =
-        ProcessorTestUtils.loadGeneratedSource(compilation, "SeedingUsageDtoBuilder");
+        ProcessorTestUtils.loadGeneratedSource(compilation, "PrefillUsageDtoBuilder");
     // No ctor(T) or factory(T): the generated builder prefills the referenced builder itself via
     // its field functions, one per readable property
     ProcessorAsserts.assertContaining(
@@ -386,7 +386,7 @@ class BuilderScopeProcessingTest {
             .compile(dto, libraryDto, libraryDtoBuilder);
 
     assertThat(compilation).succeeded();
-    // name has no field function on the builder: seeding is unsafe, so the consumer helper is
+    // name has no field function on the builder: prefilling is unsafe, so the consumer helper is
     // not generated — the plain setter still is
     assertNoBuilderConsumer(
         compilation, "UncoveredUsageDtoBuilder", "LibraryDto", "LibraryDtoBuilder");

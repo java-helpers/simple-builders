@@ -275,39 +275,39 @@ public final class MethodGeneratorUtil {
   }
 
   /**
-   * Creates the private prefilling method backing a {@link BuilderInstantiation.FieldSeedingCall}:
-   * obtains an empty builder and calls one field function per seeded property of the value.
+   * Creates the private prefilling method backing a {@link BuilderInstantiation.PrefillCall}:
+   * obtains an empty builder and calls one field function per prefilled property of the value.
    *
-   * @param seedingCall the resolved field-seeding instantiation
+   * @param prefillCall the resolved field-prefilling instantiation
    * @return the method DTO for the prefilling method
    */
-  public static BuilderMethodDto createFieldSeedingMethod(
-      BuilderInstantiation.FieldSeedingCall seedingCall) {
+  public static BuilderMethodDto createFieldPrefillMethod(
+      BuilderInstantiation.PrefillCall prefillCall) {
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName("value");
-    parameter.setParameterTypeName(seedingCall.sourceType());
+    parameter.setParameterTypeName(prefillCall.sourceType());
     BuilderMethodDto methodDto = new BuilderMethodDto();
     methodDto.setModifier(AccessModifier.PRIVATE);
     methodDto.setStatic(true);
     methodDto.setOrdering(2100); // last: private helpers go below toString
-    methodDto.setMethodName(seedingCall.methodName());
-    methodDto.setReturnType(seedingCall.builderType());
+    methodDto.setMethodName(prefillCall.methodName());
+    methodDto.setReturnType(prefillCall.builderType());
     methodDto.addParameter(parameter);
     StringBuilder code = new StringBuilder();
     code.append("$builderType:T builder = ")
-        .append(seedingCall.funcForEmptyBuilder().instantiationCode("$builderType:T", ""))
+        .append(prefillCall.funcForEmptyBuilder().instantiationCode("$builderType:T", ""))
         .append(";\n");
-    for (BuilderInstantiation.FieldSeedingCall.SeededField seededField :
-        seedingCall.seededFields()) {
+    for (BuilderInstantiation.PrefillCall.PrefilledField prefilledField :
+        prefillCall.prefilledFields()) {
       code.append("builder.")
-          .append(seedingCall.builderMethodFor(seededField))
+          .append(prefillCall.builderMethodFor(prefilledField))
           .append("(value.")
-          .append(seededField.accessor())
+          .append(prefilledField.accessor())
           .append(");\n");
     }
     code.append("return builder;");
     methodDto.setCode(code.toString());
-    methodDto.addArgument("builderType", seedingCall.builderType());
+    methodDto.addArgument("builderType", prefillCall.builderType());
     return methodDto;
   }
 

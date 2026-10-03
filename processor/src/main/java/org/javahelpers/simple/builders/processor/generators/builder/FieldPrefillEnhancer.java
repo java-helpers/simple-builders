@@ -34,12 +34,12 @@ import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
 /**
- * Enhancer that adds the private seeding methods backing {@link
- * BuilderInstantiation.FieldSeedingCall} resolutions: one {@code seed<Builder>(T value)} method per
+ * Enhancer that adds the private prefilling methods backing {@link
+ * BuilderInstantiation.PrefillCall} resolutions: one {@code prefill<Builder>(T value)} method per
  * referenced builder type, obtaining an empty builder and calling one field function per readable
- * property. Several fields referencing the same type share one seeding method.
+ * property. Several fields referencing the same type share one prefilling method.
  */
-public class FieldSeedingEnhancer implements BuilderEnhancer {
+public class FieldPrefillEnhancer implements BuilderEnhancer {
 
   private static final int PRIORITY = 15;
 
@@ -52,32 +52,32 @@ public class FieldSeedingEnhancer implements BuilderEnhancer {
   public boolean appliesTo(
       BuilderDefinitionDto builderDto, TypeName dtoType, ProcessingContext context) {
     return builderDto.getAllFieldsForBuilder().stream()
-        .anyMatch(field -> fieldSeeding(field).isPresent());
+        .anyMatch(field -> fieldPrefill(field).isPresent());
   }
 
   @Override
   public void enhanceBuilder(BuilderDefinitionDto builderDto, ProcessingContext context) {
     builderDto.getAllFieldsForBuilder().stream()
-        .map(FieldSeedingEnhancer::fieldSeeding)
+        .map(FieldPrefillEnhancer::fieldPrefill)
         .flatMap(Optional::stream)
         .distinct()
-        .map(MethodGeneratorUtil::createFieldSeedingMethod)
+        .map(MethodGeneratorUtil::createFieldPrefillMethod)
         .forEach(builderDto::addMethod);
   }
 
   /**
-   * Returns the field-seeding instantiation of a field's resolved builder, when the seeded path is
-   * realized by field functions.
+   * Returns the field-prefilling instantiation of a field's resolved builder, when the prefilled
+   * path is realized by field functions.
    *
    * @param field the field to inspect
-   * @return the field-seeding call, or empty
+   * @return the field-prefilling call, or empty
    */
-  private static Optional<BuilderInstantiation.FieldSeedingCall> fieldSeeding(FieldDto field) {
+  private static Optional<BuilderInstantiation.PrefillCall> fieldPrefill(FieldDto field) {
     return field
         .getFieldType()
         .getResolvedBuilder()
         .flatMap(ResolvedBuilder::funcForPrefilledBuilder)
-        .filter(BuilderInstantiation.FieldSeedingCall.class::isInstance)
-        .map(BuilderInstantiation.FieldSeedingCall.class::cast);
+        .filter(BuilderInstantiation.PrefillCall.class::isInstance)
+        .map(BuilderInstantiation.PrefillCall.class::cast);
   }
 }

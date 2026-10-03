@@ -119,23 +119,23 @@ public sealed interface BuilderInstantiation {
   /**
    * Instantiation by prefilling the builder through its field functions: a private static {@code
    * prefill<Builder>} method on the generated builder obtains an empty instance via {@code
-   * funcForEmptyBuilder} and calls one field function per seeded property of the source value.
+   * funcForEmptyBuilder} and calls one field function per prefilled property of the source value.
    * {@link #instantiationCode} renders the call to that generated method.
    *
-   * @param builderType the resolved builder type (return type of the seeding method)
-   * @param sourceType the referenced type the builder is seeded from
-   * @param funcForEmptyBuilder how the seeding method obtains the empty builder
+   * @param builderType the resolved builder type (return type of the prefilling method)
+   * @param sourceType the referenced type the builder is prefilled from
+   * @param funcForEmptyBuilder how the prefilling method obtains the empty builder
    * @param builderMethodPrefix the field-function prefix recognized on the builder ({@code ""} for
    *     {@code name(v)}, {@code set} for {@code setName(v)}, or a detected convention like {@code
    *     with})
-   * @param seededFields the properties to seed, in the order of the source's properties
+   * @param prefilledFields the properties to prefill, in the order of the source's properties
    */
-  record FieldSeedingCall(
+  record PrefillCall(
       TypeName builderType,
       TypeName sourceType,
       BuilderInstantiation funcForEmptyBuilder,
       String builderMethodPrefix,
-      List<SeededField> seededFields)
+      List<PrefilledField> prefilledFields)
       implements BuilderInstantiation {
 
     @Override
@@ -158,25 +158,25 @@ public sealed interface BuilderInstantiation {
     }
 
     /**
-     * The builder's field function for a seeded field: {@code <property>} when the prefix is empty,
-     * otherwise {@code <prefix><Property>} (e.g. {@code setName} or {@code withName}).
+     * The builder's field function for a prefilled field: {@code <property>} when the prefix is
+     * empty, otherwise {@code <prefix><Property>} (e.g. {@code setName} or {@code withName}).
      *
-     * @param field the seeded field
+     * @param field the prefilled field
      * @return the field function's name on the builder
      */
-    public String builderMethodFor(SeededField field) {
+    public String builderMethodFor(PrefilledField field) {
       return builderMethodPrefix.isEmpty()
           ? field.property()
           : builderMethodPrefix + StringUtils.capitalize(field.property());
     }
 
     /**
-     * One property seeded inside the seeding method: {@code
+     * One property prefilled inside the prefilling method: {@code
      * builder.<fieldFunction>(value.<accessor>)}.
      *
      * @param property the property name (e.g. {@code name})
      * @param accessor how the property is read from the value (e.g. {@code name()} or {@code name})
      */
-    public record SeededField(String property, String accessor) {}
+    public record PrefilledField(String property, String accessor) {}
   }
 }
