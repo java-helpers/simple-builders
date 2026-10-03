@@ -246,11 +246,12 @@ class BuilderScopeResolverTest {
     assertEquals(
         "create",
         assertInstanceOf(
-                BuilderInstantiation.StaticFactoryCall.class, resolved.emptyInstantiation())
+                BuilderInstantiation.StaticFactoryCall.class, resolved.funcForEmptyBuilder())
             .methodName());
     assertEquals(
         "of",
-        assertInstanceOf(BuilderInstantiation.StaticFactoryCall.class, resolved.copyInstantiation())
+        assertInstanceOf(
+                BuilderInstantiation.StaticFactoryCall.class, resolved.funcForPrefilledBuilder())
             .methodName());
   }
 

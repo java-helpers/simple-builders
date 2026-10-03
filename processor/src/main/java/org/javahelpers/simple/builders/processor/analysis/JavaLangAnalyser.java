@@ -289,7 +289,7 @@ public final class JavaLangAnalyser {
     if (builderType == null) {
       return Optional.empty();
     }
-    return findStaticFactory(builderType, 0, null, context);
+    return findStaticFactory(builderType, List.of(), context);
   }
 
   /**
@@ -310,33 +310,35 @@ public final class JavaLangAnalyser {
     if (builderType == null) {
       return Optional.empty();
     }
-    return findStaticFactory(builderType, 1, expectedParameterType, context);
+    return findStaticFactory(builderType, List.of(expectedParameterType), context);
   }
 
   private static Optional<String> findStaticFactory(
-      TypeElement builderType,
-      int parameterCount,
-      String expectedParameterType,
-      ProcessingContext context) {
+      TypeElement builderType, List<String> expectedParameterTypes, ProcessingContext context) {
     String builderTypeName = builderType.getQualifiedName().toString();
     return ElementFilter.methodsIn(context.getAllMembers(builderType)).stream()
         .filter(context::isMemberAccessibleFromBuilderPackage)
         .filter(method -> method.getModifiers().contains(STATIC))
         .filter(method -> method.getReturnType().toString().equals(builderTypeName))
-        .filter(
-            method ->
-                method.getParameters().size() == parameterCount
-                    && (expectedParameterType == null
-                        || method
-                            .getParameters()
-                            .get(0)
-                            .asType()
-                            .toString()
-                            .equals(expectedParameterType)))
+        .filter(method -> hasParameters(method, expectedParameterTypes))
         .map(method -> method.getSimpleName().toString())
         .min(
             Comparator.comparingInt(JavaLangAnalyser::factoryNameRank)
                 .thenComparing(Comparator.naturalOrder()));
+  }
+
+  private static boolean hasParameters(
+      ExecutableElement method, List<String> expectedParameterTypes) {
+    List<? extends VariableElement> parameters = method.getParameters();
+    if (parameters.size() != expectedParameterTypes.size()) {
+      return false;
+    }
+    for (int i = 0; i < parameters.size(); i++) {
+      if (!parameters.get(i).asType().toString().equals(expectedParameterTypes.get(i))) {
+        return false;
+      }
+    }
+    return true;
   }
 
   private static int factoryNameRank(String name) {

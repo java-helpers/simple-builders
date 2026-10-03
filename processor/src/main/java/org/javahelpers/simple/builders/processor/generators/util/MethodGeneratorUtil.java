@@ -245,10 +245,10 @@ public final class MethodGeneratorUtil {
         """
             .formatted(
                 fieldBuilder
-                    .copyInstantiation()
+                    .funcForPrefilledBuilder()
                     .instantiationCode("$helperType:T", existingValueConstructorArgs),
                 fieldBuilder
-                    .emptyInstantiation()
+                    .funcForEmptyBuilder()
                     .instantiationCode("$helperType:T", emptyConstructorArgs)));
     methodDto.addArgument("fieldName", field.getFieldNameInBuilder());
     methodDto.addArgument("dtoMethodParam", parameter.getParameterName());
@@ -344,7 +344,7 @@ public final class MethodGeneratorUtil {
     // The collection builder receives a supplier for element builders: the resolved
     // instantiation path as a method reference
     String elementSupplier =
-        elementBuilder.emptyInstantiation().methodReference("$elementBuilderType:T");
+        elementBuilder.funcForEmptyBuilder().methodReference("$elementBuilderType:T");
     return createFieldConsumerWithBuilder(
         field,
         new ResolvedBuilder(collectionBuilderType),

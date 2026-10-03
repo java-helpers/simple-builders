@@ -23,15 +23,15 @@ package org.javahelpers.simple.builders.processor.model.type;
  * call or static factory call - so generation sites emit exactly what was resolved.
  *
  * @param typeName the builder type to reference
- * @param emptyInstantiation how to obtain an empty builder instance (e.g. {@code new B()} or {@code
- *     B.create()})
- * @param copyInstantiation how to obtain a builder instance seeded with a value (e.g. {@code new
- *     B(value)} or {@code B.of(value)})
+ * @param funcForEmptyBuilder how to obtain an empty builder instance (e.g. {@code new B()} or
+ *     {@code B.create()})
+ * @param funcForPrefilledBuilder how to obtain a builder instance seeded with a value (e.g. {@code
+ *     new B(value)} or {@code B.of(value)})
  */
 public record ResolvedBuilder(
     TypeName typeName,
-    BuilderInstantiation emptyInstantiation,
-    BuilderInstantiation copyInstantiation) {
+    BuilderInstantiation funcForEmptyBuilder,
+    BuilderInstantiation funcForPrefilledBuilder) {
 
   /**
    * A resolution instantiated exclusively through constructors.

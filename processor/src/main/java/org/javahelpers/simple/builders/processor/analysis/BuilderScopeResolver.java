@@ -238,30 +238,56 @@ public final class BuilderScopeResolver {
     if (builderTypeElement == null) {
       return Optional.empty();
     }
-    Optional<String> emptyFactory =
-        JavaLangAnalyser.findStaticFactoryReturning(builderTypeElement, context);
-    if (emptyFactory.isEmpty()
-        && !JavaLangAnalyser.hasEmptyConstructor(builderTypeElement, context)) {
-      return Optional.empty();
-    }
-    Optional<String> copyFactory =
-        JavaLangAnalyser.findStaticFactoryAccepting(builderTypeElement, expectedType, context);
-    if (copyFactory.isEmpty()
-        && !JavaLangAnalyser.hasConstructorAccepting(builderTypeElement, expectedType, context)) {
-      return Optional.empty();
-    }
-    if (!JavaLangAnalyser.hasBuildMethodReturning(builderTypeElement, expectedType, context)) {
+    Optional<BuilderInstantiation> funcForEmptyBuilder =
+        resolveFuncForEmptyBuilder(builderTypeElement);
+    Optional<BuilderInstantiation> funcForPrefilledBuilder =
+        resolveFuncForPrefilledBuilder(builderTypeElement, expectedType);
+    if (funcForEmptyBuilder.isEmpty()
+        || funcForPrefilledBuilder.isEmpty()
+        || !JavaLangAnalyser.hasBuildMethodReturning(builderTypeElement, expectedType, context)) {
       return Optional.empty();
     }
     return Optional.of(
-        new ResolvedBuilder(
-            candidate,
-            emptyFactory
-                .<BuilderInstantiation>map(BuilderInstantiation.StaticFactoryCall::new)
-                .orElseGet(BuilderInstantiation.ConstructorCall::new),
-            copyFactory
-                .<BuilderInstantiation>map(BuilderInstantiation.StaticFactoryCall::new)
-                .orElseGet(BuilderInstantiation.ConstructorCall::new)));
+        new ResolvedBuilder(candidate, funcForEmptyBuilder.get(), funcForPrefilledBuilder.get()));
+  }
+
+  /**
+   * Resolves the instantiation path for an empty builder instance: a static parameterless factory
+   * when the builder offers one, the no-arg constructor otherwise.
+   *
+   * @param builderTypeElement the candidate builder type to inspect
+   * @return the instantiation to emit, or empty when the builder offers neither
+   */
+  private Optional<BuilderInstantiation> resolveFuncForEmptyBuilder(
+      TypeElement builderTypeElement) {
+    Optional<BuilderInstantiation> func =
+        JavaLangAnalyser.findStaticFactoryReturning(builderTypeElement, context)
+            .<BuilderInstantiation>map(BuilderInstantiation.StaticFactoryCall::new);
+    if (func.isEmpty() && JavaLangAnalyser.hasEmptyConstructor(builderTypeElement, context)) {
+      func = Optional.of(new BuilderInstantiation.ConstructorCall());
+    }
+    return func;
+  }
+
+  /**
+   * Resolves the instantiation path for a builder instance seeded with a value of the referenced
+   * type: a static factory accepting the type when the builder offers one, the constructor
+   * accepting the type otherwise.
+   *
+   * @param builderTypeElement the candidate builder type to inspect
+   * @param expectedType the qualified name of the referenced type to seed the builder with
+   * @return the instantiation to emit, or empty when the builder offers neither
+   */
+  private Optional<BuilderInstantiation> resolveFuncForPrefilledBuilder(
+      TypeElement builderTypeElement, String expectedType) {
+    Optional<BuilderInstantiation> func =
+        JavaLangAnalyser.findStaticFactoryAccepting(builderTypeElement, expectedType, context)
+            .<BuilderInstantiation>map(BuilderInstantiation.StaticFactoryCall::new);
+    if (func.isEmpty()
+        && JavaLangAnalyser.hasConstructorAccepting(builderTypeElement, expectedType, context)) {
+      func = Optional.of(new BuilderInstantiation.ConstructorCall());
+    }
+    return func;
   }
 
   private void refreshForConfigurationIfNeeded() {
