@@ -160,21 +160,23 @@ class MapStructSpiIntegrationTest {
 
   @Test
   void mapStruct_disabledIntegration_shouldMapViaSetters() {
-    // MapStruct does not forward foreign -A options to SPI environments; the off-switch is the
-    // simplebuilder.* JVM system property (same precedence as in CompilerArgumentsReader)
-    System.setProperty("simplebuilder.usingMapStructIntegration", "false");
-    try {
-      Compilation compilation = compiler().compile(MUTABLE_DTO, MUTABLE_DTO_MAPPER);
-      assertThat(compilation).succeeded();
-      ProcessorTestUtils.printDiagnosticsOnVerbose(compilation);
+    // MapStruct does not forward foreign -A options to SPI environments, so BuilderProcessor
+    // publishes the resolved switch to them via MapStructIntegration
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new BuilderProcessor(), new MappingProcessor())
+            .withOptions(
+                "-Amapstruct.suppressGeneratorTimestamp=true",
+                "-Amapstruct.suppressGeneratorVersionInfoComment=true",
+                "-Asimplebuilder.usingMapStructIntegration=DISABLED")
+            .compile(MUTABLE_DTO, MUTABLE_DTO_MAPPER);
+    assertThat(compilation).succeeded();
+    ProcessorTestUtils.printDiagnosticsOnVerbose(compilation);
 
-      String mapperImpl = loadGeneratedSource(compilation, "MutableDtoMapperImpl");
-      assertFalse(
-          mapperImpl.contains("MutableDtoBuilder"),
-          "Disabled integration must leave the generated builder unused");
-      assertTrue(mapperImpl.contains(".setName("), "MapStruct should fall back to setter mapping");
-    } finally {
-      System.clearProperty("simplebuilder.usingMapStructIntegration");
-    }
+    String mapperImpl = loadGeneratedSource(compilation, "MutableDtoMapperImpl");
+    assertFalse(
+        mapperImpl.contains("MutableDtoBuilder"),
+        "Disabled integration must leave the generated builder unused");
+    assertTrue(mapperImpl.contains(".setName("), "MapStruct should fall back to setter mapping");
   }
 }

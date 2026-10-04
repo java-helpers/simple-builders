@@ -34,7 +34,6 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
-import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
@@ -51,28 +50,27 @@ import org.mapstruct.ap.spi.TypeHierarchyErroneousException;
  *
  * <p>MapStruct's default provider only considers {@code public static} methods on the bean type
  * itself as builder-creation candidates. simple-builders keeps the factory on the generated builder
- * class ({@code PersonDtoBuilder.create()}), so builders are located by conventional name {@code
- * <Bean><builderSuffix>} in the candidate packages first — a constant-time lookup for the common
- * case. Only for beans marked for builder generation does a package scan for types carrying
- * {@code @BuilderImplementation(forClass = <bean>)} run as a last resort.
+ * class ({@code PersonDtoBuilder.create()}), so builders are located in this order: the registry
+ * {@code BuilderProcessor} publishes for the builders it plans (exact qualified names, incl. custom
+ * packages and {@code @SimpleBuilderFor} targets), then the conventional name {@code
+ * <Bean><builderSuffix>} in the candidate packages for builders generated in earlier runs — both
+ * constant-time lookups.
  *
  * <p>When a marked bean's builder is not visible yet, {@link TypeHierarchyErroneousException}
  * defers the mapper to the next processing round so a builder generated in the same round can still
- * be found. Builders generated into packages unreachable from the bean (e.g. an unrelated {@code
- * packageName} on a {@code @SimpleBuilderFor} site) cannot be discovered.
+ * be found.
  *
  * <p>The provider is registered via {@code META-INF/services} and is only loaded when
  * simple-builders-processor and mapstruct-processor share the annotation processor path. The
  * integration can be switched off entirely with {@code
- * -Dsimplebuilder.usingMapStructIntegration=false} (MapStruct does not forward foreign annotation
- * processor options to SPI environments, so the JVM system property is the documented channel).
+ * -Asimplebuilder.usingMapStructIntegration=DISABLED} (resolved by {@code BuilderProcessor}, which
+ * shares the classloader, or via the {@code -D} JVM system property).
  */
 @AutoService(BuilderProvider.class)
 public class MapStructBuilderProvider implements BuilderProvider {
 
   private static final String DEFAULT_BUILDER_SUFFIX = "Builder";
   private static final String OPTION_PREFIX = "simplebuilder.";
-  private static final String OPTION_USING_MAPSTRUCT = OPTION_PREFIX + "usingMapStructIntegration";
 
   private Elements elementUtils;
   private Types typeUtils;
@@ -82,8 +80,6 @@ public class MapStructBuilderProvider implements BuilderProvider {
   /** Resolved builder infos by bean qualified name; only positive results are cached. */
   private final Map<String, BuilderInfo> builderInfoCache = new HashMap<>();
 
-  private boolean enabled = true;
-
   @Override
   public void init(MapStructProcessingEnvironment processingEnvironment) {
     this.elementUtils = processingEnvironment.getElementUtils();
@@ -91,15 +87,11 @@ public class MapStructBuilderProvider implements BuilderProvider {
     this.annotations = new AnnotationSupport(elementUtils);
     Map<String, String> options = processingEnvironment.getOptions();
     processorOptions = options == null ? Map.of() : options;
-    enabled =
-        !"false"
-            .equalsIgnoreCase(
-                AnnotationSupport.systemOption(processorOptions, OPTION_USING_MAPSTRUCT));
   }
 
   @Override
   public BuilderInfo findBuilderInfo(TypeMirror type) {
-    if (!enabled) {
+    if (MapStructIntegration.isDisabled(processorOptions)) {
       return null;
     }
     if (!(type instanceof DeclaredType declaredType)
@@ -134,15 +126,26 @@ public class MapStructBuilderProvider implements BuilderProvider {
   }
 
   /**
-   * Locates the generated builder for {@code beanElement} by conventional name first; for beans
-   * marked for generation the package scan for {@code @BuilderImplementation} runs as a last
-   * resort, and a missing builder defers the mapper to the next processing round.
+   * Locates the generated builder for {@code beanElement}: the registry {@code BuilderProcessor}
+   * publishes first (it knows every builder it plans, incl. custom packages), then the conventional
+   * name for builders generated in earlier runs. A marked bean whose builder is not visible yet
+   * defers the mapper to the next processing round.
    */
   private TypeElement findBuilderElement(TypeElement beanElement) {
+    String registered = MapStructIntegration.builderFor(beanElement.getQualifiedName().toString());
+    if (registered != null) {
+      TypeElement registeredElement = elementUtils.getTypeElement(registered);
+      if (registeredElement == null) {
+        // Planned but not yet emitted in this round — defer.
+        throw new TypeHierarchyErroneousException(beanElement.asType());
+      }
+      return registeredElement;
+    }
+
     BuilderNaming naming = builderNaming(beanElement);
 
     // Conventional name first: a constant-time getTypeElement per candidate package and suffix,
-    // covering every builder generated by simple-builders.
+    // covering builders generated in earlier runs or with the integration's registration absent.
     for (String packageName : naming.packageNames()) {
       for (String suffix : naming.suffixes()) {
         TypeElement candidate =
@@ -156,40 +159,13 @@ public class MapStructBuilderProvider implements BuilderProvider {
       }
     }
 
-    if (!annotations.isBuilderGenerationTarget(beanElement)) {
-      return null;
+    // The bean is annotated for builder generation but neither the registry nor the naming
+    // convention resolved a builder — it is not emitted yet in this processing round. Throwing
+    // defers mapper generation to the next round.
+    if (annotations.isBuilderGenerationTarget(beanElement)) {
+      throw new TypeHierarchyErroneousException(beanElement.asType());
     }
-
-    // Last resort for marked beans: scan the candidate packages for a type carrying
-    // @BuilderImplementation(forClass = <bean>) — covers builders a plain name lookup cannot
-    // resolve, e.g. when the name was not generated by the naming convention.
-    for (String packageName : naming.packageNames()) {
-      PackageElement packageElement = elementUtils.getPackageElement(packageName);
-      if (packageElement == null) {
-        continue;
-      }
-      for (Element member : packageElement.getEnclosedElements()) {
-        if (member instanceof TypeElement typeElement
-            && isGeneratedBuilderFor(typeElement, beanElement)) {
-          return typeElement;
-        }
-      }
-    }
-
-    // The bean is annotated for builder generation but the builder does not exist yet in this
-    // processing round. Throwing defers mapper generation to the next round.
-    throw new TypeHierarchyErroneousException(beanElement.asType());
-  }
-
-  /**
-   * Checks whether {@code candidate} is annotated {@code @BuilderImplementation(forClass =
-   * beanElement)}.
-   */
-  private boolean isGeneratedBuilderFor(TypeElement candidate, TypeElement beanElement) {
-    TypeMirror forClass = annotations.builderImplementationForClass(candidate);
-    return forClass != null
-        && typeUtils.isSameType(
-            typeUtils.erasure(forClass), typeUtils.erasure(beanElement.asType()));
+    return null;
   }
 
   /**

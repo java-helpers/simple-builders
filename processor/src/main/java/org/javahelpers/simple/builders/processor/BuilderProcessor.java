@@ -60,11 +60,13 @@ import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder.Template;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFor;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFors;
+import org.javahelpers.simple.builders.core.enums.OptionState;
 import org.javahelpers.simple.builders.processor.analysis.BuilderScopeResolver;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyser;
 import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterCodeGenerator;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 import org.javahelpers.simple.builders.processor.generators.integration.JacksonModuleGenerator;
+import org.javahelpers.simple.builders.processor.mapstruct.MapStructIntegration;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.model.core.BuilderToGenerationTypeMapper;
@@ -76,6 +78,7 @@ import org.javahelpers.simple.builders.processor.model.type.TypeNameSet;
 import org.javahelpers.simple.builders.processor.processing.BuilderConfigurationReader;
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsEnum;
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsReader;
+import org.javahelpers.simple.builders.processor.processing.OptionValueParsers;
 import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 import org.javahelpers.simple.builders.processor.processing.ProcessingTarget;
 import org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker;
@@ -108,6 +111,14 @@ public class BuilderProcessor extends AbstractProcessor {
     CompilerArgumentsReader reader = new CompilerArgumentsReader(processingEnv);
     BuilderConfiguration globalConfig = reader.readBuilderConfiguration(logger);
     logger.debug("Loaded global configuration from compiler arguments: %s", globalConfig);
+
+    // Publish the resolved integration switch to the MapStruct SPIs sharing this classloader;
+    // their environment never sees foreign annotation processor options
+    String mapStructOption = reader.readValue(CompilerArgumentsEnum.USING_MAPSTRUCT_INTEGRATION);
+    MapStructIntegration.initCompilation(
+        mapStructOption == null
+            ? null
+            : OptionValueParsers.parseOptionState(mapStructOption, logger) != OptionState.DISABLED);
 
     this.context = new ProcessingContext(logger, globalConfig, processingEnv);
     this.codeGenerator = new RoasterCodeGenerator(context, processingEnv);
@@ -531,6 +542,14 @@ public class BuilderProcessor extends AbstractProcessor {
               effectiveBuilderPackage(
                   elementToGenerate.reportingElement(), elementToGenerate.config()),
               elementToGenerate.config()));
+      MapStructIntegration.registerBuilder(
+          targetType.getQualifiedName().toString(),
+          builderTypeName(
+                  targetType,
+                  effectiveBuilderPackage(
+                      elementToGenerate.reportingElement(), elementToGenerate.config()),
+                  elementToGenerate.config())
+              .getFullQualifiedName());
     }
   }
 

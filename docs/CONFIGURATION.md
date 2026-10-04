@@ -1050,17 +1050,19 @@ This is highly recommended to ensure deterministic output location and avoid spl
 
 #### `usingMapStructIntegration`
 
-**Default**: `ENABLED` | **System Property**: `-Dsimplebuilder.usingMapStructIntegration=ENABLED|DISABLED`
+**Default**: `ENABLED` | **Compiler Option**: `-Asimplebuilder.usingMapStructIntegration=ENABLED|DISABLED`
 
 Controls the MapStruct SPI adapters bundled in the processor jar (`MapStructBuilderProvider` and `MapStructAccessorNamingStrategy`, registered via `META-INF/services`). They make MapStruct auto-detect generated builders when `simple-builders-processor` and `mapstruct-processor` share the annotation processor path — no annotation attribute exists because the SPIs are discovered globally by MapStruct itself.
 
-Unlike the other options this switch is read inside MapStruct's SPI environment, which does not see the `simplebuilder.*` annotation processor options. Use the `-D` JVM system property form (same precedence rules as other options); the `-A` form is honoured as a fallback where it does reach the SPI environment.
+Unlike the other options this switch is consumed inside MapStruct's SPI environment, which does not see `simplebuilder.*` annotation processor options. `BuilderProcessor` therefore resolves the option itself (same `-D` > `-A` precedence as every option) and publishes it to the SPIs sharing the classloader; `-D` also reaches them directly for setups where only the SPI jar is on the path.
 
 **When DISABLED**: The provider returns no builder candidates and the naming strategy keeps the stock MapStruct behaviour, so generated builders are treated like ordinary classes.
 
 **Example**:
-```bash
-mvn compile -Dsimplebuilder.usingMapStructIntegration=DISABLED
+```xml
+<compilerArgs>
+  <arg>-Asimplebuilder.usingMapStructIntegration=DISABLED</arg>
+</compilerArgs>
 ```
 
 ---
@@ -1709,7 +1711,7 @@ methodAccess = AccessModifier.PRIVATE
 -Asimplebuilder.usingJacksonDeserializerAnnotation=ENABLED|DISABLED
 -Asimplebuilder.generateJacksonModule=ENABLED|DISABLED
 -Asimplebuilder.jacksonModulePackage=com.your.package
--Dsimplebuilder.usingMapStructIntegration=ENABLED|DISABLED
+-Asimplebuilder.usingMapStructIntegration=ENABLED|DISABLED
 
 # Documentation
 -Asimplebuilder.generateJavaDoc=ENABLED|DISABLED

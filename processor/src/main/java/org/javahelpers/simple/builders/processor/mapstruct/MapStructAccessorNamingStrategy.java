@@ -58,13 +58,11 @@ import org.mapstruct.ap.spi.MethodType;
 public class MapStructAccessorNamingStrategy extends DefaultAccessorNamingStrategy {
 
   private static final String OPTION_PREFIX = "simplebuilder.";
-  private static final String OPTION_USING_MAPSTRUCT = OPTION_PREFIX + "usingMapStructIntegration";
   private static final String DEFAULT_BUILDER_SUFFIX = "Builder";
 
   private AnnotationSupport annotations;
   private Map<String, String> processorOptions = Map.of();
   private final Map<String, Optional<Map<String, TypeMirror>>> directSettersCache = new HashMap<>();
-  private boolean enabled = true;
 
   @Override
   public void init(MapStructProcessingEnvironment processingEnvironment) {
@@ -72,18 +70,12 @@ public class MapStructAccessorNamingStrategy extends DefaultAccessorNamingStrate
     annotations = new AnnotationSupport(processingEnvironment.getElementUtils());
     Map<String, String> options = processingEnvironment.getOptions();
     processorOptions = options == null ? Map.of() : options;
-    // MapStruct forwards only its own options to SPI environments, so the off-switch follows the
-    // simplebuilder.* convention and prefers the JVM system property
-    enabled =
-        !"false"
-            .equalsIgnoreCase(
-                AnnotationSupport.systemOption(processorOptions, OPTION_USING_MAPSTRUCT));
   }
 
   @Override
   public MethodType getMethodType(ExecutableElement method) {
     MethodType methodType = super.getMethodType(method);
-    if (!enabled) {
+    if (MapStructIntegration.isDisabled(processorOptions)) {
       return methodType;
     }
     if (methodType != MethodType.SETTER && methodType != MethodType.ADDER) {
@@ -129,10 +121,15 @@ public class MapStructAccessorNamingStrategy extends DefaultAccessorNamingStrate
   }
 
   /**
-   * The bean a builder was generated for: {@code @BuilderImplementation(forClass = ...)} on the
-   * builder, else the conventional name {@code <Bean><builderSuffix>} in the builder's package.
+   * The bean a builder was generated for: the registry {@code BuilderProcessor} publishes, then
+   * {@code @BuilderImplementation(forClass = ...)} on the builder, else the conventional name
+   * {@code <Bean><builderSuffix>} in the builder's package.
    */
   private TypeElement resolveBean(TypeElement builderType) {
+    String registered = MapStructIntegration.beanFor(builderType.getQualifiedName().toString());
+    if (registered != null) {
+      return elementUtils.getTypeElement(registered);
+    }
     TypeMirror forClass = annotations.builderImplementationForClass(builderType);
     if (forClass instanceof DeclaredType declaredType
         && declaredType.asElement() instanceof TypeElement beanElement) {
