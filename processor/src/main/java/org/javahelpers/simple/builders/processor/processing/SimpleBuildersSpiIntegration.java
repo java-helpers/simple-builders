@@ -31,18 +31,23 @@ import java.util.Map;
  * annotation processor path (and therefore the classloader): the resolved integration switch —
  * which SPI environments cannot see because the hosting framework forwards only its own processor
  * options (e.g. MapStruct's {@code simplebuilder.usingMapStructIntegration}) — and the qualified
- * names of the builders planned for generation, so lookups do not have to guess names or scan
- * packages.
+ * names of the builders {@code BuilderProcessor} plans to generate, so lookups do not have to guess
+ * names or scan packages.
  *
- * <p>All state is compilation-scoped and guarded by {@link State}: javac initializes each processor
- * lazily when its turn in a round comes, so before {@code BuilderProcessor} has run its {@code
- * init()} nothing static can be trusted — values may be leftovers of a previous compilation in a
- * long-lived JVM (Gradle daemon, incremental builds). Only while {@link State#PROCESSING} or {@link
- * State#FINISHED} are the published switch and registry the current compilation's truth.
+ * <p>The lifecycle reports where {@code BuilderProcessor}'s own builder generation stands and is
+ * transitioned by that processor alone — other processors or SPI adapters never write it. All state
+ * is compilation-scoped: javac initializes each processor lazily when its turn in a round comes, so
+ * before {@code BuilderProcessor} has run its {@code init()} nothing static can be trusted — values
+ * may be leftovers of a previous compilation in a long-lived JVM (Gradle daemon, incremental
+ * builds). Only while {@link State#PROCESSING} or {@link State#FINISHED} are the published switch
+ * and registry the current compilation's truth.
  */
-public final class SpiIntegration {
+public final class SimpleBuildersSpiIntegration {
 
-  /** Lifecycle of the current compilation as the SPI adapters observe it. */
+  /**
+   * Where {@code BuilderProcessor}'s builder generation stands in the current compilation, as the
+   * SPI adapters observe it.
+   */
   public enum State {
     /**
      * No processor init happened in this compilation yet — static content may be a previous run's,
@@ -68,7 +73,7 @@ public final class SpiIntegration {
   /** Reverse of {@link #GENERATED_BUILDERS}: builder qualified name → bean qualified name. */
   private static final Map<String, String> BEAN_BY_BUILDER = new HashMap<>();
 
-  private SpiIntegration() {}
+  private SimpleBuildersSpiIntegration() {}
 
   /**
    * Starts a new compilation: clears the builder registry and publishes the integration switch the
@@ -87,11 +92,13 @@ public final class SpiIntegration {
   }
 
   /**
-   * Called by each SPI adapter on {@code init}. javac initializes every processor lazily in its
-   * turn, so an SPI init may run before {@code BuilderProcessor#init} of the same compilation; a
-   * {@link State#FINISHED} observed here can only be the previous compilation's leftover — a live
-   * {@link State#FINISHED} implies the last round already ran and no new SPI init would follow —
-   * and is reset to {@link State#INIT}.
+   * Called by each SPI adapter on {@code init} to age out a stale {@link State#FINISHED} left by a
+   * previous compilation: javac initializes every processor lazily in its turn, so an SPI init may
+   * run before {@code BuilderProcessor#init} of the same compilation, and a {@link State#FINISHED}
+   * observed here can only be leftover — a live {@link State#FINISHED} implies the last round
+   * already ran and no new SPI init would follow — and is reset to {@link State#INIT}. This
+   * corrects the observation; it does not declare generation state, which {@code BuilderProcessor}
+   * alone transitions.
    */
   public static void spiInitialized() {
     if (state == State.FINISHED) {

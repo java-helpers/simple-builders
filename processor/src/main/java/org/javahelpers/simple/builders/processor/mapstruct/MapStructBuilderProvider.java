@@ -38,7 +38,7 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
-import org.javahelpers.simple.builders.processor.processing.SpiIntegration;
+import org.javahelpers.simple.builders.processor.processing.SimpleBuildersSpiIntegration;
 import org.mapstruct.ap.spi.BuilderInfo;
 import org.mapstruct.ap.spi.BuilderProvider;
 import org.mapstruct.ap.spi.MapStructProcessingEnvironment;
@@ -78,7 +78,7 @@ public class MapStructBuilderProvider implements BuilderProvider {
 
   @Override
   public void init(MapStructProcessingEnvironment processingEnvironment) {
-    SpiIntegration.spiInitialized();
+    SimpleBuildersSpiIntegration.spiInitialized();
     this.elementUtils = processingEnvironment.getElementUtils();
     this.typeUtils = processingEnvironment.getTypeUtils();
     this.annotations = new AnnotationSupport(elementUtils);
@@ -88,7 +88,7 @@ public class MapStructBuilderProvider implements BuilderProvider {
 
   @Override
   public BuilderInfo findBuilderInfo(TypeMirror type) {
-    if (SpiIntegration.isDisabled(processorOptions)) {
+    if (SimpleBuildersSpiIntegration.isDisabled(processorOptions)) {
       return null;
     }
     if (!(type instanceof DeclaredType declaredType)
@@ -126,14 +126,15 @@ public class MapStructBuilderProvider implements BuilderProvider {
    * Locates the generated builder for {@code beanElement} through the registry {@code
    * BuilderProcessor} publishes — the list decides alone which type is claimed. A planned builder
    * that is not emitted yet defers the mapper to the next processing round. While the compilation
-   * is not {@link SpiIntegration.State#FINISHED} the registry may still grow (MapStruct may run
-   * ahead of this processor's first round), so a bean marked for generation gets the same deferral
-   * instead of a premature miss.
+   * is not {@link SimpleBuildersSpiIntegration.State#FINISHED} the registry may still grow
+   * (MapStruct may run ahead of this processor's first round), so a bean marked for generation gets
+   * the same deferral instead of a premature miss.
    */
   private TypeElement findBuilderElement(TypeElement beanElement) {
-    String registered = SpiIntegration.builderFor(beanElement.getQualifiedName().toString());
+    String registered =
+        SimpleBuildersSpiIntegration.builderFor(beanElement.getQualifiedName().toString());
     if (registered == null) {
-      if (SpiIntegration.state() != SpiIntegration.State.FINISHED
+      if (SimpleBuildersSpiIntegration.state() != SimpleBuildersSpiIntegration.State.FINISHED
           && annotations.isBuilderGenerationTarget(beanElement)) {
         // Marked for generation but not published yet — our processor has not had its round;
         // defer so the registry can fill in before the mapper is generated.

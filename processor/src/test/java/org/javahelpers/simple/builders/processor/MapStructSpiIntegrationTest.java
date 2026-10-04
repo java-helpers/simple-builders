@@ -183,7 +183,7 @@ class MapStructSpiIntegrationTest {
   @Test
   void mapStruct_disabledIntegration_shouldMapViaSetters() {
     // MapStruct does not forward foreign -A options to SPI environments, so BuilderProcessor
-    // publishes the resolved switch to them via SpiIntegration
+    // publishes the resolved switch to them via SimpleBuildersSpiIntegration
     Compilation compilation =
         Compiler.javac()
             .withProcessors(new BuilderProcessor(), new MappingProcessor())

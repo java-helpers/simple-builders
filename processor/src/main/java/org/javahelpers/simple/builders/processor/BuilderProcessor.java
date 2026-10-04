@@ -80,7 +80,7 @@ import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsRea
 import org.javahelpers.simple.builders.processor.processing.OptionValueParsers;
 import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 import org.javahelpers.simple.builders.processor.processing.ProcessingTarget;
-import org.javahelpers.simple.builders.processor.processing.SpiIntegration;
+import org.javahelpers.simple.builders.processor.processing.SimpleBuildersSpiIntegration;
 import org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker;
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 
@@ -115,7 +115,7 @@ public class BuilderProcessor extends AbstractProcessor {
     // Publish the resolved integration switch to the MapStruct SPIs sharing this classloader;
     // their environment never sees foreign annotation processor options
     String mapStructOption = reader.readValue(CompilerArgumentsEnum.USING_MAPSTRUCT_INTEGRATION);
-    SpiIntegration.initCompilation(
+    SimpleBuildersSpiIntegration.initCompilation(
         mapStructOption == null
             ? null
             : OptionValueParsers.parseOptionState(mapStructOption, logger) != OptionState.DISABLED);
@@ -158,7 +158,7 @@ public class BuilderProcessor extends AbstractProcessor {
 
     // Generate Jackson Module if processing is over and feature is enabled
     if (roundEnv.processingOver()) {
-      SpiIntegration.finishCompilation();
+      SimpleBuildersSpiIntegration.finishCompilation();
       generateJacksonModules(context.getPerformanceTracker());
       return false;
     }
@@ -543,7 +543,7 @@ public class BuilderProcessor extends AbstractProcessor {
               effectiveBuilderPackage(
                   elementToGenerate.reportingElement(), elementToGenerate.config()),
               elementToGenerate.config()));
-      SpiIntegration.registerBuilder(
+      SimpleBuildersSpiIntegration.registerBuilder(
           targetType.getQualifiedName().toString(),
           builderTypeName(
                   targetType,
