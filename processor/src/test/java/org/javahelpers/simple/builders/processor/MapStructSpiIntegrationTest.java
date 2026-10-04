@@ -24,12 +24,15 @@
 package org.javahelpers.simple.builders.processor;
 
 import static com.google.testing.compile.CompilationSubject.assertThat;
+import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils.assertNoWarningContaining;
+import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils.createCompiler;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils.loadGeneratedSource;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.testing.compile.Compilation;
 import com.google.testing.compile.Compiler;
+import javax.annotation.processing.Processor;
 import javax.tools.JavaFileObject;
 import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
 import org.junit.jupiter.api.Test;
@@ -42,97 +45,12 @@ import org.mapstruct.ap.MappingProcessor;
  */
 class MapStructSpiIntegrationTest {
 
-  private static final JavaFileObject PERSON_DTO =
-      ProcessorTestUtils.forSource(
-          """
-          package test;
-
-          import java.util.List;
-          import java.util.Optional;
-          import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
-
-          @SimpleBuilder
-          public class PersonDto {
-            private String name;
-            private List<String> nicknames;
-            private Optional<String> email;
-
-            public String getName() {
-              return name;
-            }
-
-            public List<String> getNicknames() {
-              return nicknames;
-            }
-
-            public Optional<String> getEmail() {
-              return email;
-            }
-          }
-          """);
-
-  private static final JavaFileObject PERSON_DTO_MAPPER =
-      ProcessorTestUtils.forSource(
-          """
-          package test;
-
-          import org.mapstruct.Mapper;
-
-          @Mapper
-          public interface PersonDtoMapper {
-
-            PersonDto copy(PersonDto source);
-          }
-          """);
-
-  private static final JavaFileObject MUTABLE_DTO =
-      ProcessorTestUtils.forSource(
-          """
-          package test;
-
-          import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
-
-          @SimpleBuilder
-          public class MutableDto {
-            private String name;
-
-            public String getName() {
-              return name;
-            }
-
-            public void setName(String name) {
-              this.name = name;
-            }
-          }
-          """);
-
-  private static final JavaFileObject MUTABLE_DTO_MAPPER =
-      ProcessorTestUtils.forSource(
-          """
-          package test;
-
-          import org.mapstruct.Mapper;
-
-          @Mapper
-          public interface MutableDtoMapper {
-
-            MutableDto copy(MutableDto source);
-          }
-          """);
-
-  private static Compiler compiler() {
-    return Compiler.javac()
-        .withProcessors(new BuilderProcessor(), new MappingProcessor())
-        .withOptions(
-            "-Amapstruct.suppressGeneratorTimestamp=true",
-            "-Amapstruct.suppressGeneratorVersionInfoComment=true");
-  }
-
   @Test
   void mapStruct_shouldUseGeneratedBuilder() {
-    Compilation compilation = compiler().compile(PERSON_DTO, PERSON_DTO_MAPPER);
+    Compilation compilation =
+        mapStructCompiler(new BuilderProcessor(), new MappingProcessor())
+            .compile(personDto(), personDtoMapper());
     assertThat(compilation).succeeded();
-    ProcessorTestUtils.printDiagnosticsOnVerbose(compilation);
 
     String mapperImpl = loadGeneratedSource(compilation, "PersonDtoMapperImpl");
     assertTrue(
@@ -147,37 +65,25 @@ class MapStructSpiIntegrationTest {
     // builder: the marked bean defers via TypeHierarchyErroneousException until the registry
     // holds the planned builder
     Compilation compilation =
-        Compiler.javac()
-            .withProcessors(new MappingProcessor(), new BuilderProcessor())
-            .withOptions(
-                "-Amapstruct.suppressGeneratorTimestamp=true",
-                "-Amapstruct.suppressGeneratorVersionInfoComment=true")
-            .compile(PERSON_DTO, PERSON_DTO_MAPPER);
+        mapStructCompiler(new MappingProcessor(), new BuilderProcessor())
+            .compile(personDto(), personDtoMapper());
     assertThat(compilation).succeeded();
-    ProcessorTestUtils.printDiagnosticsOnVerbose(compilation);
 
     String mapperImpl = loadGeneratedSource(compilation, "PersonDtoMapperImpl");
     assertTrue(
         mapperImpl.contains("PersonDtoBuilder.create()"),
-        "Reversed processor order must still bind the generated builder, got:\n" + mapperImpl);
+        "Reversed processor order must still bind the generated builder");
     assertTrue(mapperImpl.contains(".build()"), "MapStruct should finish via build()");
   }
 
   @Test
   void mapStruct_shouldNotReportHelpersAsUnmappedTargetProperties() {
-    Compilation compilation = compiler().compile(PERSON_DTO, PERSON_DTO_MAPPER);
+    Compilation compilation =
+        mapStructCompiler(new BuilderProcessor(), new MappingProcessor())
+            .compile(personDto(), personDtoMapper());
     assertThat(compilation).succeeded();
-    ProcessorTestUtils.printDiagnosticsOnVerbose(compilation);
 
-    String warnings =
-        compilation.warnings().stream()
-            .map(diagnostic -> diagnostic.getMessage(null))
-            .reduce("", (left, right) -> left + "\n" + right);
-    assertFalse(
-        warnings.toLowerCase().contains("unmapped target property"),
-        "Generated helper methods (add2*, *Update, Supplier/Consumer overloads) must not "
-            + "surface as unmapped target properties, got: "
-            + warnings);
+    assertNoWarningContaining(compilation, "unmapped target property");
   }
 
   @Test
@@ -185,20 +91,105 @@ class MapStructSpiIntegrationTest {
     // MapStruct does not forward foreign -A options to SPI environments, so BuilderProcessor
     // publishes the resolved switch to them via SimpleBuildersSpiIntegration
     Compilation compilation =
-        Compiler.javac()
-            .withProcessors(new BuilderProcessor(), new MappingProcessor())
-            .withOptions(
-                "-Amapstruct.suppressGeneratorTimestamp=true",
-                "-Amapstruct.suppressGeneratorVersionInfoComment=true",
-                "-Asimplebuilder.usingMapStructIntegration=DISABLED")
-            .compile(MUTABLE_DTO, MUTABLE_DTO_MAPPER);
+        mapStructCompiler(new BuilderProcessor(), new MappingProcessor())
+            .withOptions("-Asimplebuilder.usingMapStructIntegration=DISABLED")
+            .compile(mutableDto(), mutableDtoMapper());
     assertThat(compilation).succeeded();
-    ProcessorTestUtils.printDiagnosticsOnVerbose(compilation);
 
     String mapperImpl = loadGeneratedSource(compilation, "MutableDtoMapperImpl");
     assertFalse(
         mapperImpl.contains("MutableDtoBuilder"),
         "Disabled integration must leave the generated builder unused");
     assertTrue(mapperImpl.contains(".setName("), "MapStruct should fall back to setter mapping");
+  }
+
+  /** A javac compiler with the given processors in invocation order and stable mapper output. */
+  private static Compiler mapStructCompiler(Processor... processors) {
+    return createCompiler(processors)
+        .withOptions(
+            "-Amapstruct.suppressGeneratorTimestamp=true",
+            "-Amapstruct.suppressGeneratorVersionInfoComment=true");
+  }
+
+  private static JavaFileObject personDto() {
+    return ProcessorTestUtils.forSource(
+        """
+        package test;
+
+        import java.util.List;
+        import java.util.Optional;
+        import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+        @SimpleBuilder
+        public class PersonDto {
+          private String name;
+          private List<String> nicknames;
+          private Optional<String> email;
+
+          public String getName() {
+            return name;
+          }
+
+          public List<String> getNicknames() {
+            return nicknames;
+          }
+
+          public Optional<String> getEmail() {
+            return email;
+          }
+        }
+        """);
+  }
+
+  private static JavaFileObject personDtoMapper() {
+    return ProcessorTestUtils.forSource(
+        """
+        package test;
+
+        import org.mapstruct.Mapper;
+
+        @Mapper
+        public interface PersonDtoMapper {
+
+          PersonDto copy(PersonDto source);
+        }
+        """);
+  }
+
+  private static JavaFileObject mutableDto() {
+    return ProcessorTestUtils.forSource(
+        """
+        package test;
+
+        import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+        @SimpleBuilder
+        public class MutableDto {
+          private String name;
+
+          public String getName() {
+            return name;
+          }
+
+          public void setName(String name) {
+            this.name = name;
+          }
+        }
+        """);
+  }
+
+  private static JavaFileObject mutableDtoMapper() {
+    return ProcessorTestUtils.forSource(
+        """
+        package test;
+
+        import org.mapstruct.Mapper;
+
+        @Mapper
+        public interface MutableDtoMapper {
+
+          MutableDto copy(MutableDto source);
+        }
+        """);
   }
 }

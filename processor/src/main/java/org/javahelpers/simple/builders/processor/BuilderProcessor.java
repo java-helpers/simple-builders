@@ -112,8 +112,8 @@ public class BuilderProcessor extends AbstractProcessor {
     BuilderConfiguration globalConfig = reader.readBuilderConfiguration(logger);
     logger.debug("Loaded global configuration from compiler arguments: %s", globalConfig);
 
-    // Publish the resolved integration switch to the MapStruct SPIs sharing this classloader;
-    // their environment never sees foreign annotation processor options
+    // The SPI environments never receive foreign annotation processor options — publish the
+    // resolved switch through the shared classloader instead
     String mapStructOption = reader.readValue(CompilerArgumentsEnum.USING_MAPSTRUCT_INTEGRATION);
     SimpleBuildersSpiIntegration.initCompilation(
         mapStructOption == null
