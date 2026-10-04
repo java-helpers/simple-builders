@@ -87,7 +87,8 @@ class SimpleBuildersSpiIntegrationTest {
     assertTrue(SimpleBuildersSpiIntegration.builderFor("test.PersonDto").isEmpty());
     assertTrue(SimpleBuildersSpiIntegration.builderByName("test.PersonDtoBuilder").isEmpty());
 
-    SimpleBuildersSpiIntegration.registerBuilder(PERSON);
+    SimpleBuildersSpiIntegration.registerBuilder(
+        PERSON.beanType(), PERSON.builder().typeName(), PERSON.setterSuffix());
 
     assertEquals(PERSON, SimpleBuildersSpiIntegration.builderFor("test.PersonDto").orElseThrow());
     assertEquals(
@@ -99,7 +100,8 @@ class SimpleBuildersSpiIntegrationTest {
   @Test
   void registry_clearedOnNextCompilation() {
     SimpleBuildersSpiIntegration.initCompilation(null);
-    SimpleBuildersSpiIntegration.registerBuilder(PERSON);
+    SimpleBuildersSpiIntegration.registerBuilder(
+        PERSON.beanType(), PERSON.builder().typeName(), PERSON.setterSuffix());
 
     SimpleBuildersSpiIntegration.initCompilation(null);
     assertTrue(SimpleBuildersSpiIntegration.builderFor("test.PersonDto").isEmpty());

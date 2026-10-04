@@ -26,6 +26,7 @@ package org.javahelpers.simple.builders.processor;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import org.javahelpers.simple.builders.processor.model.type.BuilderInstantiation.StaticFactoryCall;
 import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 
@@ -86,10 +87,10 @@ public final class SimpleBuildersSpiIntegration {
    * Starts a new compilation: clears the registry and publishes the integration switch the
    * processor resolved ({@code null} when the option is unset).
    */
-  static void initCompilation(Boolean enabled) {
+  static void initCompilation(Boolean integrationEnabled) {
     BY_BEAN.clear();
     BY_BUILDER.clear();
-    integrationEnabled = enabled;
+    SimpleBuildersSpiIntegration.integrationEnabled = integrationEnabled;
     state = State.PROCESSING;
   }
 
@@ -118,8 +119,17 @@ public final class SimpleBuildersSpiIntegration {
     return state;
   }
 
-  /** Publishes a builder planned for {@code publishedBuilder.beanType} in this compilation. */
-  static void registerBuilder(PublishedBuilder publishedBuilder) {
+  /**
+   * Publishes the builder planned for {@code beanType} in this compilation under the standard
+   * contract every generated builder satisfies: {@code create()} obtains an empty builder instance
+   * and {@code build()} returns the finished bean.
+   */
+  static void registerBuilder(TypeName beanType, TypeName builderType, String setterSuffix) {
+    PublishedBuilder publishedBuilder =
+        new PublishedBuilder(
+            beanType,
+            new ResolvedBuilder(builderType, new StaticFactoryCall("create"), null),
+            setterSuffix);
     BY_BEAN.put(publishedBuilder.beanType().getFullQualifiedName(), publishedBuilder);
     BY_BUILDER.put(publishedBuilder.builder().typeName().getFullQualifiedName(), publishedBuilder);
   }

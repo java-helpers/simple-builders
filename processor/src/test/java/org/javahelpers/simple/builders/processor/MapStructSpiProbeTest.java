@@ -1,0 +1,293 @@
+/*
+ * MIT License
+ *
+ * Copyright (c) 2026 Andreas Igel
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.javahelpers.simple.builders.processor;
+
+import static com.google.testing.compile.CompilationSubject.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
+import com.google.testing.compile.Compilation;
+import com.google.testing.compile.Compiler;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
+import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.RoundEnvironment;
+import javax.annotation.processing.SupportedAnnotationTypes;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.ElementFilter;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
+import javax.tools.JavaFileObject;
+import org.javahelpers.simple.builders.processor.mapstruct.MapStructAccessorNamingStrategy;
+import org.javahelpers.simple.builders.processor.mapstruct.MapStructBuilderProvider;
+import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
+import org.junit.jupiter.api.Test;
+import org.mapstruct.ap.spi.BuilderInfo;
+import org.mapstruct.ap.spi.MapStructProcessingEnvironment;
+import org.mapstruct.ap.spi.MethodType;
+import org.mapstruct.ap.spi.TypeHierarchyErroneousException;
+
+/**
+ * Exercises both MapStruct SPIs from inside a real {@code javac} run: a probe processor drives them
+ * against the elements the same compilation emits — covering paths MapStruct's own call sites never
+ * reach in the integration tests (method classification on the builder type, deferral while the
+ * published builder is not emitted yet, marker scans of foreign, ignored and template beans, cache
+ * hits, and lookups after the registry finalized).
+ */
+class MapStructSpiProbeTest {
+
+  private static final JavaFileObject PERSON_DTO =
+      ProcessorTestUtils.forSource(
+          """
+          package test;
+
+          import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+          @SimpleBuilder
+          public class PersonDto {
+            private String name;
+
+            public String getName() {
+              return name;
+            }
+
+            public void setName(String name) {
+              this.name = name;
+            }
+          }
+          """);
+
+  private static final JavaFileObject FOREIGN_DTO =
+      ProcessorTestUtils.forSource(
+          """
+          package test;
+
+          public class ForeignDto {
+            private String name;
+          }
+          """);
+
+  private static final JavaFileObject IGNORED_DTO =
+      ProcessorTestUtils.forSource(
+          """
+          package test;
+
+          import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration;
+          import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+          @SimpleBuilder
+          @Ignore4BuilderGeneration
+          public class IgnoredDto {
+            private String name;
+          }
+          """);
+
+  private static final JavaFileObject TEMPLATE_DTO =
+      ProcessorTestUtils.forSource(
+          """
+          package test;
+
+          import org.javahelpers.simple.builders.core.annotations.SimpleMinimalBuilder;
+
+          @SimpleMinimalBuilder
+          public class MinimalDto {
+            private String name;
+          }
+          """);
+
+  @Test
+  void probe_shouldDriveSpiAgainstEmittedElements() {
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new SpiProbeProcessor(), new BuilderProcessor())
+            .compile(PERSON_DTO, FOREIGN_DTO, IGNORED_DTO, TEMPLATE_DTO);
+    assertThat(compilation).succeeded();
+
+    ProbeResults results = ProbeResults.instance;
+
+    // Marked beans defer while the registry can still grow: unregistered yet or emitted later.
+    assertInstanceOf(TypeHierarchyErroneousException.class, results.unregisteredDeferral);
+    assertInstanceOf(TypeHierarchyErroneousException.class, results.templateDeferral);
+
+    // Foreign and opted-out beans are never claimed, whichever lifecycle state applies.
+    assertNull(results.foreignWhileProcessing);
+    assertNull(results.ignoredWhileProcessing);
+    assertNull(results.foreignWhenFinished);
+    assertNull(results.noType);
+
+    // Resolution once the builder exists resolves the published contract methods and caches.
+    assertNotNull(results.builderInfo);
+    assertEquals(
+        "create", results.builderInfo.getBuilderCreationMethod().getSimpleName().toString());
+    assertEquals(
+        "build",
+        results.builderInfo.getBuildMethods().iterator().next().getSimpleName().toString());
+    assertEquals(results.builderInfo, results.cachedBuilderInfo);
+
+    // The naming strategy keeps only direct property setters visible as write accessors.
+    assertEquals(MethodType.SETTER, results.methodTypes.get("name"));
+    assertEquals(MethodType.OTHER, results.methodTypes.get("nameUpdate"));
+    assertEquals(MethodType.OTHER, results.methodTypes.get("build"));
+    assertEquals(MethodType.OTHER, results.methodTypes.get("create"));
+  }
+
+  /** Records the SPI outcomes of one probe compilation for assertions after it. */
+  private static final class ProbeResults {
+    static final ProbeResults instance = new ProbeResults();
+
+    final Map<String, MethodType> methodTypes = new LinkedHashMap<>();
+    Throwable unregisteredDeferral;
+    Throwable templateDeferral;
+    BuilderInfo foreignWhileProcessing;
+    BuilderInfo ignoredWhileProcessing;
+    BuilderInfo foreignWhenFinished;
+    BuilderInfo noType;
+    BuilderInfo builderInfo;
+    BuilderInfo cachedBuilderInfo;
+
+    void reset() {
+      methodTypes.clear();
+      unregisteredDeferral = null;
+      templateDeferral = null;
+      foreignWhileProcessing = null;
+      ignoredWhileProcessing = null;
+      foreignWhenFinished = null;
+      noType = null;
+      builderInfo = null;
+      cachedBuilderInfo = null;
+    }
+  }
+
+  /**
+   * Drives {@link MapStructBuilderProvider} and {@link MapStructAccessorNamingStrategy} like
+   * MapStruct would — one SPI instance per compilation, lookups on the mapped bean while its
+   * builder is pending, then method classification once the builder type exists. Runs ahead of
+   * {@link BuilderProcessor} in the first round so a marked bean is probed before registration.
+   */
+  @SupportedAnnotationTypes("*")
+  public static final class SpiProbeProcessor extends AbstractProcessor {
+
+    private final MapStructBuilderProvider provider = new MapStructBuilderProvider();
+    private final MapStructAccessorNamingStrategy naming = new MapStructAccessorNamingStrategy();
+    private boolean namingProbed;
+
+    @Override
+    public synchronized void init(javax.annotation.processing.ProcessingEnvironment env) {
+      super.init(env);
+      ProbeResults.instance.reset();
+      provider.init(spiEnvironment());
+      naming.init(spiEnvironment());
+    }
+
+    private MapStructProcessingEnvironment spiEnvironment() {
+      return new MapStructProcessingEnvironment() {
+        @Override
+        public Elements getElementUtils() {
+          return processingEnv.getElementUtils();
+        }
+
+        @Override
+        public Types getTypeUtils() {
+          return processingEnv.getTypeUtils();
+        }
+
+        @Override
+        public Map<String, String> getOptions() {
+          return Map.of();
+        }
+      };
+    }
+
+    @Override
+    public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+      ProbeResults results = ProbeResults.instance;
+      if (roundEnv.processingOver()) {
+        results.foreignWhenFinished = lookup(provider, "test.ForeignDto");
+        return false;
+      }
+
+      TypeElement bean = processingEnv.getElementUtils().getTypeElement("test.PersonDto");
+      if (bean == null) {
+        return false;
+      }
+
+      if (results.unregisteredDeferral == null) {
+        // Probed before BuilderProcessor planned the bean — a marked bean without a registry
+        // entry must defer like a mapper running ahead of the generating round.
+        results.unregisteredDeferral = lookupExpectingDeferral(bean);
+        results.foreignWhileProcessing = lookup(provider, "test.ForeignDto");
+        results.ignoredWhileProcessing = lookup(provider, "test.IgnoredDto");
+        TypeElement minimal = processingEnv.getElementUtils().getTypeElement("test.MinimalDto");
+        results.templateDeferral = lookupExpectingDeferral(minimal);
+        return false;
+      }
+
+      TypeElement builder = processingEnv.getElementUtils().getTypeElement("test.PersonDtoBuilder");
+      if (builder == null) {
+        // Published but not emitted yet — the lookup must defer until the type exists.
+        lookupExpectingDeferral(bean);
+        return false;
+      }
+
+      if (results.builderInfo != null) {
+        return false;
+      }
+      results.builderInfo = provider.findBuilderInfo(bean.asType());
+      results.cachedBuilderInfo = provider.findBuilderInfo(bean.asType());
+      results.noType =
+          provider.findBuilderInfo(
+              processingEnv.getTypeUtils().getNoType(javax.lang.model.type.TypeKind.NONE));
+
+      if (!namingProbed) {
+        namingProbed = true;
+        for (ExecutableElement method : ElementFilter.methodsIn(builder.getEnclosedElements())) {
+          results.methodTypes.put(method.getSimpleName().toString(), naming.getMethodType(method));
+        }
+      }
+      return false;
+    }
+
+    private Throwable lookupExpectingDeferral(TypeElement bean) {
+      try {
+        provider.findBuilderInfo(bean.asType());
+        return null;
+      } catch (RuntimeException deferred) {
+        return deferred;
+      }
+    }
+
+    private BuilderInfo lookup(MapStructBuilderProvider provider, String qualifiedName) {
+      Element element = processingEnv.getElementUtils().getTypeElement(qualifiedName);
+      TypeMirror type = element == null ? null : element.asType();
+      return type == null ? null : provider.findBuilderInfo(type);
+    }
+  }
+}

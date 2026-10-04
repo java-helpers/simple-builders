@@ -63,6 +63,7 @@ import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFors;
 import org.javahelpers.simple.builders.core.enums.OptionState;
 import org.javahelpers.simple.builders.processor.analysis.BuilderScopeResolver;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyser;
+import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
 import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterCodeGenerator;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 import org.javahelpers.simple.builders.processor.generators.integration.JacksonModuleGenerator;
@@ -70,8 +71,6 @@ import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.model.core.BuilderToGenerationTypeMapper;
 import org.javahelpers.simple.builders.processor.model.core.GenerationTargetClassDto;
-import org.javahelpers.simple.builders.processor.model.type.BuilderInstantiation.StaticFactoryCall;
-import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameList;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameMap;
@@ -537,27 +536,16 @@ public class BuilderProcessor extends AbstractProcessor {
       if (!(elementToGenerate.element() instanceof TypeElement targetType)) {
         continue;
       }
-      scopeResolver.registerGeneratedBuilder(
-          new TypeName(context.getPackageName(targetType), targetType.getSimpleName().toString()),
+      TypeName beanType = JavaLangMapper.mapToTypeName(targetType, context);
+      TypeName builderType =
           builderTypeName(
               targetType,
               effectiveBuilderPackage(
                   elementToGenerate.reportingElement(), elementToGenerate.config()),
-              elementToGenerate.config()));
+              elementToGenerate.config());
+      scopeResolver.registerGeneratedBuilder(beanType, builderType);
       SimpleBuildersSpiIntegration.registerBuilder(
-          new SimpleBuildersSpiIntegration.PublishedBuilder(
-              new TypeName(
-                  context.getPackageName(targetType), targetType.getSimpleName().toString()),
-              new ResolvedBuilder(
-                  builderTypeName(
-                      targetType,
-                      effectiveBuilderPackage(
-                          elementToGenerate.reportingElement(), elementToGenerate.config()),
-                      elementToGenerate.config()),
-                  new StaticFactoryCall("create"),
-                  Optional.empty(),
-                  "build"),
-              elementToGenerate.config().getSetterSuffix()));
+          beanType, builderType, elementToGenerate.config().getSetterSuffix());
     }
   }
 
