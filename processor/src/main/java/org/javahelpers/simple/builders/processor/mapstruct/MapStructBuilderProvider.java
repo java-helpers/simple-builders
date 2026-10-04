@@ -144,14 +144,17 @@ public class MapStructBuilderProvider implements BuilderProvider {
 
     BuilderNaming naming = builderNaming(beanElement);
 
-    // Conventional name first: a constant-time getTypeElement per candidate package and suffix,
-    // covering builders generated in earlier runs or with the integration's registration absent.
+    // Conventional name for builders generated in earlier runs (committed sources, other
+    // modules): a constant-time getTypeElement per candidate package and suffix. The candidate
+    // must carry @BuilderImplementation(forClass = <bean>) so only classes this generator
+    // emitted are claimed — a foreign type that merely matches the name is ignored.
     for (String packageName : naming.packageNames()) {
       for (String suffix : naming.suffixes()) {
         TypeElement candidate =
             elementUtils.getTypeElement(
                 qualifiedName(packageName, beanElement.getSimpleName() + suffix));
         if (candidate != null
+            && isGeneratedBuilderFor(candidate, beanElement)
             && findCreationMethod(candidate) != null
             && !findBuildMethods(candidate, beanElement.asType()).isEmpty()) {
           return candidate;
@@ -166,6 +169,18 @@ public class MapStructBuilderProvider implements BuilderProvider {
       throw new TypeHierarchyErroneousException(beanElement.asType());
     }
     return null;
+  }
+
+  /**
+   * Whether {@code candidate} carries {@code @BuilderImplementation(forClass = beanElement)} — the
+   * marker every emitted builder gets, kept at CLASS retention so it is readable on builders
+   * generated in earlier compilations.
+   */
+  private boolean isGeneratedBuilderFor(TypeElement candidate, TypeElement beanElement) {
+    TypeMirror forClass = annotations.builderImplementationForClass(candidate);
+    return forClass != null
+        && typeUtils.isSameType(
+            typeUtils.erasure(forClass), typeUtils.erasure(beanElement.asType()));
   }
 
   /**
