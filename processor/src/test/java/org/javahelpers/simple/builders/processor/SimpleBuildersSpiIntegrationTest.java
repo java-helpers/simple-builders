@@ -80,12 +80,7 @@ class SimpleBuildersSpiIntegrationTest {
   void lifecycle_transitions() {
     SimpleBuildersSpiIntegration.initCompilation(ELEMENTS, null);
     assertEquals(State.PROCESSING, SimpleBuildersSpiIntegration.state());
-
-    SimpleBuildersSpiIntegration.targetsRegistered();
-    assertEquals(State.TARGETS_REGISTERED, SimpleBuildersSpiIntegration.state());
-
-    SimpleBuildersSpiIntegration.targetsRegistered();
-    assertEquals(State.TARGETS_REGISTERED, SimpleBuildersSpiIntegration.state());
+    assertFalse(SimpleBuildersSpiIntegration.isSimpleBuildersFinishedForIntegration());
 
     SimpleBuildersSpiIntegration.finishCompilation();
     assertEquals(State.FINISHED, SimpleBuildersSpiIntegration.state());

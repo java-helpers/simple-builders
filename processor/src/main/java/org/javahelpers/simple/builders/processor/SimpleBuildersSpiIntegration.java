@@ -59,15 +59,10 @@ public final class SimpleBuildersSpiIntegration {
      */
     INIT,
     /**
-     * {@code BuilderProcessor} initialized: even its initial targets may be unpublished — the
-     * registry must be treated as possibly still filling.
+     * {@code BuilderProcessor} initialized: the registry may still fill in this and later rounds —
+     * elements emitted by other processors can add targets until the last round.
      */
     PROCESSING,
-    /**
-     * {@code BuilderProcessor}'s first processing round ran: the registry holds all targets
-     * discoverable so far and may still grow in later rounds.
-     */
-    TARGETS_REGISTERED,
     /** The last round ran: the registry is final for this compilation. */
     FINISHED
   }
@@ -106,14 +101,6 @@ public final class SimpleBuildersSpiIntegration {
     compilationElements.set(elements);
     SimpleBuildersSpiIntegration.integrationEnabled = integrationEnabled;
     state = State.PROCESSING;
-  }
-
-  /**
-   * Marks the end of {@link BuilderProcessor}'s first processing round: the initial targets are
-   * published; the registry may still grow in later rounds.
-   */
-  static void targetsRegistered() {
-    state = State.TARGETS_REGISTERED;
   }
 
   /** Marks the compilation as finished: the registry will not grow any further. */

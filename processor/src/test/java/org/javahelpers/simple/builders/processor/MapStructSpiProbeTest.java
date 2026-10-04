@@ -303,7 +303,7 @@ class MapStructSpiProbeTest {
       if (skippedMode) {
         // The bean is marked but out of the generation scope: it defers in every non-final
         // state while unpublished — the probe runs behind the processor, so these lookups
-        // already observe TARGETS_REGISTERED.
+        // already observe the post-registration state.
         if (results.skippedBeanDeferred == null) {
           results.skippedBeanDeferred = lookupExpectingDeferral(bean);
         } else {

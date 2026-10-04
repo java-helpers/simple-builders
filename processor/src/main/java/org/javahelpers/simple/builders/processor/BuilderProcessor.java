@@ -208,8 +208,6 @@ public class BuilderProcessor extends AbstractProcessor {
 
     // Reset indentation level at the end of each processing round to prevent cascading errors
     context.resetIndentation();
-    // The round's targets are published; only transitions on the first round.
-    SimpleBuildersSpiIntegration.targetsRegistered();
     // Returning false leaves the annotations unclaimed so other processors on the
     // processor path (e.g. MapStruct, AutoService) still see them.
     return false;
