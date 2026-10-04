@@ -36,6 +36,7 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import org.javahelpers.simple.builders.processor.processing.SpiIntegration;
 import org.mapstruct.ap.spi.AccessorNamingStrategy;
 import org.mapstruct.ap.spi.DefaultAccessorNamingStrategy;
 import org.mapstruct.ap.spi.MapStructProcessingEnvironment;
@@ -68,7 +69,7 @@ public class MapStructAccessorNamingStrategy extends DefaultAccessorNamingStrate
   @Override
   public void init(MapStructProcessingEnvironment processingEnvironment) {
     super.init(processingEnvironment);
-    MapStructIntegration.spiInitialized();
+    SpiIntegration.spiInitialized();
     annotations = new AnnotationSupport(processingEnvironment.getElementUtils());
     Map<String, String> options = processingEnvironment.getOptions();
     processorOptions = options == null ? Map.of() : options;
@@ -77,7 +78,7 @@ public class MapStructAccessorNamingStrategy extends DefaultAccessorNamingStrate
   @Override
   public MethodType getMethodType(ExecutableElement method) {
     MethodType methodType = super.getMethodType(method);
-    if (MapStructIntegration.isDisabled(processorOptions)) {
+    if (SpiIntegration.isDisabled(processorOptions)) {
       return methodType;
     }
     if (methodType != MethodType.SETTER && methodType != MethodType.ADDER) {
@@ -127,7 +128,7 @@ public class MapStructAccessorNamingStrategy extends DefaultAccessorNamingStrate
    * Types not on the list are not attributed to this generator.
    */
   private TypeElement resolveBean(TypeElement builderType) {
-    String registered = MapStructIntegration.beanFor(builderType.getQualifiedName().toString());
+    String registered = SpiIntegration.beanFor(builderType.getQualifiedName().toString());
     return registered == null ? null : elementUtils.getTypeElement(registered);
   }
 

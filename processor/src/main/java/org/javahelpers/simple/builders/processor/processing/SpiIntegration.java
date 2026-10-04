@@ -21,17 +21,18 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.mapstruct;
+package org.javahelpers.simple.builders.processor.processing;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * State {@code BuilderProcessor} shares with the MapStruct SPI adapters while they share the
- * annotation processor path (and therefore the classloader): the resolved {@code
- * simplebuilder.usingMapStructIntegration} switch — which SPI environments cannot see because
- * MapStruct forwards only its own processor options — and the qualified names of the builders
- * planned for generation, so lookups do not have to guess names or scan packages.
+ * State {@code BuilderProcessor} shares with SPI adapters of other frameworks while they share the
+ * annotation processor path (and therefore the classloader): the resolved integration switch —
+ * which SPI environments cannot see because the hosting framework forwards only its own processor
+ * options (e.g. MapStruct's {@code simplebuilder.usingMapStructIntegration}) — and the qualified
+ * names of the builders planned for generation, so lookups do not have to guess names or scan
+ * packages.
  *
  * <p>All state is compilation-scoped and guarded by {@link State}: javac initializes each processor
  * lazily when its turn in a round comes, so before {@code BuilderProcessor} has run its {@code
@@ -39,7 +40,7 @@ import java.util.Map;
  * long-lived JVM (Gradle daemon, incremental builds). Only while {@link State#PROCESSING} or {@link
  * State#FINISHED} are the published switch and registry the current compilation's truth.
  */
-public final class MapStructIntegration {
+public final class SpiIntegration {
 
   /** Lifecycle of the current compilation as the SPI adapters observe it. */
   public enum State {
@@ -67,7 +68,7 @@ public final class MapStructIntegration {
   /** Reverse of {@link #GENERATED_BUILDERS}: builder qualified name → bean qualified name. */
   private static final Map<String, String> BEAN_BY_BUILDER = new HashMap<>();
 
-  private MapStructIntegration() {}
+  private SpiIntegration() {}
 
   /**
    * Starts a new compilation: clears the builder registry and publishes the integration switch the
@@ -87,10 +88,10 @@ public final class MapStructIntegration {
 
   /**
    * Called by each SPI adapter on {@code init}. javac initializes every processor lazily in its
-   * turn, so MapStruct's SPI init may run before {@code BuilderProcessor#init} of the same
-   * compilation; a {@link State#FINISHED} observed here can only be the previous compilation's
-   * leftover — a live {@link State#FINISHED} implies the last round already ran and no new SPI init
-   * would follow — and is reset to {@link State#INIT}.
+   * turn, so an SPI init may run before {@code BuilderProcessor#init} of the same compilation; a
+   * {@link State#FINISHED} observed here can only be the previous compilation's leftover — a live
+   * {@link State#FINISHED} implies the last round already ran and no new SPI init would follow —
+   * and is reset to {@link State#INIT}.
    */
   public static void spiInitialized() {
     if (state == State.FINISHED) {
@@ -128,14 +129,15 @@ public final class MapStructIntegration {
    * convention applies (JVM system property before the annotation processor option MapStruct does
    * not forward anyway).
    */
-  static boolean isDisabled(Map<String, String> processorOptions) {
+  public static boolean isDisabled(Map<String, String> processorOptions) {
     if (state != State.INIT) {
       Boolean published = enabled;
       if (published != null) {
         return !published;
       }
     }
-    String value = AnnotationSupport.systemOption(processorOptions, OPTION_USING_MAPSTRUCT);
+    String value =
+        System.getProperty(OPTION_USING_MAPSTRUCT, processorOptions.get(OPTION_USING_MAPSTRUCT));
     return "false".equalsIgnoreCase(value) || "disabled".equalsIgnoreCase(value);
   }
 }
