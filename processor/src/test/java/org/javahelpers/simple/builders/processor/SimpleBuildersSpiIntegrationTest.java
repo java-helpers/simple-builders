@@ -66,6 +66,13 @@ class SimpleBuildersSpiIntegrationTest {
     SimpleBuildersSpiIntegration.initCompilation(null);
     assertEquals(State.PROCESSING, SimpleBuildersSpiIntegration.state());
 
+    SimpleBuildersSpiIntegration.targetsRegistered();
+    assertEquals(State.TARGETS_REGISTERED, SimpleBuildersSpiIntegration.state());
+
+    // Later rounds keep the state; only the first transition counts.
+    SimpleBuildersSpiIntegration.targetsRegistered();
+    assertEquals(State.TARGETS_REGISTERED, SimpleBuildersSpiIntegration.state());
+
     SimpleBuildersSpiIntegration.finishCompilation();
     assertEquals(State.FINISHED, SimpleBuildersSpiIntegration.state());
 

@@ -133,13 +133,17 @@ class MapStructSpiProbeTest {
 
     ProbeResults results = ProbeResults.instance;
 
-    // Marked beans defer while the registry can still grow: unregistered yet or emitted later.
+    // While the initial targets may be unpublished every miss defers — marked beans,
+    // template-annotated beans, foreign and opted-out beans alike.
     assertInstanceOf(TypeHierarchyErroneousException.class, results.unregisteredDeferral);
     assertInstanceOf(TypeHierarchyErroneousException.class, results.templateDeferral);
+    assertInstanceOf(TypeHierarchyErroneousException.class, results.foreignUnpublished);
+    assertInstanceOf(TypeHierarchyErroneousException.class, results.ignoredUnpublished);
 
-    // Foreign and opted-out beans are never claimed, whichever lifecycle state applies.
-    assertNull(results.foreignWhileProcessing);
-    assertNull(results.ignoredWhileProcessing);
+    // Once targets are registered only marked beans may still arrive — foreign and
+    // opted-out beans resolve to no builder immediately and never get claimed.
+    assertNull(results.foreignRegistered);
+    assertNull(results.ignoredRegistered);
     assertNull(results.foreignWhenFinished);
     assertNull(results.noType);
 
@@ -166,8 +170,10 @@ class MapStructSpiProbeTest {
     final Map<String, MethodType> methodTypes = new LinkedHashMap<>();
     Throwable unregisteredDeferral;
     Throwable templateDeferral;
-    BuilderInfo foreignWhileProcessing;
-    BuilderInfo ignoredWhileProcessing;
+    Throwable foreignUnpublished;
+    Throwable ignoredUnpublished;
+    BuilderInfo foreignRegistered;
+    BuilderInfo ignoredRegistered;
     BuilderInfo foreignWhenFinished;
     BuilderInfo noType;
     BuilderInfo builderInfo;
@@ -177,8 +183,10 @@ class MapStructSpiProbeTest {
       methodTypes.clear();
       unregisteredDeferral = null;
       templateDeferral = null;
-      foreignWhileProcessing = null;
-      ignoredWhileProcessing = null;
+      foreignUnpublished = null;
+      ignoredUnpublished = null;
+      foreignRegistered = null;
+      ignoredRegistered = null;
       foreignWhenFinished = null;
       noType = null;
       builderInfo = null;
@@ -243,10 +251,9 @@ class MapStructSpiProbeTest {
         // Probed before BuilderProcessor planned the bean — a marked bean without a registry
         // entry must defer like a mapper running ahead of the generating round.
         results.unregisteredDeferral = lookupExpectingDeferral(bean);
-        results.foreignWhileProcessing = lookup(provider, "test.ForeignDto");
-        results.ignoredWhileProcessing = lookup(provider, "test.IgnoredDto");
-        TypeElement minimal = processingEnv.getElementUtils().getTypeElement("test.MinimalDto");
-        results.templateDeferral = lookupExpectingDeferral(minimal);
+        results.foreignUnpublished = lookupExpectingDeferral(element("test.ForeignDto"));
+        results.ignoredUnpublished = lookupExpectingDeferral(element("test.IgnoredDto"));
+        results.templateDeferral = lookupExpectingDeferral(element("test.MinimalDto"));
         return false;
       }
 
@@ -262,6 +269,8 @@ class MapStructSpiProbeTest {
       }
       results.builderInfo = provider.findBuilderInfo(bean.asType());
       results.cachedBuilderInfo = provider.findBuilderInfo(bean.asType());
+      results.foreignRegistered = lookup(provider, "test.ForeignDto");
+      results.ignoredRegistered = lookup(provider, "test.IgnoredDto");
       results.noType =
           provider.findBuilderInfo(
               processingEnv.getTypeUtils().getNoType(javax.lang.model.type.TypeKind.NONE));
@@ -273,6 +282,10 @@ class MapStructSpiProbeTest {
         }
       }
       return false;
+    }
+
+    private TypeElement element(String qualifiedName) {
+      return processingEnv.getElementUtils().getTypeElement(qualifiedName);
     }
 
     private Throwable lookupExpectingDeferral(TypeElement bean) {

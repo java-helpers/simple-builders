@@ -39,6 +39,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import org.javahelpers.simple.builders.processor.SimpleBuildersSpiIntegration;
 import org.javahelpers.simple.builders.processor.SimpleBuildersSpiIntegration.PublishedBuilder;
+import org.javahelpers.simple.builders.processor.SimpleBuildersSpiIntegration.State;
 import org.javahelpers.simple.builders.processor.model.type.BuilderInstantiation.StaticFactoryCall;
 import org.mapstruct.ap.spi.BuilderInfo;
 import org.mapstruct.ap.spi.BuilderProvider;
@@ -58,11 +59,11 @@ import org.mapstruct.ap.spi.TypeHierarchyErroneousException;
  * compilations are not discovered: only the beans the processor plans in the current run get
  * builder mapping.
  *
- * <p>While the compilation is not {@link SimpleBuildersSpiIntegration.State#FINISHED} the registry
- * may still grow, so a published builder that is not visible yet — or a bean marked for generation
- * whose entry may still arrive — defers the mapper via {@link TypeHierarchyErroneousException} to
- * the next processing round. After {@link SimpleBuildersSpiIntegration.State#FINISHED} a registry
- * miss is definitive and the lookup gracefully returns {@code null}.
+ * <p>While the compilation is not {@link State#FINISHED} the registry may still grow: before {@link
+ * State#TARGETS_REGISTERED} even the initial targets may be unpublished, so a lookup miss defers
+ * the mapper via {@link TypeHierarchyErroneousException} for any bean; afterwards only a bean
+ * marked for generation may still be registered in a later round and defers then. After {@link
+ * State#FINISHED} a registry miss is definitive and the lookup gracefully returns {@code null}.
  *
  * <p>The provider is registered via {@code META-INF/services} and is only loaded when
  * simple-builders-processor and mapstruct-processor share the annotation processor path. The
@@ -140,18 +141,20 @@ public class MapStructBuilderProvider implements BuilderProvider {
   private TypeElement findBuilderElement(
       TypeElement beanElement, Optional<PublishedBuilder> published) {
     if (published.isEmpty()) {
-      if (SimpleBuildersSpiIntegration.state() != SimpleBuildersSpiIntegration.State.FINISHED
-          && isBuilderGenerationTarget(beanElement)) {
-        // Marked for generation but not published yet — MapStruct may run ahead of this
-        // processor's round; defer so the registry can fill in before the mapper is generated.
+      State state = SimpleBuildersSpiIntegration.state();
+      // While the initial target registration may still be missing, any bean may still get an
+      // entry; afterwards only a bean marked for generation may still be registered in a later
+      // round. Deferring retries the mapper once the registry could have filled.
+      if (state == State.INIT
+          || state == State.PROCESSING
+          || (state == State.TARGETS_REGISTERED && isBuilderGenerationTarget(beanElement))) {
         throw new TypeHierarchyErroneousException(beanElement.asType());
       }
       return null;
     }
     TypeElement builderElement =
         elementUtils.getTypeElement(published.get().builder().typeName().getFullQualifiedName());
-    if (builderElement == null
-        && SimpleBuildersSpiIntegration.state() != SimpleBuildersSpiIntegration.State.FINISHED) {
+    if (builderElement == null && SimpleBuildersSpiIntegration.state() != State.FINISHED) {
       // Published but not emitted yet — defer so the mapper retries once the type exists.
       throw new TypeHierarchyErroneousException(beanElement.asType());
     }

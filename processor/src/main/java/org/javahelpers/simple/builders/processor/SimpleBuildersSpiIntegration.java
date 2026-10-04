@@ -41,8 +41,8 @@ import org.javahelpers.simple.builders.processor.model.type.TypeName;
  * is compilation-scoped: javac initializes each processor lazily when its turn in a round comes, so
  * before {@link BuilderProcessor} has run its {@code init()} nothing static can be trusted — values
  * may be leftovers of a previous compilation in a long-lived JVM (Gradle daemon, incremental
- * builds). Only while {@link State#PROCESSING} or {@link State#FINISHED} are the published switch
- * and registry the current compilation's truth.
+ * builds). Only while {@link State#PROCESSING}, {@link State#TARGETS_REGISTERED} or {@link
+ * State#FINISHED} are the published switch and registry the current compilation's truth.
  */
 public final class SimpleBuildersSpiIntegration {
 
@@ -56,8 +56,16 @@ public final class SimpleBuildersSpiIntegration {
      * and the registry must be treated as possibly still filling.
      */
     INIT,
-    /** {@code BuilderProcessor} initialized: the registry may still grow this round. */
+    /**
+     * {@code BuilderProcessor} initialized: even its initial targets may be unpublished — the
+     * registry must be treated as possibly still filling.
+     */
     PROCESSING,
+    /**
+     * {@code BuilderProcessor}'s first processing round ran: the registry holds all targets
+     * discoverable so far and may still grow in later rounds.
+     */
+    TARGETS_REGISTERED,
     /** The last round ran: the registry is final for this compilation. */
     FINISHED
   }
@@ -92,6 +100,16 @@ public final class SimpleBuildersSpiIntegration {
     BY_BUILDER.clear();
     SimpleBuildersSpiIntegration.integrationEnabled = integrationEnabled;
     state = State.PROCESSING;
+  }
+
+  /**
+   * Marks the end of {@link BuilderProcessor}'s first processing round: the initial targets are
+   * published; the registry may still grow in later rounds.
+   */
+  static void targetsRegistered() {
+    if (state == State.PROCESSING) {
+      state = State.TARGETS_REGISTERED;
+    }
   }
 
   /** Marks the compilation as finished: the registry will not grow any further. */
