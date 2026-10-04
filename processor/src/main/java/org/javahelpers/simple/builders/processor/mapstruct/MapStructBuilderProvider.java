@@ -26,6 +26,7 @@ package org.javahelpers.simple.builders.processor.mapstruct;
 import com.google.auto.service.AutoService;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -53,26 +54,46 @@ import org.mapstruct.ap.spi.TypeHierarchyErroneousException;
  * resolving the conventional name {@code <Bean><builderSuffix>} in the target package.
  *
  * <p>The provider is registered via {@code META-INF/services} and is only loaded when
- * simple-builders-processor and mapstruct-processor share the annotation processor path.
+ * simple-builders-processor and mapstruct-processor share the annotation processor path. The
+ * integration can be switched off entirely with {@code
+ * -Dsimplebuilder.usingMapStructIntegration=false} (MapStruct does not forward foreign annotation
+ * processor options to SPI environments, so the JVM system property is the documented channel).
  */
 @AutoService(BuilderProvider.class)
 public class MapStructBuilderProvider implements BuilderProvider {
 
   private static final String DEFAULT_BUILDER_SUFFIX = "Builder";
+  private static final String OPTION_USING_MAPSTRUCT = "simplebuilder.usingMapStructIntegration";
 
   private Elements elementUtils;
   private Types typeUtils;
   private AnnotationSupport annotations;
+  private boolean enabled = true;
 
   @Override
   public void init(MapStructProcessingEnvironment processingEnvironment) {
     this.elementUtils = processingEnvironment.getElementUtils();
     this.typeUtils = processingEnvironment.getTypeUtils();
     this.annotations = new AnnotationSupport(elementUtils);
+    Map<String, String> options = processingEnvironment.getOptions();
+    enabled = !isDisabled(options != null ? options.get(OPTION_USING_MAPSTRUCT) : null);
+  }
+
+  /**
+   * Whether the integration is switched off, following the {@code simplebuilder.*} convention of
+   * preferring the JVM system property over the annotation processor option (which MapStruct does
+   * not forward to SPI environments).
+   */
+  private static boolean isDisabled(String processorOption) {
+    String value = System.getProperty(OPTION_USING_MAPSTRUCT, processorOption);
+    return "false".equalsIgnoreCase(value);
   }
 
   @Override
   public BuilderInfo findBuilderInfo(TypeMirror type) {
+    if (!enabled) {
+      return null;
+    }
     if (!(type instanceof DeclaredType declaredType)
         || !(declaredType.asElement() instanceof TypeElement beanElement)) {
       return null;

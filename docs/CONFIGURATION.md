@@ -1048,6 +1048,23 @@ This is highly recommended to ensure deterministic output location and avoid spl
 
 ---
 
+#### `usingMapStructIntegration`
+
+**Default**: `ENABLED` | **System Property**: `-Dsimplebuilder.usingMapStructIntegration=ENABLED|DISABLED`
+
+Controls the MapStruct SPI adapters bundled in the processor jar (`MapStructBuilderProvider` and `MapStructAccessorNamingStrategy`, registered via `META-INF/services`). They make MapStruct auto-detect generated builders when `simple-builders-processor` and `mapstruct-processor` share the annotation processor path — no annotation attribute exists because the SPIs are discovered globally by MapStruct itself.
+
+Unlike the other options this switch is read inside MapStruct's SPI environment, which does not see the `simplebuilder.*` annotation processor options. Use the `-D` JVM system property form (same precedence rules as other options); the `-A` form is honoured as a fallback where it does reach the SPI environment.
+
+**When DISABLED**: The provider returns no builder candidates and the naming strategy keeps the stock MapStruct behaviour, so generated builders are treated like ordinary classes.
+
+**Example**:
+```bash
+mvn compile -Dsimplebuilder.usingMapStructIntegration=DISABLED
+```
+
+---
+
 ### Documentation
 
 #### `generateJavaDoc`
@@ -1692,6 +1709,7 @@ methodAccess = AccessModifier.PRIVATE
 -Asimplebuilder.usingJacksonDeserializerAnnotation=ENABLED|DISABLED
 -Asimplebuilder.generateJacksonModule=ENABLED|DISABLED
 -Asimplebuilder.jacksonModulePackage=com.your.package
+-Dsimplebuilder.usingMapStructIntegration=ENABLED|DISABLED
 
 # Documentation
 -Asimplebuilder.generateJavaDoc=ENABLED|DISABLED

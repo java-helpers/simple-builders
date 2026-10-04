@@ -58,11 +58,13 @@ import org.mapstruct.ap.spi.MethodType;
 public class MapStructAccessorNamingStrategy extends DefaultAccessorNamingStrategy {
 
   private static final String OPTION_PREFIX = "simplebuilder.";
+  private static final String OPTION_USING_MAPSTRUCT = OPTION_PREFIX + "usingMapStructIntegration";
   private static final String DEFAULT_BUILDER_SUFFIX = "Builder";
 
   private AnnotationSupport annotations;
   private Map<String, String> processorOptions = Map.of();
   private final Map<String, Optional<Map<String, TypeMirror>>> directSettersCache = new HashMap<>();
+  private boolean enabled = true;
 
   @Override
   public void init(MapStructProcessingEnvironment processingEnvironment) {
@@ -70,11 +72,21 @@ public class MapStructAccessorNamingStrategy extends DefaultAccessorNamingStrate
     annotations = new AnnotationSupport(processingEnvironment.getElementUtils());
     Map<String, String> options = processingEnvironment.getOptions();
     processorOptions = options == null ? Map.of() : options;
+    // MapStruct forwards only its own options to SPI environments, so the off-switch follows the
+    // simplebuilder.* convention and prefers the JVM system property
+    enabled =
+        !"false"
+            .equalsIgnoreCase(
+                System.getProperty(
+                    OPTION_USING_MAPSTRUCT, processorOptions.get(OPTION_USING_MAPSTRUCT)));
   }
 
   @Override
   public MethodType getMethodType(ExecutableElement method) {
     MethodType methodType = super.getMethodType(method);
+    if (!enabled) {
+      return methodType;
+    }
     if (methodType != MethodType.SETTER && methodType != MethodType.ADDER) {
       return methodType;
     }
@@ -147,7 +159,7 @@ public class MapStructAccessorNamingStrategy extends DefaultAccessorNamingStrate
   }
 
   private String[] builderSuffixCandidates() {
-    String configured = processorOptions.get(OPTION_PREFIX + "builderSuffix");
+    String configured = option(OPTION_PREFIX + "builderSuffix");
     return configured != null && !configured.isEmpty()
         ? new String[] {configured, DEFAULT_BUILDER_SUFFIX}
         : new String[] {DEFAULT_BUILDER_SUFFIX};
@@ -161,8 +173,17 @@ public class MapStructAccessorNamingStrategy extends DefaultAccessorNamingStrate
         return setterSuffix;
       }
     }
-    String global = processorOptions.get(OPTION_PREFIX + "setterSuffix");
+    String global = option(OPTION_PREFIX + "setterSuffix");
     return global != null ? global : "";
+  }
+
+  /**
+   * Reads a {@code simplebuilder.*} option following the project convention: the JVM system
+   * property wins over the annotation processor option (which MapStruct does not forward to SPI
+   * environments).
+   */
+  private String option(String key) {
+    return System.getProperty(key, processorOptions.get(key));
   }
 
   private void collectFields(

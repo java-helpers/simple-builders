@@ -36,9 +36,9 @@ import org.junit.jupiter.api.Test;
 import org.mapstruct.ap.MappingProcessor;
 
 /**
- * Integration test for the MapStruct SPI implementations: {@code MapStructBuilderProvider}
- * supplies the builder, {@code MapStructAccessorNamingStrategy} hides the generated helper
- * methods so MapStruct neither binds them nor reports them as unmapped target properties.
+ * Integration test for the MapStruct SPI implementations: {@code MapStructBuilderProvider} supplies
+ * the builder, {@code MapStructAccessorNamingStrategy} hides the generated helper methods so
+ * MapStruct neither binds them nor reports them as unmapped target properties.
  */
 class MapStructSpiIntegrationTest {
 
@@ -85,6 +85,41 @@ class MapStructSpiIntegrationTest {
           }
           """);
 
+  private static final JavaFileObject MUTABLE_DTO =
+      ProcessorTestUtils.forSource(
+          """
+          package test;
+
+          import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+          @SimpleBuilder
+          public class MutableDto {
+            private String name;
+
+            public String getName() {
+              return name;
+            }
+
+            public void setName(String name) {
+              this.name = name;
+            }
+          }
+          """);
+
+  private static final JavaFileObject MUTABLE_DTO_MAPPER =
+      ProcessorTestUtils.forSource(
+          """
+          package test;
+
+          import org.mapstruct.Mapper;
+
+          @Mapper
+          public interface MutableDtoMapper {
+
+            MutableDto copy(MutableDto source);
+          }
+          """);
+
   private static Compiler compiler() {
     return Compiler.javac()
         .withProcessors(new BuilderProcessor(), new MappingProcessor())
@@ -121,5 +156,25 @@ class MapStructSpiIntegrationTest {
         "Generated helper methods (add2*, *Update, Supplier/Consumer overloads) must not "
             + "surface as unmapped target properties, got: "
             + warnings);
+  }
+
+  @Test
+  void mapStruct_disabledIntegration_shouldMapViaSetters() {
+    // MapStruct does not forward foreign -A options to SPI environments; the off-switch is the
+    // simplebuilder.* JVM system property (same precedence as in CompilerArgumentsReader)
+    System.setProperty("simplebuilder.usingMapStructIntegration", "false");
+    try {
+      Compilation compilation = compiler().compile(MUTABLE_DTO, MUTABLE_DTO_MAPPER);
+      assertThat(compilation).succeeded();
+      ProcessorTestUtils.printDiagnosticsOnVerbose(compilation);
+
+      String mapperImpl = loadGeneratedSource(compilation, "MutableDtoMapperImpl");
+      assertFalse(
+          mapperImpl.contains("MutableDtoBuilder"),
+          "Disabled integration must leave the generated builder unused");
+      assertTrue(mapperImpl.contains(".setName("), "MapStruct should fall back to setter mapping");
+    } finally {
+      System.clearProperty("simplebuilder.usingMapStructIntegration");
+    }
   }
 }
