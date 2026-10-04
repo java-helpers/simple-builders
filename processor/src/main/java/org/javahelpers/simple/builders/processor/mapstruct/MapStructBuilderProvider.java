@@ -69,6 +69,7 @@ public class MapStructBuilderProvider implements BuilderProvider {
 
   private Elements elementUtils;
   private Types typeUtils;
+  private AnnotationSupport annotations;
   private Map<String, String> processorOptions = Map.of();
 
   /** Resolved builder infos by bean qualified name; only positive results are cached. */
@@ -76,8 +77,10 @@ public class MapStructBuilderProvider implements BuilderProvider {
 
   @Override
   public void init(MapStructProcessingEnvironment processingEnvironment) {
+    MapStructIntegration.spiInitialized();
     this.elementUtils = processingEnvironment.getElementUtils();
     this.typeUtils = processingEnvironment.getTypeUtils();
+    this.annotations = new AnnotationSupport(elementUtils);
     Map<String, String> options = processingEnvironment.getOptions();
     processorOptions = options == null ? Map.of() : options;
   }
@@ -120,12 +123,21 @@ public class MapStructBuilderProvider implements BuilderProvider {
 
   /**
    * Locates the generated builder for {@code beanElement} through the registry {@code
-   * BuilderProcessor} publishes. A bean not on the list gets no builder mapping. A planned builder
-   * that is not emitted yet defers the mapper to the next processing round.
+   * BuilderProcessor} publishes — the list decides alone which type is claimed. A planned builder
+   * that is not emitted yet defers the mapper to the next processing round. While the compilation
+   * is not {@link MapStructIntegration.State#FINISHED} the registry may still grow (MapStruct may
+   * run ahead of this processor's first round), so a bean marked for generation gets the same
+   * deferral instead of a premature miss.
    */
   private TypeElement findBuilderElement(TypeElement beanElement) {
     String registered = MapStructIntegration.builderFor(beanElement.getQualifiedName().toString());
     if (registered == null) {
+      if (MapStructIntegration.state() != MapStructIntegration.State.FINISHED
+          && annotations.isBuilderGenerationTarget(beanElement)) {
+        // Marked for generation but not published yet — our processor has not had its round;
+        // defer so the registry can fill in before the mapper is generated.
+        throw new TypeHierarchyErroneousException(beanElement.asType());
+      }
       return null;
     }
     TypeElement registeredElement = elementUtils.getTypeElement(registered);

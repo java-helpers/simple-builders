@@ -68,6 +68,7 @@ public class MapStructAccessorNamingStrategy extends DefaultAccessorNamingStrate
   @Override
   public void init(MapStructProcessingEnvironment processingEnvironment) {
     super.init(processingEnvironment);
+    MapStructIntegration.spiInitialized();
     annotations = new AnnotationSupport(processingEnvironment.getElementUtils());
     Map<String, String> options = processingEnvironment.getOptions();
     processorOptions = options == null ? Map.of() : options;

@@ -158,6 +158,7 @@ public class BuilderProcessor extends AbstractProcessor {
 
     // Generate Jackson Module if processing is over and feature is enabled
     if (roundEnv.processingOver()) {
+      MapStructIntegration.finishCompilation();
       generateJacksonModules(context.getPerformanceTracker());
       return false;
     }

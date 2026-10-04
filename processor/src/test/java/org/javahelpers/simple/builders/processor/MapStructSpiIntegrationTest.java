@@ -142,6 +142,28 @@ class MapStructSpiIntegrationTest {
   }
 
   @Test
+  void mapStruct_processorOrderReversed_shouldStillUseGeneratedBuilder() {
+    // MapStruct processing the mapper before BuilderProcessor's first round must not lose the
+    // builder: the marked bean defers via TypeHierarchyErroneousException until the registry
+    // holds the planned builder
+    Compilation compilation =
+        Compiler.javac()
+            .withProcessors(new MappingProcessor(), new BuilderProcessor())
+            .withOptions(
+                "-Amapstruct.suppressGeneratorTimestamp=true",
+                "-Amapstruct.suppressGeneratorVersionInfoComment=true")
+            .compile(PERSON_DTO, PERSON_DTO_MAPPER);
+    assertThat(compilation).succeeded();
+    ProcessorTestUtils.printDiagnosticsOnVerbose(compilation);
+
+    String mapperImpl = loadGeneratedSource(compilation, "PersonDtoMapperImpl");
+    assertTrue(
+        mapperImpl.contains("PersonDtoBuilder.create()"),
+        "Reversed processor order must still bind the generated builder, got:\n" + mapperImpl);
+    assertTrue(mapperImpl.contains(".build()"), "MapStruct should finish via build()");
+  }
+
+  @Test
   void mapStruct_shouldNotReportHelpersAsUnmappedTargetProperties() {
     Compilation compilation = compiler().compile(PERSON_DTO, PERSON_DTO_MAPPER);
     assertThat(compilation).succeeded();

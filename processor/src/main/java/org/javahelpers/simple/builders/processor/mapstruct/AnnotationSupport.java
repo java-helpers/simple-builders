@@ -46,6 +46,8 @@ final class AnnotationSupport {
       "org.javahelpers.simple.builders.core.annotations.SimpleBuilder";
   static final String SIMPLE_BUILDER_TEMPLATE_ANNOTATION =
       "org.javahelpers.simple.builders.core.annotations.SimpleBuilder.Template";
+  static final String IGNORE_4_BUILDER_ANNOTATION =
+      "org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration";
 
   private final Elements elementUtils;
 
@@ -101,6 +103,34 @@ final class AnnotationSupport {
       }
     }
     return null;
+  }
+
+  /**
+   * Whether {@code beanElement} is marked for builder generation ({@code @SimpleBuilder} or a
+   * builder template annotation, not opted out via {@code @Ignore4BuilderGeneration}).
+   */
+  boolean isBuilderGenerationTarget(TypeElement beanElement) {
+    boolean marked = false;
+    for (AnnotationMirror mirror : elementUtils.getAllAnnotationMirrors(beanElement)) {
+      String annotationName = qualifiedNameOf(mirror);
+      if (annotationName.equals(IGNORE_4_BUILDER_ANNOTATION)) {
+        return false;
+      }
+      if (annotationName.equals(SIMPLE_BUILDER_ANNOTATION)) {
+        marked = true;
+        continue;
+      }
+      // A custom builder template annotation (e.g. @SimpleMinimalBuilder or a project-defined
+      // one): its type is meta-annotated with @SimpleBuilder.Template.
+      for (AnnotationMirror metaMirror :
+          mirror.getAnnotationType().asElement().getAnnotationMirrors()) {
+        if (qualifiedNameOf(metaMirror).equals(SIMPLE_BUILDER_TEMPLATE_ANNOTATION)) {
+          marked = true;
+          break;
+        }
+      }
+    }
+    return marked;
   }
 
   /**
