@@ -36,8 +36,8 @@ import org.junit.jupiter.api.Test;
 import org.mapstruct.ap.MappingProcessor;
 
 /**
- * Integration test for the MapStruct SPI implementations: {@code SimpleBuildersBuilderProvider}
- * supplies the builder, {@code SimpleBuildersAccessorNamingStrategy} hides the generated helper
+ * Integration test for the MapStruct SPI implementations: {@code MapStructBuilderProvider}
+ * supplies the builder, {@code MapStructAccessorNamingStrategy} hides the generated helper
  * methods so MapStruct neither binds them nor reports them as unmapped target properties.
  */
 class MapStructSpiIntegrationTest {

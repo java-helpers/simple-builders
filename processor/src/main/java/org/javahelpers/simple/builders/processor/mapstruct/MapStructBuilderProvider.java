@@ -56,7 +56,7 @@ import org.mapstruct.ap.spi.TypeHierarchyErroneousException;
  * simple-builders-processor and mapstruct-processor share the annotation processor path.
  */
 @AutoService(BuilderProvider.class)
-public class SimpleBuildersBuilderProvider implements BuilderProvider {
+public class MapStructBuilderProvider implements BuilderProvider {
 
   private static final String DEFAULT_BUILDER_SUFFIX = "Builder";
 

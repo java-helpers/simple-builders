@@ -55,7 +55,7 @@ import org.mapstruct.ap.spi.MethodType;
  * type keeps the {@link DefaultAccessorNamingStrategy} behaviour.
  */
 @AutoService(AccessorNamingStrategy.class)
-public class SimpleBuildersAccessorNamingStrategy extends DefaultAccessorNamingStrategy {
+public class MapStructAccessorNamingStrategy extends DefaultAccessorNamingStrategy {
 
   private static final String OPTION_PREFIX = "simplebuilder.";
   private static final String DEFAULT_BUILDER_SUFFIX = "Builder";

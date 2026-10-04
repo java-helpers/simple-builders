@@ -36,7 +36,7 @@ import org.mapstruct.factory.Mappers;
 
 /**
  * Verifies that MapStruct discovers and uses the generated {@code PersonDtoBuilder} through the
- * {@code SimpleBuildersBuilderProvider} SPI shipped in simple-builders-processor.
+ * {@code MapStructBuilderProvider} SPI shipped in simple-builders-processor.
  */
 class MapStructIntegrationTest {
 
