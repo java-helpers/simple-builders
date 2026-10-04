@@ -70,6 +70,8 @@ import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.model.core.BuilderToGenerationTypeMapper;
 import org.javahelpers.simple.builders.processor.model.core.GenerationTargetClassDto;
+import org.javahelpers.simple.builders.processor.model.type.BuilderInstantiation.StaticFactoryCall;
+import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameList;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameMap;
@@ -80,7 +82,6 @@ import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsRea
 import org.javahelpers.simple.builders.processor.processing.OptionValueParsers;
 import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 import org.javahelpers.simple.builders.processor.processing.ProcessingTarget;
-import org.javahelpers.simple.builders.processor.processing.SimpleBuildersSpiIntegration;
 import org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker;
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 
@@ -544,13 +545,19 @@ public class BuilderProcessor extends AbstractProcessor {
                   elementToGenerate.reportingElement(), elementToGenerate.config()),
               elementToGenerate.config()));
       SimpleBuildersSpiIntegration.registerBuilder(
-          targetType.getQualifiedName().toString(),
-          builderTypeName(
-                  targetType,
-                  effectiveBuilderPackage(
-                      elementToGenerate.reportingElement(), elementToGenerate.config()),
-                  elementToGenerate.config())
-              .getFullQualifiedName());
+          new SimpleBuildersSpiIntegration.PublishedBuilder(
+              new TypeName(
+                  context.getPackageName(targetType), targetType.getSimpleName().toString()),
+              new ResolvedBuilder(
+                  builderTypeName(
+                      targetType,
+                      effectiveBuilderPackage(
+                          elementToGenerate.reportingElement(), elementToGenerate.config()),
+                      elementToGenerate.config()),
+                  new StaticFactoryCall("create"),
+                  Optional.empty(),
+                  "build"),
+              elementToGenerate.config().getSetterSuffix()));
     }
   }
 

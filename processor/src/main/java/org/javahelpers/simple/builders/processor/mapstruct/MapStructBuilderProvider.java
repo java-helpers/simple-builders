@@ -24,11 +24,11 @@
 package org.javahelpers.simple.builders.processor.mapstruct;
 
 import com.google.auto.service.AutoService;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -37,8 +37,9 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
-import javax.lang.model.util.Types;
-import org.javahelpers.simple.builders.processor.processing.SimpleBuildersSpiIntegration;
+import org.javahelpers.simple.builders.processor.SimpleBuildersSpiIntegration;
+import org.javahelpers.simple.builders.processor.SimpleBuildersSpiIntegration.PublishedBuilder;
+import org.javahelpers.simple.builders.processor.model.type.BuilderInstantiation.StaticFactoryCall;
 import org.mapstruct.ap.spi.BuilderInfo;
 import org.mapstruct.ap.spi.BuilderProvider;
 import org.mapstruct.ap.spi.MapStructProcessingEnvironment;
@@ -51,13 +52,17 @@ import org.mapstruct.ap.spi.TypeHierarchyErroneousException;
  * <p>MapStruct's default provider only considers {@code public static} methods on the bean type
  * itself as builder-creation candidates. simple-builders keeps the factory on the generated builder
  * class ({@code PersonDtoBuilder.create()}), so beans are paired with builders exclusively through
- * the registry {@code BuilderProcessor} publishes for every builder it plans — a constant-time
- * lookup with exact qualified names, covering custom packages and {@code @SimpleBuilderFor}
- * targets. Builders produced by earlier compilations are not discovered: only the beans the
- * processor plans in the current run get builder mapping.
+ * the registry {@code BuilderProcessor} publishes — a constant-time lookup of already-resolved
+ * {@link PublishedBuilder} descriptors (builder type, creation and build method, setter suffix),
+ * covering custom packages and {@code @SimpleBuilderFor} targets. Builders produced by earlier
+ * compilations are not discovered: only the beans the processor plans in the current run get
+ * builder mapping.
  *
- * <p>When a planned builder is not visible yet, {@link TypeHierarchyErroneousException} defers the
- * mapper to the next processing round so a builder generated in the same round can still be found.
+ * <p>While the compilation is not {@link SimpleBuildersSpiIntegration.State#FINISHED} the registry
+ * may still grow, so a published builder that is not visible yet — or a bean marked for generation
+ * whose entry may still arrive — defers the mapper via {@link TypeHierarchyErroneousException} to
+ * the next processing round. After {@link SimpleBuildersSpiIntegration.State#FINISHED} a registry
+ * miss is definitive and the lookup gracefully returns {@code null}.
  *
  * <p>The provider is registered via {@code META-INF/services} and is only loaded when
  * simple-builders-processor and mapstruct-processor share the annotation processor path. The
@@ -68,9 +73,14 @@ import org.mapstruct.ap.spi.TypeHierarchyErroneousException;
 @AutoService(BuilderProvider.class)
 public class MapStructBuilderProvider implements BuilderProvider {
 
+  private static final String SIMPLE_BUILDER_ANNOTATION =
+      "org.javahelpers.simple.builders.core.annotations.SimpleBuilder";
+  private static final String SIMPLE_BUILDER_TEMPLATE_ANNOTATION =
+      "org.javahelpers.simple.builders.core.annotations.SimpleBuilder.Template";
+  private static final String IGNORE_4_BUILDER_ANNOTATION =
+      "org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration";
+
   private Elements elementUtils;
-  private Types typeUtils;
-  private AnnotationSupport annotations;
   private Map<String, String> processorOptions = Map.of();
 
   /** Resolved builder infos by bean qualified name; only positive results are cached. */
@@ -78,17 +88,16 @@ public class MapStructBuilderProvider implements BuilderProvider {
 
   @Override
   public void init(MapStructProcessingEnvironment processingEnvironment) {
+    // Ages out stale lifecycle state left by a previous compilation on a reused JVM.
     SimpleBuildersSpiIntegration.spiInitialized();
     this.elementUtils = processingEnvironment.getElementUtils();
-    this.typeUtils = processingEnvironment.getTypeUtils();
-    this.annotations = new AnnotationSupport(elementUtils);
     Map<String, String> options = processingEnvironment.getOptions();
     processorOptions = options == null ? Map.of() : options;
   }
 
   @Override
   public BuilderInfo findBuilderInfo(TypeMirror type) {
-    if (SimpleBuildersSpiIntegration.isDisabled(processorOptions)) {
+    if (SimpleBuildersSpiIntegration.isIntegrationDisabled(processorOptions)) {
       return null;
     }
     if (!(type instanceof DeclaredType declaredType)
@@ -99,111 +108,122 @@ public class MapStructBuilderProvider implements BuilderProvider {
     if (cached != null) {
       return cached;
     }
-    BuilderInfo builderInfo = createBuilderInfo(beanElement, type);
+    BuilderInfo builderInfo = createBuilderInfo(beanElement);
     if (builderInfo != null) {
       builderInfoCache.put(beanElement.getQualifiedName().toString(), builderInfo);
     }
     return builderInfo;
   }
 
-  private BuilderInfo createBuilderInfo(TypeElement beanElement, TypeMirror beanType) {
-    TypeElement builderElement = findBuilderElement(beanElement);
+  private BuilderInfo createBuilderInfo(TypeElement beanElement) {
+    Optional<PublishedBuilder> published =
+        SimpleBuildersSpiIntegration.builderFor(beanElement.getQualifiedName().toString());
+    TypeElement builderElement = findBuilderElement(beanElement, published);
     if (builderElement == null) {
       return null;
     }
-    ExecutableElement creationMethod = findCreationMethod(builderElement);
-    List<ExecutableElement> buildMethods = findBuildMethods(builderElement, beanType);
-    if (creationMethod == null || buildMethods.isEmpty()) {
+    ExecutableElement creationMethod = creationMethod(builderElement, published.orElseThrow());
+    List<ExecutableElement> buildMethod = buildMethod(builderElement, published.orElseThrow());
+    if (creationMethod == null || buildMethod.isEmpty()) {
       return null;
     }
     return new BuilderInfo.Builder()
         .builderCreationMethod(creationMethod)
-        .buildMethod(buildMethods)
+        .buildMethod(buildMethod)
         .build();
   }
 
   /**
    * Locates the generated builder for {@code beanElement} through the registry {@code
-   * BuilderProcessor} publishes — the list decides alone which type is claimed. A planned builder
-   * that is not emitted yet defers the mapper to the next processing round. While the compilation
-   * is not {@link SimpleBuildersSpiIntegration.State#FINISHED} the registry may still grow
-   * (MapStruct may run ahead of this processor's first round), so a bean marked for generation gets
-   * the same deferral instead of a premature miss.
+   * BuilderProcessor} publishes — the list decides alone which type is claimed.
    */
-  private TypeElement findBuilderElement(TypeElement beanElement) {
-    String registered =
-        SimpleBuildersSpiIntegration.builderFor(beanElement.getQualifiedName().toString());
-    if (registered == null) {
+  private TypeElement findBuilderElement(
+      TypeElement beanElement, Optional<PublishedBuilder> published) {
+    if (published.isEmpty()) {
       if (SimpleBuildersSpiIntegration.state() != SimpleBuildersSpiIntegration.State.FINISHED
-          && annotations.isBuilderGenerationTarget(beanElement)) {
-        // Marked for generation but not published yet — our processor has not had its round;
-        // defer so the registry can fill in before the mapper is generated.
+          && isBuilderGenerationTarget(beanElement)) {
+        // Marked for generation but not published yet — MapStruct may run ahead of this
+        // processor's round; defer so the registry can fill in before the mapper is generated.
         throw new TypeHierarchyErroneousException(beanElement.asType());
       }
       return null;
     }
-    TypeElement registeredElement = elementUtils.getTypeElement(registered);
-    if (registeredElement == null) {
-      // Planned but not yet emitted in this round — defer.
+    TypeElement builderElement =
+        elementUtils.getTypeElement(published.get().builder().typeName().getFullQualifiedName());
+    if (builderElement == null
+        && SimpleBuildersSpiIntegration.state() != SimpleBuildersSpiIntegration.State.FINISHED) {
+      // Published but not emitted yet — defer so the mapper retries once the type exists.
       throw new TypeHierarchyErroneousException(beanElement.asType());
     }
-    return registeredElement;
+    return builderElement;
   }
 
   /**
-   * A {@code public static} parameterless method on the builder returning the builder type, e.g.
-   * {@code create()}.
+   * The published creation method on the resolved builder — a {@code public static} parameterless
+   * factory whose name the descriptor carries ({@code create} for generated builders).
    */
-  private ExecutableElement findCreationMethod(TypeElement builderElement) {
-    List<ExecutableElement> candidates = new ArrayList<>();
-    for (Element member : builderElement.getEnclosedElements()) {
+  private ExecutableElement creationMethod(TypeElement builderElement, PublishedBuilder published) {
+    if (!(published.builder().funcForEmptyBuilder() instanceof StaticFactoryCall factory)) {
+      return null;
+    }
+    return findMethod(builderElement, factory.methodName(), Modifier.PUBLIC, Modifier.STATIC);
+  }
+
+  /**
+   * The published build method on the resolved builder — the {@code public} parameterless instance
+   * method named by the descriptor ({@code build} for generated builders).
+   */
+  private List<ExecutableElement> buildMethod(
+      TypeElement builderElement, PublishedBuilder published) {
+    ExecutableElement method =
+        findMethod(builderElement, published.builder().buildMethodName(), Modifier.PUBLIC);
+    return method == null ? List.of() : List.of(method);
+  }
+
+  /** The parameterless method with {@code name} and all {@code requiredModifiers} on the type. */
+  private ExecutableElement findMethod(
+      TypeElement typeElement, String name, Modifier... requiredModifiers) {
+    for (Element member : typeElement.getEnclosedElements()) {
       if (member.getKind() == ElementKind.METHOD
           && member instanceof ExecutableElement method
+          && method.getSimpleName().contentEquals(name)
           && method.getParameters().isEmpty()
-          && method.getModifiers().contains(Modifier.PUBLIC)
-          && method.getModifiers().contains(Modifier.STATIC)
-          && isBuilderType(method.getReturnType(), builderElement)) {
-        candidates.add(method);
+          && method.getModifiers().containsAll(List.of(requiredModifiers))) {
+        return method;
       }
     }
-    // Prefer the canonical factory names, then fall back alphabetically — deterministic for
-    // builders declaring several matching factories.
-    for (String preferred : List.of("create", "of")) {
-      for (ExecutableElement candidate : candidates) {
-        if (candidate.getSimpleName().contentEquals(preferred)) {
-          return candidate;
+    return null;
+  }
+
+  /**
+   * Whether {@code beanElement} is marked for builder generation ({@code @SimpleBuilder} or a
+   * builder template annotation, not opted out via {@code @Ignore4BuilderGeneration}). The marker
+   * only decides deferral — it never decides which type is claimed.
+   */
+  private boolean isBuilderGenerationTarget(TypeElement beanElement) {
+    boolean marked = false;
+    for (AnnotationMirror mirror : elementUtils.getAllAnnotationMirrors(beanElement)) {
+      String annotationName =
+          ((TypeElement) mirror.getAnnotationType().asElement()).getQualifiedName().toString();
+      if (annotationName.equals(IGNORE_4_BUILDER_ANNOTATION)) {
+        return false;
+      }
+      if (annotationName.equals(SIMPLE_BUILDER_ANNOTATION)) {
+        marked = true;
+        continue;
+      }
+      // A custom builder template annotation (e.g. @SimpleMinimalBuilder or a project-defined
+      // one): its type is meta-annotated with @SimpleBuilder.Template.
+      for (AnnotationMirror metaMirror :
+          mirror.getAnnotationType().asElement().getAnnotationMirrors()) {
+        if (((TypeElement) metaMirror.getAnnotationType().asElement())
+            .getQualifiedName()
+            .contentEquals(SIMPLE_BUILDER_TEMPLATE_ANNOTATION)) {
+          marked = true;
+          break;
         }
       }
     }
-    return candidates.stream()
-        .min(Comparator.comparing(method -> method.getSimpleName().toString()))
-        .orElse(null);
-  }
-
-  /**
-   * {@code public} parameterless instance methods on the builder returning the bean type, e.g.
-   * {@code build()}.
-   */
-  private List<ExecutableElement> findBuildMethods(
-      TypeElement builderElement, TypeMirror beanType) {
-    List<ExecutableElement> buildMethods = new ArrayList<>();
-    for (Element member : builderElement.getEnclosedElements()) {
-      if (member.getKind() == ElementKind.METHOD
-          && member instanceof ExecutableElement method
-          && method.getParameters().isEmpty()
-          && method.getModifiers().contains(Modifier.PUBLIC)
-          && !method.getModifiers().contains(Modifier.STATIC)
-          && typeUtils.isSameType(
-              typeUtils.erasure(method.getReturnType()), typeUtils.erasure(beanType))) {
-        buildMethods.add(method);
-      }
-    }
-    return buildMethods;
-  }
-
-  /** Whether {@code type} is the builder's own type. */
-  private boolean isBuilderType(TypeMirror type, TypeElement builderElement) {
-    return typeUtils.isSameType(
-        typeUtils.erasure(type), typeUtils.erasure(builderElement.asType()));
+    return marked;
   }
 }

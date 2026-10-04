@@ -21,23 +21,24 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.processing;
+package org.javahelpers.simple.builders.processor;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
+import org.javahelpers.simple.builders.processor.model.type.TypeName;
 
 /**
- * State {@code BuilderProcessor} shares with SPI adapters of other frameworks while they share the
- * annotation processor path (and therefore the classloader): the resolved integration switch —
- * which SPI environments cannot see because the hosting framework forwards only its own processor
- * options (e.g. MapStruct's {@code simplebuilder.usingMapStructIntegration}) — and the qualified
- * names of the builders {@code BuilderProcessor} plans to generate, so lookups do not have to guess
- * names or scan packages.
+ * The builders {@link BuilderProcessor} generates, published to SPI adapters of other frameworks
+ * sharing the annotation processor path (and therefore the classloader). Each entry carries the
+ * fully resolved builder — type name, creation and build method — plus the bean's configured {@code
+ * setterSuffix}, so adapters do not scan elements or read annotations themselves.
  *
- * <p>The lifecycle reports where {@code BuilderProcessor}'s own builder generation stands and is
+ * <p>The lifecycle reports where {@link BuilderProcessor}'s builder generation stands and is
  * transitioned by that processor alone — other processors or SPI adapters never write it. All state
  * is compilation-scoped: javac initializes each processor lazily when its turn in a round comes, so
- * before {@code BuilderProcessor} has run its {@code init()} nothing static can be trusted — values
+ * before {@link BuilderProcessor} has run its {@code init()} nothing static can be trusted — values
  * may be leftovers of a previous compilation in a long-lived JVM (Gradle daemon, incremental
  * builds). Only while {@link State#PROCESSING} or {@link State#FINISHED} are the published switch
  * and registry the current compilation's truth.
@@ -45,7 +46,7 @@ import java.util.Map;
 public final class SimpleBuildersSpiIntegration {
 
   /**
-   * Where {@code BuilderProcessor}'s builder generation stands in the current compilation, as the
+   * Where {@link BuilderProcessor}'s builder generation stands in the current compilation, as the
    * SPI adapters observe it.
    */
   public enum State {
@@ -60,44 +61,50 @@ public final class SimpleBuildersSpiIntegration {
     FINISHED
   }
 
+  /**
+   * One bean-to-builder pair resolved at registration time: the {@link ResolvedBuilder} this
+   * processor emits for {@code beanType} plus the bean's {@code setterSuffix} naming option.
+   */
+  public record PublishedBuilder(TypeName beanType, ResolvedBuilder builder, String setterSuffix) {}
+
   private static final String OPTION_USING_MAPSTRUCT = "simplebuilder.usingMapStructIntegration";
 
   private static volatile State state = State.INIT;
 
-  /** The processor-resolved switch; {@code null} leaves the system-property fallback active. */
-  private static volatile Boolean enabled;
+  /** The processor-resolved integration switch; {@code null} leaves the fallbacks active. */
+  private static volatile Boolean integrationEnabled;
 
-  /** Builders planned for the current compilation: bean qualified name → builder qualified name. */
-  private static final Map<String, String> GENERATED_BUILDERS = new HashMap<>();
+  /** Builders published for the current compilation, keyed by bean qualified name. */
+  private static final Map<String, PublishedBuilder> BY_BEAN = new HashMap<>();
 
-  /** Reverse of {@link #GENERATED_BUILDERS}: builder qualified name → bean qualified name. */
-  private static final Map<String, String> BEAN_BY_BUILDER = new HashMap<>();
+  /** The same entries keyed by builder qualified name. */
+  private static final Map<String, PublishedBuilder> BY_BUILDER = new HashMap<>();
 
   private SimpleBuildersSpiIntegration() {}
 
   /**
-   * Starts a new compilation: clears the builder registry and publishes the integration switch the
+   * Starts a new compilation: clears the registry and publishes the integration switch the
    * processor resolved ({@code null} when the option is unset).
    */
-  public static void initCompilation(Boolean integrationEnabled) {
-    GENERATED_BUILDERS.clear();
-    BEAN_BY_BUILDER.clear();
-    enabled = integrationEnabled;
+  static void initCompilation(Boolean enabled) {
+    BY_BEAN.clear();
+    BY_BUILDER.clear();
+    integrationEnabled = enabled;
     state = State.PROCESSING;
   }
 
   /** Marks the compilation as finished: the registry will not grow any further. */
-  public static void finishCompilation() {
+  static void finishCompilation() {
     state = State.FINISHED;
   }
 
   /**
    * Called by each SPI adapter on {@code init} to age out a stale {@link State#FINISHED} left by a
    * previous compilation: javac initializes every processor lazily in its turn, so an SPI init may
-   * run before {@code BuilderProcessor#init} of the same compilation, and a {@link State#FINISHED}
+   * run before {@link BuilderProcessor#init} of the same compilation, and a {@link State#FINISHED}
    * observed here can only be leftover — a live {@link State#FINISHED} implies the last round
    * already ran and no new SPI init would follow — and is reset to {@link State#INIT}. This
-   * corrects the observation; it does not declare generation state, which {@code BuilderProcessor}
+   * corrects the observation; it does not declare generation state, which {@link BuilderProcessor}
    * alone transitions.
    */
   public static void spiInitialized() {
@@ -111,34 +118,35 @@ public final class SimpleBuildersSpiIntegration {
     return state;
   }
 
-  /** Registers a builder planned for {@code beanQualifiedName} in the current compilation. */
-  public static void registerBuilder(String beanQualifiedName, String builderQualifiedName) {
-    GENERATED_BUILDERS.put(beanQualifiedName, builderQualifiedName);
-    BEAN_BY_BUILDER.put(builderQualifiedName, beanQualifiedName);
+  /** Publishes a builder planned for {@code publishedBuilder.beanType} in this compilation. */
+  static void registerBuilder(PublishedBuilder publishedBuilder) {
+    BY_BEAN.put(publishedBuilder.beanType().getFullQualifiedName(), publishedBuilder);
+    BY_BUILDER.put(publishedBuilder.builder().typeName().getFullQualifiedName(), publishedBuilder);
   }
 
-  /** The qualified name of the builder planned for {@code beanQualifiedName}, or {@code null}. */
-  public static String builderFor(String beanQualifiedName) {
-    return GENERATED_BUILDERS.get(beanQualifiedName);
+  /** The builder published for {@code beanType}'s qualified name, if this compilation plans one. */
+  public static Optional<PublishedBuilder> builderFor(String beanQualifiedName) {
+    return Optional.ofNullable(BY_BEAN.get(beanQualifiedName));
   }
 
   /**
-   * The qualified name of the bean {@code builderQualifiedName} was generated for, or {@code null}.
+   * The published builder with the given qualified type name, if {@link BuilderProcessor} plans it
+   * in this compilation.
    */
-  public static String beanFor(String builderQualifiedName) {
-    return BEAN_BY_BUILDER.get(builderQualifiedName);
+  public static Optional<PublishedBuilder> builderByName(String builderQualifiedName) {
+    return Optional.ofNullable(BY_BUILDER.get(builderQualifiedName));
   }
 
   /**
    * Whether the integration is switched off: while the processor has published this compilation's
    * resolution ({@link State#PROCESSING} or {@link State#FINISHED}) it wins; without one — incl.
    * the stale leftovers of a previous run in {@link State#INIT} — the {@code simplebuilder.*}
-   * convention applies (JVM system property before the annotation processor option MapStruct does
-   * not forward anyway).
+   * convention applies (JVM system property before the annotation processor option the hosting
+   * framework does not forward anyway).
    */
-  public static boolean isDisabled(Map<String, String> processorOptions) {
+  public static boolean isIntegrationDisabled(Map<String, String> processorOptions) {
     if (state != State.INIT) {
-      Boolean published = enabled;
+      Boolean published = integrationEnabled;
       if (published != null) {
         return !published;
       }
