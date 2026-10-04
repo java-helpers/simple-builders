@@ -26,6 +26,7 @@ package org.javahelpers.simple.builders.processor;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.lang.model.util.Elements;
 import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
@@ -82,7 +83,7 @@ public final class SimpleBuildersSpiIntegration {
   private static volatile State state = State.INIT;
 
   /** The {@link Elements} of the compilation this holder's content describes. */
-  private static volatile Elements compilationElements;
+  private static final AtomicReference<Elements> compilationElements = new AtomicReference<>();
 
   /** The processor-resolved integration switch; {@code null} leaves the fallbacks active. */
   private static volatile Boolean integrationEnabled;
@@ -102,7 +103,7 @@ public final class SimpleBuildersSpiIntegration {
   static void initCompilation(Elements elements, Boolean integrationEnabled) {
     BY_BEAN.clear();
     BY_BUILDER.clear();
-    compilationElements = elements;
+    compilationElements.set(elements);
     SimpleBuildersSpiIntegration.integrationEnabled = integrationEnabled;
     state = State.PROCESSING;
   }
@@ -127,7 +128,7 @@ public final class SimpleBuildersSpiIntegration {
    * staleness check that never requires the SPI adapters to write anything.
    */
   public static boolean isCurrentCompilation(Elements observed) {
-    return observed != null && observed == compilationElements;
+    return observed != null && observed == compilationElements.get();
   }
 
   /** The lifecycle state the SPI adapters observe for the current compilation. */

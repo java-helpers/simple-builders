@@ -190,11 +190,13 @@ public class MapStructBuilderProvider implements BuilderProvider {
 
   /** Warns that a bean marked for generation got no registered builder in this compilation. */
   private void warnMarkedBeanWithoutRegisteredBuilder(TypeElement beanElement) {
-    // SPI environments expose no Messager — stderr is the only channel a build shows.
-    System.err.println(
-        "simple-builders: WARNING: no generated builder was registered for the marked bean '"
-            + beanElement.getQualifiedName()
-            + "'; MapStruct maps it without a builder.");
+    // SPI environments expose no Messager — a logger is the only channel a build shows.
+    System.getLogger(MapStructBuilderProvider.class.getName())
+        .log(
+            System.Logger.Level.WARNING,
+            "simple-builders: no generated builder was registered for the marked bean '{0}';"
+                + " MapStruct maps it without a builder.",
+            beanElement.getQualifiedName());
   }
 
   /**
@@ -235,9 +237,9 @@ public class MapStructBuilderProvider implements BuilderProvider {
     for (AnnotationMirror mirror : beanElement.getAnnotationMirrors()) {
       // A custom builder template annotation (e.g. @SimpleMinimalBuilder or a project-defined
       // one): its type is meta-annotated with @SimpleBuilder.Template.
-      if (JavaLangAnalyser.findAnnotation(
-              mirror.getAnnotationType().asElement(), SimpleBuilder.Template.class)
-          .isPresent()) {
+      if (mirror.getAnnotationType().asElement() instanceof TypeElement annotationType
+          && JavaLangAnalyser.findAnnotation(annotationType, SimpleBuilder.Template.class)
+              .isPresent()) {
         return true;
       }
     }
