@@ -61,12 +61,12 @@ import org.mapstruct.ap.spi.TypeHierarchyErroneousException;
  * builder mapping.
  *
  * <p>A registry miss for a bean marked for generation ({@code @SimpleBuilder} or a template
- * annotation) defers the mapper via {@link TypeHierarchyErroneousException} while {@link
- * State#INIT} or {@link State#PROCESSING} hold — MapStruct may run ahead of this processor's first
- * round. From {@link State#TARGETS_REGISTERED} on, an unregistered bean was skipped by planning or
- * is foreign and resolves to no builder; at {@link State#FINISHED} a marked bean that was never
- * registered is reported as a warning. A published builder whose type is not emitted yet defers
- * until {@link State#FINISHED}.
+ * annotation) defers the mapper via {@link TypeHierarchyErroneousException} in every state before
+ * {@link State#FINISHED} — it may still be registered in a later round or with an element another
+ * processor emits. Once finished, a marked bean that was never registered is reported as a warning
+ * and resolves to no builder. Unmarked beans return {@code null} in every state: nothing foreign is
+ * ever claimed or delayed. A published builder whose type is not emitted yet defers until {@link
+ * State#FINISHED}.
  *
  * <p>The provider is registered via {@code META-INF/services} and is only loaded when
  * simple-builders-processor and mapstruct-processor share the annotation processor path. The
@@ -145,18 +145,14 @@ public class MapStructBuilderProvider implements BuilderProvider {
         // Foreign bean — never claimed, never deferred.
         return null;
       }
-      return switch (state()) {
-        // Marked but not published yet — MapStruct may run ahead of this processor's first
-        // round; defer so the registry can fill in before the mapper is generated.
-        case INIT, PROCESSING -> throw new TypeHierarchyErroneousException(beanElement.asType());
-        // Initial targets are registered — a marked bean without an entry was skipped by
-        // planning; it maps without a builder.
-        case TARGETS_REGISTERED -> null;
-        case FINISHED -> {
-          warnMarkedBeanWithoutRegisteredBuilder(beanElement);
-          yield null;
-        }
-      };
+      // Marked but not published — the bean may still be registered while the compilation is
+      // not in its final phase; a marked bean missing once generation finished was skipped by
+      // planning.
+      if (state() != State.FINISHED) {
+        throw new TypeHierarchyErroneousException(beanElement.asType());
+      }
+      warnMarkedBeanWithoutRegisteredBuilder(beanElement);
+      return null;
     }
     TypeElement builderElement =
         elementUtils.getTypeElement(published.get().builder().typeName().getFullQualifiedName());
@@ -194,9 +190,9 @@ public class MapStructBuilderProvider implements BuilderProvider {
     System.getLogger(MapStructBuilderProvider.class.getName())
         .log(
             System.Logger.Level.WARNING,
-            "simple-builders: no generated builder was registered for the marked bean '{0}';"
-                + " MapStruct maps it without a builder.",
-            beanElement.getQualifiedName());
+            "simple-builders: no generated builder was registered for the marked bean '"
+                + beanElement.getQualifiedName()
+                + "'; MapStruct maps it without a builder.");
   }
 
   /**
