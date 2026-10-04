@@ -293,6 +293,7 @@ public class RoasterCodeGenerator {
    * warning (an error in strict mode).
    */
   private List<MethodDto> resolveMethodConflicts(List<MethodDto> methods) {
+    // LinkedHashMap keeps the mapper's emission order for values().
     Map<String, MethodDto> signatureToMethod = new java.util.LinkedHashMap<>();
     for (MethodDto method : methods) {
       if (signatureToMethod.putIfAbsent(method.getSignatureKey(), method) != null) {

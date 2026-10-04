@@ -203,7 +203,7 @@ public class BuilderToGenerationTypeMapper {
     if (staticCompare != 0) {
       return staticCompare;
     }
-    int groupCompare = compareGroupKeys(groupKeyOf(p1), groupKeyOf(p2));
+    int groupCompare = StringUtils.compare(groupKeyOf(p1), groupKeyOf(p2), false);
     if (groupCompare != 0) {
       return groupCompare;
     }
@@ -247,20 +247,6 @@ public class BuilderToGenerationTypeMapper {
                   case PRIVATE -> 3;
                 })
         .orElse(2);
-  }
-
-  /** Grouped methods first (alphabetical by key), ungrouped methods last. */
-  private static int compareGroupKeys(String groupKey1, String groupKey2) {
-    if (groupKey1 == null && groupKey2 == null) {
-      return 0;
-    }
-    if (groupKey1 == null) {
-      return 1;
-    }
-    if (groupKey2 == null) {
-      return -1;
-    }
-    return groupKey1.compareTo(groupKey2);
   }
 
   private static boolean isDirectFieldSetter(FieldMethod pair) {
