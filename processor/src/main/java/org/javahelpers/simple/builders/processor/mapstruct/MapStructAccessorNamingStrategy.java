@@ -77,8 +77,7 @@ public class MapStructAccessorNamingStrategy extends DefaultAccessorNamingStrate
     enabled =
         !"false"
             .equalsIgnoreCase(
-                System.getProperty(
-                    OPTION_USING_MAPSTRUCT, processorOptions.get(OPTION_USING_MAPSTRUCT)));
+                AnnotationSupport.systemOption(processorOptions, OPTION_USING_MAPSTRUCT));
   }
 
   @Override
@@ -150,7 +149,9 @@ public class MapStructAccessorNamingStrategy extends DefaultAccessorNamingStrate
                     : packageName
                         + "."
                         + simpleName.substring(0, simpleName.length() - suffix.length()));
-        if (candidate != null) {
+        // Only a marked bean may claim the builder — otherwise a bean literally named
+        // <X>Builder would hide its own non-field methods whenever a bean <X> exists.
+        if (candidate != null && annotations.isBuilderGenerationTarget(candidate)) {
           return candidate;
         }
       }
@@ -158,8 +159,10 @@ public class MapStructAccessorNamingStrategy extends DefaultAccessorNamingStrate
     return null;
   }
 
+  /** Candidate builder name suffixes: the globally configured one plus the default. */
   private String[] builderSuffixCandidates() {
-    String configured = option(OPTION_PREFIX + "builderSuffix");
+    String configured =
+        AnnotationSupport.systemOption(processorOptions, OPTION_PREFIX + "builderSuffix");
     return configured != null && !configured.isEmpty()
         ? new String[] {configured, DEFAULT_BUILDER_SUFFIX}
         : new String[] {DEFAULT_BUILDER_SUFFIX};
@@ -173,19 +176,12 @@ public class MapStructAccessorNamingStrategy extends DefaultAccessorNamingStrate
         return setterSuffix;
       }
     }
-    String global = option(OPTION_PREFIX + "setterSuffix");
+    String global =
+        AnnotationSupport.systemOption(processorOptions, OPTION_PREFIX + "setterSuffix");
     return global != null ? global : "";
   }
 
-  /**
-   * Reads a {@code simplebuilder.*} option following the project convention: the JVM system
-   * property wins over the annotation processor option (which MapStruct does not forward to SPI
-   * environments).
-   */
-  private String option(String key) {
-    return System.getProperty(key, processorOptions.get(key));
-  }
-
+  /** Collects the bean's non-static fields incl. inherited ones into {@code directSetters}. */
   private void collectFields(
       TypeElement beanElement, String setterSuffix, Map<String, TypeMirror> directSetters) {
     for (Element member : beanElement.getEnclosedElements()) {

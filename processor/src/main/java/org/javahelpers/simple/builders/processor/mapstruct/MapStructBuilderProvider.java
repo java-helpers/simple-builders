@@ -25,6 +25,8 @@ package org.javahelpers.simple.builders.processor.mapstruct;
 
 import com.google.auto.service.AutoService;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.lang.model.element.AnnotationMirror;
@@ -49,9 +51,15 @@ import org.mapstruct.ap.spi.TypeHierarchyErroneousException;
  *
  * <p>MapStruct's default provider only considers {@code public static} methods on the bean type
  * itself as builder-creation candidates. simple-builders keeps the factory on the generated builder
- * class ({@code PersonDtoBuilder.create()}), so the generated builders are found here by scanning
- * the target package for types carrying {@code @BuilderImplementation(forClass = <bean>)} and by
- * resolving the conventional name {@code <Bean><builderSuffix>} in the target package.
+ * class ({@code PersonDtoBuilder.create()}), so builders are located by conventional name {@code
+ * <Bean><builderSuffix>} in the candidate packages first — a constant-time lookup for the common
+ * case. Only for beans marked for builder generation does a package scan for types carrying
+ * {@code @BuilderImplementation(forClass = <bean>)} run as a last resort.
+ *
+ * <p>When a marked bean's builder is not visible yet, {@link TypeHierarchyErroneousException}
+ * defers the mapper to the next processing round so a builder generated in the same round can still
+ * be found. Builders generated into packages unreachable from the bean (e.g. an unrelated {@code
+ * packageName} on a {@code @SimpleBuilderFor} site) cannot be discovered.
  *
  * <p>The provider is registered via {@code META-INF/services} and is only loaded when
  * simple-builders-processor and mapstruct-processor share the annotation processor path. The
@@ -63,11 +71,17 @@ import org.mapstruct.ap.spi.TypeHierarchyErroneousException;
 public class MapStructBuilderProvider implements BuilderProvider {
 
   private static final String DEFAULT_BUILDER_SUFFIX = "Builder";
-  private static final String OPTION_USING_MAPSTRUCT = "simplebuilder.usingMapStructIntegration";
+  private static final String OPTION_PREFIX = "simplebuilder.";
+  private static final String OPTION_USING_MAPSTRUCT = OPTION_PREFIX + "usingMapStructIntegration";
 
   private Elements elementUtils;
   private Types typeUtils;
   private AnnotationSupport annotations;
+  private Map<String, String> processorOptions = Map.of();
+
+  /** Resolved builder infos by bean qualified name; only positive results are cached. */
+  private final Map<String, BuilderInfo> builderInfoCache = new HashMap<>();
+
   private boolean enabled = true;
 
   @Override
@@ -76,17 +90,11 @@ public class MapStructBuilderProvider implements BuilderProvider {
     this.typeUtils = processingEnvironment.getTypeUtils();
     this.annotations = new AnnotationSupport(elementUtils);
     Map<String, String> options = processingEnvironment.getOptions();
-    enabled = !isDisabled(options != null ? options.get(OPTION_USING_MAPSTRUCT) : null);
-  }
-
-  /**
-   * Whether the integration is switched off, following the {@code simplebuilder.*} convention of
-   * preferring the JVM system property over the annotation processor option (which MapStruct does
-   * not forward to SPI environments).
-   */
-  private static boolean isDisabled(String processorOption) {
-    String value = System.getProperty(OPTION_USING_MAPSTRUCT, processorOption);
-    return "false".equalsIgnoreCase(value);
+    processorOptions = options == null ? Map.of() : options;
+    enabled =
+        !"false"
+            .equalsIgnoreCase(
+                AnnotationSupport.systemOption(processorOptions, OPTION_USING_MAPSTRUCT));
   }
 
   @Override
@@ -98,19 +106,24 @@ public class MapStructBuilderProvider implements BuilderProvider {
         || !(declaredType.asElement() instanceof TypeElement beanElement)) {
       return null;
     }
+    BuilderInfo cached = builderInfoCache.get(beanElement.getQualifiedName().toString());
+    if (cached != null) {
+      return cached;
+    }
+    BuilderInfo builderInfo = createBuilderInfo(beanElement, type);
+    if (builderInfo != null) {
+      builderInfoCache.put(beanElement.getQualifiedName().toString(), builderInfo);
+    }
+    return builderInfo;
+  }
 
+  private BuilderInfo createBuilderInfo(TypeElement beanElement, TypeMirror beanType) {
     TypeElement builderElement = findBuilderElement(beanElement);
     if (builderElement == null) {
-      if (isBuilderGenerationTarget(beanElement)) {
-        // The bean is annotated for builder generation but the builder does not exist yet in this
-        // processing round. Throwing defers mapper generation to the next round.
-        throw new TypeHierarchyErroneousException(type);
-      }
       return null;
     }
-
     ExecutableElement creationMethod = findCreationMethod(builderElement);
-    List<ExecutableElement> buildMethods = findBuildMethods(builderElement, type);
+    List<ExecutableElement> buildMethods = findBuildMethods(builderElement, beanType);
     if (creationMethod == null || buildMethods.isEmpty()) {
       return null;
     }
@@ -121,15 +134,36 @@ public class MapStructBuilderProvider implements BuilderProvider {
   }
 
   /**
-   * Locates the generated builder for {@code beanElement}: first by {@code @BuilderImplementation}
-   * in the candidate packages, then by conventional name {@code <Bean><builderSuffix>}.
+   * Locates the generated builder for {@code beanElement} by conventional name first; for beans
+   * marked for generation the package scan for {@code @BuilderImplementation} runs as a last
+   * resort, and a missing builder defers the mapper to the next processing round.
    */
   private TypeElement findBuilderElement(TypeElement beanElement) {
-    List<String> packageNames = candidatePackageNames(beanElement);
+    BuilderNaming naming = builderNaming(beanElement);
 
-    // Primary: builders generated by simple-builders carry
-    // @BuilderImplementation(forClass = <bean>) by default.
-    for (String packageName : packageNames) {
+    // Conventional name first: a constant-time getTypeElement per candidate package and suffix,
+    // covering every builder generated by simple-builders.
+    for (String packageName : naming.packageNames()) {
+      for (String suffix : naming.suffixes()) {
+        TypeElement candidate =
+            elementUtils.getTypeElement(
+                qualifiedName(packageName, beanElement.getSimpleName() + suffix));
+        if (candidate != null
+            && findCreationMethod(candidate) != null
+            && !findBuildMethods(candidate, beanElement.asType()).isEmpty()) {
+          return candidate;
+        }
+      }
+    }
+
+    if (!annotations.isBuilderGenerationTarget(beanElement)) {
+      return null;
+    }
+
+    // Last resort for marked beans: scan the candidate packages for a type carrying
+    // @BuilderImplementation(forClass = <bean>) — covers builders a plain name lookup cannot
+    // resolve, e.g. when the name was not generated by the naming convention.
+    for (String packageName : naming.packageNames()) {
       PackageElement packageElement = elementUtils.getPackageElement(packageName);
       if (packageElement == null) {
         continue;
@@ -142,21 +176,9 @@ public class MapStructBuilderProvider implements BuilderProvider {
       }
     }
 
-    // Fallback for builders generated with usingBuilderImplementationAnnotation disabled:
-    // resolve <Bean><builderSuffix> by name and verify the type looks like a builder.
-    for (String packageName : packageNames) {
-      for (String suffix : candidateSuffixes(beanElement)) {
-        TypeElement candidate =
-            elementUtils.getTypeElement(
-                qualifiedName(packageName, beanElement.getSimpleName() + suffix));
-        if (candidate != null
-            && findCreationMethod(candidate) != null
-            && !findBuildMethods(candidate, beanElement.asType()).isEmpty()) {
-          return candidate;
-        }
-      }
-    }
-    return null;
+    // The bean is annotated for builder generation but the builder does not exist yet in this
+    // processing round. Throwing defers mapper generation to the next round.
+    throw new TypeHierarchyErroneousException(beanElement.asType());
   }
 
   /**
@@ -170,64 +192,37 @@ public class MapStructBuilderProvider implements BuilderProvider {
             typeUtils.erasure(forClass), typeUtils.erasure(beanElement.asType()));
   }
 
-  /** Packages the generated builder may live in: the bean's package or a configured packageName. */
-  private List<String> candidatePackageNames(TypeElement beanElement) {
+  /**
+   * Candidate packages and builder name suffixes for {@code beanElement}, collected from its
+   * builder options in a single annotation pass.
+   */
+  private BuilderNaming builderNaming(TypeElement beanElement) {
     List<String> packageNames = new ArrayList<>();
+    List<String> suffixes = new ArrayList<>();
     packageNames.add(elementUtils.getPackageOf(beanElement).getQualifiedName().toString());
     for (AnnotationMirror optionsMirror : annotations.builderOptionsMirrors(beanElement)) {
       String packageName = annotations.stringOption(optionsMirror, "packageName");
       if (packageName != null && !packageName.isEmpty() && !packageNames.contains(packageName)) {
         packageNames.add(packageName);
       }
-    }
-    return packageNames;
-  }
-
-  /** Builder name suffixes to try: explicitly configured ones plus the default. */
-  private List<String> candidateSuffixes(TypeElement beanElement) {
-    List<String> suffixes = new ArrayList<>();
-    for (AnnotationMirror optionsMirror : annotations.builderOptionsMirrors(beanElement)) {
       String suffix = annotations.stringOption(optionsMirror, "builderSuffix");
       if (suffix != null && !suffix.isEmpty() && !suffixes.contains(suffix)) {
         suffixes.add(suffix);
       }
     }
+    String globalSuffix =
+        AnnotationSupport.systemOption(processorOptions, OPTION_PREFIX + "builderSuffix");
+    if (globalSuffix != null && !globalSuffix.isEmpty() && !suffixes.contains(globalSuffix)) {
+      suffixes.add(globalSuffix);
+    }
     if (!suffixes.contains(DEFAULT_BUILDER_SUFFIX)) {
       suffixes.add(DEFAULT_BUILDER_SUFFIX);
     }
-    return suffixes;
+    return new BuilderNaming(packageNames, suffixes);
   }
 
-  /**
-   * Whether {@code beanElement} is marked for builder generation ({@code @SimpleBuilder} or a
-   * builder template annotation, not opted out via {@code @Ignore4BuilderGeneration}).
-   */
-  private boolean isBuilderGenerationTarget(TypeElement beanElement) {
-    List<? extends AnnotationMirror> mirrors = elementUtils.getAllAnnotationMirrors(beanElement);
-    for (AnnotationMirror mirror : mirrors) {
-      if (annotations
-          .qualifiedNameOf(mirror)
-          .equals(AnnotationSupport.IGNORE_4_BUILDER_ANNOTATION)) {
-        return false;
-      }
-    }
-    for (AnnotationMirror mirror : mirrors) {
-      if (annotations.qualifiedNameOf(mirror).equals(AnnotationSupport.SIMPLE_BUILDER_ANNOTATION)) {
-        return true;
-      }
-      // A custom builder template annotation (e.g. @SimpleMinimalBuilder or a project-defined
-      // one): its type is meta-annotated with @SimpleBuilder.Template.
-      Element annotationType = mirror.getAnnotationType().asElement();
-      for (AnnotationMirror metaMirror : annotationType.getAnnotationMirrors()) {
-        if (annotations
-            .qualifiedNameOf(metaMirror)
-            .equals(AnnotationSupport.SIMPLE_BUILDER_TEMPLATE_ANNOTATION)) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
+  /** Naming candidates for locating a bean's builder. */
+  private record BuilderNaming(List<String> packageNames, List<String> suffixes) {}
 
   /**
    * A {@code public static} parameterless method on the builder returning the builder type, e.g.
@@ -245,13 +240,18 @@ public class MapStructBuilderProvider implements BuilderProvider {
         candidates.add(method);
       }
     }
-    // Prefer the simple-builders convention ("create"); otherwise use the single candidate.
-    for (ExecutableElement candidate : candidates) {
-      if (candidate.getSimpleName().contentEquals("create")) {
-        return candidate;
+    // Prefer the canonical factory names, then fall back alphabetically — deterministic for
+    // builders declaring several matching factories.
+    for (String preferred : List.of("create", "of")) {
+      for (ExecutableElement candidate : candidates) {
+        if (candidate.getSimpleName().contentEquals(preferred)) {
+          return candidate;
+        }
       }
     }
-    return candidates.size() == 1 ? candidates.get(0) : null;
+    return candidates.stream()
+        .min(Comparator.comparing(method -> method.getSimpleName().toString()))
+        .orElse(null);
   }
 
   /**
@@ -275,11 +275,13 @@ public class MapStructBuilderProvider implements BuilderProvider {
     return buildMethods;
   }
 
+  /** Whether {@code type} is the builder's own type. */
   private boolean isBuilderType(TypeMirror type, TypeElement builderElement) {
     return typeUtils.isSameType(
         typeUtils.erasure(type), typeUtils.erasure(builderElement.asType()));
   }
 
+  /** Qualified name of {@code simpleName} inside {@code packageName}. */
   private static String qualifiedName(String packageName, CharSequence simpleName) {
     return packageName.isEmpty() ? simpleName.toString() : packageName + "." + simpleName;
   }

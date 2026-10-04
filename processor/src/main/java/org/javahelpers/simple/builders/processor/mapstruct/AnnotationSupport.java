@@ -37,7 +37,9 @@ import javax.lang.model.util.Elements;
 /**
  * Shared annotation-mirror helpers for the MapStruct SPI implementations: locating the
  * simple-builders annotations and reading {@code @SimpleBuilder}/{@code @SimpleBuilder.Template}
- * options without a {@code ProcessingContext}.
+ * options without a {@code ProcessingContext}. Only explicitly set annotation values are read
+ * ({@link AnnotationMirror#getElementValues()}) — defaults materialize to the same outcome the
+ * callers already apply for absent values.
  */
 final class AnnotationSupport {
 
@@ -85,7 +87,7 @@ final class AnnotationSupport {
 
   private void addOptionsMirror(AnnotationMirror mirror, List<AnnotationMirror> optionsMirrors) {
     for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry :
-        elementUtils.getElementValuesWithDefaults(mirror).entrySet()) {
+        mirror.getElementValues().entrySet()) {
       if (entry.getKey().getSimpleName().contentEquals("options")
           && entry.getValue().getValue() instanceof AnnotationMirror optionsMirror) {
         optionsMirrors.add(optionsMirror);
@@ -95,7 +97,7 @@ final class AnnotationSupport {
 
   String stringOption(AnnotationMirror optionsMirror, String name) {
     for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry :
-        elementUtils.getElementValuesWithDefaults(optionsMirror).entrySet()) {
+        optionsMirror.getElementValues().entrySet()) {
       if (entry.getKey().getSimpleName().contentEquals(name)) {
         Object value = entry.getValue().getValue();
         if (value instanceof String stringValue) {
@@ -116,7 +118,7 @@ final class AnnotationSupport {
         continue;
       }
       for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry :
-          elementUtils.getElementValuesWithDefaults(mirror).entrySet()) {
+          mirror.getElementValues().entrySet()) {
         if (entry.getKey().getSimpleName().contentEquals("forClass")
             && entry.getValue().getValue() instanceof TypeMirror forClass) {
           return forClass;
@@ -125,5 +127,42 @@ final class AnnotationSupport {
       return null;
     }
     return null;
+  }
+
+  /**
+   * Whether {@code beanElement} is marked for builder generation ({@code @SimpleBuilder} or a
+   * builder template annotation, not opted out via {@code @Ignore4BuilderGeneration}).
+   */
+  boolean isBuilderGenerationTarget(TypeElement beanElement) {
+    boolean marked = false;
+    for (AnnotationMirror mirror : elementUtils.getAllAnnotationMirrors(beanElement)) {
+      String annotationName = qualifiedNameOf(mirror);
+      if (annotationName.equals(IGNORE_4_BUILDER_ANNOTATION)) {
+        return false;
+      }
+      if (annotationName.equals(SIMPLE_BUILDER_ANNOTATION)) {
+        marked = true;
+        continue;
+      }
+      // A custom builder template annotation (e.g. @SimpleMinimalBuilder or a project-defined
+      // one): its type is meta-annotated with @SimpleBuilder.Template.
+      for (AnnotationMirror metaMirror :
+          mirror.getAnnotationType().asElement().getAnnotationMirrors()) {
+        if (qualifiedNameOf(metaMirror).equals(SIMPLE_BUILDER_TEMPLATE_ANNOTATION)) {
+          marked = true;
+          break;
+        }
+      }
+    }
+    return marked;
+  }
+
+  /**
+   * Reads a {@code simplebuilder.*} option following the project convention: the JVM system
+   * property wins over the annotation processor option (which MapStruct does not forward to SPI
+   * environments).
+   */
+  static String systemOption(Map<String, String> processorOptions, String key) {
+    return System.getProperty(key, processorOptions.get(key));
   }
 }
