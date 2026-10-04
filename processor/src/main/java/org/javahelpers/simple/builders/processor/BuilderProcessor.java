@@ -101,6 +101,9 @@ public class BuilderProcessor extends AbstractProcessor {
   private JacksonModuleGenerator jacksonModuleGenerator;
   private boolean supportedJdk = true;
 
+  /** Whether this processor's single generating round already ran in this compilation. */
+  private boolean generated;
+
   @Override
   public synchronized void init(ProcessingEnvironment processingEnv) {
     super.init(processingEnv);
@@ -143,11 +146,14 @@ public class BuilderProcessor extends AbstractProcessor {
   }
 
   /**
-   * Always returns {@code false}, so this method intentionally never claims annotations (hence the
-   * {@code java:S3516} suppression). Claiming is all-or-nothing over the supported set and {@link
-   * SupportedAnnotationTypes} must stay {@code "*"} to discover user-defined template annotations;
-   * claiming would therefore hide every annotation in the round — including foreign ones like
-   * MapStruct's {@code @Mapper} — from later processors.
+   * Generates all builders in exactly one round — the first round carrying simple-builders
+   * annotations — and marks the SPI registry final when that round ends.
+   *
+   * <p>Always returns {@code false}, so this method intentionally never claims annotations
+   * (hence the {@code java:S3516} suppression). Claiming is all-or-nothing over the supported
+   * set and {@link SupportedAnnotationTypes} must stay {@code "*"} to discover user-defined
+   * template annotations; claiming would therefore hide every annotation in the round —
+   * including foreign ones like MapStruct's {@code @Mapper} — from later processors.
    */
   @Override
   @SuppressWarnings("java:S3516")
@@ -163,7 +169,6 @@ public class BuilderProcessor extends AbstractProcessor {
       generateJacksonModules(context.getPerformanceTracker());
       return false;
     }
-
     PerformanceTracker tracker = context.getPerformanceTracker();
     context.info("simple-builders: PROCESSING ROUND START");
 
@@ -195,6 +200,11 @@ public class BuilderProcessor extends AbstractProcessor {
     context.debug(
         "simple-builders: %d of %d annotated element(s) are inside the builderGenerationPackages scope.",
         elementsToGenerate.size(), sortedElements.size());
+    if (generated || (sortedElements.isEmpty() && sortedHolders.isEmpty())) {
+      // simple-builders generates in exactly one round — the first round carrying its
+      // annotations; elements first appearing in later rounds get no builder.
+      return false;
+    }
     registerGeneratedTypes(elementsToGenerate);
 
     int successfulGenerations = generateBuilders(elementsToGenerate, tracker);
@@ -208,6 +218,9 @@ public class BuilderProcessor extends AbstractProcessor {
 
     // Reset indentation level at the end of each processing round to prevent cascading errors
     context.resetIndentation();
+    generated = true;
+    // The generating round is done — the registry is final for SPI adapters from here on.
+    SimpleBuildersSpiIntegration.finishCompilation();
     // Returning false leaves the annotations unclaimed so other processors on the
     // processor path (e.g. MapStruct, AutoService) still see them.
     return false;

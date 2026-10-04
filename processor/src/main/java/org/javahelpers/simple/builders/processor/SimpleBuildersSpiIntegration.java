@@ -59,11 +59,15 @@ public final class SimpleBuildersSpiIntegration {
      */
     INIT,
     /**
-     * {@code BuilderProcessor} initialized: the registry may still fill in this and later rounds —
-     * elements emitted by other processors can add targets until the last round.
+     * {@code BuilderProcessor} initialized: its single generating round may not have run yet — the
+     * registry must be treated as possibly still filling.
      */
     PROCESSING,
-    /** The last round ran: the registry is final for this compilation. */
+    /**
+     * The generating round ran: the registry is final for this compilation. {@code
+     * BuilderProcessor} generates in exactly one round — the first round carrying its annotations —
+     * so elements first appearing in later rounds get no builder.
+     */
     FINISHED
   }
 
@@ -103,7 +107,10 @@ public final class SimpleBuildersSpiIntegration {
     state = State.PROCESSING;
   }
 
-  /** Marks the compilation as finished: the registry will not grow any further. */
+  /**
+   * Marks the registry as final: {@link BuilderProcessor}'s generating round ran (or the
+   * compilation ended without one) — no more builders will be published.
+   */
   static void finishCompilation() {
     state = State.FINISHED;
   }

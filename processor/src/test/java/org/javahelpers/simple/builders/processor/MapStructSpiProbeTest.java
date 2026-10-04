@@ -151,13 +151,14 @@ class MapStructSpiProbeTest {
 
     ProbeResults results = ProbeResults.instance;
 
-    // Marked beans defer while unpublished — marked or template-annotated alike.
+    // While the registry is unpublished every lookup defers — no marker is needed, so marked,
+    // template, foreign and opted-out beans alike wait for the generating round.
     assertInstanceOf(TypeHierarchyErroneousException.class, results.unregisteredDeferral);
     assertInstanceOf(TypeHierarchyErroneousException.class, results.templateDeferral);
+    assertInstanceOf(TypeHierarchyErroneousException.class, results.foreignUnpublishedDeferral);
+    assertInstanceOf(TypeHierarchyErroneousException.class, results.ignoredUnpublishedDeferral);
 
-    // Foreign and opted-out beans are never claimed and never wait, whichever state applies.
-    assertNull(results.foreignUnpublished);
-    assertNull(results.ignoredUnpublished);
+    // Once the registry is final, foreign and opted-out beans are never claimed.
     assertNull(results.foreignRegistered);
     assertNull(results.ignoredRegistered);
     assertNull(results.foreignWhenFinished);
@@ -178,19 +179,19 @@ class MapStructSpiProbeTest {
     assertEquals(MethodType.OTHER, results.methodTypes.get("build"));
     assertEquals(MethodType.OTHER, results.methodTypes.get("create"));
 
-    // A marked bean outside the generation scope is skipped by planning: it defers in every
-    // non-final state while unpublished and resolves to no builder — reported as a warning —
-    // only once finished. The in-scope bean forces a second round so the post-registration
+    // A marked bean outside the generation scope is skipped by planning: it defers while the
+    // registry may still fill and resolves to no builder — reported as a warning — once the
+    // generating round is done. The in-scope bean forces a second round so the post-registration
     // lookup runs.
     Compilation skippedCompile =
         Compiler.javac()
-            .withProcessors(new BuilderProcessor(), new SpiProbeProcessor(true))
+            .withProcessors(new SpiProbeProcessor(true), new BuilderProcessor())
             .withOptions("-Asimplebuilder.builderGenerationPackages=scoped")
             .compile(personDto(), scopedDto());
     assertThat(skippedCompile).succeeded();
     ProbeResults skipped = ProbeResults.instance;
     assertInstanceOf(TypeHierarchyErroneousException.class, skipped.skippedBeanDeferred);
-    assertInstanceOf(TypeHierarchyErroneousException.class, skipped.skippedBeanRegisteredDeferral);
+    assertNull(skipped.skippedBeanRegistered);
     assertNull(skipped.skippedBeanFinished);
   }
 
@@ -202,9 +203,9 @@ class MapStructSpiProbeTest {
     Throwable unregisteredDeferral;
     Throwable templateDeferral;
     Throwable skippedBeanDeferred;
-    Throwable skippedBeanRegisteredDeferral;
-    BuilderInfo foreignUnpublished;
-    BuilderInfo ignoredUnpublished;
+    Throwable foreignUnpublishedDeferral;
+    Throwable ignoredUnpublishedDeferral;
+    BuilderInfo skippedBeanRegistered;
     BuilderInfo skippedBeanFinished;
     BuilderInfo foreignRegistered;
     BuilderInfo ignoredRegistered;
@@ -218,9 +219,9 @@ class MapStructSpiProbeTest {
       unregisteredDeferral = null;
       templateDeferral = null;
       skippedBeanDeferred = null;
-      skippedBeanRegisteredDeferral = null;
-      foreignUnpublished = null;
-      ignoredUnpublished = null;
+      foreignUnpublishedDeferral = null;
+      ignoredUnpublishedDeferral = null;
+      skippedBeanRegistered = null;
       skippedBeanFinished = null;
       foreignRegistered = null;
       ignoredRegistered = null;
@@ -235,10 +236,9 @@ class MapStructSpiProbeTest {
    * Drives {@link MapStructBuilderProvider} and {@link MapStructAccessorNamingStrategy} like
    * MapStruct would — one SPI instance per compilation, lookups on the mapped bean while its
    * builder is pending, then method classification once the builder type exists. Runs ahead of
-   * {@link BuilderProcessor} in the first round so a marked bean is probed before registration. In
-   * {@code skippedMode} it runs behind {@link BuilderProcessor} and probes the marked bean that the
-   * scoped processor never plans — deferral through the registered states plus the finished
-   * outcome.
+   * {@link BuilderProcessor} in the first round so beans are probed before registration. In {@code
+   * skippedMode} it probes the marked bean that the scoped {@link BuilderProcessor} never plans —
+   * deferral while unpublished plus the finished outcome.
    */
   @SupportedAnnotationTypes("*")
   public static final class SpiProbeProcessor extends AbstractProcessor {
@@ -301,13 +301,12 @@ class MapStructSpiProbeTest {
       }
 
       if (skippedMode) {
-        // The bean is marked but out of the generation scope: it defers in every non-final
-        // state while unpublished — the probe runs behind the processor, so these lookups
-        // already observe the post-registration state.
+        // The bean is marked but out of the generation scope: it defers while the registry
+        // may still fill, then resolves to no builder once the generating round is done.
         if (results.skippedBeanDeferred == null) {
           results.skippedBeanDeferred = lookupExpectingDeferral(bean);
         } else {
-          results.skippedBeanRegisteredDeferral = lookupExpectingDeferral(bean);
+          results.skippedBeanRegistered = lookup(provider, "test.PersonDto");
         }
         return false;
       }
@@ -316,8 +315,8 @@ class MapStructSpiProbeTest {
         // Probed before BuilderProcessor planned the bean — a marked bean without a registry
         // entry must defer like a mapper running ahead of the generating round.
         results.unregisteredDeferral = lookupExpectingDeferral(bean);
-        results.foreignUnpublished = lookup(provider, "test.ForeignDto");
-        results.ignoredUnpublished = lookup(provider, "test.IgnoredDto");
+        results.foreignUnpublishedDeferral = lookupExpectingDeferral(element("test.ForeignDto"));
+        results.ignoredUnpublishedDeferral = lookupExpectingDeferral(element("test.IgnoredDto"));
         results.templateDeferral = lookupExpectingDeferral(element("test.MinimalDto"));
         return false;
       }

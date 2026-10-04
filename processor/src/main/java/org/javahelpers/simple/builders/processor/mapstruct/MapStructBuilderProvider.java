@@ -60,13 +60,13 @@ import org.mapstruct.ap.spi.TypeHierarchyErroneousException;
  * compilations are not discovered: only the beans the processor plans in the current run get
  * builder mapping.
  *
- * <p>A registry miss for a bean marked for generation ({@code @SimpleBuilder} or a template
- * annotation) defers the mapper via {@link TypeHierarchyErroneousException} in every state before
- * {@link State#FINISHED} — it may still be registered in a later round or with an element another
- * processor emits. Once finished, a marked bean that was never registered is reported as a warning
- * and resolves to no builder. Unmarked beans return {@code null} in every state: nothing foreign is
- * ever claimed or delayed. A published builder whose type is not emitted yet defers until {@link
- * State#FINISHED}.
+ * <p>{@code BuilderProcessor} generates in exactly one round — the first round carrying its
+ * annotations — and marks the registry final when it ends. A lookup miss before that point defers
+ * the mapper via {@link TypeHierarchyErroneousException}, MapStruct's own retry mechanism, for
+ * every bean: no bean-side marker is needed, so {@code @SimpleBuilderFor} targets resolve too. Once
+ * final, a miss is definitive: a bean marked for generation is reported as a warning, a foreign
+ * bean just maps without a builder. A published builder whose type is not emitted yet defers until
+ * the registry is final.
  *
  * <p>The provider is registered via {@code META-INF/services} and is only loaded when
  * simple-builders-processor and mapstruct-processor share the annotation processor path. The
@@ -139,26 +139,23 @@ public class MapStructBuilderProvider implements BuilderProvider {
    */
   private TypeElement findBuilderElement(
       TypeElement beanElement, Optional<PublishedBuilder> published) {
-    boolean markedForGeneration = isBuilderGenerationTarget(beanElement);
     if (published.isEmpty()) {
-      if (!markedForGeneration) {
-        // Foreign bean — never claimed, never deferred.
-        return null;
-      }
-      // Marked but not published — the bean may still be registered while the compilation is
-      // not in its final phase; a marked bean missing once generation finished was skipped by
-      // planning.
       if (state() != State.FINISHED) {
+        // The generating round may not have run yet — any bean may still be registered, so
+        // defer the mapper for a retry once the registry is final.
         throw new TypeHierarchyErroneousException(beanElement.asType());
       }
-      warnMarkedBeanWithoutRegisteredBuilder(beanElement);
+      // The registry is final: a marked bean without an entry was skipped by planning.
+      if (isBuilderGenerationTarget(beanElement)) {
+        warnMarkedBeanWithoutRegisteredBuilder(beanElement);
+      }
       return null;
     }
     TypeElement builderElement =
         elementUtils.getTypeElement(published.get().builder().typeName().getFullQualifiedName());
-    if (builderElement == null
-        && !SimpleBuildersSpiIntegration.isSimpleBuildersFinishedForIntegration()) {
-      // Published but not emitted yet — defer so the mapper retries once the type exists.
+    if (builderElement == null) {
+      // The type is written with the generating round's sources and materializes in the next
+      // round — defer until it exists.
       throw new TypeHierarchyErroneousException(beanElement.asType());
     }
     return builderElement;
@@ -221,7 +218,7 @@ public class MapStructBuilderProvider implements BuilderProvider {
   /**
    * Whether {@code beanElement} is marked for builder generation ({@code @SimpleBuilder} or a
    * builder template annotation, not opted out via {@code @Ignore4BuilderGeneration}). The marker
-   * only decides deferral and the finished-state warning — it never decides which type is claimed.
+   * only decides the finished-state warning — deferral and claiming never depend on it.
    */
   private boolean isBuilderGenerationTarget(TypeElement beanElement) {
     if (JavaLangAnalyser.findAnnotation(beanElement, Ignore4BuilderGeneration.class).isPresent()) {

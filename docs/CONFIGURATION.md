@@ -1058,6 +1058,8 @@ Unlike the other options this switch is consumed inside MapStruct's SPI environm
 
 **When DISABLED**: The provider returns no builder candidates and the naming strategy keeps the stock MapStruct behaviour, so generated builders are treated like ordinary classes.
 
+**Scope note**: `BuilderProcessor` generates in exactly one round — the first round carrying its annotations. Beans whose types first appear in a later round (emitted by other processors after that round) get no builder, and only beans the processor plans in that round are paired with their builder through the SPIs; builders produced by earlier compilations are not discovered.
+
 **Example**:
 ```xml
 <compilerArgs>
