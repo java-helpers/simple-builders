@@ -24,9 +24,9 @@
 
 package org.javahelpers.simple.builders.processor.model.core;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Stream;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
@@ -114,21 +114,17 @@ public class BuilderToGenerationTypeMapper {
 
     // Map and copy methods in emission order (see METHOD_EMISSION_ORDER): field-originated
     // methods stay grouped per field, builder-level methods come after grouped ones.
-    List<FieldMethod> fieldMethods = new ArrayList<>();
-    for (FieldDto field : builderDto.getConstructorFieldsForBuilder()) {
-      for (BuilderMethodDto method : field.getMethods()) {
-        fieldMethods.add(new FieldMethod(field, method));
-      }
-    }
-    for (FieldDto field : builderDto.getSetterFieldsForBuilder()) {
-      for (BuilderMethodDto method : field.getMethods()) {
-        fieldMethods.add(new FieldMethod(field, method));
-      }
-    }
-    for (BuilderMethodDto classMethod : builderDto.getMethods()) {
-      fieldMethods.add(new FieldMethod(null, classMethod));
-    }
-    fieldMethods.stream()
+    Stream<FieldMethod> fieldMethods =
+        Stream.concat(
+            Stream.of(
+                    builderDto.getConstructorFieldsForBuilder(),
+                    builderDto.getSetterFieldsForBuilder())
+                .flatMap(List::stream)
+                .flatMap(
+                    field ->
+                        field.getMethods().stream().map(method -> new FieldMethod(field, method))),
+            builderDto.getMethods().stream().map(method -> new FieldMethod(null, method)));
+    fieldMethods
         .sorted(METHOD_EMISSION_ORDER)
         .forEach(pair -> renderingDto.addMethod(toMethodDto(pair.method())));
 
