@@ -173,21 +173,6 @@ class FormattingModeTest {
           }
 
           /**
-           * Sets the value for <code>count</code>.
-           * <p>Generated from parameter in constructor {@link FormatTestDto#FormatTestDto(String, int) FormatTestDto(String name, int count)}
-           *
-           * <h4>Example:</h4><pre>{@code
-           * builder.count(42);
-           * }</pre>
-           * @param count count
-           * @return current instance of builder
-           */
-          public FormatTestDtoBuilder count(int count) {
-            this.count = changedValue(count);
-            return this;
-          }
-
-          /**
            * Sets the value for <code>count</code> by invoking the provided supplier.
            * <p>Generated from parameter in constructor {@link FormatTestDto#FormatTestDto(String, int) FormatTestDto(String name, int count)}
            *
@@ -199,6 +184,21 @@ class FormattingModeTest {
            */
           public FormatTestDtoBuilder count(Supplier<Integer> countSupplier) {
             this.count = changedValue(countSupplier.get());
+            return this;
+          }
+
+          /**
+           * Sets the value for <code>count</code>.
+           * <p>Generated from parameter in constructor {@link FormatTestDto#FormatTestDto(String, int) FormatTestDto(String name, int count)}
+           *
+           * <h4>Example:</h4><pre>{@code
+           * builder.count(42);
+           * }</pre>
+           * @param count count
+           * @return current instance of builder
+           */
+          public FormatTestDtoBuilder count(int count) {
+            this.count = changedValue(count);
             return this;
           }
 
@@ -220,21 +220,6 @@ class FormattingModeTest {
               throw new IllegalStateException("Cannot update 'count' before it is set");
             }
             this.count = changedValue(countUpdater.apply(this.count.value()));
-            return this;
-          }
-
-          /**
-           * Sets the value for <code>name</code>.
-           * <p>Generated from parameter in constructor {@link FormatTestDto#FormatTestDto(String, int) FormatTestDto(String name, int count)}
-           *
-           * <h4>Example:</h4><pre>{@code
-           * builder.name("example value");
-           * }</pre>
-           * @param name name
-           * @return current instance of builder
-           */
-          public FormatTestDtoBuilder name(String name) {
-            this.name = changedValue(name);
             return this;
           }
 
@@ -284,6 +269,21 @@ class FormattingModeTest {
            */
           public FormatTestDtoBuilder name(String format, Object... args) {
             this.name = changedValue(String.format(format, args));
+            return this;
+          }
+
+          /**
+           * Sets the value for <code>name</code>.
+           * <p>Generated from parameter in constructor {@link FormatTestDto#FormatTestDto(String, int) FormatTestDto(String name, int count)}
+           *
+           * <h4>Example:</h4><pre>{@code
+           * builder.name("example value");
+           * }</pre>
+           * @param name name
+           * @return current instance of builder
+           */
+          public FormatTestDtoBuilder name(String name) {
+            this.name = changedValue(name);
             return this;
           }
 
@@ -494,249 +494,249 @@ class FormattingModeTest {
     // Section 2: class body — the closing brace at 0 indentation anchors the common prefix
     String section2 = String.join("\n", java.util.Arrays.copyOfRange(lines, 38, lines.length));
     String expectedSection2 =
-        """
+"""
 
-          /**
-           * Tracked value for <code>value</code>: value.
-           */
-          private TrackedValue<String> value = unsetValue();
+  /**
+   * Tracked value for <code>value</code>: value.
+   */
+  private TrackedValue<String> value = unsetValue();
 
-          /**
-           * Empty constructor of builder for {@code test.DefaultFormatDto}.
-           */
-          public DefaultFormatDtoBuilder() {
-          }
+  /**
+   * Empty constructor of builder for {@code test.DefaultFormatDto}.
+   */
+  public DefaultFormatDtoBuilder() {
+  }
 
-          /**
-           * Initialisation of builder for {@code test.DefaultFormatDto} by a instance.
-           *
-           * @param instance object instance for initialisiation
-           */
-          public DefaultFormatDtoBuilder(DefaultFormatDto instance) {
-            this.value = initialValue(instance.getValue());
-          }
+  /**
+   * Initialisation of builder for {@code test.DefaultFormatDto} by a instance.
+   *
+   * @param instance object instance for initialisiation
+   */
+  public DefaultFormatDtoBuilder(DefaultFormatDto instance) {
+    this.value = initialValue(instance.getValue());
+  }
 
-          /**
-           * Creating a new builder for {@code test.DefaultFormatDto}.
-           *
-           * <h4>Example:</h4>
-           *
-           * <pre>{@code
-           * DefaultFormatDtoBuilder builder = DefaultFormatDtoBuilder.create();
-           * }</pre>
-           *
-           * @return builder for {@code test.DefaultFormatDto}
-           */
-          public static DefaultFormatDtoBuilder create() {
-            return new DefaultFormatDtoBuilder();
-          }
+  /**
+   * Creating a new builder for {@code test.DefaultFormatDto}.
+   *
+   * <h4>Example:</h4>
+   *
+   * <pre>{@code
+   * DefaultFormatDtoBuilder builder = DefaultFormatDtoBuilder.create();
+   * }</pre>
+   *
+   * @return builder for {@code test.DefaultFormatDto}
+   */
+  public static DefaultFormatDtoBuilder create() {
+    return new DefaultFormatDtoBuilder();
+  }
 
-          /**
-           * Sets the value for <code>value</code>.
-           * <p>
-           * Generated from parameter in constructor {@link DefaultFormatDto#DefaultFormatDto(String) DefaultFormatDto(String
-           * value)}
-           *
-           * <h4>Example:</h4>
-           *
-           * <pre>{@code
-           * builder.value("example value");
-           * }</pre>
-           *
-           * @param value value
-           * @return current instance of builder
-           */
-          public DefaultFormatDtoBuilder value(String value) {
-            this.value = changedValue(value);
-            return this;
-          }
+  /**
+   * Sets the value for <code>value</code> by executing the provided consumer.
+   * <p>
+   * Generated from parameter in constructor {@link DefaultFormatDto#DefaultFormatDto(String) DefaultFormatDto(String
+   * value)}
+   *
+   * <h4>Example:</h4>
+   *
+   * <pre>{@code
+   * builder.value(sb -> sb.append("text"));
+   * }</pre>
+   *
+   * @param valueStringBuilderConsumer consumer providing an instance of value
+   * @return current instance of builder
+   */
+  public DefaultFormatDtoBuilder value(Consumer<StringBuilder> valueStringBuilderConsumer) {
+    StringBuilder builder = new StringBuilder();
+    valueStringBuilderConsumer.accept(builder);
+    this.value = changedValue(builder.toString());
+    return this;
+  }
 
-          /**
-           * Sets the value for <code>value</code> by executing the provided consumer.
-           * <p>
-           * Generated from parameter in constructor {@link DefaultFormatDto#DefaultFormatDto(String) DefaultFormatDto(String
-           * value)}
-           *
-           * <h4>Example:</h4>
-           *
-           * <pre>{@code
-           * builder.value(sb -> sb.append("text"));
-           * }</pre>
-           *
-           * @param valueStringBuilderConsumer consumer providing an instance of value
-           * @return current instance of builder
-           */
-          public DefaultFormatDtoBuilder value(Consumer<StringBuilder> valueStringBuilderConsumer) {
-            StringBuilder builder = new StringBuilder();
-            valueStringBuilderConsumer.accept(builder);
-            this.value = changedValue(builder.toString());
-            return this;
-          }
+  /**
+   * Sets the value for <code>value</code> by invoking the provided supplier.
+   * <p>
+   * Generated from parameter in constructor {@link DefaultFormatDto#DefaultFormatDto(String) DefaultFormatDto(String
+   * value)}
+   *
+   * <h4>Example:</h4>
+   *
+   * <pre>{@code
+   * builder.value(() -> "example value");
+   * }</pre>
+   *
+   * @param valueSupplier supplier for value
+   * @return current instance of builder
+   */
+  public DefaultFormatDtoBuilder value(Supplier<String> valueSupplier) {
+    this.value = changedValue(valueSupplier.get());
+    return this;
+  }
 
-          /**
-           * Sets the value for <code>value</code> by invoking the provided supplier.
-           * <p>
-           * Generated from parameter in constructor {@link DefaultFormatDto#DefaultFormatDto(String) DefaultFormatDto(String
-           * value)}
-           *
-           * <h4>Example:</h4>
-           *
-           * <pre>{@code
-           * builder.value(() -> "example value");
-           * }</pre>
-           *
-           * @param valueSupplier supplier for value
-           * @return current instance of builder
-           */
-          public DefaultFormatDtoBuilder value(Supplier<String> valueSupplier) {
-            this.value = changedValue(valueSupplier.get());
-            return this;
-          }
+  /**
+   * Sets the String value for <code>value</code> by using String.format(format, args). See
+   * {@link String#format(String, Object...)} for details.
+   * <p>
+   * Generated from parameter in constructor {@link DefaultFormatDto#DefaultFormatDto(String) DefaultFormatDto(String
+   * value)}
+   *
+   * <h4>Example:</h4>
+   *
+   * <pre>{@code
+   * builder.value("Hello %s", "World");
+   * }</pre>
+   *
+   * @param format A format string
+   * @param args Arguments referenced by the format specifiers in the format string.
+   * @return current instance of builder
+   */
+  public DefaultFormatDtoBuilder value(String format, Object... args) {
+    this.value = changedValue(String.format(format, args));
+    return this;
+  }
 
-          /**
-           * Sets the String value for <code>value</code> by using String.format(format, args). See
-           * {@link String#format(String, Object...)} for details.
-           * <p>
-           * Generated from parameter in constructor {@link DefaultFormatDto#DefaultFormatDto(String) DefaultFormatDto(String
-           * value)}
-           *
-           * <h4>Example:</h4>
-           *
-           * <pre>{@code
-           * builder.value("Hello %s", "World");
-           * }</pre>
-           *
-           * @param format A format string
-           * @param args Arguments referenced by the format specifiers in the format string.
-           * @return current instance of builder
-           */
-          public DefaultFormatDtoBuilder value(String format, Object... args) {
-            this.value = changedValue(String.format(format, args));
-            return this;
-          }
+  /**
+   * Sets the value for <code>value</code>.
+   * <p>
+   * Generated from parameter in constructor {@link DefaultFormatDto#DefaultFormatDto(String) DefaultFormatDto(String
+   * value)}
+   *
+   * <h4>Example:</h4>
+   *
+   * <pre>{@code
+   * builder.value("example value");
+   * }</pre>
+   *
+   * @param value value
+   * @return current instance of builder
+   */
+  public DefaultFormatDtoBuilder value(String value) {
+    this.value = changedValue(value);
+    return this;
+  }
 
-          /**
-           * Updates the current value of <code>value</code> in place by applying the given operator, instead of reading it out,
-           * changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
-           * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-           * value must have been set before (directly or via an existing instance).
-           * <p>
-           * Generated from parameter in constructor {@link DefaultFormatDto#DefaultFormatDto(String) DefaultFormatDto(String
-           * value)}
-           *
-           * <h4>Example:</h4>
-           *
-           * <pre>{@code
-           * builder.value("example value").valueUpdate(String::trim);
-           * }</pre>
-           *
-           * @param valueUpdater operator applied to the current value; its result becomes the new value
-           * @return current instance of builder
-           * @throws IllegalStateException if <code>value</code> has not been set yet
-           */
-          public DefaultFormatDtoBuilder valueUpdate(UnaryOperator<String> valueUpdater) {
-            if (!this.value.isSet()) {
-              throw new IllegalStateException("Cannot update 'value' before it is set");
-            }
-            this.value = changedValue(valueUpdater.apply(this.value.value()));
-            return this;
-          }
+  /**
+   * Updates the current value of <code>value</code> in place by applying the given operator, instead of reading it out,
+   * changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance).
+   * <p>
+   * Generated from parameter in constructor {@link DefaultFormatDto#DefaultFormatDto(String) DefaultFormatDto(String
+   * value)}
+   *
+   * <h4>Example:</h4>
+   *
+   * <pre>{@code
+   * builder.value("example value").valueUpdate(String::trim);
+   * }</pre>
+   *
+   * @param valueUpdater operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>value</code> has not been set yet
+   */
+  public DefaultFormatDtoBuilder valueUpdate(UnaryOperator<String> valueUpdater) {
+    if (!this.value.isSet()) {
+      throw new IllegalStateException("Cannot update 'value' before it is set");
+    }
+    this.value = changedValue(valueUpdater.apply(this.value.value()));
+    return this;
+  }
 
-          /**
-           * Conditionally applies builder modifications if the condition is true.
-           *
-           * @param condition the condition to evaluate
-           * @param yesCondition the consumer to apply if condition is true
-           * @return this builder instance
-           */
-          public DefaultFormatDtoBuilder conditional(BooleanSupplier condition,
-              Consumer<DefaultFormatDtoBuilder> yesCondition) {
-            return conditional(condition, yesCondition, null);
-          }
+  /**
+   * Conditionally applies builder modifications if the condition is true.
+   *
+   * @param condition the condition to evaluate
+   * @param yesCondition the consumer to apply if condition is true
+   * @return this builder instance
+   */
+  public DefaultFormatDtoBuilder conditional(BooleanSupplier condition,
+      Consumer<DefaultFormatDtoBuilder> yesCondition) {
+    return conditional(condition, yesCondition, null);
+  }
 
-          /**
-           * Conditionally applies builder modifications based on a condition evaluation.
-           *
-           * @param condition the condition to evaluate
-           * @param trueCase the consumer to apply if condition is true
-           * @param falseCase the consumer to apply if condition is false (can be null)
-           * @return this builder instance
-           */
-          public DefaultFormatDtoBuilder conditional(BooleanSupplier condition, Consumer<DefaultFormatDtoBuilder> trueCase,
-              Consumer<DefaultFormatDtoBuilder> falseCase) {
-            if (condition.getAsBoolean()) {
-              trueCase.accept(this);
-            } else if (falseCase != null) {
-              falseCase.accept(this);
-            }
-            return this;
-          }
+  /**
+   * Conditionally applies builder modifications based on a condition evaluation.
+   *
+   * @param condition the condition to evaluate
+   * @param trueCase the consumer to apply if condition is true
+   * @param falseCase the consumer to apply if condition is false (can be null)
+   * @return this builder instance
+   */
+  public DefaultFormatDtoBuilder conditional(BooleanSupplier condition, Consumer<DefaultFormatDtoBuilder> trueCase,
+      Consumer<DefaultFormatDtoBuilder> falseCase) {
+    if (condition.getAsBoolean()) {
+      trueCase.accept(this);
+    } else if (falseCase != null) {
+      falseCase.accept(this);
+    }
+    return this;
+  }
 
-          /**
-           * Builds the configured DTO instance.
-           *
-           * <h4>Example:</h4>
-           *
-           * <pre>{@code
-           * DefaultFormatDto result = builder.build();
-           * }</pre>
-           */
-          @Override
-          public DefaultFormatDto build() {
-            DefaultFormatDto result = new DefaultFormatDto(this.value.value());
-            return result;
-          }
+  /**
+   * Builds the configured DTO instance.
+   *
+   * <h4>Example:</h4>
+   *
+   * <pre>{@code
+   * DefaultFormatDto result = builder.build();
+   * }</pre>
+   */
+  @Override
+  public DefaultFormatDto build() {
+    DefaultFormatDto result = new DefaultFormatDto(this.value.value());
+    return result;
+  }
 
-          /**
-           * Returns a string representation of this builder, including only fields that have been set.
-           *
-           * @return string representation of the builder
-           */
-          @Override
-          public String toString() {
-            return new ToStringBuilder(this, BuilderToStringStyle.INSTANCE).append("value", this.value).toString();
-          }
+  /**
+   * Returns a string representation of this builder, including only fields that have been set.
+   *
+   * @return string representation of the builder
+   */
+  @Override
+  public String toString() {
+    return new ToStringBuilder(this, BuilderToStringStyle.INSTANCE).append("value", this.value).toString();
+  }
 
-          /**
-           * Interface that can be implemented by the DTO to provide fluent modification methods.
-           */
-          public interface With {
-            /**
-             * Initializes a builder from an instance of this class, using methods of this builder to change values and returns
-             * the new built object.
-             *
-             * @param b the consumer to apply modifications
-             * @return the modified instance
-             */
-            default DefaultFormatDto with(Consumer<DefaultFormatDtoBuilder> b) {
-              DefaultFormatDtoBuilder builder;
-              try {
-                builder = new DefaultFormatDtoBuilder(DefaultFormatDto.class.cast(this));
-              } catch (ClassCastException ex) {
-                throw new IllegalArgumentException(
-                    "The interface 'DefaultFormatDtoBuilder.With' should only be implemented by classes, which could be casted to 'DefaultFormatDto'",
-                    ex);
-              }
-              b.accept(builder);
-              return builder.build();
-            }
+  /**
+   * Interface that can be implemented by the DTO to provide fluent modification methods.
+   */
+  public interface With {
+    /**
+     * Initializes a builder from an instance of this class, using methods of this builder to change values and returns
+     * the new built object.
+     *
+     * @param b the consumer to apply modifications
+     * @return the modified instance
+     */
+    default DefaultFormatDto with(Consumer<DefaultFormatDtoBuilder> b) {
+      DefaultFormatDtoBuilder builder;
+      try {
+        builder = new DefaultFormatDtoBuilder(DefaultFormatDto.class.cast(this));
+      } catch (ClassCastException ex) {
+        throw new IllegalArgumentException(
+            "The interface 'DefaultFormatDtoBuilder.With' should only be implemented by classes, which could be casted to 'DefaultFormatDto'",
+            ex);
+      }
+      b.accept(builder);
+      return builder.build();
+    }
 
-            /**
-             * Creates a builder initialized from this instance.
-             *
-             * @return a builder initialized with this instance's values
-             */
-            default DefaultFormatDtoBuilder with() {
-              try {
-                return new DefaultFormatDtoBuilder(DefaultFormatDto.class.cast(this));
-              } catch (ClassCastException ex) {
-                throw new IllegalArgumentException(
-                    "The interface 'DefaultFormatDtoBuilder.With' should only be implemented by classes, which could be casted to 'DefaultFormatDto'",
-                    ex);
-              }
-            }
-          }
-        }""";
+    /**
+     * Creates a builder initialized from this instance.
+     *
+     * @return a builder initialized with this instance's values
+     */
+    default DefaultFormatDtoBuilder with() {
+      try {
+        return new DefaultFormatDtoBuilder(DefaultFormatDto.class.cast(this));
+      } catch (ClassCastException ex) {
+        throw new IllegalArgumentException(
+            "The interface 'DefaultFormatDtoBuilder.With' should only be implemented by classes, which could be casted to 'DefaultFormatDto'",
+            ex);
+      }
+    }
+  }
+}""";
     assertEquals(expectedSection2, section2, "Eclipse-formatted section 2 (class body) mismatch");
   }
 }

@@ -50,9 +50,6 @@ public class MethodDto {
   /** Whether the method is static. */
   private boolean isStatic = false;
 
-  /** Ordering for method generation. Lower values appear first in generated class. */
-  private int ordering = 1000;
-
   /** Name of method. */
   private String methodName;
 
@@ -88,33 +85,6 @@ public class MethodDto {
   public MethodDto(String methodName, TypeName returnType) {
     this.methodName = methodName;
     this.returnType = returnType;
-  }
-
-  /**
-   * Sets the ordering for this method.
-   *
-   * <p>Lower values appear first in the generated class. Methods with the same ordering and name
-   * are sorted using the following enhanced rules:
-   *
-   * <ol>
-   *   <li>Methods with fewer parameters come first
-   *   <li>Non-generic methods come before generic methods
-   *   <li>Full method signature (name(paramType1,paramType2,...)) used for final ordering
-   * </ol>
-   *
-   * @param ordering the ordering value (lower values appear first)
-   */
-  public void setOrdering(int ordering) {
-    this.ordering = ordering;
-  }
-
-  /**
-   * Returns the ordering of this method.
-   *
-   * @return the ordering value
-   */
-  public int getOrdering() {
-    return ordering;
   }
 
   /**
@@ -327,98 +297,6 @@ public class MethodDto {
    */
   public void addAnnotation(AnnotationDto annotation) {
     this.annotations.add(annotation);
-  }
-
-  /**
-   * Comparator for sorting MethodDto instances with sophisticated ordering rules.
-   *
-   * <p>Sorting order for methods with same ordering and name:
-   *
-   * <ol>
-   *   <li>Methods with fewer parameters come first
-   *   <li>Non-generic methods come before generic methods
-   *   <li>Full method signature (name(paramType1,paramType2,...)) used for final ordering
-   * </ol>
-   */
-  public static class MethodComparator implements java.util.Comparator<MethodDto> {
-
-    @Override
-    public int compare(MethodDto m1, MethodDto m2) {
-      // Primary sort: ordering value
-      int orderingCompare = Integer.compare(m1.getOrdering(), m2.getOrdering());
-      if (orderingCompare != 0) {
-        return orderingCompare;
-      }
-
-      // Secondary sort: method name
-      int nameCompare = m1.getMethodName().compareTo(m2.getMethodName());
-      if (nameCompare != 0) {
-        return nameCompare;
-      }
-
-      // Tertiary sort: parameter count (fewer parameters first)
-      int paramCountCompare = Integer.compare(m1.getParameters().size(), m2.getParameters().size());
-      if (paramCountCompare != 0) {
-        return paramCountCompare;
-      }
-
-      // Quaternary sort: generic vs non-generic (non-generic first)
-      boolean m1Generic = hasGenericParameters(m1);
-      boolean m2Generic = hasGenericParameters(m2);
-      if (m1Generic != m2Generic) {
-        return m1Generic ? 1 : -1; // non-generic comes first
-      }
-
-      // Final sort: full method signature
-      String signature1 = createMethodSignature(m1);
-      String signature2 = createMethodSignature(m2);
-      return signature1.compareTo(signature2);
-    }
-
-    /**
-     * Creates a qualified name string for a TypeName.
-     *
-     * @param typeName the type name
-     * @return qualified name using the type's own formatting logic
-     */
-    private String getQualifiedName(TypeName typeName) {
-      return typeName.getFullQualifiedName();
-    }
-
-    /**
-     * Creates a method signature string for sorting purposes.
-     *
-     * <p>The signature includes method name and parameter types in the format:
-     * methodName(paramType1,paramType2,...)
-     *
-     * @param method the method to create signature for
-     * @return signature string for comparison
-     */
-    private String createMethodSignature(MethodDto method) {
-      StringBuilder signature = new StringBuilder(method.getMethodName());
-      signature.append("(");
-
-      java.util.List<String> paramTypes =
-          method.getParameters().stream()
-              .map(param -> getQualifiedName(param.getParameterType()))
-              .toList();
-
-      signature.append(String.join(",", paramTypes));
-      signature.append(")");
-
-      return signature.toString();
-    }
-
-    /**
-     * Checks if a method has generic parameters.
-     *
-     * @param method the method to check
-     * @return true if any parameter is generic (contains type parameters)
-     */
-    private boolean hasGenericParameters(MethodDto method) {
-      return method.getParameters().stream()
-          .anyMatch(param -> getQualifiedName(param.getParameterType()).contains("<"));
-    }
   }
 
   /**

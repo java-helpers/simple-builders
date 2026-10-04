@@ -468,11 +468,6 @@ class ConfigurationProcessingTest {
             return new PersonDtoBuilder();
           }
 
-          public PersonDtoBuilder name(String name) {
-            this.name = changedValue(name);
-            return this;
-          }
-
           public PersonDtoBuilder name(Consumer<StringBuilder> nameStringBuilderConsumer) {
             StringBuilder builder = new StringBuilder();
             nameStringBuilderConsumer.accept(builder);
@@ -487,6 +482,11 @@ class ConfigurationProcessingTest {
 
           public PersonDtoBuilder name(String format, Object... args) {
             this.name = changedValue(String.format(format, args));
+            return this;
+          }
+
+          public PersonDtoBuilder name(String name) {
+            this.name = changedValue(name);
             return this;
           }
 

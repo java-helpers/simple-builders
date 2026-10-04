@@ -289,32 +289,19 @@ public class RoasterCodeGenerator {
    * org.javahelpers.simple.builders.processor.processing.BuilderDefinitionCreator#resolveMethodConflicts}.
    *
    * <p>Since conflicts should already be resolved by the builder-specific step, this safety net
-   * simply keeps the first occurrence for any remaining duplicate signatures and logs a generic
-   * warning.
+   * simply keeps the first occurrence for any remaining duplicate signatures and reports it as a
+   * warning (an error in strict mode).
    */
   private List<MethodDto> resolveMethodConflicts(List<MethodDto> methods) {
-    MethodDto.MethodComparator comparator = new MethodDto.MethodComparator();
-
-    // Sort methods by comparator for consistent ordering
-    List<MethodDto> sortedMethods = methods.stream().sorted(comparator).toList();
-
     Map<String, MethodDto> signatureToMethod = new java.util.LinkedHashMap<>();
-
-    for (MethodDto method : sortedMethods) {
-      String signature = method.getSignatureKey();
-
-      MethodDto existing = signatureToMethod.get(signature);
-      if (existing == null) {
-        signatureToMethod.put(signature, method);
-      } else {
-        context.warning(
-            "  Unexpected duplicate method signature: '%s' — keeping first occurrence (safety net)",
-            signature);
+    for (MethodDto method : methods) {
+      if (signatureToMethod.putIfAbsent(method.getSignatureKey(), method) != null) {
+        context.reportBasedOnStrictMode(
+            "Unexpected duplicate method signature: '%s' — keeping first occurrence (safety net)",
+            method.getSignatureKey());
       }
     }
-
-    // Sort the final result for reproducible output
-    return signatureToMethod.values().stream().sorted(comparator).toList();
+    return List.copyOf(signatureToMethod.values());
   }
 
   private void appendMethod(
