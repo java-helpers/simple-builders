@@ -30,8 +30,10 @@ import static org.javahelpers.simple.builders.processor.processing.logging.Perfo
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -293,16 +295,18 @@ public class RoasterCodeGenerator {
    * warning (an error in strict mode).
    */
   private List<MethodDto> resolveMethodConflicts(List<MethodDto> methods) {
-    // LinkedHashMap keeps the mapper's emission order for values().
-    Map<String, MethodDto> signatureToMethod = new java.util.LinkedHashMap<>();
+    Set<String> seenSignatures = new HashSet<>();
+    List<MethodDto> deduplicated = new ArrayList<>(methods.size());
     for (MethodDto method : methods) {
-      if (signatureToMethod.putIfAbsent(method.getSignatureKey(), method) != null) {
+      if (seenSignatures.add(method.getSignatureKey())) {
+        deduplicated.add(method);
+      } else {
         context.reportBasedOnStrictMode(
             "Unexpected duplicate method signature: '%s' — keeping first occurrence (safety net)",
             method.getSignatureKey());
       }
     }
-    return List.copyOf(signatureToMethod.values());
+    return deduplicated;
   }
 
   private void appendMethod(
