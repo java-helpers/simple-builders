@@ -17,10 +17,12 @@ updates:
 
   - package-ecosystem: "maven" # See documentation for possible values
     directories:
+      - "/"
       - "/core"
       - "/processor"
       - "/example-custom-generator"
       - "/example"
+      - "/performance-test"
     schedule:
       interval: "weekly"
     labels:
