@@ -31,7 +31,6 @@ import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 
 /**
@@ -47,10 +46,6 @@ final class AnnotationSupport {
       "org.javahelpers.simple.builders.core.annotations.SimpleBuilder";
   static final String SIMPLE_BUILDER_TEMPLATE_ANNOTATION =
       "org.javahelpers.simple.builders.core.annotations.SimpleBuilder.Template";
-  static final String BUILDER_IMPLEMENTATION_ANNOTATION =
-      "org.javahelpers.simple.builders.core.annotations.BuilderImplementation";
-  static final String IGNORE_4_BUILDER_ANNOTATION =
-      "org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration";
 
   private final Elements elementUtils;
 
@@ -106,55 +101,6 @@ final class AnnotationSupport {
       }
     }
     return null;
-  }
-
-  /**
-   * The {@code forClass} type of {@code @BuilderImplementation} on {@code builderType}, or {@code
-   * null} when the annotation is absent.
-   */
-  TypeMirror builderImplementationForClass(TypeElement builderType) {
-    for (AnnotationMirror mirror : builderType.getAnnotationMirrors()) {
-      if (!qualifiedNameOf(mirror).equals(BUILDER_IMPLEMENTATION_ANNOTATION)) {
-        continue;
-      }
-      for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry :
-          mirror.getElementValues().entrySet()) {
-        if (entry.getKey().getSimpleName().contentEquals("forClass")
-            && entry.getValue().getValue() instanceof TypeMirror forClass) {
-          return forClass;
-        }
-      }
-      return null;
-    }
-    return null;
-  }
-
-  /**
-   * Whether {@code beanElement} is marked for builder generation ({@code @SimpleBuilder} or a
-   * builder template annotation, not opted out via {@code @Ignore4BuilderGeneration}).
-   */
-  boolean isBuilderGenerationTarget(TypeElement beanElement) {
-    boolean marked = false;
-    for (AnnotationMirror mirror : elementUtils.getAllAnnotationMirrors(beanElement)) {
-      String annotationName = qualifiedNameOf(mirror);
-      if (annotationName.equals(IGNORE_4_BUILDER_ANNOTATION)) {
-        return false;
-      }
-      if (annotationName.equals(SIMPLE_BUILDER_ANNOTATION)) {
-        marked = true;
-        continue;
-      }
-      // A custom builder template annotation (e.g. @SimpleMinimalBuilder or a project-defined
-      // one): its type is meta-annotated with @SimpleBuilder.Template.
-      for (AnnotationMirror metaMirror :
-          mirror.getAnnotationType().asElement().getAnnotationMirrors()) {
-        if (qualifiedNameOf(metaMirror).equals(SIMPLE_BUILDER_TEMPLATE_ANNOTATION)) {
-          marked = true;
-          break;
-        }
-      }
-    }
-    return marked;
   }
 
   /**
