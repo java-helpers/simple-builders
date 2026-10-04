@@ -85,8 +85,6 @@ public class MapStructBuilderProvider implements BuilderProvider {
 
   @Override
   public void init(MapStructProcessingEnvironment processingEnvironment) {
-    // Ages out stale lifecycle state left by a previous compilation on a reused JVM.
-    SimpleBuildersSpiIntegration.spiInitialized();
     this.elementUtils = processingEnvironment.getElementUtils();
     Map<String, String> options = processingEnvironment.getOptions();
     processorOptions = options == null ? Map.of() : options;
@@ -94,7 +92,8 @@ public class MapStructBuilderProvider implements BuilderProvider {
 
   @Override
   public BuilderInfo findBuilderInfo(TypeMirror type) {
-    if (SimpleBuildersSpiIntegration.isIntegrationDisabled(processorOptions)) {
+    if (!SimpleBuildersSpiIntegration.isMapstructGenerationEnabled(
+        elementUtils, processorOptions)) {
       return null;
     }
     if (!(type instanceof DeclaredType declaredType)
@@ -117,8 +116,7 @@ public class MapStructBuilderProvider implements BuilderProvider {
    * BuilderProcessor} publishes — the list decides alone which type is claimed.
    */
   private BuilderInfo createBuilderInfo(TypeElement beanElement) {
-    Optional<PublishedBuilder> published =
-        SimpleBuildersSpiIntegration.builderFor(beanElement.getQualifiedName().toString());
+    Optional<PublishedBuilder> published = publishedFor(beanElement);
     TypeElement builderElement = findBuilderElement(beanElement, published);
     if (builderElement == null) {
       return null;
@@ -147,7 +145,7 @@ public class MapStructBuilderProvider implements BuilderProvider {
         // Foreign bean — never claimed, never deferred.
         return null;
       }
-      return switch (SimpleBuildersSpiIntegration.state()) {
+      return switch (state()) {
         // Marked but not published yet — MapStruct may run ahead of this processor's first
         // round; defer so the registry can fill in before the mapper is generated.
         case INIT, PROCESSING -> throw new TypeHierarchyErroneousException(beanElement.asType());
@@ -162,11 +160,32 @@ public class MapStructBuilderProvider implements BuilderProvider {
     }
     TypeElement builderElement =
         elementUtils.getTypeElement(published.get().builder().typeName().getFullQualifiedName());
-    if (builderElement == null && SimpleBuildersSpiIntegration.state() != State.FINISHED) {
+    if (builderElement == null
+        && !SimpleBuildersSpiIntegration.isSimpleBuildersFinishedForIntegration()) {
       // Published but not emitted yet — defer so the mapper retries once the type exists.
       throw new TypeHierarchyErroneousException(beanElement.asType());
     }
     return builderElement;
+  }
+
+  /**
+   * The state of the compilation this provider's {@code elementUtils} belongs to — {@link
+   * State#INIT} while the holder still describes a previous run on a reused JVM.
+   */
+  private State state() {
+    return SimpleBuildersSpiIntegration.isCurrentCompilation(elementUtils)
+        ? SimpleBuildersSpiIntegration.state()
+        : State.INIT;
+  }
+
+  /**
+   * The builder published for {@code beanElement} — empty while the holder still describes a
+   * previous run, so stale entries can never claim a bean.
+   */
+  private Optional<PublishedBuilder> publishedFor(TypeElement beanElement) {
+    return SimpleBuildersSpiIntegration.isCurrentCompilation(elementUtils)
+        ? SimpleBuildersSpiIntegration.builderFor(beanElement.getQualifiedName().toString())
+        : Optional.empty();
   }
 
   /** Warns that a bean marked for generation got no registered builder in this compilation. */

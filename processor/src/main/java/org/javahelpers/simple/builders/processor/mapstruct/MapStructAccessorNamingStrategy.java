@@ -27,21 +27,18 @@ import com.google.auto.service.AutoService;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import org.javahelpers.simple.builders.processor.SimpleBuildersSpiIntegration;
 import org.javahelpers.simple.builders.processor.SimpleBuildersSpiIntegration.PublishedBuilder;
+import org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyser;
 import org.mapstruct.ap.spi.AccessorNamingStrategy;
 import org.mapstruct.ap.spi.DefaultAccessorNamingStrategy;
 import org.mapstruct.ap.spi.MapStructProcessingEnvironment;
 import org.mapstruct.ap.spi.MethodType;
+import org.mapstruct.ap.spi.TypeHierarchyErroneousException;
 
 /**
  * MapStruct {@link AccessorNamingStrategy} that hides the generated helper methods of
@@ -69,8 +66,6 @@ public class MapStructAccessorNamingStrategy extends DefaultAccessorNamingStrate
   @Override
   public void init(MapStructProcessingEnvironment processingEnvironment) {
     super.init(processingEnvironment);
-    // Ages out stale lifecycle state left by a previous compilation on a reused JVM.
-    SimpleBuildersSpiIntegration.spiInitialized();
     Map<String, String> options = processingEnvironment.getOptions();
     processorOptions = options == null ? Map.of() : options;
   }
@@ -78,7 +73,11 @@ public class MapStructAccessorNamingStrategy extends DefaultAccessorNamingStrate
   @Override
   public MethodType getMethodType(ExecutableElement method) {
     MethodType methodType = super.getMethodType(method);
-    if (SimpleBuildersSpiIntegration.isIntegrationDisabled(processorOptions)) {
+    if (!SimpleBuildersSpiIntegration.isCurrentCompilation(elementUtils)
+        || !SimpleBuildersSpiIntegration.isMapstructGenerationEnabled(
+            elementUtils, processorOptions)) {
+      // The holder describes another compilation (or is disabled): simple-builders is not
+      // ready here, so everything keeps the default classification.
       return methodType;
     }
     if (methodType != MethodType.SETTER && methodType != MethodType.ADDER) {
@@ -122,28 +121,18 @@ public class MapStructAccessorNamingStrategy extends DefaultAccessorNamingStrate
     TypeElement beanElement =
         elementUtils.getTypeElement(published.get().beanType().getFullQualifiedName());
     if (beanElement == null) {
+      // The published bean is not emitted yet — another processor may produce it in a later
+      // round, so the classification retries once the type exists.
+      if (!SimpleBuildersSpiIntegration.isSimpleBuildersFinishedForIntegration()) {
+        throw new TypeHierarchyErroneousException(builderType.asType());
+      }
       return Map.of();
     }
     Map<String, TypeMirror> directSetters = new HashMap<>();
-    collectFields(beanElement, published.get().setterSuffix(), directSetters);
+    for (VariableElement field : JavaLangAnalyser.findFields(beanElement)) {
+      directSetters.put(
+          field.getSimpleName().toString() + published.get().setterSuffix(), field.asType());
+    }
     return directSetters;
-  }
-
-  /** Collects the bean's non-static fields incl. inherited ones into {@code directSetters}. */
-  private void collectFields(
-      TypeElement beanElement, String setterSuffix, Map<String, TypeMirror> directSetters) {
-    for (Element member : beanElement.getEnclosedElements()) {
-      if (member.getKind() == ElementKind.FIELD
-          && member instanceof VariableElement field
-          && !field.getModifiers().contains(Modifier.STATIC)) {
-        directSetters.put(field.getSimpleName().toString() + setterSuffix, field.asType());
-      }
-    }
-    TypeMirror superclass = beanElement.getSuperclass();
-    if (superclass.getKind() == TypeKind.DECLARED
-        && ((DeclaredType) superclass).asElement() instanceof TypeElement parent
-        && !parent.getQualifiedName().contentEquals("java.lang.Object")) {
-      collectFields(parent, setterSuffix, directSetters);
-    }
   }
 }

@@ -116,6 +116,7 @@ public class BuilderProcessor extends AbstractProcessor {
     // resolved switch through the shared classloader instead
     String mapStructOption = reader.readValue(CompilerArgumentsEnum.USING_MAPSTRUCT_INTEGRATION);
     SimpleBuildersSpiIntegration.initCompilation(
+        processingEnv.getElementUtils(),
         mapStructOption == null
             ? null
             : OptionValueParsers.parseOptionState(mapStructOption, logger) != OptionState.DISABLED);
@@ -546,8 +547,12 @@ public class BuilderProcessor extends AbstractProcessor {
                   elementToGenerate.reportingElement(), elementToGenerate.config()),
               elementToGenerate.config());
       scopeResolver.registerGeneratedBuilder(beanType, builderType);
-      SimpleBuildersSpiIntegration.registerBuilder(
-          beanType, builderType, elementToGenerate.config().getSetterSuffix());
+      scopeResolver
+          .resolveGeneratedBuilder(targetType)
+          .ifPresent(
+              resolvedBuilder ->
+                  SimpleBuildersSpiIntegration.registerBuilder(
+                      beanType, resolvedBuilder, elementToGenerate.config().getSetterSuffix()));
     }
   }
 

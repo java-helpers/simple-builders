@@ -137,6 +137,29 @@ public final class BuilderScopeResolver {
   }
 
   /**
+   * The builder contract of a type whose builder this processor registered for the current round —
+   * always the generated {@code create()} factory for the empty path and the constructor for the
+   * copy path.
+   *
+   * <p>Unlike {@link #resolveUsableBuilderType(TypeElement)} this does not read the per-element
+   * configuration and is safe to call during generation-plan registration.
+   *
+   * @param referencedType the type element being referenced
+   * @return the resolved builder, or empty if no generated builder is registered for the type
+   */
+  public Optional<ResolvedBuilder> resolveGeneratedBuilder(TypeElement referencedType) {
+    TypeName referencedTypeName = JavaLangMapper.mapToTypeName(referencedType, context);
+    return generatedBuilders
+        .findBuilder(referencedTypeName)
+        .map(
+            builder ->
+                new ResolvedBuilder(
+                    builder,
+                    new BuilderInstantiation.StaticFactoryCall("create"),
+                    new BuilderInstantiation.ConstructorCall()));
+  }
+
+  /**
    * Checks whether a builder may be generated for the given element under the generation scope of
    * the resolved configuration.
    *
@@ -214,16 +237,9 @@ public final class BuilderScopeResolver {
     // Types whose builders are generated in the current processing round are trusted
     // immediately — our own generators always produce the builder contract, so no
     // classpath lookup or contract check is needed.
-    Optional<TypeName> generatedBuilder = generatedBuilders.findBuilder(referencedTypeName);
+    Optional<ResolvedBuilder> generatedBuilder = resolveGeneratedBuilder(referencedType);
     if (generatedBuilder.isPresent()) {
-      // Our generators always emit a static create() and no create(T) - the empty path uses
-      // the factory, the copy path the constructor
-      return generatedBuilder.map(
-          builder ->
-              new ResolvedBuilder(
-                  builder,
-                  new BuilderInstantiation.StaticFactoryCall("create"),
-                  new BuilderInstantiation.ConstructorCall()));
+      return generatedBuilder;
     }
 
     // Reusing builders not generated in this round - nested or anchored inside the referenced

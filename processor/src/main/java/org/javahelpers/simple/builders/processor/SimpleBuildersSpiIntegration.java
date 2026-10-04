@@ -26,7 +26,7 @@ package org.javahelpers.simple.builders.processor;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import org.javahelpers.simple.builders.processor.model.type.BuilderInstantiation.StaticFactoryCall;
+import javax.lang.model.util.Elements;
 import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 
@@ -37,12 +37,13 @@ import org.javahelpers.simple.builders.processor.model.type.TypeName;
  * setterSuffix}, so adapters do not scan elements or read annotations themselves.
  *
  * <p>The lifecycle reports where {@link BuilderProcessor}'s builder generation stands and is
- * transitioned by that processor alone — other processors or SPI adapters never write it. All state
- * is compilation-scoped: javac initializes each processor lazily when its turn in a round comes, so
- * before {@link BuilderProcessor} has run its {@code init()} nothing static can be trusted — values
- * may be leftovers of a previous compilation in a long-lived JVM (Gradle daemon, incremental
- * builds). Only while {@link State#PROCESSING}, {@link State#TARGETS_REGISTERED} or {@link
- * State#FINISHED} are the published switch and registry the current compilation's truth.
+ * transitioned by that processor alone — SPI adapters only ever read this holder, they never
+ * initialize or mutate it. All state is compilation-scoped: javac initializes each processor lazily
+ * when its turn in a round comes, so before {@link BuilderProcessor} has run its {@code init()}
+ * nothing static can be trusted — values may be leftovers of a previous compilation in a long-lived
+ * JVM (Gradle daemon, incremental builds). Adapters therefore pass their own {@link Elements} to
+ * {@link #isCurrentCompilation}: javac hands every processor of one compilation the same {@code
+ * Elements} instance, so a mismatch means this holder still describes an older run.
  */
 public final class SimpleBuildersSpiIntegration {
 
@@ -80,6 +81,9 @@ public final class SimpleBuildersSpiIntegration {
 
   private static volatile State state = State.INIT;
 
+  /** The {@link Elements} of the compilation this holder's content describes. */
+  private static volatile Elements compilationElements;
+
   /** The processor-resolved integration switch; {@code null} leaves the fallbacks active. */
   private static volatile Boolean integrationEnabled;
 
@@ -95,9 +99,10 @@ public final class SimpleBuildersSpiIntegration {
    * Starts a new compilation: clears the registry and publishes the integration switch the
    * processor resolved ({@code null} when the option is unset).
    */
-  static void initCompilation(Boolean integrationEnabled) {
+  static void initCompilation(Elements elements, Boolean integrationEnabled) {
     BY_BEAN.clear();
     BY_BUILDER.clear();
+    compilationElements = elements;
     SimpleBuildersSpiIntegration.integrationEnabled = integrationEnabled;
     state = State.PROCESSING;
   }
@@ -107,9 +112,7 @@ public final class SimpleBuildersSpiIntegration {
    * published; the registry may still grow in later rounds.
    */
   static void targetsRegistered() {
-    if (state == State.PROCESSING) {
-      state = State.TARGETS_REGISTERED;
-    }
+    state = State.TARGETS_REGISTERED;
   }
 
   /** Marks the compilation as finished: the registry will not grow any further. */
@@ -118,18 +121,13 @@ public final class SimpleBuildersSpiIntegration {
   }
 
   /**
-   * Called by each SPI adapter on {@code init} to age out a stale {@link State#FINISHED} left by a
-   * previous compilation: javac initializes every processor lazily in its turn, so an SPI init may
-   * run before {@link BuilderProcessor#init} of the same compilation, and a {@link State#FINISHED}
-   * observed here can only be leftover — a live {@link State#FINISHED} implies the last round
-   * already ran and no new SPI init would follow — and is reset to {@link State#INIT}. This
-   * corrects the observation; it does not declare generation state, which {@link BuilderProcessor}
-   * alone transitions.
+   * Whether {@code observed} belongs to the compilation this holder currently describes — {@code
+   * false} while it still carries a previous run's leftovers. javac creates one {@link Elements}
+   * per compilation and shares it between all processors, so reference identity is a reliable
+   * staleness check that never requires the SPI adapters to write anything.
    */
-  public static void spiInitialized() {
-    if (state == State.FINISHED) {
-      state = State.INIT;
-    }
+  public static boolean isCurrentCompilation(Elements observed) {
+    return observed != null && observed == compilationElements;
   }
 
   /** The lifecycle state the SPI adapters observe for the current compilation. */
@@ -137,17 +135,17 @@ public final class SimpleBuildersSpiIntegration {
     return state;
   }
 
+  /** Whether {@link BuilderProcessor} finished generating builders for this compilation. */
+  public static boolean isSimpleBuildersFinishedForIntegration() {
+    return state == State.FINISHED;
+  }
+
   /**
-   * Publishes the builder planned for {@code beanType} in this compilation under the standard
-   * contract every generated builder satisfies: {@code create()} obtains an empty builder instance
-   * and {@code build()} returns the finished bean.
+   * Publishes the builder {@link BuilderProcessor} resolved for {@code beanType} in this
+   * compilation.
    */
-  static void registerBuilder(TypeName beanType, TypeName builderType, String setterSuffix) {
-    PublishedBuilder publishedBuilder =
-        new PublishedBuilder(
-            beanType,
-            new ResolvedBuilder(builderType, new StaticFactoryCall("create"), null),
-            setterSuffix);
+  static void registerBuilder(TypeName beanType, ResolvedBuilder builder, String setterSuffix) {
+    PublishedBuilder publishedBuilder = new PublishedBuilder(beanType, builder, setterSuffix);
     BY_BEAN.put(publishedBuilder.beanType().getFullQualifiedName(), publishedBuilder);
     BY_BUILDER.put(publishedBuilder.builder().typeName().getFullQualifiedName(), publishedBuilder);
   }
@@ -166,21 +164,22 @@ public final class SimpleBuildersSpiIntegration {
   }
 
   /**
-   * Whether the integration is switched off: while the processor has published this compilation's
-   * resolution ({@link State#PROCESSING} or {@link State#FINISHED}) it wins; without one — incl.
-   * the stale leftovers of a previous run in {@link State#INIT} — the {@code simplebuilder.*}
-   * convention applies (JVM system property before the annotation processor option the hosting
-   * framework does not forward anyway).
+   * Whether the MapStruct integration is switched on: while the processor has published this
+   * compilation's resolution (and {@code observed} proves it current) that value wins; without one
+   * — incl. the stale leftovers of a previous run — the {@code simplebuilder.*} convention applies
+   * (JVM system property before the annotation processor option the hosting framework does not
+   * forward anyway). Anything but {@code false}/{@code disabled} keeps it on.
    */
-  public static boolean isIntegrationDisabled(Map<String, String> processorOptions) {
-    if (state != State.INIT) {
+  public static boolean isMapstructGenerationEnabled(
+      Elements observed, Map<String, String> processorOptions) {
+    if (isCurrentCompilation(observed) && state != State.INIT) {
       Boolean published = integrationEnabled;
       if (published != null) {
-        return !published;
+        return published;
       }
     }
     String value =
         System.getProperty(OPTION_USING_MAPSTRUCT, processorOptions.get(OPTION_USING_MAPSTRUCT));
-    return "false".equalsIgnoreCase(value) || "disabled".equalsIgnoreCase(value);
+    return !("false".equalsIgnoreCase(value) || "disabled".equalsIgnoreCase(value));
   }
 }
