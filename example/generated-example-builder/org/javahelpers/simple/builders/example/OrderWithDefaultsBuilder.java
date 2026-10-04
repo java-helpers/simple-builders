@@ -92,25 +92,6 @@ public class OrderWithDefaultsBuilder implements IBuilderBase<OrderWithDefaults>
   }
 
   /**
-   * Sets the value for <code>id</code>.
-   * <p>
-   * Generated from setter {@link OrderWithDefaults#setId(String) setId(String id)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.id("example value");
-   * }</pre>
-   * 
-   * @param id id
-   * @return current instance of builder
-   */
-  public OrderWithDefaultsBuilder id(String id) {
-    this.id = changedValue(id);
-    return this;
-  }
-
-  /**
    * Sets the value for <code>id</code> by executing the provided consumer.
    * <p>
    * Generated from setter {@link OrderWithDefaults#setId(String) setId(String id)}
@@ -172,6 +153,25 @@ public class OrderWithDefaultsBuilder implements IBuilderBase<OrderWithDefaults>
   }
 
   /**
+   * Sets the value for <code>id</code>.
+   * <p>
+   * Generated from setter {@link OrderWithDefaults#setId(String) setId(String id)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.id("example value");
+   * }</pre>
+   * 
+   * @param id id
+   * @return current instance of builder
+   */
+  public OrderWithDefaultsBuilder id(String id) {
+    this.id = changedValue(id);
+    return this;
+  }
+
+  /**
    * Updates the current value of <code>id</code> in place by applying the given operator, instead of reading it out,
    * changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
@@ -198,25 +198,6 @@ public class OrderWithDefaultsBuilder implements IBuilderBase<OrderWithDefaults>
   }
 
   /**
-   * Sets the value for <code>priority</code>.
-   * <p>
-   * Generated from setter {@link OrderWithDefaults#setPriority(int) setPriority(int priority)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.priority(42);
-   * }</pre>
-   * 
-   * @param priority priority
-   * @return current instance of builder
-   */
-  public OrderWithDefaultsBuilder priority(int priority) {
-    this.priority = changedValue(priority);
-    return this;
-  }
-
-  /**
    * Sets the value for <code>priority</code> by invoking the provided supplier.
    * <p>
    * Generated from setter {@link OrderWithDefaults#setPriority(int) setPriority(int priority)}
@@ -232,6 +213,25 @@ public class OrderWithDefaultsBuilder implements IBuilderBase<OrderWithDefaults>
    */
   public OrderWithDefaultsBuilder priority(Supplier<Integer> prioritySupplier) {
     this.priority = changedValue(prioritySupplier.get());
+    return this;
+  }
+
+  /**
+   * Sets the value for <code>priority</code>.
+   * <p>
+   * Generated from setter {@link OrderWithDefaults#setPriority(int) setPriority(int priority)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.priority(42);
+   * }</pre>
+   * 
+   * @param priority priority
+   * @return current instance of builder
+   */
+  public OrderWithDefaultsBuilder priority(int priority) {
+    this.priority = changedValue(priority);
     return this;
   }
 
@@ -258,25 +258,6 @@ public class OrderWithDefaultsBuilder implements IBuilderBase<OrderWithDefaults>
       throw new IllegalStateException("Cannot update 'priority' before it is set");
     }
     this.priority = changedValue(priorityUpdater.apply(this.priority.value()));
-    return this;
-  }
-
-  /**
-   * Sets the value for <code>status</code>.
-   * <p>
-   * Generated from setter {@link OrderWithDefaults#setStatus(String) setStatus(String status)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.status("example value");
-   * }</pre>
-   * 
-   * @param status status
-   * @return current instance of builder
-   */
-  public OrderWithDefaultsBuilder status(String status) {
-    this.status = changedValue(status);
     return this;
   }
 
@@ -338,6 +319,25 @@ public class OrderWithDefaultsBuilder implements IBuilderBase<OrderWithDefaults>
    */
   public OrderWithDefaultsBuilder status(String format, Object... args) {
     this.status = changedValue(String.format(format, args));
+    return this;
+  }
+
+  /**
+   * Sets the value for <code>status</code>.
+   * <p>
+   * Generated from setter {@link OrderWithDefaults#setStatus(String) setStatus(String status)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.status("example value");
+   * }</pre>
+   * 
+   * @param status status
+   * @return current instance of builder
+   */
+  public OrderWithDefaultsBuilder status(String status) {
+    this.status = changedValue(status);
     return this;
   }
 

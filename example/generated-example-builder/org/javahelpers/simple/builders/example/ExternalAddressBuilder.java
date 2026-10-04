@@ -96,25 +96,6 @@ public class ExternalAddressBuilder implements IBuilderBase<ExternalAddress> {
   }
 
   /**
-   * Sets the value for <code>city</code>.
-   * <p>
-   * Generated from setter {@link ExternalAddress#setCity(String) setCity(String city)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.city("example value");
-   * }</pre>
-   * 
-   * @param city city
-   * @return current instance of builder
-   */
-  public ExternalAddressBuilder city(String city) {
-    this.city = changedValue(city);
-    return this;
-  }
-
-  /**
    * Sets the value for <code>city</code> by executing the provided consumer.
    * <p>
    * Generated from setter {@link ExternalAddress#setCity(String) setCity(String city)}
@@ -176,6 +157,25 @@ public class ExternalAddressBuilder implements IBuilderBase<ExternalAddress> {
   }
 
   /**
+   * Sets the value for <code>city</code>.
+   * <p>
+   * Generated from setter {@link ExternalAddress#setCity(String) setCity(String city)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.city("example value");
+   * }</pre>
+   * 
+   * @param city city
+   * @return current instance of builder
+   */
+  public ExternalAddressBuilder city(String city) {
+    this.city = changedValue(city);
+    return this;
+  }
+
+  /**
    * Updates the current value of <code>city</code> in place by applying the given operator, instead of reading it out,
    * changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
@@ -198,25 +198,6 @@ public class ExternalAddressBuilder implements IBuilderBase<ExternalAddress> {
       throw new IllegalStateException("Cannot update 'city' before it is set");
     }
     this.city = changedValue(cityUpdater.apply(this.city.value()));
-    return this;
-  }
-
-  /**
-   * Sets the value for <code>street</code>.
-   * <p>
-   * Generated from setter {@link ExternalAddress#setStreet(String) setStreet(String street)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.street("example value");
-   * }</pre>
-   * 
-   * @param street street
-   * @return current instance of builder
-   */
-  public ExternalAddressBuilder street(String street) {
-    this.street = changedValue(street);
     return this;
   }
 
@@ -282,6 +263,25 @@ public class ExternalAddressBuilder implements IBuilderBase<ExternalAddress> {
   }
 
   /**
+   * Sets the value for <code>street</code>.
+   * <p>
+   * Generated from setter {@link ExternalAddress#setStreet(String) setStreet(String street)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.street("example value");
+   * }</pre>
+   * 
+   * @param street street
+   * @return current instance of builder
+   */
+  public ExternalAddressBuilder street(String street) {
+    this.street = changedValue(street);
+    return this;
+  }
+
+  /**
    * Updates the current value of <code>street</code> in place by applying the given operator, instead of reading it
    * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
@@ -304,70 +304,6 @@ public class ExternalAddressBuilder implements IBuilderBase<ExternalAddress> {
       throw new IllegalStateException("Cannot update 'street' before it is set");
     }
     this.street = changedValue(streetUpdater.apply(this.street.value()));
-    return this;
-  }
-
-  /**
-   * Validates that the city field is not null or empty.
-   * <p>
-   * Generated from setter {@link ExternalAddress#setCity(String) setCity(String city)}
-   * 
-   * @return this builder instance for chaining
-   * @throws IllegalArgumentException if city is null or empty
-   */
-  ExternalAddressBuilder validateCity() {
-    if (!city.isSet() || city.value().trim().isEmpty()) {
-      throw new IllegalArgumentException("City cannot be null or empty");
-    }
-    return this;
-  }
-
-  /**
-   * Validates that the street field is not null or empty.
-   * <p>
-   * Generated from setter {@link ExternalAddress#setStreet(String) setStreet(String street)}
-   * 
-   * @return this builder instance for chaining
-   * @throws IllegalArgumentException if street is null or empty
-   */
-  ExternalAddressBuilder validateStreet() {
-    if (!street.isSet() || street.value().trim().isEmpty()) {
-      throw new IllegalArgumentException("Street cannot be null or empty");
-    }
-    return this;
-  }
-
-  /**
-   * Validates that the zipCode field is not null or empty.
-   * <p>
-   * Generated from setter {@link ExternalAddress#setZipCode(String) setZipCode(String zipCode)}
-   * 
-   * @return this builder instance for chaining
-   * @throws IllegalArgumentException if zipCode is null or empty
-   */
-  ExternalAddressBuilder validateZipCode() {
-    if (!zipCode.isSet() || zipCode.value().trim().isEmpty()) {
-      throw new IllegalArgumentException("ZipCode cannot be null or empty");
-    }
-    return this;
-  }
-
-  /**
-   * Sets the value for <code>zipCode</code>.
-   * <p>
-   * Generated from setter {@link ExternalAddress#setZipCode(String) setZipCode(String zipCode)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.zipCode("example value");
-   * }</pre>
-   * 
-   * @param zipCode zipCode
-   * @return current instance of builder
-   */
-  public ExternalAddressBuilder zipCode(String zipCode) {
-    this.zipCode = changedValue(zipCode);
     return this;
   }
 
@@ -433,6 +369,25 @@ public class ExternalAddressBuilder implements IBuilderBase<ExternalAddress> {
   }
 
   /**
+   * Sets the value for <code>zipCode</code>.
+   * <p>
+   * Generated from setter {@link ExternalAddress#setZipCode(String) setZipCode(String zipCode)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.zipCode("example value");
+   * }</pre>
+   * 
+   * @param zipCode zipCode
+   * @return current instance of builder
+   */
+  public ExternalAddressBuilder zipCode(String zipCode) {
+    this.zipCode = changedValue(zipCode);
+    return this;
+  }
+
+  /**
    * Updates the current value of <code>zipCode</code> in place by applying the given operator, instead of reading it
    * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
@@ -455,6 +410,51 @@ public class ExternalAddressBuilder implements IBuilderBase<ExternalAddress> {
       throw new IllegalStateException("Cannot update 'zipCode' before it is set");
     }
     this.zipCode = changedValue(zipCodeUpdater.apply(this.zipCode.value()));
+    return this;
+  }
+
+  /**
+   * Validates that the city field is not null or empty.
+   * <p>
+   * Generated from setter {@link ExternalAddress#setCity(String) setCity(String city)}
+   * 
+   * @return this builder instance for chaining
+   * @throws IllegalArgumentException if city is null or empty
+   */
+  ExternalAddressBuilder validateCity() {
+    if (!city.isSet() || city.value().trim().isEmpty()) {
+      throw new IllegalArgumentException("City cannot be null or empty");
+    }
+    return this;
+  }
+
+  /**
+   * Validates that the street field is not null or empty.
+   * <p>
+   * Generated from setter {@link ExternalAddress#setStreet(String) setStreet(String street)}
+   * 
+   * @return this builder instance for chaining
+   * @throws IllegalArgumentException if street is null or empty
+   */
+  ExternalAddressBuilder validateStreet() {
+    if (!street.isSet() || street.value().trim().isEmpty()) {
+      throw new IllegalArgumentException("Street cannot be null or empty");
+    }
+    return this;
+  }
+
+  /**
+   * Validates that the zipCode field is not null or empty.
+   * <p>
+   * Generated from setter {@link ExternalAddress#setZipCode(String) setZipCode(String zipCode)}
+   * 
+   * @return this builder instance for chaining
+   * @throws IllegalArgumentException if zipCode is null or empty
+   */
+  ExternalAddressBuilder validateZipCode() {
+    if (!zipCode.isSet() || zipCode.value().trim().isEmpty()) {
+      throw new IllegalArgumentException("ZipCode cannot be null or empty");
+    }
     return this;
   }
 

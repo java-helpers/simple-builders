@@ -84,26 +84,6 @@ public class JacksonIntegrationDtoBuilder implements IBuilderBase<JacksonIntegra
   }
 
   /**
-   * Sets the value for <code>age</code>.
-   * <p>
-   * Generated from parameter in constructor {@link JacksonIntegrationDto#JacksonIntegrationDto(String, int)
-   * JacksonIntegrationDto(String name, int age)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.age(42);
-   * }</pre>
-   * 
-   * @param age age
-   * @return current instance of builder
-   */
-  public JacksonIntegrationDtoBuilder age(int age) {
-    this.age = changedValue(age);
-    return this;
-  }
-
-  /**
    * Sets the value for <code>age</code> by invoking the provided supplier.
    * <p>
    * Generated from parameter in constructor {@link JacksonIntegrationDto#JacksonIntegrationDto(String, int)
@@ -120,6 +100,26 @@ public class JacksonIntegrationDtoBuilder implements IBuilderBase<JacksonIntegra
    */
   public JacksonIntegrationDtoBuilder age(Supplier<Integer> ageSupplier) {
     this.age = changedValue(ageSupplier.get());
+    return this;
+  }
+
+  /**
+   * Sets the value for <code>age</code>.
+   * <p>
+   * Generated from parameter in constructor {@link JacksonIntegrationDto#JacksonIntegrationDto(String, int)
+   * JacksonIntegrationDto(String name, int age)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.age(42);
+   * }</pre>
+   * 
+   * @param age age
+   * @return current instance of builder
+   */
+  public JacksonIntegrationDtoBuilder age(int age) {
+    this.age = changedValue(age);
     return this;
   }
 
@@ -147,26 +147,6 @@ public class JacksonIntegrationDtoBuilder implements IBuilderBase<JacksonIntegra
       throw new IllegalStateException("Cannot update 'age' before it is set");
     }
     this.age = changedValue(ageUpdater.apply(this.age.value()));
-    return this;
-  }
-
-  /**
-   * Sets the value for <code>name</code>.
-   * <p>
-   * Generated from parameter in constructor {@link JacksonIntegrationDto#JacksonIntegrationDto(String, int)
-   * JacksonIntegrationDto(String name, int age)}
-   * 
-   * <h4>Example:</h4>
-   * 
-   * <pre>{@code
-   * builder.name("example value");
-   * }</pre>
-   * 
-   * @param name name
-   * @return current instance of builder
-   */
-  public JacksonIntegrationDtoBuilder name(String name) {
-    this.name = changedValue(name);
     return this;
   }
 
@@ -231,6 +211,26 @@ public class JacksonIntegrationDtoBuilder implements IBuilderBase<JacksonIntegra
    */
   public JacksonIntegrationDtoBuilder name(String format, Object... args) {
     this.name = changedValue(String.format(format, args));
+    return this;
+  }
+
+  /**
+   * Sets the value for <code>name</code>.
+   * <p>
+   * Generated from parameter in constructor {@link JacksonIntegrationDto#JacksonIntegrationDto(String, int)
+   * JacksonIntegrationDto(String name, int age)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.name("example value");
+   * }</pre>
+   * 
+   * @param name name
+   * @return current instance of builder
+   */
+  public JacksonIntegrationDtoBuilder name(String name) {
+    this.name = changedValue(name);
     return this;
   }
 

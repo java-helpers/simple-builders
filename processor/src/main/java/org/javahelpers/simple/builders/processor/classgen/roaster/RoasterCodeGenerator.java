@@ -30,8 +30,10 @@ import static org.javahelpers.simple.builders.processor.processing.logging.Perfo
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -289,32 +291,22 @@ public class RoasterCodeGenerator {
    * org.javahelpers.simple.builders.processor.processing.BuilderDefinitionCreator#resolveMethodConflicts}.
    *
    * <p>Since conflicts should already be resolved by the builder-specific step, this safety net
-   * simply keeps the first occurrence for any remaining duplicate signatures and logs a generic
-   * warning.
+   * simply keeps the first occurrence for any remaining duplicate signatures and reports it as a
+   * warning (an error in strict mode).
    */
   private List<MethodDto> resolveMethodConflicts(List<MethodDto> methods) {
-    MethodDto.MethodComparator comparator = new MethodDto.MethodComparator();
-
-    // Sort methods by comparator for consistent ordering
-    List<MethodDto> sortedMethods = methods.stream().sorted(comparator).toList();
-
-    Map<String, MethodDto> signatureToMethod = new java.util.LinkedHashMap<>();
-
-    for (MethodDto method : sortedMethods) {
-      String signature = method.getSignatureKey();
-
-      MethodDto existing = signatureToMethod.get(signature);
-      if (existing == null) {
-        signatureToMethod.put(signature, method);
+    Set<String> seenSignatures = new HashSet<>();
+    List<MethodDto> deduplicated = new ArrayList<>(methods.size());
+    for (MethodDto method : methods) {
+      if (seenSignatures.add(method.getSignatureKey())) {
+        deduplicated.add(method);
       } else {
-        context.warning(
-            "  Unexpected duplicate method signature: '%s' — keeping first occurrence (safety net)",
-            signature);
+        context.reportBasedOnStrictMode(
+            "Unexpected duplicate method signature: '%s' — keeping first occurrence (safety net)",
+            method.getSignatureKey());
       }
     }
-
-    // Sort the final result for reproducible output
-    return signatureToMethod.values().stream().sorted(comparator).toList();
+    return deduplicated;
   }
 
   private void appendMethod(

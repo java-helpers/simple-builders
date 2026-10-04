@@ -275,10 +275,13 @@ compileJava {
 | [`StringFormatHelperGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/field/StringFormatHelperGenerator.java) | String.format helpers | 80 |
 | [`SupplierMethodGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/field/SupplierMethodGenerator.java) | Supplier-based setters | 80 |
 | [`VarArgsHelperGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/field/VarArgsHelperGenerator.java) | Varargs helpers | 50 |
+| [`StringBuilderConsumerGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/field/StringBuilderConsumerGenerator.java) | StringBuilder consumer methods | 45 |
 | [`ArrayConversionGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/field/ArrayConversionGenerator.java) | Array-from-List conversion methods | 35 |
 | [`UpdateHelperGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/field/UpdateHelperGenerator.java) | UnaryOperator update helpers | 31 |
 | [`AddToCollectionGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/field/AddToCollectionGenerator.java) | add2FieldName methods for List/Set | 30 |
 | [`ArrayBuilderConsumerGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/field/ArrayBuilderConsumerGenerator.java) | ArrayListBuilder consumer methods for arrays | 25 |
+
+The column is the generator's *execution* priority. Emission order inside the generated class is governed separately: constructors first, then methods sorted by their `ordering` value (creation methods 200, fluent field methods 1000, conditional helpers 1100, build 1200, toString 2000, private helpers 2100), then by access modifier (public first, private last), non-static before static, then grouped by originating field, and finally by method name. Within a same-named overload group the direct property setter is emitted last, so consumers that resolve overloaded builder methods last-wins — e.g. MapStruct's builder detection — bind to the plain setter.
 
 ### Builder-Level Generators
 
@@ -287,8 +290,10 @@ compileJava {
 | [`ConditionalEnhancer`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/builder/ConditionalEnhancer.java) | Conditional logic methods | 100 |
 | [`JacksonAnnotationEnhancer`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/builder/JacksonAnnotationEnhancer.java) | Jackson annotations | 100 |
 | [`CoreMethodsEnhancer`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/builder/CoreMethodsEnhancer.java) | Core builder methods (build, create, toString) | 100 |
+| [`ConstructorEnhancer`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/builder/ConstructorEnhancer.java) | Builder constructors (empty + from-instance) | 95 |
 | [`WithInterfaceEnhancer`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/builder/WithInterfaceEnhancer.java) | With interface implementation | 90 |
 | [`InterfaceEnhancer`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/builder/InterfaceEnhancer.java) | Builder interface implementation | 90 |
+| [`FieldPrefillEnhancer`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/builder/FieldPrefillEnhancer.java) | Field-function prefilling for referenced builders | 15 |
 | [`GeneratedAnnotationEnhancer`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/builder/GeneratedAnnotationEnhancer.java) | @Generated annotation | 10 |
 | [`BuilderImplementationAnnotationEnhancer`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/builder/BuilderImplementationAnnotationEnhancer.java) | @BuilderImplementation annotation | 10 |
 | [`ClassJavaDocEnhancer`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/builder/ClassJavaDocEnhancer.java) | Class-level JavaDoc | 10 |

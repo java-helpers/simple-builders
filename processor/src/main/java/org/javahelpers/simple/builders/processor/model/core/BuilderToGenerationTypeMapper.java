@@ -24,6 +24,9 @@
 
 package org.javahelpers.simple.builders.processor.model.core;
 
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Stream;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
@@ -49,6 +52,16 @@ import org.javahelpers.simple.builders.processor.model.type.NestedTypeDto;
  * so the code generator can remain a pure renderer.
  */
 public class BuilderToGenerationTypeMapper {
+
+  /**
+   * Emission order for generated methods, applied while mapping to the rendering DTOs: ordering
+   * value (create/fluent/conditional/build/toString/helper sections), access modifier (public
+   * first, private last), non-static before static, originating field (alphabetically,
+   * builder-level methods last), method name, direct field setter last within a same-named overload
+   * group, parameter count, non-generic first, full signature.
+   */
+  private static final Comparator<FieldMethod> METHOD_EMISSION_ORDER =
+      BuilderToGenerationTypeMapper::compareFieldMethods;
 
   private final BuilderConfiguration configuration;
 
@@ -99,22 +112,21 @@ public class BuilderToGenerationTypeMapper {
     // Copy interfaces
     builderDto.getInterfaces().forEach(renderingDto::addInterface);
 
-    // Map and copy methods from fields
-    for (FieldDto field : builderDto.getConstructorFieldsForBuilder()) {
-      for (BuilderMethodDto method : field.getMethods()) {
-        renderingDto.addMethod(toMethodDto(method));
-      }
-    }
-    for (FieldDto field : builderDto.getSetterFieldsForBuilder()) {
-      for (BuilderMethodDto method : field.getMethods()) {
-        renderingDto.addMethod(toMethodDto(method));
-      }
-    }
-
-    // Map and copy builder-level methods from enhancers
-    for (BuilderMethodDto classMethod : builderDto.getMethods()) {
-      renderingDto.addMethod(toMethodDto(classMethod));
-    }
+    // Map and copy methods in emission order (see METHOD_EMISSION_ORDER): field-originated
+    // methods stay grouped per field, builder-level methods come after grouped ones.
+    Stream<FieldMethod> fieldMethods =
+        Stream.concat(
+            Stream.of(
+                    builderDto.getConstructorFieldsForBuilder(),
+                    builderDto.getSetterFieldsForBuilder())
+                .flatMap(List::stream)
+                .flatMap(
+                    field ->
+                        field.getMethods().stream().map(method -> new FieldMethod(field, method))),
+            builderDto.getMethods().stream().map(method -> new FieldMethod(null, method)));
+    fieldMethods
+        .sorted(METHOD_EMISSION_ORDER)
+        .forEach(pair -> renderingDto.addMethod(toMethodDto(pair.method())));
 
     builderDto
         .getNestedTypes()
@@ -137,7 +149,6 @@ public class BuilderToGenerationTypeMapper {
     MethodDto method = new MethodDto(classMethod.getMethodName(), classMethod.getReturnType());
     method.setModifier(classMethod.getModifier().orElse(null));
     method.setStatic(classMethod.isStatic());
-    method.setOrdering(classMethod.getOrdering());
 
     if (configuration.shouldGenerateJavaDoc()) {
       method.setJavadoc(buildMethodJavadoc(classMethod));
@@ -164,6 +175,97 @@ public class BuilderToGenerationTypeMapper {
     }
 
     return method;
+  }
+
+  /**
+   * Pair of a builder method and the field it originates from; {@code field} is {@code null} for
+   * builder-level methods created by enhancers.
+   */
+  private record FieldMethod(FieldDto field, BuilderMethodDto method) {}
+
+  private static int compareFieldMethods(FieldMethod p1, FieldMethod p2) {
+    BuilderMethodDto m1 = p1.method();
+    BuilderMethodDto m2 = p2.method();
+
+    int orderingCompare = Integer.compare(m1.getOrdering(), m2.getOrdering());
+    if (orderingCompare != 0) {
+      return orderingCompare;
+    }
+    int modifierCompare = Integer.compare(accessModifierRank(m1), accessModifierRank(m2));
+    if (modifierCompare != 0) {
+      return modifierCompare;
+    }
+    int staticCompare = Boolean.compare(m1.isStatic(), m2.isStatic());
+    if (staticCompare != 0) {
+      return staticCompare;
+    }
+    int groupCompare = StringUtils.compare(groupKeyOf(p1), groupKeyOf(p2), false);
+    if (groupCompare != 0) {
+      return groupCompare;
+    }
+    int nameCompare = m1.getMethodName().compareTo(m2.getMethodName());
+    if (nameCompare != 0) {
+      return nameCompare;
+    }
+    // Within a same-named overload group the direct setter is emitted last, so consumers that
+    // resolve overloaded builder methods last-wins (e.g. MapStruct) bind to it.
+    int directSetterCompare = Boolean.compare(isDirectFieldSetter(p1), isDirectFieldSetter(p2));
+    if (directSetterCompare != 0) {
+      return directSetterCompare;
+    }
+    int paramCountCompare = Integer.compare(m1.getParameters().size(), m2.getParameters().size());
+    if (paramCountCompare != 0) {
+      return paramCountCompare;
+    }
+    boolean m1Generic = hasGenericParameters(m1);
+    boolean m2Generic = hasGenericParameters(m2);
+    if (m1Generic != m2Generic) {
+      return m1Generic ? 1 : -1;
+    }
+    return m1.getSignatureKey().compareTo(m2.getSignatureKey());
+  }
+
+  /** Group key clustering field-originated methods; {@code null} for builder-level methods. */
+  private static String groupKeyOf(FieldMethod pair) {
+    return pair.field() == null ? null : pair.field().getFieldNameInBuilder();
+  }
+
+  /** Visibility rank: public first, private last; absent modifier means package-private. */
+  private static int accessModifierRank(BuilderMethodDto method) {
+    return method
+        .getModifier()
+        .map(
+            modifier ->
+                switch (modifier) {
+                  case DEFAULT, PUBLIC -> 0;
+                  case PROTECTED -> 1;
+                  case PACKAGE_PRIVATE -> 2;
+                  case PRIVATE -> 3;
+                })
+        .orElse(2);
+  }
+
+  private static boolean isDirectFieldSetter(FieldMethod pair) {
+    return pair.field() != null && isDirectFieldSetter(pair.method(), pair.field());
+  }
+
+  private static boolean hasGenericParameters(BuilderMethodDto method) {
+    return method.getParameters().stream()
+        .anyMatch(param -> param.getParameterType().getFullQualifiedName().contains("<"));
+  }
+
+  /**
+   * Whether {@code method} is the direct setter of {@code field}: exactly one parameter of the
+   * field's declared type.
+   */
+  private static boolean isDirectFieldSetter(BuilderMethodDto method, FieldDto field) {
+    return method.getParameters().size() == 1
+        && method
+            .getParameters()
+            .get(0)
+            .getParameterType()
+            .getFullQualifiedName()
+            .equals(field.getFieldType().getFullQualifiedName());
   }
 
   /**

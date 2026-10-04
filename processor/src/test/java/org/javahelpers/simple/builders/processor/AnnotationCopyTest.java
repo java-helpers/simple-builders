@@ -597,8 +597,7 @@ class AnnotationCopyTest {
           public String toString() {
             return new ToStringBuilder(this, BuilderToStringStyle.INSTANCE).append("name", this.name).toString();
           }
-        }
-        """);
+        }""");
   }
 
   @Test
