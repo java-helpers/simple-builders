@@ -26,9 +26,7 @@ package org.javahelpers.simple.builders.processor.mapstruct;
 import com.google.auto.service.AutoService;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -61,22 +59,16 @@ import org.mapstruct.ap.spi.TypeHierarchyErroneousException;
 public class SimpleBuildersBuilderProvider implements BuilderProvider {
 
   private static final String DEFAULT_BUILDER_SUFFIX = "Builder";
-  private static final String SIMPLE_BUILDER_ANNOTATION =
-      "org.javahelpers.simple.builders.core.annotations.SimpleBuilder";
-  private static final String SIMPLE_BUILDER_TEMPLATE_ANNOTATION =
-      "org.javahelpers.simple.builders.core.annotations.SimpleBuilder.Template";
-  private static final String BUILDER_IMPLEMENTATION_ANNOTATION =
-      "org.javahelpers.simple.builders.core.annotations.BuilderImplementation";
-  private static final String IGNORE_4_BUILDER_ANNOTATION =
-      "org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration";
 
   private Elements elementUtils;
   private Types typeUtils;
+  private AnnotationSupport annotations;
 
   @Override
   public void init(MapStructProcessingEnvironment processingEnvironment) {
     this.elementUtils = processingEnvironment.getElementUtils();
     this.typeUtils = processingEnvironment.getTypeUtils();
+    this.annotations = new AnnotationSupport(elementUtils);
   }
 
   @Override
@@ -151,31 +143,18 @@ public class SimpleBuildersBuilderProvider implements BuilderProvider {
    * beanElement)}.
    */
   private boolean isGeneratedBuilderFor(TypeElement candidate, TypeElement beanElement) {
-    for (AnnotationMirror mirror : candidate.getAnnotationMirrors()) {
-      if (!qualifiedNameOf(mirror).equals(BUILDER_IMPLEMENTATION_ANNOTATION)) {
-        continue;
-      }
-      for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry :
-          elementUtils.getElementValuesWithDefaults(mirror).entrySet()) {
-        if (entry.getKey().getSimpleName().contentEquals("forClass")
-            && entry.getValue().getValue() instanceof TypeMirror forClass
-            && typeUtils.isSameType(
-                typeUtils.erasure(forClass), typeUtils.erasure(beanElement.asType()))) {
-          return true;
-        }
-      }
-      // @BuilderImplementation present but forClass points at another bean
-      return false;
-    }
-    return false;
+    TypeMirror forClass = annotations.builderImplementationForClass(candidate);
+    return forClass != null
+        && typeUtils.isSameType(
+            typeUtils.erasure(forClass), typeUtils.erasure(beanElement.asType()));
   }
 
   /** Packages the generated builder may live in: the bean's package or a configured packageName. */
   private List<String> candidatePackageNames(TypeElement beanElement) {
     List<String> packageNames = new ArrayList<>();
     packageNames.add(elementUtils.getPackageOf(beanElement).getQualifiedName().toString());
-    for (AnnotationMirror optionsMirror : builderOptionsMirrors(beanElement)) {
-      String packageName = stringOption(optionsMirror, "packageName");
+    for (AnnotationMirror optionsMirror : annotations.builderOptionsMirrors(beanElement)) {
+      String packageName = annotations.stringOption(optionsMirror, "packageName");
       if (packageName != null && !packageName.isEmpty() && !packageNames.contains(packageName)) {
         packageNames.add(packageName);
       }
@@ -186,8 +165,8 @@ public class SimpleBuildersBuilderProvider implements BuilderProvider {
   /** Builder name suffixes to try: explicitly configured ones plus the default. */
   private List<String> candidateSuffixes(TypeElement beanElement) {
     List<String> suffixes = new ArrayList<>();
-    for (AnnotationMirror optionsMirror : builderOptionsMirrors(beanElement)) {
-      String suffix = stringOption(optionsMirror, "builderSuffix");
+    for (AnnotationMirror optionsMirror : annotations.builderOptionsMirrors(beanElement)) {
+      String suffix = annotations.stringOption(optionsMirror, "builderSuffix");
       if (suffix != null && !suffix.isEmpty() && !suffixes.contains(suffix)) {
         suffixes.add(suffix);
       }
@@ -199,71 +178,29 @@ public class SimpleBuildersBuilderProvider implements BuilderProvider {
   }
 
   /**
-   * Options mirrors relevant for builder generation on {@code beanElement}: {@code options()} of
-   * {@code @SimpleBuilder} and of {@code @SimpleBuilder.Template} on builder template annotations.
-   */
-  private List<AnnotationMirror> builderOptionsMirrors(TypeElement beanElement) {
-    List<AnnotationMirror> optionsMirrors = new ArrayList<>();
-    for (AnnotationMirror mirror : elementUtils.getAllAnnotationMirrors(beanElement)) {
-      String annotationName = qualifiedNameOf(mirror);
-      if (annotationName.equals(SIMPLE_BUILDER_ANNOTATION)) {
-        addOptionsMirror(mirror, optionsMirrors);
-      } else {
-        // A custom builder template: read options of its @SimpleBuilder.Template meta-annotation.
-        Element annotationType = mirror.getAnnotationType().asElement();
-        for (AnnotationMirror metaMirror : annotationType.getAnnotationMirrors()) {
-          if (qualifiedNameOf(metaMirror).equals(SIMPLE_BUILDER_TEMPLATE_ANNOTATION)) {
-            addOptionsMirror(metaMirror, optionsMirrors);
-          }
-        }
-      }
-    }
-    return optionsMirrors;
-  }
-
-  private void addOptionsMirror(AnnotationMirror mirror, List<AnnotationMirror> optionsMirrors) {
-    for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry :
-        elementUtils.getElementValuesWithDefaults(mirror).entrySet()) {
-      if (entry.getKey().getSimpleName().contentEquals("options")
-          && entry.getValue().getValue() instanceof AnnotationMirror optionsMirror) {
-        optionsMirrors.add(optionsMirror);
-      }
-    }
-  }
-
-  private String stringOption(AnnotationMirror optionsMirror, String name) {
-    for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry :
-        elementUtils.getElementValuesWithDefaults(optionsMirror).entrySet()) {
-      if (entry.getKey().getSimpleName().contentEquals(name)) {
-        Object value = entry.getValue().getValue();
-        if (value instanceof String stringValue) {
-          return stringValue;
-        }
-      }
-    }
-    return null;
-  }
-
-  /**
    * Whether {@code beanElement} is marked for builder generation ({@code @SimpleBuilder} or a
    * builder template annotation, not opted out via {@code @Ignore4BuilderGeneration}).
    */
   private boolean isBuilderGenerationTarget(TypeElement beanElement) {
     List<? extends AnnotationMirror> mirrors = elementUtils.getAllAnnotationMirrors(beanElement);
     for (AnnotationMirror mirror : mirrors) {
-      if (qualifiedNameOf(mirror).equals(IGNORE_4_BUILDER_ANNOTATION)) {
+      if (annotations
+          .qualifiedNameOf(mirror)
+          .equals(AnnotationSupport.IGNORE_4_BUILDER_ANNOTATION)) {
         return false;
       }
     }
     for (AnnotationMirror mirror : mirrors) {
-      if (qualifiedNameOf(mirror).equals(SIMPLE_BUILDER_ANNOTATION)) {
+      if (annotations.qualifiedNameOf(mirror).equals(AnnotationSupport.SIMPLE_BUILDER_ANNOTATION)) {
         return true;
       }
       // A custom builder template annotation (e.g. @SimpleMinimalBuilder or a project-defined
       // one): its type is meta-annotated with @SimpleBuilder.Template.
       Element annotationType = mirror.getAnnotationType().asElement();
       for (AnnotationMirror metaMirror : annotationType.getAnnotationMirrors()) {
-        if (qualifiedNameOf(metaMirror).equals(SIMPLE_BUILDER_TEMPLATE_ANNOTATION)) {
+        if (annotations
+            .qualifiedNameOf(metaMirror)
+            .equals(AnnotationSupport.SIMPLE_BUILDER_TEMPLATE_ANNOTATION)) {
           return true;
         }
       }
@@ -320,10 +257,6 @@ public class SimpleBuildersBuilderProvider implements BuilderProvider {
   private boolean isBuilderType(TypeMirror type, TypeElement builderElement) {
     return typeUtils.isSameType(
         typeUtils.erasure(type), typeUtils.erasure(builderElement.asType()));
-  }
-
-  private String qualifiedNameOf(AnnotationMirror mirror) {
-    return ((TypeElement) mirror.getAnnotationType().asElement()).getQualifiedName().toString();
   }
 
   private static String qualifiedName(String packageName, CharSequence simpleName) {

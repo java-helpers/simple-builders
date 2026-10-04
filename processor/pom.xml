@@ -164,6 +164,14 @@
       <scope>test</scope>
     </dependency>
     
+    <!-- MapStruct annotations for compiling test mappers against the SPI integration -->
+    <dependency>
+      <groupId>org.mapstruct</groupId>
+      <artifactId>mapstruct</artifactId>
+      <version>${mapstruct.version}</version>
+      <scope>test</scope>
+    </dependency>
+
     <!-- Jackson Annotations for testing Jackson support -->
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>

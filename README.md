@@ -493,7 +493,7 @@ A runnable example demonstrating package-scoped builder generation and usage:
 
 ### MapStruct Example
 
-A runnable example of the MapStruct `BuilderProvider` integration - no configuration needed beyond putting mapstruct-processor on the same annotation processor path:
+A runnable example of the MapStruct `BuilderProvider` integration - no configuration needed beyond putting mapstruct-processor on the same annotation processor path. A bundled `AccessorNamingStrategy` marks the generated helper methods (`add2*`, `*Update`, `Supplier`/`Consumer`/`format` overloads, `conditional(...)`) as non-setters, honoring per-bean naming configuration like `setterSuffix`, so only direct property setters participate in bean mapping - no phantom "unmapped target property" warnings.
 
 - **Mapper**: [`PersonDtoMapper.java`](example/src/main/java/org/javahelpers/simple/builders/example/PersonDtoMapper.java) - Plain `@Mapper` interface; MapStruct resolves `PersonDtoBuilder` automatically
 - **Generated implementation**: [`PersonDtoMapperImpl.java`](example/generated-example-builder/org/javahelpers/simple/builders/example/PersonDtoMapperImpl.java) - Uses `PersonDtoBuilder.create()`, the plain setter overloads, and `build()`
