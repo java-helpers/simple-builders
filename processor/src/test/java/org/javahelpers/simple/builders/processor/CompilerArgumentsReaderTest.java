@@ -197,6 +197,59 @@ class CompilerArgumentsReaderTest {
         "Should return false for: " + value);
   }
 
+  /** Test: the static readBooleanValue resolves an options map without an environment. */
+  @Test
+  void readBooleanValue_ExplicitOptionsMap_ResolvesLikeEnvironment() {
+    assertTrue(
+        CompilerArgumentsReader.readBooleanValue(
+            CompilerArgumentsEnum.USING_MAPSTRUCT_INTEGRATION, Map.of(), true));
+
+    assertFalse(
+        CompilerArgumentsReader.readBooleanValue(
+            CompilerArgumentsEnum.USING_MAPSTRUCT_INTEGRATION,
+            Map.of("usingMapStructIntegration", "DISABLED"),
+            true));
+
+    assertTrue(
+        CompilerArgumentsReader.readBooleanValue(
+            CompilerArgumentsEnum.USING_MAPSTRUCT_INTEGRATION,
+            Map.of("simplebuilder.usingMapStructIntegration", "invalid"),
+            true));
+  }
+
+  /** Test: the static readBooleanValue honors the -D > -A > bare-option precedence. */
+  @Test
+  void readBooleanValue_ExplicitOptionsMap_SystemPropertyWins() {
+    System.setProperty("simplebuilder.usingMapStructIntegration", "DISABLED");
+    try {
+      assertFalse(
+          CompilerArgumentsReader.readBooleanValue(
+              CompilerArgumentsEnum.USING_MAPSTRUCT_INTEGRATION,
+              Map.of(
+                  "simplebuilder.usingMapStructIntegration",
+                  "ENABLED",
+                  "usingMapStructIntegration",
+                  "ENABLED"),
+              true));
+    } finally {
+      System.clearProperty("simplebuilder.usingMapStructIntegration");
+    }
+  }
+
+  /** Test: the prefixed compiler argument beats the bare option name. */
+  @Test
+  void readBooleanValue_ExplicitOptionsMap_CompilerArgumentBeatsBareOption() {
+    assertFalse(
+        CompilerArgumentsReader.readBooleanValue(
+            CompilerArgumentsEnum.USING_MAPSTRUCT_INTEGRATION,
+            Map.of(
+                "simplebuilder.usingMapStructIntegration",
+                "DISABLED",
+                "usingMapStructIntegration",
+                "ENABLED"),
+            true));
+  }
+
   /** Test: readBuilderConfiguration with no arguments returns all UNSET/DEFAULT values. */
   @Test
   void readBuilderConfiguration_NoArguments_ReturnsDefaults() {

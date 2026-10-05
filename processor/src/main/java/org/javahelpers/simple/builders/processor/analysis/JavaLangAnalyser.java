@@ -40,6 +40,7 @@ import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.RecordComponentElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
@@ -396,6 +397,30 @@ public final class JavaLangAnalyser {
 
   private static boolean hasNoParameters(ExecutableElement method) {
     return method.getParameters().isEmpty();
+  }
+
+  /**
+   * Finds a parameterless method with the given name directly declared on the type that carries all
+   * {@code requiredModifiers}.
+   *
+   * @param type the type element to inspect
+   * @param name the simple method name
+   * @param requiredModifiers modifiers the method must declare (e.g. {@code PUBLIC}, {@code
+   *     STATIC})
+   * @return the matching method, or empty if none is declared
+   */
+  public static Optional<ExecutableElement> findMethodWithoutParameters(
+      TypeElement type, String name, Modifier... requiredModifiers) {
+    for (Element member : type.getEnclosedElements()) {
+      if (member.getKind() == ElementKind.METHOD
+          && member instanceof ExecutableElement method
+          && method.getSimpleName().contentEquals(name)
+          && method.getParameters().isEmpty()
+          && method.getModifiers().containsAll(List.of(requiredModifiers))) {
+        return Optional.of(method);
+      }
+    }
+    return Optional.empty();
   }
 
   private static boolean hasParameters(

@@ -137,6 +137,29 @@ public final class BuilderScopeResolver {
   }
 
   /**
+   * The builder contract of a type whose builder this processor registered for the current round —
+   * always the generated {@code create()} factory for the empty path and the constructor for the
+   * copy path. Only the SPI integrations consume this, to publish the emitted contract.
+   *
+   * <p>Unlike {@link #resolveUsableBuilderType(TypeElement)} this does not read the per-element
+   * configuration and is safe to call during generation-plan registration.
+   *
+   * @param referencedType the type element being referenced
+   * @return the resolved builder, or empty if no generated builder is registered for the type
+   */
+  public Optional<ResolvedBuilder> resolveGeneratedBuilder(TypeElement referencedType) {
+    TypeName referencedTypeName = JavaLangMapper.mapToTypeName(referencedType, context);
+    return generatedBuilders
+        .findBuilder(referencedTypeName)
+        .map(
+            builder ->
+                new ResolvedBuilder(
+                    builder,
+                    new BuilderInstantiation.StaticFactoryCall("create"),
+                    new BuilderInstantiation.ConstructorCall()));
+  }
+
+  /**
    * Checks whether a builder may be generated for the given element under the generation scope of
    * the resolved configuration.
    *

@@ -33,6 +33,7 @@ A zero-reflection Java annotation processor that generates fluent, type-safe bui
   - [Advanced Features](#advanced-features)
   - [External Type Builder Example](#external-type-builder-example)
   - [Builder Scoping Example](#builder-scoping-example)
+  - [MapStruct Example](#mapstruct-example)
 - [Performance Measurement](#performance-measurement)
 - [Contributing](#contributing)
 - [License](#license)
@@ -76,6 +77,7 @@ Value semantics (`equals`, `hashCode`, `toString`) and generating brand-new immu
 - **Annotation Preservation**: Validation annotations are automatically copied to builder methods
 - **With Interface Pattern**: Type-safe object modifications using generated With interfaces
 - **Jackson Support**: Supporting Jackson deserialization via `@JsonPOJOBuilder` and optional generation of `SimpleModule`s (one per package) (both need to be enabled)
+- **MapStruct Support**: Generated builders are automatically detected by [MapStruct](https://mapstruct.org/) via a `BuilderProvider` SPI when simple-builders-processor and mapstruct-processor share the annotation processor path
 - **External Type Builders**: `@SimpleBuilderFor` generates builders for types that cannot be annotated - for example classes from third-party libraries
 - **JavaDoc Usage Examples**: Generated builder methods include auto-generated usage examples in their JavaDoc (per-method fluent snippets plus a class-level example), so IDE tooltips show exactly how to use each builder
 
@@ -488,6 +490,14 @@ A runnable example demonstrating package-scoped builder generation and usage:
 - **Library helper**: [`library/LibraryHelperDto.java`](example/src/main/java/org/javahelpers/simple/builders/example/library/LibraryHelperDto.java) - Annotated but outside the generation scope, so no builder exists and the owner falls back to a plain setter
 - **Generated Builder**: [`ScopedOwnerDtoBuilder.java`](example/generated-example-builder/org/javahelpers/simple/builders/example/scoping/ScopedOwnerDtoBuilder.java) - Shows the consumer overload for `trusted` and plain setters for `library` and `sponsor`
 - **Tests**: [`ScopedOwnerDtoBuilderTest.java`](example/src/test/java/org/javahelpers/simple/builders/example/scoping/ScopedOwnerDtoBuilderTest.java) - Asserts the generated API shape
+
+### MapStruct Example
+
+A runnable example of the MapStruct `BuilderProvider` integration - no configuration needed beyond putting mapstruct-processor on the same annotation processor path. A bundled `AccessorNamingStrategy` marks the generated helper methods (`add2*`, `*Update`, `Supplier`/`Consumer`/`format` overloads, `conditional(...)`) as non-setters, honoring per-bean naming configuration like `setterSuffix`, so only direct property setters participate in bean mapping - no phantom "unmapped target property" warnings.
+
+- **Mapper**: [`PersonDtoMapper.java`](example/src/main/java/org/javahelpers/simple/builders/example/PersonDtoMapper.java) - Plain `@Mapper` interface; MapStruct resolves `PersonDtoBuilder` automatically
+- **Generated implementation**: [`PersonDtoMapperImpl.java`](example/generated-example-builder/org/javahelpers/simple/builders/example/PersonDtoMapperImpl.java) - Uses `PersonDtoBuilder.create()`, the plain setter overloads, and `build()`
+- **Tests**: [`MapStructIntegrationTest.java`](example/src/test/java/org/javahelpers/simple/builders/example/MapStructIntegrationTest.java) - Verifies end-to-end mapping through the generated builder
 
 These examples serve as both documentation and integration tests for the annotation processor.
 

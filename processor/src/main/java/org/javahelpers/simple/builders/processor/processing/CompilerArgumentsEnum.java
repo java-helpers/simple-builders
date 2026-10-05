@@ -138,6 +138,13 @@ public enum CompilerArgumentsEnum {
   /** Option for Jackson Module generation. */
   GENERATE_JACKSON_MODULE("generateJacksonModule", optionState(Builder::generateJacksonModule)),
 
+  /**
+   * Option for the MapStruct SPI integration. Processor-level: it switches the SPI adapters
+   * discovered by MapStruct itself, so it is read directly via {@link CompilerArgumentsReader}
+   * rather than applied to a {@link BuilderConfiguration.Builder}.
+   */
+  USING_MAPSTRUCT_INTEGRATION("usingMapStructIntegration"),
+
   /** Option for Javadoc generation on the generated builder. */
   GENERATE_JAVADOC("generateJavaDoc", optionState(Builder::generateJavaDoc)),
 
