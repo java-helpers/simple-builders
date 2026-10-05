@@ -28,13 +28,15 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.lang.model.util.Elements;
+import org.javahelpers.simple.builders.processor.model.type.BuilderInstantiation.StaticFactoryCall;
 import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsEnum;
 
 /**
  * The builders {@link BuilderProcessor} generates, published to SPI adapters of other frameworks
  * sharing the annotation processor path (and therefore the classloader). Each entry carries the
- * fully resolved builder — type name, creation and build method — plus the bean's configured {@code
+ * resolved builder's type, creation and build method names plus the bean's configured {@code
  * setterSuffix}, so adapters do not scan elements or read annotations themselves.
  *
  * <p>The lifecycle reports where {@link BuilderProcessor}'s builder generation stands and is
@@ -72,20 +74,21 @@ public final class SimpleBuildersSpiIntegration {
   }
 
   /**
-   * One bean-to-builder pair resolved at registration time: the {@link ResolvedBuilder} this
-   * processor emits for {@code beanType} plus the bean's {@code setterSuffix} naming option.
+   * One bean-to-builder pair resolved at registration time: the type this processor emits for
+   * {@code beanType} plus its creation/build method names and the bean's {@code setterSuffix}
+   * naming option — flattened to names so SPI adapters never touch the resolution model.
    */
-  public record PublishedBuilder(TypeName beanType, ResolvedBuilder builder, String setterSuffix) {}
-
-  private static final String OPTION_USING_MAPSTRUCT = "simplebuilder.usingMapStructIntegration";
+  public record PublishedBuilder(
+      TypeName beanType,
+      TypeName builderType,
+      String creationMethodName,
+      String buildMethodName,
+      String setterSuffix) {}
 
   private static volatile State state = State.INIT;
 
   /** The {@link Elements} of the compilation this holder's content describes. */
   private static final AtomicReference<Elements> compilationElements = new AtomicReference<>();
-
-  /** The processor-resolved integration switch; {@code null} leaves the fallbacks active. */
-  private static volatile Boolean integrationEnabled;
 
   /** Builders published for the current compilation, keyed by bean qualified name. */
   private static final Map<String, PublishedBuilder> BY_BEAN = new HashMap<>();
@@ -95,15 +98,11 @@ public final class SimpleBuildersSpiIntegration {
 
   private SimpleBuildersSpiIntegration() {}
 
-  /**
-   * Starts a new compilation: clears the registry and publishes the integration switch the
-   * processor resolved ({@code null} when the option is unset).
-   */
-  static void initCompilation(Elements elements, Boolean integrationEnabled) {
+  /** Starts a new compilation: clears the registry and marks generation as running. */
+  static void initCompilation(Elements elements) {
     BY_BEAN.clear();
     BY_BUILDER.clear();
     compilationElements.set(elements);
-    SimpleBuildersSpiIntegration.integrationEnabled = integrationEnabled;
     state = State.PROCESSING;
   }
 
@@ -137,12 +136,21 @@ public final class SimpleBuildersSpiIntegration {
 
   /**
    * Publishes the builder {@link BuilderProcessor} resolved for {@code beanType} in this
-   * compilation.
+   * compilation — generated builders always create via a static factory.
    */
   static void registerBuilder(TypeName beanType, ResolvedBuilder builder, String setterSuffix) {
-    PublishedBuilder publishedBuilder = new PublishedBuilder(beanType, builder, setterSuffix);
+    if (!(builder.funcForEmptyBuilder() instanceof StaticFactoryCall factory)) {
+      return;
+    }
+    PublishedBuilder publishedBuilder =
+        new PublishedBuilder(
+            beanType,
+            builder.typeName(),
+            factory.methodName(),
+            builder.buildMethodName(),
+            setterSuffix);
     BY_BEAN.put(publishedBuilder.beanType().getFullQualifiedName(), publishedBuilder);
-    BY_BUILDER.put(publishedBuilder.builder().typeName().getFullQualifiedName(), publishedBuilder);
+    BY_BUILDER.put(publishedBuilder.builderType().getFullQualifiedName(), publishedBuilder);
   }
 
   /** The builder published for {@code beanType}'s qualified name, if this compilation plans one. */
@@ -159,22 +167,25 @@ public final class SimpleBuildersSpiIntegration {
   }
 
   /**
-   * Whether the MapStruct integration is switched on: while the processor has published this
-   * compilation's resolution (and {@code observed} proves it current) that value wins; without one
-   * — incl. the stale leftovers of a previous run — the {@code simplebuilder.*} convention applies
-   * (JVM system property before the annotation processor option the hosting framework does not
-   * forward anyway). Anything but {@code false}/{@code disabled} keeps it on.
+   * Whether the MapStruct integration is switched on, resolved like {@code
+   * CompilerArgumentsReader#readValue} — {@code -Dsimplebuilder.usingMapStructIntegration} first,
+   * then the same {@code -A} argument, then the bare {@code -AusingMapStructIntegration}. {@code
+   * processorOptions} is the full javac options map the SPI environment exposes, so foreign {@code
+   * -A} arguments reach it without any processor involvement. Anything but {@code false}/{@code
+   * disabled} keeps it on.
    */
-  public static boolean isMapstructGenerationEnabled(
-      Elements observed, Map<String, String> processorOptions) {
-    if (isCurrentCompilation(observed) && state != State.INIT) {
-      Boolean published = integrationEnabled;
-      if (published != null) {
-        return published;
-      }
-    }
+  public static boolean isMapstructGenerationEnabled(Map<String, String> processorOptions) {
     String value =
-        System.getProperty(OPTION_USING_MAPSTRUCT, processorOptions.get(OPTION_USING_MAPSTRUCT));
+        System.getProperty(CompilerArgumentsEnum.USING_MAPSTRUCT_INTEGRATION.getCompilerArgument());
+    if (value == null) {
+      value =
+          processorOptions.get(
+              CompilerArgumentsEnum.USING_MAPSTRUCT_INTEGRATION.getCompilerArgument());
+    }
+    if (value == null) {
+      value =
+          processorOptions.get(CompilerArgumentsEnum.USING_MAPSTRUCT_INTEGRATION.getOptionName());
+    }
     return !("false".equalsIgnoreCase(value) || "disabled".equalsIgnoreCase(value));
   }
 }

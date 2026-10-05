@@ -29,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.Proxy;
 import java.util.Map;
+import java.util.Optional;
 import javax.lang.model.util.Elements;
 import org.javahelpers.simple.builders.processor.SimpleBuildersSpiIntegration.PublishedBuilder;
 import org.javahelpers.simple.builders.processor.SimpleBuildersSpiIntegration.State;
@@ -41,23 +42,27 @@ import org.junit.jupiter.api.Test;
 /**
  * Unit test for the shared SPI bridge: lifecycle transitions stay pinned to the current compilation
  * (identified by its {@link Elements}), the registry exposes exactly the published descriptors, and
- * the integration switch honors the {@code -D} > processor-published precedence.
+ * the integration switch honors the {@code -D} > {@code -A} > bare-option precedence.
  */
 class SimpleBuildersSpiIntegrationTest {
 
   private static final String OPTION = "simplebuilder.usingMapStructIntegration";
 
+  private static final String BARE_OPTION = "usingMapStructIntegration";
+
   private static final Elements ELEMENTS = fakeElements();
 
+  private static final TypeName PERSON_BEAN = new TypeName("test", "PersonDto");
+
+  private static final ResolvedBuilder PERSON_RESOLVED =
+      new ResolvedBuilder(
+          new TypeName("test", "PersonDtoBuilder"),
+          new StaticFactoryCall("create"),
+          Optional.empty(),
+          "build");
+
   private static final PublishedBuilder PERSON =
-      new PublishedBuilder(
-          new TypeName("test", "PersonDto"),
-          new ResolvedBuilder(
-              new TypeName("test", "PersonDtoBuilder"),
-              new StaticFactoryCall("create"),
-              java.util.Optional.empty(),
-              "build"),
-          "");
+      new PublishedBuilder(PERSON_BEAN, PERSON_RESOLVED.typeName(), "create", "build", "");
 
   /** A stand-in {@link Elements}; javac identity is what matters, never its methods. */
   private static Elements fakeElements() {
@@ -73,12 +78,12 @@ class SimpleBuildersSpiIntegrationTest {
   @AfterEach
   void reset() {
     System.clearProperty(OPTION);
-    SimpleBuildersSpiIntegration.initCompilation(null, null);
+    SimpleBuildersSpiIntegration.initCompilation(null);
   }
 
   @Test
   void lifecycle_transitions() {
-    SimpleBuildersSpiIntegration.initCompilation(ELEMENTS, null);
+    SimpleBuildersSpiIntegration.initCompilation(ELEMENTS);
     assertEquals(State.PROCESSING, SimpleBuildersSpiIntegration.state());
     assertFalse(SimpleBuildersSpiIntegration.isSimpleBuildersFinishedForIntegration());
 
@@ -89,7 +94,7 @@ class SimpleBuildersSpiIntegrationTest {
 
   @Test
   void staleness_onlyOwnCompilationIsCurrent() {
-    SimpleBuildersSpiIntegration.initCompilation(ELEMENTS, null);
+    SimpleBuildersSpiIntegration.initCompilation(ELEMENTS);
     assertTrue(SimpleBuildersSpiIntegration.isCurrentCompilation(ELEMENTS));
     // A different Elements instance belongs to another compilation — the holder must answer
     // as not current until its initCompilation ran with that instance.
@@ -99,62 +104,55 @@ class SimpleBuildersSpiIntegrationTest {
 
   @Test
   void registry_publishesBothDirections() {
-    SimpleBuildersSpiIntegration.initCompilation(ELEMENTS, null);
+    SimpleBuildersSpiIntegration.initCompilation(ELEMENTS);
     assertTrue(SimpleBuildersSpiIntegration.builderFor("test.PersonDto").isEmpty());
     assertTrue(SimpleBuildersSpiIntegration.builderByName("test.PersonDtoBuilder").isEmpty());
 
-    SimpleBuildersSpiIntegration.registerBuilder(
-        PERSON.beanType(), PERSON.builder(), PERSON.setterSuffix());
+    SimpleBuildersSpiIntegration.registerBuilder(PERSON_BEAN, PERSON_RESOLVED, "");
 
     assertEquals(PERSON, SimpleBuildersSpiIntegration.builderFor("test.PersonDto").orElseThrow());
     assertEquals(
         PERSON, SimpleBuildersSpiIntegration.builderByName("test.PersonDtoBuilder").orElseThrow());
-    assertEquals("test.PersonDtoBuilder", PERSON.builder().typeName().getFullQualifiedName());
+    assertEquals("test.PersonDtoBuilder", PERSON.builderType().getFullQualifiedName());
+    assertEquals("create", PERSON.creationMethodName());
+    assertEquals("build", PERSON.buildMethodName());
     assertEquals("", PERSON.setterSuffix());
   }
 
   @Test
   void registry_clearedOnNextCompilation() {
-    SimpleBuildersSpiIntegration.initCompilation(ELEMENTS, null);
-    SimpleBuildersSpiIntegration.registerBuilder(
-        PERSON.beanType(), PERSON.builder(), PERSON.setterSuffix());
+    SimpleBuildersSpiIntegration.initCompilation(ELEMENTS);
+    SimpleBuildersSpiIntegration.registerBuilder(PERSON_BEAN, PERSON_RESOLVED, "");
 
-    SimpleBuildersSpiIntegration.initCompilation(fakeElements(), null);
+    SimpleBuildersSpiIntegration.initCompilation(fakeElements());
     assertTrue(SimpleBuildersSpiIntegration.builderFor("test.PersonDto").isEmpty());
   }
 
   @Test
-  void isMapstructGenerationEnabled_publishedSwitchWinsOverProperty() {
-    System.setProperty(OPTION, "DISABLED");
-    SimpleBuildersSpiIntegration.initCompilation(ELEMENTS, Boolean.TRUE);
-    assertTrue(SimpleBuildersSpiIntegration.isMapstructGenerationEnabled(ELEMENTS, Map.of()));
-
-    SimpleBuildersSpiIntegration.initCompilation(ELEMENTS, Boolean.FALSE);
-    assertFalse(SimpleBuildersSpiIntegration.isMapstructGenerationEnabled(ELEMENTS, Map.of()));
+  void isMapstructGenerationEnabled_defaultsToEnabled() {
+    assertTrue(SimpleBuildersSpiIntegration.isMapstructGenerationEnabled(Map.of()));
   }
 
   @Test
-  void isMapstructGenerationEnabled_staleObserverFallsBackToProperty() {
-    // The previous compilation's DISABLED must not leak: an SPI observing with another
-    // compilation's Elements gets the property fallback until our init publishes.
-    SimpleBuildersSpiIntegration.initCompilation(ELEMENTS, Boolean.FALSE);
-    Elements otherCompilation = fakeElements();
+  void isMapstructGenerationEnabled_systemPropertyWins() {
+    System.setProperty(OPTION, "DISABLED");
+    assertFalse(
+        SimpleBuildersSpiIntegration.isMapstructGenerationEnabled(
+            Map.of(OPTION, "ENABLED", BARE_OPTION, "ENABLED")));
 
     System.setProperty(OPTION, "ENABLED");
     assertTrue(
-        SimpleBuildersSpiIntegration.isMapstructGenerationEnabled(otherCompilation, Map.of()));
-
-    System.setProperty(OPTION, "DISABLED");
-    assertFalse(
-        SimpleBuildersSpiIntegration.isMapstructGenerationEnabled(otherCompilation, Map.of()));
+        SimpleBuildersSpiIntegration.isMapstructGenerationEnabled(
+            Map.of(OPTION, "DISABLED", BARE_OPTION, "DISABLED")));
   }
 
   @Test
-  void isMapstructGenerationEnabled_noPublishedValueFallsBackToProperty() {
-    SimpleBuildersSpiIntegration.initCompilation(ELEMENTS, null);
-    assertTrue(SimpleBuildersSpiIntegration.isMapstructGenerationEnabled(ELEMENTS, Map.of()));
+  void isMapstructGenerationEnabled_compilerArgumentBeatsBareOption() {
+    assertFalse(
+        SimpleBuildersSpiIntegration.isMapstructGenerationEnabled(
+            Map.of(OPTION, "DISABLED", BARE_OPTION, "ENABLED")));
 
-    System.setProperty(OPTION, "DISABLED");
-    assertFalse(SimpleBuildersSpiIntegration.isMapstructGenerationEnabled(ELEMENTS, Map.of()));
+    assertFalse(
+        SimpleBuildersSpiIntegration.isMapstructGenerationEnabled(Map.of(BARE_OPTION, "DISABLED")));
   }
 }

@@ -74,8 +74,7 @@ public class MapStructAccessorNamingStrategy extends DefaultAccessorNamingStrate
   public MethodType getMethodType(ExecutableElement method) {
     MethodType methodType = super.getMethodType(method);
     if (!SimpleBuildersSpiIntegration.isCurrentCompilation(elementUtils)
-        || !SimpleBuildersSpiIntegration.isMapstructGenerationEnabled(
-            elementUtils, processorOptions)) {
+        || !SimpleBuildersSpiIntegration.isMapstructGenerationEnabled(processorOptions)) {
       // The holder describes another compilation (or is disabled): simple-builders is not
       // ready here, so everything keeps the default classification.
       return methodType;

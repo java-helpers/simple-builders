@@ -64,83 +64,6 @@ import org.mapstruct.ap.spi.TypeHierarchyErroneousException;
  */
 class MapStructSpiProbeTest {
 
-  private static JavaFileObject personDto() {
-    return ProcessorTestUtils.forSource(
-        """
-        package test;
-
-        import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
-
-        @SimpleBuilder
-        public class PersonDto {
-          private String name;
-
-          public String getName() {
-            return name;
-          }
-
-          public void setName(String name) {
-            this.name = name;
-          }
-        }
-        """);
-  }
-
-  private static JavaFileObject foreignDto() {
-    return ProcessorTestUtils.forSource(
-        """
-        package test;
-
-        public class ForeignDto {
-          private String name;
-        }
-        """);
-  }
-
-  private static JavaFileObject ignoredDto() {
-    return ProcessorTestUtils.forSource(
-        """
-        package test;
-
-        import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration;
-        import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
-
-        @SimpleBuilder
-        @Ignore4BuilderGeneration
-        public class IgnoredDto {
-          private String name;
-        }
-        """);
-  }
-
-  private static JavaFileObject scopedDto() {
-    return ProcessorTestUtils.forSource(
-        """
-        package scoped;
-
-        import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
-
-        @SimpleBuilder
-        public class ScopedDto {
-          private String name;
-        }
-        """);
-  }
-
-  private static JavaFileObject templateDto() {
-    return ProcessorTestUtils.forSource(
-        """
-        package test;
-
-        import org.javahelpers.simple.builders.core.annotations.SimpleMinimalBuilder;
-
-        @SimpleMinimalBuilder
-        public class MinimalDto {
-          private String name;
-        }
-        """);
-  }
-
   @Test
   void probe_shouldDriveSpiAgainstEmittedElements() {
     Compilation compilation =
@@ -366,5 +289,82 @@ class MapStructSpiProbeTest {
       TypeMirror type = element == null ? null : element.asType();
       return type == null ? null : provider.findBuilderInfo(type);
     }
+  }
+
+  private static JavaFileObject personDto() {
+    return ProcessorTestUtils.forSource(
+        """
+        package test;
+
+        import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+        @SimpleBuilder
+        public class PersonDto {
+          private String name;
+
+          public String getName() {
+            return name;
+          }
+
+          public void setName(String name) {
+            this.name = name;
+          }
+        }
+        """);
+  }
+
+  private static JavaFileObject foreignDto() {
+    return ProcessorTestUtils.forSource(
+        """
+        package test;
+
+        public class ForeignDto {
+          private String name;
+        }
+        """);
+  }
+
+  private static JavaFileObject ignoredDto() {
+    return ProcessorTestUtils.forSource(
+        """
+        package test;
+
+        import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration;
+        import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+        @SimpleBuilder
+        @Ignore4BuilderGeneration
+        public class IgnoredDto {
+          private String name;
+        }
+        """);
+  }
+
+  private static JavaFileObject scopedDto() {
+    return ProcessorTestUtils.forSource(
+        """
+        package scoped;
+
+        import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+        @SimpleBuilder
+        public class ScopedDto {
+          private String name;
+        }
+        """);
+  }
+
+  private static JavaFileObject templateDto() {
+    return ProcessorTestUtils.forSource(
+        """
+        package test;
+
+        import org.javahelpers.simple.builders.core.annotations.SimpleMinimalBuilder;
+
+        @SimpleMinimalBuilder
+        public class MinimalDto {
+          private String name;
+        }
+        """);
   }
 }

@@ -60,7 +60,6 @@ import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder.Template;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFor;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFors;
-import org.javahelpers.simple.builders.core.enums.OptionState;
 import org.javahelpers.simple.builders.processor.analysis.BuilderScopeResolver;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyser;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
@@ -78,7 +77,6 @@ import org.javahelpers.simple.builders.processor.model.type.TypeNameSet;
 import org.javahelpers.simple.builders.processor.processing.BuilderConfigurationReader;
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsEnum;
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsReader;
-import org.javahelpers.simple.builders.processor.processing.OptionValueParsers;
 import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 import org.javahelpers.simple.builders.processor.processing.ProcessingTarget;
 import org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker;
@@ -112,14 +110,7 @@ public class BuilderProcessor extends AbstractProcessor {
     BuilderConfiguration globalConfig = reader.readBuilderConfiguration(logger);
     logger.debug("Loaded global configuration from compiler arguments: %s", globalConfig);
 
-    // The SPI environments never receive foreign annotation processor options — publish the
-    // resolved switch through the shared classloader instead
-    String mapStructOption = reader.readValue(CompilerArgumentsEnum.USING_MAPSTRUCT_INTEGRATION);
-    SimpleBuildersSpiIntegration.initCompilation(
-        processingEnv.getElementUtils(),
-        mapStructOption == null
-            ? null
-            : OptionValueParsers.parseOptionState(mapStructOption, logger) != OptionState.DISABLED);
+    SimpleBuildersSpiIntegration.initCompilation(processingEnv.getElementUtils());
 
     this.context = new ProcessingContext(logger, globalConfig, processingEnv);
     this.codeGenerator = new RoasterCodeGenerator(context, processingEnv);

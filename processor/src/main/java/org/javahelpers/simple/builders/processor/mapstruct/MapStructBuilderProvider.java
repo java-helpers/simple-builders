@@ -41,7 +41,6 @@ import org.javahelpers.simple.builders.processor.SimpleBuildersSpiIntegration;
 import org.javahelpers.simple.builders.processor.SimpleBuildersSpiIntegration.PublishedBuilder;
 import org.javahelpers.simple.builders.processor.SimpleBuildersSpiIntegration.State;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyser;
-import org.javahelpers.simple.builders.processor.model.type.BuilderInstantiation.StaticFactoryCall;
 import org.mapstruct.ap.spi.BuilderInfo;
 import org.mapstruct.ap.spi.BuilderProvider;
 import org.mapstruct.ap.spi.MapStructProcessingEnvironment;
@@ -71,8 +70,9 @@ import org.mapstruct.ap.spi.TypeHierarchyErroneousException;
  * <p>The provider is registered via {@code META-INF/services} and is only loaded when
  * simple-builders-processor and mapstruct-processor share the annotation processor path. The
  * integration can be switched off entirely with {@code
- * -Asimplebuilder.usingMapStructIntegration=DISABLED} (resolved by {@code BuilderProcessor}, which
- * shares the classloader, or via the {@code -D} JVM system property).
+ * -Asimplebuilder.usingMapStructIntegration=DISABLED} or the {@code -D} JVM system property — the
+ * {@code -A} argument reaches SPI environments because {@link
+ * MapStructAdditionalSupportedOptionsProvider} declares it.
  */
 @AutoService(BuilderProvider.class)
 public class MapStructBuilderProvider implements BuilderProvider {
@@ -92,8 +92,7 @@ public class MapStructBuilderProvider implements BuilderProvider {
 
   @Override
   public BuilderInfo findBuilderInfo(TypeMirror type) {
-    if (!SimpleBuildersSpiIntegration.isMapstructGenerationEnabled(
-        elementUtils, processorOptions)) {
+    if (!SimpleBuildersSpiIntegration.isMapstructGenerationEnabled(processorOptions)) {
       return null;
     }
     if (!(type instanceof DeclaredType declaredType)
@@ -152,7 +151,7 @@ public class MapStructBuilderProvider implements BuilderProvider {
       return null;
     }
     TypeElement builderElement =
-        elementUtils.getTypeElement(published.get().builder().typeName().getFullQualifiedName());
+        elementUtils.getTypeElement(published.get().builderType().getFullQualifiedName());
     if (builderElement == null) {
       // The type is written with the generating round's sources and materializes in the next
       // round — defer until it exists.
@@ -197,11 +196,8 @@ public class MapStructBuilderProvider implements BuilderProvider {
    * factory whose name the descriptor carries ({@code create} for generated builders).
    */
   private ExecutableElement creationMethod(TypeElement builderElement, PublishedBuilder published) {
-    if (!(published.builder().funcForEmptyBuilder() instanceof StaticFactoryCall factory)) {
-      return null;
-    }
     return JavaLangAnalyser.findMethodWithoutParameters(
-            builderElement, factory.methodName(), Modifier.PUBLIC, Modifier.STATIC)
+            builderElement, published.creationMethodName(), Modifier.PUBLIC, Modifier.STATIC)
         .orElse(null);
   }
 
@@ -212,7 +208,7 @@ public class MapStructBuilderProvider implements BuilderProvider {
   private Optional<ExecutableElement> buildMethod(
       TypeElement builderElement, PublishedBuilder published) {
     return JavaLangAnalyser.findMethodWithoutParameters(
-        builderElement, published.builder().buildMethodName(), Modifier.PUBLIC);
+        builderElement, published.buildMethodName(), Modifier.PUBLIC);
   }
 
   /**

@@ -47,9 +47,7 @@ class MapStructSpiIntegrationTest {
 
   @Test
   void mapStruct_shouldUseGeneratedBuilder() {
-    Compilation compilation =
-        mapStructCompiler(new BuilderProcessor(), new MappingProcessor())
-            .compile(personDto(), personDtoMapper());
+    Compilation compilation = mapStructCompiler().compile(personDto(), personDtoMapper());
     assertThat(compilation).succeeded();
 
     String mapperImpl = loadGeneratedSource(compilation, "PersonDtoMapperImpl");
@@ -78,9 +76,7 @@ class MapStructSpiIntegrationTest {
 
   @Test
   void mapStruct_shouldNotReportHelpersAsUnmappedTargetProperties() {
-    Compilation compilation =
-        mapStructCompiler(new BuilderProcessor(), new MappingProcessor())
-            .compile(personDto(), personDtoMapper());
+    Compilation compilation = mapStructCompiler().compile(personDto(), personDtoMapper());
     assertThat(compilation).succeeded();
 
     assertNoWarningContaining(compilation, "unmapped target property");
@@ -88,10 +84,10 @@ class MapStructSpiIntegrationTest {
 
   @Test
   void mapStruct_disabledIntegration_shouldMapViaSetters() {
-    // MapStruct does not forward foreign -A options to SPI environments, so BuilderProcessor
-    // publishes the resolved switch to them via SimpleBuildersSpiIntegration
+    // Our AdditionalSupportedOptionsProvider declares the option, so MapStruct forwards the -A
+    // value into the SPI environment's options
     Compilation compilation =
-        mapStructCompiler(new BuilderProcessor(), new MappingProcessor())
+        mapStructCompiler()
             .withOptions("-Asimplebuilder.usingMapStructIntegration=DISABLED")
             .compile(mutableDto(), mutableDtoMapper());
     assertThat(compilation).succeeded();
@@ -101,6 +97,11 @@ class MapStructSpiIntegrationTest {
         mapperImpl.contains("MutableDtoBuilder"),
         "Disabled integration must leave the generated builder unused");
     assertTrue(mapperImpl.contains(".setName("), "MapStruct should fall back to setter mapping");
+  }
+
+  /** A javac compiler with BuilderProcessor ahead of MapStruct and stable mapper output. */
+  private static Compiler mapStructCompiler() {
+    return mapStructCompiler(new BuilderProcessor(), new MappingProcessor());
   }
 
   /** A javac compiler with the given processors in invocation order and stable mapper output. */
