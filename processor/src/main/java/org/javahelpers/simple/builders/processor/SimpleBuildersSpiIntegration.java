@@ -119,18 +119,29 @@ public final class SimpleBuildersSpiIntegration {
    * per compilation and shares it between all processors, so reference identity is a reliable
    * staleness check that never requires the SPI adapters to write anything.
    */
-  public static boolean isCurrentCompilation(Elements observed) {
+  static boolean isCurrentCompilation(Elements observed) {
     return observed != null && observed == compilationElements.get();
   }
 
-  /** The lifecycle state the SPI adapters observe for the current compilation. */
-  public static State state() {
+  /** The lifecycle state of the current compilation. */
+  static State state() {
     return state;
   }
 
   /**
    * Whether {@link BuilderProcessor} finished generating builders for the compilation {@code
    * observed} belongs to — {@code false} while this holder still describes another run.
+   *
+   * <p>The guard is not optional: this holder's statics live in the processor-path classloader,
+   * which build tools reuse across compilations (Gradle daemon, in-process javac, IDE builds,
+   * repeated compiles in one JVM). In a new compilation's first round — before {@link
+   * BuilderProcessor}'s {@code init()} had its turn — {@code state} can still be the previous run's
+   * {@link State#FINISHED} and the registry still holds its entries. Trusting them would claim
+   * beans by qualified name they were never planned with here and answer misses as final instead of
+   * deferring. javac hands every processor of one compilation the same {@link Elements} instance
+   * and a different one per compilation, so identity is the read-only, order-independent boundary
+   * marker — an SPI-side reset cannot work, because SPI init order against {@link
+   * BuilderProcessor}'s init is path-order dependent.
    */
   public static boolean isSimpleBuildersFinishedForIntegration(Elements observed) {
     return isCurrentCompilation(observed) && state == State.FINISHED;
@@ -155,16 +166,25 @@ public final class SimpleBuildersSpiIntegration {
     BY_BUILDER.put(publishedBuilder.builderType().getFullQualifiedName(), publishedBuilder);
   }
 
-  /** The builder published for {@code beanType}'s qualified name, if this compilation plans one. */
-  public static Optional<PublishedBuilder> builderFor(String beanQualifiedName) {
-    return Optional.ofNullable(BY_BEAN.get(beanQualifiedName));
+  /**
+   * The builder published for {@code beanType}'s qualified name in the compilation {@code observed}
+   * belongs to — empty while this holder still describes another run, so stale entries can never
+   * claim a bean.
+   */
+  public static Optional<PublishedBuilder> builderFor(String beanQualifiedName, Elements observed) {
+    return isCurrentCompilation(observed)
+        ? Optional.ofNullable(BY_BEAN.get(beanQualifiedName))
+        : Optional.empty();
   }
 
   /**
-   * The published builder with the given qualified type name, if {@link BuilderProcessor} plans it
-   * in this compilation.
+   * The published builder with the given qualified type name in the compilation {@code observed}
+   * belongs to — empty while this holder still describes another run.
    */
-  public static Optional<PublishedBuilder> builderByName(String builderQualifiedName) {
-    return Optional.ofNullable(BY_BUILDER.get(builderQualifiedName));
+  public static Optional<PublishedBuilder> builderByName(
+      String builderQualifiedName, Elements observed) {
+    return isCurrentCompilation(observed)
+        ? Optional.ofNullable(BY_BUILDER.get(builderQualifiedName))
+        : Optional.empty();
   }
 }

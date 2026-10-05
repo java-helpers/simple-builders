@@ -180,13 +180,12 @@ public class MapStructBuilderProvider implements BuilderProvider {
   }
 
   /**
-   * The builder published for {@code beanElement} — empty while the holder still describes a
-   * previous run, so stale entries can never claim a bean.
+   * The builder published for {@code beanElement} in this provider's compilation — empty while the
+   * holder still describes a previous run, so stale entries can never claim a bean.
    */
   private Optional<PublishedBuilder> publishedFor(TypeElement beanElement) {
-    return SimpleBuildersSpiIntegration.isCurrentCompilation(elementUtils)
-        ? SimpleBuildersSpiIntegration.builderFor(beanElement.getQualifiedName().toString())
-        : Optional.empty();
+    return SimpleBuildersSpiIntegration.builderFor(
+        beanElement.getQualifiedName().toString(), elementUtils);
   }
 
   /** Warns that a bean marked for generation got no registered builder in this compilation. */

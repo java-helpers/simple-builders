@@ -75,10 +75,8 @@ public class MapStructAccessorNamingStrategy extends DefaultAccessorNamingStrate
   @Override
   public MethodType getMethodType(ExecutableElement method) {
     MethodType methodType = super.getMethodType(method);
-    if (!SimpleBuildersSpiIntegration.isCurrentCompilation(elementUtils)
-        || !isIntegrationEnabled()) {
-      // The holder describes another compilation (or is disabled): simple-builders is not
-      // ready here, so everything keeps the default classification.
+    if (!isIntegrationEnabled()) {
+      // The integration is switched off — everything keeps the default classification.
       return methodType;
     }
     if (methodType != MethodType.SETTER && methodType != MethodType.ADDER) {
@@ -121,11 +119,14 @@ public class MapStructAccessorNamingStrategy extends DefaultAccessorNamingStrate
 
   /**
    * The direct property setters (setter name → field type) of the bean {@code builderType} was
-   * published for — empty when {@code builderType} is not a simple-builders builder.
+   * published for — empty when {@code builderType} is not a simple-builders builder of this
+   * compilation (the lookup is empty while the holder still describes a previous run, so stale
+   * entries can never match here either).
    */
   private Map<String, TypeMirror> directSettersOf(TypeElement builderType) {
     Optional<PublishedBuilder> published =
-        SimpleBuildersSpiIntegration.builderByName(builderType.getQualifiedName().toString());
+        SimpleBuildersSpiIntegration.builderByName(
+            builderType.getQualifiedName().toString(), elementUtils);
     if (published.isEmpty()) {
       return Map.of();
     }

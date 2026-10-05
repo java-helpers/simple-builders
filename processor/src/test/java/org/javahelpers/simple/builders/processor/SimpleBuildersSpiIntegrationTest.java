@@ -102,14 +102,23 @@ class SimpleBuildersSpiIntegrationTest {
   @Test
   void registry_publishesBothDirections() {
     SimpleBuildersSpiIntegration.initCompilation(ELEMENTS);
-    assertTrue(SimpleBuildersSpiIntegration.builderFor("test.PersonDto").isEmpty());
-    assertTrue(SimpleBuildersSpiIntegration.builderByName("test.PersonDtoBuilder").isEmpty());
+    assertTrue(SimpleBuildersSpiIntegration.builderFor("test.PersonDto", ELEMENTS).isEmpty());
+    assertTrue(
+        SimpleBuildersSpiIntegration.builderByName("test.PersonDtoBuilder", ELEMENTS).isEmpty());
 
     SimpleBuildersSpiIntegration.registerBuilder(PERSON_BEAN, PERSON_RESOLVED, "");
 
-    assertEquals(PERSON, SimpleBuildersSpiIntegration.builderFor("test.PersonDto").orElseThrow());
     assertEquals(
-        PERSON, SimpleBuildersSpiIntegration.builderByName("test.PersonDtoBuilder").orElseThrow());
+        PERSON, SimpleBuildersSpiIntegration.builderFor("test.PersonDto", ELEMENTS).orElseThrow());
+    assertEquals(
+        PERSON,
+        SimpleBuildersSpiIntegration.builderByName("test.PersonDtoBuilder", ELEMENTS)
+            .orElseThrow());
+    // Lookups are scoped to the compilation asked about — a foreign compilation sees nothing.
+    assertTrue(SimpleBuildersSpiIntegration.builderFor("test.PersonDto", fakeElements()).isEmpty());
+    assertTrue(
+        SimpleBuildersSpiIntegration.builderByName("test.PersonDtoBuilder", fakeElements())
+            .isEmpty());
     assertEquals("test.PersonDtoBuilder", PERSON.builderType().getFullQualifiedName());
     assertEquals("create", PERSON.creationMethodName());
     assertEquals("build", PERSON.buildMethodName());
@@ -121,7 +130,10 @@ class SimpleBuildersSpiIntegrationTest {
     SimpleBuildersSpiIntegration.initCompilation(ELEMENTS);
     SimpleBuildersSpiIntegration.registerBuilder(PERSON_BEAN, PERSON_RESOLVED, "");
 
-    SimpleBuildersSpiIntegration.initCompilation(fakeElements());
-    assertTrue(SimpleBuildersSpiIntegration.builderFor("test.PersonDto").isEmpty());
+    Elements nextCompilation = fakeElements();
+    SimpleBuildersSpiIntegration.initCompilation(nextCompilation);
+    assertTrue(
+        SimpleBuildersSpiIntegration.builderFor("test.PersonDto", nextCompilation).isEmpty());
+    assertTrue(SimpleBuildersSpiIntegration.builderFor("test.PersonDto", ELEMENTS).isEmpty());
   }
 }
