@@ -1054,7 +1054,7 @@ This is highly recommended to ensure deterministic output location and avoid spl
 
 Controls the MapStruct SPI adapters bundled in the processor jar (`MapStructBuilderProvider` and `MapStructAccessorNamingStrategy`, registered via `META-INF/services`). They make MapStruct auto-detect generated builders when `simple-builders-processor` and `mapstruct-processor` share the annotation processor path — no annotation attribute exists because the SPIs are discovered globally by MapStruct itself.
 
-Unlike the other options this switch is consumed inside MapStruct's SPI environment, which does not see `simplebuilder.*` annotation processor options. `BuilderProcessor` therefore resolves the option itself (same `-D` > `-A` precedence as every option) and publishes it to the SPIs sharing the classloader; `-D` also reaches them directly for setups where only the SPI jar is on the path.
+The SPIs read this option from the options map MapStruct hands them, with the same `-D` > `-A` > bare-option precedence as every option. MapStruct only forwards declared options into SPI environments, so the processor jar also ships an `AdditionalSupportedOptionsProvider` declaring both spellings — `-Asimplebuilder.usingMapStructIntegration` and the bare `-AusingMapStructIntegration` reach the SPIs, and `-D` works too since system properties are JVM-global (the only mechanism when only the SPI jar is on the processor path).
 
 **When DISABLED**: The provider returns no builder candidates and the naming strategy keeps the stock MapStruct behaviour, so generated builders are treated like ordinary classes.
 

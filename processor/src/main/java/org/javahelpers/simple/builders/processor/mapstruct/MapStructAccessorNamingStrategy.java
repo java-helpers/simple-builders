@@ -28,12 +28,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.ElementFilter;
 import org.javahelpers.simple.builders.processor.SimpleBuildersSpiIntegration;
 import org.javahelpers.simple.builders.processor.SimpleBuildersSpiIntegration.PublishedBuilder;
-import org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyser;
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsEnum;
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsReader;
 import org.mapstruct.ap.spi.AccessorNamingStrategy;
@@ -141,9 +142,11 @@ public class MapStructAccessorNamingStrategy extends DefaultAccessorNamingStrate
       return Map.of();
     }
     Map<String, TypeMirror> directSetters = new HashMap<>();
-    for (VariableElement field : JavaLangAnalyser.findFields(beanElement)) {
-      directSetters.put(
-          field.getSimpleName().toString() + published.get().setterSuffix(), field.asType());
+    for (VariableElement field : ElementFilter.fieldsIn(elementUtils.getAllMembers(beanElement))) {
+      if (!field.getModifiers().contains(Modifier.STATIC)) {
+        directSetters.put(
+            field.getSimpleName().toString() + published.get().setterSuffix(), field.asType());
+      }
     }
     return directSetters;
   }

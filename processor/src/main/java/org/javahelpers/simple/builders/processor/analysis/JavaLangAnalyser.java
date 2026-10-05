@@ -44,8 +44,6 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.RecordComponentElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import org.apache.commons.collections4.CollectionUtils;
@@ -797,32 +795,6 @@ public final class JavaLangAnalyser {
     return ElementFilter.fieldsIn(classElement.getEnclosedElements()).stream()
         .filter(e -> e.getSimpleName().contentEquals(fieldName))
         .findFirst();
-  }
-
-  /**
-   * Finds all non-static field elements declared by the given type or inherited from its
-   * superclasses (the walk stops at {@code java.lang.Object}).
-   *
-   * @param type the type element to search
-   * @return list of field elements, declared fields first, then superclass fields
-   */
-  public static List<VariableElement> findFields(TypeElement type) {
-    List<VariableElement> fields = new ArrayList<>();
-    TypeElement current = type;
-    while (current != null && !current.getQualifiedName().contentEquals("java.lang.Object")) {
-      for (VariableElement field : ElementFilter.fieldsIn(current.getEnclosedElements())) {
-        if (!field.getModifiers().contains(Modifier.STATIC)) {
-          fields.add(field);
-        }
-      }
-      TypeMirror superclass = current.getSuperclass();
-      current =
-          superclass.getKind() == TypeKind.DECLARED
-                  && ((DeclaredType) superclass).asElement() instanceof TypeElement parent
-              ? parent
-              : null;
-    }
-    return fields;
   }
 
   /**

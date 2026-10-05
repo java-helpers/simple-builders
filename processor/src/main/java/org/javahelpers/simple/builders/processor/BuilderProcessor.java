@@ -210,8 +210,6 @@ public class BuilderProcessor extends AbstractProcessor {
     context.resetIndentation();
     // The generating round is done — the registry is final for SPI adapters from here on.
     SimpleBuildersSpiIntegration.finishCompilation();
-    // Returning false leaves the annotations unclaimed so other processors on the
-    // processor path (e.g. MapStruct, AutoService) still see them.
     return false;
   }
 

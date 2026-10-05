@@ -59,9 +59,9 @@ class MapStructSpiIntegrationTest {
 
   @Test
   void mapStruct_processorOrderReversed_shouldStillUseGeneratedBuilder() {
-    // MapStruct processing the mapper before BuilderProcessor's first round must not lose the
-    // builder: the marked bean defers via TypeHierarchyErroneousException until the registry
-    // holds the planned builder
+    // MapStruct processing the mapper before BuilderProcessor's generating round must not lose
+    // the builder: the bean defers via TypeHierarchyErroneousException until the registry is
+    // final and holds the planned builder
     Compilation compilation =
         mapStructCompiler(new MappingProcessor(), new BuilderProcessor())
             .compile(personDto(), personDtoMapper());

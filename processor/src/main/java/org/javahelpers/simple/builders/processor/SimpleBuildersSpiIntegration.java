@@ -36,16 +36,16 @@ import org.javahelpers.simple.builders.processor.model.type.TypeName;
  * The builders {@link BuilderProcessor} generates, published to SPI adapters of other frameworks
  * sharing the annotation processor path (and therefore the classloader). Each entry carries the
  * resolved builder's type, creation and build method names plus the bean's configured {@code
- * setterSuffix}, so adapters do not scan elements or read annotations themselves.
+ * setterSuffix}, so adapters do not scan candidates or read annotation configuration themselves.
  *
  * <p>The lifecycle reports where {@link BuilderProcessor}'s builder generation stands and is
  * transitioned by that processor alone — SPI adapters only ever read this holder, they never
  * initialize or mutate it. All state is compilation-scoped: javac initializes each processor lazily
  * when its turn in a round comes, so before {@link BuilderProcessor} has run its {@code init()}
  * nothing static can be trusted — values may be leftovers of a previous compilation in a long-lived
- * JVM (Gradle daemon, incremental builds). Adapters therefore pass their own {@link Elements} to
- * {@link #isCurrentCompilation}: javac hands every processor of one compilation the same {@code
- * Elements} instance, so a mismatch means this holder still describes an older run.
+ * JVM (Gradle daemon, incremental builds). Adapters therefore pass their own {@link Elements}
+ * instance to every read: javac hands every processor of one compilation the same {@code Elements}
+ * instance, so a mismatch means this holder still describes an older run.
  */
 public final class SimpleBuildersSpiIntegration {
 
