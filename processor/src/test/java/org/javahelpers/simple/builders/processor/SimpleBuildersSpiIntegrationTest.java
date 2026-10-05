@@ -28,7 +28,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.Proxy;
-import java.util.Map;
 import java.util.Optional;
 import javax.lang.model.util.Elements;
 import org.javahelpers.simple.builders.processor.SimpleBuildersSpiIntegration.PublishedBuilder;
@@ -41,14 +40,9 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Unit test for the shared SPI bridge: lifecycle transitions stay pinned to the current compilation
- * (identified by its {@link Elements}), the registry exposes exactly the published descriptors, and
- * the integration switch honors the {@code -D} > {@code -A} > bare-option precedence.
+ * (identified by its {@link Elements}), and the registry exposes exactly the published descriptors.
  */
 class SimpleBuildersSpiIntegrationTest {
-
-  private static final String OPTION = "simplebuilder.usingMapStructIntegration";
-
-  private static final String BARE_OPTION = "usingMapStructIntegration";
 
   private static final Elements ELEMENTS = fakeElements();
 
@@ -77,7 +71,6 @@ class SimpleBuildersSpiIntegrationTest {
 
   @AfterEach
   void reset() {
-    System.clearProperty(OPTION);
     SimpleBuildersSpiIntegration.initCompilation(null);
   }
 
@@ -85,11 +78,15 @@ class SimpleBuildersSpiIntegrationTest {
   void lifecycle_transitions() {
     SimpleBuildersSpiIntegration.initCompilation(ELEMENTS);
     assertEquals(State.PROCESSING, SimpleBuildersSpiIntegration.state());
-    assertFalse(SimpleBuildersSpiIntegration.isSimpleBuildersFinishedForIntegration());
+    assertFalse(SimpleBuildersSpiIntegration.isSimpleBuildersFinishedForIntegration(ELEMENTS));
 
     SimpleBuildersSpiIntegration.finishCompilation();
     assertEquals(State.FINISHED, SimpleBuildersSpiIntegration.state());
-    assertTrue(SimpleBuildersSpiIntegration.isSimpleBuildersFinishedForIntegration());
+    assertTrue(SimpleBuildersSpiIntegration.isSimpleBuildersFinishedForIntegration(ELEMENTS));
+    // The finished answer is scoped to the compilation it was asked about — a foreign
+    // compilation sees the holder as not finished even in State.FINISHED.
+    assertFalse(
+        SimpleBuildersSpiIntegration.isSimpleBuildersFinishedForIntegration(fakeElements()));
   }
 
   @Test
@@ -126,33 +123,5 @@ class SimpleBuildersSpiIntegrationTest {
 
     SimpleBuildersSpiIntegration.initCompilation(fakeElements());
     assertTrue(SimpleBuildersSpiIntegration.builderFor("test.PersonDto").isEmpty());
-  }
-
-  @Test
-  void isMapstructGenerationEnabled_defaultsToEnabled() {
-    assertTrue(SimpleBuildersSpiIntegration.isMapstructGenerationEnabled(Map.of()));
-  }
-
-  @Test
-  void isMapstructGenerationEnabled_systemPropertyWins() {
-    System.setProperty(OPTION, "DISABLED");
-    assertFalse(
-        SimpleBuildersSpiIntegration.isMapstructGenerationEnabled(
-            Map.of(OPTION, "ENABLED", BARE_OPTION, "ENABLED")));
-
-    System.setProperty(OPTION, "ENABLED");
-    assertTrue(
-        SimpleBuildersSpiIntegration.isMapstructGenerationEnabled(
-            Map.of(OPTION, "DISABLED", BARE_OPTION, "DISABLED")));
-  }
-
-  @Test
-  void isMapstructGenerationEnabled_compilerArgumentBeatsBareOption() {
-    assertFalse(
-        SimpleBuildersSpiIntegration.isMapstructGenerationEnabled(
-            Map.of(OPTION, "DISABLED", BARE_OPTION, "ENABLED")));
-
-    assertFalse(
-        SimpleBuildersSpiIntegration.isMapstructGenerationEnabled(Map.of(BARE_OPTION, "DISABLED")));
   }
 }

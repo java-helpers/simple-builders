@@ -34,6 +34,8 @@ import javax.lang.model.type.TypeMirror;
 import org.javahelpers.simple.builders.processor.SimpleBuildersSpiIntegration;
 import org.javahelpers.simple.builders.processor.SimpleBuildersSpiIntegration.PublishedBuilder;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyser;
+import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsEnum;
+import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsReader;
 import org.mapstruct.ap.spi.AccessorNamingStrategy;
 import org.mapstruct.ap.spi.DefaultAccessorNamingStrategy;
 import org.mapstruct.ap.spi.MapStructProcessingEnvironment;
@@ -74,7 +76,7 @@ public class MapStructAccessorNamingStrategy extends DefaultAccessorNamingStrate
   public MethodType getMethodType(ExecutableElement method) {
     MethodType methodType = super.getMethodType(method);
     if (!SimpleBuildersSpiIntegration.isCurrentCompilation(elementUtils)
-        || !SimpleBuildersSpiIntegration.isMapstructGenerationEnabled(processorOptions)) {
+        || !isIntegrationEnabled()) {
       // The holder describes another compilation (or is disabled): simple-builders is not
       // ready here, so everything keeps the default classification.
       return methodType;
@@ -94,6 +96,16 @@ public class MapStructAccessorNamingStrategy extends DefaultAccessorNamingStrate
       return methodType;
     }
     return MethodType.OTHER;
+  }
+
+  /**
+   * Whether the integration is switched on for this compilation — read from the options map
+   * MapStruct hands the SPI ({@code -A} arguments reach it because {@link
+   * MapStructAdditionalSupportedOptionsProvider} declares them), defaulting to enabled.
+   */
+  private boolean isIntegrationEnabled() {
+    return CompilerArgumentsReader.readBooleanValue(
+        CompilerArgumentsEnum.USING_MAPSTRUCT_INTEGRATION, processorOptions, true);
   }
 
   /**
@@ -122,7 +134,7 @@ public class MapStructAccessorNamingStrategy extends DefaultAccessorNamingStrate
     if (beanElement == null) {
       // The published bean is not emitted yet — another processor may produce it in a later
       // round, so the classification retries once the type exists.
-      if (!SimpleBuildersSpiIntegration.isSimpleBuildersFinishedForIntegration()) {
+      if (!SimpleBuildersSpiIntegration.isSimpleBuildersFinishedForIntegration(elementUtils)) {
         throw new TypeHierarchyErroneousException(builderType.asType());
       }
       return Map.of();

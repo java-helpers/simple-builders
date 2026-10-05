@@ -188,7 +188,8 @@ public class BuilderProcessor extends AbstractProcessor {
     context.debug(
         "simple-builders: %d of %d annotated element(s) are inside the builderGenerationPackages scope.",
         elementsToGenerate.size(), sortedElements.size());
-    if (SimpleBuildersSpiIntegration.isSimpleBuildersFinishedForIntegration()
+    if (SimpleBuildersSpiIntegration.isSimpleBuildersFinishedForIntegration(
+            processingEnv.getElementUtils())
         || (sortedElements.isEmpty() && sortedHolders.isEmpty())) {
       // simple-builders generates in exactly one round — the first round carrying its
       // annotations; elements first appearing in later rounds get no builder.

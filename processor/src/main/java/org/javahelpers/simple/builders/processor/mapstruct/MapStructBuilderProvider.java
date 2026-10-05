@@ -39,8 +39,9 @@ import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 import org.javahelpers.simple.builders.processor.SimpleBuildersSpiIntegration;
 import org.javahelpers.simple.builders.processor.SimpleBuildersSpiIntegration.PublishedBuilder;
-import org.javahelpers.simple.builders.processor.SimpleBuildersSpiIntegration.State;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyser;
+import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsEnum;
+import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsReader;
 import org.mapstruct.ap.spi.BuilderInfo;
 import org.mapstruct.ap.spi.BuilderProvider;
 import org.mapstruct.ap.spi.MapStructProcessingEnvironment;
@@ -92,7 +93,7 @@ public class MapStructBuilderProvider implements BuilderProvider {
 
   @Override
   public BuilderInfo findBuilderInfo(TypeMirror type) {
-    if (!SimpleBuildersSpiIntegration.isMapstructGenerationEnabled(processorOptions)) {
+    if (!isIntegrationEnabled()) {
       return null;
     }
     if (!(type instanceof DeclaredType declaredType)
@@ -108,6 +109,16 @@ public class MapStructBuilderProvider implements BuilderProvider {
       builderInfoCache.put(beanElement.getQualifiedName().toString(), builderInfo);
     }
     return builderInfo;
+  }
+
+  /**
+   * Whether the integration is switched on for this compilation — read from the options map
+   * MapStruct hands the SPI ({@code -A} arguments reach it because {@link
+   * MapStructAdditionalSupportedOptionsProvider} declares them), defaulting to enabled.
+   */
+  private boolean isIntegrationEnabled() {
+    return CompilerArgumentsReader.readBooleanValue(
+        CompilerArgumentsEnum.USING_MAPSTRUCT_INTEGRATION, processorOptions, true);
   }
 
   /**
@@ -139,7 +150,7 @@ public class MapStructBuilderProvider implements BuilderProvider {
   private TypeElement findBuilderElement(
       TypeElement beanElement, Optional<PublishedBuilder> published) {
     if (published.isEmpty()) {
-      if (state() != State.FINISHED) {
+      if (!isFinished()) {
         // The generating round may not have run yet — any bean may still be registered, so
         // defer the mapper for a retry once the registry is final.
         throw new TypeHierarchyErroneousException(beanElement.asType());
@@ -161,13 +172,11 @@ public class MapStructBuilderProvider implements BuilderProvider {
   }
 
   /**
-   * The state of the compilation this provider's {@code elementUtils} belongs to — {@link
-   * State#INIT} while the holder still describes a previous run on a reused JVM.
+   * Whether builder generation is final for the compilation this provider's {@code elementUtils}
+   * belongs to — {@code false} while the holder still describes a previous run on a reused JVM.
    */
-  private State state() {
-    return SimpleBuildersSpiIntegration.isCurrentCompilation(elementUtils)
-        ? SimpleBuildersSpiIntegration.state()
-        : State.INIT;
+  private boolean isFinished() {
+    return SimpleBuildersSpiIntegration.isSimpleBuildersFinishedForIntegration(elementUtils);
   }
 
   /**

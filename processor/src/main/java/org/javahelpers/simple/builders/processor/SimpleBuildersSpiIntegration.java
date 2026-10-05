@@ -31,7 +31,6 @@ import javax.lang.model.util.Elements;
 import org.javahelpers.simple.builders.processor.model.type.BuilderInstantiation.StaticFactoryCall;
 import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsEnum;
 
 /**
  * The builders {@link BuilderProcessor} generates, published to SPI adapters of other frameworks
@@ -129,9 +128,12 @@ public final class SimpleBuildersSpiIntegration {
     return state;
   }
 
-  /** Whether {@link BuilderProcessor} finished generating builders for this compilation. */
-  public static boolean isSimpleBuildersFinishedForIntegration() {
-    return state == State.FINISHED;
+  /**
+   * Whether {@link BuilderProcessor} finished generating builders for the compilation {@code
+   * observed} belongs to — {@code false} while this holder still describes another run.
+   */
+  public static boolean isSimpleBuildersFinishedForIntegration(Elements observed) {
+    return isCurrentCompilation(observed) && state == State.FINISHED;
   }
 
   /**
@@ -164,28 +166,5 @@ public final class SimpleBuildersSpiIntegration {
    */
   public static Optional<PublishedBuilder> builderByName(String builderQualifiedName) {
     return Optional.ofNullable(BY_BUILDER.get(builderQualifiedName));
-  }
-
-  /**
-   * Whether the MapStruct integration is switched on, resolved like {@code
-   * CompilerArgumentsReader#readValue} — {@code -Dsimplebuilder.usingMapStructIntegration} first,
-   * then the same {@code -A} argument, then the bare {@code -AusingMapStructIntegration}. {@code
-   * processorOptions} is the full javac options map the SPI environment exposes, so foreign {@code
-   * -A} arguments reach it without any processor involvement. Anything but {@code false}/{@code
-   * disabled} keeps it on.
-   */
-  public static boolean isMapstructGenerationEnabled(Map<String, String> processorOptions) {
-    String value =
-        System.getProperty(CompilerArgumentsEnum.USING_MAPSTRUCT_INTEGRATION.getCompilerArgument());
-    if (value == null) {
-      value =
-          processorOptions.get(
-              CompilerArgumentsEnum.USING_MAPSTRUCT_INTEGRATION.getCompilerArgument());
-    }
-    if (value == null) {
-      value =
-          processorOptions.get(CompilerArgumentsEnum.USING_MAPSTRUCT_INTEGRATION.getOptionName());
-    }
-    return !("false".equalsIgnoreCase(value) || "disabled".equalsIgnoreCase(value));
   }
 }
