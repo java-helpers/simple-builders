@@ -130,7 +130,15 @@ public class BuilderProcessor extends AbstractProcessor {
     }
   }
 
+  /**
+   * Always returns {@code false}, so this method intentionally never claims annotations (hence the
+   * {@code java:S3516} suppression). Claiming is all-or-nothing over the supported set and {@link
+   * SupportedAnnotationTypes} must stay {@code "*"} to discover user-defined template annotations;
+   * claiming would therefore hide every annotation in the round — including foreign ones like
+   * MapStruct's {@code @Mapper} — from later processors.
+   */
   @Override
+  @SuppressWarnings("java:S3516")
   public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
     if (!supportedJdk) {
       // Fail fast: we already emitted an error in init(); do not attempt any processing.
@@ -187,7 +195,7 @@ public class BuilderProcessor extends AbstractProcessor {
 
     // Reset indentation level at the end of each processing round to prevent cascading errors
     context.resetIndentation();
-    return true;
+    return false;
   }
 
   /** Generates all Jackson modules after the last processing round and reports the metrics. */
