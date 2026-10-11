@@ -24,6 +24,7 @@
 
 package org.javahelpers.simple.builders.processor.processing;
 
+import java.util.Map;
 import java.util.stream.Stream;
 import javax.annotation.processing.ProcessingEnvironment;
 import org.apache.commons.lang3.Strings;
@@ -62,17 +63,29 @@ public class CompilerArgumentsReader {
    * @return the value of the compiler argument, or null if not set
    */
   public String readValue(CompilerArgumentsEnum argument) {
+    return readValue(argument, processingEnv.getOptions());
+  }
+
+  /**
+   * Reads the value of a compiler argument from an explicit options map — the same lookup SPI
+   * adapters can use on the options map their host framework hands them.
+   *
+   * @param argument the compiler argument enum to read
+   * @param options the compiler options map to search
+   * @return the value of the compiler argument, or null if not set
+   */
+  public static String readValue(CompilerArgumentsEnum argument, Map<String, String> options) {
     // Try the -D JVM system property first (e.g., -Dsimplebuilder.verbose)
     String value = System.getProperty(argument.getCompilerArgument());
 
     // Then the -A compiler argument (e.g., -Asimplebuilder.verbose)
     if (value == null) {
-      value = processingEnv.getOptions().get(argument.getCompilerArgument());
+      value = options.get(argument.getCompilerArgument());
     }
 
     // Finally the bare option name for backward compatibility (e.g., -Averbose)
     if (value == null) {
-      value = processingEnv.getOptions().get(argument.getOptionName());
+      value = options.get(argument.getOptionName());
     }
 
     return value;
@@ -87,8 +100,32 @@ public class CompilerArgumentsReader {
    * @return true if the value is "true" (case-insensitive), false otherwise
    */
   public boolean readBooleanValue(CompilerArgumentsEnum argument) {
-    String value = readValue(argument);
-    return Strings.CI.equalsAny(value, "true", "enabled");
+    return readBooleanValue(argument, processingEnv.getOptions(), false);
+  }
+
+  /**
+   * Reads the value of a compiler argument as a boolean with an explicit default — the same
+   * resolution SPI adapters can use on the options map their host framework hands them.
+   *
+   * @param argument the compiler argument enum to read
+   * @param options the compiler options map to search
+   * @param defaultValue the result for an unset or unrecognizable value
+   * @return "true"/"enabled" resolves to true, "false"/"disabled" to false, anything else to {@code
+   *     defaultValue}
+   */
+  public static boolean readBooleanValue(
+      CompilerArgumentsEnum argument, Map<String, String> options, boolean defaultValue) {
+    String value = readValue(argument, options);
+    if (value == null || value.isEmpty()) {
+      return defaultValue;
+    }
+    if (Strings.CI.equalsAny(value, "true", "enabled")) {
+      return true;
+    }
+    if (Strings.CI.equalsAny(value, "false", "disabled")) {
+      return false;
+    }
+    return defaultValue;
   }
 
   /**
