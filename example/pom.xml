@@ -112,6 +112,13 @@
             <id>default-compile</id>
             <configuration>
               <annotationProcessorPaths>
+                <!-- MapStruct first: the harder ordering, lookups defer until the builder
+                     registry is published (SPI covers it) -->
+                <path>
+                  <groupId>org.mapstruct</groupId>
+                  <artifactId>mapstruct-processor</artifactId>
+                  <version>${mapstruct.version}</version>
+                </path>
                 <path>
                   <groupId>io.github.java-helpers</groupId>
                   <artifactId>simple-builders-processor</artifactId>
@@ -121,11 +128,6 @@
                   <groupId>org.javahelpers.simple.builders</groupId>
                   <artifactId>example-custom-generator</artifactId>
                   <version>${project.version}</version>
-                </path>
-                <path>
-                  <groupId>org.mapstruct</groupId>
-                  <artifactId>mapstruct-processor</artifactId>
-                  <version>${mapstruct.version}</version>
                 </path>
               </annotationProcessorPaths>
               <compilerArgs>
