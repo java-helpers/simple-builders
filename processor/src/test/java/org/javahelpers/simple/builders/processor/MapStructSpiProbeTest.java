@@ -69,7 +69,7 @@ class MapStructSpiProbeTest {
     Compilation compilation =
         Compiler.javac()
             .withProcessors(new SpiProbeProcessor(), new BuilderProcessor())
-            .compile(personDto(), foreignDto(), ignoredDto(), templateDto());
+            .compile(personDto(), foreignDto(), ignoredDto(), templateDto(), suffixDto());
     assertThat(compilation).succeeded();
 
     ProbeResults results = ProbeResults.instance;
@@ -102,6 +102,15 @@ class MapStructSpiProbeTest {
     assertEquals(MethodType.OTHER, results.methodTypes.get("build"));
     assertEquals(MethodType.OTHER, results.methodTypes.get("create"));
 
+    // A configured setterSuffix is applied as a prefix: only the exact direct setter stays a
+    // write accessor — every prefixed helper and lifecycle method resolves to OTHER.
+    assertEquals(MethodType.SETTER, results.suffixMethodTypes.get("withName(java.lang.String)"));
+    assertEquals(
+        1,
+        results.suffixMethodTypes.values().stream()
+            .filter(type -> type == MethodType.SETTER)
+            .count());
+
     // A marked bean outside the generation scope is skipped by planning: it defers while the
     // registry may still fill and resolves to no builder — reported as a warning — once the
     // generating round is done. The in-scope bean forces a second round so the post-registration
@@ -123,6 +132,7 @@ class MapStructSpiProbeTest {
     static final ProbeResults instance = new ProbeResults();
 
     final Map<String, MethodType> methodTypes = new LinkedHashMap<>();
+    final Map<String, MethodType> suffixMethodTypes = new LinkedHashMap<>();
     Throwable unregisteredDeferral;
     Throwable templateDeferral;
     Throwable skippedBeanDeferred;
@@ -139,6 +149,7 @@ class MapStructSpiProbeTest {
 
     void reset() {
       methodTypes.clear();
+      suffixMethodTypes.clear();
       unregisteredDeferral = null;
       templateDeferral = null;
       skippedBeanDeferred = null;
@@ -267,12 +278,25 @@ class MapStructSpiProbeTest {
         for (ExecutableElement method : ElementFilter.methodsIn(builder.getEnclosedElements())) {
           results.methodTypes.put(method.getSimpleName().toString(), naming.getMethodType(method));
         }
+        TypeElement suffixBuilder = element("test.SuffixDtoBuilder");
+        if (suffixBuilder != null) {
+          for (ExecutableElement method :
+              ElementFilter.methodsIn(suffixBuilder.getEnclosedElements())) {
+            results.suffixMethodTypes.put(signatureKey(method), naming.getMethodType(method));
+          }
+        }
       }
       return false;
     }
 
     private TypeElement element(String qualifiedName) {
       return processingEnv.getElementUtils().getTypeElement(qualifiedName);
+    }
+
+    private static String signatureKey(ExecutableElement method) {
+      String firstParam =
+          method.getParameters().isEmpty() ? "" : method.getParameters().get(0).asType().toString();
+      return method.getSimpleName() + "(" + firstParam + ")";
     }
 
     private Throwable lookupExpectingDeferral(TypeElement bean) {
@@ -350,6 +374,24 @@ class MapStructSpiProbeTest {
         @SimpleBuilder
         public class ScopedDto {
           private String name;
+        }
+        """);
+  }
+
+  private static JavaFileObject suffixDto() {
+    return ProcessorTestUtils.forSource(
+        """
+        package test;
+
+        import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+        @SimpleBuilder(options = @SimpleBuilder.Options(setterSuffix = "with"))
+        public class SuffixDto {
+          private String name;
+
+          public void setName(String name) {
+            this.name = name;
+          }
         }
         """);
   }
