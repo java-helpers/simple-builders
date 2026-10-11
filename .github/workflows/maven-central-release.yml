@@ -63,6 +63,10 @@ jobs:
           CURRENT_VERSION="${CURRENT_VERSION//$'\r'/}"
           CURRENT_VERSION="${CURRENT_VERSION// /}"
 
+          # All POMs must share the root version, otherwise a module would be
+          # released and bumped from a stale version.
+          .github/scripts/project-version.sh --verify
+
           if [[ "$CURRENT_VERSION" != *-SNAPSHOT ]]; then
             echo "::error::Current POM version is '$CURRENT_VERSION', expected a -SNAPSHOT version. main must always be on a snapshot version."
             exit 1

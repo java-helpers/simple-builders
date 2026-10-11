@@ -85,4 +85,4 @@ Each release produces, in addition to the GPG-signed jars:
 - Versions with `-` (e.g., `0.2.0-beta`) are marked as pre-releases
 - Releases are **staged** to the Sonatype Central portal and require a **manual publish** step; nothing is auto-released
 - Only `core` and `processor` modules are published to Maven Central
-- All other modules (e.g. `example`, `example-custom-generator`, `performance-test`) are version-updated alongside the released modules but are **not** deployed to Maven Central; CI on the release PR fails if any POM differs from the root version
+- All other modules (e.g. `example`, `example-custom-generator`, `performance-test`) are version-updated alongside the released modules but are **not** deployed to Maven Central; the release workflow fails if any POM differs from the root version
