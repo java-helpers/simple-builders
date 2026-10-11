@@ -1048,6 +1048,27 @@ This is highly recommended to ensure deterministic output location and avoid spl
 
 ---
 
+#### `usingMapStructIntegration`
+
+**Default**: `ENABLED` | **Compiler Option**: `-Asimplebuilder.usingMapStructIntegration=ENABLED|DISABLED`
+
+Controls the MapStruct SPI adapters bundled in the processor jar (`MapStructBuilderProvider` and `MapStructAccessorNamingStrategy`, registered via `META-INF/services`). They make MapStruct auto-detect generated builders when `simple-builders-processor` and `mapstruct-processor` share the annotation processor path — no annotation attribute exists because the SPIs are discovered globally by MapStruct itself.
+
+The SPIs read this option from the options map MapStruct hands them, with the same `-D` > `-A` > bare-option precedence as every option. MapStruct only forwards declared options into SPI environments, so the processor jar also ships an `AdditionalSupportedOptionsProvider` declaring both spellings — `-Asimplebuilder.usingMapStructIntegration` and the bare `-AusingMapStructIntegration` reach the SPIs, and `-D` works too since system properties are JVM-global (the only mechanism when only the SPI jar is on the processor path).
+
+**When DISABLED**: The provider returns no builder candidates and the naming strategy keeps the stock MapStruct behaviour, so generated builders are treated like ordinary classes.
+
+**Scope note**: `BuilderProcessor` generates in exactly one round — the first round carrying its annotations. Beans whose types first appear in a later round (emitted by other processors after that round) get no builder, and only beans the processor plans in that round are paired with their builder through the SPIs; builders produced by earlier compilations are not discovered.
+
+**Example**:
+```xml
+<compilerArgs>
+  <arg>-Asimplebuilder.usingMapStructIntegration=DISABLED</arg>
+</compilerArgs>
+```
+
+---
+
 ### Documentation
 
 #### `generateJavaDoc`
@@ -1692,6 +1713,7 @@ methodAccess = AccessModifier.PRIVATE
 -Asimplebuilder.usingJacksonDeserializerAnnotation=ENABLED|DISABLED
 -Asimplebuilder.generateJacksonModule=ENABLED|DISABLED
 -Asimplebuilder.jacksonModulePackage=com.your.package
+-Asimplebuilder.usingMapStructIntegration=ENABLED|DISABLED
 
 # Documentation
 -Asimplebuilder.generateJavaDoc=ENABLED|DISABLED

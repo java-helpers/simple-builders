@@ -67,8 +67,12 @@ public final class BuilderScopeResolver {
    */
   private record ResolutionInputs(BuilderConfiguration configuration, String builderPackage) {}
 
+  // The factory method name our generators always emit for the empty-builder path
+  private static final String GENERATED_FACTORY_METHOD_NAME = "create";
+
   // Factory method names preferred when a builder offers several candidates
-  private static final List<String> PREFERRED_FACTORY_NAMES = List.of("create", "of");
+  private static final List<String> PREFERRED_FACTORY_NAMES =
+      List.of(GENERATED_FACTORY_METHOD_NAME, "of");
   private static final char[] UPPERCASE_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
 
   private final ProcessingContext context;
@@ -134,6 +138,29 @@ public final class BuilderScopeResolver {
     refreshForConfigurationIfNeeded();
     return resolvedBuilderTypes.computeIfAbsent(
         referencedType.getQualifiedName().toString(), fqn -> resolve(referencedType));
+  }
+
+  /**
+   * The builder contract of a type whose builder this processor registered for the current round —
+   * always the generated {@code create()} factory for the empty path and the constructor for the
+   * copy path. Only the SPI integrations consume this, to publish the emitted contract.
+   *
+   * <p>Unlike {@link #resolveUsableBuilderType(TypeElement)} this does not read the per-element
+   * configuration and is safe to call during generation-plan registration.
+   *
+   * @param referencedType the type element being referenced
+   * @return the resolved builder, or empty if no generated builder is registered for the type
+   */
+  public Optional<ResolvedBuilder> resolveGeneratedBuilder(TypeElement referencedType) {
+    TypeName referencedTypeName = JavaLangMapper.mapToTypeName(referencedType, context);
+    return generatedBuilders
+        .findBuilder(referencedTypeName)
+        .map(
+            builder ->
+                new ResolvedBuilder(
+                    builder,
+                    new BuilderInstantiation.StaticFactoryCall(GENERATED_FACTORY_METHOD_NAME),
+                    new BuilderInstantiation.ConstructorCall()));
   }
 
   /**
@@ -222,7 +249,7 @@ public final class BuilderScopeResolver {
           builder ->
               new ResolvedBuilder(
                   builder,
-                  new BuilderInstantiation.StaticFactoryCall("create"),
+                  new BuilderInstantiation.StaticFactoryCall(GENERATED_FACTORY_METHOD_NAME),
                   new BuilderInstantiation.ConstructorCall()));
     }
 

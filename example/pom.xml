@@ -18,6 +18,7 @@
     <commons-lang.version>3.21.0</commons-lang.version>
     <junit-jupiter.version>6.1.3</junit-jupiter.version>
     <jackson-databind.version>2.22.3</jackson-databind.version>
+    <mapstruct.version>1.6.3</mapstruct.version>
 
     <plugin.maven.compiler.version>3.16.0</plugin.maven.compiler.version>
     <plugin.maven.deploy.version>3.2.0</plugin.maven.deploy.version>
@@ -64,6 +65,13 @@
       <version>${jackson-databind.version}</version>
     </dependency>
 
+    <!-- MapStruct annotations for the MapStruct integration example -->
+    <dependency>
+      <groupId>org.mapstruct</groupId>
+      <artifactId>mapstruct</artifactId>
+      <version>${mapstruct.version}</version>
+    </dependency>
+
   </dependencies>
 
 
@@ -104,6 +112,13 @@
             <id>default-compile</id>
             <configuration>
               <annotationProcessorPaths>
+                <!-- MapStruct first: the harder ordering, lookups defer until the builder
+                     registry is published (SPI covers it) -->
+                <path>
+                  <groupId>org.mapstruct</groupId>
+                  <artifactId>mapstruct-processor</artifactId>
+                  <version>${mapstruct.version}</version>
+                </path>
                 <path>
                   <groupId>io.github.java-helpers</groupId>
                   <artifactId>simple-builders-processor</artifactId>
@@ -117,6 +132,9 @@
               </annotationProcessorPaths>
               <compilerArgs>
                 <arg>-Averbose=${simplebuilder.verbose}</arg>
+                <!-- Keep the committed PersonDtoMapperImpl deterministic for CI's regen check -->
+                <arg>-Amapstruct.suppressGeneratorTimestamp=true</arg>
+                <arg>-Amapstruct.suppressGeneratorVersionInfoComment=true</arg>
               </compilerArgs>
             </configuration>
           </execution>

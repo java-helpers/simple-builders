@@ -6,9 +6,12 @@ import com.google.testing.compile.JavaFileObjects;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import javax.annotation.processing.Processor;
 import javax.tools.JavaFileObject;
 import org.apache.commons.lang3.Strings;
 import org.javahelpers.simple.builders.processor.BuilderProcessor;
+import org.junit.jupiter.api.Assertions;
 
 /**
  * Utilities to simplify annotation-processor tests by reducing boilerplate for building sources,
@@ -37,7 +40,21 @@ public final class ProcessorTestUtils {
    * @return a Compiler instance configured with BuilderProcessor and optional verbose output
    */
   public static Compiler createCompiler() {
-    Compiler compiler = Compiler.javac().withProcessors(new BuilderProcessor());
+    return createCompiler(new BuilderProcessor());
+  }
+
+  /**
+   * Creates a configured {@link Compiler} instance with the given processors in invocation order.
+   *
+   * <p>Use this overload when a test compiles with several annotation processors whose relative
+   * order matters (e.g. {@code BuilderProcessor} alongside the MapStruct {@code MappingProcessor}).
+   * Verbose handling matches {@link #createCompiler()}.
+   *
+   * @param processors the processors to register, in the order javac invokes them
+   * @return a Compiler instance configured with the given processors and optional verbose output
+   */
+  public static Compiler createCompiler(Processor... processors) {
+    Compiler compiler = Compiler.javac().withProcessors(processors);
 
     // Check for verbose flag from Maven property
     if (isVerboseEnabled()) {
@@ -45,6 +62,22 @@ public final class ProcessorTestUtils {
     }
 
     return compiler;
+  }
+
+  /**
+   * Asserts that none of the compilation's warnings contains the given text (case-insensitive).
+   *
+   * @param compilation the compilation result to check
+   * @param text the text no warning message may contain
+   */
+  public static void assertNoWarningContaining(Compilation compilation, String text) {
+    String warnings =
+        compilation.warnings().stream()
+            .map(diagnostic -> diagnostic.getMessage(null))
+            .collect(Collectors.joining("\n"));
+    Assertions.assertFalse(
+        warnings.toLowerCase().contains(text.toLowerCase()),
+        "No warning containing '" + text + "' expected, got: " + warnings);
   }
 
   /**
