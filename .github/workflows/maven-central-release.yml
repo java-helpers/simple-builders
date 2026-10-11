@@ -63,6 +63,10 @@ jobs:
           CURRENT_VERSION="${CURRENT_VERSION//$'\r'/}"
           CURRENT_VERSION="${CURRENT_VERSION// /}"
 
+          # All POMs must share the root version, otherwise a module would be
+          # released and bumped from a stale version.
+          .github/scripts/project-version.sh verify
+
           if [[ "$CURRENT_VERSION" != *-SNAPSHOT ]]; then
             echo "::error::Current POM version is '$CURRENT_VERSION', expected a -SNAPSHOT version. main must always be on a snapshot version."
             exit 1
@@ -85,14 +89,10 @@ jobs:
           VERSION=${{ steps.version.outputs.VERSION }}
           echo "Setting version to $VERSION"
 
-          # Update parent POM
-          mvn versions:set -DnewVersion=$VERSION -DgenerateBackupPoms=false
-
-          # Update ALL module POMs. The modules have no <parent> element, so
-          # each must be set individually. Only core and processor are deployed
-          # to Maven Central, but all modules must share the same version for
-          # the reactor build to work correctly.
-          mvn versions:set -DnewVersion=$VERSION -DgenerateBackupPoms=false -pl core,processor,example,example-custom-generator
+          # Update ALL POMs (root and every module, including profile-only
+          # ones). Only core and processor are deployed to Maven Central, but
+          # all modules must share the same version.
+          .github/scripts/project-version.sh set "$VERSION"
 
       - name: Update reproducible build timestamp
         run: |
@@ -114,7 +114,7 @@ jobs:
           # update to main goes through a reviewed pull request instead of a
           # direct push that bypasses branch protection.
           git checkout -B "$BRANCH"
-          git add pom.xml core/pom.xml processor/pom.xml example/pom.xml example-custom-generator/pom.xml
+          git add -- ':(glob)**/pom.xml'
           echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
 
           # Only commit if there are changes. Note: no "[skip ci]" so the
@@ -264,12 +264,11 @@ jobs:
           echo "Next snapshot version: $NEXT_VERSION"
 
           # Set all POMs to the next snapshot version.
-          mvn versions:set -DnewVersion=$NEXT_VERSION -DgenerateBackupPoms=false
-          mvn versions:set -DnewVersion=$NEXT_VERSION -DgenerateBackupPoms=false -pl core,processor,example,example-custom-generator
+          .github/scripts/project-version.sh set "$NEXT_VERSION"
 
           # Commit as a second commit on the release branch. The tag (already
           # created and pushed on the first commit) is unaffected by this commit.
-          git add pom.xml core/pom.xml processor/pom.xml example/pom.xml example-custom-generator/pom.xml
+          git add -- ':(glob)**/pom.xml'
           git commit -m "release: prepare next version $NEXT_VERSION"
 
           # Force-push the updated branch so the remote has both commits.
