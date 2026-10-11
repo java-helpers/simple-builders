@@ -85,11 +85,11 @@ public final class MethodGeneratorUtil {
    * @return the method name with prefix applied
    */
   public static String generateBuilderMethodName(String fieldName, ProcessingContext context) {
-    String suffix = context.getConfiguration().getSetterSuffix();
-    if (suffix == null || suffix.isEmpty()) {
+    String prefix = context.getConfiguration().getSetterPrefix();
+    if (prefix == null || prefix.isEmpty()) {
       return fieldName;
     }
-    return suffix + StringUtils.capitalize(fieldName);
+    return prefix + StringUtils.capitalize(fieldName);
   }
 
   /**

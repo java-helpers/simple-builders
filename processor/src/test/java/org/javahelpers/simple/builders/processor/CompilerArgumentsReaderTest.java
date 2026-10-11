@@ -214,7 +214,7 @@ class CompilerArgumentsReaderTest {
     assertEquals(AccessModifier.DEFAULT, config.getBuilderConstructorAccess());
     assertEquals(AccessModifier.DEFAULT, config.getMethodAccess());
     assertNull(config.getBuilderSuffix(), "Builder suffix should be null when not set");
-    assertNull(config.getSetterSuffix(), "Setter suffix should be null when not set");
+    assertNull(config.getSetterPrefix(), "Setter prefix should be null when not set");
     assertTrue(
         config.getBuilderGenerationPackagesSet().isEmpty(),
         "Builder generation packages should be empty when not set");
@@ -238,7 +238,7 @@ class CompilerArgumentsReaderTest {
             .put("simplebuilder.generateUpdateHelpers", "enabled")
             .put("simplebuilder.copyTypeAnnotations", "enabled")
             .put("simplebuilder.builderSuffix", "Factory")
-            .put("simplebuilder.setterSuffix", "with")
+            .put("simplebuilder.setterPrefix", "with")
             .put("simplebuilder.builderGenerationPackages", "a.b, c.d")
             .put("simplebuilder.builderUsagePackages", "x.y")
             .build();
@@ -257,7 +257,7 @@ class CompilerArgumentsReaderTest {
     assertEquals(OptionState.ENABLED, config.generateUpdateHelpers());
     assertEquals(OptionState.ENABLED, config.copyTypeAnnotations());
     assertEquals("Factory", config.getBuilderSuffix());
-    assertEquals("with", config.getSetterSuffix());
+    assertEquals("with", config.getSetterPrefix());
     assertEquals(Set.of("a.b", "c.d"), config.getBuilderGenerationPackagesSet());
     assertEquals(Set.of("x.y"), config.getBuilderUsagePackagesSet());
   }
@@ -294,7 +294,7 @@ class CompilerArgumentsReaderTest {
             .put("simplebuilder.generateFieldSupplier", "")
             .put("simplebuilder.builderAccess", "")
             .put("simplebuilder.builderSuffix", "")
-            .put("simplebuilder.setterSuffix", "")
+            .put("simplebuilder.setterPrefix", "")
             .build();
     CompilerArgumentsReader reader = new CompilerArgumentsReader(env);
 
@@ -304,6 +304,6 @@ class CompilerArgumentsReaderTest {
     assertEquals(OptionState.UNSET, config.generateFieldSupplier(), "Empty should be UNSET");
     assertEquals(AccessModifier.DEFAULT, config.getBuilderAccess(), "Empty should be DEFAULT");
     assertEquals("", config.getBuilderSuffix(), "Empty string should be preserved for suffix");
-    assertEquals("", config.getSetterSuffix(), "Empty string should be preserved for suffix");
+    assertEquals("", config.getSetterPrefix(), "Empty string should be preserved for prefix");
   }
 }

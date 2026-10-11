@@ -97,7 +97,7 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
             usingExistingBuilders = OptionState.DISABLED,
             usingFieldFunctionPrefill = OptionState.DISABLED,
             builderSuffix = "Builder",
-            setterSuffix = "",
+            setterPrefix = "",
             formattingMode = "lightweight"))
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.TYPE)

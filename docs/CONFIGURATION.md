@@ -1154,15 +1154,15 @@ public class ExternalBuilders { }
 
 ---
 
-#### `setterSuffix`
+#### `setterPrefix`
 
-**Default**: `""` (empty) | **Compiler Option**: `-Asimplebuilder.setterSuffix=customPrefix`
+**Default**: `""` (empty) | **Compiler Option**: `-Asimplebuilder.setterPrefix=customPrefix`
 
 Adds a prefix to all setter method names.
 
 **Example**:
 ```java
-@SimpleBuilder.Options(setterSuffix = "with")
+@SimpleBuilder.Options(setterPrefix = "with")
 public class PersonDto {
     private String name;
 }
@@ -1698,7 +1698,7 @@ methodAccess = AccessModifier.PRIVATE
 
 # Naming
 -Asimplebuilder.builderSuffix=CustomSuffix
--Asimplebuilder.setterSuffix=customPrefix
+-Asimplebuilder.setterPrefix=customPrefix
 
 # Reliability
 -Asimplebuilder.strict=ENABLED|DISABLED
@@ -1762,7 +1762,7 @@ methodAccess = AccessModifier.PRIVATE
 
     // Naming
     builderSuffix = "Builder",
-    setterSuffix = ""
+    setterPrefix = ""
 )
 public class ExampleDto {
     private String name;

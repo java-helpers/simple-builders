@@ -14,7 +14,7 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
             generateConditionalHelper = OptionState.DISABLED,
             generateWithInterface = OptionState.DISABLED,
             builderSuffix = "MiniBuilder",
-            setterSuffix = "set"))
+            setterPrefix = "set"))
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.TYPE)
 public @interface MyBuliderForTestAnnotation {}

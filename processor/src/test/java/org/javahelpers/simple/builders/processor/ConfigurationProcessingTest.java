@@ -89,7 +89,7 @@ class ConfigurationProcessingTest {
     assertEquals(AccessModifier.PRIVATE, config.getBuilderConstructorAccess());
     assertEquals(AccessModifier.PACKAGE_PRIVATE, config.getMethodAccess());
     assertEquals("Builder", config.getBuilderSuffix());
-    assertEquals("", config.getSetterSuffix());
+    assertEquals("", config.getSetterPrefix());
     assertEquals("lightweight", config.formattingMode());
     assertEquals(Set.of("a.b"), config.getBuilderGenerationPackagesSet());
     assertEquals(Set.of("c.d"), config.getBuilderUsagePackagesSet());
@@ -158,7 +158,7 @@ class ConfigurationProcessingTest {
         .generateJavaDoc(OptionState.ENABLED)
         // Naming
         .builderSuffix("Builder")
-        .setterSuffix("")
+        .setterPrefix("")
         // Formatting
         .formattingMode("lightweight")
         // Builder scoping
@@ -271,7 +271,7 @@ class ConfigurationProcessingTest {
                 "-Asimplebuilder.usingJacksonDeserializerAnnotation=false",
                 "-Asimplebuilder.generateJavaDoc=false",
                 "-Asimplebuilder.builderSuffix=CustomBuilder",
-                "-Asimplebuilder.setterSuffix=with")
+                "-Asimplebuilder.setterPrefix=with")
             .compile(nestedDto, addressDto, source);
 
     // Then: Compilation should succeed
@@ -361,7 +361,7 @@ class ConfigurationProcessingTest {
     ProcessorAsserts.assertNotContaining(
         generatedCode, "public MinimalDtoCustomBuilder withName(String name)");
 
-    // But package-private methods should exist - with setterSuffix="with", methods are prefixed
+    // But package-private methods should exist - with setterPrefix="with", methods are prefixed
     ProcessorAsserts.assertContaining(
         generatedCode,
         "MinimalDtoCustomBuilder withName(String name)",
@@ -387,7 +387,7 @@ class ConfigurationProcessingTest {
         "MinimalDtoCustomBuilder withProperties(Consumer<HashMapBuilder<String, Integer>> propertiesBuilderConsumer)");
 
     // Still generates: basic setters and build method
-    // With setterSuffix="with", all setter methods should be prefixed with "with" and capitalized
+    // With setterPrefix="with", all setter methods should be prefixed with "with" and capitalized
     ProcessorAsserts.assertContaining(
         generatedCode,
         "class MinimalDtoCustomBuilder",
@@ -566,7 +566,7 @@ class ConfigurationProcessingTest {
             .generateSupplier(OptionState.ENABLED)
             .generateConsumer(OptionState.ENABLED)
             .builderAccess(AccessModifier.PUBLIC)
-            .setterSuffix("")
+            .setterPrefix("")
             .builderGenerationPackages("base.pkg")
             .builderUsagePackages("base.lib")
             .build();
@@ -576,7 +576,7 @@ class ConfigurationProcessingTest {
         BuilderConfiguration.builder()
             .generateSupplier(OptionState.DISABLED) // Override
             .generateBuilderConsumer(OptionState.DISABLED) // New value
-            .setterSuffix("with") // Override setterSuffix
+            .setterPrefix("with") // Override setterPrefix
             .builderGenerationPackages("override.pkg")
             // generateConsumer not set, should keep base value
             .build();
@@ -598,7 +598,7 @@ class ConfigurationProcessingTest {
         AccessModifier.PUBLIC,
         merged.getBuilderAccess(),
         "Base value should be kept when override is DEFAULT");
-    assertEquals("with", merged.getSetterSuffix(), "Override should win for setterSuffix");
+    assertEquals("with", merged.getSetterPrefix(), "Override should win for setterPrefix");
     assertEquals(Set.of("override.pkg"), merged.getBuilderGenerationPackagesSet());
     assertEquals(Set.of("base.lib"), merged.getBuilderUsagePackagesSet());
   }
@@ -660,7 +660,7 @@ class ConfigurationProcessingTest {
             .generateConsumer(OptionState.ENABLED)
             .builderAccess(AccessModifier.PRIVATE)
             .methodAccess(AccessModifier.PACKAGE_PRIVATE)
-            .setterSuffix("with")
+            .setterPrefix("with")
             .build();
 
     String configString = config.toString();
@@ -675,9 +675,9 @@ class ConfigurationProcessingTest {
     assertTrue(
         configString.contains("PACKAGE_PRIVATE"), "toString should show AccessModifier values");
     assertTrue(
-        configString.contains("setterSuffix"),
-        "toString should mention setterSuffix when non-default");
-    assertTrue(configString.contains("with"), "toString should show setterSuffix value");
+        configString.contains("setterPrefix"),
+        "toString should mention setterPrefix when non-default");
+    assertTrue(configString.contains("with"), "toString should show setterPrefix value");
 
     // Verify it's not just a hash code
     assertTrue(configString.length() > 100, "toString should be detailed, not just class@hashcode");

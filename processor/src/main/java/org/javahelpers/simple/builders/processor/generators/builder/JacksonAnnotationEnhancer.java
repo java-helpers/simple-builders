@@ -118,7 +118,7 @@ public class JacksonAnnotationEnhancer implements BuilderEnhancer {
         new TypeName("com.fasterxml.jackson.databind.annotation", "JsonPOJOBuilder"));
 
     // Add withPrefix member with the setter prefix from configuration
-    String setterPrefix = builderDto.getConfiguration().getSetterSuffix();
+    String setterPrefix = builderDto.getConfiguration().getSetterPrefix();
     if (setterPrefix != null) {
       annotation.addMember("withPrefix", "\"" + setterPrefix + "\"");
     } else {

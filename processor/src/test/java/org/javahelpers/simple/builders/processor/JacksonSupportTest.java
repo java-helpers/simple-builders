@@ -58,7 +58,7 @@ class JacksonSupportTest {
         ProcessorTestUtils.createCompiler()
             .withOptions(
                 "-Asimplebuilder.usingJacksonDeserializerAnnotation=true",
-                "-Asimplebuilder.setterSuffix=with")
+                "-Asimplebuilder.setterPrefix=with")
             .compile(source);
 
     // Then
