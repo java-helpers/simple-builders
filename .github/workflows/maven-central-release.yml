@@ -114,7 +114,7 @@ jobs:
           # update to main goes through a reviewed pull request instead of a
           # direct push that bypasses branch protection.
           git checkout -B "$BRANCH"
-          git add -- ':(glob)**/pom.xml'
+          git add -- pom.xml '*/pom.xml'
           echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
 
           # Only commit if there are changes. Note: no "[skip ci]" so the
@@ -268,7 +268,7 @@ jobs:
 
           # Commit as a second commit on the release branch. The tag (already
           # created and pushed on the first commit) is unaffected by this commit.
-          git add -- ':(glob)**/pom.xml'
+          git add -- pom.xml '*/pom.xml'
           git commit -m "release: prepare next version $NEXT_VERSION"
 
           # Force-push the updated branch so the remote has both commits.
