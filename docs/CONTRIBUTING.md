@@ -300,7 +300,7 @@ mvn fmt:check
 ### License Headers
 
 All Java source files must carry the MIT license header defined in
-[`conf/header.txt`](../conf/header.txt). The `license-maven-plugin` verifies it
+[`LICENSE.txt`](../LICENSE.txt). The `license-maven-plugin` verifies it
 during `mvn verify`:
 
 ```bash
