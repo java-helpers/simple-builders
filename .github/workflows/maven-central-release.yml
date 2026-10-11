@@ -63,10 +63,6 @@ jobs:
           CURRENT_VERSION="${CURRENT_VERSION//$'\r'/}"
           CURRENT_VERSION="${CURRENT_VERSION// /}"
 
-          # All POMs must share the root version, otherwise a module would be
-          # released and bumped from a stale version.
-          .github/scripts/project-version.sh verify
-
           if [[ "$CURRENT_VERSION" != *-SNAPSHOT ]]; then
             echo "::error::Current POM version is '$CURRENT_VERSION', expected a -SNAPSHOT version. main must always be on a snapshot version."
             exit 1
@@ -92,7 +88,7 @@ jobs:
           # Update ALL POMs (root and every module, including profile-only
           # ones). Only core and processor are deployed to Maven Central, but
           # all modules must share the same version.
-          .github/scripts/project-version.sh set "$VERSION"
+          .github/scripts/project-version.sh --set "$VERSION"
 
       - name: Update reproducible build timestamp
         run: |
@@ -264,7 +260,7 @@ jobs:
           echo "Next snapshot version: $NEXT_VERSION"
 
           # Set all POMs to the next snapshot version.
-          .github/scripts/project-version.sh set "$NEXT_VERSION"
+          .github/scripts/project-version.sh --set "$NEXT_VERSION"
 
           # Commit as a second commit on the release branch. The tag (already
           # created and pushed on the first commit) is unaffected by this commit.

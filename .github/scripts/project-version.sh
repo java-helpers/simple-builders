@@ -1,52 +1,76 @@
 #!/usr/bin/env bash
-# Keeps the version of every tracked pom.xml in sync with the root POM.
 #
-# The modules have no <parent> element, so each POM carries its own version.
-# POMs are discovered via git instead of a hardcoded module list, so modules
-# that are only part of a profile (e.g. performance-test) or added later are
-# never left behind.
+# Sets or verifies the version of all Maven POMs in this repository.
 #
-# project.build.outputTimestamp is left untouched; the release workflow pins
-# it in a dedicated step.
-#
-# Usage:
-#   project-version.sh set <version>   set <version> in every POM
-#   project-version.sh verify          fail if any POM differs from the root POM
+# The modules have no <parent>, so every POM carries its own version. The POMs
+# are found via git, so new or profile-only modules (e.g. performance-test)
+# are always included.
+
 set -euo pipefail
 
-POM_PATHSPEC=':(glob)**/pom.xml'
+usage() {
+  cat <<USAGE
+Usage: $(basename "$0") --set <version> | --verify
+
+  --set <version>  set <version> in all POMs
+  --verify         fail if any POM differs from the version of the root POM
+  -h, --help       show this help
+USAGE
+}
+
+all_poms() {
+  git ls-files pom.xml '*/pom.xml'
+}
 
 pom_version() {
-  mvn -B -q -N -f "$1" help:evaluate -Dexpression=project.version -DforceStdout | tr -d '\r '
+  mvn -B -q -N -f "$1" help:evaluate -Dexpression=project.version -DforceStdout
+}
+
+set_version() {
+  local version="$1"
+  for pom in $(all_poms); do
+    echo "Setting version of $pom to $version"
+    # The reproducible build timestamp is pinned by the release workflow itself.
+    mvn -B -q -N -f "$pom" versions:set \
+      -DnewVersion="$version" \
+      -DgenerateBackupPoms=false \
+      -DupdateBuildOutputTimestampPolicy=never
+  done
+}
+
+verify_versions() {
+  local expected actual failed=0
+  expected="$(pom_version pom.xml)"
+  for pom in $(all_poms); do
+    actual="$(pom_version "$pom")"
+    if [[ "$actual" != "$expected" ]]; then
+      echo "::error file=$pom::$pom has version $actual, expected $expected"
+      failed=1
+    fi
+  done
+  return "$failed"
 }
 
 case "${1:-}" in
-  set)
-    NEW_VERSION="${2:?usage: $0 set <version>}"
-    git ls-files -z -- "$POM_PATHSPEC" | while IFS= read -r -d '' pom; do
-      echo "Setting $pom to $NEW_VERSION"
-      mvn -B -q -N -f "$pom" versions:set -DnewVersion="$NEW_VERSION" -DgenerateBackupPoms=false \
-        -DupdateBuildOutputTimestampPolicy=never
-    done
-    ;;
-  verify)
-    ROOT_VERSION="$(pom_version pom.xml)"
-    MISMATCHES=0
-    while IFS= read -r -d '' pom; do
-      VERSION="$(pom_version "$pom")"
-      if [[ "$VERSION" != "$ROOT_VERSION" ]]; then
-        echo "::error file=$pom::$pom is on version $VERSION, expected $ROOT_VERSION (root pom.xml)."
-        MISMATCHES=$((MISMATCHES + 1))
-      fi
-    done < <(git ls-files -z -- "$POM_PATHSPEC")
-    if [[ "$MISMATCHES" -gt 0 ]]; then
-      echo "Run '.github/scripts/project-version.sh set $ROOT_VERSION' to align all POMs."
+  --set)
+    if [[ $# -ne 2 ]]; then
+      usage >&2
       exit 1
     fi
-    echo "All POMs are on version $ROOT_VERSION."
+    set_version "$2"
+    ;;
+  --verify)
+    if [[ $# -ne 1 ]]; then
+      usage >&2
+      exit 1
+    fi
+    verify_versions
+    ;;
+  -h | --help)
+    usage
     ;;
   *)
-    echo "usage: $0 set <version> | verify" >&2
-    exit 2
+    usage >&2
+    exit 1
     ;;
 esac

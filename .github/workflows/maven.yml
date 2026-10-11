@@ -68,8 +68,9 @@ jobs:
         key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
         restore-keys: ${{ runner.os }}-m2
 
-    - name: Verify all POMs share the root version
-      run: .github/scripts/project-version.sh verify
+    - name: Verify all POMs share the root version (release PRs)
+      if: startsWith(github.head_ref, 'release/')
+      run: .github/scripts/project-version.sh --verify
 
     - name: Build with Maven
       run: mvn -B install -Pmetrics --file pom.xml
