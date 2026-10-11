@@ -58,19 +58,18 @@ class MapStructSpiIntegrationTest {
   }
 
   @Test
-  void mapStruct_processorOrderReversed_shouldStillUseGeneratedBuilder() {
-    // MapStruct processing the mapper before BuilderProcessor's generating round must not lose
-    // the builder: the bean defers via TypeHierarchyErroneousException until the registry is
-    // final and holds the planned builder
+  void mapStruct_processorOrderForward_shouldStillUseGeneratedBuilder() {
+    // BuilderProcessor ahead of MapStruct registers before the first lookup — the generated
+    // builder binds without any deferral round
     Compilation compilation =
-        mapStructCompiler(new MappingProcessor(), new BuilderProcessor())
+        mapStructCompiler(new BuilderProcessor(), new MappingProcessor())
             .compile(personDto(), personDtoMapper());
     assertThat(compilation).succeeded();
 
     String mapperImpl = loadGeneratedSource(compilation, "PersonDtoMapperImpl");
     assertTrue(
         mapperImpl.contains("PersonDtoBuilder.create()"),
-        "Reversed processor order must still bind the generated builder");
+        "Forward processor order must still bind the generated builder");
     assertTrue(mapperImpl.contains(".build()"), "MapStruct should finish via build()");
   }
 
@@ -99,9 +98,13 @@ class MapStructSpiIntegrationTest {
     assertTrue(mapperImpl.contains(".setName("), "MapStruct should fall back to setter mapping");
   }
 
-  /** A javac compiler with BuilderProcessor ahead of MapStruct and stable mapper output. */
+  /**
+   * A javac compiler with MapStruct ahead of BuilderProcessor — the demanding order: every lookup
+   * hits the registry before the generating round ran, so the whole suite exercises the deferral
+   * path. Stable mapper output.
+   */
   private static Compiler mapStructCompiler() {
-    return mapStructCompiler(new BuilderProcessor(), new MappingProcessor());
+    return mapStructCompiler(new MappingProcessor(), new BuilderProcessor());
   }
 
   /** A javac compiler with the given processors in invocation order and stable mapper output. */
