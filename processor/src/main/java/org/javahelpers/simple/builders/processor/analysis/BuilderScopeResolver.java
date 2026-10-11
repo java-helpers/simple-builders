@@ -67,8 +67,12 @@ public final class BuilderScopeResolver {
    */
   private record ResolutionInputs(BuilderConfiguration configuration, String builderPackage) {}
 
+  // The factory method name our generators always emit for the empty-builder path
+  private static final String GENERATED_FACTORY_METHOD_NAME = "create";
+
   // Factory method names preferred when a builder offers several candidates
-  private static final List<String> PREFERRED_FACTORY_NAMES = List.of("create", "of");
+  private static final List<String> PREFERRED_FACTORY_NAMES =
+      List.of(GENERATED_FACTORY_METHOD_NAME, "of");
   private static final char[] UPPERCASE_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
 
   private final ProcessingContext context;
@@ -155,7 +159,7 @@ public final class BuilderScopeResolver {
             builder ->
                 new ResolvedBuilder(
                     builder,
-                    new BuilderInstantiation.StaticFactoryCall("create"),
+                    new BuilderInstantiation.StaticFactoryCall(GENERATED_FACTORY_METHOD_NAME),
                     new BuilderInstantiation.ConstructorCall()));
   }
 
@@ -245,7 +249,7 @@ public final class BuilderScopeResolver {
           builder ->
               new ResolvedBuilder(
                   builder,
-                  new BuilderInstantiation.StaticFactoryCall("create"),
+                  new BuilderInstantiation.StaticFactoryCall(GENERATED_FACTORY_METHOD_NAME),
                   new BuilderInstantiation.ConstructorCall()));
     }
 

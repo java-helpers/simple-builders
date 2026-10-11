@@ -27,6 +27,7 @@ import com.google.auto.service.AutoService;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.ExecutableElement;
@@ -225,6 +226,7 @@ public class MapStructBuilderProvider implements BuilderProvider {
    * only decides the finished-state warning — deferral and claiming never depend on it.
    */
   private boolean isBuilderGenerationTarget(TypeElement beanElement) {
+    Objects.requireNonNull(beanElement, "beanElement must not be null");
     if (JavaLangAnalyser.findAnnotation(beanElement, Ignore4BuilderGeneration.class).isPresent()) {
       return false;
     }
