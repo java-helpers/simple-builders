@@ -18,11 +18,11 @@
     <java.version>17</java.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-    <commons-lang.version>3.20.0</commons-lang.version>
+    <commons-lang.version>3.21.0</commons-lang.version>
 
     <!-- Builder framework versions for performance comparison profiles -->
     <record-builder.version>53</record-builder.version>
-    <lombok.version>1.18.46</lombok.version>
+    <lombok.version>1.18.48</lombok.version>
 
     <maven.compiler.source>${java.version}</maven.compiler.source>
     <maven.compiler.target>${java.version}</maven.compiler.target>
