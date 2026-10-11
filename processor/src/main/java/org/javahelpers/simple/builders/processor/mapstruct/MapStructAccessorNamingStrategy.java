@@ -31,11 +31,12 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
-import org.apache.commons.lang3.StringUtils;
+import javax.lang.model.util.ElementFilter;
+import org.javahelpers.simple.builders.core.util.TrackedValue;
 import org.javahelpers.simple.builders.processor.SimpleBuildersSpiIntegration;
 import org.javahelpers.simple.builders.processor.SimpleBuildersSpiIntegration.PublishedBuilder;
-import org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyser;
 import org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil;
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsEnum;
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsReader;
@@ -43,7 +44,6 @@ import org.mapstruct.ap.spi.AccessorNamingStrategy;
 import org.mapstruct.ap.spi.DefaultAccessorNamingStrategy;
 import org.mapstruct.ap.spi.MapStructProcessingEnvironment;
 import org.mapstruct.ap.spi.MethodType;
-import org.mapstruct.ap.spi.TypeHierarchyErroneousException;
 
 /**
  * MapStruct {@link AccessorNamingStrategy} that hides the generated helper methods of
@@ -56,9 +56,10 @@ import org.mapstruct.ap.spi.TypeHierarchyErroneousException;
  * compete with the direct setter. For methods declared on a builder published by {@code
  * BuilderProcessor} this strategy returns {@link MethodType#OTHER} for everything that is not the
  * direct property setter ({@code <setterSuffix><Field>} — the option is applied as a prefix —
- * taking a single argument of the field type). The setter suffix and the bean of each builder come
- * from the published {@link PublishedBuilder} descriptors, so builders produced by earlier
- * compilations and foreign types keep the {@link DefaultAccessorNamingStrategy} behaviour.
+ * taking a single argument of the field type). The property set is read off the builder's own
+ * tracked fields and the setter suffix comes from the published {@link PublishedBuilder}
+ * descriptors, so builders produced by earlier compilations and foreign types keep the {@link
+ * DefaultAccessorNamingStrategy} behaviour.
  */
 @AutoService(AccessorNamingStrategy.class)
 public class MapStructAccessorNamingStrategy extends DefaultAccessorNamingStrategy {
@@ -121,10 +122,11 @@ public class MapStructAccessorNamingStrategy extends DefaultAccessorNamingStrate
   }
 
   /**
-   * The direct property setters (setter name → property type) of the bean {@code builderType} was
-   * published for — empty when {@code builderType} is not a simple-builders builder of this
-   * compilation (the lookup is empty while the holder still describes a previous run, so stale
-   * entries can never match here either).
+   * The direct property setters (setter name → property type) {@code builderType} was published for
+   * — the builder's own fields are the property set ({@link TrackedValue}{@code <X>} unwraps to
+   * {@code X}), so the expected names are exactly the ones the generators emit for them. Empty when
+   * {@code builderType} is not a simple-builders builder of this compilation (the lookup is empty
+   * while the holder still describes a previous run, so stale entries can never match here either).
    */
   private Map<String, TypeMirror> directSettersOf(TypeElement builderType) {
     Optional<PublishedBuilder> published =
@@ -133,42 +135,31 @@ public class MapStructAccessorNamingStrategy extends DefaultAccessorNamingStrate
     if (published.isEmpty()) {
       return Map.of();
     }
-    TypeElement beanElement =
-        elementUtils.getTypeElement(published.get().beanType().getFullQualifiedName());
-    if (beanElement == null) {
-      // The published bean is not emitted yet — another processor may produce it in a later
-      // round, so the classification retries once the type exists.
-      if (!SimpleBuildersSpiIntegration.isSimpleBuildersFinishedForIntegration(elementUtils)) {
-        throw new TypeHierarchyErroneousException(builderType.asType());
-      }
-      return Map.of();
-    }
     Map<String, TypeMirror> directSetters = new HashMap<>();
     String setterSuffix = published.get().setterSuffix();
-    // Builder properties derive from the bean's selected constructor parameters and its setter
-    // methods — the sources BuilderDefinitionCreator turns into fields in the same precedence
-    // (constructor fields first, first setter per property wins) — so every generated direct
-    // setter is covered here. Entries no field was created for (e.g. private setters) never match
-    // a generated method and are harmless.
-    JavaLangAnalyser.findConstructorForBuilder(beanElement, elementUtils)
-        .ifPresent(
-            constructor -> {
-              for (VariableElement parameter : constructor.getParameters()) {
-                directSetters.put(
-                    MethodGeneratorUtil.generateBuilderMethodName(
-                        parameter.getSimpleName().toString(), setterSuffix),
-                    parameter.asType());
-              }
-            });
-    for (ExecutableElement setter :
-        JavaLangAnalyser.findAllPossibleSettersOfClass(beanElement, elementUtils)) {
-      if (!setter.getModifiers().contains(Modifier.STATIC)) {
-        String property = StringUtils.uncapitalize(setter.getSimpleName().toString().substring(3));
-        directSetters.putIfAbsent(
-            MethodGeneratorUtil.generateBuilderMethodName(property, setterSuffix),
-            setter.getParameters().get(0).asType());
+    for (VariableElement field : ElementFilter.fieldsIn(builderType.getEnclosedElements())) {
+      if (!field.getModifiers().contains(Modifier.STATIC)) {
+        directSetters.put(
+            MethodGeneratorUtil.generateBuilderMethodName(
+                field.getSimpleName().toString(), setterSuffix),
+            trackedPropertyType(field.asType()));
       }
     }
     return directSetters;
+  }
+
+  /**
+   * The property type held by a builder field: {@link TrackedValue}{@code <X>} unwraps to {@code
+   * X}, any other field type is used unchanged.
+   */
+  private static TypeMirror trackedPropertyType(TypeMirror fieldType) {
+    if (fieldType instanceof DeclaredType declared
+        && declared.getTypeArguments().size() == 1
+        && ((TypeElement) declared.asElement())
+            .getQualifiedName()
+            .contentEquals(TrackedValue.class.getCanonicalName())) {
+      return declared.getTypeArguments().get(0);
+    }
+    return fieldType;
   }
 }

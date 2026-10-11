@@ -30,7 +30,6 @@ import static javax.lang.model.type.TypeKind.VOID;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,7 +46,6 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
-import javax.lang.model.util.Elements;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
@@ -60,24 +58,6 @@ public final class JavaLangAnalyser {
 
   private static final String PARAM_TAG = "@param ";
   private static final String DEPRECATED_TAG = "@deprecated";
-
-  /** Ordering for setter candidates: by method name, then by single-parameter type. */
-  private static final Comparator<ExecutableElement> SETTER_COMPARATOR =
-      (m1, m2) -> {
-        int nameCompare = m1.getSimpleName().toString().compareTo(m2.getSimpleName().toString());
-        if (nameCompare != 0) {
-          return nameCompare;
-        }
-        // If same method name (overloaded), sort by parameter type
-        if (m1.getParameters().size() == 1 && m2.getParameters().size() == 1) {
-          String param1 =
-              StringUtils.deleteWhitespace(m1.getParameters().get(0).asType().toString());
-          String param2 =
-              StringUtils.deleteWhitespace(m2.getParameters().get(0).asType().toString());
-          return param1.compareTo(param2);
-        }
-        return 0;
-      };
 
   private JavaLangAnalyser() {}
 
@@ -114,24 +94,24 @@ public final class JavaLangAnalyser {
     return ElementFilter.methodsIn(context.getAllMembers(typeElement)).stream()
         .filter(mth -> isNoMethodOfObjectClass(mth, context))
         .filter(JavaLangAnalyser::isSetterForField)
-        .sorted(SETTER_COMPARATOR)
-        .toList();
-  }
-
-  /**
-   * Variant of {@link #findAllPossibleSettersOfClass(TypeElement, ProcessingContext)} for callers
-   * without a {@link ProcessingContext} (e.g. SPI adapters). {@link #isSetterForField} already
-   * excludes every {@link Object} method, so no Object check is needed here.
-   *
-   * @param typeElement the type element to get methods from
-   * @param elements the elements utility of the caller's own processing environment
-   * @return filtered list excluding Object class methods
-   */
-  public static List<ExecutableElement> findAllPossibleSettersOfClass(
-      TypeElement typeElement, Elements elements) {
-    return ElementFilter.methodsIn(elements.getAllMembers(typeElement)).stream()
-        .filter(JavaLangAnalyser::isSetterForField)
-        .sorted(SETTER_COMPARATOR)
+        .sorted(
+            (m1, m2) -> {
+              // Sort by method name first, then by parameter type for consistent ordering
+              int nameCompare =
+                  m1.getSimpleName().toString().compareTo(m2.getSimpleName().toString());
+              if (nameCompare != 0) {
+                return nameCompare;
+              }
+              // If same method name (overloaded), sort by parameter type
+              if (m1.getParameters().size() == 1 && m2.getParameters().size() == 1) {
+                String param1 =
+                    StringUtils.deleteWhitespace(m1.getParameters().get(0).asType().toString());
+                String param2 =
+                    StringUtils.deleteWhitespace(m2.getParameters().get(0).asType().toString());
+                return param1.compareTo(param2);
+              }
+              return 0;
+            })
         .toList();
   }
 
@@ -881,32 +861,8 @@ public final class JavaLangAnalyser {
         ElementFilter.constructorsIn(context.getAllMembers(annotatedType)).stream()
             .filter(context::isMemberAccessibleFromBuilderPackage)
             .toList();
-    return selectConstructor(ctors);
-  }
 
-  /**
-   * Variant of {@link #findConstructorForBuilder(TypeElement, ProcessingContext)} for callers
-   * without a {@link ProcessingContext} (e.g. SPI adapters): the same constructor is selected, but
-   * the accessibility check is omitted, so a constructor the builder package cannot access may be
-   * returned where the processor variant would pick a smaller accessible one.
-   *
-   * @param annotatedType the type to check for the preferred constructor
-   * @param elements the elements utility of the caller's own processing environment
-   * @return the constructor the builder generation would pick for the type
-   */
-  public static Optional<ExecutableElement> findConstructorForBuilder(
-      TypeElement annotatedType, Elements elements) {
-    return selectConstructor(ElementFilter.constructorsIn(elements.getAllMembers(annotatedType)));
-  }
-
-  /**
-   * Selects the constructor the builder generation uses: a constructor annotated with {@link
-   * SimpleBuilderConstructor}, else the one with the most parameters.
-   *
-   * @param ctors the candidate constructors
-   * @return the selected constructor, or empty when none declares parameters
-   */
-  private static Optional<ExecutableElement> selectConstructor(List<ExecutableElement> ctors) {
+    // First, check if any constructor is annotated with @SimpleBuilderConstructor
     for (ExecutableElement ctor : ctors) {
       if (ctor.getAnnotation(SimpleBuilderConstructor.class) != null) {
         return Optional.of(ctor);
