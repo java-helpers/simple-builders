@@ -85,6 +85,7 @@
     <plugin.maven.site.version>3.22.0</plugin.maven.site.version>
     <plugin.maven.surefire.version>3.6.0</plugin.maven.surefire.version>
     <plugin.code-format.version>2.29</plugin.code-format.version>
+    <plugin.license.version>5.1.2</plugin.license.version>
     <plugin.jacoco.version>0.8.15</plugin.jacoco.version>
   </properties>
 
@@ -188,6 +189,42 @@
           <execution>
             <goals>
               <goal>format</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- License Header Check -->
+      <plugin>
+        <groupId>com.mycila</groupId>
+        <artifactId>license-maven-plugin</artifactId>
+        <version>${plugin.license.version}</version>
+        <configuration>
+          <licenseSets>
+            <licenseSet>
+              <header>${maven.multiModuleProjectDirectory}/conf/header.txt</header>
+              <includes>
+                <include>src/main/java/**</include>
+                <include>src/test/java/**</include>
+              </includes>
+              <excludes>
+                <exclude>generated-example-builder/**</exclude>
+                <exclude>target/**</exclude>
+              </excludes>
+              <headerSections>
+                <headerSection>
+                  <key>COPYRIGHT_LINE</key>
+                  <defaultValue>Copyright (c) 2026 Andreas Igel</defaultValue>
+                  <ensureMatch>Copyright (\(c\) )?\d{4}(-\d{4})? Andreas Igel</ensureMatch>
+                </headerSection>
+              </headerSections>
+            </licenseSet>
+          </licenseSets>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>check</goal>
             </goals>
           </execution>
         </executions>

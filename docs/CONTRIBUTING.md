@@ -297,6 +297,20 @@ mvn fmt:format
 mvn fmt:check
 ```
 
+### License Headers
+
+All Java source files must carry the MIT license header defined in
+[`conf/header.txt`](../conf/header.txt). The `license-maven-plugin` verifies it
+during `mvn verify`:
+
+```bash
+# Check headers
+mvn license:check
+
+# Add or fix headers automatically
+mvn license:format
+```
+
 ### Code Quality
 
 - **SonarLint**: We use SonarQube rules. Install the SonarLint IDE plugin for real-time feedback.
