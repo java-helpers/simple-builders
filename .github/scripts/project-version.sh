@@ -51,26 +51,15 @@ verify_versions() {
   return "$failed"
 }
 
-case "${1:-}" in
-  --set)
-    if [[ $# -ne 2 ]]; then
-      usage >&2
-      exit 1
-    fi
-    set_version "$2"
-    ;;
-  --verify)
-    if [[ $# -ne 1 ]]; then
-      usage >&2
-      exit 1
-    fi
-    verify_versions
-    ;;
-  -h | --help)
-    usage
-    ;;
-  *)
-    usage >&2
-    exit 1
-    ;;
-esac
+option="${1:-}"
+
+if [[ "$option" == "--set" && $# -eq 2 ]]; then
+  set_version "$2"
+elif [[ "$option" == "--verify" && $# -eq 1 ]]; then
+  verify_versions
+elif [[ "$option" == "-h" || "$option" == "--help" ]]; then
+  usage
+else
+  usage >&2
+  exit 1
+fi
