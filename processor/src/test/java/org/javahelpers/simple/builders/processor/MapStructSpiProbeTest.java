@@ -111,6 +111,10 @@ class MapStructSpiProbeTest {
             .filter(type -> type == MethodType.SETTER)
             .count());
 
+    // A write accessor on a foreign class keeps the default classification — only published
+    // builders are filtered.
+    assertEquals(MethodType.SETTER, results.foreignSetterType);
+
     // A marked bean outside the generation scope is skipped by planning: it defers while the
     // registry may still fill and resolves to no builder — reported as a warning — once the
     // generating round is done. The in-scope bean forces a second round so the post-registration
@@ -119,12 +123,15 @@ class MapStructSpiProbeTest {
         Compiler.javac()
             .withProcessors(new SpiProbeProcessor(true), new BuilderProcessor())
             .withOptions("-Asimplebuilder.builderGenerationPackages=scoped")
-            .compile(personDto(), scopedDto());
+            .compile(personDto(), scopedDto(), templateDto());
     assertThat(skippedCompile).succeeded();
     ProbeResults skipped = ProbeResults.instance;
     assertInstanceOf(TypeHierarchyErroneousException.class, skipped.skippedBeanDeferred);
     assertNull(skipped.skippedBeanRegistered);
     assertNull(skipped.skippedBeanFinished);
+    // A bean marked only via a template annotation (meta-annotated @SimpleBuilder.Template) is
+    // still a marked bean — the finished lookup warns and resolves to no builder.
+    assertNull(skipped.templateMarkedFinished);
   }
 
   /** Records the SPI outcomes of one probe compilation for assertions after it. */
@@ -146,6 +153,8 @@ class MapStructSpiProbeTest {
     BuilderInfo noType;
     BuilderInfo builderInfo;
     BuilderInfo cachedBuilderInfo;
+    BuilderInfo templateMarkedFinished;
+    MethodType foreignSetterType;
 
     void reset() {
       methodTypes.clear();
@@ -163,6 +172,8 @@ class MapStructSpiProbeTest {
       noType = null;
       builderInfo = null;
       cachedBuilderInfo = null;
+      templateMarkedFinished = null;
+      foreignSetterType = null;
     }
   }
 
@@ -223,6 +234,7 @@ class MapStructSpiProbeTest {
       if (roundEnv.processingOver()) {
         if (skippedMode) {
           results.skippedBeanFinished = lookup(provider, "test.PersonDto");
+          results.templateMarkedFinished = lookup(provider, "test.MinimalDto");
         } else {
           results.foreignWhenFinished = lookup(provider, "test.ForeignDto");
         }
@@ -285,6 +297,13 @@ class MapStructSpiProbeTest {
             results.suffixMethodTypes.put(signatureKey(method), naming.getMethodType(method));
           }
         }
+        TypeElement foreignBean = element("test.ForeignDto");
+        for (ExecutableElement method :
+            ElementFilter.methodsIn(foreignBean.getEnclosedElements())) {
+          if (method.getSimpleName().contentEquals("setName")) {
+            results.foreignSetterType = naming.getMethodType(method);
+          }
+        }
       }
       return false;
     }
@@ -344,6 +363,10 @@ class MapStructSpiProbeTest {
 
         public class ForeignDto {
           private String name;
+
+          public void setName(String name) {
+            this.name = name;
+          }
         }
         """);
   }
