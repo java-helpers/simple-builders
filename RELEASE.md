@@ -20,7 +20,7 @@ No version input is required. The workflow derives the release version from the 
 ### What the Workflow Does
 
 1. Derives the release version from the current POM snapshot version (strips `-SNAPSHOT`)
-2. Updates POM versions to the release version in **all** modules (core, processor, example, example-custom-generator)
+2. Updates POM versions to the release version in **all** tracked `pom.xml` files (discovered via git, so new and profile-only modules such as `performance-test` are included)
 3. Commits the version bump on a dedicated `release/vX.Y.Z` branch and creates tag `vX.Y.Z`
 4. Builds and verifies the project with `-Prelease` (reproducible builds via `project.build.outputTimestamp`)
 5. Signs artifacts with GPG
@@ -85,4 +85,4 @@ Each release produces, in addition to the GPG-signed jars:
 - Versions with `-` (e.g., `0.2.0-beta`) are marked as pre-releases
 - Releases are **staged** to the Sonatype Central portal and require a **manual publish** step; nothing is auto-released
 - Only `core` and `processor` modules are published to Maven Central
-- The `example` and `example-custom-generator` modules are version-updated alongside the released modules but are **not** deployed to Maven Central
+- All other modules (e.g. `example`, `example-custom-generator`, `performance-test`) are version-updated alongside the released modules but are **not** deployed to Maven Central; the release workflow fails if any POM differs from the root version
