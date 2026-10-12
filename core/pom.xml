@@ -75,6 +75,7 @@
     <plugin.central.publishing.version>0.11.0</plugin.central.publishing.version>
     <plugin.cyclonedx.version>2.9.3</plugin.cyclonedx.version>
     <plugin.code-format.version>2.29</plugin.code-format.version>
+    <plugin.license.version>5.1.2</plugin.license.version>
     <plugin.maven.compiler.version>3.16.0</plugin.maven.compiler.version>
     <plugin.maven.source.version>3.4.0</plugin.maven.source.version>
     <plugin.maven.javadoc.version>3.12.0</plugin.maven.javadoc.version>
@@ -118,6 +119,35 @@
           <execution>
             <goals>
               <goal>format</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- License Header Check -->
+      <plugin>
+        <groupId>com.mycila</groupId>
+        <artifactId>license-maven-plugin</artifactId>
+        <version>${plugin.license.version}</version>
+        <configuration>
+          <licenseSets>
+            <licenseSet>
+              <header>${maven.multiModuleProjectDirectory}/LICENSE.txt</header>
+              <includes>
+                <include>src/main/java/**</include>
+                <include>src/test/java/**</include>
+              </includes>
+              <excludes>
+                <exclude>generated-example-builder/**</exclude>
+                <exclude>target/**</exclude>
+              </excludes>
+            </licenseSet>
+          </licenseSets>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>check</goal>
             </goals>
           </execution>
         </executions>

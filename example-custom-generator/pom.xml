@@ -18,6 +18,7 @@
     <commons-lang.version>3.21.0</commons-lang.version>
 
     <plugin.maven.compiler.version>3.16.0</plugin.maven.compiler.version>
+    <plugin.license.version>5.1.2</plugin.license.version>
     <maven.compiler.source>${java.version}</maven.compiler.source>
     <maven.compiler.target>${java.version}</maven.compiler.target>
     <maven.compiler.release>${java.version}</maven.compiler.release>
@@ -40,6 +41,35 @@
 
   <build>
     <plugins>
+      <!-- License Header Check -->
+      <plugin>
+        <groupId>com.mycila</groupId>
+        <artifactId>license-maven-plugin</artifactId>
+        <version>${plugin.license.version}</version>
+        <configuration>
+          <licenseSets>
+            <licenseSet>
+              <header>${maven.multiModuleProjectDirectory}/LICENSE.txt</header>
+              <includes>
+                <include>src/main/java/**</include>
+                <include>src/test/java/**</include>
+              </includes>
+              <excludes>
+                <exclude>generated-example-builder/**</exclude>
+                <exclude>target/**</exclude>
+              </excludes>
+            </licenseSet>
+          </licenseSets>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
