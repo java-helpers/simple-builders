@@ -94,7 +94,8 @@ public final class ProcessingContext {
         StringUtils.trimToNull(argReader.readValue(CompilerArgumentsEnum.FORMATTER_PROFILE));
     this.performanceTracker =
         perfTrackingEnabled
-            ? new ActivePerformanceTracker(perfOutputFile)
+            ? new ActivePerformanceTracker(
+                perfOutputFile, ProcessingPhases.TOP_LEVEL_PHASES, ProcessingPhases.PHASE_CHILDREN)
             : new NoOpPerformanceTracker();
     this.builderScopeResolver = new BuilderScopeResolver(this);
     // GeneratorRegistry will be lazily initialized on first access

@@ -28,8 +28,6 @@ import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.tools.Diagnostic;
-import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsEnum;
-import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsReader;
 
 /**
  * Logger for all messages during annotation processing. Providing util-functions for posting
@@ -46,20 +44,41 @@ public class ProcessingLogger {
   /** Thread-local indentation level for hierarchical logging. */
   private static final ThreadLocal<Integer> indentationLevel = ThreadLocal.withInitial(() -> 0);
 
+  /** Verbosity level of a {@link ProcessingLogger}. */
+  private enum Verbosity {
+    /** Errors, warnings and info messages only. */
+    NORMAL,
+    /** Additionally reports debug messages. */
+    VERBOSE
+  }
+
   /**
    * Constructs a new ProcessingLogger with the specified ProcessingEnvironment. The Messager is
-   * used to report errors, warnings, and other notices during annotation processing. Debug logging
-   * is enabled by setting the compiler argument: -Averbose=true or -Asimplebuilder.verbose=true
+   * used to report errors, warnings, and other notices during annotation processing. To enable
+   * debug messages use {@link #verbose(ProcessingEnvironment)} instead.
    *
-   * @param processingEnv the processing environment providing messager and options
+   * @param processingEnv the processing environment providing the messager
    */
   public ProcessingLogger(ProcessingEnvironment processingEnv) {
+    this(processingEnv, Verbosity.NORMAL);
+  }
+
+  /**
+   * Constructs a new ProcessingLogger that additionally reports debug messages.
+   *
+   * @param processingEnv the processing environment providing the messager
+   * @return a debug-enabled processing logger
+   */
+  public static ProcessingLogger verbose(ProcessingEnvironment processingEnv) {
+    return new ProcessingLogger(processingEnv, Verbosity.VERBOSE);
+  }
+
+  private ProcessingLogger(ProcessingEnvironment processingEnv, Verbosity verbosity) {
     // Reset ThreadLocal state to ensure clean state between test runs
     resetThreadLocalState();
 
     this.messager = processingEnv.getMessager();
-    CompilerArgumentsReader reader = new CompilerArgumentsReader(processingEnv);
-    this.debugEnabled = reader.readBooleanValue(CompilerArgumentsEnum.VERBOSE);
+    this.debugEnabled = verbosity == Verbosity.VERBOSE;
   }
 
   /** Resets ThreadLocal state to ensure clean state between test runs. */

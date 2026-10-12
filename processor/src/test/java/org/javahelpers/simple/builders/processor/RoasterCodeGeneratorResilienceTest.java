@@ -30,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import javax.annotation.processing.ProcessingEnvironment;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.core.enums.FormattingMode;
+import org.javahelpers.simple.builders.processor.classgen.GenerationEnvironment;
 import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterCodeGenerator;
 import org.javahelpers.simple.builders.processor.classgen.roaster.exceptions.RoasterMapperException;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
@@ -82,7 +83,11 @@ class RoasterCodeGeneratorResilienceTest {
     ProcessingEnvironment env = ProcessingEnvironmentStub.createEmpty();
     ProcessingLogger logger = new ProcessingLogger(env);
     ProcessingContext context = new ProcessingContext(logger, BuilderConfiguration.DEFAULT, env);
-    RoasterCodeGenerator generator = new RoasterCodeGenerator(context, env);
+    RoasterCodeGenerator generator =
+        new RoasterCodeGenerator(
+            new GenerationEnvironment(
+                env, logger, context.getPerformanceTracker(), context::reportBasedOnStrictMode),
+            context::createSourceFormatter);
 
     BuilderException thrown =
         assertThrows(BuilderException.class, () -> generator.generateClass(classDef));
@@ -109,7 +114,14 @@ class RoasterCodeGeneratorResilienceTest {
     ProcessingEnvironment env = ProcessingEnvironmentStub.createEmpty();
     ProcessingContext context =
         new ProcessingContext(capturing.logger(), BuilderConfiguration.DEFAULT, env);
-    RoasterCodeGenerator generator = new RoasterCodeGenerator(context, env);
+    RoasterCodeGenerator generator =
+        new RoasterCodeGenerator(
+            new GenerationEnvironment(
+                env,
+                capturing.logger(),
+                context.getPerformanceTracker(),
+                context::reportBasedOnStrictMode),
+            context::createSourceFormatter);
 
     // generation itself succeeds; only the file-write step fails on the stub's null filer
     assertThrows(NullPointerException.class, () -> generator.generateClass(classDef));

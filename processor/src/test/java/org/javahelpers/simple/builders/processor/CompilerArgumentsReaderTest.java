@@ -33,6 +33,7 @@ import javax.annotation.processing.ProcessingEnvironment;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.core.enums.OptionState;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
+import org.javahelpers.simple.builders.processor.processing.BuilderConfigurationReader;
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsEnum;
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsReader;
 import org.javahelpers.simple.builders.processor.testing.CapturingProcessingLogger;
@@ -257,7 +258,8 @@ class CompilerArgumentsReaderTest {
     CompilerArgumentsReader reader = new CompilerArgumentsReader(env);
 
     BuilderConfiguration config =
-        reader.readBuilderConfiguration(CapturingProcessingLogger.create().logger());
+        BuilderConfigurationReader.readBuilderConfiguration(
+            reader, CapturingProcessingLogger.create().logger());
 
     assertNotNull(config, "Configuration should not be null");
     assertEquals(OptionState.UNSET, config.generateFieldSupplier());
@@ -298,7 +300,8 @@ class CompilerArgumentsReaderTest {
     CompilerArgumentsReader reader = new CompilerArgumentsReader(env);
 
     BuilderConfiguration config =
-        reader.readBuilderConfiguration(CapturingProcessingLogger.create().logger());
+        BuilderConfigurationReader.readBuilderConfiguration(
+            reader, CapturingProcessingLogger.create().logger());
 
     assertEquals(OptionState.ENABLED, config.generateFieldSupplier());
     assertEquals(OptionState.DISABLED, config.generateFieldConsumer());
@@ -327,7 +330,8 @@ class CompilerArgumentsReaderTest {
     CompilerArgumentsReader reader = new CompilerArgumentsReader(env);
 
     BuilderConfiguration config =
-        reader.readBuilderConfiguration(CapturingProcessingLogger.create().logger());
+        BuilderConfigurationReader.readBuilderConfiguration(
+            reader, CapturingProcessingLogger.create().logger());
 
     assertEquals(
         OptionState.UNSET, config.generateFieldSupplier(), "Invalid option should be UNSET");
@@ -352,7 +356,8 @@ class CompilerArgumentsReaderTest {
     CompilerArgumentsReader reader = new CompilerArgumentsReader(env);
 
     BuilderConfiguration config =
-        reader.readBuilderConfiguration(CapturingProcessingLogger.create().logger());
+        BuilderConfigurationReader.readBuilderConfiguration(
+            reader, CapturingProcessingLogger.create().logger());
 
     assertEquals(OptionState.UNSET, config.generateFieldSupplier(), "Empty should be UNSET");
     assertEquals(AccessModifier.DEFAULT, config.getBuilderAccess(), "Empty should be DEFAULT");
