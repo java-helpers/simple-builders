@@ -46,6 +46,7 @@ import javax.lang.model.type.TypeMirror;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.javahelpers.simple.builders.core.annotations.IgnoreInBuilder;
+import org.javahelpers.simple.builders.core.annotations.SimpleBuilderConstructor;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.core.util.TrackedValue;
 import org.javahelpers.simple.builders.processor.analysis.FieldAnnotationExtractor;
@@ -489,7 +490,8 @@ public class BuilderDefinitionCreator {
       ProcessingContext context,
       Map<String, FieldDto> fieldNameRegistry) {
     List<FieldDto> constructorFields = new LinkedList<>();
-    Optional<ExecutableElement> constructorOpt = findConstructorForBuilder(annotatedType, context);
+    Optional<ExecutableElement> constructorOpt =
+        findConstructorForBuilder(annotatedType, SimpleBuilderConstructor.class, context);
     if (constructorOpt.isPresent()) {
       ExecutableElement ctor = constructorOpt.get();
       context.debugStartOperation(
@@ -1181,7 +1183,8 @@ public class BuilderDefinitionCreator {
    */
   private static boolean isConstructorDeprecated(
       TypeElement annotatedType, ProcessingContext context) {
-    return JavaLangAnalyser.findConstructorForBuilder(annotatedType, context)
+    return JavaLangAnalyser.findConstructorForBuilder(
+            annotatedType, SimpleBuilderConstructor.class, context)
         .filter(ctor -> ctor.getAnnotation(Deprecated.class) != null)
         .isPresent();
   }

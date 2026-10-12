@@ -30,9 +30,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import javax.annotation.processing.ProcessingEnvironment;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.core.enums.FormattingMode;
+import org.javahelpers.simple.builders.processor.classgen.CodeGenerationException;
+import org.javahelpers.simple.builders.processor.classgen.GenerationEnvironment;
 import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterCodeGenerator;
 import org.javahelpers.simple.builders.processor.classgen.roaster.exceptions.RoasterMapperException;
-import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.core.GenerationTargetClassDto;
 import org.javahelpers.simple.builders.processor.model.method.ConstructorDto;
@@ -42,6 +43,7 @@ import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
+import org.javahelpers.simple.builders.processor.processing.SourceFormatterResolver;
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 import org.javahelpers.simple.builders.processor.testing.CapturingProcessingLogger;
 import org.javahelpers.simple.builders.processor.testing.ProcessingEnvironmentStub;
@@ -51,9 +53,10 @@ import org.junit.jupiter.api.Test;
  * Regression tests for {@link RoasterCodeGenerator} error-handling robustness.
  *
  * <p>Rendering failures surface as {@link RoasterMapperException}, which extends {@link
- * RuntimeException}. These must be converted into the checked {@link BuilderException} so that the
- * per-builder resilience loops in {@code BuilderProcessor} can isolate the failure to the offending
- * class and continue generating the remaining builders instead of aborting the whole round.
+ * RuntimeException}. These must be converted into the checked {@link CodeGenerationException} so
+ * that the per-builder resilience loops in {@code BuilderProcessor} can isolate the failure to the
+ * offending class and continue generating the remaining builders instead of aborting the whole
+ * round.
  */
 class RoasterCodeGeneratorResilienceTest {
 
@@ -65,7 +68,7 @@ class RoasterCodeGeneratorResilienceTest {
   }
 
   @Test
-  void shouldWrapRenderingRuntimeExceptionInBuilderException() {
+  void shouldWrapRenderingRuntimeExceptionInCodeGenerationException() {
     GenerationTargetClassDto classDef = new GenerationTargetClassDto();
     classDef.setTypeName(new TypeName("com.example", "FailingBuilder"));
     classDef.setClassAccessModifier(AccessModifier.PUBLIC);
@@ -80,12 +83,20 @@ class RoasterCodeGeneratorResilienceTest {
     classDef.addConstructor(constructor);
 
     ProcessingEnvironment env = ProcessingEnvironmentStub.createEmpty();
-    ProcessingLogger logger = new ProcessingLogger(env);
+    ProcessingLogger logger = ProcessingLogger.create(env);
     ProcessingContext context = new ProcessingContext(logger, BuilderConfiguration.DEFAULT, env);
-    RoasterCodeGenerator generator = new RoasterCodeGenerator(context, env);
+    RoasterCodeGenerator generator =
+        new RoasterCodeGenerator(
+            new GenerationEnvironment(
+                env, logger, context.getPerformanceTracker(), context::reportBasedOnStrictMode));
 
-    BuilderException thrown =
-        assertThrows(BuilderException.class, () -> generator.generateClass(classDef));
+    CodeGenerationException thrown =
+        assertThrows(
+            CodeGenerationException.class,
+            () ->
+                generator.generateClass(
+                    classDef,
+                    new SourceFormatterResolver(env, logger).resolve(FormattingMode.NONE)));
     assertInstanceOf(RoasterMapperException.class, thrown.getCause());
   }
 
@@ -109,10 +120,21 @@ class RoasterCodeGeneratorResilienceTest {
     ProcessingEnvironment env = ProcessingEnvironmentStub.createEmpty();
     ProcessingContext context =
         new ProcessingContext(capturing.logger(), BuilderConfiguration.DEFAULT, env);
-    RoasterCodeGenerator generator = new RoasterCodeGenerator(context, env);
+    RoasterCodeGenerator generator =
+        new RoasterCodeGenerator(
+            new GenerationEnvironment(
+                env,
+                capturing.logger(),
+                context.getPerformanceTracker(),
+                context::reportBasedOnStrictMode));
 
     // generation itself succeeds; only the file-write step fails on the stub's null filer
-    assertThrows(NullPointerException.class, () -> generator.generateClass(classDef));
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            generator.generateClass(
+                classDef,
+                new SourceFormatterResolver(env, capturing.logger()).resolve(FormattingMode.NONE)));
     capturing.assertMessage(
         "WARNING: Unexpected duplicate method signature: 'name(java.lang.String)'"
             + " — keeping first occurrence (safety net)");

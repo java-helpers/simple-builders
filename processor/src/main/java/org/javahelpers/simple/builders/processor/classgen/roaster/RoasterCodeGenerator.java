@@ -24,15 +24,14 @@
 
 package org.javahelpers.simple.builders.processor.classgen.roaster;
 
+import static org.javahelpers.simple.builders.processor.classgen.GenerationPhases.*;
 import static org.javahelpers.simple.builders.processor.classgen.roaster.RoasterMapper.mapType;
 import static org.javahelpers.simple.builders.processor.classgen.roaster.RoasterMapper.resolveCodeTemplate;
-import static org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker.*;
 
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -40,13 +39,15 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.element.TypeElement;
 import javax.tools.JavaFileObject;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
-import org.javahelpers.simple.builders.core.enums.FormattingMode;
-import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
+import org.javahelpers.simple.builders.processor.classgen.ClassCodeGenerator;
+import org.javahelpers.simple.builders.processor.classgen.CodeGenerationException;
+import org.javahelpers.simple.builders.processor.classgen.GenerationEnvironment;
+import org.javahelpers.simple.builders.processor.classgen.GenerationIssueReporter;
+import org.javahelpers.simple.builders.processor.classgen.SourceFormatter;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.annotation.InterfaceName;
 import org.javahelpers.simple.builders.processor.model.core.ClassFieldDto;
@@ -62,7 +63,8 @@ import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto
 import org.javahelpers.simple.builders.processor.model.type.NestedTypeDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameArray;
-import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
+import org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker;
+import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 import org.javahelpers.simple.builders.processor.util.ImportCollector;
 import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster.model.source.AnnotationSource;
@@ -75,84 +77,84 @@ import org.jboss.forge.roaster.model.source.ParameterSource;
 import org.jboss.forge.roaster.model.source.TypeVariableSource;
 
 /** Roaster-based code generator for builder source files. */
-public class RoasterCodeGenerator {
-  /** Processing context providing logger, performance tracking, type lookup and profile. */
-  private final ProcessingContext context;
-
-  /** Processing environment for creating generated source files via its filer. */
+public class RoasterCodeGenerator implements ClassCodeGenerator {
+  /** Processing environment for accessing filer and element utilities. */
   private final ProcessingEnvironment processingEnv;
 
-  /** Cached formatters per formatting mode (at most 3 instances, created lazily). */
-  private final EnumMap<FormattingMode, RoasterSourceFormatter> formatterCache =
-      new EnumMap<>(FormattingMode.class);
+  /** Logger for debug output during code generation. */
+  private final ProcessingLogger logger;
+
+  /** Performance tracker for sub-phase timing (Source Construction, File Writing). */
+  private final PerformanceTracker performanceTracker;
+
+  /** Reporter for problems found during generation; the reporter decides the severity. */
+  private final GenerationIssueReporter issueReporter;
+
+  /** Factory for creating a source formatter per formatting mode. */
 
   /**
-   * Creates a code generator using the given processing context and environment.
+   * Creates a code generator using the given generation environment.
    *
-   * @param context processing context providing logger, performance tracking, type lookup and
-   *     formatter profile
-   * @param processingEnv processing environment providing the filer for generated source files
+   * @param environment the generation environment providing processing environment, logger,
+   *     performance tracker and issue reporter
    */
-  public RoasterCodeGenerator(ProcessingContext context, ProcessingEnvironment processingEnv) {
-    this.context = Objects.requireNonNull(context, "context must not be null");
-    this.processingEnv = Objects.requireNonNull(processingEnv, "processingEnv must not be null");
-  }
-
-  /**
-   * Returns a cached or newly created {@link RoasterSourceFormatter} for the given mode.
-   *
-   * <p>At most 3 formatter instances exist (one per {@link FormattingMode} enum value), created
-   * lazily on first use.
-   *
-   * @param mode the formatting mode
-   * @return a cached or new formatter instance
-   */
-  private RoasterSourceFormatter getFormatter(FormattingMode mode) {
-    return formatterCache.computeIfAbsent(mode, context::createSourceFormatter);
+  public RoasterCodeGenerator(GenerationEnvironment environment) {
+    this.processingEnv =
+        Objects.requireNonNull(
+            environment.getProcessingEnvironment(), "processingEnv must not be null");
+    this.logger = Objects.requireNonNull(environment.getLogger(), "logger must not be null");
+    this.performanceTracker =
+        Objects.requireNonNull(
+            environment.getPerformanceTracker(), "performanceTracker must not be null");
+    this.issueReporter =
+        Objects.requireNonNull(environment.getIssueReporter(), "issueReporter must not be null");
   }
 
   /**
    * Generates a class from the given class definition.
    *
    * @param classDef DTO containing all information to create the class
-   * @throws BuilderException if there is an error in source code generation
+   * @param formatter formats the generated source before it is written
+   * @throws CodeGenerationException if there is an error in source code generation
    */
-  public void generateClass(GenerationTargetClassDto classDef) throws BuilderException {
-    context.debugStartOperation(
+  @Override
+  public void generateClass(GenerationTargetClassDto classDef, SourceFormatter formatter)
+      throws CodeGenerationException {
+    logger.debugStartOperation(
         "Code generation for class: %s", classDef.getTypeName().getClassName());
 
     String sourceCode;
     try {
-      context.startPerformancePhase();
+      performanceTracker.startPhase();
       JavaClassSource source = buildClassSource(classDef);
-      context.startPerformancePhase();
+      performanceTracker.startPhase();
       String unformatted = source.toUnformattedString();
-      context.endPerformancePhase(PHASE_STRING_GENERATION);
-      context.startPerformancePhase();
-      sourceCode = formatSource(unformatted, classDef.getFormattingMode());
+      performanceTracker.endPhase(PHASE_STRING_GENERATION);
+      performanceTracker.startPhase();
+      sourceCode = formatSource(unformatted, formatter);
       // Roaster renders some java.lang annotations (e.g. @SuppressWarnings, @Deprecated with
       // members) with their FQN (@java.lang.SuppressWarnings) even though java.lang types don't
       // need qualification. Fix this by replacing @java.lang.Xxx with @Xxx for known annotations.
       sourceCode = sourceCode.replace("@java.lang.SuppressWarnings", "@SuppressWarnings");
       sourceCode = sourceCode.replace("@java.lang.Deprecated", "@Deprecated");
-      context.endPerformancePhase(PHASE_FORMATTING);
-      context.endPerformancePhase(PHASE_SOURCE_CONSTRUCTION);
+      performanceTracker.endPhase(PHASE_FORMATTING);
+      performanceTracker.endPhase(PHASE_SOURCE_CONSTRUCTION);
     } catch (RuntimeException ex) {
-      // Rendering failures (e.g. RoasterMapperException) are RuntimeExceptions. Convert them into
-      // a BuilderException so callers can isolate the failure to this single class and keep
-      // generating the remaining builders instead of aborting the whole processing round.
-      throw new BuilderException(null, ex);
+      // Rendering failures (e.g. RoasterMapperException) are RuntimeExceptions. Convert them
+      // into a CodeGenerationException so callers can isolate the failure to this single class and
+      // keep generating the remaining classes instead of aborting the whole processing round.
+      throw new CodeGenerationException(ex);
     }
-    context.startPerformancePhase();
+    performanceTracker.startPhase();
     writeClassToFile(sourceCode, classDef);
-    context.endPerformancePhase(PHASE_FILE_WRITING);
+    performanceTracker.endPhase(PHASE_FILE_WRITING);
 
-    context.debugEndOperation(
+    logger.debugEndOperation(
         "Successfully generated class: %s", classDef.getTypeName().getClassName());
   }
 
   private JavaClassSource buildClassSource(GenerationTargetClassDto classDef) {
-    context.startPerformancePhase();
+    performanceTracker.startPhase();
     JavaClassSource source = createJavaClassSource(classDef);
     addClassMetadata(source, classDef);
     appendFields(source, classDef);
@@ -160,24 +162,24 @@ public class RoasterCodeGenerator {
     appendMethods(source, classDef);
     appendNestedTypes(source, classDef);
     applyClassAnnotations(source, classDef);
-    context.endPerformancePhase(PHASE_ELEMENT_BUILDING);
+    performanceTracker.endPhase(PHASE_ELEMENT_BUILDING);
     return source;
   }
 
   private void applyClassAnnotations(JavaClassSource source, GenerationTargetClassDto classDef) {
-    context.startPerformancePhase();
+    performanceTracker.startPhase();
     if (CollectionUtils.isNotEmpty(classDef.getClassAnnotations())) {
       // Adding class annotations
       applyAnnotations(source, classDef.getClassAnnotations());
-      context.debug("Class-level annotations added");
+      logger.debug("Class-level annotations added");
     }
-    context.endPerformancePhase(PHASE_CLASS_ANNOTATIONS);
+    performanceTracker.endPhase(PHASE_CLASS_ANNOTATIONS);
   }
 
   private JavaClassSource createJavaClassSource(GenerationTargetClassDto classDef) {
-    context.startPerformancePhase();
+    performanceTracker.startPhase();
     if (CollectionUtils.isNotEmpty(classDef.getGenerics())) {
-      context.debug("Class has %d generic type parameter(s)", classDef.getGenerics().size());
+      logger.debug("Class has %d generic type parameter(s)", classDef.getGenerics().size());
     }
 
     JavaClassSource source = Roaster.create(JavaClassSource.class);
@@ -200,13 +202,13 @@ public class RoasterCodeGenerator {
       }
     }
 
-    context.debug("JavaClassSource created");
-    context.endPerformancePhase(PHASE_CLASS_CREATION);
+    logger.debug("JavaClassSource created");
+    performanceTracker.endPhase(PHASE_CLASS_CREATION);
     return source;
   }
 
   private void addClassMetadata(JavaClassSource source, GenerationTargetClassDto classDef) {
-    context.startPerformancePhase();
+    performanceTracker.startPhase();
     applyJavadoc(source, classDef.getClassJavadoc());
     applyVisibility(source, classDef.getClassAccessModifier());
     applySuperType(source, classDef.getSuperType());
@@ -216,20 +218,20 @@ public class RoasterCodeGenerator {
       source.addInterface(RoasterMapper.mapInterfaceToTypeName(interfaceName));
     }
 
-    context.debug("Class metadata added");
-    context.endPerformancePhase(PHASE_CLASS_METADATA);
+    logger.debug("Class metadata added");
+    performanceTracker.endPhase(PHASE_CLASS_METADATA);
   }
 
   private void appendFields(JavaClassSource source, GenerationTargetClassDto classDef) {
-    context.startPerformancePhase();
-    context.debugStartOperation("Generating %d fields", classDef.getClassFields().size());
+    performanceTracker.startPhase();
+    logger.debugStartOperation("Generating %d fields", classDef.getClassFields().size());
 
     for (ClassFieldDto fieldDto : classDef.getClassFields()) {
       appendField(source, fieldDto);
     }
 
-    context.debugEndOperation("Fields added: %d fields", source.getFields().size());
-    context.endPerformancePhase(PHASE_FIELDS);
+    logger.debugEndOperation("Fields added: %d fields", source.getFields().size());
+    performanceTracker.endPhase(PHASE_FIELDS);
   }
 
   private void appendField(JavaClassSource source, ClassFieldDto fieldDto) {
@@ -242,15 +244,15 @@ public class RoasterCodeGenerator {
   }
 
   private void appendConstructors(JavaClassSource source, GenerationTargetClassDto classDef) {
-    context.startPerformancePhase();
-    context.debugStartOperation("Generating %d constructors", classDef.getConstructors().size());
+    performanceTracker.startPhase();
+    logger.debugStartOperation("Generating %d constructors", classDef.getConstructors().size());
 
     for (ConstructorDto constructor : classDef.getConstructors()) {
       appendConstructor(source, constructor);
     }
 
-    context.debugEndOperation("Constructors added: %d", classDef.getConstructors().size());
-    context.endPerformancePhase(PHASE_CONSTRUCTORS);
+    logger.debugEndOperation("Constructors added: %d", classDef.getConstructors().size());
+    performanceTracker.endPhase(PHASE_CONSTRUCTORS);
   }
 
   private void appendConstructor(JavaClassSource source, ConstructorDto constructor) {
@@ -266,19 +268,19 @@ public class RoasterCodeGenerator {
   }
 
   private void appendMethods(JavaClassSource source, GenerationTargetClassDto classDef) {
-    context.startPerformancePhase();
-    context.debugStartOperation("Generating %d method candidates", classDef.getMethods().size());
+    performanceTracker.startPhase();
+    logger.debugStartOperation("Generating %d method candidates", classDef.getMethods().size());
 
     // Resolve method conflicts by signature and priority
     List<MethodDto> resolvedMethods = resolveMethodConflicts(classDef.getMethods());
-    context.debug("Resolved to %d methods after conflict resolution", resolvedMethods.size());
+    logger.debug("Resolved to %d methods after conflict resolution", resolvedMethods.size());
 
     for (MethodDto methodDto : resolvedMethods) {
       appendMethod(source, methodDto, false, false);
     }
 
-    context.debugEndOperation("Methods added: %d", resolvedMethods.size());
-    context.endPerformancePhase(PHASE_METHODS);
+    logger.debugEndOperation("Methods added: %d", resolvedMethods.size());
+    performanceTracker.endPhase(PHASE_METHODS);
   }
 
   /**
@@ -301,7 +303,7 @@ public class RoasterCodeGenerator {
       if (seenSignatures.add(method.getSignatureKey())) {
         deduplicated.add(method);
       } else {
-        context.reportBasedOnStrictMode(
+        issueReporter.report(
             "Unexpected duplicate method signature: '%s' — keeping first occurrence (safety net)",
             method.getSignatureKey());
       }
@@ -320,16 +322,16 @@ public class RoasterCodeGenerator {
   }
 
   private void appendNestedTypes(JavaClassSource source, GenerationTargetClassDto classDef) {
-    context.startPerformancePhase();
+    performanceTracker.startPhase();
     if (CollectionUtils.isNotEmpty(classDef.getNestedTypes())) {
-      context.debugStartOperation("Generating %d nested type(s)", classDef.getNestedTypes().size());
+      logger.debugStartOperation("Generating %d nested type(s)", classDef.getNestedTypes().size());
       for (NestedTypeDto nestedType : classDef.getNestedTypes()) {
         appendNestedType(source, nestedType);
-        context.debug("Generated nested type: %s", nestedType.getTypeName());
+        logger.debug("Generated nested type: %s", nestedType.getTypeName());
       }
-      context.debugEndOperation("Nested types added");
+      logger.debugEndOperation("Nested types added");
     }
-    context.endPerformancePhase(PHASE_NESTED_TYPES);
+    performanceTracker.endPhase(PHASE_NESTED_TYPES);
   }
 
   private void appendNestedType(JavaClassSource source, NestedTypeDto nestedType) {
@@ -556,30 +558,17 @@ public class RoasterCodeGenerator {
     applyAnnotations(parameter, paramDto.getAnnotations());
   }
 
-  private String formatSource(String rawSource, FormattingMode mode) {
-    return getFormatter(mode).format(rawSource);
+  private String formatSource(String rawSource, SourceFormatter formatter) {
+    return formatter.format(rawSource);
   }
 
   private void writeClassToFile(String sourceCode, GenerationTargetClassDto classDef)
-      throws BuilderException {
-    context.debug(
+      throws CodeGenerationException {
+    logger.debug(
         "Writing class to file: %s.%s",
         classDef.getTypeName().getPackageName(), classDef.getTypeName().getClassName());
 
     String qualifiedName = classDef.getTypeName().getFullQualifiedName();
-    if (builderClassAlreadyExists(qualifiedName)) {
-      throw new BuilderException(
-          null,
-          """
-              Builder class '%s' already exists. This may be a manually written builder or a previously generated builder.
-              To resolve this:
-              1. If you have a manual builder, consider renaming it or removing @SimpleBuilder from the DTO
-              2. If this is from a previous compilation, clean and rebuild the project
-              3. Check that you're not trying to generate multiple builders for the same DTO
-              """
-              .formatted(qualifiedName));
-    }
-
     try {
       JavaFileObject file = processingEnv.getFiler().createSourceFile(qualifiedName);
       try (Writer writer = file.openWriter()) {
@@ -594,25 +583,7 @@ public class RoasterCodeGenerator {
           """
               .formatted(
                   qualifiedName, StringUtils.isNotBlank(message) ? message : "Unknown error");
-      throw new BuilderException(null, errorMessage);
-    }
-  }
-
-  /**
-   * Checks if a builder class already exists by attempting to find the type element.
-   *
-   * @param qualifiedName the fully qualified name of the class to check
-   * @return true if the class already exists, false otherwise
-   */
-  private boolean builderClassAlreadyExists(String qualifiedName) {
-    try {
-      TypeElement existingType = context.getTypeElement(qualifiedName);
-      return existingType != null;
-    } catch (Exception e) {
-      context.debug(
-          "Error checking if builder class '%s' already exists: %s",
-          qualifiedName, StringUtils.isNotBlank(e.getMessage()) ? e.getMessage() : "No message");
-      return false;
+      throw new CodeGenerationException(errorMessage);
     }
   }
 }

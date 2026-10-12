@@ -25,11 +25,11 @@
 package org.javahelpers.simple.builders.processor;
 
 import static org.javahelpers.simple.builders.processor.processing.BuilderDefinitionCreator.extractFromElement;
-import static org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker.PHASE_BUILDER_DEFINITION_EXTRACTION;
-import static org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker.PHASE_CODE_GENERATION;
-import static org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker.PHASE_CONFIGURATION_RESOLUTION;
-import static org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker.PHASE_DTO_MAPPING;
-import static org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker.PHASE_ELEMENT_COLLECTION;
+import static org.javahelpers.simple.builders.processor.processing.PipelinePhases.PHASE_BUILDER_DEFINITION_EXTRACTION;
+import static org.javahelpers.simple.builders.processor.processing.PipelinePhases.PHASE_CODE_GENERATION;
+import static org.javahelpers.simple.builders.processor.processing.PipelinePhases.PHASE_CONFIGURATION_RESOLUTION;
+import static org.javahelpers.simple.builders.processor.processing.PipelinePhases.PHASE_DTO_MAPPING;
+import static org.javahelpers.simple.builders.processor.processing.PipelinePhases.PHASE_ELEMENT_COLLECTION;
 
 import com.google.auto.service.AutoService;
 import java.util.ArrayList;
@@ -63,6 +63,9 @@ import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFors;
 import org.javahelpers.simple.builders.processor.analysis.BuilderScopeResolver;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyser;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
+import org.javahelpers.simple.builders.processor.classgen.ClassCodeGenerator;
+import org.javahelpers.simple.builders.processor.classgen.CodeGenerationException;
+import org.javahelpers.simple.builders.processor.classgen.GenerationEnvironment;
 import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterCodeGenerator;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 import org.javahelpers.simple.builders.processor.generators.integration.JacksonModuleGenerator;
@@ -79,6 +82,7 @@ import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsEnu
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsReader;
 import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 import org.javahelpers.simple.builders.processor.processing.ProcessingTarget;
+import org.javahelpers.simple.builders.processor.processing.SourceFormatterResolver;
 import org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker;
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 
@@ -95,25 +99,37 @@ public class BuilderProcessor extends AbstractProcessor {
 
   private ProcessingContext context;
   private ProcessingLogger logger;
-  private RoasterCodeGenerator codeGenerator;
+  private ClassCodeGenerator codeGenerator;
+  private SourceFormatterResolver formatterResolver;
   private JacksonModuleGenerator jacksonModuleGenerator;
   private boolean supportedJdk = true;
 
   @Override
   public synchronized void init(ProcessingEnvironment processingEnv) {
     super.init(processingEnv);
-    this.logger = new ProcessingLogger(processingEnv);
-    logger.debug("Starting BuilderProcessor...");
-
     // Read global configuration from compiler arguments
     CompilerArgumentsReader reader = new CompilerArgumentsReader(processingEnv);
-    BuilderConfiguration globalConfig = reader.readBuilderConfiguration(logger);
+    this.logger =
+        reader.readBooleanValue(CompilerArgumentsEnum.VERBOSE)
+            ? ProcessingLogger.createVerbose(processingEnv)
+            : ProcessingLogger.create(processingEnv);
+    logger.debug("Starting BuilderProcessor...");
+
+    BuilderConfiguration globalConfig =
+        BuilderConfigurationReader.readCompilerConfiguration(reader, logger);
     logger.debug("Loaded global configuration from compiler arguments: %s", globalConfig);
 
     SimpleBuildersSpiIntegration.initCompilation(processingEnv.getElementUtils());
 
     this.context = new ProcessingContext(logger, globalConfig, processingEnv);
-    this.codeGenerator = new RoasterCodeGenerator(context, processingEnv);
+    this.codeGenerator =
+        new RoasterCodeGenerator(
+            new GenerationEnvironment(
+                processingEnv,
+                logger,
+                context.getPerformanceTracker(),
+                context::reportBasedOnStrictMode));
+    this.formatterResolver = new SourceFormatterResolver(processingEnv, logger);
     this.jacksonModuleGenerator = new JacksonModuleGenerator(processingEnv, logger, globalConfig);
 
     // Initialize GeneratorRegistry once during processor initialization
@@ -222,8 +238,10 @@ public class BuilderProcessor extends AbstractProcessor {
       String packageName = moduleClassDef.getTypeName().getPackageName();
       context.info("Generating Jackson Module in package '%s'", packageName);
       try {
-        codeGenerator.generateClass(moduleClassDef);
-      } catch (BuilderException e) {
+        assertTargetClassDoesNotExist(moduleClassDef);
+        codeGenerator.generateClass(
+            moduleClassDef, formatterResolver.resolve(moduleClassDef.getFormattingMode()));
+      } catch (CodeGenerationException e) {
         // By default Jackson module generation failures are warnings. In opt-in strict mode
         // they are promoted to errors that fail the build.
         context.reportBasedOnStrictMode(
@@ -592,6 +610,38 @@ public class BuilderProcessor extends AbstractProcessor {
     return SourceVersion.latestSupported();
   }
 
+  /**
+   * Fails the build with a descriptive error when the class to be generated already exists (a
+   * manually written class or a leftover from a previous compilation).
+   *
+   * @param classDef the class definition to check
+   * @throws CodeGenerationException if a class with the target qualified name already exists
+   */
+  private void assertTargetClassDoesNotExist(GenerationTargetClassDto classDef)
+      throws CodeGenerationException {
+    String qualifiedName = classDef.getTypeName().getFullQualifiedName();
+    boolean exists;
+    try {
+      exists = context.getTypeElement(qualifiedName) != null;
+    } catch (Exception e) {
+      context.debug(
+          "Error checking if class '%s' already exists: %s",
+          qualifiedName, e.getMessage() != null ? e.getMessage() : "No message");
+      exists = false;
+    }
+    if (exists) {
+      throw new CodeGenerationException(
+          """
+              Builder class '%s' already exists. This may be a manually written builder or a previously generated builder.
+              To resolve this:
+              1. If you have a manual builder, consider renaming it or removing @SimpleBuilder from the DTO
+              2. If this is from a previous compilation, clean and rebuild the project
+              3. Check that you're not trying to generate multiple builders for the same DTO
+              """
+              .formatted(qualifiedName));
+    }
+  }
+
   private void process(Element annotatedElement, BuilderConfiguration config, String builderPackage)
       throws BuilderException {
     context.initProcessingTarget(new ProcessingTarget(config, builderPackage));
@@ -622,7 +672,13 @@ public class BuilderProcessor extends AbstractProcessor {
     // Track Code Generation (parent phase; sub-phases tracked inside RoasterCodeGenerator)
     tracker.startPhase();
 
-    codeGenerator.generateClass(renderingDto);
+    try {
+      assertTargetClassDoesNotExist(renderingDto);
+      codeGenerator.generateClass(
+          renderingDto, formatterResolver.resolve(renderingDto.getFormattingMode()));
+    } catch (CodeGenerationException e) {
+      throw new BuilderException(annotatedElement, e);
+    }
     tracker.endPhase(PHASE_CODE_GENERATION);
 
     // Collect info for Jackson Module if enabled

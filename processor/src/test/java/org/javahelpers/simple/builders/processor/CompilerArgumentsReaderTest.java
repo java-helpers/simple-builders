@@ -33,6 +33,7 @@ import javax.annotation.processing.ProcessingEnvironment;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.core.enums.OptionState;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
+import org.javahelpers.simple.builders.processor.processing.BuilderConfigurationReader;
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsEnum;
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsReader;
 import org.javahelpers.simple.builders.processor.testing.CapturingProcessingLogger;
@@ -250,14 +251,15 @@ class CompilerArgumentsReaderTest {
             true));
   }
 
-  /** Test: readBuilderConfiguration with no arguments returns all UNSET/DEFAULT values. */
+  /** Test: readCompilerConfiguration with no arguments returns all UNSET/DEFAULT values. */
   @Test
-  void readBuilderConfiguration_NoArguments_ReturnsDefaults() {
+  void readCompilerConfiguration_NoArguments_ReturnsDefaults() {
     ProcessingEnvironment env = ProcessingEnvironmentStub.createEmpty();
     CompilerArgumentsReader reader = new CompilerArgumentsReader(env);
 
     BuilderConfiguration config =
-        reader.readBuilderConfiguration(CapturingProcessingLogger.create().logger());
+        BuilderConfigurationReader.readCompilerConfiguration(
+            reader, CapturingProcessingLogger.create().logger());
 
     assertNotNull(config, "Configuration should not be null");
     assertEquals(OptionState.UNSET, config.generateFieldSupplier());
@@ -276,9 +278,9 @@ class CompilerArgumentsReaderTest {
         "Builder usage packages should be empty when not set");
   }
 
-  /** Test: readBuilderConfiguration reads all options correctly. */
+  /** Test: readCompilerConfiguration reads all options correctly. */
   @Test
-  void readBuilderConfiguration_AllOptionsSet_ReadsCorrectly() {
+  void readCompilerConfiguration_AllOptionsSet_ReadsCorrectly() {
     ProcessingEnvironment env =
         ProcessingEnvironmentStub.builder()
             .put("simplebuilder.generateFieldSupplier", "true")
@@ -298,7 +300,8 @@ class CompilerArgumentsReaderTest {
     CompilerArgumentsReader reader = new CompilerArgumentsReader(env);
 
     BuilderConfiguration config =
-        reader.readBuilderConfiguration(CapturingProcessingLogger.create().logger());
+        BuilderConfigurationReader.readCompilerConfiguration(
+            reader, CapturingProcessingLogger.create().logger());
 
     assertEquals(OptionState.ENABLED, config.generateFieldSupplier());
     assertEquals(OptionState.DISABLED, config.generateFieldConsumer());
@@ -315,9 +318,9 @@ class CompilerArgumentsReaderTest {
     assertEquals(Set.of("x.y"), config.getBuilderUsagePackagesSet());
   }
 
-  /** Test: readBuilderConfiguration handles mixed valid and invalid values. */
+  /** Test: readCompilerConfiguration handles mixed valid and invalid values. */
   @Test
-  void readBuilderConfiguration_MixedValidInvalid_HandlesGracefully() {
+  void readCompilerConfiguration_MixedValidInvalid_HandlesGracefully() {
     ProcessingEnvironment env =
         ProcessingEnvironmentStub.builder()
             .put("simplebuilder.generateFieldSupplier", "invalid")
@@ -327,7 +330,8 @@ class CompilerArgumentsReaderTest {
     CompilerArgumentsReader reader = new CompilerArgumentsReader(env);
 
     BuilderConfiguration config =
-        reader.readBuilderConfiguration(CapturingProcessingLogger.create().logger());
+        BuilderConfigurationReader.readCompilerConfiguration(
+            reader, CapturingProcessingLogger.create().logger());
 
     assertEquals(
         OptionState.UNSET, config.generateFieldSupplier(), "Invalid option should be UNSET");
@@ -339,9 +343,9 @@ class CompilerArgumentsReaderTest {
         OptionState.ENABLED, config.generateFieldConsumer(), "Valid option should be ENABLED");
   }
 
-  /** Test: readBuilderConfiguration with empty string values. */
+  /** Test: readCompilerConfiguration with empty string values. */
   @Test
-  void readBuilderConfiguration_EmptyStringValues_HandlesGracefully() {
+  void readCompilerConfiguration_EmptyStringValues_HandlesGracefully() {
     ProcessingEnvironment env =
         ProcessingEnvironmentStub.builder()
             .put("simplebuilder.generateFieldSupplier", "")
@@ -352,7 +356,8 @@ class CompilerArgumentsReaderTest {
     CompilerArgumentsReader reader = new CompilerArgumentsReader(env);
 
     BuilderConfiguration config =
-        reader.readBuilderConfiguration(CapturingProcessingLogger.create().logger());
+        BuilderConfigurationReader.readCompilerConfiguration(
+            reader, CapturingProcessingLogger.create().logger());
 
     assertEquals(OptionState.UNSET, config.generateFieldSupplier(), "Empty should be UNSET");
     assertEquals(AccessModifier.DEFAULT, config.getBuilderAccess(), "Empty should be DEFAULT");

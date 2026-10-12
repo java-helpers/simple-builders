@@ -28,8 +28,6 @@ import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.tools.Diagnostic;
-import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsEnum;
-import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsReader;
 
 /**
  * Logger for all messages during annotation processing. Providing util-functions for posting
@@ -40,26 +38,48 @@ public class ProcessingLogger {
   /** Util class for exposing messages of type {@code javax.annotation.processing.Messager}. */
   private final Messager messager;
 
-  /** Flag indicating if debug logging is enabled. */
-  private final boolean debugEnabled;
+  /** Verbosity level of this logger. */
+  private final Verbosity verbosity;
 
   /** Thread-local indentation level for hierarchical logging. */
   private static final ThreadLocal<Integer> indentationLevel = ThreadLocal.withInitial(() -> 0);
 
+  /** Verbosity level of a {@link ProcessingLogger}. */
+  private enum Verbosity {
+    /** Errors, warnings and info messages only. */
+    NORMAL,
+    /** Additionally reports debug messages. */
+    VERBOSE
+  }
+
   /**
-   * Constructs a new ProcessingLogger with the specified ProcessingEnvironment. The Messager is
-   * used to report errors, warnings, and other notices during annotation processing. Debug logging
-   * is enabled by setting the compiler argument: -Averbose=true or -Asimplebuilder.verbose=true
+   * Creates a new ProcessingLogger with the specified ProcessingEnvironment. The Messager is used
+   * to report errors, warnings, and other notices during annotation processing. To enable debug
+   * messages use {@link #createVerbose(ProcessingEnvironment)} instead.
    *
-   * @param processingEnv the processing environment providing messager and options
+   * @param processingEnv the processing environment providing the messager
+   * @return a processing logger reporting errors, warnings and info messages
    */
-  public ProcessingLogger(ProcessingEnvironment processingEnv) {
+  public static ProcessingLogger create(ProcessingEnvironment processingEnv) {
+    return new ProcessingLogger(processingEnv, Verbosity.NORMAL);
+  }
+
+  /**
+   * Creates a new ProcessingLogger that additionally reports debug messages.
+   *
+   * @param processingEnv the processing environment providing the messager
+   * @return a debug-enabled processing logger
+   */
+  public static ProcessingLogger createVerbose(ProcessingEnvironment processingEnv) {
+    return new ProcessingLogger(processingEnv, Verbosity.VERBOSE);
+  }
+
+  private ProcessingLogger(ProcessingEnvironment processingEnv, Verbosity verbosity) {
     // Reset ThreadLocal state to ensure clean state between test runs
     resetThreadLocalState();
 
     this.messager = processingEnv.getMessager();
-    CompilerArgumentsReader reader = new CompilerArgumentsReader(processingEnv);
-    this.debugEnabled = reader.readBooleanValue(CompilerArgumentsEnum.VERBOSE);
+    this.verbosity = verbosity;
   }
 
   /** Resets ThreadLocal state to ensure clean state between test runs. */
@@ -120,7 +140,7 @@ public class ProcessingLogger {
    */
   public void info(String format, Object... args) {
     String message = String.format(format, args);
-    if (debugEnabled) {
+    if (verbosity == Verbosity.VERBOSE) {
       // When debug is enabled, add spaces to align with [DEBUG] prefix (which is 6 characters
       // longer)
       String indentedMessage = formatHierarchicalMessage(message, 8); // Add 8 spaces for alignment
@@ -139,7 +159,7 @@ public class ProcessingLogger {
    * @param message the debug message to be posted
    */
   public void debug(String message) {
-    if (debugEnabled) {
+    if (verbosity == Verbosity.VERBOSE) {
       String indentedMessage = formatWithIndentation(message);
       messager.printMessage(Diagnostic.Kind.OTHER, indentedMessage);
     }
@@ -153,7 +173,7 @@ public class ProcessingLogger {
    * @param args arguments referenced by the format specifiers in the format string
    */
   public void debug(String format, Object... args) {
-    if (debugEnabled) {
+    if (verbosity == Verbosity.VERBOSE) {
       String message = String.format(format, args);
       String indentedMessage = formatWithIndentation(message);
       messager.printMessage(Diagnostic.Kind.OTHER, indentedMessage);
@@ -169,7 +189,7 @@ public class ProcessingLogger {
    */
   public void warning(String format, Object... args) {
     String message = String.format(format, args);
-    if (debugEnabled) {
+    if (verbosity == Verbosity.VERBOSE) {
       // When debug is enabled, add spaces to align with [DEBUG] prefix (which is 5 characters
       // longer)
       String indentedMessage = formatHierarchicalMessage(message, 5); // Add 5 spaces for alignment
@@ -189,7 +209,7 @@ public class ProcessingLogger {
    */
   public void warning(Element e, String format, Object... args) {
     String message = String.format(format, args);
-    if (debugEnabled) {
+    if (verbosity == Verbosity.VERBOSE) {
       // When debug is enabled, add spaces to align with [DEBUG] prefix (which is 5 characters
       // longer)
       String indentedMessage = formatHierarchicalMessage(message, 5); // Add 5 spaces for alignment
@@ -269,7 +289,7 @@ public class ProcessingLogger {
     int currentLevel = indentationLevel.get();
 
     // Log the operation start message with proper prefix handling
-    if (debugEnabled) {
+    if (verbosity == Verbosity.VERBOSE) {
       String operationMessage = formatWithIndentation(String.format(formatClosingMessage, args));
       messager.printMessage(Diagnostic.Kind.NOTE, operationMessage);
     }
@@ -302,7 +322,7 @@ public class ProcessingLogger {
     int currentLevel = indentationLevel.get();
 
     // Log the closing message with └─ to indicate it's the last operation at this level
-    if (debugEnabled) {
+    if (verbosity == Verbosity.VERBOSE) {
       String closingMessage = String.format(formatClosingMessage, args);
       String operationMessage = formatWithIndentation(closingMessage, "└─ ");
       messager.printMessage(Diagnostic.Kind.NOTE, operationMessage);

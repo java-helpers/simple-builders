@@ -49,7 +49,6 @@ import javax.lang.model.util.ElementFilter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
-import org.javahelpers.simple.builders.core.annotations.SimpleBuilderConstructor;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
@@ -204,9 +203,9 @@ public final class JavaLangAnalyser {
    * @param context processing context
    * @return {@code true}, if the element has an accessible empty constructor
    */
-  public static boolean hasEmptyConstructor(TypeElement typeElement, ProcessingContext context) {
+  public static boolean hasEmptyConstructor(TypeElement typeElement, TypeMappingContext context) {
     return ElementFilter.constructorsIn(context.getAllMembers(typeElement)).stream()
-        .filter(context::isMemberAccessibleFromBuilderPackage)
+        .filter(context::isAccessibleFromGeneratedPackage)
         .anyMatch(JavaLangAnalyser::hasNoParameters);
   }
 
@@ -389,7 +388,7 @@ public final class JavaLangAnalyser {
       return List.of();
     }
     return ElementFilter.methodsIn(context.getAllMembers(type)).stream()
-        .filter(context::isMemberAccessibleFromBuilderPackage)
+        .filter(context::isAccessibleFromGeneratedPackage)
         .filter(method -> returnTypeMatcher.test(method.getReturnType()))
         .filter(method -> hasParameters(method, expectedParameterTypes))
         .toList();
@@ -510,7 +509,7 @@ public final class JavaLangAnalyser {
     return ElementFilter.methodsIn(context.getAllMembers(type)).stream()
         .filter(JavaLangAnalyser::isNotStatic)
         .filter(method -> isNoMethodOfObjectClass(method, context))
-        .filter(context::isMemberAccessibleFromBuilderPackage)
+        .filter(context::isAccessibleFromGeneratedPackage)
         .filter(method -> method.getParameters().size() == 1)
         .toList();
   }
@@ -548,7 +547,7 @@ public final class JavaLangAnalyser {
       return false;
     }
     return ElementFilter.constructorsIn(context.getAllMembers(builderType)).stream()
-        .filter(context::isMemberAccessibleFromBuilderPackage)
+        .filter(context::isAccessibleFromGeneratedPackage)
         .anyMatch(constructor -> hasParameters(constructor, List.of(expectedType)));
   }
 
@@ -847,24 +846,28 @@ public final class JavaLangAnalyser {
 
   /**
    * Determines which constructor to use for builder initialization. Prioritizes constructors
-   * annotated with {@link SimpleBuilderConstructor}. If none is annotated, selects the constructor
+   * annotated with the given constructor annotation. If none is annotated, selects the constructor
    * with the highest number of parameters. Returns empty if no constructor has parameters (i.e.,
    * only default constructor or none found).
    *
    * @param annotatedType the type element to search for constructors
+   * @param constructorAnnotation the marker annotation selecting a constructor explicitly; may be
+   *     {@code null} to skip the annotation check
    * @param context the processing context providing access to elements and types utilities
    * @return Optional containing the selected constructor, or empty if none suitable
    */
   public static Optional<ExecutableElement> findConstructorForBuilder(
-      TypeElement annotatedType, ProcessingContext context) {
+      TypeElement annotatedType,
+      Class<? extends Annotation> constructorAnnotation,
+      ProcessingContext context) {
     List<ExecutableElement> ctors =
         ElementFilter.constructorsIn(context.getAllMembers(annotatedType)).stream()
-            .filter(context::isMemberAccessibleFromBuilderPackage)
+            .filter(context::isAccessibleFromGeneratedPackage)
             .toList();
 
-    // First, check if any constructor is annotated with @SimpleBuilderConstructor
+    // First, check if any constructor is annotated with the constructor annotation
     for (ExecutableElement ctor : ctors) {
-      if (ctor.getAnnotation(SimpleBuilderConstructor.class) != null) {
+      if (constructorAnnotation != null && ctor.getAnnotation(constructorAnnotation) != null) {
         return Optional.of(ctor);
       }
     }
@@ -894,6 +897,6 @@ public final class JavaLangAnalyser {
   public static boolean hasAccessibleConstructor(
       TypeElement typeElement, ProcessingContext context) {
     return ElementFilter.constructorsIn(context.getAllMembers(typeElement)).stream()
-        .anyMatch(context::isMemberAccessibleFromBuilderPackage);
+        .anyMatch(context::isAccessibleFromGeneratedPackage);
   }
 }
