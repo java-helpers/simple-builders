@@ -81,16 +81,14 @@ public final class CapturingProcessingLogger {
   }
 
   /**
-   * Creates a new capturing logger with debug logging enabled via {@code
-   * simplebuilder.verbose=true}.
+   * Creates a new capturing logger with debug logging enabled.
    *
    * @return a new debug-enabled capturing logger instance
    */
   public static CapturingProcessingLogger createDebugEnabled() {
     List<String> messages = new ArrayList<>();
     ProcessingLogger logger =
-        new ProcessingLogger(
-            createCapturingEnvironment(messages, Map.of("simplebuilder.verbose", "true")));
+        ProcessingLogger.verbose(createCapturingEnvironment(messages, Collections.emptyMap()));
     return new CapturingProcessingLogger(messages, logger);
   }
 
