@@ -550,7 +550,7 @@ public class BuilderProcessor extends AbstractProcessor {
           .ifPresent(
               resolvedBuilder ->
                   SimpleBuildersSpiIntegration.registerBuilder(
-                      beanType, resolvedBuilder, elementToGenerate.config().getSetterSuffix()));
+                      beanType, resolvedBuilder, elementToGenerate.config().getSetterPrefix()));
     }
   }
 

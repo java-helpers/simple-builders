@@ -47,7 +47,7 @@ import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
  *
  * <p>This generator creates methods that add single elements to collection fields, supporting both
  * List and Set types. The generated methods follow the pattern "add2{#FieldName}" and always use
- * this naming convention regardless of setter suffix configuration.
+ * this naming convention regardless of setter prefix configuration.
  *
  * <p><b>Important behavior:</b> The generated methods preserve immutability by creating a new
  * collection instance. If the field already has a value, the method creates a copy of the existing

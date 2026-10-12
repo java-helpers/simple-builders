@@ -162,7 +162,7 @@ class AddToCollectionTest {
   }
 
   @Test
-  void add2Method_ignoresSetterSuffix() {
+  void add2Method_ignoresSetterPrefix() {
     JavaFileObject dto =
         com.google.testing.compile.JavaFileObjects.forSourceLines(
             "test.PersonDto",
@@ -170,7 +170,7 @@ class AddToCollectionTest {
             "import java.util.List;",
             "@org.javahelpers.simple.builders.core.annotations.SimpleBuilder(",
             "  options = @org.javahelpers.simple.builders.core.annotations.SimpleBuilder.Options(",
-            "    setterSuffix = \"with\"",
+            "    setterPrefix = \"with\"",
             "  )",
             ")",
             "public class PersonDto {",
@@ -195,13 +195,13 @@ class AddToCollectionTest {
     String generatedCode = loadGeneratedSource(compilation, "PersonDtoBuilder");
     assertGenerationSucceeded(compilation, "PersonDtoBuilder", generatedCode);
 
-    // Verify regular setter respects setterSuffix
+    // Verify regular setter respects setterPrefix
     ProcessorAsserts.assertContaining(
         generatedCode, "public PersonDtoBuilder withName(String name)");
     ProcessorAsserts.assertContaining(
         generatedCode, "public PersonDtoBuilder withNicknames(List<String> nicknames)");
 
-    // Verify add2 method does NOT respect setterSuffix - always uses add2FieldName pattern
+    // Verify add2 method does NOT respect setterPrefix - always uses add2FieldName pattern
     ProcessorAsserts.assertContaining(
         generatedCode, "public PersonDtoBuilder add2Nicknames(String element)");
 

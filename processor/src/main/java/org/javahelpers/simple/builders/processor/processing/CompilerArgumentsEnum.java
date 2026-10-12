@@ -179,8 +179,8 @@ public enum CompilerArgumentsEnum {
   /** Option for builder class name suffix when referencing usage-scope builders. */
   BUILDER_USAGE_SUFFIX("builderUsageSuffix", string(Builder::builderUsageSuffix)),
 
-  /** Option for setter method name suffix. */
-  SETTER_SUFFIX("setterSuffix", string(Builder::setterSuffix)),
+  /** Option for setter method name prefix. */
+  SETTER_PREFIX("setterPrefix", string(Builder::setterPrefix)),
 
   // === Component Filtering ===
   /**

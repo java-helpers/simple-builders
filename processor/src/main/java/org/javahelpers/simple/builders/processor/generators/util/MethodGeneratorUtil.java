@@ -85,12 +85,12 @@ public final class MethodGeneratorUtil {
    * @return the method name with prefix applied
    */
   public static String generateBuilderMethodName(String fieldName, ProcessingContext context) {
-    return generateBuilderMethodName(fieldName, context.getConfiguration().getSetterSuffix());
+    return generateBuilderMethodName(fieldName, context.getConfiguration().getSetterPrefix());
   }
 
   /**
    * Generates a builder method name by prepending the given setter prefix to the capitalized field
-   * name — the same name derivation the context-based overload resolves from {@code setterSuffix},
+   * name — the same name derivation the context-based overload resolves from {@code setterPrefix},
    * for callers without a {@link ProcessingContext} (e.g. SPI adapters).
    *
    * @param fieldName the field name

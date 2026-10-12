@@ -36,7 +36,7 @@ import org.javahelpers.simple.builders.processor.model.type.TypeName;
  * The builders {@link BuilderProcessor} generates, published to SPI adapters of other frameworks
  * sharing the annotation processor path (and therefore the classloader). Each entry carries the
  * resolved builder's type, creation and build method names plus the bean's configured {@code
- * setterSuffix}, so adapters do not scan candidates or read annotation configuration themselves.
+ * setterPrefix}, so adapters do not scan candidates or read annotation configuration themselves.
  *
  * <p>The lifecycle reports where {@link BuilderProcessor}'s builder generation stands and is
  * transitioned by that processor alone — SPI adapters only ever read this holder, they never
@@ -74,7 +74,7 @@ public final class SimpleBuildersSpiIntegration {
 
   /**
    * One bean-to-builder pair resolved at registration time: the type this processor emits for
-   * {@code beanType} plus its creation/build method names and the bean's {@code setterSuffix}
+   * {@code beanType} plus its creation/build method names and the bean's {@code setterPrefix}
    * naming option — flattened to names so SPI adapters never touch the resolution model.
    */
   public record PublishedBuilder(
@@ -82,7 +82,7 @@ public final class SimpleBuildersSpiIntegration {
       TypeName builderType,
       String creationMethodName,
       String buildMethodName,
-      String setterSuffix) {}
+      String setterPrefix) {}
 
   private static volatile State state = State.INIT;
 
@@ -151,7 +151,7 @@ public final class SimpleBuildersSpiIntegration {
    * Publishes the builder {@link BuilderProcessor} resolved for {@code beanType} in this
    * compilation — generated builders always create via a static factory.
    */
-  static void registerBuilder(TypeName beanType, ResolvedBuilder builder, String setterSuffix) {
+  static void registerBuilder(TypeName beanType, ResolvedBuilder builder, String setterPrefix) {
     if (!(builder.funcForEmptyBuilder() instanceof StaticFactoryCall factory)) {
       return;
     }
@@ -161,7 +161,7 @@ public final class SimpleBuildersSpiIntegration {
             builder.typeName(),
             factory.methodName(),
             builder.buildMethodName(),
-            setterSuffix);
+            setterPrefix);
     BY_BEAN.put(publishedBuilder.beanType().getFullQualifiedName(), publishedBuilder);
     BY_BUILDER.put(publishedBuilder.builderType().getFullQualifiedName(), publishedBuilder);
   }

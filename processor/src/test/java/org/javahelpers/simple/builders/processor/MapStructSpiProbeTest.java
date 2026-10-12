@@ -69,7 +69,7 @@ class MapStructSpiProbeTest {
     Compilation compilation =
         Compiler.javac()
             .withProcessors(new SpiProbeProcessor(), new BuilderProcessor())
-            .compile(personDto(), foreignDto(), ignoredDto(), templateDto(), suffixDto());
+            .compile(personDto(), foreignDto(), ignoredDto(), templateDto(), prefixDto());
     assertThat(compilation).succeeded();
 
     ProbeResults results = ProbeResults.instance;
@@ -102,12 +102,12 @@ class MapStructSpiProbeTest {
     assertEquals(MethodType.OTHER, results.methodTypes.get("build"));
     assertEquals(MethodType.OTHER, results.methodTypes.get("create"));
 
-    // A configured setterSuffix is applied as a prefix: only the exact direct setter stays a
+    // A configured setterPrefix is applied as a prefix: only the exact direct setter stays a
     // write accessor — every prefixed helper and lifecycle method resolves to OTHER.
-    assertEquals(MethodType.SETTER, results.suffixMethodTypes.get("withName(java.lang.String)"));
+    assertEquals(MethodType.SETTER, results.prefixMethodTypes.get("withName(java.lang.String)"));
     assertEquals(
         1,
-        results.suffixMethodTypes.values().stream()
+        results.prefixMethodTypes.values().stream()
             .filter(type -> type == MethodType.SETTER)
             .count());
 
@@ -139,7 +139,7 @@ class MapStructSpiProbeTest {
     static final ProbeResults instance = new ProbeResults();
 
     final Map<String, MethodType> methodTypes = new LinkedHashMap<>();
-    final Map<String, MethodType> suffixMethodTypes = new LinkedHashMap<>();
+    final Map<String, MethodType> prefixMethodTypes = new LinkedHashMap<>();
     Throwable unregisteredDeferral;
     Throwable templateDeferral;
     Throwable skippedBeanDeferred;
@@ -158,7 +158,7 @@ class MapStructSpiProbeTest {
 
     void reset() {
       methodTypes.clear();
-      suffixMethodTypes.clear();
+      prefixMethodTypes.clear();
       unregisteredDeferral = null;
       templateDeferral = null;
       skippedBeanDeferred = null;
@@ -290,11 +290,11 @@ class MapStructSpiProbeTest {
         for (ExecutableElement method : ElementFilter.methodsIn(builder.getEnclosedElements())) {
           results.methodTypes.put(method.getSimpleName().toString(), naming.getMethodType(method));
         }
-        TypeElement suffixBuilder = element("test.SuffixDtoBuilder");
-        if (suffixBuilder != null) {
+        TypeElement prefixBuilder = element("test.PrefixDtoBuilder");
+        if (prefixBuilder != null) {
           for (ExecutableElement method :
-              ElementFilter.methodsIn(suffixBuilder.getEnclosedElements())) {
-            results.suffixMethodTypes.put(signatureKey(method), naming.getMethodType(method));
+              ElementFilter.methodsIn(prefixBuilder.getEnclosedElements())) {
+            results.prefixMethodTypes.put(signatureKey(method), naming.getMethodType(method));
           }
         }
         TypeElement foreignBean = element("test.ForeignDto");
@@ -401,15 +401,15 @@ class MapStructSpiProbeTest {
         """);
   }
 
-  private static JavaFileObject suffixDto() {
+  private static JavaFileObject prefixDto() {
     return ProcessorTestUtils.forSource(
         """
         package test;
 
         import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 
-        @SimpleBuilder(options = @SimpleBuilder.Options(setterSuffix = "with"))
-        public class SuffixDto {
+        @SimpleBuilder(options = @SimpleBuilder.Options(setterPrefix = "with"))
+        public class PrefixDto {
           private String name;
 
           public void setName(String name) {

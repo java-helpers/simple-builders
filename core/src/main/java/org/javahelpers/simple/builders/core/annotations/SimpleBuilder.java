@@ -637,7 +637,7 @@ public @interface SimpleBuilder {
     /**
      * Add Jackson annotations to the generated builder class. <br>
      * Adds {@code @JsonPOJOBuilder(withPrefix = "...")} to the builder class. The prefix matches
-     * the configured {@link #setterSuffix()}.
+     * the configured {@link #setterPrefix()}.
      *
      * <p>Example:
      *
@@ -858,15 +858,15 @@ public @interface SimpleBuilder {
     String builderUsageSuffix() default "";
 
     /**
-     * Suffix to append to setter method names in the generated builder. <br>
-     * For example, with suffix "with", a field named "name" will generate "withName()". <br>
-     * When a suffix is set, the field name is capitalized after the suffix.
+     * Prefix to prepend to setter method names in the generated builder. <br>
+     * For example, with prefix "with", a field named "name" will generate "withName()". <br>
+     * When a prefix is set, the field name is capitalized after the prefix.
      *
      * <p>Example:
      *
      * <pre>{@code
      * @SimpleBuilder(options = @SimpleBuilder.Options(
-     *     setterSuffix = "with"
+     *     setterPrefix = "with"
      * ))
      * public class PersonDto {
      *     // Generates: withName(String) instead of name(String)
@@ -878,12 +878,12 @@ public @interface SimpleBuilder {
      *     .build();
      * }</pre>
      *
-     * Default: "" (empty - no suffix) <br>
-     * Compiler option: -Asimplebuilder.setterSuffix
+     * Default: "" (empty - no prefix) <br>
+     * Compiler option: -Asimplebuilder.setterPrefix
      *
-     * @return the suffix for setter method names
+     * @return the prefix for setter method names
      */
-    String setterSuffix() default "";
+    String setterPrefix() default "";
 
     /**
      * Formatting mode for the generated source code. <br>

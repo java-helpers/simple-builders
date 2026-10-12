@@ -80,7 +80,7 @@ class BuilderConfigurationReaderTest {
                 builderAccess = AccessModifier.PACKAGE_PRIVATE,
                 methodAccess = AccessModifier.PACKAGE_PRIVATE,
                 builderSuffix = "Factory",
-                setterSuffix = "with"
+                setterPrefix = "with"
             ))
             public class PersonDto {
                 private String name;
@@ -107,7 +107,7 @@ class BuilderConfigurationReaderTest {
     // Verify class access is PACKAGE_PRIVATE
     ProcessorAsserts.assertNotContaining(generatedCode, "public class PersonDtoFactory");
 
-    // Verify setterSuffix="with"
+    // Verify setterPrefix="with"
     ProcessorAsserts.assertContaining(generatedCode, "PersonDtoFactory withName(String name)");
     ProcessorAsserts.assertContaining(generatedCode, "PersonDtoFactory withTags(");
 
@@ -211,7 +211,7 @@ class BuilderConfigurationReaderTest {
                     generateConditionalHelper = OptionState.DISABLED,
                     generateWithInterface = OptionState.DISABLED,
                     builderSuffix = "InlineBuilder",
-                    setterSuffix = "update"
+                    setterPrefix = "update"
                 ))
             @Retention(RetentionPolicy.CLASS)
             @Target(ElementType.TYPE)
@@ -268,7 +268,7 @@ class BuilderConfigurationReaderTest {
             @MyBuliderForTestAnnotation
             @SimpleBuilder(options = @SimpleBuilder.Options(
                 builderSuffix = "OptionsBuilder",
-                setterSuffix = "set"
+                setterPrefix = "set"
             ))
             public class PersonDto {
                 private String name;
@@ -329,7 +329,7 @@ class BuilderConfigurationReaderTest {
         ProcessorTestUtils.createCompiler()
             .withOptions(
                 "-Asimplebuilder.builderSuffix=CustomBuilder",
-                "-Asimplebuilder.setterSuffix=set",
+                "-Asimplebuilder.setterPrefix=set",
                 "-Asimplebuilder.generateVarArgsHelpers=false")
             .compile(source);
 
@@ -400,7 +400,7 @@ class BuilderConfigurationReaderTest {
    *       helpers, unboxed optional, collection builders, annotations
    *       (@Generated, @BuilderImplementation)
    *   <li>Compiler args: Disable conditional helper, with interface, string format helpers
-   *   <li>Inline options: Custom naming (builderSuffix, setterSuffix)
+   *   <li>Inline options: Custom naming (builderSuffix, setterPrefix)
    *   <li>Template: Ignored (because @SimpleBuilder is present)
    * </ul>
    */
@@ -429,7 +429,7 @@ class BuilderConfigurationReaderTest {
                 usingBuilderImplementationAnnotation = OptionState.DISABLED,
                 usingJacksonDeserializerAnnotation = OptionState.DISABLED,
                 builderSuffix = "MinimalBuilder",
-                setterSuffix = "with"
+                setterPrefix = "with"
             ))
             public class PersonDto {
                 private String name;

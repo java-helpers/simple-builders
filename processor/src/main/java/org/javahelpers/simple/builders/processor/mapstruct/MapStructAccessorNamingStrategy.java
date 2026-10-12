@@ -55,9 +55,9 @@ import org.mapstruct.ap.spi.MethodType;
  * ({@code <field>(Supplier)}, {@code <field>(String, Object...)}, {@code <field>(Consumer)})
  * compete with the direct setter. For methods declared on a builder published by {@code
  * BuilderProcessor} this strategy returns {@link MethodType#OTHER} for everything that is not the
- * direct property setter ({@code <setterSuffix><Field>} — the option is applied as a prefix —
+ * direct property setter ({@code <setterPrefix><Field>} — the option is applied as a prefix —
  * taking a single argument of the field type). The property set is read off the builder's own
- * tracked fields and the setter suffix comes from the published {@link PublishedBuilder}
+ * tracked fields and the setter prefix comes from the published {@link PublishedBuilder}
  * descriptors, so builders produced by earlier compilations and foreign types keep the {@link
  * DefaultAccessorNamingStrategy} behaviour.
  */
@@ -136,12 +136,12 @@ public class MapStructAccessorNamingStrategy extends DefaultAccessorNamingStrate
       return Map.of();
     }
     Map<String, TypeMirror> directSetters = new HashMap<>();
-    String setterSuffix = published.get().setterSuffix();
+    String setterPrefix = published.get().setterPrefix();
     for (VariableElement field : ElementFilter.fieldsIn(builderType.getEnclosedElements())) {
       if (!field.getModifiers().contains(Modifier.STATIC)) {
         directSetters.put(
             MethodGeneratorUtil.generateBuilderMethodName(
-                field.getSimpleName().toString(), setterSuffix),
+                field.getSimpleName().toString(), setterPrefix),
             trackedPropertyType(field.asType()));
       }
     }

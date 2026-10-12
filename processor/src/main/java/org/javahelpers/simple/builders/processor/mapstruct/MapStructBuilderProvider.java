@@ -56,7 +56,7 @@ import org.mapstruct.ap.spi.TypeHierarchyErroneousException;
  * itself as builder-creation candidates. simple-builders keeps the factory on the generated builder
  * class ({@code PersonDtoBuilder.create()}), so beans are paired with builders exclusively through
  * the registry {@code BuilderProcessor} publishes — a constant-time lookup of already-resolved
- * {@link PublishedBuilder} descriptors (builder type, creation and build method, setter suffix),
+ * {@link PublishedBuilder} descriptors (builder type, creation and build method, setter prefix),
  * covering custom packages and {@code @SimpleBuilderFor} targets. Builders produced by earlier
  * compilations are not discovered: only the beans the processor plans in the current run get
  * builder mapping.

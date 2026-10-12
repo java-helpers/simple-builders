@@ -37,8 +37,8 @@ import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
  * Generates basic setter methods for all fields of the builder.
  *
  * <p>This generator creates the primary setter method for each field, which accepts the field type
- * directly and stores it in the builder. The method name follows the configured setter
- * prefix/suffix pattern (default is field name without prefix).
+ * directly and stores it in the builder. The method name follows the configured setter prefix
+ * pattern (default is field name without prefix).
  *
  * <p><b>Important behavior:</b> The generated setter wraps the value using {@code changedValue()}
  * to track that the field has been explicitly set. This allows distinguishing between fields that
@@ -48,7 +48,7 @@ import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
  * builder field must have.
  *
  * <p>This generator cannot be deactivated as it provides the core builder functionality. However,
- * the method naming can be configured using the setter prefix/suffix configuration options.
+ * the method naming can be configured using the setter prefix configuration option.
  *
  * <h3>Example to demonstrate the generated methods</h3>
  *
