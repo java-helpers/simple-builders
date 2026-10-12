@@ -141,13 +141,6 @@
                 <exclude>generated-example-builder/**</exclude>
                 <exclude>target/**</exclude>
               </excludes>
-              <headerSections>
-                <headerSection>
-                  <key>Copyright (c) 2026 Andreas Igel</key>
-                  <defaultValue>Copyright (c) 2026 Andreas Igel</defaultValue>
-                  <ensureMatch>Copyright (\(c\) )?\d{4}(-\d{4})? Andreas Igel</ensureMatch>
-                </headerSection>
-              </headerSections>
             </licenseSet>
           </licenseSets>
         </configuration>
