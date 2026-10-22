@@ -33,9 +33,6 @@ import org.javahelpers.simple.builders.processor.analysis.TypeMappingContext;
 import org.javahelpers.simple.builders.processor.generators.registry.GeneratorRegistry;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
-import org.javahelpers.simple.builders.processor.processing.logging.ActivePerformanceTracker;
-import org.javahelpers.simple.builders.processor.processing.logging.NoOpPerformanceTracker;
-import org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker;
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 
 /**
@@ -63,26 +60,24 @@ public final class BuilderProcessingContext extends AnnotationProcessingContext
       ProcessingLogger logger,
       BuilderConfiguration globalConfiguration,
       ProcessingEnvironment processingEnv) {
-    super(
-        logger,
-        processingEnv,
-        createPerformanceTracker(processingEnv),
-        new AnnotationProcessingOptions(globalConfiguration.isStrictModeEnabled()));
+    super(logger, processingEnv, createOptions(processingEnv, globalConfiguration));
     this.configurationReader =
         new BuilderConfigurationReader(globalConfiguration, logger, elementUtils);
     this.builderScopeResolver = new BuilderScopeResolver(this);
     // GeneratorRegistry will be lazily initialized on first access
   }
 
-  private static PerformanceTracker createPerformanceTracker(ProcessingEnvironment processingEnv) {
-    // Initialize performance tracker based on compiler argument
+  private static AnnotationProcessingOptions createOptions(
+      ProcessingEnvironment processingEnv, BuilderConfiguration globalConfiguration) {
+    // Derive generic context options from the builder's compiler arguments
     CompilerArgumentsReader argReader = new CompilerArgumentsReader(processingEnv);
-    boolean perfTrackingEnabled =
-        argReader.readBooleanValue(CompilerArgumentsEnum.PERFORMANCE_TRACKING);
-    String perfOutputFile = argReader.readValue(CompilerArgumentsEnum.PERFORMANCE_OUTPUT_FILE);
-    return perfTrackingEnabled
-        ? new ActivePerformanceTracker(perfOutputFile, PipelinePhases.PIPELINE_HIERARCHY)
-        : new NoOpPerformanceTracker();
+    return AnnotationProcessingOptions.builder()
+        .strictModeEnabled(globalConfiguration.isStrictModeEnabled())
+        .performanceTrackingEnabled(
+            argReader.readBooleanValue(CompilerArgumentsEnum.PERFORMANCE_TRACKING))
+        .performanceOutputFile(argReader.readValue(CompilerArgumentsEnum.PERFORMANCE_OUTPUT_FILE))
+        .phaseHierarchy(PipelinePhases.PIPELINE_HIERARCHY)
+        .build();
   }
 
   /**

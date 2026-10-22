@@ -39,6 +39,8 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.simple.builders.processor.processing.logging.ActivePerformanceTracker;
+import org.javahelpers.simple.builders.processor.processing.logging.NoOpPerformanceTracker;
 import org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker;
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 
@@ -70,23 +72,35 @@ public abstract class AnnotationProcessingContext {
   protected final AnnotationProcessingOptions options;
 
   /**
+   * Creates the context with default options (strict mode and performance tracking disabled).
+   *
+   * @param logger logger for output
+   * @param processingEnv the annotation processing environment
+   */
+  public AnnotationProcessingContext(ProcessingLogger logger, ProcessingEnvironment processingEnv) {
+    this(logger, processingEnv, AnnotationProcessingOptions.builder().build());
+  }
+
+  /**
    * Creates the context.
    *
    * @param logger logger for output
    * @param processingEnv the annotation processing environment
-   * @param performanceTracker tracker for pipeline phase timing
    * @param options static options of the concrete context
    */
   public AnnotationProcessingContext(
       ProcessingLogger logger,
       ProcessingEnvironment processingEnv,
-      PerformanceTracker performanceTracker,
       AnnotationProcessingOptions options) {
     this.elementUtils = processingEnv.getElementUtils();
     this.typeUtils = processingEnv.getTypeUtils();
     this.logger = logger;
     this.processingEnv = processingEnv;
-    this.performanceTracker = performanceTracker;
+    this.performanceTracker =
+        options.performanceTrackingEnabled()
+            ? new ActivePerformanceTracker(
+                options.performanceOutputFile(), options.phaseHierarchy())
+            : new NoOpPerformanceTracker();
     this.options = options;
   }
 
