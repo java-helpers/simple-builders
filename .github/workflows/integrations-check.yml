@@ -74,6 +74,54 @@ jobs:
           fi
           echo "OK: SONAR_TOKEN is valid and SonarCloud is reachable."
 
+      - name: Check SonarCloud token expiry
+        run: |
+          set -euo pipefail
+          # Warn (without failing) when the token is close to expiry so it can
+          # be rotated before CI/release jobs break. authentication/validate
+          # only reports valid/invalid, not the expiration date, so query the
+          # user tokens endpoint. Non-fatal: any reachability/parse issue is
+          # informational only - only the validate step above hard-fails.
+          body="$RUNNER_TEMP/sonar-tokens.json"
+          http_code="$(curl -sS -o "$body" -w '%{http_code}' \
+            -u "$SONAR_TOKEN:" https://sonarcloud.io/api/user_tokens/search || true)"
+          echo "sonarcloud.io/api/user_tokens/search -> HTTP $http_code"
+          if [ "$http_code" != "200" ]; then
+            echo "Could not query user tokens (reachability/auth issue); skipping expiry check."
+            exit 0
+          fi
+          # SONAR_TOKEN is the user token whose name contains "github"
+          # (case-insensitive, anywhere in the name).
+          match_count="$(jq '[.userTokens[] | select((.name | ascii_downcase) | contains("github"))] | length' "$body" 2>/dev/null || echo '')"
+          if [ -z "$match_count" ]; then
+            echo "Could not parse the user_tokens/search response; skipping expiry check."
+            exit 0
+          fi
+          if [ "$match_count" = "0" ]; then
+            echo "No user token with 'github' in its name found; skipping expiry check."
+            exit 0
+          fi
+          # Soonest expirationDate (YYYY-MM-DDTHH:MM:SSZ) among the matching
+          # tokens; tokens created without an expiry have no expirationDate.
+          expiry="$(jq -r '[.userTokens[] | select((.name | ascii_downcase) | contains("github")) | .expirationDate // empty] | sort | .[0] // empty' "$body")"
+          if [ -z "$expiry" ]; then
+            echo "The 'github' user token(s) have no expiration date; nothing to warn about."
+            exit 0
+          fi
+          if ! expiry_epoch="$(date -d "$expiry" +%s 2>/dev/null)"; then
+            echo "Could not parse expirationDate '$expiry'; skipping expiry check."
+            exit 0
+          fi
+          days_left=$(( (expiry_epoch - $(date +%s)) / 86400 ))
+          expiry_day="${expiry%%T*}"
+          if [ "$days_left" -lt 0 ]; then
+            echo "::warning::SONAR_TOKEN expired $((-days_left)) day(s) ago on $expiry_day; rotate it to restore CI/release jobs."
+          elif [ "$days_left" -le 7 ]; then
+            echo "::warning::SONAR_TOKEN expires in $days_left day(s) on $expiry_day; rotate it to avoid CI/release failures."
+          else
+            echo "OK: SONAR_TOKEN expires on $expiry_day ($days_left days remaining)."
+          fi
+
   codecov:
     # Scheduled runs have no dispatch inputs, so always run both checks then.
     if: ${{ github.event.repository.fork == false && (github.event_name == 'schedule' || github.event.inputs.target == 'all' || github.event.inputs.target == 'codecov') }}
