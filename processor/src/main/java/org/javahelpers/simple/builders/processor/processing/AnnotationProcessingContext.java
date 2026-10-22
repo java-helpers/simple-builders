@@ -186,6 +186,28 @@ public class AnnotationProcessingContext implements TypeMappingContext {
   }
 
   /**
+   * {@inheritDoc}
+   *
+   * <p>Default: a generic context copies no type annotations; override to derive from
+   * configuration.
+   */
+  @Override
+  public boolean shouldCopyTypeAnnotations() {
+    return false;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>Default: a generic context knows no generated types; override to resolve generated
+   * replacement types.
+   */
+  @Override
+  public Optional<ResolvedBuilder> resolveGeneratedType(TypeElement typeElement) {
+    return Optional.empty();
+  }
+
+  /**
    * Get the TypeElement for a given qualified class name.
    *
    * @param qualifiedName the canonical class name (e.g., "java.lang.String")
@@ -445,27 +467,5 @@ public class AnnotationProcessingContext implements TypeMappingContext {
     } else {
       logger.warning(format, args);
     }
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * <p>Default: a generic context copies no type annotations; override to derive from
-   * configuration.
-   */
-  @Override
-  public boolean shouldCopyTypeAnnotations() {
-    return false;
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * <p>Default: a generic context knows no generated types; override to resolve generated
-   * replacement types.
-   */
-  @Override
-  public Optional<ResolvedBuilder> resolveGeneratedType(TypeElement typeElement) {
-    return Optional.empty();
   }
 }
