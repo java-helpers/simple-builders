@@ -100,6 +100,7 @@ public interface TypeMappingContext {
    * @param typeMirror the type mirror
    * @return list of direct supertypes
    */
+  @SuppressWarnings("java:S1452")
   List<? extends TypeMirror> directSupertypes(TypeMirror typeMirror);
 
   /**
@@ -108,6 +109,7 @@ public interface TypeMappingContext {
    * @param typeElement the type to inspect
    * @return list of all member elements
    */
+  @SuppressWarnings("java:S1452")
   List<? extends Element> getAllMembers(TypeElement typeElement);
 
   /**

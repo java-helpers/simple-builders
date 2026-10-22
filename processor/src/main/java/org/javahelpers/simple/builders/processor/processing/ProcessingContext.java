@@ -387,6 +387,7 @@ public final class ProcessingContext implements TypeMappingContext {
    * @param typeMirror the type
    * @return list of direct supertypes
    */
+  @SuppressWarnings("java:S1452")
   @Override
   public java.util.List<? extends TypeMirror> directSupertypes(TypeMirror typeMirror) {
     return typeUtils.directSupertypes(typeMirror);
