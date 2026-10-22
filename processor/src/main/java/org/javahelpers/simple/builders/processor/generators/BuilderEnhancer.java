@@ -25,7 +25,7 @@ package org.javahelpers.simple.builders.processor.generators;
 
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
+import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 
 /**
  * Interface for enhancing or modifying generated builders beyond the basic field-based methods.
@@ -72,7 +72,8 @@ public non-sealed interface BuilderEnhancer extends Generator {
    * @param context the processing context for configuration and utilities
    * @return true if this enhancer should be applied to this builder
    */
-  boolean appliesTo(BuilderDefinitionDto builderDto, TypeName dtoType, ProcessingContext context);
+  boolean appliesTo(
+      BuilderDefinitionDto builderDto, TypeName dtoType, BuilderProcessingContext context);
 
   /**
    * Enhances the builder by adding or modifying its structure.
@@ -91,5 +92,5 @@ public non-sealed interface BuilderEnhancer extends Generator {
    * @param builderDto the builder to enhance (modifiable)
    * @param context the processing context for configuration and utilities
    */
-  void enhanceBuilder(BuilderDefinitionDto builderDto, ProcessingContext context);
+  void enhanceBuilder(BuilderDefinitionDto builderDto, BuilderProcessingContext context);
 }

@@ -133,8 +133,8 @@ public class BuilderConfigurationReader {
    *   <li>{@code BuilderConfiguration} — add the field, builder method, merge logic, and a typed
    *       accessor (e.g. {@code formattingModeEnum}) if enum conversion is needed. Set the default
    *       in {@code BuilderConfiguration.DEFAULT}.
-   *   <li>{@code ProcessingContext} — should NOT need a dedicated field or getter. The resolved
-   *       per-target config ({@code context.getConfiguration()}) and global config ({@code
+   *   <li>{@code BuilderProcessingContext} — should NOT need a dedicated field or getter. The
+   *       resolved per-target config ({@code context.getConfiguration()}) and global config ({@code
    *       context.getConfigurationReader().getGlobalConfiguration()}) carry all option values.
    *       Special-casing outside {@code BuilderConfiguration} breaks the merge chain and bypasses
    *       annotation overrides.

@@ -40,7 +40,7 @@ import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameList;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameSet;
-import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
+import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 
 /**
  * Generates add2FieldName helper methods for List and Set fields.
@@ -90,7 +90,7 @@ public class AddToCollectionGenerator implements MethodGenerator {
   }
 
   @Override
-  public boolean appliesTo(FieldDto field, TypeName dtoType, ProcessingContext context) {
+  public boolean appliesTo(FieldDto field, TypeName dtoType, BuilderProcessingContext context) {
     if (!context.getConfiguration().shouldGenerateAddToCollectionHelpers()) {
       return false;
     }
@@ -103,7 +103,7 @@ public class AddToCollectionGenerator implements MethodGenerator {
 
   @Override
   public List<BuilderMethodDto> generateMethods(
-      FieldDto field, TypeName builderType, ProcessingContext context) {
+      FieldDto field, TypeName builderType, BuilderProcessingContext context) {
 
     List<BuilderMethodDto> methods = new ArrayList<>();
     TypeName fieldType = field.getFieldType();
@@ -139,7 +139,7 @@ public class AddToCollectionGenerator implements MethodGenerator {
       TypeName fieldType,
       TypeName elementType,
       TypeName builderType,
-      ProcessingContext context) {
+      BuilderProcessingContext context) {
     String methodName = "add2" + StringUtils.capitalize(originalFieldName);
     BuilderMethodDto methodDto = new BuilderMethodDto(methodName, builderType);
 

@@ -89,7 +89,7 @@ public class BuilderDefinitionCreator {
    * @throws BuilderException if validation or generation failed
    */
   public static BuilderDefinitionDto extractFromElement(
-      Element annotatedElement, ProcessingContext context) throws BuilderException {
+      Element annotatedElement, BuilderProcessingContext context) throws BuilderException {
     validateAnnotatedElement(annotatedElement);
     TypeElement annotatedType = (TypeElement) annotatedElement;
 
@@ -172,7 +172,7 @@ public class BuilderDefinitionCreator {
    * @param context the processing context
    */
   private static void finalizeDefinition(
-      BuilderDefinitionDto builderDto, ProcessingContext context) {
+      BuilderDefinitionDto builderDto, BuilderProcessingContext context) {
     context.debugStartOperation("Finalizing builder definition");
 
     // 1. Convert FieldDto → ClassFieldDto
@@ -325,7 +325,7 @@ public class BuilderDefinitionCreator {
    * @param context the processing context for logging
    */
   private static void resolveMethodConflicts(
-      BuilderDefinitionDto builderDto, ProcessingContext context) {
+      BuilderDefinitionDto builderDto, BuilderProcessingContext context) {
     context.debugStartOperation("Resolving method conflicts");
 
     // Collect all BuilderMethodDto instances grouped by signature key
@@ -456,7 +456,7 @@ public class BuilderDefinitionCreator {
 
   /** Initializes the builder definition with package, class name, and generics. */
   private static BuilderDefinitionDto initializeBuilderDefinition(
-      TypeElement annotatedType, ProcessingContext context) {
+      TypeElement annotatedType, BuilderProcessingContext context) {
     BuilderDefinitionDto result = new BuilderDefinitionDto();
     String packageName = context.getPackageName(annotatedType);
     String builderPackageName = context.getBuilderPackageName();
@@ -487,7 +487,7 @@ public class BuilderDefinitionCreator {
   private static List<FieldDto> extractConstructorFields(
       TypeElement annotatedType,
       BuilderDefinitionDto builderDef,
-      ProcessingContext context,
+      BuilderProcessingContext context,
       Map<String, FieldDto> fieldNameRegistry) {
     List<FieldDto> constructorFields = new LinkedList<>();
     Optional<ExecutableElement> constructorOpt =
@@ -527,7 +527,7 @@ public class BuilderDefinitionCreator {
   private static List<FieldDto> extractSetterFields(
       TypeElement annotatedType,
       BuilderDefinitionDto result,
-      ProcessingContext context,
+      BuilderProcessingContext context,
       Map<String, FieldDto> fieldNameRegistry) {
     context.debugStartOperation("Analysing setters for finding fields");
     List<FieldDto> setterFields = new LinkedList<>();
@@ -592,7 +592,7 @@ public class BuilderDefinitionCreator {
   }
 
   /** Logs the addition of a field with its type information. */
-  private static void logFieldAddition(FieldDto field, ProcessingContext context) {
+  private static void logFieldAddition(FieldDto field, BuilderProcessingContext context) {
     String fieldTypeName = field.getFieldType().getClassName();
     if (field.getFieldType().getPackageName() != null
         && !field.getFieldType().getPackageName().isEmpty()) {
@@ -603,7 +603,7 @@ public class BuilderDefinitionCreator {
   }
 
   private static boolean isMethodRelevantForBuilder(
-      ExecutableElement mth, ProcessingContext context) {
+      ExecutableElement mth, BuilderProcessingContext context) {
     if (!hasNoThrowablesDeclared(mth)) {
       context.debug("Skipping: declares throwables");
       return false;
@@ -634,7 +634,7 @@ public class BuilderDefinitionCreator {
   private static Optional<FieldDto> createFieldFromSetter(
       ExecutableElement mth,
       TypeName builderType,
-      ProcessingContext context,
+      BuilderProcessingContext context,
       Map<String, FieldDto> fieldNameRegistry) {
     String methodName = mth.getSimpleName().toString();
     String fieldName = StringUtils.uncapitalize(Strings.CI.removeStart(methodName, "set"));
@@ -706,7 +706,7 @@ public class BuilderDefinitionCreator {
       TypeElement annotatedType,
       VariableElement param,
       TypeName builderType,
-      ProcessingContext context,
+      BuilderProcessingContext context,
       Map<String, FieldDto> fieldNameRegistry) {
     String fieldName = param.getSimpleName().toString();
     // Extract javadoc from constructor parameter (if present)
@@ -746,7 +746,7 @@ public class BuilderDefinitionCreator {
       String fieldName,
       VariableElement param,
       Map<String, FieldDto> fieldNameRegistry,
-      ProcessingContext context) {
+      BuilderProcessingContext context) {
 
     FieldDto existing = fieldNameRegistry.get(fieldName);
     if (existing == null) {
@@ -806,7 +806,7 @@ public class BuilderDefinitionCreator {
       VariableElement param,
       TypeName dtoType,
       TypeName builderType,
-      ProcessingContext context) {
+      BuilderProcessingContext context) {
     MethodParameterDto paramDto = map2MethodParameter(param, context);
     if (paramDto == null || dtoType == null) {
       return Optional.empty();
@@ -922,7 +922,7 @@ public class BuilderDefinitionCreator {
       VariableElement param,
       TypeMirror fieldTypeMirror,
       TypeElement dtoTypeElement,
-      ProcessingContext context) {
+      BuilderProcessingContext context) {
     if (dtoTypeElement == null) {
       return;
     }
@@ -1042,7 +1042,9 @@ public class BuilderDefinitionCreator {
    * @param context processing context
    */
   private static void applyDtoDeprecation(
-      BuilderDefinitionDto builderDto, TypeElement annotatedType, ProcessingContext context) {
+      BuilderDefinitionDto builderDto,
+      TypeElement annotatedType,
+      BuilderProcessingContext context) {
     Optional<AnnotationDto> deprecatedAnnot =
         FieldAnnotationExtractor.extractDeprecatedAnnotation(annotatedType, context);
     if (deprecatedAnnot.isEmpty()) {
@@ -1116,7 +1118,9 @@ public class BuilderDefinitionCreator {
    * @param context processing context
    */
   private static void applyDeprecationSuppressions(
-      BuilderDefinitionDto builderDto, TypeElement annotatedType, ProcessingContext context) {
+      BuilderDefinitionDto builderDto,
+      TypeElement annotatedType,
+      BuilderProcessingContext context) {
     boolean dtoDeprecated = annotatedType.getAnnotation(Deprecated.class) != null;
     boolean constructorDeprecated = isConstructorDeprecated(annotatedType, context);
     // Check getter method deprecation from the flag stored during field creation — a deprecated
@@ -1182,7 +1186,7 @@ public class BuilderDefinitionCreator {
    * @return {@code true} if the selected constructor is deprecated
    */
   private static boolean isConstructorDeprecated(
-      TypeElement annotatedType, ProcessingContext context) {
+      TypeElement annotatedType, BuilderProcessingContext context) {
     return JavaLangAnalyser.findConstructorForBuilder(
             annotatedType, SimpleBuilderConstructor.class, context)
         .filter(ctor -> ctor.getAnnotation(Deprecated.class) != null)

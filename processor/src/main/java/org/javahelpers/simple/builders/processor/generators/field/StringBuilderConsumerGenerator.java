@@ -39,7 +39,7 @@ import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameArray;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
-import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
+import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 
 /**
  * Generates Consumer-based methods for String and {@code Optional<String>} fields using
@@ -88,7 +88,7 @@ public class StringBuilderConsumerGenerator implements MethodGenerator {
   }
 
   @Override
-  public boolean appliesTo(FieldDto field, TypeName dtoType, ProcessingContext context) {
+  public boolean appliesTo(FieldDto field, TypeName dtoType, BuilderProcessingContext context) {
     if (!context.getConfiguration().shouldGenerateBuilderConsumer()) {
       return false;
     }
@@ -106,7 +106,7 @@ public class StringBuilderConsumerGenerator implements MethodGenerator {
 
   @Override
   public List<BuilderMethodDto> generateMethods(
-      FieldDto field, TypeName builderType, ProcessingContext context) {
+      FieldDto field, TypeName builderType, BuilderProcessingContext context) {
     String transform =
         isOptionalString(field.getFieldType())
             ? "Optional.of(builder.toString())"
@@ -134,7 +134,7 @@ public class StringBuilderConsumerGenerator implements MethodGenerator {
       String fieldJavadoc,
       String transform,
       TypeName builderType,
-      ProcessingContext context) {
+      BuilderProcessingContext context) {
     TypeName stringBuilderType = map2TypeName(StringBuilder.class);
     TypeNameGeneric consumerType = createConsumerType(stringBuilderType);
     MethodParameterDto parameter = new MethodParameterDto();

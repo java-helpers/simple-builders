@@ -37,7 +37,7 @@ import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.type.GenericParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
+import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 
 /**
  * Enhancer that adds core builder methods (build, create, toString).
@@ -94,12 +94,12 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
 
   @Override
   public boolean appliesTo(
-      BuilderDefinitionDto builderDto, TypeName dtoType, ProcessingContext context) {
+      BuilderDefinitionDto builderDto, TypeName dtoType, BuilderProcessingContext context) {
     return true; // Core methods are always needed
   }
 
   @Override
-  public void enhanceBuilder(BuilderDefinitionDto builderDto, ProcessingContext context) {
+  public void enhanceBuilder(BuilderDefinitionDto builderDto, BuilderProcessingContext context) {
     // Add build() method
     BuilderMethodDto buildMethod = createBuildMethod(builderDto);
     builderDto.addMethod(buildMethod);

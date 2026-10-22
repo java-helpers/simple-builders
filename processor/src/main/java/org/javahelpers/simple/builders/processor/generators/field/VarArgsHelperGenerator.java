@@ -38,7 +38,7 @@ import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameList;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameMap;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameSet;
-import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
+import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 
 /**
  * Generates varargs helper methods for List, Set, and Map fields.
@@ -88,7 +88,7 @@ public class VarArgsHelperGenerator implements MethodGenerator {
   }
 
   @Override
-  public boolean appliesTo(FieldDto field, TypeName dtoType, ProcessingContext context) {
+  public boolean appliesTo(FieldDto field, TypeName dtoType, BuilderProcessingContext context) {
     if (!context.getConfiguration().shouldGenerateVarArgsHelpers()) {
       return false;
     }
@@ -99,7 +99,7 @@ public class VarArgsHelperGenerator implements MethodGenerator {
 
   @Override
   public List<BuilderMethodDto> generateMethods(
-      FieldDto field, TypeName builderType, ProcessingContext context) {
+      FieldDto field, TypeName builderType, BuilderProcessingContext context) {
 
     TypeName fieldType = field.getFieldType();
     TypeName parameterType = null;
@@ -136,7 +136,10 @@ public class VarArgsHelperGenerator implements MethodGenerator {
    * @return the method DTO for the setter
    */
   private BuilderMethodDto createFieldSetterByVarArgs(
-      FieldDto field, TypeName parameterType, TypeName builderType, ProcessingContext context) {
+      FieldDto field,
+      TypeName parameterType,
+      TypeName builderType,
+      BuilderProcessingContext context) {
     String baseExpression;
     TypeName fieldType = field.getFieldType();
 

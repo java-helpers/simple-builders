@@ -122,18 +122,18 @@ class CustomizingDocumentationTest {
             import org.javahelpers.simple.builders.processor.model.core.FieldDto;
             import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
             import org.javahelpers.simple.builders.processor.model.type.TypeName;
-            import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
+            import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
             import java.util.List;
 
             public class TestMethodGenerator implements MethodGenerator {
                 @Override
-                public boolean appliesTo(FieldDto field, TypeName dtoType, ProcessingContext context) {
+                public boolean appliesTo(FieldDto field, TypeName dtoType, BuilderProcessingContext context) {
                     // Check if field type is String by comparing class name
                     return "java.lang.String".equals(field.getFieldType().getFullQualifiedName());
                 }
 
                 @Override
-                public List<BuilderMethodDto> generateMethods(FieldDto field, TypeName builderType, ProcessingContext context) {
+                public List<BuilderMethodDto> generateMethods(FieldDto field, TypeName builderType, BuilderProcessingContext context) {
                     return List.of();
                 }
 
@@ -165,16 +165,16 @@ class CustomizingDocumentationTest {
             import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
             import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
             import org.javahelpers.simple.builders.processor.model.type.TypeName;
-            import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
+            import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 
             public class TestBuilderEnhancer implements BuilderEnhancer {
                 @Override
-                public boolean appliesTo(BuilderDefinitionDto builderDto, TypeName dtoType, ProcessingContext context) {
+                public boolean appliesTo(BuilderDefinitionDto builderDto, TypeName dtoType, BuilderProcessingContext context) {
                     return true;
                 }
 
                 @Override
-                public void enhanceBuilder(BuilderDefinitionDto builderDto, ProcessingContext context) {
+                public void enhanceBuilder(BuilderDefinitionDto builderDto, BuilderProcessingContext context) {
                     // Enhancement logic
                 }
 
@@ -208,17 +208,17 @@ class CustomizingDocumentationTest {
             import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
             import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
             import org.javahelpers.simple.builders.processor.model.type.TypeName;
-            import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
+            import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
             import java.util.List;
 
             public class CustomHelperGenerator implements MethodGenerator {
                 @Override
-                public boolean appliesTo(FieldDto field, TypeName dtoType, ProcessingContext context) {
+                public boolean appliesTo(FieldDto field, TypeName dtoType, BuilderProcessingContext context) {
                     return "java.lang.String".equals(field.getFieldType().getFullQualifiedName());
                 }
 
                 @Override
-                public List<BuilderMethodDto> generateMethods(FieldDto field, TypeName builderType, ProcessingContext context) {
+                public List<BuilderMethodDto> generateMethods(FieldDto field, TypeName builderType, BuilderProcessingContext context) {
                     String fieldName = field.getFieldNameInBuilder();
                     String methodName = "custom" + capitalize(fieldName);
 
@@ -268,17 +268,17 @@ class CustomizingDocumentationTest {
             import org.javahelpers.simple.builders.processor.model.core.FieldDto;
             import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
             import org.javahelpers.simple.builders.processor.model.type.TypeName;
-            import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
+            import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
             import java.util.List;
 
             public class HighPriorityGenerator implements MethodGenerator {
                 @Override
-                public boolean appliesTo(FieldDto field, TypeName dtoType, ProcessingContext context) {
+                public boolean appliesTo(FieldDto field, TypeName dtoType, BuilderProcessingContext context) {
                     return true;
                 }
 
                 @Override
-                public List<BuilderMethodDto> generateMethods(FieldDto field, TypeName builderType, ProcessingContext context) {
+                public List<BuilderMethodDto> generateMethods(FieldDto field, TypeName builderType, BuilderProcessingContext context) {
                     return List.of();
                 }
 
@@ -299,7 +299,7 @@ class CustomizingDocumentationTest {
   /**
    * Test error handling pattern from CUSTOMIZING.md.
    *
-   * <p>Validates the recommended error handling approach using ProcessingContext.
+   * <p>Validates the recommended error handling approach using BuilderProcessingContext.
    */
   @Test
   void testErrorHandlingPattern() {
@@ -311,17 +311,17 @@ class CustomizingDocumentationTest {
             import org.javahelpers.simple.builders.processor.model.core.FieldDto;
             import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
             import org.javahelpers.simple.builders.processor.model.type.TypeName;
-            import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
+            import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
             import java.util.List;
 
             public class SafeGenerator implements MethodGenerator {
                 @Override
-                public boolean appliesTo(FieldDto field, TypeName dtoType, ProcessingContext context) {
+                public boolean appliesTo(FieldDto field, TypeName dtoType, BuilderProcessingContext context) {
                     return true;
                 }
 
                 @Override
-                public List<BuilderMethodDto> generateMethods(FieldDto field, TypeName builderType, ProcessingContext context) {
+                public List<BuilderMethodDto> generateMethods(FieldDto field, TypeName builderType, BuilderProcessingContext context) {
                     try {
                         // Generation logic
                         return List.of();
@@ -360,12 +360,12 @@ class CustomizingDocumentationTest {
             import org.javahelpers.simple.builders.processor.model.core.FieldDto;
             import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
             import org.javahelpers.simple.builders.processor.model.type.TypeName;
-            import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
+            import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
             import java.util.List;
 
             public class ConditionalGenerator implements MethodGenerator {
                 @Override
-                public boolean appliesTo(FieldDto field, TypeName dtoType, ProcessingContext context) {
+                public boolean appliesTo(FieldDto field, TypeName dtoType, BuilderProcessingContext context) {
                     // Check if component should apply
                     if (!shouldApply(field, context)) {
                         return false;
@@ -376,7 +376,7 @@ class CustomizingDocumentationTest {
                 }
 
                 @Override
-                public List<BuilderMethodDto> generateMethods(FieldDto field, TypeName builderType, ProcessingContext context) {
+                public List<BuilderMethodDto> generateMethods(FieldDto field, TypeName builderType, BuilderProcessingContext context) {
                     return List.of();
                 }
 
@@ -385,7 +385,7 @@ class CustomizingDocumentationTest {
                     return 100;
                 }
 
-                private boolean shouldApply(FieldDto field, ProcessingContext context) {
+                private boolean shouldApply(FieldDto field, BuilderProcessingContext context) {
                     return "java.lang.String".equals(field.getFieldType().getFullQualifiedName());
                 }
             }
@@ -415,7 +415,7 @@ class CustomizingDocumentationTest {
             import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
             import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
             import org.javahelpers.simple.builders.processor.model.type.TypeName;
-            import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
+            import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
             import java.util.List;
 
             public class CustomValidationGenerator implements MethodGenerator {
@@ -424,14 +424,14 @@ class CustomizingDocumentationTest {
                     new TypeName("org.javahelpers.simple.builders.core.util", "TrackedValue");
 
                 @Override
-                public boolean appliesTo(FieldDto field, TypeName dtoType, ProcessingContext context) {
+                public boolean appliesTo(FieldDto field, TypeName dtoType, BuilderProcessingContext context) {
                     // Only apply to String fields with @Email annotation
                     return "java.lang.String".equals(field.getFieldType().getFullQualifiedName())
                         && field.hasAnnotation("javax.validation.constraints.Email");
                 }
 
                 @Override
-                public List<BuilderMethodDto> generateMethods(FieldDto field, TypeName builderType, ProcessingContext context) {
+                public List<BuilderMethodDto> generateMethods(FieldDto field, TypeName builderType, BuilderProcessingContext context) {
                     String fieldName = field.getFieldNameInBuilder();
                     String methodName = "validated" + capitalize(fieldName);
 
@@ -490,12 +490,12 @@ class CustomizingDocumentationTest {
             import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
             import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
             import org.javahelpers.simple.builders.processor.model.type.TypeName;
-            import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
+            import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 
             public class CustomValidationEnhancer implements BuilderEnhancer {
 
                 @Override
-                public boolean appliesTo(BuilderDefinitionDto builderDto, TypeName dtoType, ProcessingContext context) {
+                public boolean appliesTo(BuilderDefinitionDto builderDto, TypeName dtoType, BuilderProcessingContext context) {
                     // Only apply to DTOs with validation annotations
                     return builderDto.getAllFieldsForBuilder().stream()
                         .flatMap(field -> field.getParameterAnnotations().stream())
@@ -507,7 +507,7 @@ class CustomizingDocumentationTest {
                 }
 
                 @Override
-                public void enhanceBuilder(BuilderDefinitionDto builderDto, ProcessingContext context) {
+                public void enhanceBuilder(BuilderDefinitionDto builderDto, BuilderProcessingContext context) {
                     // Add validation method to builder
                     BuilderMethodDto validateMethod = createValidateMethod();
                     builderDto.addMethod(validateMethod);
@@ -535,7 +535,7 @@ class CustomizingDocumentationTest {
                     return method;
                 }
 
-                private boolean isValidationAvailable(ProcessingContext context) {
+                private boolean isValidationAvailable(BuilderProcessingContext context) {
                     return context.getTypeElement("javax.validation.Valid") != null;
                 }
             }
@@ -600,19 +600,19 @@ class CustomizingDocumentationTest {
             import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
             import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
             import org.javahelpers.simple.builders.processor.model.type.TypeName;
-            import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
+            import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
             import java.util.List;
 
             public class DateParserGenerator implements MethodGenerator {
 
                 @Override
-                public boolean appliesTo(FieldDto field, TypeName dtoType, ProcessingContext context) {
+                public boolean appliesTo(FieldDto field, TypeName dtoType, BuilderProcessingContext context) {
                     return "java.time.LocalDate".equals(field.getFieldType().getFullQualifiedName())
                         && field.hasAnnotation("org.javahelpers.simple.builders.processor.testannotations.ParseFromString");
                 }
 
                 @Override
-                public List<BuilderMethodDto> generateMethods(FieldDto field, TypeName builderType, ProcessingContext context) {
+                public List<BuilderMethodDto> generateMethods(FieldDto field, TypeName builderType, BuilderProcessingContext context) {
                     String fieldName = field.getFieldNameInBuilder();
                     String methodName = fieldName + "FromString";
 
@@ -664,17 +664,17 @@ class CustomizingDocumentationTest {
             import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
             import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
             import org.javahelpers.simple.builders.processor.model.type.TypeName;
-            import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
+            import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 
             public class BuilderFactoryEnhancer implements BuilderEnhancer {
 
                 @Override
-                public boolean appliesTo(BuilderDefinitionDto builderDto, TypeName dtoType, ProcessingContext context) {
+                public boolean appliesTo(BuilderDefinitionDto builderDto, TypeName dtoType, BuilderProcessingContext context) {
                     return dtoType.hasAnnotation("org.javahelpers.simple.builders.processor.testannotations.BuilderFactory");
                 }
 
                 @Override
-                public void enhanceBuilder(BuilderDefinitionDto builderDto, ProcessingContext context) {
+                public void enhanceBuilder(BuilderDefinitionDto builderDto, BuilderProcessingContext context) {
                     TypeName builderType = builderDto.getBuilderTypeName();
 
                     // Add static factory method (conceptual - actual API may differ)

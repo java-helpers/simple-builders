@@ -47,7 +47,7 @@ import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLo
  * {@link Types}, logging and performance tracking, providing domain-agnostic helpers for type and
  * element operations.
  *
- * <p>Builder-specific state lives in {@link ProcessingContext}, which extends this base.
+ * <p>Builder-specific state lives in {@link BuilderProcessingContext}, which extends this base.
  */
 public abstract class AnnotationProcessingContext {
 

@@ -31,7 +31,7 @@ import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.type.BuilderInstantiation;
 import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
+import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 
 /**
  * Enhancer that adds the private prefilling methods backing {@link
@@ -50,13 +50,13 @@ public class FieldPrefillEnhancer implements BuilderEnhancer {
 
   @Override
   public boolean appliesTo(
-      BuilderDefinitionDto builderDto, TypeName dtoType, ProcessingContext context) {
+      BuilderDefinitionDto builderDto, TypeName dtoType, BuilderProcessingContext context) {
     return builderDto.getAllFieldsForBuilder().stream()
         .anyMatch(field -> fieldPrefill(field).isPresent());
   }
 
   @Override
-  public void enhanceBuilder(BuilderDefinitionDto builderDto, ProcessingContext context) {
+  public void enhanceBuilder(BuilderDefinitionDto builderDto, BuilderProcessingContext context) {
     builderDto.getAllFieldsForBuilder().stream()
         .map(FieldPrefillEnhancer::fieldPrefill)
         .flatMap(Optional::stream)

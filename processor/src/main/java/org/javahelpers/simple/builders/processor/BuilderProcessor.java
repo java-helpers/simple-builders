@@ -78,9 +78,9 @@ import org.javahelpers.simple.builders.processor.model.type.TypeNameList;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameMap;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameSet;
 import org.javahelpers.simple.builders.processor.processing.BuilderConfigurationReader;
+import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsEnum;
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsReader;
-import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 import org.javahelpers.simple.builders.processor.processing.ProcessingTarget;
 import org.javahelpers.simple.builders.processor.processing.SourceFormatterResolver;
 import org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker;
@@ -97,7 +97,7 @@ public class BuilderProcessor extends AbstractProcessor {
   private static final String MSG_FAILED_TO_GENERATE =
       "simple-builders: Failed to generate builder - %s";
 
-  private ProcessingContext context;
+  private BuilderProcessingContext context;
   private ProcessingLogger logger;
   private ClassCodeGenerator codeGenerator;
   private SourceFormatterResolver formatterResolver;
@@ -121,7 +121,7 @@ public class BuilderProcessor extends AbstractProcessor {
 
     SimpleBuildersSpiIntegration.initCompilation(processingEnv.getElementUtils());
 
-    this.context = new ProcessingContext(logger, globalConfig, processingEnv);
+    this.context = new BuilderProcessingContext(logger, globalConfig, processingEnv);
     this.codeGenerator =
         new RoasterCodeGenerator(
             new GenerationEnvironment(

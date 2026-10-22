@@ -44,7 +44,7 @@ import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLo
  *
  * <p>This eliminates repetitive parameter passing and provides a cleaner API.
  */
-public final class ProcessingContext extends AnnotationProcessingContext
+public final class BuilderProcessingContext extends AnnotationProcessingContext
     implements TypeMappingContext {
   private final BuilderConfigurationReader configurationReader;
   private final BuilderScopeResolver builderScopeResolver;
@@ -59,7 +59,7 @@ public final class ProcessingContext extends AnnotationProcessingContext
    * @param globalConfiguration the global builder configuration read from compiler arguments
    * @param processingEnv the processing environment providing access to utilities and facilities
    */
-  public ProcessingContext(
+  public BuilderProcessingContext(
       ProcessingLogger logger,
       BuilderConfiguration globalConfiguration,
       ProcessingEnvironment processingEnv) {

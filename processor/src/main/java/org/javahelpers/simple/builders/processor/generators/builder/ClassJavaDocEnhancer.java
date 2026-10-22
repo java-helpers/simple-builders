@@ -31,7 +31,7 @@ import org.javahelpers.simple.builders.processor.model.javadoc.JavadocCodeBlockD
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
+import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 
 /**
  * Enhancer that adds class-level JavaDoc to generated builder classes.
@@ -83,12 +83,12 @@ public class ClassJavaDocEnhancer implements BuilderEnhancer {
 
   @Override
   public boolean appliesTo(
-      BuilderDefinitionDto builderDto, TypeName dtoType, ProcessingContext context) {
+      BuilderDefinitionDto builderDto, TypeName dtoType, BuilderProcessingContext context) {
     return true; // Class JavaDoc is always needed for builders
   }
 
   @Override
-  public void enhanceBuilder(BuilderDefinitionDto builderDto, ProcessingContext context) {
+  public void enhanceBuilder(BuilderDefinitionDto builderDto, BuilderProcessingContext context) {
     TypeName targetType = builderDto.getBuildingTargetTypeName();
     JavadocDto javadoc = createClassJavadoc(targetType);
     String indentionString = "    ";

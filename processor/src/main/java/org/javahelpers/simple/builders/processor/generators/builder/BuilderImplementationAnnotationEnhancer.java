@@ -29,7 +29,7 @@ import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
+import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 
 /**
  * Enhancer that adds the @BuilderImplementation annotation to generated builder classes.
@@ -74,12 +74,12 @@ public class BuilderImplementationAnnotationEnhancer implements BuilderEnhancer 
 
   @Override
   public boolean appliesTo(
-      BuilderDefinitionDto builderDto, TypeName dtoType, ProcessingContext context) {
+      BuilderDefinitionDto builderDto, TypeName dtoType, BuilderProcessingContext context) {
     return context.getConfiguration().shouldUseBuilderImplementationAnnotation();
   }
 
   @Override
-  public void enhanceBuilder(BuilderDefinitionDto builderDto, ProcessingContext context) {
+  public void enhanceBuilder(BuilderDefinitionDto builderDto, BuilderProcessingContext context) {
     AnnotationDto builderImplementationAnnotation =
         createBuilderImplementationAnnotation(builderDto);
     builderDto.addClassAnnotation(builderImplementationAnnotation);

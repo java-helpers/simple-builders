@@ -44,7 +44,7 @@ import org.javahelpers.simple.builders.processor.model.type.TypeNameList;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameMap;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameSet;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameVariable;
-import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
+import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 
 /**
  * Utility class providing common functionality for method generators.
@@ -84,14 +84,15 @@ public final class MethodGeneratorUtil {
    * @param context the processing context containing the configuration with the method name prefix
    * @return the method name with prefix applied
    */
-  public static String generateBuilderMethodName(String fieldName, ProcessingContext context) {
+  public static String generateBuilderMethodName(
+      String fieldName, BuilderProcessingContext context) {
     return generateBuilderMethodName(fieldName, context.getConfiguration().getSetterPrefix());
   }
 
   /**
    * Generates a builder method name by prepending the given setter prefix to the capitalized field
    * name — the same name derivation the context-based overload resolves from {@code setterPrefix},
-   * for callers without a {@link ProcessingContext} (e.g. SPI adapters).
+   * for callers without a {@link BuilderProcessingContext} (e.g. SPI adapters).
    *
    * @param fieldName the field name
    * @param setterPrefix the configured setter prefix, or {@code null}/empty for none
@@ -110,7 +111,7 @@ public final class MethodGeneratorUtil {
    * @param context the processing context
    * @return the AccessModifier for method access, or null for package-private
    */
-  public static AccessModifier getMethodAccessModifier(ProcessingContext context) {
+  public static AccessModifier getMethodAccessModifier(BuilderProcessingContext context) {
     return context.getConfiguration().getMethodAccess();
   }
 
@@ -124,7 +125,7 @@ public final class MethodGeneratorUtil {
    * @return a new {@link BuilderMethodDto} with name and modifier set
    */
   public static BuilderMethodDto createBuilderMethod(
-      String fieldName, TypeName returnType, ProcessingContext context) {
+      String fieldName, TypeName returnType, BuilderProcessingContext context) {
     BuilderMethodDto method =
         new BuilderMethodDto(generateBuilderMethodName(fieldName, context), returnType);
     method.setModifier(getMethodAccessModifier(context));
@@ -173,7 +174,7 @@ public final class MethodGeneratorUtil {
       String transform,
       TypeName parameterType,
       TypeName builderType,
-      ProcessingContext context) {
+      BuilderProcessingContext context) {
 
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName(field.getOriginalFieldName());
@@ -235,7 +236,7 @@ public final class MethodGeneratorUtil {
       String emptyConstructorArgs,
       Map<String, TypeName> additionalTemplateArguments,
       TypeName parentBuilderType,
-      ProcessingContext context) {
+      BuilderProcessingContext context) {
     TypeName fieldBuilderType = fieldBuilder.typeName();
     TypeNameGeneric consumerType = createConsumerType(fieldBuilderType);
     MethodParameterDto parameter = new MethodParameterDto();
@@ -381,7 +382,7 @@ public final class MethodGeneratorUtil {
       TypeName collectionBuilderType,
       ResolvedBuilder elementBuilder,
       TypeName returnBuilderType,
-      ProcessingContext context) {
+      BuilderProcessingContext context) {
     // The collection builder receives a supplier for element builders: the resolved
     // instantiation path as a method reference
     String elementSupplier =
@@ -409,7 +410,7 @@ public final class MethodGeneratorUtil {
    * @return the method DTO for the simple field consumer
    */
   public static BuilderMethodDto createSimpleFieldConsumer(
-      FieldDto field, TypeName fieldType, TypeName builderType, ProcessingContext context) {
+      FieldDto field, TypeName fieldType, TypeName builderType, BuilderProcessingContext context) {
     TypeNameGeneric consumerType = createConsumerType(fieldType);
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName(field.getOriginalFieldName() + SUFFIX_CONSUMER);
