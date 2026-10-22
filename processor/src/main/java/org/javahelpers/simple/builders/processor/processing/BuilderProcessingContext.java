@@ -29,7 +29,6 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import org.javahelpers.simple.builders.processor.analysis.BuilderScopeResolver;
-import org.javahelpers.simple.builders.processor.analysis.TypeMappingContext;
 import org.javahelpers.simple.builders.processor.generators.registry.GeneratorRegistry;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
@@ -41,8 +40,7 @@ import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLo
  *
  * <p>This eliminates repetitive parameter passing and provides a cleaner API.
  */
-public final class BuilderProcessingContext extends AnnotationProcessingContext
-    implements TypeMappingContext {
+public final class BuilderProcessingContext extends AnnotationProcessingContext {
   private final BuilderConfigurationReader configurationReader;
   private final BuilderScopeResolver builderScopeResolver;
 

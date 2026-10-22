@@ -27,6 +27,7 @@ package org.javahelpers.simple.builders.processor.processing;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
@@ -38,6 +39,8 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+import org.javahelpers.simple.builders.processor.analysis.TypeMappingContext;
+import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.logging.ActivePerformanceTracker;
 import org.javahelpers.simple.builders.processor.processing.logging.NoOpPerformanceTracker;
@@ -51,7 +54,7 @@ import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLo
  *
  * <p>Builder-specific state lives in {@link BuilderProcessingContext}, which extends this base.
  */
-public class AnnotationProcessingContext {
+public class AnnotationProcessingContext implements TypeMappingContext {
 
   /** Element utility of the annotation processing framework. */
   protected final Elements elementUtils;
@@ -442,5 +445,27 @@ public class AnnotationProcessingContext {
     } else {
       logger.warning(format, args);
     }
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>Default: a generic context copies no type annotations; override to derive from
+   * configuration.
+   */
+  @Override
+  public boolean shouldCopyTypeAnnotations() {
+    return false;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>Default: a generic context knows no generated types; override to resolve generated
+   * replacement types.
+   */
+  @Override
+  public Optional<ResolvedBuilder> resolveGeneratedType(TypeElement typeElement) {
+    return Optional.empty();
   }
 }
