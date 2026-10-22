@@ -51,7 +51,7 @@ import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLo
  *
  * <p>Builder-specific state lives in {@link BuilderProcessingContext}, which extends this base.
  */
-public abstract class AnnotationProcessingContext {
+public class AnnotationProcessingContext {
 
   /** Element utility of the annotation processing framework. */
   protected final Elements elementUtils;
@@ -121,7 +121,7 @@ public abstract class AnnotationProcessingContext {
    * Gets the performance tracker for this processing context.
    *
    * <p>When performance tracking is disabled, returns a {@link NoOpPerformanceTracker} that has
-   * zero overhead. When enabled via {@code -Asimplebuilder.performanceTracking=true}, returns an
+   * zero overhead. When enabled via the supplied {@link AnnotationProcessingOptions}, returns an
    * {@link ActivePerformanceTracker} that measures execution times.
    *
    * @return the performance tracker instance
@@ -243,9 +243,12 @@ public abstract class AnnotationProcessingContext {
   /**
    * Returns the name of the package generated code is written to.
    *
-   * @return the qualified name of the package generated classes are placed in
+   * @return the qualified name of the package generated classes are placed in, or {@code null} when
+   *     the context generates no code into a specific package
    */
-  protected abstract String getGeneratedPackageName();
+  protected String getGeneratedPackageName() {
+    return null;
+  }
 
   /**
    * Checks whether a member (constructor, method) is accessible from the package generated code is
@@ -266,7 +269,8 @@ public abstract class AnnotationProcessingContext {
     if (member.getModifiers().contains(Modifier.PRIVATE)) {
       return false;
     }
-    return getPackageName(member).equals(getGeneratedPackageName());
+    String generatedPackage = getGeneratedPackageName();
+    return generatedPackage != null && getPackageName(member).equals(generatedPackage);
   }
 
   /**
