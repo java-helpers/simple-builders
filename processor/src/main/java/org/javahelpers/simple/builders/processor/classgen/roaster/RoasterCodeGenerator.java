@@ -90,8 +90,6 @@ public class RoasterCodeGenerator implements ClassCodeGenerator {
   /** Reporter for problems found during generation; the reporter decides the severity. */
   private final GenerationIssueReporter issueReporter;
 
-  /** Factory for creating a source formatter per formatting mode. */
-
   /**
    * Creates a code generator using the given generation environment.
    *
