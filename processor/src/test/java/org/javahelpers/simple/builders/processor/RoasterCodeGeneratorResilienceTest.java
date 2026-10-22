@@ -43,7 +43,7 @@ import org.javahelpers.simple.builders.processor.model.method.MethodCodePlacehol
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
+import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 import org.javahelpers.simple.builders.processor.processing.SourceFormatterResolver;
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 import org.javahelpers.simple.builders.processor.testing.CapturingProcessingLogger;
@@ -85,7 +85,8 @@ class RoasterCodeGeneratorResilienceTest {
 
     ProcessingEnvironment env = ProcessingEnvironmentStub.createEmpty();
     ProcessingLogger logger = ProcessingLogger.create(env);
-    ProcessingContext context = new ProcessingContext(logger, BuilderConfiguration.DEFAULT, env);
+    BuilderProcessingContext context =
+        new BuilderProcessingContext(logger, BuilderConfiguration.DEFAULT, env);
     RoasterCodeGenerator generator =
         new RoasterCodeGenerator(
             new GenerationEnvironment(
@@ -117,8 +118,8 @@ class RoasterCodeGeneratorResilienceTest {
 
     CapturingProcessingLogger capturing = CapturingProcessingLogger.create();
     ProcessingEnvironment env = ProcessingEnvironmentStub.createEmpty();
-    ProcessingContext context =
-        new ProcessingContext(capturing.logger(), BuilderConfiguration.DEFAULT, env);
+    BuilderProcessingContext context =
+        new BuilderProcessingContext(capturing.logger(), BuilderConfiguration.DEFAULT, env);
     RoasterCodeGenerator generator =
         new RoasterCodeGenerator(
             new GenerationEnvironment(

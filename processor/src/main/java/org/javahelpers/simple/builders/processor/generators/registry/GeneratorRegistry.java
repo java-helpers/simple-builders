@@ -37,7 +37,7 @@ import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
+import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 import org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker;
 
 /**
@@ -59,7 +59,7 @@ public class GeneratorRegistry {
 
   private final List<MethodGenerator> methodGenerators;
   private final List<BuilderEnhancer> builderEnhancers;
-  private final ProcessingContext context;
+  private final BuilderProcessingContext context;
   private final ComponentFilter componentFilter;
   private final PerformanceTracker performanceTracker;
 
@@ -69,7 +69,7 @@ public class GeneratorRegistry {
    * @param context the processing context for configuration and utilities
    * @param processingEnv the processing environment for reading compiler arguments
    */
-  public GeneratorRegistry(ProcessingContext context, ProcessingEnvironment processingEnv) {
+  public GeneratorRegistry(BuilderProcessingContext context, ProcessingEnvironment processingEnv) {
     this.context = context;
     this.methodGenerators = new ArrayList<>();
     this.builderEnhancers = new ArrayList<>();

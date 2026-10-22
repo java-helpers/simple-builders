@@ -41,7 +41,7 @@ import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
-import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
+import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 
 /**
  * Generates Supplier-based methods for builder fields.
@@ -88,13 +88,13 @@ public class SupplierMethodGenerator implements MethodGenerator {
   }
 
   @Override
-  public boolean appliesTo(FieldDto field, TypeName dtoType, ProcessingContext context) {
+  public boolean appliesTo(FieldDto field, TypeName dtoType, BuilderProcessingContext context) {
     return context.getConfiguration().shouldGenerateFieldSupplier();
   }
 
   @Override
   public List<BuilderMethodDto> generateMethods(
-      FieldDto field, TypeName builderType, ProcessingContext context) {
+      FieldDto field, TypeName builderType, BuilderProcessingContext context) {
 
     BuilderMethodDto supplierMethod =
         createFieldSupplier(
@@ -126,7 +126,7 @@ public class SupplierMethodGenerator implements MethodGenerator {
       String fieldJavaDoc,
       TypeName fieldType,
       TypeName builderType,
-      ProcessingContext context) {
+      BuilderProcessingContext context) {
     TypeNameGeneric supplierType = new TypeNameGeneric(map2TypeName(Supplier.class), fieldType);
     String parameterName = fieldName + SUFFIX_SUPPLIER;
 

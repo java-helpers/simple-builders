@@ -27,7 +27,7 @@ import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
+import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 
 /**
  * Enhancer that adds the @JsonPOJOBuilder annotation to generated builder classes.
@@ -84,13 +84,13 @@ public class JacksonAnnotationEnhancer implements BuilderEnhancer {
 
   @Override
   public boolean appliesTo(
-      BuilderDefinitionDto builderDto, TypeName dtoType, ProcessingContext context) {
+      BuilderDefinitionDto builderDto, TypeName dtoType, BuilderProcessingContext context) {
     return context.getConfiguration().shouldUseJacksonDeserializerAnnotation()
         && isJacksonAvailable(context);
   }
 
   @Override
-  public void enhanceBuilder(BuilderDefinitionDto builderDto, ProcessingContext context) {
+  public void enhanceBuilder(BuilderDefinitionDto builderDto, BuilderProcessingContext context) {
     AnnotationDto jacksonAnnotation = createJsonPOJOBuilderAnnotation(builderDto);
     builderDto.addClassAnnotation(jacksonAnnotation);
   }
@@ -101,7 +101,7 @@ public class JacksonAnnotationEnhancer implements BuilderEnhancer {
    * @param context the processing context
    * @return true if Jackson is available, false otherwise
    */
-  private boolean isJacksonAvailable(ProcessingContext context) {
+  private boolean isJacksonAvailable(BuilderProcessingContext context) {
     return context.getTypeElement("com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder")
         != null;
   }

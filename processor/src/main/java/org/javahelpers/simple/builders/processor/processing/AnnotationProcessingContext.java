@@ -39,10 +39,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
-import org.javahelpers.simple.builders.processor.analysis.BuilderScopeResolver;
 import org.javahelpers.simple.builders.processor.analysis.TypeMappingContext;
-import org.javahelpers.simple.builders.processor.generators.registry.GeneratorRegistry;
-import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.logging.ActivePerformanceTracker;
@@ -51,112 +48,99 @@ import org.javahelpers.simple.builders.processor.processing.logging.PerformanceT
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 
 /**
- * Context object that wraps Elements, Types, and logging utilities from annotation processing,
- * providing domain-specific methods for type and element operations.
+ * Generic annotation-processing context: wraps {@link ProcessingEnvironment}, {@link Elements},
+ * {@link Types}, logging and performance tracking, providing domain-agnostic helpers for type and
+ * element operations.
  *
- * <p>This eliminates repetitive parameter passing and provides a cleaner API.
+ * <p>Builder-specific state lives in {@link BuilderProcessingContext}, which extends this base.
  */
-public final class ProcessingContext implements TypeMappingContext {
-  private final Elements elementUtils;
-  private final Types typeUtils;
-  private final ProcessingLogger logger;
-  private final BuilderConfigurationReader configurationReader;
-  private final ProcessingEnvironment processingEnv;
-  private final PerformanceTracker performanceTracker;
-  private final BuilderScopeResolver builderScopeResolver;
+public class AnnotationProcessingContext implements TypeMappingContext {
 
-  private GeneratorRegistry generatorRegistry;
-  private ProcessingTarget processingTarget;
+  /** Element utility of the annotation processing framework. */
+  protected final Elements elementUtils;
+
+  /** Type utility of the annotation processing framework. */
+  protected final Types typeUtils;
+
+  /** Logger for info, debug, warning and error output. */
+  protected final ProcessingLogger logger;
+
+  /** The processing environment of the current round. */
+  protected final ProcessingEnvironment processingEnv;
+
+  /** Performance tracker for pipeline phase timing. */
+  protected final PerformanceTracker performanceTracker;
+
+  /** Static options supplied by the concrete context. */
+  protected final AnnotationProcessingOptions options;
+
+  /** Package generated code is written to, or {@code null} when not generating into a package. */
+  private String generatedPackageName;
 
   /**
-   * Creates a new processing context.
+   * Creates the context with default options (strict mode enabled, performance tracking disabled).
    *
-   * @param logger the logging utility for the annotation processor
-   * @param globalConfiguration the global builder configuration read from compiler arguments
-   * @param processingEnv the processing environment providing access to utilities and facilities
+   * @param logger logger for output
+   * @param processingEnv the annotation processing environment
    */
-  public ProcessingContext(
+  public AnnotationProcessingContext(ProcessingLogger logger, ProcessingEnvironment processingEnv) {
+    this(logger, processingEnv, AnnotationProcessingOptions.builder().build());
+  }
+
+  /**
+   * Creates the context.
+   *
+   * @param logger logger for output
+   * @param processingEnv the annotation processing environment
+   * @param options static options of the concrete context
+   */
+  public AnnotationProcessingContext(
       ProcessingLogger logger,
-      BuilderConfiguration globalConfiguration,
-      ProcessingEnvironment processingEnv) {
+      ProcessingEnvironment processingEnv,
+      AnnotationProcessingOptions options) {
     this.elementUtils = processingEnv.getElementUtils();
     this.typeUtils = processingEnv.getTypeUtils();
     this.logger = logger;
     this.processingEnv = processingEnv;
-    this.configurationReader =
-        new BuilderConfigurationReader(globalConfiguration, logger, elementUtils);
-    // Initialize performance tracker based on compiler argument
-    CompilerArgumentsReader argReader = new CompilerArgumentsReader(processingEnv);
-    boolean perfTrackingEnabled =
-        argReader.readBooleanValue(CompilerArgumentsEnum.PERFORMANCE_TRACKING);
-    String perfOutputFile = argReader.readValue(CompilerArgumentsEnum.PERFORMANCE_OUTPUT_FILE);
     this.performanceTracker =
-        perfTrackingEnabled
-            ? new ActivePerformanceTracker(perfOutputFile, PipelinePhases.PIPELINE_HIERARCHY)
+        options.performanceTrackingEnabled()
+            ? new ActivePerformanceTracker(
+                options.performanceOutputFile(), options.phaseHierarchy())
             : new NoOpPerformanceTracker();
-    this.builderScopeResolver = new BuilderScopeResolver(this);
-    // GeneratorRegistry will be lazily initialized on first access
+    this.options = options;
   }
 
   /**
-   * Initializes the per-target state ({@link ProcessingTarget}) for the type whose builder is
-   * currently being generated. Called once per target before extraction starts.
+   * Sets the name of the package generated code is written to. Called when the current generation
+   * target is known.
    *
-   * @param processingTarget the resolved configuration and builder package of the current target
+   * @param generatedPackageName the qualified name of the package generated classes are placed in
    */
-  public void initProcessingTarget(ProcessingTarget processingTarget) {
-    this.processingTarget = processingTarget;
+  protected void setGeneratedPackageName(String generatedPackageName) {
+    this.generatedPackageName = generatedPackageName;
   }
 
   /**
-   * Gets the configuration for the current processing target.
+   * Checks whether a member (constructor, method) is accessible from the package generated code is
+   * written to.
    *
-   * @return the builder configuration for the target being processed
-   */
-  public BuilderConfiguration getConfiguration() {
-    return this.processingTarget.configuration();
-  }
-
-  /**
-   * Gets the package the builder of the current processing target is generated in.
-   *
-   * @return the qualified package name of the generated builder
-   */
-  public String getBuilderPackageName() {
-    return this.processingTarget.builderPackage();
-  }
-
-  /**
-   * Checks whether a member (constructor, method) is accessible from the package the generated
-   * builder is written to.
-   *
-   * <p>Public members are always accessible. Private members are never accessible - the generated
-   * builder is a separate top-level class. Package-private and protected members are only
-   * accessible when the member's declaring package equals the builder package (protected access
-   * through inheritance does not apply, as the builder does not extend the target type).
+   * <p>Public members are always accessible. Private members are never accessible - generated code
+   * lives in a separate top-level class. Package-private and protected members are only accessible
+   * when the member's declaring package equals the generated package (protected access through
+   * inheritance does not apply, as generated code does not extend the target type).
    *
    * @param member the member to check
-   * @return {@code true} if generated code in the builder package may call the member
+   * @return {@code true} if generated code may call the member
    */
   @Override
   public boolean isAccessibleFromGeneratedPackage(Element member) {
-    return isMemberAccessibleFromBuilderPackage(member);
-  }
-
-  /**
-   * Tests whether a member is accessible from the package the generated builder is written to.
-   *
-   * @param member the member to check
-   * @return {@code true} if the member is accessible from the builder package
-   */
-  public boolean isMemberAccessibleFromBuilderPackage(Element member) {
     if (member.getModifiers().contains(Modifier.PUBLIC)) {
       return true;
     }
     if (member.getModifiers().contains(Modifier.PRIVATE)) {
       return false;
     }
-    return getPackageName(member).equals(getBuilderPackageName());
+    return generatedPackageName != null && getPackageName(member).equals(generatedPackageName);
   }
 
   /**
@@ -173,34 +157,10 @@ public final class ProcessingContext implements TypeMappingContext {
   }
 
   /**
-   * Gets the configuration reader for reading builder configurations.
-   *
-   * @return the builder configuration reader
-   */
-  public BuilderConfigurationReader getConfigurationReader() {
-    return configurationReader;
-  }
-
-  /**
-   * Get the unified generator registry for both field-level method generation and builder-level
-   * enhancement.
-   *
-   * <p>The registry is lazily initialized on first access to avoid circular dependency issues.
-   *
-   * @return the generator registry
-   */
-  public GeneratorRegistry getGeneratorRegistry() {
-    if (generatorRegistry == null) {
-      generatorRegistry = new GeneratorRegistry(this, processingEnv);
-    }
-    return generatorRegistry;
-  }
-
-  /**
    * Gets the performance tracker for this processing context.
    *
    * <p>When performance tracking is disabled, returns a {@link NoOpPerformanceTracker} that has
-   * zero overhead. When enabled via {@code -Asimplebuilder.performanceTracking=true}, returns an
+   * zero overhead. When enabled via the supplied {@link AnnotationProcessingOptions}, returns an
    * {@link ActivePerformanceTracker} that measures execution times.
    *
    * @return the performance tracker instance
@@ -227,35 +187,25 @@ public final class ProcessingContext implements TypeMappingContext {
   }
 
   /**
-   * Get the builder scope resolver for deciding whether a builder may be referenced.
-   *
-   * <p>The resolver is keyed off the current target configuration and is recomputed when the target
-   * configuration changes.
-   *
-   * @return the builder scope resolver
-   */
-  public BuilderScopeResolver getBuilderScopeResolver() {
-    return builderScopeResolver;
-  }
-
-  /**
    * {@inheritDoc}
    *
-   * <p>Backed by the resolved per-target builder configuration.
+   * <p>Default: a generic context copies no type annotations; override to derive from
+   * configuration.
    */
   @Override
   public boolean shouldCopyTypeAnnotations() {
-    return getConfiguration().shouldCopyTypeAnnotations();
+    return false;
   }
 
   /**
    * {@inheritDoc}
    *
-   * <p>Delegated to the builder scope resolver.
+   * <p>Default: a generic context knows no generated types; override to resolve generated
+   * replacement types.
    */
   @Override
   public Optional<ResolvedBuilder> resolveGeneratedType(TypeElement typeElement) {
-    return builderScopeResolver.resolveUsableBuilderType(typeElement);
+    return Optional.empty();
   }
 
   /**
@@ -490,18 +440,18 @@ public final class ProcessingContext implements TypeMappingContext {
   }
 
   /**
-   * Returns whether strict/fail-fast generation mode is enabled via the global compiler
-   * configuration.
+   * Returns whether strict/fail-fast mode is enabled via the supplied {@link
+   * AnnotationProcessingOptions}.
    *
-   * @return true if {@code -Asimplebuilder.strict=true} was supplied, false otherwise
+   * @return {@code true} if strict mode is enabled, {@code false} otherwise
    */
   public boolean isStrictModeEnabled() {
-    return configurationReader.getGlobalConfiguration().isStrictModeEnabled();
+    return options.strictModeEnabled();
   }
 
   /**
    * Reports an error or warning based on strict mode. In strict mode a build failure is emitted;
-   * otherwise a warning is logged so generation of remaining builders can continue.
+   * otherwise a warning is logged so processing can continue.
    *
    * @param element the element associated with the problem, for compiler location information
    * @param format the format string

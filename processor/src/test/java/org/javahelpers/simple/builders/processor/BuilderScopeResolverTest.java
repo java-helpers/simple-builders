@@ -47,7 +47,7 @@ import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration
 import org.javahelpers.simple.builders.processor.model.type.BuilderInstantiation;
 import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
+import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 import org.javahelpers.simple.builders.processor.processing.ProcessingTarget;
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
@@ -1314,8 +1314,8 @@ class BuilderScopeResolverTest {
         return false;
       }
       TypeElement helper = processingEnv.getElementUtils().getTypeElement("lib.LibHelper");
-      ProcessingContext context =
-          new ProcessingContext(
+      BuilderProcessingContext context =
+          new BuilderProcessingContext(
               ProcessingLogger.create(processingEnv), BuilderConfiguration.DEFAULT, processingEnv);
       context.initProcessingTarget(new ProcessingTarget(configuration("lib", "Builder"), ""));
       BuilderScopeResolver resolver = context.getBuilderScopeResolver();

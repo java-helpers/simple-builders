@@ -44,7 +44,7 @@ import org.javahelpers.simple.builders.processor.model.core.PackageScopes;
 import org.javahelpers.simple.builders.processor.model.type.BuilderInstantiation;
 import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
+import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 
 /**
  * Central resolver that decides whether a builder may be referenced for a given type.
@@ -75,7 +75,7 @@ public final class BuilderScopeResolver {
       List.of(GENERATED_FACTORY_METHOD_NAME, "of");
   private static final char[] UPPERCASE_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
 
-  private final ProcessingContext context;
+  private final BuilderProcessingContext context;
   private ResolutionInputs cachedResolutionInputs;
   private PackageScopes usagePackages = PackageScopes.unscoped();
   private final Map<String, Optional<ResolvedBuilder>> resolvedBuilderTypes = new HashMap<>();
@@ -86,7 +86,7 @@ public final class BuilderScopeResolver {
    *
    * @param context the processing context providing configuration and type utilities
    */
-  public BuilderScopeResolver(ProcessingContext context) {
+  public BuilderScopeResolver(BuilderProcessingContext context) {
     this.context = context;
   }
 
@@ -94,9 +94,9 @@ public final class BuilderScopeResolver {
    * Resolves the builder type to use for the given referenced type, if any.
    *
    * <p>This method reads the configuration from the processing context via {@link
-   * org.javahelpers.simple.builders.processor.processing.ProcessingContext#getConfiguration()}. The
-   * caller must ensure that {@link
-   * org.javahelpers.simple.builders.processor.processing.ProcessingContext#initProcessingTarget}
+   * org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext#getConfiguration()}.
+   * The caller must ensure that {@link
+   * org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext#initProcessingTarget}
    * has been invoked with the owner element's resolved configuration beforehand, so that
    * per-element {@code builderUsagePackages} overrides are respected.
    *
@@ -170,7 +170,7 @@ public final class BuilderScopeResolver {
    * <p>Unlike {@link #resolveUsableBuilderType(TypeElement)}, this method takes the configuration
    * as an explicit parameter rather than reading it from the processing context. This is because it
    * is called during generation-plan resolution, before {@link
-   * org.javahelpers.simple.builders.processor.processing.ProcessingContext#initProcessingTarget}
+   * org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext#initProcessingTarget}
    * has been invoked for the element, so the context does not yet hold the per-element
    * configuration.
    *

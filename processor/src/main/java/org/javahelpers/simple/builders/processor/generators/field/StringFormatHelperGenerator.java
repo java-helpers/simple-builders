@@ -43,7 +43,7 @@ import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameArray;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
-import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
+import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 
 /**
  * Generates String.format helper methods for String and {@code Optional<String>} fields.
@@ -90,7 +90,7 @@ public class StringFormatHelperGenerator implements MethodGenerator {
   }
 
   @Override
-  public boolean appliesTo(FieldDto field, TypeName dtoType, ProcessingContext context) {
+  public boolean appliesTo(FieldDto field, TypeName dtoType, BuilderProcessingContext context) {
     if (!context.getConfiguration().shouldGenerateStringFormatHelpers()) {
       return false;
     }
@@ -113,7 +113,7 @@ public class StringFormatHelperGenerator implements MethodGenerator {
 
   @Override
   public List<BuilderMethodDto> generateMethods(
-      FieldDto field, TypeName builderType, ProcessingContext context) {
+      FieldDto field, TypeName builderType, BuilderProcessingContext context) {
 
     List<BuilderMethodDto> methods = new ArrayList<>();
     TypeName fieldType = field.getFieldType();
@@ -168,7 +168,7 @@ public class StringFormatHelperGenerator implements MethodGenerator {
       String transform,
       List<AnnotationDto> annotations,
       TypeName builderType,
-      ProcessingContext context) {
+      BuilderProcessingContext context) {
     TypeName stringType = map2TypeName(String.class);
 
     MethodParameterDto formatParam = new MethodParameterDto();

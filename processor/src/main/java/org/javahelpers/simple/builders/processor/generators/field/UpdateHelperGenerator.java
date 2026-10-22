@@ -56,7 +56,7 @@ import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
 import org.javahelpers.simple.builders.processor.model.type.TypeNamePrimitive;
 import org.javahelpers.simple.builders.processor.model.type.TypeNamePrimitive.PrimitiveTypeEnum;
-import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
+import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 
 /**
  * Generates update helper methods for builder fields.
@@ -143,13 +143,13 @@ public class UpdateHelperGenerator implements MethodGenerator {
   }
 
   @Override
-  public boolean appliesTo(FieldDto field, TypeName dtoType, ProcessingContext context) {
+  public boolean appliesTo(FieldDto field, TypeName dtoType, BuilderProcessingContext context) {
     return context.getConfiguration().shouldGenerateUpdateHelpers();
   }
 
   @Override
   public List<BuilderMethodDto> generateMethods(
-      FieldDto field, TypeName builderType, ProcessingContext context) {
+      FieldDto field, TypeName builderType, BuilderProcessingContext context) {
     String originalFieldName = field.getOriginalFieldName();
     String parameterName = originalFieldName + "Updater";
     TypeNameGeneric updaterType =
@@ -206,7 +206,7 @@ public class UpdateHelperGenerator implements MethodGenerator {
    * Returns Javadoc guidance pointing to the builder-consumer overload when such a helper will be
    * generated for this field (nested DTO or collection of nested DTOs).
    */
-  private static String builderConsumerGuidance(FieldDto field, ProcessingContext context) {
+  private static String builderConsumerGuidance(FieldDto field, BuilderProcessingContext context) {
     if (!context.getConfiguration().shouldGenerateBuilderConsumer()) {
       return "";
     }
@@ -228,7 +228,7 @@ public class UpdateHelperGenerator implements MethodGenerator {
    * method-level example additionally requires an example value for setting the field first.
    */
   private static void addUpdateExample(
-      BuilderMethodDto methodDto, FieldDto field, ProcessingContext context) {
+      BuilderMethodDto methodDto, FieldDto field, BuilderProcessingContext context) {
     Optional<String> updateExpression = getUpdateExample(field.getFieldType());
     if (updateExpression.isEmpty()) {
       return;

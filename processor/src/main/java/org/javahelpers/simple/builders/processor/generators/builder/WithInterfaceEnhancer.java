@@ -35,7 +35,7 @@ import org.javahelpers.simple.builders.processor.model.type.BuilderNestedTypeDto
 import org.javahelpers.simple.builders.processor.model.type.NestedTypeDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
-import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
+import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 
 /**
  * Enhancer that adds the "With" interface to generated builders.
@@ -95,12 +95,12 @@ public class WithInterfaceEnhancer implements BuilderEnhancer {
 
   @Override
   public boolean appliesTo(
-      BuilderDefinitionDto builderDto, TypeName dtoType, ProcessingContext context) {
+      BuilderDefinitionDto builderDto, TypeName dtoType, BuilderProcessingContext context) {
     return context.getConfiguration().shouldGenerateWithInterface();
   }
 
   @Override
-  public void enhanceBuilder(BuilderDefinitionDto builderDto, ProcessingContext context) {
+  public void enhanceBuilder(BuilderDefinitionDto builderDto, BuilderProcessingContext context) {
     BuilderNestedTypeDto withInterface = createWithInterface(builderDto);
     builderDto.addNestedType(withInterface);
   }

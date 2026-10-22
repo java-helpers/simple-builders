@@ -30,8 +30,8 @@ import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration
  * Per-target processing state for the type whose builder is currently being generated.
  *
  * <p>{@link org.javahelpers.simple.builders.processor.BuilderProcessor} sets one instance per
- * processed type on the {@link ProcessingContext} before extraction starts, so downstream analysis
- * can reach it without threading both values through every call.
+ * processed type on the {@link BuilderProcessingContext} before extraction starts, so downstream
+ * analysis can reach it without threading both values through every call.
  *
  * @param configuration the resolved builder configuration for the current target
  * @param builderPackage the package the generated builder is written to. This is the configured

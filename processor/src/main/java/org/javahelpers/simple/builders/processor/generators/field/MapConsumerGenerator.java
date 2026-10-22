@@ -39,7 +39,7 @@ import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameMap;
-import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
+import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 
 /**
  * Generates Consumer-based methods for Map fields with map builder support.
@@ -105,7 +105,7 @@ public class MapConsumerGenerator implements MethodGenerator {
    */
   @Override
   public boolean appliesTo(
-      final FieldDto field, final TypeName dtoType, final ProcessingContext context) {
+      final FieldDto field, final TypeName dtoType, final BuilderProcessingContext context) {
     BuilderConfiguration configuration = context.getConfiguration();
     TypeName fieldType = field.getFieldType();
     return
@@ -133,7 +133,7 @@ public class MapConsumerGenerator implements MethodGenerator {
    */
   @Override
   public List<BuilderMethodDto> generateMethods(
-      final FieldDto field, final TypeName builderType, final ProcessingContext context) {
+      final FieldDto field, final TypeName builderType, final BuilderProcessingContext context) {
     if (!(field.getFieldType() instanceof TypeNameMap fieldTypeGeneric
         && fieldTypeGeneric.isParameterized())) {
       return Collections.emptyList();

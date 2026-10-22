@@ -36,7 +36,7 @@ import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
+import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 
 /**
  * Generates Consumer-based methods for fields whose type has a @SimpleBuilder annotation.
@@ -89,7 +89,7 @@ public class NestedBuilderConsumerGenerator implements MethodGenerator {
   }
 
   @Override
-  public boolean appliesTo(FieldDto field, TypeName dtoType, ProcessingContext context) {
+  public boolean appliesTo(FieldDto field, TypeName dtoType, BuilderProcessingContext context) {
     if (!context.getConfiguration().shouldGenerateBuilderConsumer()) {
       return false;
     }
@@ -98,7 +98,7 @@ public class NestedBuilderConsumerGenerator implements MethodGenerator {
 
   @Override
   public List<BuilderMethodDto> generateMethods(
-      FieldDto field, TypeName builderType, ProcessingContext context) {
+      FieldDto field, TypeName builderType, BuilderProcessingContext context) {
     Optional<ResolvedBuilder> fieldBuilderOpt = field.getFieldType().getResolvedBuilder();
     if (fieldBuilderOpt.isEmpty() || fieldBuilderOpt.get().funcForPrefilledBuilder().isEmpty()) {
       return Collections.emptyList();

@@ -33,7 +33,7 @@ import org.javahelpers.simple.builders.processor.model.method.MethodCodeDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNamePrimitive;
-import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
+import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 
 /**
  * Enhancer that adds builder constructors.
@@ -59,12 +59,12 @@ public class ConstructorEnhancer implements BuilderEnhancer {
 
   @Override
   public boolean appliesTo(
-      BuilderDefinitionDto builderDto, TypeName dtoType, ProcessingContext context) {
+      BuilderDefinitionDto builderDto, TypeName dtoType, BuilderProcessingContext context) {
     return true; // Constructors are always needed
   }
 
   @Override
-  public void enhanceBuilder(BuilderDefinitionDto builderDto, ProcessingContext context) {
+  public void enhanceBuilder(BuilderDefinitionDto builderDto, BuilderProcessingContext context) {
     builderDto.addConstructor(createEmptyConstructor(builderDto));
     builderDto.addConstructor(createFromInstanceConstructor(builderDto));
   }

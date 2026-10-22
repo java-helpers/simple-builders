@@ -50,7 +50,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
+import org.javahelpers.simple.builders.processor.processing.AnnotationProcessingContext;
 
 /** Helperclass for extrating specific information from existing classes. */
 public final class JavaLangAnalyser {
@@ -68,7 +68,8 @@ public final class JavaLangAnalyser {
    * @param context the processing context, used to resolve {@link java.lang.Object}'s methods
    * @return {@code true}, if it is no method with the signature of a java.lang.Object method
    */
-  public static boolean isNoMethodOfObjectClass(ExecutableElement mth, ProcessingContext context) {
+  public static boolean isNoMethodOfObjectClass(
+      ExecutableElement mth, AnnotationProcessingContext context) {
     TypeElement objectElement = context.getTypeElement(Object.class.getCanonicalName());
     if (objectElement == null) {
       return true;
@@ -89,7 +90,7 @@ public final class JavaLangAnalyser {
    * @return filtered list excluding Object class methods
    */
   public static List<ExecutableElement> findAllPossibleSettersOfClass(
-      TypeElement typeElement, ProcessingContext context) {
+      TypeElement typeElement, AnnotationProcessingContext context) {
     return ElementFilter.methodsIn(context.getAllMembers(typeElement)).stream()
         .filter(mth -> isNoMethodOfObjectClass(mth, context))
         .filter(JavaLangAnalyser::isSetterForField)
@@ -250,7 +251,7 @@ public final class JavaLangAnalyser {
       Element element,
       Class<? extends Annotation> annotationClass,
       Class<? extends Annotation> containerClass,
-      ProcessingContext context) {
+      AnnotationProcessingContext context) {
     if (element == null) {
       return List.of();
     }
@@ -275,7 +276,7 @@ public final class JavaLangAnalyser {
    * @return the annotation mirrors wrapped by the container
    */
   private static List<AnnotationMirror> unwrapContainerInstances(
-      AnnotationMirror containerMirror, ProcessingContext context) {
+      AnnotationMirror containerMirror, AnnotationProcessingContext context) {
     Optional<AnnotationValue> containerValue =
         findAnnotationAttribute(containerMirror, "value", context);
     if (containerValue.isEmpty() || !(containerValue.get().getValue() instanceof List<?> entries)) {
@@ -299,7 +300,9 @@ public final class JavaLangAnalyser {
    * @return the attribute's value, or empty if the annotation has no such attribute
    */
   public static Optional<AnnotationValue> findAnnotationAttribute(
-      AnnotationMirror annotationMirror, String attributeName, ProcessingContext context) {
+      AnnotationMirror annotationMirror,
+      String attributeName,
+      AnnotationProcessingContext context) {
     for (Map.Entry<ExecutableElement, AnnotationValue> entry :
         context.getElementValuesWithDefaults(annotationMirror).entrySet()) {
       if (entry.getKey().getSimpleName().contentEquals(attributeName)) {
@@ -311,13 +314,13 @@ public final class JavaLangAnalyser {
 
   /**
    * Single-parameter variant of {@link #findMethodsStatic(TypeElement, List, TypeName,
-   * ProcessingContext)}.
+   * AnnotationProcessingContext)}.
    */
   public static List<ExecutableElement> findMethodsStatic(
       TypeElement type,
       TypeName expectedParameterType,
       TypeName expectedReturnType,
-      ProcessingContext context) {
+      AnnotationProcessingContext context) {
     return findMethodsStatic(type, List.of(expectedParameterType), expectedReturnType, context);
   }
 
@@ -335,7 +338,7 @@ public final class JavaLangAnalyser {
       TypeElement type,
       List<TypeName> expectedParameterTypes,
       TypeName expectedReturnType,
-      ProcessingContext context) {
+      AnnotationProcessingContext context) {
     return findMethods(type, expectedParameterTypes, expectedReturnType, context).stream()
         .filter(Predicate.not(JavaLangAnalyser::isNotStatic))
         .toList();
@@ -351,7 +354,9 @@ public final class JavaLangAnalyser {
    * @return the matching methods, in declaration order
    */
   public static List<ExecutableElement> findMethodsStatic(
-      TypeElement type, List<TypeName> expectedParameterTypes, ProcessingContext context) {
+      TypeElement type,
+      List<TypeName> expectedParameterTypes,
+      AnnotationProcessingContext context) {
     return findMethods(type, expectedParameterTypes, mirror -> true, context).stream()
         .filter(Predicate.not(JavaLangAnalyser::isNotStatic))
         .toList();
@@ -371,7 +376,7 @@ public final class JavaLangAnalyser {
       TypeElement type,
       List<TypeName> expectedParameterTypes,
       TypeName expectedReturnType,
-      ProcessingContext context) {
+      AnnotationProcessingContext context) {
     Predicate<TypeMirror> returnTypeMatcher =
         expectedReturnType == null
             ? mirror -> mirror.getKind() == VOID
@@ -383,7 +388,7 @@ public final class JavaLangAnalyser {
       TypeElement type,
       List<TypeName> expectedParameterTypes,
       Predicate<TypeMirror> returnTypeMatcher,
-      ProcessingContext context) {
+      AnnotationProcessingContext context) {
     if (type == null) {
       return List.of();
     }
@@ -463,7 +468,7 @@ public final class JavaLangAnalyser {
    * @return the readable properties in declaration order
    */
   public static List<ReadableProperty> findReadableProperties(
-      TypeElement typeElement, ProcessingContext context) {
+      TypeElement typeElement, AnnotationProcessingContext context) {
     if (typeElement == null) {
       return List.of();
     }
@@ -478,7 +483,7 @@ public final class JavaLangAnalyser {
           && hasNoParameters(method)
           && method.getReturnType().getKind() != VOID
           && isNoMethodOfObjectClass(method, context)
-          && context.isMemberAccessibleFromBuilderPackage(method)) {
+          && context.isAccessibleFromGeneratedPackage(method)) {
         String name = propertyNameOf(method);
         properties.putIfAbsent(
             name,
@@ -487,7 +492,7 @@ public final class JavaLangAnalyser {
     }
     for (VariableElement field : ElementFilter.fieldsIn(context.getAllMembers(typeElement))) {
       if (!field.getModifiers().contains(STATIC)
-          && context.isMemberAccessibleFromBuilderPackage(field)) {
+          && context.isAccessibleFromGeneratedPackage(field)) {
         String name = field.getSimpleName().toString();
         properties.putIfAbsent(name, new ReadableProperty(name, name, field.asType()));
       }
@@ -505,7 +510,7 @@ public final class JavaLangAnalyser {
    * @return the field functions in declaration order
    */
   public static List<ExecutableElement> findFieldFunctions(
-      TypeElement type, ProcessingContext context) {
+      TypeElement type, AnnotationProcessingContext context) {
     return ElementFilter.methodsIn(context.getAllMembers(type)).stream()
         .filter(JavaLangAnalyser::isNotStatic)
         .filter(method -> isNoMethodOfObjectClass(method, context))
@@ -542,7 +547,7 @@ public final class JavaLangAnalyser {
    * @return {@code true} if the type declares or inherits a matching constructor
    */
   public static boolean hasConstructorAccepting(
-      TypeElement builderType, TypeName expectedType, ProcessingContext context) {
+      TypeElement builderType, TypeName expectedType, AnnotationProcessingContext context) {
     if (builderType == null) {
       return false;
     }
@@ -759,7 +764,7 @@ public final class JavaLangAnalyser {
       TypeElement dtoType,
       String fieldName,
       TypeMirror fieldTypeMirror,
-      ProcessingContext context) {
+      AnnotationProcessingContext context) {
     if (dtoType == null || fieldName == null || fieldTypeMirror == null) {
       return Optional.empty();
     }
@@ -772,7 +777,7 @@ public final class JavaLangAnalyser {
       if (Strings.CI.equalsAny(name, fieldName, "is" + fieldName, "get" + fieldName)
           && candidate.getParameters().isEmpty()
           && context.isSameType(candidate.getReturnType(), fieldTypeMirror)
-          && context.isMemberAccessibleFromBuilderPackage(candidate)) {
+          && context.isAccessibleFromGeneratedPackage(candidate)) {
         return Optional.of(candidate);
       }
     }
@@ -827,7 +832,7 @@ public final class JavaLangAnalyser {
    * @return Optional containing the setter ExecutableElement if found
    */
   public static Optional<ExecutableElement> findSetterForField(
-      TypeElement dtoType, String fieldName, ProcessingContext context) {
+      TypeElement dtoType, String fieldName, AnnotationProcessingContext context) {
     if (dtoType == null || fieldName == null) {
       return Optional.empty();
     }
@@ -837,7 +842,7 @@ public final class JavaLangAnalyser {
       if (candidate.getSimpleName().contentEquals(setterName)
           && candidate.getParameters().size() == 1
           && candidate.getReturnType().getKind() == VOID
-          && context.isMemberAccessibleFromBuilderPackage(candidate)) {
+          && context.isAccessibleFromGeneratedPackage(candidate)) {
         return Optional.of(candidate);
       }
     }
@@ -859,7 +864,7 @@ public final class JavaLangAnalyser {
   public static Optional<ExecutableElement> findConstructorForBuilder(
       TypeElement annotatedType,
       Class<? extends Annotation> constructorAnnotation,
-      ProcessingContext context) {
+      AnnotationProcessingContext context) {
     List<ExecutableElement> ctors =
         ElementFilter.constructorsIn(context.getAllMembers(annotatedType)).stream()
             .filter(context::isAccessibleFromGeneratedPackage)
@@ -895,7 +900,7 @@ public final class JavaLangAnalyser {
    * @return {@code true} if an accessible constructor exists
    */
   public static boolean hasAccessibleConstructor(
-      TypeElement typeElement, ProcessingContext context) {
+      TypeElement typeElement, AnnotationProcessingContext context) {
     return ElementFilter.constructorsIn(context.getAllMembers(typeElement)).stream()
         .anyMatch(context::isAccessibleFromGeneratedPackage);
   }

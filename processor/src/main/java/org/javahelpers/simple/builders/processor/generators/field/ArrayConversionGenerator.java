@@ -38,7 +38,7 @@ import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameArray;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
 import org.javahelpers.simple.builders.processor.model.type.TypeNamePrimitive;
-import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
+import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 
 /**
  * Generates array-from-List conversion methods for array fields.
@@ -83,13 +83,13 @@ public class ArrayConversionGenerator implements MethodGenerator {
   }
 
   @Override
-  public boolean appliesTo(FieldDto field, TypeName dtoType, ProcessingContext context) {
+  public boolean appliesTo(FieldDto field, TypeName dtoType, BuilderProcessingContext context) {
     return field.getFieldType() instanceof TypeNameArray;
   }
 
   @Override
   public List<BuilderMethodDto> generateMethods(
-      FieldDto field, TypeName builderType, ProcessingContext context) {
+      FieldDto field, TypeName builderType, BuilderProcessingContext context) {
 
     TypeName fieldType = field.getFieldType();
 
@@ -111,7 +111,7 @@ public class ArrayConversionGenerator implements MethodGenerator {
       TypeName listType,
       TypeName elementType,
       TypeName builderType,
-      ProcessingContext context) {
+      BuilderProcessingContext context) {
     String fieldName = field.getOriginalFieldName();
     String fieldNameInBuilder = field.getFieldNameInBuilder();
     MethodParameterDto parameter = new MethodParameterDto();
