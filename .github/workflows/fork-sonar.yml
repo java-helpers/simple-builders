@@ -34,10 +34,13 @@ concurrency:
 
 jobs:
   sonar:
+    # Skipped for PR runs sent by igel-devin-ai (Devin): the CI build itself is
+    # skipped for that actor, so no analysis-inputs artifact exists to download.
     if: >
       github.event.workflow_run.event == 'pull_request' &&
       github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.head_repository.full_name != github.event.workflow_run.repository.full_name
+      github.event.workflow_run.head_repository.full_name != github.event.workflow_run.repository.full_name &&
+      github.event.workflow_run.actor.login != 'igel-devin-ai'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment: fork-ci

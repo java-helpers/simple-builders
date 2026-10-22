@@ -28,6 +28,12 @@ concurrency:
 jobs:
   analyze:
     name: Analyze (${{ matrix.language }})
+    # Same gate as the Java CI build job: PR runs sent by igel-devin-ai (Devin)
+    # are skipped; pushes by devin-ai-integration[bot] wait for maintainer
+    # approval, and a maintainer re-run passes the check. Scoped to pull_request
+    # so scheduled runs (whose actor is the workflow's last modifier) are not
+    # skipped.
+    if: github.event_name != 'pull_request' || github.actor != 'igel-devin-ai'
     # Runner size impacts CodeQL analysis time. To learn more, please see:
     #   - https://gh.io/recommended-hardware-resources-for-running-codeql
     #   - https://gh.io/supported-runners-and-hardware-resources

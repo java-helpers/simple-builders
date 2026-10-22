@@ -20,10 +20,13 @@ permissions:
 jobs:
   codecov:
     # Only for PRs that originate from a fork (same-repo PRs upload directly in
-    # the main CI workflow, which has secrets).
+    # the main CI workflow, which has secrets). Skipped for PR runs sent by
+    # igel-devin-ai (Devin): those are skipped in the CI build itself, so no
+    # coverage artifact exists to download.
     if: >
       github.event.workflow_run.event == 'pull_request' &&
-      github.event.workflow_run.head_repository.full_name != github.event.workflow_run.repository.full_name
+      github.event.workflow_run.head_repository.full_name != github.event.workflow_run.repository.full_name &&
+      github.event.workflow_run.actor.login != 'igel-devin-ai'
     runs-on: ubuntu-latest
     env:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
