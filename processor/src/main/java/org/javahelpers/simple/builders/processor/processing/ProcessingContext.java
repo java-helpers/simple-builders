@@ -27,7 +27,6 @@ package org.javahelpers.simple.builders.processor.processing;
 import java.util.Optional;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import org.javahelpers.simple.builders.processor.analysis.BuilderScopeResolver;
 import org.javahelpers.simple.builders.processor.analysis.TypeMappingContext;
@@ -110,21 +109,9 @@ public final class ProcessingContext extends AnnotationProcessingContext
     return this.processingTarget.builderPackage();
   }
 
-  /**
-   * Checks whether a member (constructor, method) is accessible from the package the generated
-   * builder is written to.
-   *
-   * <p>Public members are always accessible. Private members are never accessible - the generated
-   * builder is a separate top-level class. Package-private and protected members are only
-   * accessible when the member's declaring package equals the builder package (protected access
-   * through inheritance does not apply, as the builder does not extend the target type).
-   *
-   * @param member the member to check
-   * @return {@code true} if generated code in the builder package may call the member
-   */
   @Override
-  public boolean isAccessibleFromGeneratedPackage(Element member) {
-    return isMemberAccessibleFromBuilderPackage(member);
+  protected String getGeneratedPackageName() {
+    return getBuilderPackageName();
   }
 
   /**
@@ -134,13 +121,7 @@ public final class ProcessingContext extends AnnotationProcessingContext
    * @return {@code true} if the member is accessible from the builder package
    */
   public boolean isMemberAccessibleFromBuilderPackage(Element member) {
-    if (member.getModifiers().contains(Modifier.PUBLIC)) {
-      return true;
-    }
-    if (member.getModifiers().contains(Modifier.PRIVATE)) {
-      return false;
-    }
-    return getPackageName(member).equals(getBuilderPackageName());
+    return isAccessibleFromGeneratedPackage(member);
   }
 
   /**

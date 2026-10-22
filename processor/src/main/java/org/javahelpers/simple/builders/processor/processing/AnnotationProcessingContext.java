@@ -32,6 +32,7 @@ import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
@@ -48,7 +49,7 @@ import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLo
  *
  * <p>Builder-specific state lives in {@link ProcessingContext}, which extends this base.
  */
-public class AnnotationProcessingContext {
+public abstract class AnnotationProcessingContext {
 
   /** Element utility of the annotation processing framework. */
   protected final Elements elementUtils;
@@ -177,6 +178,35 @@ public class AnnotationProcessingContext {
    */
   public String getPackageName(Element element) {
     return elementUtils.getPackageOf(element).getQualifiedName().toString();
+  }
+
+  /**
+   * Returns the name of the package generated code is written to.
+   *
+   * @return the qualified name of the package generated classes are placed in
+   */
+  protected abstract String getGeneratedPackageName();
+
+  /**
+   * Checks whether a member (constructor, method) is accessible from the package generated code is
+   * written to.
+   *
+   * <p>Public members are always accessible. Private members are never accessible - generated code
+   * lives in a separate top-level class. Package-private and protected members are only accessible
+   * when the member's declaring package equals the generated package (protected access through
+   * inheritance does not apply, as generated code does not extend the target type).
+   *
+   * @param member the member to check
+   * @return {@code true} if generated code may call the member
+   */
+  public boolean isAccessibleFromGeneratedPackage(Element member) {
+    if (member.getModifiers().contains(Modifier.PUBLIC)) {
+      return true;
+    }
+    if (member.getModifiers().contains(Modifier.PRIVATE)) {
+      return false;
+    }
+    return getPackageName(member).equals(getGeneratedPackageName());
   }
 
   /**
