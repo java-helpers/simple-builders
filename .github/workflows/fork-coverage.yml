@@ -18,15 +18,33 @@ permissions:
   actions: read
 
 jobs:
-  codecov:
-    # Only for PRs that originate from a fork (same-repo PRs upload directly in
-    # the main CI workflow, which has secrets). Skipped for PR runs sent by
-    # igel-devin-ai (Devin): those are skipped in the CI build itself, so no
-    # coverage artifact exists to download.
+  # Gate job: a skipped CI run (e.g. pull_request runs sent by igel-devin-ai)
+  # concludes 'success' but produces no artifacts, so only run the upload job
+  # when the coverage payload actually exists. This checks a fact of the
+  # completed run instead of forgeable github.event.* context values.
+  coverage-payload:
     if: >
       github.event.workflow_run.event == 'pull_request' &&
-      github.event.workflow_run.head_repository.full_name != github.event.workflow_run.repository.full_name &&
-      github.event.workflow_run.actor.login != 'igel-devin-ai'
+      github.event.workflow_run.head_repository.full_name != github.event.workflow_run.repository.full_name
+    runs-on: ubuntu-latest
+    outputs:
+      present: ${{ steps.check.outputs.present }}
+    steps:
+      - name: Check for coverage payload in the CI run
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          present="$(curl -sS -H "Authorization: Bearer $GH_TOKEN" \
+            "${{ github.api_url }}/repos/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}/artifacts?per_page=100" \
+            | jq -r '.artifacts[] | select(.name == "codecov-payload" and (.expired | not)) | .name')"
+          echo "present=${present:+true}" >> "$GITHUB_OUTPUT"
+
+  codecov:
+    needs: coverage-payload
+    # Only runs when the gate job found the artifact (a skipped needed job
+    # skips this one automatically).
+    if: needs.coverage-payload.outputs.present == 'true'
     runs-on: ubuntu-latest
     env:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

@@ -33,14 +33,34 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  sonar:
-    # Skipped for PR runs sent by igel-devin-ai (Devin): the CI build itself is
-    # skipped for that actor, so no analysis-inputs artifact exists to download.
+  # Gate job: a skipped CI run (e.g. pull_request runs sent by igel-devin-ai)
+  # concludes 'success' but produces no artifacts, so only run the analysis when
+  # the inputs actually exist. This checks a fact of the completed run instead
+  # of forgeable github.event.* context values.
+  analysis-inputs:
     if: >
       github.event.workflow_run.event == 'pull_request' &&
       github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.head_repository.full_name != github.event.workflow_run.repository.full_name &&
-      github.event.workflow_run.actor.login != 'igel-devin-ai'
+      github.event.workflow_run.head_repository.full_name != github.event.workflow_run.repository.full_name
+    runs-on: ubuntu-latest
+    outputs:
+      present: ${{ steps.check.outputs.present }}
+    steps:
+      - name: Check for analysis inputs in the CI run
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          present="$(curl -sS -H "Authorization: Bearer $GH_TOKEN" \
+            "${{ github.api_url }}/repos/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}/artifacts?per_page=100" \
+            | jq -r '.artifacts[] | select(.name == "sonar-analysis-inputs" and (.expired | not)) | .name')"
+          echo "present=${present:+true}" >> "$GITHUB_OUTPUT"
+
+  sonar:
+    needs: analysis-inputs
+    # Only runs when the gate job found the artifact (a skipped needed job
+    # skips this one automatically).
+    if: needs.analysis-inputs.outputs.present == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment: fork-ci
