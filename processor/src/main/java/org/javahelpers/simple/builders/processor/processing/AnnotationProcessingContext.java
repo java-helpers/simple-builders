@@ -132,6 +132,7 @@ public class AnnotationProcessingContext implements TypeMappingContext {
    * @param member the member to check
    * @return {@code true} if generated code may call the member
    */
+  @Override
   public boolean isAccessibleFromGeneratedPackage(Element member) {
     if (member.getModifiers().contains(Modifier.PUBLIC)) {
       return true;
@@ -213,6 +214,7 @@ public class AnnotationProcessingContext implements TypeMappingContext {
    * @param qualifiedName the canonical class name (e.g., "java.lang.String")
    * @return the type element, or null if not found
    */
+  @Override
   public TypeElement getTypeElement(String qualifiedName) {
     return elementUtils.getTypeElement(qualifiedName);
   }
@@ -256,6 +258,7 @@ public class AnnotationProcessingContext implements TypeMappingContext {
    * @param element the element
    * @return the qualified package name
    */
+  @Override
   public String getPackageName(Element element) {
     return elementUtils.getPackageOf(element).getQualifiedName().toString();
   }
@@ -267,6 +270,7 @@ public class AnnotationProcessingContext implements TypeMappingContext {
    * @return list of all members (wildcard enforced by the javax.lang.model API)
    */
   @SuppressWarnings("java:S1452")
+  @Override
   public List<? extends Element> getAllMembers(TypeElement typeElement) {
     return elementUtils.getAllMembers(typeElement);
   }
@@ -287,6 +291,7 @@ public class AnnotationProcessingContext implements TypeMappingContext {
    * @param typeMirror the type mirror
    * @return the element, or null if not representable as an element
    */
+  @Override
   public Element asElement(TypeMirror typeMirror) {
     return typeUtils.asElement(typeMirror);
   }
@@ -298,6 +303,7 @@ public class AnnotationProcessingContext implements TypeMappingContext {
    * @param type2 second type
    * @return true if the types are the same
    */
+  @Override
   public boolean isSameType(TypeMirror type1, TypeMirror type2) {
     return typeUtils.isSameType(type1, type2);
   }
@@ -308,6 +314,7 @@ public class AnnotationProcessingContext implements TypeMappingContext {
    * @param typeMirror the type to erase
    * @return the erasure of the type
    */
+  @Override
   public TypeMirror erasure(TypeMirror typeMirror) {
     return typeUtils.erasure(typeMirror);
   }
@@ -319,6 +326,7 @@ public class AnnotationProcessingContext implements TypeMappingContext {
    * @param type2 the target type
    * @return true if type1 is assignable to type2
    */
+  @Override
   public boolean isAssignable(TypeMirror type1, TypeMirror type2) {
     return typeUtils.isAssignable(type1, type2);
   }
@@ -330,6 +338,7 @@ public class AnnotationProcessingContext implements TypeMappingContext {
    * @return list of direct supertypes
    */
   @SuppressWarnings("java:S1452")
+  @Override
   public java.util.List<? extends TypeMirror> directSupertypes(TypeMirror typeMirror) {
     return typeUtils.directSupertypes(typeMirror);
   }
@@ -369,6 +378,7 @@ public class AnnotationProcessingContext implements TypeMappingContext {
    * @param format the format string
    * @param args arguments referenced by the format specifiers in the format string
    */
+  @Override
   public void debug(String format, Object... args) {
     logger.debug(format, args);
   }
