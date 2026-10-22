@@ -98,7 +98,7 @@ public interface TypeMappingContext {
    * Returns the direct supertypes of a type mirror.
    *
    * @param typeMirror the type mirror
-   * @return list of direct supertypes
+   * @return list of direct supertypes (wildcard enforced by the javax.lang.model API)
    */
   @SuppressWarnings("java:S1452")
   List<? extends TypeMirror> directSupertypes(TypeMirror typeMirror);
@@ -107,7 +107,7 @@ public interface TypeMappingContext {
    * Returns all members of a type, including inherited members.
    *
    * @param typeElement the type to inspect
-   * @return list of all member elements
+   * @return list of all member elements (wildcard enforced by the javax.lang.model API)
    */
   @SuppressWarnings("java:S1452")
   List<? extends Element> getAllMembers(TypeElement typeElement);

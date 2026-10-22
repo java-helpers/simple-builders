@@ -317,7 +317,7 @@ public final class ProcessingContext implements TypeMappingContext {
    * Get all members of a type, including inherited members.
    *
    * @param typeElement the type to inspect
-   * @return list of all members
+   * @return list of all members (wildcard enforced by the javax.lang.model API)
    */
   @SuppressWarnings("java:S1452")
   @Override
