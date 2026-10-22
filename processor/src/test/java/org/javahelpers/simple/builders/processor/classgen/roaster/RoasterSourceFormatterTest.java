@@ -55,6 +55,9 @@ import org.junit.jupiter.params.provider.MethodSource;
  */
 class RoasterSourceFormatterTest {
 
+  /** Minimal compilable input used when a test only needs to trigger profile initialization. */
+  private static final String TESTDATA_CODE = "class A {}";
+
   private RoasterSourceFormatter createFormatter(FormattingMode mode) {
     return new RoasterSourceFormatter(CapturingProcessingLogger.create().logger(), mode);
   }
@@ -561,7 +564,7 @@ class RoasterSourceFormatterTest {
     CapturingProcessingLogger capturing = CapturingProcessingLogger.createDebugEnabled();
     new RoasterSourceFormatter(
             capturing.logger(), FormattingMode.LIGHTWEIGHT, "nonexistent-profile.xml")
-        .format("class A {}");
+        .format(TESTDATA_CODE);
     capturing.assertMessage("OTHER: [DEBUG] Using lightweight source formatting.");
   }
 
@@ -569,7 +572,7 @@ class RoasterSourceFormatterTest {
   void constructor_missingProfile_logsProfileNotFoundWarning() {
     CapturingProcessingLogger capturing = CapturingProcessingLogger.create();
     new RoasterSourceFormatter(capturing.logger(), FormattingMode.JDT, "nonexistent-profile.xml")
-        .format("class A {}");
+        .format(TESTDATA_CODE);
     capturing.assertMessage(
         "WARNING: Eclipse formatter profile 'nonexistent-profile.xml' was not found as a file or classpath resource; falling back to the bundled profile.");
   }
@@ -612,7 +615,7 @@ class RoasterSourceFormatterTest {
             capturing.logger(),
             FormattingMode.JDT,
             RoasterSourceFormatter.DEFAULT_FORMATTER_PROFILE_RESOURCE)
-        .format("class A {}");
+        .format(TESTDATA_CODE);
     capturing.assertMessage(
         "OTHER: [DEBUG] Using JDT source formatting with Eclipse formatter profile 'eclipse-java-format.xml'.");
   }
@@ -639,7 +642,7 @@ class RoasterSourceFormatterTest {
   @Test
   void constructor_blankProfile_usesBundledDefault() {
     CapturingProcessingLogger capturing = CapturingProcessingLogger.createDebugEnabled();
-    new RoasterSourceFormatter(capturing.logger(), FormattingMode.JDT, "  ").format("class A {}");
+    new RoasterSourceFormatter(capturing.logger(), FormattingMode.JDT, "  ").format(TESTDATA_CODE);
     capturing.assertMessage(
         "OTHER: [DEBUG] Using JDT source formatting with Eclipse formatter profile 'eclipse-java-format.xml'.");
   }
@@ -649,7 +652,7 @@ class RoasterSourceFormatterTest {
     CapturingProcessingLogger capturing = CapturingProcessingLogger.createDebugEnabled();
     new RoasterSourceFormatter(
             capturing.logger(), FormattingMode.JDT, "eclipse-java-format-malformed.xml")
-        .format("class A {}");
+        .format(TESTDATA_CODE);
     capturing.assertMessageMatching(
         w ->
             w.startsWith(
