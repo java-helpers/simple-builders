@@ -11,8 +11,9 @@ name: 'Integration connectivity check'
 #
 # It also runs on a nightly schedule so an expiring/revoked SONAR_TOKEN or
 # CODECOV_TOKEN surfaces as a failed run (and the usual GitHub failure
-# notification) before it silently breaks a real CI/release run. Scheduled runs
-# check all integrations.
+# notification) before it silently breaks a real CI/release run. The sonarcloud
+# job additionally warns once the token is within 7 days of its expiry.
+# Scheduled runs check all integrations.
 #
 # Both jobs are skipped on forks (same convention as dependency-review.yml):
 # the secrets are absent there, so jobs would fail nightly on every fork.
@@ -77,29 +78,35 @@ jobs:
       - name: Check SonarCloud token expiry
         run: |
           set -euo pipefail
-          # Warn (without failing) when the token is close to expiry so it can
-          # be rotated before CI/release jobs break. authentication/validate
-          # only reports valid/invalid, not the expiration date, so query the
-          # user tokens endpoint. Non-fatal: any reachability/parse issue is
-          # informational only - only the validate step above hard-fails.
+          if [ -z "${SONAR_TOKEN:-}" ]; then
+            echo "::error::SONAR_TOKEN secret is empty or not configured."
+            exit 1
+          fi
+          # Warn ahead of expiry so the token can be rotated before CI/release
+          # jobs break: authentication/validate only reports valid/invalid, not
+          # the expiration date, so query the user tokens endpoint. Runs only on
+          # the upstream repo (job-level fork guard) after the validate step, so
+          # reachability and validity are already proven - anything that still
+          # prevents determining the expiry is a real problem and fails here.
           body="$RUNNER_TEMP/sonar-tokens.json"
           http_code="$(curl -sS -o "$body" -w '%{http_code}' \
             -u "$SONAR_TOKEN:" https://sonarcloud.io/api/user_tokens/search || true)"
           echo "sonarcloud.io/api/user_tokens/search -> HTTP $http_code"
           if [ "$http_code" != "200" ]; then
-            echo "Could not query user tokens (reachability/auth issue); skipping expiry check."
-            exit 0
+            echo "::error::user_tokens/search returned HTTP $http_code although the token validated; cannot determine its expiry."
+            exit 1
           fi
           # SONAR_TOKEN is the user token whose name contains "github"
           # (case-insensitive, anywhere in the name).
           match_count="$(jq '[.userTokens[] | select((.name | ascii_downcase) | contains("github"))] | length' "$body" 2>/dev/null || echo '')"
           if [ -z "$match_count" ]; then
-            echo "Could not parse the user_tokens/search response; skipping expiry check."
-            exit 0
+            echo "::error::Could not parse the user_tokens/search response; cannot determine the token expiry."
+            cat "$body" || true
+            exit 1
           fi
           if [ "$match_count" = "0" ]; then
-            echo "No user token with 'github' in its name found; skipping expiry check."
-            exit 0
+            echo "::error::No user token with 'github' in its name found; SONAR_TOKEN does not match the expected token or it was renamed."
+            exit 1
           fi
           # Soonest expirationDate (YYYY-MM-DDTHH:MM:SSZ) among the matching
           # tokens; tokens created without an expiry have no expirationDate.
@@ -109,8 +116,8 @@ jobs:
             exit 0
           fi
           if ! expiry_epoch="$(date -d "$expiry" +%s 2>/dev/null)"; then
-            echo "Could not parse expirationDate '$expiry'; skipping expiry check."
-            exit 0
+            echo "::error::Could not parse expirationDate '$expiry'; cannot determine the token expiry."
+            exit 1
           fi
           days_left=$(( (expiry_epoch - $(date +%s)) / 86400 ))
           expiry_day="${expiry%%T*}"
