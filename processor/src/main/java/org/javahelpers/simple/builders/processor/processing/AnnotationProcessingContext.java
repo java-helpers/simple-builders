@@ -71,6 +71,9 @@ public class AnnotationProcessingContext {
   /** Static options supplied by the concrete context. */
   protected final AnnotationProcessingOptions options;
 
+  /** Package generated code is written to, or {@code null} when not generating into a package. */
+  private String generatedPackageName;
+
   /**
    * Creates the context with default options (strict mode enabled, performance tracking disabled).
    *
@@ -105,13 +108,13 @@ public class AnnotationProcessingContext {
   }
 
   /**
-   * Returns the name of the package generated code is written to.
+   * Sets the name of the package generated code is written to. Called when the current generation
+   * target is known.
    *
-   * @return the qualified name of the package generated classes are placed in, or {@code null} when
-   *     the context generates no code into a specific package
+   * @param generatedPackageName the qualified name of the package generated classes are placed in
    */
-  protected String getGeneratedPackageName() {
-    return null;
+  protected void setGeneratedPackageName(String generatedPackageName) {
+    this.generatedPackageName = generatedPackageName;
   }
 
   /**
@@ -133,8 +136,7 @@ public class AnnotationProcessingContext {
     if (member.getModifiers().contains(Modifier.PRIVATE)) {
       return false;
     }
-    String generatedPackage = getGeneratedPackageName();
-    return generatedPackage != null && getPackageName(member).equals(generatedPackage);
+    return generatedPackageName != null && getPackageName(member).equals(generatedPackageName);
   }
 
   /**

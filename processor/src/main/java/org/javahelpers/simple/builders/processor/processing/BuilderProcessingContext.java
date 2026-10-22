@@ -88,6 +88,7 @@ public final class BuilderProcessingContext extends AnnotationProcessingContext
    */
   public void initProcessingTarget(ProcessingTarget processingTarget) {
     this.processingTarget = processingTarget;
+    setGeneratedPackageName(processingTarget.builderPackage());
   }
 
   /**
@@ -106,11 +107,6 @@ public final class BuilderProcessingContext extends AnnotationProcessingContext
    */
   public String getBuilderPackageName() {
     return this.processingTarget.builderPackage();
-  }
-
-  @Override
-  protected String getGeneratedPackageName() {
-    return getBuilderPackageName();
   }
 
   /**
