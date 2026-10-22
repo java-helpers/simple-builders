@@ -33,6 +33,7 @@ import java.util.Optional;
 import java.util.Properties;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.enums.FormattingMode;
+import org.javahelpers.simple.builders.processor.classgen.SourceFormatter;
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster.model.util.FormatterProfileReader;
@@ -50,15 +51,15 @@ import org.jboss.forge.roaster.model.util.FormatterProfileReader;
  *
  * <p>The Eclipse formatter profile can be overridden with a file system path or classpath resource.
  */
-public final class RoasterSourceFormatter {
+public final class RoasterSourceFormatter implements SourceFormatter {
 
   static final String DEFAULT_FORMATTER_PROFILE_RESOURCE = "eclipse-java-format.xml";
   private static final int SPACES_PER_TAB = 2;
 
   private final ProcessingLogger logger;
   private final FormattingMode formattingMode;
-  private final Properties formatterProperties;
   private final String formatterProfileResource;
+  private Properties formatterProperties;
 
   /**
    * Creates a formatter instance.
@@ -86,7 +87,13 @@ public final class RoasterSourceFormatter {
     this.formattingMode = Objects.requireNonNull(formattingMode, "formattingMode must not be null");
     this.formatterProfileResource =
         StringUtils.defaultIfBlank(formatterProfile, DEFAULT_FORMATTER_PROFILE_RESOURCE);
-    this.formatterProperties = initializeFormatterProperties(formattingMode);
+  }
+
+  private Properties formatterProperties() {
+    if (formatterProperties == null) {
+      formatterProperties = initializeFormatterProperties(formattingMode);
+    }
+    return formatterProperties;
   }
 
   /**
@@ -126,17 +133,19 @@ public final class RoasterSourceFormatter {
    * @param rawSource the unformatted Java source code from Roaster's {@code toUnformattedString()}
    * @return the formatted source code
    */
+  @Override
   public String format(String rawSource) {
+    Properties properties = formatterProperties();
     if (formattingMode == FormattingMode.NONE) {
       return rawSource;
     }
     if (formattingMode == FormattingMode.LIGHTWEIGHT) {
       return lightweightFormat(rawSource);
     }
-    if (formatterProperties.isEmpty()) {
+    if (properties.isEmpty()) {
       return lightweightFormat(rawSource);
     }
-    return Roaster.format(formatterProperties, rawSource);
+    return Roaster.format(properties, rawSource);
   }
 
   /**

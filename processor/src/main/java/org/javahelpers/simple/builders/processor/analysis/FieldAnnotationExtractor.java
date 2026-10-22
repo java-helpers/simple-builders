@@ -40,7 +40,6 @@ import javax.lang.model.type.DeclaredType;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNamePrimitive;
-import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
 /** Extractor for field annotations, converting them from Java model elements to DTOs. */
 public final class FieldAnnotationExtractor {
@@ -82,7 +81,7 @@ public final class FieldAnnotationExtractor {
    * Extracts the {@code @Deprecated} annotation from the given element, preserving its members
    * (e.g. {@code since} and {@code forRemoval}).
    *
-   * <p>Unlike {@link #extractAnnotations(VariableElement, ProcessingContext)}, this method targets
+   * <p>Unlike {@link #extractAnnotations(VariableElement, TypeMappingContext)}, this method targets
    * a single annotation and works on any {@link Element} (method, field, parameter, record
    * component, type), not just {@link VariableElement}s.
    *
@@ -92,7 +91,7 @@ public final class FieldAnnotationExtractor {
    *     element is not deprecated
    */
   public static Optional<AnnotationDto> extractDeprecatedAnnotation(
-      Element element, ProcessingContext context) {
+      Element element, TypeMappingContext context) {
     if (element == null) {
       return Optional.empty();
     }
@@ -120,7 +119,7 @@ public final class FieldAnnotationExtractor {
    * @return list of annotations to be copied to the builder field
    */
   public static List<AnnotationDto> extractAnnotations(
-      VariableElement param, ProcessingContext context) {
+      VariableElement param, TypeMappingContext context) {
     List<AnnotationDto> annotations = new ArrayList<>();
     List<? extends AnnotationMirror> annotationMirrors = param.getAnnotationMirrors();
 
@@ -140,7 +139,7 @@ public final class FieldAnnotationExtractor {
    * @return list of annotations to be copied to the builder field
    */
   public static List<AnnotationDto> extractAnnotations(
-      javax.lang.model.type.TypeMirror typeMirror, ProcessingContext context) {
+      javax.lang.model.type.TypeMirror typeMirror, TypeMappingContext context) {
     List<AnnotationDto> annotations = new ArrayList<>();
     List<? extends AnnotationMirror> annotationMirrors = typeMirror.getAnnotationMirrors();
 
@@ -160,7 +159,7 @@ public final class FieldAnnotationExtractor {
    * @return Optional containing the extracted annotation, or empty if it should be skipped
    */
   private static Optional<AnnotationDto> extractAnnotation(
-      AnnotationMirror mirror, ProcessingContext context) {
+      AnnotationMirror mirror, TypeMappingContext context) {
     // Get the annotation type element
     Element annotationElement = mirror.getAnnotationType().asElement();
     if (!(annotationElement instanceof TypeElement annotationType)) {
@@ -188,7 +187,7 @@ public final class FieldAnnotationExtractor {
    * @return Optional containing the extracted annotation
    */
   private static Optional<AnnotationDto> extractAnnotationWithoutFiltering(
-      AnnotationMirror mirror, ProcessingContext context) {
+      AnnotationMirror mirror, TypeMappingContext context) {
     Element annotationElement = mirror.getAnnotationType().asElement();
     if (!(annotationElement instanceof TypeElement annotationType)) {
       return Optional.empty();

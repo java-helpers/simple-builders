@@ -51,7 +51,6 @@ import org.javahelpers.simple.builders.processor.model.type.TypeNameMap;
 import org.javahelpers.simple.builders.processor.model.type.TypeNamePrimitive;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameSet;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameVariable;
-import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
 /** Helper functions to create simple builder types from java.lang types. */
 public final class JavaLangMapper {
@@ -74,11 +73,11 @@ public final class JavaLangMapper {
    * Maps the declared type parameters of the given type element into GenericParameterDto list.
    *
    * @param type the type element whose type parameters to map
-   * @param context the processing context
+   * @param context the type mapping context
    * @return list of GenericParameterDto representing the type parameters
    */
   public static List<GenericParameterDto> map2GenericParameterDtos(
-      TypeElement type, ProcessingContext context) {
+      TypeElement type, TypeMappingContext context) {
     return type.getTypeParameters().stream()
         .map(tp -> map2GenericParameterDto(tp, context))
         .toList();
@@ -88,11 +87,11 @@ public final class JavaLangMapper {
    * Maps a single {@code TypeParameterElement} to {@code GenericParameterDto}.
    *
    * @param tp the type parameter element to map
-   * @param context the processing context
+   * @param context the type mapping context
    * @return a GenericParameterDto representing the type parameter
    */
   public static GenericParameterDto map2GenericParameterDto(
-      TypeParameterElement tp, ProcessingContext context) {
+      TypeParameterElement tp, TypeMappingContext context) {
     GenericParameterDto g = new GenericParameterDto();
     g.setName(tp.getSimpleName().toString());
     tp.getBounds().stream()
@@ -107,11 +106,11 @@ public final class JavaLangMapper {
    * org.javahelpers.simple.builders.processor.dtos.MethodParameterDto}.
    *
    * @param param Parameter variable to be mapped
-   * @param context processing context
+   * @param context the type mapping context
    * @return MethodParameterDto holding the information of the param.
    */
   public static MethodParameterDto map2MethodParameter(
-      VariableElement param, ProcessingContext context) {
+      VariableElement param, TypeMappingContext context) {
     MethodParameterDto result = new MethodParameterDto();
     result.setParameterName(param.getSimpleName().toString());
     TypeMirror typeMirror = param.asType();
@@ -134,10 +133,10 @@ public final class JavaLangMapper {
    * without resolving builder or constructor information.
    *
    * @param typeElement the TypeElement to map
-   * @param context the processing context
+   * @param context the type mapping context
    * @return TypeName of the type element, or null if the type element is null
    */
-  public static TypeName mapToTypeName(TypeElement typeElement, ProcessingContext context) {
+  public static TypeName mapToTypeName(TypeElement typeElement, TypeMappingContext context) {
     if (typeElement == null) {
       return null;
     }
@@ -151,10 +150,10 @@ public final class JavaLangMapper {
    * Maps a {@code TypeElement} to a simple-builder {@code TypeName}.
    *
    * @param typeElement the TypeElement to map
-   * @param context the processing context
+   * @param context the type mapping context
    * @return TypeName holding the information of the type element, or null if mapping fails
    */
-  public static TypeName map2TypeName(TypeElement typeElement, ProcessingContext context) {
+  public static TypeName map2TypeName(TypeElement typeElement, TypeMappingContext context) {
     if (typeElement == null) {
       return null;
     }
@@ -175,10 +174,10 @@ public final class JavaLangMapper {
    *
    * @param typeName the TypeName to enhance with builder/constructor info
    * @param typeElement the TypeElement representing the type
-   * @param context the processing context
+   * @param context the type mapping context
    */
   private static void setBuilderAndConstructorInfo(
-      TypeName typeName, TypeElement typeElement, ProcessingContext context) {
+      TypeName typeName, TypeElement typeElement, TypeMappingContext context) {
     setBuilderTypeIfScopeMatches(typeName, typeElement, context);
     setEmptyConstructorInfoIfAvailable(typeName, typeElement, context);
     setElementBuilderTypeIfScopeMatches(typeName, context);
@@ -189,14 +188,11 @@ public final class JavaLangMapper {
    *
    * @param typeName the TypeName to enhance
    * @param typeElement the type element to check
-   * @param context the processing context
+   * @param context the type mapping context
    */
   private static void setBuilderTypeIfScopeMatches(
-      TypeName typeName, TypeElement typeElement, ProcessingContext context) {
-    context
-        .getBuilderScopeResolver()
-        .resolveUsableBuilderType(typeElement)
-        .ifPresent(typeName::setResolvedBuilder);
+      TypeName typeName, TypeElement typeElement, TypeMappingContext context) {
+    context.resolveGeneratedType(typeElement).ifPresent(typeName::setResolvedBuilder);
   }
 
   /**
@@ -204,10 +200,10 @@ public final class JavaLangMapper {
    *
    * @param typeName the TypeName to enhance
    * @param typeElement the type element to check
-   * @param context the processing context
+   * @param context the type mapping context
    */
   private static void setEmptyConstructorInfoIfAvailable(
-      TypeName typeName, TypeElement typeElement, ProcessingContext context) {
+      TypeName typeName, TypeElement typeElement, TypeMappingContext context) {
     if (isConcreteClass(typeElement)
         && !TypeNameAnalyser.isJavaClass(typeName)
         && JavaLangAnalyser.hasEmptyConstructor(typeElement, context)) {
@@ -220,10 +216,10 @@ public final class JavaLangMapper {
    * configured builder scope.
    *
    * @param typeName the TypeName to enhance
-   * @param context the processing context
+   * @param context the type mapping context
    */
   private static void setElementBuilderTypeIfScopeMatches(
-      TypeName typeName, ProcessingContext context) {
+      TypeName typeName, TypeMappingContext context) {
     // Only process generic types
     if (!(typeName instanceof TypeNameGeneric genericType)) {
       return;
@@ -243,10 +239,9 @@ public final class JavaLangMapper {
       return;
     }
 
-    // Resolve usable element builder type through the scope resolver
+    // Resolve usable element builder type through the generated type resolver
     context
-        .getBuilderScopeResolver()
-        .resolveUsableBuilderType(elementTypeElement)
+        .resolveGeneratedType(elementTypeElement)
         .ifPresent(genericType::setElementResolvedBuilder);
   }
 
@@ -254,37 +249,25 @@ public final class JavaLangMapper {
    * Gets the TypeElement for a given TypeName if it exists.
    *
    * @param typeName the type name to resolve
-   * @param context the processing context
+   * @param context the type mapping context
    * @return the TypeElement, or null if not found or not a TypeElement
    */
   private static TypeElement retrieveTypeElementIfExists(
-      TypeName typeName, ProcessingContext context) {
+      TypeName typeName, TypeMappingContext context) {
     Element element = context.getTypeElement(typeName.getFullQualifiedName());
     return element instanceof TypeElement typeElement ? typeElement : null;
-  }
-
-  /**
-   * Creates a TypeName for the builder of a given TypeElement using the configured builder suffix.
-   *
-   * @param typeElement the type element to create builder name for
-   * @param context the processing context
-   * @return the TypeName for the builder
-   */
-  public static TypeName createBuilderTypeName(TypeElement typeElement, ProcessingContext context) {
-    return createBuilderTypeName(
-        typeElement, context, context.getConfiguration().getBuilderSuffix());
   }
 
   /**
    * Creates a TypeName for the builder of a given TypeElement using an explicit suffix.
    *
    * @param typeElement the type element to create builder name for
-   * @param context the processing context
+   * @param context the type mapping context
    * @param suffix the builder class name suffix to append
    * @return the TypeName for the builder
    */
   public static TypeName createBuilderTypeName(
-      TypeElement typeElement, ProcessingContext context, String suffix) {
+      TypeElement typeElement, TypeMappingContext context, String suffix) {
     String builderClassName = typeElement.getSimpleName().toString() + suffix;
     String packageName = context.getPackageName(typeElement);
     return new TypeName(packageName, builderClassName);
@@ -295,10 +278,10 @@ public final class JavaLangMapper {
    *
    * @param typeName the TypeName to enhance with builder/constructor info
    * @param param the VariableElement representing the parameter
-   * @param context the processing context
+   * @param context the type mapping context
    */
   private static void setBuilderAndConstructorInfo(
-      TypeName typeName, VariableElement param, ProcessingContext context) {
+      TypeName typeName, VariableElement param, TypeMappingContext context) {
     Element element = context.asElement(param.asType());
     if (element instanceof TypeElement typeElement) {
       setBuilderAndConstructorInfo(typeName, typeElement, context);
@@ -307,10 +290,10 @@ public final class JavaLangMapper {
 
   /**
    * Maps a list of {@code TypeMirror} to a list of simple-builder {@code TypeName}s using {@link
-   * #extractType(TypeMirror, ProcessingContext)}.
+   * #extractType(TypeMirror, TypeMappingContext)}.
    */
   private static List<TypeName> extractTypeForList(
-      List<TypeMirror> typeMirrors, ProcessingContext context) {
+      List<TypeMirror> typeMirrors, TypeMappingContext context) {
     List<TypeName> result = new ArrayList<>(typeMirrors.size());
     for (TypeMirror tm : typeMirrors) {
       result.add(extractType(tm, context));
@@ -329,12 +312,15 @@ public final class JavaLangMapper {
    * @param rawType the base TypeName (preserves concrete class information)
    * @param argTypes the generic type arguments from the class declaration (may not match interface)
    * @param typeMirror the TypeMirror to check for interface implementation
-   * @param context the processing context
+   * @param context the type mapping context
    * @return a specialized TypeName (TypeNameList, TypeNameSet, TypeNameMap) if applicable, or a
    *     TypeNameGeneric/rawType otherwise
    */
   private static TypeName wrapInCollectionTypeIfApplicable(
-      TypeName rawType, List<TypeName> argTypes, TypeMirror typeMirror, ProcessingContext context) {
+      TypeName rawType,
+      List<TypeName> argTypes,
+      TypeMirror typeMirror,
+      TypeMappingContext context) {
     TypeName listWrapper = tryWrapAsList(rawType, argTypes, typeMirror, context);
     if (listWrapper != null) {
       return listWrapper;
@@ -361,7 +347,10 @@ public final class JavaLangMapper {
    * @return TypeNameList if applicable, null otherwise
    */
   private static TypeName tryWrapAsList(
-      TypeName rawType, List<TypeName> argTypes, TypeMirror typeMirror, ProcessingContext context) {
+      TypeName rawType,
+      List<TypeName> argTypes,
+      TypeMirror typeMirror,
+      TypeMappingContext context) {
     TypeElement listElement = context.getTypeElement("java.util.List");
     if (listElement == null) {
       return null;
@@ -390,7 +379,10 @@ public final class JavaLangMapper {
    * @return TypeNameSet if applicable, null otherwise
    */
   private static TypeName tryWrapAsSet(
-      TypeName rawType, List<TypeName> argTypes, TypeMirror typeMirror, ProcessingContext context) {
+      TypeName rawType,
+      List<TypeName> argTypes,
+      TypeMirror typeMirror,
+      TypeMappingContext context) {
     TypeElement setElement = context.getTypeElement("java.util.Set");
     if (setElement == null) {
       return null;
@@ -419,7 +411,10 @@ public final class JavaLangMapper {
    * @return TypeNameMap if applicable, null otherwise
    */
   private static TypeName tryWrapAsMap(
-      TypeName rawType, List<TypeName> argTypes, TypeMirror typeMirror, ProcessingContext context) {
+      TypeName rawType,
+      List<TypeName> argTypes,
+      TypeMirror typeMirror,
+      TypeMappingContext context) {
     TypeElement mapElement = context.getTypeElement("java.util.Map");
     if (mapElement == null) {
       return null;
@@ -451,11 +446,11 @@ public final class JavaLangMapper {
    *
    * @param typeElement the type to check
    * @param interfaceElement the collection interface (List or Set)
-   * @param context the processing context
+   * @param context the type mapping context
    * @return true if the type is the interface itself or has a Collection constructor
    */
   private static boolean shouldWrapAsCollectionType(
-      TypeElement typeElement, TypeElement interfaceElement, ProcessingContext context) {
+      TypeElement typeElement, TypeElement interfaceElement, TypeMappingContext context) {
     boolean isInterface = typeElement.equals(interfaceElement);
     boolean hasConstructor =
         !isInterface
@@ -484,11 +479,11 @@ public final class JavaLangMapper {
    * @param typeElement the type to check
    * @param parameterTypeName the fully qualified name of the parameter type (e.g.,
    *     "java.util.Collection")
-   * @param context the processing context
+   * @param context the type mapping context
    * @return true if the type has a constructor accepting the specified parameter type
    */
   private static boolean hasConstructorWithParameterOfType(
-      TypeElement typeElement, String parameterTypeName, ProcessingContext context) {
+      TypeElement typeElement, String parameterTypeName, TypeMappingContext context) {
     TypeElement parameterElement = context.getTypeElement(parameterTypeName);
     if (parameterElement == null) {
       return false;
@@ -520,11 +515,11 @@ public final class JavaLangMapper {
    *
    * @param typeMirror the type to examine
    * @param targetInterface the interface element (e.g., List, Set, Map)
-   * @param context the processing context
+   * @param context the type mapping context
    * @return list of type arguments used by the interface, or empty list if raw type
    */
   public static List<TypeName> extractInterfaceTypeArguments(
-      TypeMirror typeMirror, TypeElement targetInterface, ProcessingContext context) {
+      TypeMirror typeMirror, TypeElement targetInterface, TypeMappingContext context) {
     // Walk the supertype hierarchy to find the specific instantiation of the target interface
     TypeMirror found = findSupertype(typeMirror, targetInterface, context);
 
@@ -543,11 +538,11 @@ public final class JavaLangMapper {
    *
    * @param typeMirror the type to search from
    * @param targetInterface the interface to find
-   * @param context the processing context
+   * @param context the type mapping context
    * @return the matching supertype, or null if not found
    */
   private static TypeMirror findSupertype(
-      TypeMirror typeMirror, TypeElement targetInterface, ProcessingContext context) {
+      TypeMirror typeMirror, TypeElement targetInterface, TypeMappingContext context) {
     if (!(typeMirror instanceof DeclaredType)) {
       return null;
     }
@@ -568,7 +563,7 @@ public final class JavaLangMapper {
     return null;
   }
 
-  private static TypeName extractType(TypeMirror typeOfParameter, ProcessingContext context) {
+  private static TypeName extractType(TypeMirror typeOfParameter, TypeMappingContext context) {
     TypeName typeName =
         typeOfParameter.accept(
             new SimpleTypeVisitor14<TypeName, Void>() {
@@ -638,7 +633,7 @@ public final class JavaLangMapper {
             },
             null);
 
-    if (typeName != null && context.getConfiguration().shouldCopyTypeAnnotations()) {
+    if (typeName != null && context.shouldCopyTypeAnnotations()) {
       List<AnnotationDto> annotations =
           FieldAnnotationExtractor.extractAnnotations(typeOfParameter, context);
       annotations.forEach(typeName::addAnnotation);

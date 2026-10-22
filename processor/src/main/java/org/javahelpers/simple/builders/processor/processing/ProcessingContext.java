@@ -27,6 +27,7 @@ package org.javahelpers.simple.builders.processor.processing;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
@@ -38,12 +39,11 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
-import org.apache.commons.lang3.StringUtils;
-import org.javahelpers.simple.builders.core.enums.FormattingMode;
 import org.javahelpers.simple.builders.processor.analysis.BuilderScopeResolver;
-import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterSourceFormatter;
+import org.javahelpers.simple.builders.processor.analysis.TypeMappingContext;
 import org.javahelpers.simple.builders.processor.generators.registry.GeneratorRegistry;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
+import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.logging.ActivePerformanceTracker;
 import org.javahelpers.simple.builders.processor.processing.logging.NoOpPerformanceTracker;
@@ -56,15 +56,15 @@ import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLo
  *
  * <p>This eliminates repetitive parameter passing and provides a cleaner API.
  */
-public final class ProcessingContext {
+public final class ProcessingContext implements TypeMappingContext {
   private final Elements elementUtils;
   private final Types typeUtils;
   private final ProcessingLogger logger;
   private final BuilderConfigurationReader configurationReader;
   private final ProcessingEnvironment processingEnv;
   private final PerformanceTracker performanceTracker;
-  private final String formatterProfile;
   private final BuilderScopeResolver builderScopeResolver;
+
   private GeneratorRegistry generatorRegistry;
   private ProcessingTarget processingTarget;
 
@@ -90,11 +90,9 @@ public final class ProcessingContext {
     boolean perfTrackingEnabled =
         argReader.readBooleanValue(CompilerArgumentsEnum.PERFORMANCE_TRACKING);
     String perfOutputFile = argReader.readValue(CompilerArgumentsEnum.PERFORMANCE_OUTPUT_FILE);
-    this.formatterProfile =
-        StringUtils.trimToNull(argReader.readValue(CompilerArgumentsEnum.FORMATTER_PROFILE));
     this.performanceTracker =
         perfTrackingEnabled
-            ? new ActivePerformanceTracker(perfOutputFile)
+            ? new ActivePerformanceTracker(perfOutputFile, PipelinePhases.PIPELINE_HIERARCHY)
             : new NoOpPerformanceTracker();
     this.builderScopeResolver = new BuilderScopeResolver(this);
     // GeneratorRegistry will be lazily initialized on first access
@@ -139,6 +137,17 @@ public final class ProcessingContext {
    *
    * @param member the member to check
    * @return {@code true} if generated code in the builder package may call the member
+   */
+  @Override
+  public boolean isAccessibleFromGeneratedPackage(Element member) {
+    return isMemberAccessibleFromBuilderPackage(member);
+  }
+
+  /**
+   * Tests whether a member is accessible from the package the generated builder is written to.
+   *
+   * @param member the member to check
+   * @return {@code true} if the member is accessible from the builder package
    */
   public boolean isMemberAccessibleFromBuilderPackage(Element member) {
     if (member.getModifiers().contains(Modifier.PUBLIC)) {
@@ -218,17 +227,6 @@ public final class ProcessingContext {
   }
 
   /**
-   * Creates a {@link RoasterSourceFormatter} for the given formatting mode, applying the configured
-   * Eclipse formatter profile when one is set.
-   *
-   * @param mode the formatting mode
-   * @return a new formatter instance
-   */
-  public RoasterSourceFormatter createSourceFormatter(FormattingMode mode) {
-    return new RoasterSourceFormatter(logger, mode, formatterProfile);
-  }
-
-  /**
    * Get the builder scope resolver for deciding whether a builder may be referenced.
    *
    * <p>The resolver is keyed off the current target configuration and is recomputed when the target
@@ -241,11 +239,32 @@ public final class ProcessingContext {
   }
 
   /**
+   * {@inheritDoc}
+   *
+   * <p>Backed by the resolved per-target builder configuration.
+   */
+  @Override
+  public boolean shouldCopyTypeAnnotations() {
+    return getConfiguration().shouldCopyTypeAnnotations();
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>Delegated to the builder scope resolver.
+   */
+  @Override
+  public Optional<ResolvedBuilder> resolveGeneratedType(TypeElement typeElement) {
+    return builderScopeResolver.resolveUsableBuilderType(typeElement);
+  }
+
+  /**
    * Get the TypeElement for a given qualified class name.
    *
    * @param qualifiedName the canonical class name (e.g., "java.lang.String")
    * @return the type element, or null if not found
    */
+  @Override
   public TypeElement getTypeElement(String qualifiedName) {
     return elementUtils.getTypeElement(qualifiedName);
   }
@@ -289,6 +308,7 @@ public final class ProcessingContext {
    * @param element the element
    * @return the qualified package name
    */
+  @Override
   public String getPackageName(Element element) {
     return elementUtils.getPackageOf(element).getQualifiedName().toString();
   }
@@ -297,9 +317,10 @@ public final class ProcessingContext {
    * Get all members of a type, including inherited members.
    *
    * @param typeElement the type to inspect
-   * @return list of all members
+   * @return list of all members (wildcard enforced by the javax.lang.model API)
    */
   @SuppressWarnings("java:S1452")
+  @Override
   public List<? extends Element> getAllMembers(TypeElement typeElement) {
     return elementUtils.getAllMembers(typeElement);
   }
@@ -320,6 +341,7 @@ public final class ProcessingContext {
    * @param typeMirror the type mirror
    * @return the element, or null if not representable as an element
    */
+  @Override
   public Element asElement(TypeMirror typeMirror) {
     return typeUtils.asElement(typeMirror);
   }
@@ -331,6 +353,7 @@ public final class ProcessingContext {
    * @param type2 second type
    * @return true if the types are the same
    */
+  @Override
   public boolean isSameType(TypeMirror type1, TypeMirror type2) {
     return typeUtils.isSameType(type1, type2);
   }
@@ -341,6 +364,7 @@ public final class ProcessingContext {
    * @param typeMirror the type to erase
    * @return the erasure of the type
    */
+  @Override
   public TypeMirror erasure(TypeMirror typeMirror) {
     return typeUtils.erasure(typeMirror);
   }
@@ -352,6 +376,7 @@ public final class ProcessingContext {
    * @param type2 the target type
    * @return true if type1 is assignable to type2
    */
+  @Override
   public boolean isAssignable(TypeMirror type1, TypeMirror type2) {
     return typeUtils.isAssignable(type1, type2);
   }
@@ -362,6 +387,8 @@ public final class ProcessingContext {
    * @param typeMirror the type
    * @return list of direct supertypes
    */
+  @SuppressWarnings("java:S1452")
+  @Override
   public java.util.List<? extends TypeMirror> directSupertypes(TypeMirror typeMirror) {
     return typeUtils.directSupertypes(typeMirror);
   }
@@ -401,6 +428,7 @@ public final class ProcessingContext {
    * @param format the format string
    * @param args arguments referenced by the format specifiers in the format string
    */
+  @Override
   public void debug(String format, Object... args) {
     logger.debug(format, args);
   }

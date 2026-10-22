@@ -1316,7 +1316,7 @@ class BuilderScopeResolverTest {
       TypeElement helper = processingEnv.getElementUtils().getTypeElement("lib.LibHelper");
       ProcessingContext context =
           new ProcessingContext(
-              new ProcessingLogger(processingEnv), BuilderConfiguration.DEFAULT, processingEnv);
+              ProcessingLogger.create(processingEnv), BuilderConfiguration.DEFAULT, processingEnv);
       context.initProcessingTarget(new ProcessingTarget(configuration("lib", "Builder"), ""));
       BuilderScopeResolver resolver = context.getBuilderScopeResolver();
       // Register the type as generated, mirroring the real processor which calls

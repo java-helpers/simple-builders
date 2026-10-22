@@ -39,8 +39,8 @@
  * <p>Exception classes are organized in separate packages:
  *
  * <ul>
- *   <li>{@link org.javahelpers.simple.builders.processor.exceptions.BuilderException} - Exception
- *       for code generation errors
+ *   <li>{@link org.javahelpers.simple.builders.processor.classgen.CodeGenerationException} -
+ *       Exception for code generation errors
  *   <li>{@link
  *       org.javahelpers.simple.builders.processor.classgen.roaster.exceptions.RoasterMapperException}
  *       - Exception for mapping errors
