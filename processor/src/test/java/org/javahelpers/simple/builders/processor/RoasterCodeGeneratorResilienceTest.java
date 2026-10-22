@@ -32,6 +32,7 @@ import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.core.enums.FormattingMode;
 import org.javahelpers.simple.builders.processor.classgen.CodeGenerationException;
 import org.javahelpers.simple.builders.processor.classgen.GenerationEnvironment;
+import org.javahelpers.simple.builders.processor.classgen.SourceFormatter;
 import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterCodeGenerator;
 import org.javahelpers.simple.builders.processor.classgen.roaster.exceptions.RoasterMapperException;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
@@ -90,13 +91,11 @@ class RoasterCodeGeneratorResilienceTest {
             new GenerationEnvironment(
                 env, logger, context.getPerformanceTracker(), context::reportBasedOnStrictMode));
 
+    SourceFormatter formatter =
+        new SourceFormatterResolver(env, logger).resolve(FormattingMode.NONE);
     CodeGenerationException thrown =
         assertThrows(
-            CodeGenerationException.class,
-            () ->
-                generator.generateClass(
-                    classDef,
-                    new SourceFormatterResolver(env, logger).resolve(FormattingMode.NONE)));
+            CodeGenerationException.class, () -> generator.generateClass(classDef, formatter));
     assertInstanceOf(RoasterMapperException.class, thrown.getCause());
   }
 
@@ -128,13 +127,10 @@ class RoasterCodeGeneratorResilienceTest {
                 context.getPerformanceTracker(),
                 context::reportBasedOnStrictMode));
 
+    SourceFormatter formatter =
+        new SourceFormatterResolver(env, capturing.logger()).resolve(FormattingMode.NONE);
     // generation itself succeeds; only the file-write step fails on the stub's null filer
-    assertThrows(
-        NullPointerException.class,
-        () ->
-            generator.generateClass(
-                classDef,
-                new SourceFormatterResolver(env, capturing.logger()).resolve(FormattingMode.NONE)));
+    assertThrows(NullPointerException.class, () -> generator.generateClass(classDef, formatter));
     capturing.assertMessage(
         "WARNING: Unexpected duplicate method signature: 'name(java.lang.String)'"
             + " — keeping first occurrence (safety net)");
