@@ -46,7 +46,7 @@ public record AnnotationProcessingOptions(
     PhaseHierarchy phaseHierarchy) {
 
   /**
-   * Creates a builder for {@link AnnotationProcessingOptions}. Defaults: strict mode and
+   * Creates a builder for {@link AnnotationProcessingOptions}. Defaults: strict mode enabled,
    * performance tracking disabled, no output file, empty phase hierarchy.
    *
    * @return a new builder
@@ -58,7 +58,7 @@ public record AnnotationProcessingOptions(
   /** Builder for {@link AnnotationProcessingOptions}. */
   public static final class Builder {
 
-    private boolean strictModeEnabled;
+    private boolean strictModeEnabled = true;
     private boolean performanceTrackingEnabled;
     private String performanceOutputFile;
     private PhaseHierarchy phaseHierarchy = new PhaseHierarchy(List.of(), Map.of());

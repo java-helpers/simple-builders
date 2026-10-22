@@ -72,7 +72,7 @@ public abstract class AnnotationProcessingContext {
   protected final AnnotationProcessingOptions options;
 
   /**
-   * Creates the context with default options (strict mode and performance tracking disabled).
+   * Creates the context with default options (strict mode enabled, performance tracking disabled).
    *
    * @param logger logger for output
    * @param processingEnv the annotation processing environment
