@@ -105,6 +105,39 @@ public class AnnotationProcessingContext {
   }
 
   /**
+   * Returns the name of the package generated code is written to.
+   *
+   * @return the qualified name of the package generated classes are placed in, or {@code null} when
+   *     the context generates no code into a specific package
+   */
+  protected String getGeneratedPackageName() {
+    return null;
+  }
+
+  /**
+   * Checks whether a member (constructor, method) is accessible from the package generated code is
+   * written to.
+   *
+   * <p>Public members are always accessible. Private members are never accessible - generated code
+   * lives in a separate top-level class. Package-private and protected members are only accessible
+   * when the member's declaring package equals the generated package (protected access through
+   * inheritance does not apply, as generated code does not extend the target type).
+   *
+   * @param member the member to check
+   * @return {@code true} if generated code may call the member
+   */
+  public boolean isAccessibleFromGeneratedPackage(Element member) {
+    if (member.getModifiers().contains(Modifier.PUBLIC)) {
+      return true;
+    }
+    if (member.getModifiers().contains(Modifier.PRIVATE)) {
+      return false;
+    }
+    String generatedPackage = getGeneratedPackageName();
+    return generatedPackage != null && getPackageName(member).equals(generatedPackage);
+  }
+
+  /**
    * Returns the annotation values of an annotation mirror, including default values.
    *
    * @param annotationMirror the annotation mirror to read
@@ -198,79 +231,6 @@ public class AnnotationProcessingContext {
    */
   public String getPackageName(Element element) {
     return elementUtils.getPackageOf(element).getQualifiedName().toString();
-  }
-
-  /**
-   * Returns whether strict/fail-fast mode is enabled via the supplied {@link
-   * AnnotationProcessingOptions}.
-   *
-   * @return {@code true} if strict mode is enabled, {@code false} otherwise
-   */
-  public boolean isStrictModeEnabled() {
-    return options.strictModeEnabled();
-  }
-
-  /**
-   * Reports an error or warning based on strict mode. In strict mode a build failure is emitted;
-   * otherwise a warning is logged so processing can continue.
-   *
-   * @param element the element associated with the problem, for compiler location information
-   * @param format the format string
-   * @param args arguments referenced by the format specifiers
-   */
-  public void reportBasedOnStrictMode(Element element, String format, Object... args) {
-    if (isStrictModeEnabled()) {
-      logger.error(element, format, args);
-    } else {
-      logger.warning(element, format, args);
-    }
-  }
-
-  /**
-   * Reports an error or warning based on strict mode, without an element location.
-   *
-   * @param format the format string
-   * @param args arguments referenced by the format specifiers
-   */
-  public void reportBasedOnStrictMode(String format, Object... args) {
-    if (isStrictModeEnabled()) {
-      logger.error(format, args);
-    } else {
-      logger.warning(format, args);
-    }
-  }
-
-  /**
-   * Returns the name of the package generated code is written to.
-   *
-   * @return the qualified name of the package generated classes are placed in, or {@code null} when
-   *     the context generates no code into a specific package
-   */
-  protected String getGeneratedPackageName() {
-    return null;
-  }
-
-  /**
-   * Checks whether a member (constructor, method) is accessible from the package generated code is
-   * written to.
-   *
-   * <p>Public members are always accessible. Private members are never accessible - generated code
-   * lives in a separate top-level class. Package-private and protected members are only accessible
-   * when the member's declaring package equals the generated package (protected access through
-   * inheritance does not apply, as generated code does not extend the target type).
-   *
-   * @param member the member to check
-   * @return {@code true} if generated code may call the member
-   */
-  public boolean isAccessibleFromGeneratedPackage(Element member) {
-    if (member.getModifiers().contains(Modifier.PUBLIC)) {
-      return true;
-    }
-    if (member.getModifiers().contains(Modifier.PRIVATE)) {
-      return false;
-    }
-    String generatedPackage = getGeneratedPackageName();
-    return generatedPackage != null && getPackageName(member).equals(generatedPackage);
   }
 
   /**
@@ -440,5 +400,45 @@ public class AnnotationProcessingContext {
    */
   public void error(String format, Object... args) {
     logger.error(format, args);
+  }
+
+  /**
+   * Returns whether strict/fail-fast mode is enabled via the supplied {@link
+   * AnnotationProcessingOptions}.
+   *
+   * @return {@code true} if strict mode is enabled, {@code false} otherwise
+   */
+  public boolean isStrictModeEnabled() {
+    return options.strictModeEnabled();
+  }
+
+  /**
+   * Reports an error or warning based on strict mode. In strict mode a build failure is emitted;
+   * otherwise a warning is logged so processing can continue.
+   *
+   * @param element the element associated with the problem, for compiler location information
+   * @param format the format string
+   * @param args arguments referenced by the format specifiers
+   */
+  public void reportBasedOnStrictMode(Element element, String format, Object... args) {
+    if (isStrictModeEnabled()) {
+      logger.error(element, format, args);
+    } else {
+      logger.warning(element, format, args);
+    }
+  }
+
+  /**
+   * Reports an error or warning based on strict mode, without an element location.
+   *
+   * @param format the format string
+   * @param args arguments referenced by the format specifiers
+   */
+  public void reportBasedOnStrictMode(String format, Object... args) {
+    if (isStrictModeEnabled()) {
+      logger.error(format, args);
+    } else {
+      logger.warning(format, args);
+    }
   }
 }
