@@ -63,7 +63,11 @@ public final class BuilderProcessingContext extends AnnotationProcessingContext
       ProcessingLogger logger,
       BuilderConfiguration globalConfiguration,
       ProcessingEnvironment processingEnv) {
-    super(logger, processingEnv, createPerformanceTracker(processingEnv));
+    super(
+        logger,
+        processingEnv,
+        createPerformanceTracker(processingEnv),
+        new AnnotationProcessingOptions(globalConfiguration.isStrictModeEnabled()));
     this.configurationReader =
         new BuilderConfigurationReader(globalConfiguration, logger, elementUtils);
     this.builderScopeResolver = new BuilderScopeResolver(this);
@@ -178,45 +182,5 @@ public final class BuilderProcessingContext extends AnnotationProcessingContext
   @Override
   public Optional<ResolvedBuilder> resolveGeneratedType(TypeElement typeElement) {
     return builderScopeResolver.resolveUsableBuilderType(typeElement);
-  }
-
-  /**
-   * Returns whether strict/fail-fast generation mode is enabled via the global compiler
-   * configuration.
-   *
-   * @return true if {@code -Asimplebuilder.strict=true} was supplied, false otherwise
-   */
-  public boolean isStrictModeEnabled() {
-    return configurationReader.getGlobalConfiguration().isStrictModeEnabled();
-  }
-
-  /**
-   * Reports an error or warning based on strict mode. In strict mode a build failure is emitted;
-   * otherwise a warning is logged so generation of remaining builders can continue.
-   *
-   * @param element the element associated with the problem, for compiler location information
-   * @param format the format string
-   * @param args arguments referenced by the format specifiers
-   */
-  public void reportBasedOnStrictMode(Element element, String format, Object... args) {
-    if (isStrictModeEnabled()) {
-      logger.error(element, format, args);
-    } else {
-      logger.warning(element, format, args);
-    }
-  }
-
-  /**
-   * Reports an error or warning based on strict mode, without an element location.
-   *
-   * @param format the format string
-   * @param args arguments referenced by the format specifiers
-   */
-  public void reportBasedOnStrictMode(String format, Object... args) {
-    if (isStrictModeEnabled()) {
-      logger.error(format, args);
-    } else {
-      logger.warning(format, args);
-    }
   }
 }
