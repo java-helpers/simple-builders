@@ -279,15 +279,14 @@ public final class BuilderScopeResolver {
 
   /**
    * Looks up the candidate builder type on the classpath and verifies it satisfies the builder
-   * contract: a way to create an empty builder instance (a no-arg constructor or a static
-   * parameterless factory like {@code create()}), a way to create an instance prefilled with a
-   * value (a constructor accepting the referenced type or a static factory like {@code
-   * create(T)}/{@code of(T)}), and an accessible, parameterless method returning it (the build
-   * method, regardless of name) - each accessible from the generated builder's package, since the
-   * generated code calls them from there. The contract check is annotation-agnostic, so builders
-   * generated with custom template annotations or from external sources are supported as long as
-   * they follow the builder contract. It also avoids false positives like {@code String} → {@code
-   * StringBuilder}.
+   * contract: a way to create an empty instance (a no-arg constructor or a static parameterless
+   * factory like {@code create()}), a way to create an instance prefilled with a value (a
+   * constructor accepting the referenced type or a static factory like {@code create(T)}/{@code
+   * of(T)}), and an accessible, parameterless method returning it (the build method, regardless of
+   * name) - each accessible from the generated builder's package, since the generated code calls
+   * them from there. The contract check is annotation-agnostic, so builders generated with custom
+   * template annotations or from external sources are supported as long as they follow the builder
+   * contract. It also avoids false positives like {@code String} → {@code StringBuilder}.
    *
    * @param candidate the candidate builder type name to look up
    * @param referencedType the type element being referenced
