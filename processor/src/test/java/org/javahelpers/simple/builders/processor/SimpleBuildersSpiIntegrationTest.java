@@ -34,7 +34,7 @@ import javax.lang.model.util.Elements;
 import org.javahelpers.simple.builders.processor.SimpleBuildersSpiIntegration.PublishedBuilder;
 import org.javahelpers.simple.builders.processor.SimpleBuildersSpiIntegration.State;
 import org.javahelpers.simple.builders.processor.model.type.BuilderInstantiation.StaticFactoryCall;
-import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
+import org.javahelpers.simple.builders.processor.model.type.ResolvedGeneratedType;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -49,8 +49,8 @@ class SimpleBuildersSpiIntegrationTest {
 
   private static final TypeName PERSON_BEAN = new TypeName("test", "PersonDto");
 
-  private static final ResolvedBuilder PERSON_RESOLVED =
-      new ResolvedBuilder(
+  private static final ResolvedGeneratedType PERSON_RESOLVED =
+      new ResolvedGeneratedType(
           new TypeName("test", "PersonDtoBuilder"),
           new StaticFactoryCall("create"),
           Optional.empty(),
@@ -122,7 +122,7 @@ class SimpleBuildersSpiIntegrationTest {
             .isEmpty());
     assertEquals("test.PersonDtoBuilder", PERSON.builderType().getFullQualifiedName());
     assertEquals("create", PERSON.creationMethodName());
-    assertEquals("build", PERSON.buildMethodName());
+    assertEquals("build", PERSON.resultMethodName());
     assertEquals("", PERSON.setterPrefix());
   }
 

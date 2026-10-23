@@ -34,7 +34,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
-import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
+import org.javahelpers.simple.builders.processor.model.type.ResolvedGeneratedType;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 
@@ -93,18 +93,19 @@ public class NestedBuilderConsumerGenerator implements MethodGenerator {
     if (!context.getConfiguration().shouldGenerateBuilderConsumer()) {
       return false;
     }
-    return field.getFieldType().getBuilderType().isPresent();
+    return field.getFieldType().getGeneratedType().isPresent();
   }
 
   @Override
   public List<BuilderMethodDto> generateMethods(
       FieldDto field, TypeName builderType, BuilderProcessingContext context) {
-    Optional<ResolvedBuilder> fieldBuilderOpt = field.getFieldType().getResolvedBuilder();
-    if (fieldBuilderOpt.isEmpty() || fieldBuilderOpt.get().funcForPrefilledBuilder().isEmpty()) {
+    Optional<ResolvedGeneratedType> fieldBuilderOpt =
+        field.getFieldType().getResolvedGeneratedType();
+    if (fieldBuilderOpt.isEmpty() || fieldBuilderOpt.get().funcForPrefilledInstance().isEmpty()) {
       return Collections.emptyList();
     }
 
-    ResolvedBuilder fieldBuilder = fieldBuilderOpt.get();
+    ResolvedGeneratedType fieldBuilder = fieldBuilderOpt.get();
     BuilderMethodDto method =
         createFieldConsumerWithBuilder(
             field, fieldBuilder, "this.$fieldName:N.value()", "", Map.of(), builderType, context);

@@ -566,9 +566,11 @@ public class BuilderProcessor extends AbstractProcessor {
       scopeResolver
           .resolveGeneratedBuilder(targetType)
           .ifPresent(
-              resolvedBuilder ->
+              resolvedGeneratedType ->
                   SimpleBuildersSpiIntegration.registerBuilder(
-                      beanType, resolvedBuilder, elementToGenerate.config().getSetterPrefix()));
+                      beanType,
+                      resolvedGeneratedType,
+                      elementToGenerate.config().getSetterPrefix()));
     }
   }
 

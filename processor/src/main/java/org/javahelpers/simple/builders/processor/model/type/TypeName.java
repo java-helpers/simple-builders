@@ -47,7 +47,7 @@ public class TypeName {
   private final java.util.List<AnnotationDto> annotations = new java.util.ArrayList<>();
 
   /** Resolved builder for this type, including how generated code instantiates it. */
-  private ResolvedBuilder resolvedBuilder;
+  private ResolvedGeneratedType resolvedGeneratedType;
 
   /** Whether this type has an empty constructor. */
   private boolean hasEmptyConstructor = false;
@@ -130,8 +130,8 @@ public class TypeName {
    *
    * @return optional builder type
    */
-  public Optional<TypeName> getBuilderType() {
-    return getResolvedBuilder().map(ResolvedBuilder::typeName);
+  public Optional<TypeName> getGeneratedType() {
+    return getResolvedGeneratedType().map(ResolvedGeneratedType::typeName);
   }
 
   /**
@@ -140,17 +140,17 @@ public class TypeName {
    *
    * @return optional resolved builder
    */
-  public Optional<ResolvedBuilder> getResolvedBuilder() {
-    return Optional.ofNullable(resolvedBuilder);
+  public Optional<ResolvedGeneratedType> getResolvedGeneratedType() {
+    return Optional.ofNullable(resolvedGeneratedType);
   }
 
   /**
    * Sets the resolved builder for this type.
    *
-   * @param resolvedBuilder the resolved builder
+   * @param resolvedGeneratedType the resolved builder
    */
-  public void setResolvedBuilder(ResolvedBuilder resolvedBuilder) {
-    this.resolvedBuilder = resolvedBuilder;
+  public void setResolvedGeneratedType(ResolvedGeneratedType resolvedGeneratedType) {
+    this.resolvedGeneratedType = resolvedGeneratedType;
   }
 
   /**

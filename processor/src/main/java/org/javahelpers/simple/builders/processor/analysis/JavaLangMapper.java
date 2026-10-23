@@ -120,8 +120,8 @@ public final class JavaLangMapper {
     }
 
     // Set builder and constructor information on the TypeName (only if not already set)
-    if (!typeName.getBuilderType().isPresent()) {
-      setBuilderAndConstructorInfo(typeName, param, context);
+    if (!typeName.getGeneratedType().isPresent()) {
+      setGeneratedTypeAndConstructorInfo(typeName, param, context);
     }
 
     result.setParameterTypeName(typeName);
@@ -162,8 +162,8 @@ public final class JavaLangMapper {
     TypeName typeName = extractType(typeMirror, context);
 
     // Set builder and constructor information on the TypeName (only if not already set)
-    if (typeName != null && !typeName.getBuilderType().isPresent()) {
-      setBuilderAndConstructorInfo(typeName, typeElement, context);
+    if (typeName != null && !typeName.getGeneratedType().isPresent()) {
+      setGeneratedTypeAndConstructorInfo(typeName, typeElement, context);
     }
 
     return typeName;
@@ -176,11 +176,11 @@ public final class JavaLangMapper {
    * @param typeElement the TypeElement representing the type
    * @param context the type mapping context
    */
-  private static void setBuilderAndConstructorInfo(
+  private static void setGeneratedTypeAndConstructorInfo(
       TypeName typeName, TypeElement typeElement, TypeMappingContext context) {
-    setBuilderTypeIfScopeMatches(typeName, typeElement, context);
+    setGeneratedTypeIfScopeMatches(typeName, typeElement, context);
     setEmptyConstructorInfoIfAvailable(typeName, typeElement, context);
-    setElementBuilderTypeIfScopeMatches(typeName, context);
+    setElementGeneratedTypeIfScopeMatches(typeName, context);
   }
 
   /**
@@ -190,9 +190,9 @@ public final class JavaLangMapper {
    * @param typeElement the type element to check
    * @param context the type mapping context
    */
-  private static void setBuilderTypeIfScopeMatches(
+  private static void setGeneratedTypeIfScopeMatches(
       TypeName typeName, TypeElement typeElement, TypeMappingContext context) {
-    context.resolveGeneratedType(typeElement).ifPresent(typeName::setResolvedBuilder);
+    context.resolveGeneratedType(typeElement).ifPresent(typeName::setResolvedGeneratedType);
   }
 
   /**
@@ -218,7 +218,7 @@ public final class JavaLangMapper {
    * @param typeName the TypeName to enhance
    * @param context the type mapping context
    */
-  private static void setElementBuilderTypeIfScopeMatches(
+  private static void setElementGeneratedTypeIfScopeMatches(
       TypeName typeName, TypeMappingContext context) {
     // Only process generic types
     if (!(typeName instanceof TypeNameGeneric genericType)) {
@@ -242,7 +242,7 @@ public final class JavaLangMapper {
     // Resolve usable element builder type through the generated type resolver
     context
         .resolveGeneratedType(elementTypeElement)
-        .ifPresent(genericType::setElementResolvedBuilder);
+        .ifPresent(genericType::setElementResolvedGeneratedType);
   }
 
   /**
@@ -280,11 +280,11 @@ public final class JavaLangMapper {
    * @param param the VariableElement representing the parameter
    * @param context the type mapping context
    */
-  private static void setBuilderAndConstructorInfo(
+  private static void setGeneratedTypeAndConstructorInfo(
       TypeName typeName, VariableElement param, TypeMappingContext context) {
     Element element = context.asElement(param.asType());
     if (element instanceof TypeElement typeElement) {
-      setBuilderAndConstructorInfo(typeName, typeElement, context);
+      setGeneratedTypeAndConstructorInfo(typeName, typeElement, context);
     }
   }
 

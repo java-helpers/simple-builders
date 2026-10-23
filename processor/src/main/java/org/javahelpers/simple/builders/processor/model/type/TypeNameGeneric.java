@@ -45,7 +45,7 @@ public class TypeNameGeneric extends TypeName {
   private final List<TypeName> innerTypeArguments;
 
   /** Resolved builder for the element type of this collection (if applicable). */
-  private ResolvedBuilder elementResolvedBuilder;
+  private ResolvedGeneratedType elementResolvedGeneratedType;
 
   /**
    * Creates a {@code TypeNameGeneric} based on another {@code TypeName} as outer type and a list of
@@ -137,8 +137,8 @@ public class TypeNameGeneric extends TypeName {
    *
    * @return optional element builder type
    */
-  public Optional<TypeName> getElementBuilderType() {
-    return getElementResolvedBuilder().map(ResolvedBuilder::typeName);
+  public Optional<TypeName> getElementGeneratedType() {
+    return getElementResolvedGeneratedType().map(ResolvedGeneratedType::typeName);
   }
 
   /**
@@ -147,17 +147,17 @@ public class TypeNameGeneric extends TypeName {
    *
    * @return optional resolved element builder
    */
-  public Optional<ResolvedBuilder> getElementResolvedBuilder() {
-    return Optional.ofNullable(elementResolvedBuilder);
+  public Optional<ResolvedGeneratedType> getElementResolvedGeneratedType() {
+    return Optional.ofNullable(elementResolvedGeneratedType);
   }
 
   /**
    * Sets the resolved builder for the element type of this collection.
    *
-   * @param elementResolvedBuilder the resolved element builder
+   * @param elementResolvedGeneratedType the resolved element builder
    */
-  public void setElementResolvedBuilder(ResolvedBuilder elementResolvedBuilder) {
-    this.elementResolvedBuilder = elementResolvedBuilder;
+  public void setElementResolvedGeneratedType(ResolvedGeneratedType elementResolvedGeneratedType) {
+    this.elementResolvedGeneratedType = elementResolvedGeneratedType;
   }
 
   @Override
@@ -207,7 +207,7 @@ public class TypeNameGeneric extends TypeName {
     return new EqualsBuilder()
         .appendSuper(super.equals(o))
         .append(innerTypeArguments, that.innerTypeArguments)
-        .append(elementResolvedBuilder, that.elementResolvedBuilder)
+        .append(elementResolvedGeneratedType, that.elementResolvedGeneratedType)
         .isEquals();
   }
 
@@ -216,7 +216,7 @@ public class TypeNameGeneric extends TypeName {
     return new HashCodeBuilder(17, 37)
         .appendSuper(super.hashCode())
         .append(innerTypeArguments)
-        .append(elementResolvedBuilder)
+        .append(elementResolvedGeneratedType)
         .toHashCode();
   }
 }

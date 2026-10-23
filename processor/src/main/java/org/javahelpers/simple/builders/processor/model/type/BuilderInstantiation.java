@@ -128,12 +128,12 @@ public sealed interface BuilderInstantiation {
   /**
    * Instantiation by prefilling the builder through its field functions: a private static {@code
    * prefill<Builder>} method on the generated builder obtains an empty instance via {@code
-   * funcForEmptyBuilder} and calls one field function per prefilled property of the source value.
+   * funcForEmptyInstance} and calls one field function per prefilled property of the source value.
    * {@link #instantiationCode} renders the call to that generated method.
    *
    * @param builderType the resolved builder type (return type of the prefilling method)
    * @param sourceType the referenced type the builder is prefilled from
-   * @param funcForEmptyBuilder how the prefilling method obtains the empty builder
+   * @param funcForEmptyInstance how the prefilling method obtains the empty builder
    * @param builderMethodPrefix the field-function prefix recognized on the builder ({@code ""} for
    *     {@code name(v)}, {@code set} for {@code setName(v)}, or a detected convention like {@code
    *     with})
@@ -142,7 +142,7 @@ public sealed interface BuilderInstantiation {
   record PrefillCall(
       TypeName builderType,
       TypeName sourceType,
-      BuilderInstantiation funcForEmptyBuilder,
+      BuilderInstantiation funcForEmptyInstance,
       String builderMethodPrefix,
       List<Field> prefilledFields)
       implements BuilderInstantiation {

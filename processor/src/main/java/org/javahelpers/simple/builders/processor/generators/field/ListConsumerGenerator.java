@@ -39,7 +39,7 @@ import org.javahelpers.simple.builders.core.builders.ArrayListBuilderWithElement
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
-import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
+import org.javahelpers.simple.builders.processor.model.type.ResolvedGeneratedType;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameList;
@@ -108,7 +108,7 @@ public class ListConsumerGenerator implements MethodGenerator {
       return false;
     }
     // Don't apply if field itself has a builder (higher priority)
-    if (field.getFieldType().getBuilderType().isPresent()) {
+    if (field.getFieldType().getGeneratedType().isPresent()) {
       return false;
     }
 
@@ -125,21 +125,22 @@ public class ListConsumerGenerator implements MethodGenerator {
     }
 
     TypeName elementType = fieldTypeGeneric.getElementType();
-    Optional<ResolvedBuilder> elementBuilder = fieldTypeGeneric.getElementResolvedBuilder();
+    Optional<ResolvedGeneratedType> elementGeneratedType =
+        fieldTypeGeneric.getElementResolvedGeneratedType();
 
-    if (elementBuilder.isPresent()
+    if (elementGeneratedType.isPresent()
         && context.getConfiguration().shouldUseArrayListBuilderWithElementBuilders()) {
       TypeName collectionBuilderType =
           new TypeNameGeneric(
               map2TypeName(ArrayListBuilderWithElementBuilders.class),
               elementType,
-              elementBuilder.get().typeName());
+              elementGeneratedType.get().typeName());
       BuilderMethodDto method =
           createFieldConsumerWithElementBuilders(
-              field, collectionBuilderType, elementBuilder.get(), builderType, context);
+              field, collectionBuilderType, elementGeneratedType.get(), builderType, context);
 
       // Add method-level example for list consumer
-      addExampleToListConsumerWithBuilder(method, elementBuilder.get().typeName());
+      addExampleToListConsumerWithBuilder(method, elementGeneratedType.get().typeName());
 
       return List.of(method);
     } else if (context.getConfiguration().shouldUseArrayListBuilder()) {
@@ -148,7 +149,7 @@ public class ListConsumerGenerator implements MethodGenerator {
       BuilderMethodDto method =
           createFieldConsumerWithBuilder(
               field,
-              new ResolvedBuilder(builderTypeGeneric),
+              new ResolvedGeneratedType(builderTypeGeneric),
               "this.$fieldName:N.value()",
               "",
               Map.of(),

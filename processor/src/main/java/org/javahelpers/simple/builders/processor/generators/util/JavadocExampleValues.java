@@ -153,7 +153,7 @@ public final class JavadocExampleValues {
         .or(
             () ->
                 collectionType
-                    .getElementBuilderType()
+                    .getElementGeneratedType()
                     .map(builderType -> builderType.getClassName() + ".create().build()"));
   }
 
@@ -211,7 +211,7 @@ public final class JavadocExampleValues {
 
   private static Optional<String> resolveBuilderType(TypeName typeName) {
     return typeName
-        .getBuilderType()
+        .getGeneratedType()
         .map(builderType -> builderType.getClassName() + ".create().build()");
   }
 }

@@ -212,11 +212,11 @@ public class UpdateHelperGenerator implements MethodGenerator {
     }
     TypeName fieldType = field.getFieldType();
     String methodName = generateBuilderMethodName(field.getOriginalFieldName(), context);
-    if (fieldType.getBuilderType().isPresent()) {
+    if (fieldType.getGeneratedType().isPresent()) {
       return "\n" + NESTED_DTO_GUIDANCE.formatted(methodName);
     }
     if (fieldType instanceof TypeNameGeneric genericType
-        && genericType.getElementBuilderType().isPresent()) {
+        && genericType.getElementGeneratedType().isPresent()) {
       return "\n" + COLLECTION_ELEMENT_DTO_GUIDANCE.formatted(methodName);
     }
     return "";

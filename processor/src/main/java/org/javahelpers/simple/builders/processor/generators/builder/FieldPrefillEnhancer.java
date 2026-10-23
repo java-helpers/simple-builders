@@ -29,7 +29,7 @@ import org.javahelpers.simple.builders.processor.generators.util.MethodGenerator
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.type.BuilderInstantiation;
-import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
+import org.javahelpers.simple.builders.processor.model.type.ResolvedGeneratedType;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 
@@ -75,8 +75,8 @@ public class FieldPrefillEnhancer implements BuilderEnhancer {
   private static Optional<BuilderInstantiation.PrefillCall> fieldPrefill(FieldDto field) {
     return field
         .getFieldType()
-        .getResolvedBuilder()
-        .flatMap(ResolvedBuilder::funcForPrefilledBuilder)
+        .getResolvedGeneratedType()
+        .flatMap(ResolvedGeneratedType::funcForPrefilledInstance)
         .filter(BuilderInstantiation.PrefillCall.class::isInstance)
         .map(BuilderInstantiation.PrefillCall.class::cast);
   }

@@ -37,7 +37,7 @@ import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.BuilderInstantiation;
 import org.javahelpers.simple.builders.processor.model.type.GenericParameterDto;
-import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
+import org.javahelpers.simple.builders.processor.model.type.ResolvedGeneratedType;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameList;
@@ -231,7 +231,7 @@ public final class MethodGeneratorUtil {
    */
   public static BuilderMethodDto createFieldConsumerWithBuilder(
       FieldDto field,
-      ResolvedBuilder fieldBuilder,
+      ResolvedGeneratedType fieldBuilder,
       String existingValueConstructorArgs,
       String emptyConstructorArgs,
       Map<String, TypeName> additionalTemplateArguments,
@@ -247,7 +247,7 @@ public final class MethodGeneratorUtil {
     methodDto.addParameter(parameter);
 
     String buildExpression =
-        wrapConcreteCollectionType(field.getFieldType(), fieldBuilder.buildCall("builder"));
+        wrapConcreteCollectionType(field.getFieldType(), fieldBuilder.resultCall("builder"));
 
     methodDto.setCode(
         """
@@ -260,11 +260,11 @@ public final class MethodGeneratorUtil {
         """
             .formatted(
                 fieldBuilder
-                    .funcForPrefilledBuilder()
+                    .funcForPrefilledInstance()
                     .orElseThrow()
                     .instantiationCode("$helperType:T", existingValueConstructorArgs),
                 fieldBuilder
-                    .funcForEmptyBuilder()
+                    .funcForEmptyInstance()
                     .instantiationCode("$helperType:T", emptyConstructorArgs)));
     methodDto.addArgument("fieldName", field.getFieldNameInBuilder());
     methodDto.addArgument("dtoMethodParam", parameter.getParameterName());
@@ -308,7 +308,7 @@ public final class MethodGeneratorUtil {
     methodDto.addParameter(parameter);
     StringBuilder code = new StringBuilder();
     code.append("$builderType:T builder = ")
-        .append(prefillCall.funcForEmptyBuilder().instantiationCode("$builderType:T", ""))
+        .append(prefillCall.funcForEmptyInstance().instantiationCode("$builderType:T", ""))
         .append(";\n");
     for (BuilderInstantiation.PrefillCall.Field prefilledField : prefillCall.prefilledFields()) {
       code.append("builder.")
@@ -371,8 +371,8 @@ public final class MethodGeneratorUtil {
    *
    * @param field the field DTO
    * @param collectionBuilderType the collection builder type
-   * @param elementBuilder the resolved element builder; its empty-instantiation path is passed to
-   *     the collection builder as a method reference
+   * @param elementGeneratedType the resolved element builder; its empty-instantiation path is
+   *     passed to the collection builder as a method reference
    * @param returnBuilderType the return builder type
    * @param context the processing context
    * @return the method DTO for the consumer
@@ -380,19 +380,19 @@ public final class MethodGeneratorUtil {
   public static BuilderMethodDto createFieldConsumerWithElementBuilders(
       FieldDto field,
       TypeName collectionBuilderType,
-      ResolvedBuilder elementBuilder,
+      ResolvedGeneratedType elementGeneratedType,
       TypeName returnBuilderType,
       BuilderProcessingContext context) {
     // The collection builder receives a supplier for element builders: the resolved
     // instantiation path as a method reference
     String elementSupplier =
-        elementBuilder.funcForEmptyBuilder().methodReference("$elementBuilderType:T");
+        elementGeneratedType.funcForEmptyInstance().methodReference("$elementBuilderType:T");
     return createFieldConsumerWithBuilder(
         field,
-        new ResolvedBuilder(collectionBuilderType),
+        new ResolvedGeneratedType(collectionBuilderType),
         "this.$fieldName:N.value(), " + elementSupplier,
         elementSupplier,
-        Map.of("elementBuilderType", elementBuilder.typeName()),
+        Map.of("elementBuilderType", elementGeneratedType.typeName()),
         returnBuilderType,
         context);
   }

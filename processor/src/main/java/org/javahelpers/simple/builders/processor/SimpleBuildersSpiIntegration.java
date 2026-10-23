@@ -30,7 +30,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.lang.model.util.Elements;
 import org.javahelpers.simple.builders.processor.model.type.BuilderInstantiation.StaticFactoryCall;
-import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
+import org.javahelpers.simple.builders.processor.model.type.ResolvedGeneratedType;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 
 /**
@@ -82,7 +82,7 @@ public final class SimpleBuildersSpiIntegration {
       TypeName beanType,
       TypeName builderType,
       String creationMethodName,
-      String buildMethodName,
+      String resultMethodName,
       String setterPrefix) {}
 
   private static volatile State state = State.INIT;
@@ -152,8 +152,9 @@ public final class SimpleBuildersSpiIntegration {
    * Publishes the builder {@link BuilderProcessor} resolved for {@code beanType} in this
    * compilation — generated builders always create via a static factory.
    */
-  static void registerBuilder(TypeName beanType, ResolvedBuilder builder, String setterPrefix) {
-    if (!(builder.funcForEmptyBuilder() instanceof StaticFactoryCall factory)) {
+  static void registerBuilder(
+      TypeName beanType, ResolvedGeneratedType builder, String setterPrefix) {
+    if (!(builder.funcForEmptyInstance() instanceof StaticFactoryCall factory)) {
       return;
     }
     PublishedBuilder publishedBuilder =
@@ -161,7 +162,7 @@ public final class SimpleBuildersSpiIntegration {
             beanType,
             builder.typeName(),
             factory.methodName(),
-            builder.buildMethodName(),
+            builder.resultMethodName(),
             setterPrefix);
     BY_BEAN.put(publishedBuilder.beanType().getFullQualifiedName(), publishedBuilder);
     BY_BUILDER.put(publishedBuilder.builderType().getFullQualifiedName(), publishedBuilder);

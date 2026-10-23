@@ -31,7 +31,7 @@ import javax.lang.model.element.TypeElement;
 import org.javahelpers.simple.builders.processor.analysis.BuilderScopeResolver;
 import org.javahelpers.simple.builders.processor.generators.registry.GeneratorRegistry;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
-import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
+import org.javahelpers.simple.builders.processor.model.type.ResolvedGeneratedType;
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 
 /**
@@ -169,7 +169,7 @@ public final class BuilderProcessingContext extends AnnotationProcessingContext 
    * <p>Delegated to the builder scope resolver.
    */
   @Override
-  public Optional<ResolvedBuilder> resolveGeneratedType(TypeElement typeElement) {
+  public Optional<ResolvedGeneratedType> resolveGeneratedType(TypeElement typeElement) {
     return builderScopeResolver.resolveUsableBuilderType(typeElement);
   }
 }
