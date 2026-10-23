@@ -161,7 +161,8 @@ public final class BuilderScopeResolver {
                 new ResolvedGeneratedType(
                     builder,
                     new TypeInstantiation.StaticFactoryCall(GENERATED_FACTORY_METHOD_NAME),
-                    new TypeInstantiation.ConstructorCall()));
+                    new TypeInstantiation.ConstructorCall(),
+                    "build"));
   }
 
   /**
@@ -251,7 +252,8 @@ public final class BuilderScopeResolver {
               new ResolvedGeneratedType(
                   builder,
                   new TypeInstantiation.StaticFactoryCall(GENERATED_FACTORY_METHOD_NAME),
-                  new TypeInstantiation.ConstructorCall()));
+                  new TypeInstantiation.ConstructorCall(),
+                  "build"));
     }
 
     // Reusing builders not generated in this round - nested or anchored inside the referenced
@@ -385,7 +387,8 @@ public final class BuilderScopeResolver {
             referencedTypeName,
             funcForEmptyInstance,
             best.prefix(),
-            best.prefilledFields()));
+            best.prefilledFields(),
+            "prefill" + builderTypeName.getClassName()));
   }
 
   /**

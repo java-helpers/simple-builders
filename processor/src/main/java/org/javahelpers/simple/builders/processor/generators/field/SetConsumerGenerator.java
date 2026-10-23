@@ -38,6 +38,7 @@ import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.type.ResolvedGeneratedType;
+import org.javahelpers.simple.builders.processor.model.type.TypeInstantiation;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameSet;
@@ -142,7 +143,11 @@ public class SetConsumerGenerator implements MethodGenerator {
       BuilderMethodDto method =
           createFieldConsumerWithBuilder(
               field,
-              new ResolvedGeneratedType(builderTypeGeneric),
+              new ResolvedGeneratedType(
+              builderTypeGeneric,
+              new TypeInstantiation.ConstructorCall(),
+              new TypeInstantiation.ConstructorCall(),
+              "build"),
               "this.$fieldName:N.value()",
               "",
               Map.of(),

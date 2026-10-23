@@ -33,9 +33,9 @@ import org.javahelpers.simple.builders.processor.model.type.TypeName;
  *
  * <p>Maps each target type to the {@link TypeName} of the type being generated for it. The
  * generated name is stored explicitly because it cannot always be derived from the target type:
- * {@code @SimpleBuilderFor} targets generate into the holder's package (and may use the holder's
- * builder suffix), so the generated type may live in a different package than the default naming
- * convention would suggest.
+ * targets anchored on a holder type generate into the holder's package (and may follow the
+ * holder's naming convention), so the generated type may live in a different package than the
+ * default naming convention would suggest.
  */
 public final class GeneratedTypes {
   private final Map<TypeName, TypeName> typesByTarget = new HashMap<>();

@@ -125,8 +125,8 @@ public sealed interface TypeInstantiation {
   }
 
   /**
-   * Instantiation by prefilling the generated type through its field functions: a private static
-   * {@code prefill<Type>} method on the generated class obtains an empty instance via {@code
+   * Instantiation by prefilling the generated type through its field functions: a generated
+   * static {@code methodName} on the target class obtains an empty instance via {@code
    * funcForEmptyInstance} and calls one field function per prefilled property of the source value.
    * {@link #instantiationCode} renders the call to that generated method.
    *
@@ -137,13 +137,15 @@ public sealed interface TypeInstantiation {
    *     {@code name(v)}, {@code set} for {@code setName(v)}, or a detected convention like {@code
    *     with})
    * @param prefilledFields the properties to prefill, in the order of the source's properties
+   * @param methodName the name of the prefilling method generated on the target type
    */
   record PrefillCall(
       TypeName generatedType,
       TypeName sourceType,
       TypeInstantiation funcForEmptyInstance,
       String methodPrefix,
-      List<Field> prefilledFields)
+      List<Field> prefilledFields,
+      String methodName)
       implements TypeInstantiation {
 
     @Override
@@ -154,15 +156,6 @@ public sealed interface TypeInstantiation {
     @Override
     public String methodReference(String typeExpression) {
       return "this::" + methodName();
-    }
-
-    /**
-     * The name of the prefilling method generated on the target type.
-     *
-     * @return {@code prefill} followed by the generated type's class name
-     */
-    public String methodName() {
-      return "prefill" + generatedType.getClassName();
     }
 
     /**

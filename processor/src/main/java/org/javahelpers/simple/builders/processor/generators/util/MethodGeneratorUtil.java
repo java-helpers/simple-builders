@@ -389,7 +389,11 @@ public final class MethodGeneratorUtil {
         elementGeneratedType.funcForEmptyInstance().methodReference("$elementBuilderType:T");
     return createFieldConsumerWithBuilder(
         field,
-        new ResolvedGeneratedType(collectionBuilderType),
+        new ResolvedGeneratedType(
+            collectionBuilderType,
+            new TypeInstantiation.ConstructorCall(),
+            new TypeInstantiation.ConstructorCall(),
+            "build"),
         "this.$fieldName:N.value(), " + elementSupplier,
         elementSupplier,
         Map.of("elementBuilderType", elementGeneratedType.typeName()),
