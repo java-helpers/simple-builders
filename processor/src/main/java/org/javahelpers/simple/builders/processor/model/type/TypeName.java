@@ -145,9 +145,9 @@ public class TypeName {
   }
 
   /**
-   * Sets the resolved builder for this type.
+   * Sets the resolved generated type for this type.
    *
-   * @param resolvedGeneratedType the resolved builder
+   * @param resolvedGeneratedType the resolved generated type
    */
   public void setResolvedGeneratedType(ResolvedGeneratedType resolvedGeneratedType) {
     this.resolvedGeneratedType = resolvedGeneratedType;
