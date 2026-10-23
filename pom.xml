@@ -54,6 +54,8 @@
   
   <modules>
     <module>core</module>
+    <module>simple-codegen</module>
+    <module>simple-codegen-roaster</module>
     <module>processor</module>
     <module>example-custom-generator</module>
     <module>example</module>
