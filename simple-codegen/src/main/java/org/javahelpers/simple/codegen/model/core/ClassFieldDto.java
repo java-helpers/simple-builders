@@ -24,13 +24,13 @@
 
 package org.javahelpers.simple.codegen.model.core;
 
-import static org.javahelpers.simple.builders.core.enums.AccessModifier.PRIVATE;
+import static org.javahelpers.simple.codegen.enums.AccessModifier.PRIVATE;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
-import org.javahelpers.simple.builders.core.enums.AccessModifier;
+import org.javahelpers.simple.codegen.enums.AccessModifier;
 import org.javahelpers.simple.codegen.model.imports.ImportStatement;
 import org.javahelpers.simple.codegen.model.imports.RegularImport;
 import org.javahelpers.simple.codegen.model.imports.StaticImport;

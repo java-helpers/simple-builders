@@ -129,7 +129,7 @@ class JacksonModuleMultiPackageTest {
             package pkg.source;
 
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
-            import org.javahelpers.simple.builders.core.enums.OptionState;
+            import org.javahelpers.simple.codegen.enums.OptionState;
 
             @SimpleBuilder(options = @SimpleBuilder.Options(
                 generateJacksonModule = OptionState.ENABLED,

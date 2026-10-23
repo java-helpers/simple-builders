@@ -47,7 +47,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.javahelpers.simple.builders.core.annotations.IgnoreInBuilder;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilderConstructor;
-import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.core.util.TrackedValue;
 import org.javahelpers.simple.builders.processor.analysis.FieldAnnotationExtractor;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyser;
@@ -58,6 +57,7 @@ import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto
 import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
 import org.javahelpers.simple.builders.processor.model.core.GetterInfoDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
+import org.javahelpers.simple.codegen.enums.AccessModifier;
 import org.javahelpers.simple.codegen.model.annotation.AnnotationDto;
 import org.javahelpers.simple.codegen.model.core.ClassFieldDto;
 import org.javahelpers.simple.codegen.model.core.DeprecationInfoDto;

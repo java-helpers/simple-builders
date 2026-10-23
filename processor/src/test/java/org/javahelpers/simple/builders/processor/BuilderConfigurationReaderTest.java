@@ -68,8 +68,8 @@ class BuilderConfigurationReaderTest {
             """
             package test;
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
-            import org.javahelpers.simple.builders.core.enums.OptionState;
-            import org.javahelpers.simple.builders.core.enums.AccessModifier;
+            import org.javahelpers.simple.codegen.enums.OptionState;
+            import org.javahelpers.simple.codegen.enums.AccessModifier;
 
             @SimpleBuilder(options = @SimpleBuilder.Options(
                 generateFieldSupplier = OptionState.DISABLED,
@@ -199,7 +199,7 @@ class BuilderConfigurationReaderTest {
             """
             package test;
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
-            import org.javahelpers.simple.builders.core.enums.OptionState;
+            import org.javahelpers.simple.codegen.enums.OptionState;
             import java.lang.annotation.*;
 
             @SimpleBuilder.Template(
@@ -411,7 +411,7 @@ class BuilderConfigurationReaderTest {
             """
             package test;
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
-            import org.javahelpers.simple.builders.core.enums.OptionState;
+            import org.javahelpers.simple.codegen.enums.OptionState;
             import org.javahelpers.simple.builders.processor.testing.MyBuliderForTestAnnotation;
 
             @MyBuliderForTestAnnotation
@@ -628,7 +628,7 @@ class BuilderConfigurationReaderTest {
             """
             package test;
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
-            import org.javahelpers.simple.builders.core.enums.AccessModifier;
+            import org.javahelpers.simple.codegen.enums.AccessModifier;
 
             @SimpleBuilder(options = @SimpleBuilder.Options(
                 builderAccess = AccessModifier.PRIVATE
@@ -664,7 +664,7 @@ class BuilderConfigurationReaderTest {
             """
             package test;
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
-            import org.javahelpers.simple.builders.core.enums.AccessModifier;
+            import org.javahelpers.simple.codegen.enums.AccessModifier;
 
             @SimpleBuilder(options = @SimpleBuilder.Options(
                 methodAccess = AccessModifier.PRIVATE
@@ -700,7 +700,7 @@ class BuilderConfigurationReaderTest {
             """
             package test;
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
-            import org.javahelpers.simple.builders.core.enums.AccessModifier;
+            import org.javahelpers.simple.codegen.enums.AccessModifier;
 
             @SimpleBuilder(options = @SimpleBuilder.Options(
                 builderConstructorAccess = AccessModifier.PRIVATE

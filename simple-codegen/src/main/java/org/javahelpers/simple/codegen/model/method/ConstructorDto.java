@@ -29,7 +29,7 @@ import java.util.LinkedList;
 import java.util.List;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
-import org.javahelpers.simple.builders.core.enums.AccessModifier;
+import org.javahelpers.simple.codegen.enums.AccessModifier;
 import org.javahelpers.simple.codegen.model.annotation.AnnotationDto;
 import org.javahelpers.simple.codegen.model.javadoc.JavadocDto;
 
