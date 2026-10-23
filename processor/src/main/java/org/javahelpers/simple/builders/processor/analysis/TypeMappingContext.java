@@ -30,7 +30,6 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import org.javahelpers.simple.builders.processor.model.type.ResolvedGeneratedType;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
 
 /**
  * Everything {@link JavaLangMapper} needs for mapping elements and type mirrors to {@code TypeName}
@@ -144,15 +143,4 @@ public interface TypeMappingContext {
    * @return the usable generated type, or empty when none applies
    */
   Optional<ResolvedGeneratedType> resolveGeneratedType(TypeElement typeElement);
-
-  /**
-   * Resolves the generated type usable for the given type name, via its type element.
-   *
-   * @param typeName the referenced type name to resolve
-   * @return the usable generated type, or empty when none applies or the type cannot be resolved
-   */
-  default Optional<ResolvedGeneratedType> resolveGeneratedType(TypeName typeName) {
-    return Optional.ofNullable(getTypeElement(typeName.getFullQualifiedName()))
-        .flatMap(this::resolveGeneratedType);
-  }
 }

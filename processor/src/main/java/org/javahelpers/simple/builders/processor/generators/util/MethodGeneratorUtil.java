@@ -31,7 +31,6 @@ import java.util.function.Consumer;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
-import org.javahelpers.simple.builders.processor.analysis.TypeMappingContext;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
@@ -468,7 +467,7 @@ public final class MethodGeneratorUtil {
    * @param fieldType the field type to get an example value for
    */
   public static void addExampleChainFragment(
-      BuilderMethodDto methodDto, TypeName fieldType, TypeMappingContext context) {
+      BuilderMethodDto methodDto, TypeName fieldType, BuilderProcessingContext context) {
     addExampleChainFragmentTemplate(
         methodDto, "#{methodName}(#{exampleValue})", fieldType, context);
   }
@@ -488,7 +487,7 @@ public final class MethodGeneratorUtil {
    * @param elementType the element type to get an example value for
    */
   public static void addExampleChainFragmentVarArgs(
-      BuilderMethodDto methodDto, TypeName elementType, TypeMappingContext context) {
+      BuilderMethodDto methodDto, TypeName elementType, BuilderProcessingContext context) {
     addExampleChainFragmentTemplate(
         methodDto, "#{methodName}(#{exampleValue}, #{exampleValue})", elementType, context);
   }
@@ -508,7 +507,7 @@ public final class MethodGeneratorUtil {
    * @param fieldType the field type to get an example value for
    */
   public static void addExampleChainFragmentWithSupplier(
-      BuilderMethodDto methodDto, TypeName fieldType, TypeMappingContext context) {
+      BuilderMethodDto methodDto, TypeName fieldType, BuilderProcessingContext context) {
     if (fieldType.hasEmptyConstructor()) {
       addExampleChainFragmentTemplate(
           methodDto, "#{methodName}(" + fieldType.getClassName() + "::new)");
@@ -538,7 +537,10 @@ public final class MethodGeneratorUtil {
    * @param fieldType the field type to get an example value for (can be {@code null})
    */
   public static void addExampleChainFragmentTemplate(
-      BuilderMethodDto methodDto, String template, TypeName fieldType, TypeMappingContext context) {
+      BuilderMethodDto methodDto,
+      String template,
+      TypeName fieldType,
+      BuilderProcessingContext context) {
     String fragment = template.replace("#{methodName}", methodDto.getMethodName());
 
     if (fieldType != null) {

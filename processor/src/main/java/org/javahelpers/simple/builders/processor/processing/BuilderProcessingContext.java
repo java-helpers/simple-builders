@@ -32,6 +32,7 @@ import org.javahelpers.simple.builders.processor.analysis.BuilderScopeResolver;
 import org.javahelpers.simple.builders.processor.generators.registry.GeneratorRegistry;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.type.ResolvedGeneratedType;
+import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 
 /**
@@ -171,5 +172,16 @@ public final class BuilderProcessingContext extends AnnotationProcessingContext 
   @Override
   public Optional<ResolvedGeneratedType> resolveGeneratedType(TypeElement typeElement) {
     return builderScopeResolver.resolveUsableBuilderType(typeElement);
+  }
+
+  /**
+   * Resolves the generated type usable for the given type name, via its type element.
+   *
+   * @param typeName the referenced type name to resolve
+   * @return the usable generated type, or empty when none applies or the type cannot be resolved
+   */
+  public Optional<ResolvedGeneratedType> resolveGeneratedType(TypeName typeName) {
+    return Optional.ofNullable(getTypeElement(typeName.getFullQualifiedName()))
+        .flatMap(this::resolveGeneratedType);
   }
 }
