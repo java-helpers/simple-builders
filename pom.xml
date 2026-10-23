@@ -81,7 +81,7 @@
     <!-- Coverage exclusion needs to match jacoco configuration in processor module.
          Only genuine boilerplate is excluded (DTO model, exception classes, constants
          holders, generated sources); mapper logic is intentionally measured. -->
-    <sonar.coverage.exclusions>**/codegen/model/**,**/*Exception.java,**/generated/**,**/JavadocConstants.java</sonar.coverage.exclusions>
+    <sonar.coverage.exclusions>**/codegen/model/**,**/*Exception.*,**/generated/**,**/JavadocConstants.java</sonar.coverage.exclusions>
     
     <!-- Plugin Versions -->
     <plugin.maven.compiler.version>3.16.0</plugin.maven.compiler.version>

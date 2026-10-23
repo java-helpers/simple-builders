@@ -412,7 +412,7 @@
                 <configuration>
                   <excludes>
                     <!-- Exclude exception classes from coverage (simple constructors) -->
-                    <exclude>**/*Exception.java</exclude>
+                    <exclude>**/*Exception.*</exclude>
                     <!-- Exclude constants-only holders -->
                     <exclude>**/JavadocConstants.*</exclude>
                   </excludes>
