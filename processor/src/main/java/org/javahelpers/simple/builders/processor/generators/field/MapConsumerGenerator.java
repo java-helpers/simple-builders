@@ -36,7 +36,6 @@ import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
-import org.javahelpers.simple.builders.processor.model.type.TypeInstantiation;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameMap;
@@ -148,11 +147,7 @@ public class MapConsumerGenerator implements MethodGenerator {
     BuilderMethodDto mapConsumerWithBuilder =
         createFieldConsumerWithBuilder(
             field,
-            new ResolvedBuilder(
-                builderTargetTypeName,
-                new TypeInstantiation.ConstructorCall(),
-                new TypeInstantiation.ConstructorCall(),
-                "build"),
+            new ResolvedBuilder(builderTargetTypeName),
             "this.$fieldName:N.value()",
             "",
             Map.of(),

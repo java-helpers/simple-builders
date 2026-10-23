@@ -41,7 +41,6 @@ import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
-import org.javahelpers.simple.builders.processor.model.type.TypeInstantiation;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameList;
@@ -150,11 +149,7 @@ public class ListConsumerGenerator implements MethodGenerator {
       BuilderMethodDto method =
           createFieldConsumerWithBuilder(
               field,
-              new ResolvedBuilder(
-                  builderTypeGeneric,
-                  new TypeInstantiation.ConstructorCall(),
-                  new TypeInstantiation.ConstructorCall(),
-                  "build"),
+              new ResolvedBuilder(builderTypeGeneric),
               "this.$fieldName:N.value()",
               "",
               Map.of(),

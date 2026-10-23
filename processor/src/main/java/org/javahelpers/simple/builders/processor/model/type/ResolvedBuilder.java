@@ -49,6 +49,16 @@ public record ResolvedBuilder(
     String buildMethodName) {
 
   /**
+   * A resolution instantiated exclusively through constructors, building with {@code build()}.
+   *
+   * @param typeName the builder type to reference
+   */
+  public ResolvedBuilder(TypeName typeName) {
+    this(
+        typeName, new TypeInstantiation.ConstructorCall(), new TypeInstantiation.ConstructorCall());
+  }
+
+  /**
    * A resolution using {@code build} as terminal method name - the default for builders.
    *
    * @param typeName the builder type to reference
