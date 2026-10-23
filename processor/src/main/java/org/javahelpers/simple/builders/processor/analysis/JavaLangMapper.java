@@ -183,19 +183,6 @@ public final class JavaLangMapper {
   }
 
   /**
-   * Gets the TypeElement for a given TypeName if it exists.
-   *
-   * @param typeName the type name to resolve
-   * @param context the type mapping context
-   * @return the TypeElement, or null if not found or not a TypeElement
-   */
-  private static TypeElement retrieveTypeElementIfExists(
-      TypeName typeName, TypeMappingContext context) {
-    Element element = context.getTypeElement(typeName.getFullQualifiedName());
-    return element instanceof TypeElement typeElement ? typeElement : null;
-  }
-
-  /**
    * Creates a TypeName for the builder of a given TypeElement using an explicit suffix.
    *
    * @param typeElement the type element to create builder name for
