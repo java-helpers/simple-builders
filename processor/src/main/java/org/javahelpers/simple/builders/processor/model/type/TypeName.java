@@ -126,19 +126,10 @@ public class TypeName {
   }
 
   /**
-   * Returns the builder type for this type if a usable builder was resolved.
+   * Returns the resolved generated type for this type, including the instantiation paths generated
+   * code must use.
    *
-   * @return optional builder type
-   */
-  public Optional<TypeName> getGeneratedType() {
-    return getResolvedGeneratedType().map(ResolvedGeneratedType::typeName);
-  }
-
-  /**
-   * Returns the resolved builder for this type, including the instantiation paths generated code
-   * must use.
-   *
-   * @return optional resolved builder
+   * @return optional resolved generated type
    */
   public Optional<ResolvedGeneratedType> getResolvedGeneratedType() {
     return Optional.ofNullable(resolvedGeneratedType);

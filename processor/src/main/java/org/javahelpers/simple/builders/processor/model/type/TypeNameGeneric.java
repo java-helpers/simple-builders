@@ -133,28 +133,19 @@ public class TypeNameGeneric extends TypeName {
   }
 
   /**
-   * Returns the builder type for the element type of this collection.
-   *
-   * @return optional element builder type
-   */
-  public Optional<TypeName> getElementGeneratedType() {
-    return getElementResolvedGeneratedType().map(ResolvedGeneratedType::typeName);
-  }
-
-  /**
-   * Returns the resolved builder for the element type of this collection, including the
+   * Returns the resolved generated type for the element type of this collection, including the
    * instantiation paths generated code must use.
    *
-   * @return optional resolved element builder
+   * @return optional resolved element generated type
    */
   public Optional<ResolvedGeneratedType> getElementResolvedGeneratedType() {
     return Optional.ofNullable(elementResolvedGeneratedType);
   }
 
   /**
-   * Sets the resolved builder for the element type of this collection.
+   * Sets the resolved generated type for the element type of this collection.
    *
-   * @param elementResolvedGeneratedType the resolved element builder
+   * @param elementResolvedGeneratedType the resolved element generated type
    */
   public void setElementResolvedGeneratedType(ResolvedGeneratedType elementResolvedGeneratedType) {
     this.elementResolvedGeneratedType = elementResolvedGeneratedType;

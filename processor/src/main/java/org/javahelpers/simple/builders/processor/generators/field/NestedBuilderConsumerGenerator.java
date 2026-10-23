@@ -93,7 +93,7 @@ public class NestedBuilderConsumerGenerator implements MethodGenerator {
     if (!context.getConfiguration().shouldGenerateBuilderConsumer()) {
       return false;
     }
-    return field.getFieldType().getGeneratedType().isPresent();
+    return field.getFieldType().getResolvedGeneratedType().isPresent();
   }
 
   @Override

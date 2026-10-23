@@ -106,7 +106,7 @@ public class SetConsumerGenerator implements MethodGenerator {
       return false;
     }
     // Don't apply if field itself has a builder (higher priority)
-    if (field.getFieldType().getGeneratedType().isPresent()) {
+    if (field.getFieldType().getResolvedGeneratedType().isPresent()) {
       return false;
     }
     return context.getConfiguration().shouldUseHashSetBuilder()

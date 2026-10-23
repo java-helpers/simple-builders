@@ -120,7 +120,7 @@ public final class JavaLangMapper {
     }
 
     // Set builder and constructor information on the TypeName (only if not already set)
-    if (!typeName.getGeneratedType().isPresent()) {
+    if (!typeName.getResolvedGeneratedType().isPresent()) {
       setGeneratedTypeAndConstructorInfo(typeName, param, context);
     }
 
@@ -162,7 +162,7 @@ public final class JavaLangMapper {
     TypeName typeName = extractType(typeMirror, context);
 
     // Set builder and constructor information on the TypeName (only if not already set)
-    if (typeName != null && !typeName.getGeneratedType().isPresent()) {
+    if (typeName != null && !typeName.getResolvedGeneratedType().isPresent()) {
       setGeneratedTypeAndConstructorInfo(typeName, typeElement, context);
     }
 
