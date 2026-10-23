@@ -29,41 +29,41 @@ import java.util.Optional;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 
 /**
- * Registry of the builders generated in the current annotation-processing round.
+ * Registry of the types generated in the current annotation-processing round.
  *
- * <p>Maps each target type to the {@link TypeName} of the builder being generated for it. The
- * builder name is stored explicitly because it cannot always be derived from the target type:
+ * <p>Maps each target type to the {@link TypeName} of the type being generated for it. The
+ * generated name is stored explicitly because it cannot always be derived from the target type:
  * {@code @SimpleBuilderFor} targets generate into the holder's package (and may use the holder's
- * builder suffix), so the generated builder may live in a different package than the default naming
+ * builder suffix), so the generated type may live in a different package than the default naming
  * convention would suggest.
  */
-public final class GeneratedBuilders {
-  private final Map<TypeName, TypeName> buildersByTarget = new HashMap<>();
+public final class GeneratedTypes {
+  private final Map<TypeName, TypeName> typesByTarget = new HashMap<>();
 
   /**
-   * Registers the builder generated in this round for the given target type.
+   * Registers the type generated in this round for the given target type.
    *
-   * @param targetType the type a builder is generated for
-   * @param builderType the generated builder's type name
+   * @param targetType the type a generated type is produced for
+   * @param generatedType the generated type's name
    * @return {@code true} if the target was not already registered, {@code false} if a previous
    *     registration was replaced
    */
-  public boolean add(TypeName targetType, TypeName builderType) {
-    return buildersByTarget.put(targetType, builderType) == null;
+  public boolean add(TypeName targetType, TypeName generatedType) {
+    return typesByTarget.put(targetType, generatedType) == null;
   }
 
   /**
-   * Returns the builder registered for the referenced type.
+   * Returns the generated type registered for the referenced type.
    *
-   * @param referencedType the referenced type a builder may exist for
-   * @return the generated builder's type name, or empty if the type is not generated this round
+   * @param referencedType the referenced type a generated type may exist for
+   * @return the generated type's name, or empty if the type is not generated this round
    */
-  public Optional<TypeName> findBuilder(TypeName referencedType) {
-    return Optional.ofNullable(buildersByTarget.get(referencedType));
+  public Optional<TypeName> findGenerated(TypeName referencedType) {
+    return Optional.ofNullable(typesByTarget.get(referencedType));
   }
 
   /** Drops all registrations, e.g. at the start of a new processing round. */
   public void clear() {
-    buildersByTarget.clear();
+    typesByTarget.clear();
   }
 }

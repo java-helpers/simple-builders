@@ -80,7 +80,7 @@ public final class BuilderScopeResolver {
   private PackageScopes usagePackages = PackageScopes.unscoped();
   private final Map<String, Optional<ResolvedGeneratedType>> resolvedGeneratedTypes =
       new HashMap<>();
-  private final GeneratedBuilders generatedBuilders = new GeneratedBuilders();
+  private final GeneratedTypes generatedBuilders = new GeneratedTypes();
 
   /**
    * Creates a new resolver for the given processing context.
@@ -155,7 +155,7 @@ public final class BuilderScopeResolver {
   public Optional<ResolvedGeneratedType> resolveGeneratedBuilder(TypeElement referencedType) {
     TypeName referencedTypeName = JavaLangMapper.mapToTypeName(referencedType, context);
     return generatedBuilders
-        .findBuilder(referencedTypeName)
+        .findGenerated(referencedTypeName)
         .map(
             builder ->
                 new ResolvedGeneratedType(
@@ -242,7 +242,7 @@ public final class BuilderScopeResolver {
     // Types whose builders are generated in the current processing round are trusted
     // immediately — our own generators always produce the builder contract, so no
     // classpath lookup or contract check is needed.
-    Optional<TypeName> generatedBuilder = generatedBuilders.findBuilder(referencedTypeName);
+    Optional<TypeName> generatedBuilder = generatedBuilders.findGenerated(referencedTypeName);
     if (generatedBuilder.isPresent()) {
       // Our generators always emit a static create() and no create(T) - the empty path uses
       // the factory, the copy path the constructor
