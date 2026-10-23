@@ -41,7 +41,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.core.PackageScopes;
-import org.javahelpers.simple.builders.processor.model.type.BuilderInstantiation;
+import org.javahelpers.simple.builders.processor.model.type.TypeInstantiation;
 import org.javahelpers.simple.builders.processor.model.type.ResolvedGeneratedType;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
@@ -160,8 +160,8 @@ public final class BuilderScopeResolver {
             builder ->
                 new ResolvedGeneratedType(
                     builder,
-                    new BuilderInstantiation.StaticFactoryCall(GENERATED_FACTORY_METHOD_NAME),
-                    new BuilderInstantiation.ConstructorCall()));
+                    new TypeInstantiation.StaticFactoryCall(GENERATED_FACTORY_METHOD_NAME),
+                    new TypeInstantiation.ConstructorCall()));
   }
 
   /**
@@ -250,8 +250,8 @@ public final class BuilderScopeResolver {
           builder ->
               new ResolvedGeneratedType(
                   builder,
-                  new BuilderInstantiation.StaticFactoryCall(GENERATED_FACTORY_METHOD_NAME),
-                  new BuilderInstantiation.ConstructorCall()));
+                  new TypeInstantiation.StaticFactoryCall(GENERATED_FACTORY_METHOD_NAME),
+                  new TypeInstantiation.ConstructorCall()));
     }
 
     // Reusing builders not generated in this round - nested or anchored inside the referenced
@@ -301,13 +301,13 @@ public final class BuilderScopeResolver {
     if (builderTypeElement == null) {
       return Optional.empty();
     }
-    Optional<BuilderInstantiation> funcForEmptyInstance =
+    Optional<TypeInstantiation> funcForEmptyInstance =
         resolveFuncForEmptyBuilder(builderTypeElement);
     Optional<ExecutableElement> buildMethod = findBuildMethod(builderTypeElement, expectedType);
     if (funcForEmptyInstance.isEmpty() || buildMethod.isEmpty()) {
       return Optional.empty();
     }
-    Optional<BuilderInstantiation> funcForPrefilledInstance =
+    Optional<TypeInstantiation> funcForPrefilledInstance =
         resolveFuncForPrefilledBuilder(builderTypeElement, expectedType);
     // the builder can be created empty but offers no prefilled path: try its field functions
     if (funcForPrefilledInstance.isEmpty()
@@ -350,12 +350,12 @@ public final class BuilderScopeResolver {
    * @param funcForEmptyInstance how the prefilling obtains the empty builder instance
    * @return the prefilling instantiation to emit, or empty when the convention covers too little
    */
-  private Optional<BuilderInstantiation> resolveFieldFunctionPrefill(
+  private Optional<TypeInstantiation> resolveFieldFunctionPrefill(
       TypeElement referencedType,
       TypeElement builderElement,
       TypeName builderTypeName,
       TypeName referencedTypeName,
-      BuilderInstantiation funcForEmptyInstance) {
+      TypeInstantiation funcForEmptyInstance) {
     List<JavaLangAnalyser.ReadableProperty> properties =
         JavaLangAnalyser.findReadableProperties(referencedType, context);
     if (properties.isEmpty()) {
@@ -380,7 +380,7 @@ public final class BuilderScopeResolver {
       return Optional.empty();
     }
     return Optional.of(
-        new BuilderInstantiation.PrefillCall(
+        new TypeInstantiation.PrefillCall(
             builderTypeName,
             referencedTypeName,
             funcForEmptyInstance,
@@ -393,7 +393,7 @@ public final class BuilderScopeResolver {
    * convention the most properties follow wins.
    */
   private record ConventionCoverage(
-      String prefix, List<BuilderInstantiation.PrefillCall.Field> prefilledFields) {}
+      String prefix, List<TypeInstantiation.PrefillCall.Field> prefilledFields) {}
 
   /**
    * Candidate field-function prefixes: {@code ""} (fluent {@code name(v)}) and {@code set}
@@ -434,7 +434,7 @@ public final class BuilderScopeResolver {
    * @param prefix the naming convention to try
    * @return the prefilled fields in property order
    */
-  private List<BuilderInstantiation.PrefillCall.Field> collectPrefilledFields(
+  private List<TypeInstantiation.PrefillCall.Field> collectPrefilledFields(
       List<JavaLangAnalyser.ReadableProperty> properties,
       List<ExecutableElement> fieldFunctions,
       String prefix) {
@@ -451,9 +451,9 @@ public final class BuilderScopeResolver {
    * @param property the readable property to prefill
    * @return the prefilled field to emit
    */
-  private static BuilderInstantiation.PrefillCall.Field prefilledField(
+  private static TypeInstantiation.PrefillCall.Field prefilledField(
       JavaLangAnalyser.ReadableProperty property) {
-    return new BuilderInstantiation.PrefillCall.Field(property.name(), property.accessor());
+    return new TypeInstantiation.PrefillCall.Field(property.name(), property.accessor());
   }
 
   /**
@@ -488,11 +488,11 @@ public final class BuilderScopeResolver {
    * @param builderTypeElement the candidate builder type to inspect
    * @return the instantiation to emit, or empty when the builder offers neither
    */
-  private Optional<BuilderInstantiation> resolveFuncForEmptyBuilder(
+  private Optional<TypeInstantiation> resolveFuncForEmptyBuilder(
       TypeElement builderTypeElement) {
-    Optional<BuilderInstantiation> func = findStaticFactoryCall(builderTypeElement, List.of());
+    Optional<TypeInstantiation> func = findStaticFactoryCall(builderTypeElement, List.of());
     if (func.isEmpty() && JavaLangAnalyser.hasEmptyConstructor(builderTypeElement, context)) {
-      func = Optional.of(new BuilderInstantiation.ConstructorCall());
+      func = Optional.of(new TypeInstantiation.ConstructorCall());
     }
     return func;
   }
@@ -506,13 +506,13 @@ public final class BuilderScopeResolver {
    * @param expectedType the referenced type to prefill the builder with
    * @return the instantiation to emit, or empty when the builder offers neither
    */
-  private Optional<BuilderInstantiation> resolveFuncForPrefilledBuilder(
+  private Optional<TypeInstantiation> resolveFuncForPrefilledBuilder(
       TypeElement builderTypeElement, TypeName expectedType) {
-    Optional<BuilderInstantiation> func =
+    Optional<TypeInstantiation> func =
         findStaticFactoryCall(builderTypeElement, List.of(expectedType));
     if (func.isEmpty()
         && JavaLangAnalyser.hasConstructorAccepting(builderTypeElement, expectedType, context)) {
-      func = Optional.of(new BuilderInstantiation.ConstructorCall());
+      func = Optional.of(new TypeInstantiation.ConstructorCall());
     }
     return func;
   }
@@ -605,10 +605,10 @@ public final class BuilderScopeResolver {
       if (!context.isMemberAccessibleFromBuilderPackage(builderElement) || buildMethod.isEmpty()) {
         continue;
       }
-      BuilderInstantiation funcForEmptyInstance =
-          new BuilderInstantiation.AnchorFactoryCall(
+      TypeInstantiation funcForEmptyInstance =
+          new TypeInstantiation.NestedFactoryCall(
               referencedTypeName, factory.getSimpleName().toString());
-      Optional<BuilderInstantiation> funcForPrefilledInstance =
+      Optional<TypeInstantiation> funcForPrefilledInstance =
           resolveAnchoredPrefilledBuilder(
               referencedType, referencedTypeName, builderElement, funcForEmptyInstance);
       if (funcForPrefilledInstance.isPresent()) {
@@ -636,13 +636,13 @@ public final class BuilderScopeResolver {
    *     prefilling
    * @return the instantiation to emit, or empty when no prefilled path exists
    */
-  private Optional<BuilderInstantiation> resolveAnchoredPrefilledBuilder(
+  private Optional<TypeInstantiation> resolveAnchoredPrefilledBuilder(
       TypeElement referencedType,
       TypeName referencedTypeName,
       TypeElement builderElement,
-      BuilderInstantiation funcForEmptyInstance) {
+      TypeInstantiation funcForEmptyInstance) {
     TypeName builderTypeName = JavaLangMapper.mapToTypeName(builderElement, context);
-    Optional<BuilderInstantiation> func =
+    Optional<TypeInstantiation> func =
         resolveFuncForPrefilledBuilder(builderElement, referencedTypeName);
     if (func.isEmpty()) {
       func = resolveAnchoredStaticFactory(referencedType, referencedTypeName, builderTypeName);
@@ -672,7 +672,7 @@ public final class BuilderScopeResolver {
    * @param builderTypeName the builder type the factory must return
    * @return the instantiation calling the anchored factory, or empty
    */
-  private Optional<BuilderInstantiation> resolveAnchoredStaticFactory(
+  private Optional<TypeInstantiation> resolveAnchoredStaticFactory(
       TypeElement referencedType, TypeName referencedTypeName, TypeName builderTypeName) {
     return JavaLangAnalyser.findMethodsStatic(
             referencedType, List.of(referencedTypeName), builderTypeName, context)
@@ -682,7 +682,7 @@ public final class BuilderScopeResolver {
                 method -> "builder".contentEquals(method.getSimpleName()) ? 0 : 1))
         .map(
             method ->
-                new BuilderInstantiation.AnchorFactoryCall(
+                new TypeInstantiation.NestedFactoryCall(
                     referencedTypeName, method.getSimpleName().toString()));
   }
 
@@ -696,7 +696,7 @@ public final class BuilderScopeResolver {
    * @param builderTypeName the builder type the method must return
    * @return the instantiation calling the instance factory, or empty
    */
-  private Optional<BuilderInstantiation> resolveAnchoredInstanceFactory(
+  private Optional<TypeInstantiation> resolveAnchoredInstanceFactory(
       TypeElement referencedType, TypeName referencedTypeName, TypeName builderTypeName) {
     return JavaLangAnalyser.findMethods(referencedType, List.of(), builderTypeName, context)
         .stream()
@@ -706,7 +706,7 @@ public final class BuilderScopeResolver {
                 method -> "toBuilder".contentEquals(method.getSimpleName()) ? 0 : 1))
         .map(
             method ->
-                new BuilderInstantiation.ValueFactoryCall(
+                new TypeInstantiation.ValueFactoryCall(
                     referencedTypeName, method.getSimpleName().toString()));
   }
 
@@ -719,7 +719,7 @@ public final class BuilderScopeResolver {
    * @param expectedParameterTypes the parameter types the factory must accept
    * @return the instantiation calling the found factory, or empty when none exists
    */
-  private Optional<BuilderInstantiation> findStaticFactoryCall(
+  private Optional<TypeInstantiation> findStaticFactoryCall(
       TypeElement builderTypeElement, List<TypeName> expectedParameterTypes) {
     TypeName builderTypeName = JavaLangMapper.mapToTypeName(builderTypeElement, context);
     return JavaLangAnalyser.findMethodsStatic(
@@ -732,7 +732,7 @@ public final class BuilderScopeResolver {
                 .thenComparing(method -> method.getSimpleName().toString()))
         .map(
             method ->
-                new BuilderInstantiation.StaticFactoryCall(method.getSimpleName().toString()));
+                new TypeInstantiation.StaticFactoryCall(method.getSimpleName().toString()));
   }
 
   private static int preferredFactoryNameRank(String name) {

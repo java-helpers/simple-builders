@@ -44,8 +44,8 @@ import java.util.Optional;
  */
 public record ResolvedGeneratedType(
     TypeName typeName,
-    BuilderInstantiation funcForEmptyInstance,
-    Optional<BuilderInstantiation> funcForPrefilledInstance,
+    TypeInstantiation funcForEmptyInstance,
+    Optional<TypeInstantiation> funcForPrefilledInstance,
     String resultMethodName) {
 
   /**
@@ -56,8 +56,8 @@ public record ResolvedGeneratedType(
   public ResolvedGeneratedType(TypeName typeName) {
     this(
         typeName,
-        new BuilderInstantiation.ConstructorCall(),
-        new BuilderInstantiation.ConstructorCall());
+        new TypeInstantiation.ConstructorCall(),
+        new TypeInstantiation.ConstructorCall());
   }
 
   /**
@@ -70,8 +70,8 @@ public record ResolvedGeneratedType(
    */
   public ResolvedGeneratedType(
       TypeName typeName,
-      BuilderInstantiation funcForEmptyInstance,
-      BuilderInstantiation funcForPrefilledInstance) {
+      TypeInstantiation funcForEmptyInstance,
+      TypeInstantiation funcForPrefilledInstance) {
     this(typeName, funcForEmptyInstance, funcForPrefilledInstance, "build");
   }
 
@@ -85,8 +85,8 @@ public record ResolvedGeneratedType(
    */
   public ResolvedGeneratedType(
       TypeName typeName,
-      BuilderInstantiation funcForEmptyInstance,
-      BuilderInstantiation funcForPrefilledInstance,
+      TypeInstantiation funcForEmptyInstance,
+      TypeInstantiation funcForPrefilledInstance,
       String resultMethodName) {
     this(
         typeName,

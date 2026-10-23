@@ -28,62 +28,61 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 
 /**
- * The instantiation path generated code uses to obtain an instance of a resolved builder.
+ * The instantiation path generated code uses to obtain an instance of a resolved generated type.
  *
- * <p>The resolver records the concrete decision made while checking the builder contract, so
+ * <p>The resolver records the concrete decision made while checking the type's contract, so
  * generation sites emit exactly the path that was resolved - constructor call or static factory
  * call - instead of silently falling back between the two.
  */
-public sealed interface BuilderInstantiation {
+public sealed interface TypeInstantiation {
 
   /**
-   * Renders the code obtaining a builder instance of {@code builderTypeExpression} invoked with
-   * {@code arguments}.
+   * Renders the code obtaining an instance of {@code typeExpression} invoked with {@code
+   * arguments}.
    *
-   * @param builderTypeExpression expression evaluating to the builder type, may be a template
-   *     placeholder like {@code $helperType:T}
+   * @param typeExpression expression evaluating to the type, may be a template placeholder like
+   *     {@code $helperType:T}
    * @param arguments the arguments for the constructor or factory call
    * @return the instantiation code
    */
-  String instantiationCode(String builderTypeExpression, String arguments);
+  String instantiationCode(String typeExpression, String arguments);
 
   /**
-   * Renders a method reference obtaining a builder instance (e.g. {@code B::new} or {@code
-   * B::create}).
+   * Renders a method reference obtaining an instance (e.g. {@code B::new} or {@code B::create}).
    *
-   * @param builderTypeExpression expression evaluating to the builder type, may be a template
-   *     placeholder like {@code $elementBuilderType:T}
+   * @param typeExpression expression evaluating to the type, may be a template placeholder like
+   *     {@code $elementBuilderType:T}
    * @return the method reference
    */
-  String methodReference(String builderTypeExpression);
+  String methodReference(String typeExpression);
 
   /** Instantiation through a constructor: {@code new B(arguments)}. */
-  record ConstructorCall() implements BuilderInstantiation {
+  record ConstructorCall() implements TypeInstantiation {
     @Override
-    public String instantiationCode(String builderTypeExpression, String arguments) {
-      return "new " + builderTypeExpression + "(" + arguments + ")";
+    public String instantiationCode(String typeExpression, String arguments) {
+      return "new " + typeExpression + "(" + arguments + ")";
     }
 
     @Override
-    public String methodReference(String builderTypeExpression) {
-      return builderTypeExpression + "::new";
+    public String methodReference(String typeExpression) {
+      return typeExpression + "::new";
     }
   }
 
   /**
-   * Instantiation through a static factory method on the builder: {@code B.methodName(arguments)}.
+   * Instantiation through a static factory method on the type: {@code B.methodName(arguments)}.
    *
    * @param methodName name of the static factory method (e.g. {@code create}, {@code of})
    */
-  record StaticFactoryCall(String methodName) implements BuilderInstantiation {
+  record StaticFactoryCall(String methodName) implements TypeInstantiation {
     @Override
-    public String instantiationCode(String builderTypeExpression, String arguments) {
-      return builderTypeExpression + "." + methodName + "(" + arguments + ")";
+    public String instantiationCode(String typeExpression, String arguments) {
+      return typeExpression + "." + methodName + "(" + arguments + ")";
     }
 
     @Override
-    public String methodReference(String builderTypeExpression) {
-      return builderTypeExpression + "::" + methodName;
+    public String methodReference(String typeExpression) {
+      return typeExpression + "::" + methodName;
     }
   }
 
@@ -94,14 +93,14 @@ public sealed interface BuilderInstantiation {
    * @param anchor the type declaring the factory method
    * @param methodName name of the static factory method (e.g. {@code builder})
    */
-  record AnchorFactoryCall(TypeName anchor, String methodName) implements BuilderInstantiation {
+  record NestedFactoryCall(TypeName anchor, String methodName) implements TypeInstantiation {
     @Override
-    public String instantiationCode(String builderTypeExpression, String arguments) {
+    public String instantiationCode(String typeExpression, String arguments) {
       return anchor.getFullQualifiedName() + "." + methodName + "(" + arguments + ")";
     }
 
     @Override
-    public String methodReference(String builderTypeExpression) {
+    public String methodReference(String typeExpression) {
       return anchor.getFullQualifiedName() + "::" + methodName;
     }
   }
@@ -113,75 +112,76 @@ public sealed interface BuilderInstantiation {
    * @param anchor the type declaring the instance method
    * @param methodName name of the instance factory method (e.g. {@code toBuilder})
    */
-  record ValueFactoryCall(TypeName anchor, String methodName) implements BuilderInstantiation {
+  record ValueFactoryCall(TypeName anchor, String methodName) implements TypeInstantiation {
     @Override
-    public String instantiationCode(String builderTypeExpression, String arguments) {
+    public String instantiationCode(String typeExpression, String arguments) {
       return arguments + "." + methodName + "()";
     }
 
     @Override
-    public String methodReference(String builderTypeExpression) {
+    public String methodReference(String typeExpression) {
       return anchor.getFullQualifiedName() + "::" + methodName;
     }
   }
 
   /**
-   * Instantiation by prefilling the builder through its field functions: a private static {@code
-   * prefill<Builder>} method on the generated builder obtains an empty instance via {@code
+   * Instantiation by prefilling the generated type through its field functions: a private static
+   * {@code prefill<Type>} method on the generated class obtains an empty instance via {@code
    * funcForEmptyInstance} and calls one field function per prefilled property of the source value.
    * {@link #instantiationCode} renders the call to that generated method.
    *
-   * @param builderType the resolved builder type (return type of the prefilling method)
-   * @param sourceType the referenced type the builder is prefilled from
-   * @param funcForEmptyInstance how the prefilling method obtains the empty builder
-   * @param builderMethodPrefix the field-function prefix recognized on the builder ({@code ""} for
+   * @param generatedType the resolved generated type (return type of the prefilling method)
+   * @param sourceType the referenced type the instance is prefilled from
+   * @param funcForEmptyInstance how the prefilling method obtains the empty instance
+   * @param methodPrefix the field-function prefix recognized on the generated type ({@code ""} for
    *     {@code name(v)}, {@code set} for {@code setName(v)}, or a detected convention like {@code
    *     with})
    * @param prefilledFields the properties to prefill, in the order of the source's properties
    */
   record PrefillCall(
-      TypeName builderType,
+      TypeName generatedType,
       TypeName sourceType,
-      BuilderInstantiation funcForEmptyInstance,
-      String builderMethodPrefix,
+      TypeInstantiation funcForEmptyInstance,
+      String methodPrefix,
       List<Field> prefilledFields)
-      implements BuilderInstantiation {
+      implements TypeInstantiation {
 
     @Override
-    public String instantiationCode(String builderTypeExpression, String arguments) {
+    public String instantiationCode(String typeExpression, String arguments) {
       return methodName() + "(" + arguments + ")";
     }
 
     @Override
-    public String methodReference(String builderTypeExpression) {
+    public String methodReference(String typeExpression) {
       return "this::" + methodName();
     }
 
     /**
-     * The name of the prefilling method generated on the target builder.
+     * The name of the prefilling method generated on the target type.
      *
-     * @return {@code prefill} followed by the builder's class name
+     * @return {@code prefill} followed by the generated type's class name
      */
     public String methodName() {
-      return "prefill" + builderType.getClassName();
+      return "prefill" + generatedType.getClassName();
     }
 
     /**
-     * The builder's field function for a prefilled field: {@code <property>} when the prefix is
-     * empty, otherwise {@code <prefix><Property>} (e.g. {@code setName} or {@code withName}).
+     * The generated type's field function for a prefilled field: {@code <property>} when the
+     * prefix is empty, otherwise {@code <prefix><Property>} (e.g. {@code setName} or {@code
+     * withName}).
      *
      * @param field the prefilled field
-     * @return the field function's name on the builder
+     * @return the field function's name on the generated type
      */
-    public String builderMethodFor(Field field) {
-      return builderMethodPrefix.isEmpty()
+    public String fieldMethodFor(Field field) {
+      return methodPrefix.isEmpty()
           ? field.property()
-          : builderMethodPrefix + StringUtils.capitalize(field.property());
+          : methodPrefix + StringUtils.capitalize(field.property());
     }
 
     /**
      * One property prefilled inside the prefilling method: {@code
-     * builder.<fieldFunction>(value.<accessor>)}.
+     * target.<fieldFunction>(value.<accessor>)}.
      *
      * @param property the property name (e.g. {@code name})
      * @param accessor how the property is read from the value (e.g. {@code name()} or {@code name})
