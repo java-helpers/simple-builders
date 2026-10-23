@@ -91,7 +91,7 @@ class UpdateHelperGeneratorTest {
             package test;
 
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
-            import org.javahelpers.simple.codegen.enums.OptionState;
+            import org.javahelpers.simple.builders.core.enums.OptionState;
 
             @SimpleBuilder(options = @SimpleBuilder.Options(
                 generateUpdateHelpers = OptionState.ENABLED))
@@ -185,7 +185,7 @@ class UpdateHelperGeneratorTest {
             package test;
 
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
-            import org.javahelpers.simple.codegen.enums.OptionState;
+            import org.javahelpers.simple.builders.core.enums.OptionState;
 
             @SimpleBuilder(options = @SimpleBuilder.Options(
                 generateUpdateHelpers = OptionState.ENABLED,

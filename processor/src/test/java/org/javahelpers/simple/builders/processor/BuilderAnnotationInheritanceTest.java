@@ -292,7 +292,7 @@ class BuilderAnnotationInheritanceTest {
             package test;
 
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
-            import org.javahelpers.simple.codegen.enums.OptionState;
+            import org.javahelpers.simple.builders.core.enums.OptionState;
 
             @SimpleBuilder(options = @SimpleBuilder.Options(
                 generateFieldSupplier = OptionState.DISABLED
@@ -346,7 +346,7 @@ class BuilderAnnotationInheritanceTest {
             import java.lang.annotation.RetentionPolicy;
             import java.lang.annotation.Target;
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
-            import org.javahelpers.simple.codegen.enums.OptionState;
+            import org.javahelpers.simple.builders.core.enums.OptionState;
 
             @SimpleBuilder.Template(options = @SimpleBuilder.Options(
                 generateFieldSupplier = OptionState.DISABLED
@@ -412,7 +412,7 @@ class BuilderAnnotationInheritanceTest {
             import java.lang.annotation.RetentionPolicy;
             import java.lang.annotation.Target;
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
-            import org.javahelpers.simple.codegen.enums.OptionState;
+            import org.javahelpers.simple.builders.core.enums.OptionState;
 
             @SimpleBuilder.Template(options = @SimpleBuilder.Options(
                 generateFieldConsumer = OptionState.DISABLED,
@@ -433,7 +433,7 @@ class BuilderAnnotationInheritanceTest {
             package test;
 
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
-            import org.javahelpers.simple.codegen.enums.OptionState;
+            import org.javahelpers.simple.builders.core.enums.OptionState;
 
             @SimpleBuilder(options = @SimpleBuilder.Options(
                 generateFieldSupplier = OptionState.DISABLED,
@@ -503,7 +503,7 @@ class BuilderAnnotationInheritanceTest {
             import java.lang.annotation.RetentionPolicy;
             import java.lang.annotation.Target;
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
-            import org.javahelpers.simple.codegen.enums.OptionState;
+            import org.javahelpers.simple.builders.core.enums.OptionState;
 
             @SimpleBuilder.Template(options = @SimpleBuilder.Options(
                 generateFieldSupplier = OptionState.DISABLED,
@@ -526,7 +526,7 @@ class BuilderAnnotationInheritanceTest {
             import java.lang.annotation.RetentionPolicy;
             import java.lang.annotation.Target;
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
-            import org.javahelpers.simple.codegen.enums.OptionState;
+            import org.javahelpers.simple.builders.core.enums.OptionState;
 
             @SimpleBuilder.Template(options = @SimpleBuilder.Options(
                 generateFieldConsumer = OptionState.DISABLED,
@@ -611,7 +611,7 @@ class BuilderAnnotationInheritanceTest {
             import java.lang.annotation.RetentionPolicy;
             import java.lang.annotation.Target;
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
-            import org.javahelpers.simple.codegen.enums.OptionState;
+            import org.javahelpers.simple.builders.core.enums.OptionState;
 
             @SimpleBuilder.Template(options = @SimpleBuilder.Options(
                 generateFieldSupplier = OptionState.DISABLED,

@@ -472,7 +472,7 @@ class AnnotationCopyTest {
             """
             package test.deprecated.dto;
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
-            import org.javahelpers.simple.codegen.enums.OptionState;
+            import org.javahelpers.simple.builders.core.enums.OptionState;
 
             @Deprecated
             @SimpleBuilder(options = @SimpleBuilder.Options(
@@ -638,7 +638,7 @@ class AnnotationCopyTest {
             """
             package test.deprecated.dto.javadoc;
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
-            import org.javahelpers.simple.codegen.enums.OptionState;
+            import org.javahelpers.simple.builders.core.enums.OptionState;
 
             /**
              * A DTO that is now obsolete.

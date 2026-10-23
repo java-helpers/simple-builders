@@ -364,7 +364,7 @@ class TypeUseAnnotationTest {
             """
             package test.typeuse.disabled;
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
-            import org.javahelpers.simple.codegen.enums.OptionState;
+            import org.javahelpers.simple.builders.core.enums.OptionState;
             import test.typeuse.disabled.annotations.NotNull;
             import java.util.List;
 
