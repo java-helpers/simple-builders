@@ -175,12 +175,12 @@ public final class BuilderProcessingContext extends AnnotationProcessingContext 
   }
 
   /**
-   * Resolves the generated type usable for the given type name, via its type element.
+   * Resolves the builder usable for the given type name, via its type element.
    *
    * @param typeName the referenced type name to resolve
-   * @return the usable generated type, or empty when none applies or the type cannot be resolved
+   * @return the usable builder type, or empty when none applies or the type cannot be resolved
    */
-  public Optional<ResolvedGeneratedType> resolveGeneratedType(TypeName typeName) {
+  public Optional<ResolvedGeneratedType> resolveBuilderType(TypeName typeName) {
     return Optional.ofNullable(getTypeElement(typeName.getFullQualifiedName()))
         .flatMap(this::resolveGeneratedType);
   }

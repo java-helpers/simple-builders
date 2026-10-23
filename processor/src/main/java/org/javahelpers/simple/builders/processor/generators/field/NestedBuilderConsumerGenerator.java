@@ -93,14 +93,14 @@ public class NestedBuilderConsumerGenerator implements MethodGenerator {
     if (!context.getConfiguration().shouldGenerateBuilderConsumer()) {
       return false;
     }
-    return context.resolveGeneratedType(field.getFieldType()).isPresent();
+    return context.resolveBuilderType(field.getFieldType()).isPresent();
   }
 
   @Override
   public List<BuilderMethodDto> generateMethods(
       FieldDto field, TypeName builderType, BuilderProcessingContext context) {
     Optional<ResolvedGeneratedType> fieldBuilderOpt =
-        context.resolveGeneratedType(field.getFieldType());
+        context.resolveBuilderType(field.getFieldType());
     if (fieldBuilderOpt.isEmpty() || fieldBuilderOpt.get().funcForPrefilledInstance().isEmpty()) {
       return Collections.emptyList();
     }

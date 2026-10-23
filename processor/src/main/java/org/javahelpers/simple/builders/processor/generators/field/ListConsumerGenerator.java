@@ -109,7 +109,7 @@ public class ListConsumerGenerator implements MethodGenerator {
       return false;
     }
     // Don't apply if field itself has a builder (higher priority)
-    if (context.resolveGeneratedType(field.getFieldType()).isPresent()) {
+    if (context.resolveBuilderType(field.getFieldType()).isPresent()) {
       return false;
     }
 
@@ -126,8 +126,7 @@ public class ListConsumerGenerator implements MethodGenerator {
     }
 
     TypeName elementType = fieldTypeGeneric.getElementType();
-    Optional<ResolvedGeneratedType> elementGeneratedType =
-        context.resolveGeneratedType(elementType);
+    Optional<ResolvedGeneratedType> elementGeneratedType = context.resolveBuilderType(elementType);
 
     if (elementGeneratedType.isPresent()
         && context.getConfiguration().shouldUseArrayListBuilderWithElementBuilders()) {

@@ -160,7 +160,7 @@ public final class JavadocExampleValues {
         .or(
             () ->
                 context
-                    .resolveGeneratedType(collectionType.getElementType())
+                    .resolveBuilderType(collectionType.getElementType())
                     .map(resolved -> resolved.typeName().getClassName() + ".create().build()"));
   }
 
@@ -222,7 +222,7 @@ public final class JavadocExampleValues {
   private static Optional<String> resolveBuilderType(
       TypeName typeName, BuilderProcessingContext context) {
     return context
-        .resolveGeneratedType(typeName)
+        .resolveBuilderType(typeName)
         .map(resolved -> resolved.typeName().getClassName() + ".create().build()");
   }
 }

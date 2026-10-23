@@ -119,7 +119,7 @@ public class MapConsumerGenerator implements MethodGenerator {
         // Map must be parameterized (has key/value types)
         && fieldTypeGeneric.isParameterized()
         // Field shouldn't have its own builder (higher priority)
-        && !context.resolveGeneratedType(fieldTypeGeneric).isPresent()
+        && !context.resolveBuilderType(fieldTypeGeneric).isPresent()
         // Field shouldn't have empty constructor (higher priority)
         && !fieldTypeGeneric.hasEmptyConstructor();
   }
