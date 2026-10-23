@@ -22,38 +22,24 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.classgen.roaster.exceptions;
+package org.javahelpers.simple.codegen;
 
-/** Special exception for errors in mapping to Roaster classes. */
-public class RoasterMapperException extends RuntimeException {
-
-  /**
-   * Creating an exception with message and parameters.
-   *
-   * @param cause root cause of current exception, containing stacktrace
-   */
-  public RoasterMapperException(Throwable cause) {
-    super(cause.getMessage(), cause);
-  }
-
-  /**
-   * Creating an exception with message and parameters.
-   *
-   * @param message A specific message, supports String.format arguments
-   * @param args Arguments for String.format on message
-   */
-  public RoasterMapperException(String message, Object... args) {
-    super(String.format(message, args));
-  }
+/**
+ * Formats generated source code before it is written to disk.
+ *
+ * <p>The generic formatting seam of the code generation layer: callers pick the formatter
+ * implementation matching the target's formatting mode and pass it to {@link
+ * ClassCodeGenerator#generateClass}. Formatting-heavy backends may implement richer formatters
+ * behind this interface.
+ */
+@FunctionalInterface
+public interface SourceFormatter {
 
   /**
-   * Creating an exception with message and parameters.
+   * Formats generated source code.
    *
-   * @param cause root cause of current exception, containing stacktrace
-   * @param message A specific message, supports String.format arguments
-   * @param args Arguments for String.format on message
+   * @param rawSource the unformatted source code
+   * @return the formatted source code
    */
-  public RoasterMapperException(Throwable cause, String message, Object... args) {
-    super(String.format(message, args), cause);
-  }
+  String format(String rawSource);
 }

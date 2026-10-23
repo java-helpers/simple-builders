@@ -22,21 +22,38 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.classgen;
+package org.javahelpers.simple.codegen.roaster.exceptions;
 
-/**
- * Reports a problem found during code generation. The receiving side decides the severity — e.g. an
- * unexpected generated-code inconsistency may be a warning in normal operation and an error in a
- * caller-defined strict mode.
- */
-@FunctionalInterface
-public interface GenerationIssueReporter {
+/** Special exception for errors in mapping to Roaster classes. */
+public class RoasterMapperException extends RuntimeException {
 
   /**
-   * Reports a problem found during code generation.
+   * Creating an exception with message and parameters.
    *
-   * @param format the message format string
-   * @param args arguments referenced by the format specifiers in the format string
+   * @param cause root cause of current exception, containing stacktrace
    */
-  void report(String format, Object... args);
+  public RoasterMapperException(Throwable cause) {
+    super(cause.getMessage(), cause);
+  }
+
+  /**
+   * Creating an exception with message and parameters.
+   *
+   * @param message A specific message, supports String.format arguments
+   * @param args Arguments for String.format on message
+   */
+  public RoasterMapperException(String message, Object... args) {
+    super(String.format(message, args));
+  }
+
+  /**
+   * Creating an exception with message and parameters.
+   *
+   * @param cause root cause of current exception, containing stacktrace
+   * @param message A specific message, supports String.format arguments
+   * @param args Arguments for String.format on message
+   */
+  public RoasterMapperException(Throwable cause, String message, Object... args) {
+    super(String.format(message, args), cause);
+  }
 }

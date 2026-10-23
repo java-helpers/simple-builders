@@ -30,16 +30,14 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import javax.annotation.processing.ProcessingEnvironment;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.core.enums.FormattingMode;
-import org.javahelpers.simple.builders.processor.classgen.CodeGenerationException;
-import org.javahelpers.simple.builders.processor.classgen.GenerationEnvironment;
-import org.javahelpers.simple.builders.processor.classgen.SourceFormatter;
-import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterCodeGenerator;
-import org.javahelpers.simple.builders.processor.classgen.roaster.exceptions.RoasterMapperException;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 import org.javahelpers.simple.builders.processor.processing.SourceFormatterResolver;
 import org.javahelpers.simple.builders.processor.testing.CapturingProcessingLogger;
 import org.javahelpers.simple.builders.processor.testing.ProcessingEnvironmentStub;
+import org.javahelpers.simple.codegen.CodeGenerationException;
+import org.javahelpers.simple.codegen.GenerationEnvironment;
+import org.javahelpers.simple.codegen.SourceFormatter;
 import org.javahelpers.simple.codegen.logging.ProcessingLogger;
 import org.javahelpers.simple.codegen.model.core.GenerationTargetClassDto;
 import org.javahelpers.simple.codegen.model.method.ConstructorDto;
@@ -48,6 +46,8 @@ import org.javahelpers.simple.codegen.model.method.MethodCodePlaceholder;
 import org.javahelpers.simple.codegen.model.method.MethodDto;
 import org.javahelpers.simple.codegen.model.method.MethodParameterDto;
 import org.javahelpers.simple.codegen.model.type.TypeName;
+import org.javahelpers.simple.codegen.roaster.RoasterCodeGenerator;
+import org.javahelpers.simple.codegen.roaster.exceptions.RoasterMapperException;
 import org.junit.jupiter.api.Test;
 
 /**

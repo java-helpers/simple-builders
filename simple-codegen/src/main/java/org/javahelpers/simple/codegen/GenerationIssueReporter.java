@@ -22,33 +22,21 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.classgen;
+package org.javahelpers.simple.codegen;
 
 /**
- * Failure of a {@link ClassCodeGenerator} to produce or write generated source code.
- *
- * <p>The exception type of the code generation layer: it intentionally knows nothing about
- * builders. Callers generating builders translate it into their domain exception.
+ * Reports a problem found during code generation. The receiving side decides the severity — e.g. an
+ * unexpected generated-code inconsistency may be a warning in normal operation and an error in a
+ * caller-defined strict mode.
  */
-public class CodeGenerationException extends Exception {
-
-  private static final long serialVersionUID = 1L;
-
-  /**
-   * Creates a code generation failure with a message.
-   *
-   * @param message the failure description
-   */
-  public CodeGenerationException(String message) {
-    super(message);
-  }
+@FunctionalInterface
+public interface GenerationIssueReporter {
 
   /**
-   * Creates a code generation failure wrapping an underlying cause.
+   * Reports a problem found during code generation.
    *
-   * @param cause the underlying failure
+   * @param format the message format string
+   * @param args arguments referenced by the format specifiers in the format string
    */
-  public CodeGenerationException(Throwable cause) {
-    super(cause.getMessage(), cause);
-  }
+  void report(String format, Object... args);
 }

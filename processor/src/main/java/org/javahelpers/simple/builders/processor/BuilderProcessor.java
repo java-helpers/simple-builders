@@ -63,10 +63,6 @@ import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFors;
 import org.javahelpers.simple.builders.processor.analysis.BuilderScopeResolver;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyser;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
-import org.javahelpers.simple.builders.processor.classgen.ClassCodeGenerator;
-import org.javahelpers.simple.builders.processor.classgen.CodeGenerationException;
-import org.javahelpers.simple.builders.processor.classgen.GenerationEnvironment;
-import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterCodeGenerator;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 import org.javahelpers.simple.builders.processor.generators.integration.JacksonModuleGenerator;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
@@ -78,6 +74,9 @@ import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsEnu
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsReader;
 import org.javahelpers.simple.builders.processor.processing.ProcessingTarget;
 import org.javahelpers.simple.builders.processor.processing.SourceFormatterResolver;
+import org.javahelpers.simple.codegen.ClassCodeGenerator;
+import org.javahelpers.simple.codegen.CodeGenerationException;
+import org.javahelpers.simple.codegen.GenerationEnvironment;
 import org.javahelpers.simple.codegen.logging.PerformanceTracker;
 import org.javahelpers.simple.codegen.logging.ProcessingLogger;
 import org.javahelpers.simple.codegen.model.core.GenerationTargetClassDto;
@@ -85,6 +84,7 @@ import org.javahelpers.simple.codegen.model.type.TypeName;
 import org.javahelpers.simple.codegen.model.type.TypeNameList;
 import org.javahelpers.simple.codegen.model.type.TypeNameMap;
 import org.javahelpers.simple.codegen.model.type.TypeNameSet;
+import org.javahelpers.simple.codegen.roaster.RoasterCodeGenerator;
 
 /**
  * BuilderProcessor is an annotation processor for execution in generate-sources phase. The

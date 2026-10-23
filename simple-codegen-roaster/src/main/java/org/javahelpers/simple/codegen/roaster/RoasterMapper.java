@@ -22,12 +22,11 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.classgen.roaster;
+package org.javahelpers.simple.codegen.roaster;
 
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.collections4.CollectionUtils;
-import org.javahelpers.simple.builders.processor.classgen.roaster.exceptions.RoasterMapperException;
 import org.javahelpers.simple.codegen.model.annotation.AnnotationDto;
 import org.javahelpers.simple.codegen.model.annotation.InterfaceName;
 import org.javahelpers.simple.codegen.model.method.CodeTemplateDto;
@@ -39,6 +38,7 @@ import org.javahelpers.simple.codegen.model.type.TypeNameArray;
 import org.javahelpers.simple.codegen.model.type.TypeNameGeneric;
 import org.javahelpers.simple.codegen.model.type.TypeNamePrimitive;
 import org.javahelpers.simple.codegen.model.type.TypeNameVariable;
+import org.javahelpers.simple.codegen.roaster.exceptions.RoasterMapperException;
 
 /** Helper functions to create Roaster-compatible source code strings from DTOs. */
 public final class RoasterMapper {

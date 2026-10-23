@@ -23,27 +23,11 @@
  */
 
 /**
- * Package org.javahelpers.simple.builders.processor.classgen.roaster
+ * Package org.javahelpers.simple.codegen.roaster.exceptions
  *
- * <p>Roaster-based code generation for simple-builders processor.
+ * <p>Roaster-specific exception classes.
  *
- * <p>This package contains the core code generation components:
- *
- * <ul>
- *   <li>{@link org.javahelpers.simple.builders.processor.classgen.roaster.RoasterCodeGenerator} -
- *       Main code generator that creates builder classes
- *   <li>{@link org.javahelpers.simple.builders.processor.classgen.roaster.RoasterMapper} - Utility
- *       for mapping DTOs to Java source strings
- * </ul>
- *
- * <p>Exception classes are organized in separate packages:
- *
- * <ul>
- *   <li>{@link org.javahelpers.simple.builders.processor.classgen.CodeGenerationException} -
- *       Exception for code generation errors
- *   <li>{@link
- *       org.javahelpers.simple.builders.processor.classgen.roaster.exceptions.RoasterMapperException}
- *       - Exception for mapping errors
- * </ul>
+ * <p>This package contains exceptions specific to Roaster code generation, providing error handling
+ * for mapping and code generation issues within the Roaster layer.
  */
-package org.javahelpers.simple.builders.processor.classgen.roaster;
+package org.javahelpers.simple.codegen.roaster.exceptions;

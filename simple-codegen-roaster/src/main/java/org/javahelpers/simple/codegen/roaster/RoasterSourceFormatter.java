@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.javahelpers.simple.builders.processor.classgen.roaster;
+package org.javahelpers.simple.codegen.roaster;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,7 +33,7 @@ import java.util.Optional;
 import java.util.Properties;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.enums.FormattingMode;
-import org.javahelpers.simple.builders.processor.classgen.SourceFormatter;
+import org.javahelpers.simple.codegen.SourceFormatter;
 import org.javahelpers.simple.codegen.logging.ProcessingLogger;
 import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster.model.util.FormatterProfileReader;

@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.classgen.roaster;
+package org.javahelpers.simple.codegen.roaster;
 
-import static org.javahelpers.simple.builders.processor.classgen.GenerationPhases.*;
-import static org.javahelpers.simple.builders.processor.classgen.roaster.RoasterMapper.mapType;
-import static org.javahelpers.simple.builders.processor.classgen.roaster.RoasterMapper.resolveCodeTemplate;
+import static org.javahelpers.simple.codegen.GenerationPhases.*;
+import static org.javahelpers.simple.codegen.roaster.RoasterMapper.mapType;
+import static org.javahelpers.simple.codegen.roaster.RoasterMapper.resolveCodeTemplate;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -43,12 +43,11 @@ import javax.tools.JavaFileObject;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
-import org.javahelpers.simple.builders.processor.classgen.ClassCodeGenerator;
-import org.javahelpers.simple.builders.processor.classgen.CodeGenerationException;
-import org.javahelpers.simple.builders.processor.classgen.GenerationEnvironment;
-import org.javahelpers.simple.builders.processor.classgen.GenerationIssueReporter;
-import org.javahelpers.simple.builders.processor.classgen.SourceFormatter;
-import org.javahelpers.simple.builders.processor.util.ImportCollector;
+import org.javahelpers.simple.codegen.ClassCodeGenerator;
+import org.javahelpers.simple.codegen.CodeGenerationException;
+import org.javahelpers.simple.codegen.GenerationEnvironment;
+import org.javahelpers.simple.codegen.GenerationIssueReporter;
+import org.javahelpers.simple.codegen.SourceFormatter;
 import org.javahelpers.simple.codegen.logging.PerformanceTracker;
 import org.javahelpers.simple.codegen.logging.ProcessingLogger;
 import org.javahelpers.simple.codegen.model.annotation.AnnotationDto;
@@ -66,6 +65,7 @@ import org.javahelpers.simple.codegen.model.method.MethodParameterDto;
 import org.javahelpers.simple.codegen.model.type.NestedTypeDto;
 import org.javahelpers.simple.codegen.model.type.TypeName;
 import org.javahelpers.simple.codegen.model.type.TypeNameArray;
+import org.javahelpers.simple.codegen.util.ImportCollector;
 import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster.model.source.AnnotationSource;
 import org.jboss.forge.roaster.model.source.FieldSource;
