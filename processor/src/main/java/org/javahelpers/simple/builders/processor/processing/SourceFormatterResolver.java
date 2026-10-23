@@ -30,7 +30,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.enums.FormattingMode;
 import org.javahelpers.simple.builders.processor.classgen.SourceFormatter;
 import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterSourceFormatter;
-import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
+import org.javahelpers.simple.codegen.logging.ProcessingLogger;
 
 /**
  * Resolves the {@link SourceFormatter} for a formatting mode, applying the Eclipse formatter

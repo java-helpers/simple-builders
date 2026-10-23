@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.processing.logging;
+package org.javahelpers.simple.codegen.logging;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

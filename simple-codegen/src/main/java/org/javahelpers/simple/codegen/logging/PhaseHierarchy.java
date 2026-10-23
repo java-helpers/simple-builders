@@ -22,58 +22,30 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.processing.logging;
+package org.javahelpers.simple.codegen.logging;
+
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
- * No-operation implementation of {@link PerformanceTracker} that does nothing.
+ * The phase vocabulary a {@link PerformanceTracker} report is rendered as a tree: the top-level
+ * phases in display order, plus for each parent phase the ordered sub-phases nested underneath.
+ * Phases absent from {@code subPhases} are leaves.
  *
- * <p>All methods are empty, so the JIT compiler can eliminate them entirely when the tracker is
- * fixed at construction time. This ensures zero overhead when performance tracking is disabled.
+ * <p>The phase names themselves are consumer-defined — this type carries whichever pipeline
+ * vocabulary the caller tracks with, keeping the tracker independent of any concrete phase set.
+ *
+ * @param topLevelPhases top-level phases in display order
+ * @param subPhases parent phase name to its ordered sub-phase names
  */
-public final class NoOpPerformanceTracker implements PerformanceTracker {
+public record PhaseHierarchy(List<String> topLevelPhases, Map<String, List<String>> subPhases) {
 
-  @Override
-  public void startPhase() {
-    // No-op
-  }
-
-  @Override
-  public void endPhase(String phase) {
-    // No-op
-  }
-
-  @Override
-  public void startGenerator() {
-    // No-op
-  }
-
-  @Override
-  public void endGenerator(String generatorName) {
-    // No-op
-  }
-
-  @Override
-  public void startEnhancer() {
-    // No-op
-  }
-
-  @Override
-  public void endEnhancer(String enhancerName) {
-    // No-op
-  }
-
-  @Override
-  public void startClass(String className) {
-    // No-op
-  }
-
-  @Override
-  public void endClass(int fieldCount, int collectionCount) {
-    // No-op
-  }
-
-  @Override
-  public void generateReport(ProcessingLogger logger) {
-    // No-op
+  /** Defensive copies: hierarchy structure must not change after tracker creation. */
+  public PhaseHierarchy {
+    topLevelPhases = List.copyOf(topLevelPhases);
+    Map<String, List<String>> copied = new LinkedHashMap<>();
+    subPhases.forEach((parent, children) -> copied.put(parent, List.copyOf(children)));
+    subPhases = Map.copyOf(copied);
   }
 }

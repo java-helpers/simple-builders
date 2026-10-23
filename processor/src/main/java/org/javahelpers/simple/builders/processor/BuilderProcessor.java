@@ -83,8 +83,8 @@ import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsEnu
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsReader;
 import org.javahelpers.simple.builders.processor.processing.ProcessingTarget;
 import org.javahelpers.simple.builders.processor.processing.SourceFormatterResolver;
-import org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker;
-import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
+import org.javahelpers.simple.codegen.logging.PerformanceTracker;
+import org.javahelpers.simple.codegen.logging.ProcessingLogger;
 
 /**
  * BuilderProcessor is an annotation processor for execution in generate-sources phase. The

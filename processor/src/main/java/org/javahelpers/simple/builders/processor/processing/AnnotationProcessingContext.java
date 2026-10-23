@@ -41,10 +41,10 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import org.javahelpers.simple.builders.processor.analysis.TypeMappingContext;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.processing.logging.ActivePerformanceTracker;
-import org.javahelpers.simple.builders.processor.processing.logging.NoOpPerformanceTracker;
-import org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker;
-import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
+import org.javahelpers.simple.codegen.logging.ActivePerformanceTracker;
+import org.javahelpers.simple.codegen.logging.NoOpPerformanceTracker;
+import org.javahelpers.simple.codegen.logging.PerformanceTracker;
+import org.javahelpers.simple.codegen.logging.ProcessingLogger;
 
 /**
  * Generic annotation-processing context: wraps {@link ProcessingEnvironment}, {@link Elements},

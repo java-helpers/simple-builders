@@ -22,35 +22,58 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.processing.logging;
-
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-
-import org.junit.jupiter.api.Test;
+package org.javahelpers.simple.codegen.logging;
 
 /**
- * Unit tests for {@link NoOpPerformanceTracker}.
+ * No-operation implementation of {@link PerformanceTracker} that does nothing.
  *
- * <p>Verifies that every tracking call is a safe no-op, including {@code generateReport} with a
- * null logger (the report must be dropped entirely when tracking is disabled).
+ * <p>All methods are empty, so the JIT compiler can eliminate them entirely when the tracker is
+ * fixed at construction time. This ensures zero overhead when performance tracking is disabled.
  */
-class NoOpPerformanceTrackerTest {
+public final class NoOpPerformanceTracker implements PerformanceTracker {
 
-  private final NoOpPerformanceTracker tracker = new NoOpPerformanceTracker();
+  @Override
+  public void startPhase() {
+    // No-op
+  }
 
-  @Test
-  void allTrackingCallsAreSafeNoOps() {
-    assertDoesNotThrow(
-        () -> {
-          tracker.startPhase();
-          tracker.endPhase("phase");
-          tracker.startGenerator();
-          tracker.endGenerator("generator");
-          tracker.startEnhancer();
-          tracker.endEnhancer("enhancer");
-          tracker.startClass("class");
-          tracker.endClass(1, 2);
-          tracker.generateReport(null);
-        });
+  @Override
+  public void endPhase(String phase) {
+    // No-op
+  }
+
+  @Override
+  public void startGenerator() {
+    // No-op
+  }
+
+  @Override
+  public void endGenerator(String generatorName) {
+    // No-op
+  }
+
+  @Override
+  public void startEnhancer() {
+    // No-op
+  }
+
+  @Override
+  public void endEnhancer(String enhancerName) {
+    // No-op
+  }
+
+  @Override
+  public void startClass(String className) {
+    // No-op
+  }
+
+  @Override
+  public void endClass(int fieldCount, int collectionCount) {
+    // No-op
+  }
+
+  @Override
+  public void generateReport(ProcessingLogger logger) {
+    // No-op
   }
 }

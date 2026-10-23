@@ -29,7 +29,7 @@ import static org.javahelpers.simple.builders.processor.classgen.GenerationPhase
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import org.javahelpers.simple.builders.processor.processing.logging.PhaseHierarchy;
+import org.javahelpers.simple.codegen.logging.PhaseHierarchy;
 
 /**
  * Phase names of the builder processing pipeline, reported through {@code
