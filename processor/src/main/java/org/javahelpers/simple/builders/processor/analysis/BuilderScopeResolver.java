@@ -160,8 +160,7 @@ public final class BuilderScopeResolver {
                 new ResolvedBuilder(
                     builder,
                     new TypeInstantiation.StaticFactoryCall(GENERATED_FACTORY_METHOD_NAME),
-                    new TypeInstantiation.ConstructorCall(),
-                    "build"));
+                    new TypeInstantiation.ConstructorCall()));
   }
 
   /**
@@ -251,8 +250,7 @@ public final class BuilderScopeResolver {
               new ResolvedBuilder(
                   builder,
                   new TypeInstantiation.StaticFactoryCall(GENERATED_FACTORY_METHOD_NAME),
-                  new TypeInstantiation.ConstructorCall(),
-                  "build"));
+                  new TypeInstantiation.ConstructorCall()));
     }
 
     // Reusing builders not generated in this round - nested or anchored inside the referenced
@@ -281,14 +279,15 @@ public final class BuilderScopeResolver {
 
   /**
    * Looks up the candidate builder type on the classpath and verifies it satisfies the builder
-   * contract: a way to create an empty instance (a no-arg constructor or a static parameterless
-   * factory like {@code create()}), a way to create an instance prefilled with a value (a
-   * constructor accepting the referenced type or a static factory like {@code create(T)}/{@code
-   * of(T)}), and an accessible, parameterless method returning it (the build method, regardless of
-   * name) - each accessible from the generated builder's package, since the generated code calls
-   * them from there. The contract check is annotation-agnostic, so builders generated with custom
-   * template annotations or from external sources are supported as long as they follow the builder
-   * contract. It also avoids false positives like {@code String} → {@code StringBuilder}.
+   * contract: a way to create an empty builder instance (a no-arg constructor or a static
+   * parameterless factory like {@code create()}), a way to create an instance prefilled with a
+   * value (a constructor accepting the referenced type or a static factory like {@code
+   * create(T)}/{@code of(T)}), and an accessible, parameterless method returning it (the build
+   * method, regardless of name) - each accessible from the generated builder's package, since the
+   * generated code calls them from there. The contract check is annotation-agnostic, so builders
+   * generated with custom template annotations or from external sources are supported as long as
+   * they follow the builder contract. It also avoids false positives like {@code String} → {@code
+   * StringBuilder}.
    *
    * @param candidate the candidate builder type name to look up
    * @param referencedType the type element being referenced
@@ -302,26 +301,26 @@ public final class BuilderScopeResolver {
     if (builderTypeElement == null) {
       return Optional.empty();
     }
-    Optional<TypeInstantiation> funcForEmptyInstance =
+    Optional<TypeInstantiation> funcForEmptyBuilder =
         resolveFuncForEmptyBuilder(builderTypeElement);
     Optional<ExecutableElement> buildMethod = findBuildMethod(builderTypeElement, expectedType);
-    if (funcForEmptyInstance.isEmpty() || buildMethod.isEmpty()) {
+    if (funcForEmptyBuilder.isEmpty() || buildMethod.isEmpty()) {
       return Optional.empty();
     }
-    Optional<TypeInstantiation> funcForPrefilledInstance =
+    Optional<TypeInstantiation> funcForPrefilledBuilder =
         resolveFuncForPrefilledBuilder(builderTypeElement, expectedType);
     // the builder can be created empty but offers no prefilled path: try its field functions
-    if (funcForPrefilledInstance.isEmpty()
+    if (funcForPrefilledBuilder.isEmpty()
         && context.getConfiguration().shouldUseFieldFunctionPrefill()) {
-      funcForPrefilledInstance =
+      funcForPrefilledBuilder =
           resolveFieldFunctionPrefill(
               referencedType,
               builderTypeElement,
               candidate,
               expectedType,
-              funcForEmptyInstance.get());
+              funcForEmptyBuilder.get());
     }
-    if (funcForPrefilledInstance.isEmpty()
+    if (funcForPrefilledBuilder.isEmpty()
         && context.getConfiguration().shouldUseFieldFunctionPrefill()) {
       context.debug(
           "Builder %s for %s offers no way to prefill a value - consumer helpers are skipped",
@@ -330,8 +329,8 @@ public final class BuilderScopeResolver {
     return Optional.of(
         new ResolvedBuilder(
             candidate,
-            funcForEmptyInstance.get(),
-            funcForPrefilledInstance,
+            funcForEmptyBuilder.get(),
+            funcForPrefilledBuilder,
             buildMethod.get().getSimpleName().toString()));
   }
 
@@ -348,7 +347,7 @@ public final class BuilderScopeResolver {
    * @param builderElement the candidate builder type
    * @param builderTypeName the candidate builder type name
    * @param referencedTypeName the referenced type, prefilled into the builder
-   * @param funcForEmptyInstance how the prefilling obtains the empty builder instance
+   * @param funcForEmptyBuilder how the prefilling obtains the empty builder instance
    * @return the prefilling instantiation to emit, or empty when the convention covers too little
    */
   private Optional<TypeInstantiation> resolveFieldFunctionPrefill(
@@ -356,7 +355,7 @@ public final class BuilderScopeResolver {
       TypeElement builderElement,
       TypeName builderTypeName,
       TypeName referencedTypeName,
-      TypeInstantiation funcForEmptyInstance) {
+      TypeInstantiation funcForEmptyBuilder) {
     List<JavaLangAnalyser.ReadableProperty> properties =
         JavaLangAnalyser.findReadableProperties(referencedType, context);
     if (properties.isEmpty()) {
@@ -384,7 +383,7 @@ public final class BuilderScopeResolver {
         new TypeInstantiation.PrefillCall(
             builderTypeName,
             referencedTypeName,
-            funcForEmptyInstance,
+            funcForEmptyBuilder,
             best.prefix(),
             best.prefilledFields(),
             "prefill" + builderTypeName.getClassName()));
@@ -606,18 +605,18 @@ public final class BuilderScopeResolver {
       if (!context.isMemberAccessibleFromBuilderPackage(builderElement) || buildMethod.isEmpty()) {
         continue;
       }
-      TypeInstantiation funcForEmptyInstance =
+      TypeInstantiation funcForEmptyBuilder =
           new TypeInstantiation.NestedFactoryCall(
               referencedTypeName, factory.getSimpleName().toString());
-      Optional<TypeInstantiation> funcForPrefilledInstance =
+      Optional<TypeInstantiation> funcForPrefilledBuilder =
           resolveAnchoredPrefilledBuilder(
-              referencedType, referencedTypeName, builderElement, funcForEmptyInstance);
-      if (funcForPrefilledInstance.isPresent()) {
+              referencedType, referencedTypeName, builderElement, funcForEmptyBuilder);
+      if (funcForPrefilledBuilder.isPresent()) {
         return Optional.of(
             new ResolvedBuilder(
                 JavaLangMapper.mapToTypeName(builderElement, context),
-                funcForEmptyInstance,
-                funcForPrefilledInstance.get(),
+                funcForEmptyBuilder,
+                funcForPrefilledBuilder.get(),
                 buildMethod.get().getSimpleName().toString()));
       }
     }
@@ -633,7 +632,7 @@ public final class BuilderScopeResolver {
    * @param referencedType the type element being referenced
    * @param referencedTypeName the referenced type, passed to the contract check
    * @param builderElement the anchored builder type
-   * @param funcForEmptyInstance how the empty builder is obtained, reused by field-function
+   * @param funcForEmptyBuilder how the empty builder is obtained, reused by field-function
    *     prefilling
    * @return the instantiation to emit, or empty when no prefilled path exists
    */
@@ -641,7 +640,7 @@ public final class BuilderScopeResolver {
       TypeElement referencedType,
       TypeName referencedTypeName,
       TypeElement builderElement,
-      TypeInstantiation funcForEmptyInstance) {
+      TypeInstantiation funcForEmptyBuilder) {
     TypeName builderTypeName = JavaLangMapper.mapToTypeName(builderElement, context);
     Optional<TypeInstantiation> func =
         resolveFuncForPrefilledBuilder(builderElement, referencedTypeName);
@@ -658,7 +657,7 @@ public final class BuilderScopeResolver {
               builderElement,
               builderTypeName,
               referencedTypeName,
-              funcForEmptyInstance);
+              funcForEmptyBuilder);
     }
     return func;
   }

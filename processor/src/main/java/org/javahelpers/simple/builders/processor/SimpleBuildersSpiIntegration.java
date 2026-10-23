@@ -153,7 +153,7 @@ public final class SimpleBuildersSpiIntegration {
    * compilation — generated builders always create via a static factory.
    */
   static void registerBuilder(TypeName beanType, ResolvedBuilder builder, String setterPrefix) {
-    if (!(builder.funcForEmptyInstance() instanceof StaticFactoryCall factory)) {
+    if (!(builder.funcForEmptyBuilder() instanceof StaticFactoryCall factory)) {
       return;
     }
     PublishedBuilder publishedBuilder =

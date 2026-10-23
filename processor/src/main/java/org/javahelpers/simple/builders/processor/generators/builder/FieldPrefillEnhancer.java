@@ -76,7 +76,7 @@ public class FieldPrefillEnhancer implements BuilderEnhancer {
       FieldDto field, BuilderProcessingContext context) {
     return context
         .resolveBuilderType(field.getFieldType())
-        .flatMap(ResolvedBuilder::funcForPrefilledInstance)
+        .flatMap(ResolvedBuilder::funcForPrefilledBuilder)
         .filter(TypeInstantiation.PrefillCall.class::isInstance)
         .map(TypeInstantiation.PrefillCall.class::cast);
   }

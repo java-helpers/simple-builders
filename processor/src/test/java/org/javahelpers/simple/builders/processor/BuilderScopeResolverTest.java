@@ -157,8 +157,8 @@ class BuilderScopeResolverTest {
     assertThat(compilation).succeeded();
     ResolvedBuilder resolved = probeResult.get().get();
     assertEquals(expectedBuilder, resolved.typeName().getFullQualifiedName());
-    TypeInstantiation empty = resolved.funcForEmptyInstance();
-    TypeInstantiation prefilled = resolved.funcForPrefilledInstance().get();
+    TypeInstantiation empty = resolved.funcForEmptyBuilder();
+    TypeInstantiation prefilled = resolved.funcForPrefilledBuilder().get();
     assertInstanceOf(expectedEmptyPath, empty);
     assertInstanceOf(expectedPrefilledPath, prefilled);
     assertFactoryMethod(expectedEmptyMethod, empty);
@@ -262,12 +262,11 @@ class BuilderScopeResolverTest {
     ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
     assertEquals("builders.LibHelperBuilder", resolved.typeName().getFullQualifiedName());
     TypeInstantiation.NestedFactoryCall empty =
-        assertInstanceOf(
-            TypeInstantiation.NestedFactoryCall.class, resolved.funcForEmptyInstance());
+        assertInstanceOf(TypeInstantiation.NestedFactoryCall.class, resolved.funcForEmptyBuilder());
     assertEquals("builder", empty.methodName());
     assertEquals("lib.LibHelper", empty.anchor().getFullQualifiedName());
     assertInstanceOf(
-        TypeInstantiation.ConstructorCall.class, resolved.funcForPrefilledInstance().get());
+        TypeInstantiation.ConstructorCall.class, resolved.funcForPrefilledBuilder().get());
   }
 
   @Test
@@ -343,10 +342,10 @@ class BuilderScopeResolverTest {
     // path — two candidates match, the conventional name wins
     ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
     assertEquals("lib.LibHelper.LibHelperBuilder", resolved.typeName().getFullQualifiedName());
-    assertInstanceOf(TypeInstantiation.NestedFactoryCall.class, resolved.funcForEmptyInstance());
+    assertInstanceOf(TypeInstantiation.NestedFactoryCall.class, resolved.funcForEmptyBuilder());
     TypeInstantiation.NestedFactoryCall prefilled =
         assertInstanceOf(
-            TypeInstantiation.NestedFactoryCall.class, resolved.funcForPrefilledInstance().get());
+            TypeInstantiation.NestedFactoryCall.class, resolved.funcForPrefilledBuilder().get());
     assertEquals("builder", prefilled.methodName());
   }
 
@@ -376,7 +375,7 @@ class BuilderScopeResolverTest {
     assertEquals("lib.LibHelper.LibHelperBuilder", resolved.typeName().getFullQualifiedName());
     TypeInstantiation.ValueFactoryCall prefilled =
         assertInstanceOf(
-            TypeInstantiation.ValueFactoryCall.class, resolved.funcForPrefilledInstance().get());
+            TypeInstantiation.ValueFactoryCall.class, resolved.funcForPrefilledBuilder().get());
     assertEquals("toBuilder", prefilled.methodName());
   }
 
@@ -414,9 +413,9 @@ class BuilderScopeResolverTest {
     // method; the second nested type exercises the candidate ranking
     ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
     assertEquals("lib.LibHelper.LibHelperBuilder", resolved.typeName().getFullQualifiedName());
-    assertInstanceOf(TypeInstantiation.ConstructorCall.class, resolved.funcForEmptyInstance());
+    assertInstanceOf(TypeInstantiation.ConstructorCall.class, resolved.funcForEmptyBuilder());
     assertInstanceOf(
-        TypeInstantiation.ConstructorCall.class, resolved.funcForPrefilledInstance().get());
+        TypeInstantiation.ConstructorCall.class, resolved.funcForPrefilledBuilder().get());
   }
 
   @Test
@@ -443,10 +442,10 @@ class BuilderScopeResolverTest {
     // toBuilder() the prefilled one; the nested builder's package-private ctor is never called
     ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
     assertEquals("lib.LibHelper.LibHelperBuilder", resolved.typeName().getFullQualifiedName());
-    assertInstanceOf(TypeInstantiation.NestedFactoryCall.class, resolved.funcForEmptyInstance());
+    assertInstanceOf(TypeInstantiation.NestedFactoryCall.class, resolved.funcForEmptyBuilder());
     TypeInstantiation.ValueFactoryCall prefilled =
         assertInstanceOf(
-            TypeInstantiation.ValueFactoryCall.class, resolved.funcForPrefilledInstance().get());
+            TypeInstantiation.ValueFactoryCall.class, resolved.funcForPrefilledBuilder().get());
     assertEquals("toBuilder", prefilled.methodName());
   }
 
@@ -478,9 +477,9 @@ class BuilderScopeResolverTest {
     // ctors resolves through the constructed-name candidate path
     ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
     assertEquals("lib.LibHelperBuilder", resolved.typeName().getFullQualifiedName());
-    assertInstanceOf(TypeInstantiation.ConstructorCall.class, resolved.funcForEmptyInstance());
+    assertInstanceOf(TypeInstantiation.ConstructorCall.class, resolved.funcForEmptyBuilder());
     assertInstanceOf(
-        TypeInstantiation.ConstructorCall.class, resolved.funcForPrefilledInstance().get());
+        TypeInstantiation.ConstructorCall.class, resolved.funcForPrefilledBuilder().get());
   }
 
   @Test
@@ -519,10 +518,10 @@ class BuilderScopeResolverTest {
     // so the generated builder prefills the instance itself — the unprefixed name wins over setName
     ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
     assertEquals("lib.LibHelper.Builder", resolved.typeName().getFullQualifiedName());
-    assertInstanceOf(TypeInstantiation.ConstructorCall.class, resolved.funcForEmptyInstance());
+    assertInstanceOf(TypeInstantiation.ConstructorCall.class, resolved.funcForEmptyBuilder());
     TypeInstantiation.PrefillCall prefilled =
         assertInstanceOf(
-            TypeInstantiation.PrefillCall.class, resolved.funcForPrefilledInstance().get());
+            TypeInstantiation.PrefillCall.class, resolved.funcForPrefilledBuilder().get());
     assertEquals("", prefilled.methodPrefix());
     assertEquals("name", prefilled.prefilledFields().get(0).property());
     assertEquals("getName()", prefilled.prefilledFields().get(0).accessor());
@@ -558,7 +557,7 @@ class BuilderScopeResolverTest {
     // without a prefilled path
     assertEquals(
         Optional.empty(),
-        ResolverProbeProcessor.usagePrefillDisabled.get().funcForPrefilledInstance());
+        ResolverProbeProcessor.usagePrefillDisabled.get().funcForPrefilledBuilder());
   }
 
   @Test
@@ -605,10 +604,10 @@ class BuilderScopeResolverTest {
     // generated builder prefills the instance itself
     ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
     assertEquals("lib.AutoValue_LibHelper.Builder", resolved.typeName().getFullQualifiedName());
-    assertInstanceOf(TypeInstantiation.NestedFactoryCall.class, resolved.funcForEmptyInstance());
+    assertInstanceOf(TypeInstantiation.NestedFactoryCall.class, resolved.funcForEmptyBuilder());
     TypeInstantiation.PrefillCall prefilled =
         assertInstanceOf(
-            TypeInstantiation.PrefillCall.class, resolved.funcForPrefilledInstance().get());
+            TypeInstantiation.PrefillCall.class, resolved.funcForPrefilledBuilder().get());
     assertEquals("set", prefilled.methodPrefix());
     assertEquals("name", prefilled.prefilledFields().get(0).property());
   }
@@ -655,7 +654,7 @@ class BuilderScopeResolverTest {
     ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
     TypeInstantiation.PrefillCall prefilled =
         assertInstanceOf(
-            TypeInstantiation.PrefillCall.class, resolved.funcForPrefilledInstance().get());
+            TypeInstantiation.PrefillCall.class, resolved.funcForPrefilledBuilder().get());
     assertEquals("with", prefilled.methodPrefix());
     assertEquals(2, prefilled.prefilledFields().size());
   }
@@ -691,7 +690,7 @@ class BuilderScopeResolverTest {
     ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
     TypeInstantiation.PrefillCall prefilled =
         assertInstanceOf(
-            TypeInstantiation.PrefillCall.class, resolved.funcForPrefilledInstance().get());
+            TypeInstantiation.PrefillCall.class, resolved.funcForPrefilledBuilder().get());
     assertEquals("put", prefilled.methodPrefix());
   }
 
@@ -722,7 +721,7 @@ class BuilderScopeResolverTest {
     ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
     TypeInstantiation.PrefillCall prefilled =
         assertInstanceOf(
-            TypeInstantiation.PrefillCall.class, resolved.funcForPrefilledInstance().get());
+            TypeInstantiation.PrefillCall.class, resolved.funcForPrefilledBuilder().get());
     assertEquals("", prefilled.methodPrefix());
     assertEquals("name", prefilled.prefilledFields().get(0).property());
     assertEquals("name()", prefilled.prefilledFields().get(0).accessor());
@@ -761,7 +760,7 @@ class BuilderScopeResolverTest {
     ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
     TypeInstantiation.PrefillCall prefilled =
         assertInstanceOf(
-            TypeInstantiation.PrefillCall.class, resolved.funcForPrefilledInstance().get());
+            TypeInstantiation.PrefillCall.class, resolved.funcForPrefilledBuilder().get());
     assertEquals("", prefilled.methodPrefix());
     assertEquals("name", prefilled.prefilledFields().get(0).property());
     assertEquals("name", prefilled.prefilledFields().get(0).accessor());
@@ -791,11 +790,11 @@ class BuilderScopeResolverTest {
 
     assertThat(compilation).succeeded();
     // No prefilled path and name has no field function: the builder still resolves, but
-    // funcForPrefilledInstance stays empty so only helpers not needing a prefilled path generate
+    // funcForPrefilledBuilder stays empty so only helpers not needing a prefilled path generate
     ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
     assertEquals("lib.LibHelperBuilder", resolved.typeName().getFullQualifiedName());
-    assertInstanceOf(TypeInstantiation.ConstructorCall.class, resolved.funcForEmptyInstance());
-    assertEquals(Optional.empty(), resolved.funcForPrefilledInstance());
+    assertInstanceOf(TypeInstantiation.ConstructorCall.class, resolved.funcForEmptyBuilder());
+    assertEquals(Optional.empty(), resolved.funcForPrefilledBuilder());
   }
 
   @Test
@@ -843,7 +842,7 @@ class BuilderScopeResolverTest {
     ResolvedBuilder resolved = ResolverProbeProcessor.usageWithoutAnnotation.get();
     TypeInstantiation.PrefillCall prefilled =
         assertInstanceOf(
-            TypeInstantiation.PrefillCall.class, resolved.funcForPrefilledInstance().get());
+            TypeInstantiation.PrefillCall.class, resolved.funcForPrefilledBuilder().get());
     assertEquals(2, prefilled.prefilledFields().size());
     assertEquals("name", prefilled.prefilledFields().get(0).property());
     assertEquals("active", prefilled.prefilledFields().get(1).property());
@@ -878,9 +877,9 @@ class BuilderScopeResolverTest {
     // ... but a builder generated in the current round is own generation and still resolves
     ResolvedBuilder generated = ResolverProbeProcessor.usageGeneratedWithExistingDisabled.get();
     assertEquals("lib.LibHelperBuilder", generated.typeName().getFullQualifiedName());
-    assertInstanceOf(TypeInstantiation.StaticFactoryCall.class, generated.funcForEmptyInstance());
+    assertInstanceOf(TypeInstantiation.StaticFactoryCall.class, generated.funcForEmptyBuilder());
     assertInstanceOf(
-        TypeInstantiation.ConstructorCall.class, generated.funcForPrefilledInstance().get());
+        TypeInstantiation.ConstructorCall.class, generated.funcForPrefilledBuilder().get());
   }
 
   private static final String LIB_HELPER =

@@ -34,37 +34,51 @@ import java.util.Optional;
  * call or static factory call - so generation sites emit exactly what was resolved.
  *
  * @param typeName the builder type to reference
- * @param funcForEmptyInstance how to obtain an empty instance (e.g. {@code new B()} or {@code
- *     B.create()})
- * @param funcForPrefilledInstance how to obtain an instance prefilled with a value (e.g. {@code new
- *     B(value)} or {@code B.of(value)}), or empty when the type offers no prefilled path; helpers
+ * @param funcForEmptyBuilder how to obtain an empty builder instance (e.g. {@code new
+ *     PersonDtoBuilder()} or {@code PersonDtoBuilder.create()})
+ * @param funcForPrefilledBuilder how to obtain a builder prefilled with a value (e.g. {@code new
+ *     PersonDtoBuilder(person)}), or empty when the builder offers no prefilled path; helpers
  *     needing one are then not generated
  * @param buildMethodName the name of the parameterless method returning the built value (e.g.
  *     {@code build})
  */
 public record ResolvedBuilder(
     TypeName typeName,
-    TypeInstantiation funcForEmptyInstance,
-    Optional<TypeInstantiation> funcForPrefilledInstance,
+    TypeInstantiation funcForEmptyBuilder,
+    Optional<TypeInstantiation> funcForPrefilledBuilder,
     String buildMethodName) {
+
+  /**
+   * A resolution using {@code build} as terminal method name - the default for builders.
+   *
+   * @param typeName the builder type to reference
+   * @param funcForEmptyBuilder how to obtain an empty builder instance
+   * @param funcForPrefilledBuilder how to obtain a builder prefilled with a value
+   */
+  public ResolvedBuilder(
+      TypeName typeName,
+      TypeInstantiation funcForEmptyBuilder,
+      TypeInstantiation funcForPrefilledBuilder) {
+    this(typeName, funcForEmptyBuilder, funcForPrefilledBuilder, "build");
+  }
 
   /**
    * A resolution with a non-optional prefilled instantiation path.
    *
    * @param typeName the builder type to reference
-   * @param funcForEmptyInstance how to obtain an empty builder instance
-   * @param funcForPrefilledInstance how to obtain a builder prefilled with a value
+   * @param funcForEmptyBuilder how to obtain an empty builder instance
+   * @param funcForPrefilledBuilder how to obtain a builder prefilled with a value
    * @param buildMethodName the name of the parameterless method returning the built value
    */
   public ResolvedBuilder(
       TypeName typeName,
-      TypeInstantiation funcForEmptyInstance,
-      TypeInstantiation funcForPrefilledInstance,
+      TypeInstantiation funcForEmptyBuilder,
+      TypeInstantiation funcForPrefilledBuilder,
       String buildMethodName) {
     this(
         typeName,
-        funcForEmptyInstance,
-        Optional.ofNullable(funcForPrefilledInstance),
+        funcForEmptyBuilder,
+        Optional.ofNullable(funcForPrefilledBuilder),
         buildMethodName);
   }
 
