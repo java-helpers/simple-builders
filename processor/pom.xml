@@ -411,8 +411,6 @@
                 </goals>
                 <configuration>
                   <excludes>
-                    <!-- Exclude DTOs (model package) from coverage -->
-                    <exclude>**/processor/model/**</exclude>
                     <!-- Exclude exception classes from coverage (simple constructors) -->
                     <exclude>**/exceptions/**</exclude>
                     <!-- Exclude constants-only holders -->
