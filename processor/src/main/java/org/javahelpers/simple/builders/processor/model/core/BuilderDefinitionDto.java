@@ -65,13 +65,13 @@ public class BuilderDefinitionDto {
    * constructor. Ordering in LinkedList is matching ordering of parameters in constructor call.
    * Instances of fields are added in LinkedList of all fields too.
    */
-  private final List<FieldDto> fieldsInConstructor = new LinkedList<>();
+  private final List<BuilderFieldDto> fieldsInConstructor = new LinkedList<>();
 
   /**
    * List of all fields of target DTO which are supported by builder. A field could be supported by
    * multiple functions in builder.
    */
-  private final List<FieldDto> fields = new LinkedList<>();
+  private final List<BuilderFieldDto> fields = new LinkedList<>();
 
   /** Configuration for builder generation. */
   private BuilderConfiguration configuration;
@@ -265,7 +265,7 @@ public class BuilderDefinitionDto {
    *
    * @param field to be added
    */
-  public void addField(FieldDto field) {
+  public void addField(BuilderFieldDto field) {
     fields.add(field);
   }
 
@@ -274,7 +274,7 @@ public class BuilderDefinitionDto {
    *
    * @param field the field to add to the constructor parameters
    */
-  public void addFieldInConstructor(FieldDto field) {
+  public void addFieldInConstructor(BuilderFieldDto field) {
     fieldsInConstructor.add(field);
   }
 
@@ -283,7 +283,7 @@ public class BuilderDefinitionDto {
    *
    * @param fields the list of fields to add to the constructor parameters
    */
-  public void addAllFieldsInConstructor(List<FieldDto> fields) {
+  public void addAllFieldsInConstructor(List<BuilderFieldDto> fields) {
     fieldsInConstructor.addAll(fields);
   }
 
@@ -292,7 +292,7 @@ public class BuilderDefinitionDto {
    *
    * @param fields the list of fields to add
    */
-  public void addAllFields(List<FieldDto> fields) {
+  public void addAllFields(List<BuilderFieldDto> fields) {
     this.fields.addAll(fields);
   }
 
@@ -301,7 +301,7 @@ public class BuilderDefinitionDto {
    *
    * @return list of fields
    */
-  public List<FieldDto> getSetterFieldsForBuilder() {
+  public List<BuilderFieldDto> getSetterFieldsForBuilder() {
     return fields;
   }
 
@@ -310,7 +310,7 @@ public class BuilderDefinitionDto {
    *
    * @return the ordered list of constructor parameter fields
    */
-  public List<FieldDto> getConstructorFieldsForBuilder() {
+  public List<BuilderFieldDto> getConstructorFieldsForBuilder() {
     return fieldsInConstructor;
   }
 
@@ -320,8 +320,8 @@ public class BuilderDefinitionDto {
    *
    * @return all fields in the builder (constructor fields first, then setter fields)
    */
-  public List<FieldDto> getAllFieldsForBuilder() {
-    LinkedList<FieldDto> all = new LinkedList<>();
+  public List<BuilderFieldDto> getAllFieldsForBuilder() {
+    LinkedList<BuilderFieldDto> all = new LinkedList<>();
     all.addAll(fieldsInConstructor);
     all.addAll(fields);
     return all;

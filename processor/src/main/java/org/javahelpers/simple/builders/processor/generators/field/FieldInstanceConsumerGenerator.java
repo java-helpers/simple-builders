@@ -29,7 +29,7 @@ import static org.javahelpers.simple.builders.processor.generators.util.MethodGe
 import java.util.Collections;
 import java.util.List;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
-import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameList;
@@ -90,7 +90,8 @@ public class FieldInstanceConsumerGenerator implements MethodGenerator {
   }
 
   @Override
-  public boolean appliesTo(FieldDto field, TypeName dtoType, BuilderProcessingContext context) {
+  public boolean appliesTo(
+      BuilderFieldDto field, TypeName dtoType, BuilderProcessingContext context) {
     if (!context.getConfiguration().shouldGenerateFieldConsumer()) {
       return false;
     }
@@ -115,7 +116,8 @@ public class FieldInstanceConsumerGenerator implements MethodGenerator {
    * @param context the processing context
    * @return true if a specific consumer (List, Set, or Map) should be generated instead
    */
-  private boolean hasSpecificCollectionConsumer(FieldDto field, BuilderProcessingContext context) {
+  private boolean hasSpecificCollectionConsumer(
+      BuilderFieldDto field, BuilderProcessingContext context) {
     TypeName fieldType = field.getFieldType();
 
     return (fieldType instanceof TypeNameList
@@ -128,7 +130,7 @@ public class FieldInstanceConsumerGenerator implements MethodGenerator {
 
   @Override
   public List<BuilderMethodDto> generateMethods(
-      FieldDto field, TypeName builderType, BuilderProcessingContext context) {
+      BuilderFieldDto field, TypeName builderType, BuilderProcessingContext context) {
     if (!field.getFieldType().hasEmptyConstructor()) {
       return Collections.emptyList();
     }

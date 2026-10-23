@@ -26,7 +26,7 @@ package org.javahelpers.simple.builders.processor.generators.builder;
 
 import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
-import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocCodeBlockDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
@@ -96,9 +96,10 @@ public class ClassJavaDocEnhancer implements BuilderEnhancer {
     // Synthesise example blocks from the fluent-chain fragments stored on methods. This keeps the
     // per-method "builder.field(value);" example and the class-level kitchen-sink chain in sync
     // with a single source of truth (the fragment on the BuilderMethodDto).
-    // Note: Methods are stored in FieldDto objects at this point (before finalizeDefinition).
+    // Note: Methods are stored in BuilderFieldDto objects at this point (before
+    // finalizeDefinition).
     JavadocCodeBlockDto classExampleBlock = new JavadocCodeBlockDto();
-    for (FieldDto field : builderDto.getAllFieldsForBuilder()) {
+    for (BuilderFieldDto field : builderDto.getAllFieldsForBuilder()) {
       for (BuilderMethodDto method : field.getMethods()) {
         String fragment = method.getExampleChainFragment();
         if (fragment == null) {

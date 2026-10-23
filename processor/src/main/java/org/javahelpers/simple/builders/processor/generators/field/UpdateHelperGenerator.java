@@ -47,7 +47,7 @@ import java.util.function.UnaryOperator;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.generators.util.JavadocConstants;
 import org.javahelpers.simple.builders.processor.generators.util.JavadocExampleValues;
-import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocCodeBlockDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
@@ -143,13 +143,14 @@ public class UpdateHelperGenerator implements MethodGenerator {
   }
 
   @Override
-  public boolean appliesTo(FieldDto field, TypeName dtoType, BuilderProcessingContext context) {
+  public boolean appliesTo(
+      BuilderFieldDto field, TypeName dtoType, BuilderProcessingContext context) {
     return context.getConfiguration().shouldGenerateUpdateHelpers();
   }
 
   @Override
   public List<BuilderMethodDto> generateMethods(
-      FieldDto field, TypeName builderType, BuilderProcessingContext context) {
+      BuilderFieldDto field, TypeName builderType, BuilderProcessingContext context) {
     String originalFieldName = field.getOriginalFieldName();
     String parameterName = originalFieldName + "Updater";
     TypeNameGeneric updaterType =
@@ -206,7 +207,8 @@ public class UpdateHelperGenerator implements MethodGenerator {
    * Returns Javadoc guidance pointing to the builder-consumer overload when such a helper will be
    * generated for this field (nested DTO or collection of nested DTOs).
    */
-  private static String builderConsumerGuidance(FieldDto field, BuilderProcessingContext context) {
+  private static String builderConsumerGuidance(
+      BuilderFieldDto field, BuilderProcessingContext context) {
     if (!context.getConfiguration().shouldGenerateBuilderConsumer()) {
       return "";
     }
@@ -228,7 +230,7 @@ public class UpdateHelperGenerator implements MethodGenerator {
    * method-level example additionally requires an example value for setting the field first.
    */
   private static void addUpdateExample(
-      BuilderMethodDto methodDto, FieldDto field, BuilderProcessingContext context) {
+      BuilderMethodDto methodDto, BuilderFieldDto field, BuilderProcessingContext context) {
     Optional<String> updateExpression = getUpdateExample(field.getFieldType());
     if (updateExpression.isEmpty()) {
       return;

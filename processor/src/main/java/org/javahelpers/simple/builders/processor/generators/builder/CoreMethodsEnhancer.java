@@ -31,7 +31,7 @@ import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
 import org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
-import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocCodeBlockDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
@@ -313,12 +313,12 @@ public class CoreMethodsEnhancer implements BuilderEnhancer {
     StringBuilder sb = new StringBuilder();
 
     // Combine all fields and process them
-    List<FieldDto> allFields = new ArrayList<>();
+    List<BuilderFieldDto> allFields = new ArrayList<>();
     allFields.addAll(builderDto.getConstructorFieldsForBuilder());
     allFields.addAll(builderDto.getSetterFieldsForBuilder());
 
     for (int i = 0; i < allFields.size(); i++) {
-      FieldDto field = allFields.get(i);
+      BuilderFieldDto field = allFields.get(i);
       sb.append("\n        .append(\"")
           .append(field.getFieldNameInBuilder())
           .append("\", this.")

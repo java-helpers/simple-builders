@@ -181,7 +181,7 @@ public class BuilderToGenerationTypeMapper {
    * Pair of a builder method and the field it originates from; {@code field} is {@code null} for
    * builder-level methods created by enhancers.
    */
-  private record FieldMethod(FieldDto field, BuilderMethodDto method) {}
+  private record FieldMethod(BuilderFieldDto field, BuilderMethodDto method) {}
 
   private static int compareFieldMethods(FieldMethod p1, FieldMethod p2) {
     BuilderMethodDto m1 = p1.method();
@@ -258,7 +258,7 @@ public class BuilderToGenerationTypeMapper {
    * Whether {@code method} is the direct setter of {@code field}: exactly one parameter of the
    * field's declared type.
    */
-  private static boolean isDirectFieldSetter(BuilderMethodDto method, FieldDto field) {
+  private static boolean isDirectFieldSetter(BuilderMethodDto method, BuilderFieldDto field) {
     return method.getParameters().size() == 1
         && method
             .getParameters()

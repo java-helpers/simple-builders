@@ -27,7 +27,7 @@ import java.util.Optional;
 import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
 import org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
-import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
 import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
 import org.javahelpers.simple.builders.processor.model.type.TypeInstantiation;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
@@ -73,7 +73,7 @@ public class FieldPrefillEnhancer implements BuilderEnhancer {
    * @return the field-prefilling call, or empty
    */
   private static Optional<TypeInstantiation.PrefillCall> fieldPrefill(
-      FieldDto field, BuilderProcessingContext context) {
+      BuilderFieldDto field, BuilderProcessingContext context) {
     return context
         .resolveBuilderType(field.getFieldType())
         .flatMap(ResolvedBuilder::funcForPrefilledBuilder)

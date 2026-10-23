@@ -38,8 +38,8 @@ import org.apache.commons.lang3.builder.ToStringStyle;
  * intentionally not propagated to generated builder methods.
  *
  * <p>A {@code GetterInfoDto} is only created when a getter was found, so {@link #getterName()} is
- * always non-null. The absence of a getter is represented by {@code null} on {@link FieldDto}'s
- * getter info field, not by a {@code GetterInfoDto} with a null name.
+ * always non-null. The absence of a getter is represented by {@code null} on {@link
+ * BuilderFieldDto}'s getter info field, not by a {@code GetterInfoDto} with a null name.
  *
  * @param getterName the simple name of the getter method; must not be {@code null}
  * @param deprecated whether the getter method is annotated {@code @Deprecated}

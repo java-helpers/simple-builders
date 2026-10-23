@@ -62,13 +62,13 @@ The custom generator implements the `MethodGenerator` interface:
 public class StringValidationGenerator implements MethodGenerator {
     
     @Override
-    public boolean appliesTo(FieldDto field, TypeName dtoType, ProcessingContext context) {
+    public boolean appliesTo(BuilderFieldDto field, TypeName dtoType, BuilderProcessingContext context) {
         // Only apply to String fields
         return "java.lang.String".equals(field.getFieldType().getFullQualifiedName());
     }
     
     @Override
-    public List<MethodDto> generateMethods(FieldDto field, TypeName builderType, ProcessingContext context) {
+    public List<BuilderMethodDto> generateMethods(BuilderFieldDto field, TypeName builderType, BuilderProcessingContext context) {
         // Generate validation method for the field
         // ...
     }

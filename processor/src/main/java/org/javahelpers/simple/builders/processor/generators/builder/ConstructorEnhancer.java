@@ -26,7 +26,7 @@ package org.javahelpers.simple.builders.processor.generators.builder;
 
 import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
-import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.ConstructorDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodCodeDto;
@@ -97,7 +97,7 @@ public class ConstructorEnhancer implements BuilderEnhancer {
     constructor.setMethodCodeDto(codeDto);
 
     // Initialize fields from instance
-    for (FieldDto field : builderDto.getAllFieldsForBuilder()) {
+    for (BuilderFieldDto field : builderDto.getAllFieldsForBuilder()) {
       String fieldName = field.getFieldNameInBuilder();
 
       // getGetterName() returns Optional<String>

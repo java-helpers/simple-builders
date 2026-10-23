@@ -26,7 +26,7 @@ package org.javahelpers.simple.builders.example.custom;
 
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
-import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
@@ -60,13 +60,13 @@ public class StringValidationGenerator implements MethodGenerator {
     }
 
     @Override
-    public boolean appliesTo(FieldDto field, TypeName dtoType, BuilderProcessingContext context) {
+    public boolean appliesTo(BuilderFieldDto field, TypeName dtoType, BuilderProcessingContext context) {
         // Only apply to String fields
         return "java.lang.String".equals(field.getFieldType().getFullQualifiedName());
     }
 
     @Override
-    public List<BuilderMethodDto> generateMethods(FieldDto field, TypeName builderType, BuilderProcessingContext context) {
+    public List<BuilderMethodDto> generateMethods(BuilderFieldDto field, TypeName builderType, BuilderProcessingContext context) {
         String fieldInDto = field.getOriginalFieldName();
         String fieldInBuilder = field.getFieldNameInBuilder();
         String methodName = "validate" + StringUtils.capitalize(fieldInDto);
