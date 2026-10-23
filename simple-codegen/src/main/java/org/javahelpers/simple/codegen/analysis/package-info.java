@@ -23,7 +23,7 @@
  */
 
 /**
- * Package org.javahelpers.simple.builders.processor.analysis
+ * Package org.javahelpers.simple.codegen.analysis
  *
  * <p>Analysis components for the simple-builders processor.
  *
@@ -34,4 +34,4 @@
  * <p>Key responsibilities include annotation extraction, Java language element analysis, type
  * resolution, and mapping between source code structures and internal DTOs.
  */
-package org.javahelpers.simple.builders.processor.analysis;
+package org.javahelpers.simple.codegen.analysis;

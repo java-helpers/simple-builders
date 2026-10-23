@@ -24,10 +24,10 @@
 
 package org.javahelpers.simple.builders.processor.generators.field;
 
-import static org.javahelpers.simple.builders.processor.analysis.JavaLangMapper.map2TypeName;
-import static org.javahelpers.simple.builders.processor.analysis.TypeNameAnalyser.isParameterizedOptional;
-import static org.javahelpers.simple.builders.processor.analysis.TypeNameAnalyser.isString;
 import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.*;
+import static org.javahelpers.simple.codegen.analysis.JavaLangMapper.map2TypeName;
+import static org.javahelpers.simple.codegen.analysis.TypeNameAnalyser.isParameterizedOptional;
+import static org.javahelpers.simple.codegen.analysis.TypeNameAnalyser.isString;
 
 import java.util.ArrayList;
 import java.util.List;

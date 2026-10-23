@@ -23,13 +23,13 @@
  */
 package org.javahelpers.simple.builders.processor.generators.builder;
 
-import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
 import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
 import org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.type.BuilderNestedTypeDto;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
+import org.javahelpers.simple.codegen.analysis.JavaLangMapper;
 import org.javahelpers.simple.codegen.enums.AccessModifier;
 import org.javahelpers.simple.codegen.model.javadoc.JavadocDto;
 import org.javahelpers.simple.codegen.model.method.MethodParameterDto;

@@ -24,10 +24,10 @@
 package org.javahelpers.simple.builders.processor.generators.builder;
 
 import org.javahelpers.simple.builders.core.annotations.BuilderImplementation;
-import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
 import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
+import org.javahelpers.simple.codegen.analysis.JavaLangMapper;
 import org.javahelpers.simple.codegen.model.annotation.AnnotationDto;
 import org.javahelpers.simple.codegen.model.type.TypeName;
 

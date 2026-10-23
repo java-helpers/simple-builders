@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.javahelpers.simple.builders.processor.analysis;
+package org.javahelpers.simple.codegen.analysis;
 
 import org.apache.commons.lang3.Strings;
 import org.javahelpers.simple.codegen.model.type.TypeName;

@@ -24,11 +24,11 @@
 
 package org.javahelpers.simple.builders.processor.generators.field;
 
-import static org.javahelpers.simple.builders.processor.analysis.JavaLangMapper.map2TypeName;
 import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.TRACKED_VALUE_TYPE;
 import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.addExampleChainFragmentTemplate;
 import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.generateBuilderMethodName;
 import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.getMethodAccessModifier;
+import static org.javahelpers.simple.codegen.analysis.JavaLangMapper.map2TypeName;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

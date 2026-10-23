@@ -24,7 +24,7 @@
 
 package org.javahelpers.simple.builders.processor.generators.field;
 
-import static org.javahelpers.simple.builders.processor.analysis.TypeNameAnalyser.isParameterizedOptional;
+import static org.javahelpers.simple.codegen.analysis.TypeNameAnalyser.isParameterizedOptional;
 
 import java.util.Collections;
 import java.util.List;

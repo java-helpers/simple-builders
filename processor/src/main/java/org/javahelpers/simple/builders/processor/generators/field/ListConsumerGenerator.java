@@ -24,10 +24,10 @@
 
 package org.javahelpers.simple.builders.processor.generators.field;
 
-import static org.javahelpers.simple.builders.processor.analysis.JavaLangMapper.map2TypeName;
 import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.addExampleChainFragmentTemplate;
 import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.createFieldConsumerWithBuilder;
 import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.createFieldConsumerWithElementBuilders;
+import static org.javahelpers.simple.codegen.analysis.JavaLangMapper.map2TypeName;
 
 import java.util.Collections;
 import java.util.List;

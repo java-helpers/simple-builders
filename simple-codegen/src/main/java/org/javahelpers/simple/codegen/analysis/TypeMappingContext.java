@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.analysis;
+package org.javahelpers.simple.codegen.analysis;
 
 import java.util.List;
 import java.util.Optional;

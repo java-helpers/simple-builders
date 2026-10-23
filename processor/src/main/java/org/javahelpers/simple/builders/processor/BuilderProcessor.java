@@ -61,8 +61,6 @@ import org.javahelpers.simple.builders.core.annotations.SimpleBuilder.Template;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFor;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFors;
 import org.javahelpers.simple.builders.processor.analysis.BuilderScopeResolver;
-import org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyser;
-import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 import org.javahelpers.simple.builders.processor.generators.integration.JacksonModuleGenerator;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
@@ -77,6 +75,8 @@ import org.javahelpers.simple.builders.processor.processing.SourceFormatterResol
 import org.javahelpers.simple.codegen.ClassCodeGenerator;
 import org.javahelpers.simple.codegen.CodeGenerationException;
 import org.javahelpers.simple.codegen.GenerationEnvironment;
+import org.javahelpers.simple.codegen.analysis.JavaLangAnalyser;
+import org.javahelpers.simple.codegen.analysis.JavaLangMapper;
 import org.javahelpers.simple.codegen.logging.PerformanceTracker;
 import org.javahelpers.simple.codegen.logging.ProcessingLogger;
 import org.javahelpers.simple.codegen.model.core.GenerationTargetClassDto;

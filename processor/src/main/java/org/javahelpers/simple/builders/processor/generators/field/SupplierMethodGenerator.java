@@ -24,11 +24,11 @@
 
 package org.javahelpers.simple.builders.processor.generators.field;
 
-import static org.javahelpers.simple.builders.processor.analysis.JavaLangMapper.map2TypeName;
 import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.SUFFIX_SUPPLIER;
 import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.TRACKED_VALUE_TYPE;
 import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.addExampleChainFragmentWithSupplier;
 import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.createBuilderMethod;
+import static org.javahelpers.simple.codegen.analysis.JavaLangMapper.map2TypeName;
 
 import java.util.Collections;
 import java.util.List;
