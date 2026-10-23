@@ -37,12 +37,6 @@
       <version>${project.version}</version>
       <scope>provided</scope>
     </dependency>
-    <dependency>
-      <groupId>io.github.java-helpers</groupId>
-      <artifactId>simple-codegen</artifactId>
-      <version>${project.version}</version>
-      <scope>provided</scope>
-    </dependency>
   </dependencies>
 
   <build>
