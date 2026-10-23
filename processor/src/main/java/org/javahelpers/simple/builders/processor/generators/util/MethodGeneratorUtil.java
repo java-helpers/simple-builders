@@ -371,8 +371,8 @@ public final class MethodGeneratorUtil {
    *
    * @param field the field DTO
    * @param collectionBuilderType the collection builder type
-   * @param elementGeneratedType the resolved element builder; its empty-instantiation path is
-   *     passed to the collection builder as a method reference
+   * @param elementBuilder the resolved element builder; its empty-instantiation path is passed to
+   *     the collection builder as a method reference
    * @param returnBuilderType the return builder type
    * @param context the processing context
    * @return the method DTO for the consumer
@@ -380,13 +380,13 @@ public final class MethodGeneratorUtil {
   public static BuilderMethodDto createFieldConsumerWithElementBuilders(
       FieldDto field,
       TypeName collectionBuilderType,
-      ResolvedGeneratedType elementGeneratedType,
+      ResolvedGeneratedType elementBuilder,
       TypeName returnBuilderType,
       BuilderProcessingContext context) {
     // The collection builder receives a supplier for element builders: the resolved
     // instantiation path as a method reference
     String elementSupplier =
-        elementGeneratedType.funcForEmptyInstance().methodReference("$elementBuilderType:T");
+        elementBuilder.funcForEmptyInstance().methodReference("$elementBuilderType:T");
     return createFieldConsumerWithBuilder(
         field,
         new ResolvedGeneratedType(
@@ -396,7 +396,7 @@ public final class MethodGeneratorUtil {
             "build"),
         "this.$fieldName:N.value(), " + elementSupplier,
         elementSupplier,
-        Map.of("elementBuilderType", elementGeneratedType.typeName()),
+        Map.of("elementBuilderType", elementBuilder.typeName()),
         returnBuilderType,
         context);
   }

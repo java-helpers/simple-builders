@@ -122,19 +122,19 @@ public class SetConsumerGenerator implements MethodGenerator {
     }
 
     TypeName elementType = fieldTypeGeneric.getElementType();
-    Optional<ResolvedGeneratedType> elementGeneratedType = context.resolveBuilderType(elementType);
+    Optional<ResolvedGeneratedType> elementBuilder = context.resolveBuilderType(elementType);
 
-    if (elementGeneratedType.isPresent()
+    if (elementBuilder.isPresent()
         && context.getConfiguration().shouldUseHashSetBuilderWithElementBuilders()) {
       TypeName collectionBuilderType =
           new TypeNameGeneric(
               map2TypeName(HashSetBuilderWithElementBuilders.class),
               elementType,
-              elementGeneratedType.get().typeName());
+              elementBuilder.get().typeName());
       BuilderMethodDto method =
           createFieldConsumerWithElementBuilders(
-              field, collectionBuilderType, elementGeneratedType.get(), builderType, context);
-      addExampleToSetConsumerWithBuilder(method, elementGeneratedType.get().typeName());
+              field, collectionBuilderType, elementBuilder.get(), builderType, context);
+      addExampleToSetConsumerWithBuilder(method, elementBuilder.get().typeName());
       return List.of(method);
     } else if (context.getConfiguration().shouldUseHashSetBuilder()) {
       TypeName hashSetBuilderType = map2TypeName(HashSetBuilder.class);

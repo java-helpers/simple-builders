@@ -78,8 +78,7 @@ public final class BuilderScopeResolver {
   private final BuilderProcessingContext context;
   private ResolutionInputs cachedResolutionInputs;
   private PackageScopes usagePackages = PackageScopes.unscoped();
-  private final Map<String, Optional<ResolvedGeneratedType>> resolvedGeneratedTypes =
-      new HashMap<>();
+  private final Map<String, Optional<ResolvedGeneratedType>> resolvedBuilderTypes = new HashMap<>();
   private final GeneratedTypes generatedBuilders = new GeneratedTypes();
 
   /**
@@ -137,7 +136,7 @@ public final class BuilderScopeResolver {
       return Optional.empty();
     }
     refreshForConfigurationIfNeeded();
-    return resolvedGeneratedTypes.computeIfAbsent(
+    return resolvedBuilderTypes.computeIfAbsent(
         referencedType.getQualifiedName().toString(), fqn -> resolve(referencedType));
   }
 
@@ -213,7 +212,7 @@ public final class BuilderScopeResolver {
    */
   public void registerGeneratedBuilder(TypeName targetType, TypeName builderType) {
     generatedBuilders.add(targetType, builderType);
-    resolvedGeneratedTypes.clear();
+    resolvedBuilderTypes.clear();
   }
 
   /**
@@ -222,7 +221,7 @@ public final class BuilderScopeResolver {
    */
   public void resetGeneratedBuilders() {
     generatedBuilders.clear();
-    resolvedGeneratedTypes.clear();
+    resolvedBuilderTypes.clear();
   }
 
   private Optional<ResolvedGeneratedType> resolve(TypeElement referencedType) {
@@ -780,7 +779,7 @@ public final class BuilderScopeResolver {
     PackageScopes usage =
         configuration == null ? PackageScopes.unscoped() : configuration.builderUsagePackages();
     usagePackages = PackageScopes.merge(generation, usage);
-    resolvedGeneratedTypes.clear();
+    resolvedBuilderTypes.clear();
     cachedResolutionInputs = inputs;
   }
 
