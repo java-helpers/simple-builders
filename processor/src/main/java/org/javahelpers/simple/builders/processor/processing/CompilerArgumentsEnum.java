@@ -30,6 +30,7 @@ import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration
 import org.javahelpers.simple.codegen.enums.AccessModifier;
 import org.javahelpers.simple.codegen.enums.OptionState;
 import org.javahelpers.simple.codegen.logging.ProcessingLogger;
+import org.javahelpers.simple.codegen.processing.CompilerOption;
 
 /**
  * Enumeration of all builder configuration compiler arguments.

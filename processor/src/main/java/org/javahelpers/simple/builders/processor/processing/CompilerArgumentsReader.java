@@ -27,6 +27,7 @@ package org.javahelpers.simple.builders.processor.processing;
 import java.util.Map;
 import javax.annotation.processing.ProcessingEnvironment;
 import org.apache.commons.lang3.Strings;
+import org.javahelpers.simple.codegen.processing.CompilerOption;
 
 /**
  * Utility class for reading compiler arguments from the annotation processing environment.

@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.processing;
+package org.javahelpers.simple.codegen.processing;
 
 /**
  * A compiler option that can be read from the annotation processing environment.
