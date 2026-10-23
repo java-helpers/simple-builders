@@ -32,6 +32,7 @@ import org.javahelpers.simple.builders.processor.analysis.BuilderScopeResolver;
 import org.javahelpers.simple.builders.processor.generators.registry.GeneratorRegistry;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
+import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 
 /**
@@ -169,7 +170,20 @@ public final class BuilderProcessingContext extends AnnotationProcessingContext 
    * <p>Delegated to the builder scope resolver.
    */
   @Override
-  public Optional<ResolvedBuilder> resolveGeneratedType(TypeElement typeElement) {
-    return builderScopeResolver.resolveUsableBuilderType(typeElement);
+  public Optional<TypeName> resolveGeneratedType(TypeElement typeElement) {
+    return builderScopeResolver
+        .resolveUsableBuilderType(typeElement)
+        .map(ResolvedBuilder::typeName);
+  }
+
+  /**
+   * Resolves the builder usable for the given type name, via its type element.
+   *
+   * @param typeName the referenced type name to resolve
+   * @return the usable builder, or empty when none applies or the type cannot be resolved
+   */
+  public Optional<ResolvedBuilder> resolveBuilderType(TypeName typeName) {
+    return Optional.ofNullable(getTypeElement(typeName.getFullQualifiedName()))
+        .flatMap(builderScopeResolver::resolveUsableBuilderType);
   }
 }

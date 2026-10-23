@@ -29,8 +29,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.lang.model.util.Elements;
-import org.javahelpers.simple.builders.processor.model.type.BuilderInstantiation.StaticFactoryCall;
 import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
+import org.javahelpers.simple.builders.processor.model.type.TypeInstantiation.StaticFactoryCall;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 
 /**

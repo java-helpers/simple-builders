@@ -31,6 +31,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.builders.HashSetBuilder;
 import org.javahelpers.simple.builders.core.builders.HashSetBuilderWithElementBuilders;
@@ -105,7 +106,7 @@ public class SetConsumerGenerator implements MethodGenerator {
       return false;
     }
     // Don't apply if field itself has a builder (higher priority)
-    if (field.getFieldType().getBuilderType().isPresent()) {
+    if (context.resolveBuilderType(field.getFieldType()).isPresent()) {
       return false;
     }
     return context.getConfiguration().shouldUseHashSetBuilder()
@@ -121,7 +122,7 @@ public class SetConsumerGenerator implements MethodGenerator {
     }
 
     TypeName elementType = fieldTypeGeneric.getElementType();
-    Optional<ResolvedBuilder> elementBuilder = fieldTypeGeneric.getElementResolvedBuilder();
+    Optional<ResolvedBuilder> elementBuilder = context.resolveBuilderType(elementType);
 
     if (elementBuilder.isPresent()
         && context.getConfiguration().shouldUseHashSetBuilderWithElementBuilders()) {
@@ -147,7 +148,7 @@ public class SetConsumerGenerator implements MethodGenerator {
               Map.of(),
               builderType,
               context);
-      addExampleToSetConsumerWithSimpleValue(method, elementType);
+      addExampleToSetConsumerWithSimpleValue(method, elementType, context::resolveBuilderType);
       return List.of(method);
     }
 
@@ -174,8 +175,10 @@ public class SetConsumerGenerator implements MethodGenerator {
    * @param elementType the element type
    */
   private void addExampleToSetConsumerWithSimpleValue(
-      BuilderMethodDto method, TypeName elementType) {
+      BuilderMethodDto method,
+      TypeName elementType,
+      Function<TypeName, Optional<ResolvedBuilder>> builderResolver) {
     addExampleChainFragmentTemplate(
-        method, "#{methodName}(t -> t.add(#{exampleValue}))", elementType);
+        method, "#{methodName}(t -> t.add(#{exampleValue}))", elementType, builderResolver);
   }
 }

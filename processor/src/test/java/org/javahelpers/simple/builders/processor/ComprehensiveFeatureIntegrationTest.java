@@ -152,7 +152,9 @@ class ComprehensiveFeatureIntegrationTest {
          *     .previousAddresses(List.of(AddressDtoBuilder.create().build()))
          *     .previousAddresses(() -> List.of(AddressDtoBuilder.create().build()))
          *     .previousAddresses(t -> t.add(addressDtoBuilder -> addressDtoBuilder))
+         *     .previousAddresses(AddressDtoBuilder.create().build(), AddressDtoBuilder.create().build())
          *     .previousAddressesUpdate(list -> list.stream().sorted().toList())
+         *     .add2PreviousAddresses(AddressDtoBuilder.create().build())
          *     .phoneNumbers(List.of("example value"))
          *     .phoneNumbers(() -> List.of("example value"))
          *     .phoneNumbers(t -> t.add("example value"))
@@ -1090,6 +1092,12 @@ class ComprehensiveFeatureIntegrationTest {
            * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
            * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
            *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.add2PreviousAddresses(AddressDtoBuilder.create().build());
+           * }</pre>
+           *
            * @param element the element to add
            * @return current instance of builder
            */
@@ -1112,6 +1120,12 @@ class ComprehensiveFeatureIntegrationTest {
            * {@link PersonDto#PersonDto(String, int, Optional, List, Set, Map, AddressDto, List, LinkedList) PersonDto(String
            * name, int age, Optional<String> email, List<String> nicknames, Set<String> tags, Map<String, String> metadata,
            * AddressDto address, List<AddressDto> previousAddresses, LinkedList<String> phoneNumbers)}
+           *
+           * <h4>Example:</h4>
+           *
+           * <pre>{@code
+           * builder.previousAddresses(AddressDtoBuilder.create().build(), AddressDtoBuilder.create().build());
+           * }</pre>
            *
            * @param previousAddresses previousAddresses
            * @return current instance of builder

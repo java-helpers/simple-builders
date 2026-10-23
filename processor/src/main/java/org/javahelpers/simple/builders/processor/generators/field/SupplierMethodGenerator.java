@@ -153,7 +153,7 @@ public class SupplierMethodGenerator implements MethodGenerator {
             .addParam(parameterName, "supplier for %s", fieldJavaDoc)
             .addReturn(JavadocConstants.RETURN_BUILDER_INSTANCE));
 
-    addExampleChainFragmentWithSupplier(methodDto, fieldType);
+    addExampleChainFragmentWithSupplier(methodDto, fieldType, context::resolveBuilderType);
 
     return methodDto;
   }

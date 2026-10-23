@@ -119,10 +119,7 @@ public final class JavaLangMapper {
       return null;
     }
 
-    // Set builder and constructor information on the TypeName (only if not already set)
-    if (!typeName.getBuilderType().isPresent()) {
-      setBuilderAndConstructorInfo(typeName, param, context);
-    }
+    setEmptyConstructorInfo(typeName, param, context);
 
     result.setParameterTypeName(typeName);
     return result;
@@ -161,38 +158,11 @@ public final class JavaLangMapper {
     TypeMirror typeMirror = typeElement.asType();
     TypeName typeName = extractType(typeMirror, context);
 
-    // Set builder and constructor information on the TypeName (only if not already set)
-    if (typeName != null && !typeName.getBuilderType().isPresent()) {
-      setBuilderAndConstructorInfo(typeName, typeElement, context);
+    if (typeName != null) {
+      setEmptyConstructorInfo(typeName, typeElement, context);
     }
 
     return typeName;
-  }
-
-  /**
-   * Sets builder and constructor information on the TypeName.
-   *
-   * @param typeName the TypeName to enhance with builder/constructor info
-   * @param typeElement the TypeElement representing the type
-   * @param context the type mapping context
-   */
-  private static void setBuilderAndConstructorInfo(
-      TypeName typeName, TypeElement typeElement, TypeMappingContext context) {
-    setBuilderTypeIfScopeMatches(typeName, typeElement, context);
-    setEmptyConstructorInfoIfAvailable(typeName, typeElement, context);
-    setElementBuilderTypeIfScopeMatches(typeName, context);
-  }
-
-  /**
-   * Sets the builder type if the type element's package is in the configured builder scope.
-   *
-   * @param typeName the TypeName to enhance
-   * @param typeElement the type element to check
-   * @param context the type mapping context
-   */
-  private static void setBuilderTypeIfScopeMatches(
-      TypeName typeName, TypeElement typeElement, TypeMappingContext context) {
-    context.resolveGeneratedType(typeElement).ifPresent(typeName::setResolvedBuilder);
   }
 
   /**
@@ -202,60 +172,14 @@ public final class JavaLangMapper {
    * @param typeElement the type element to check
    * @param context the type mapping context
    */
-  private static void setEmptyConstructorInfoIfAvailable(
+  private static void setEmptyConstructorInfo(
       TypeName typeName, TypeElement typeElement, TypeMappingContext context) {
-    if (isConcreteClass(typeElement)
+    if (!typeName.hasEmptyConstructor()
+        && isConcreteClass(typeElement)
         && !TypeNameAnalyser.isJavaClass(typeName)
         && JavaLangAnalyser.hasEmptyConstructor(typeElement, context)) {
       typeName.setHasEmptyConstructor(true);
     }
-  }
-
-  /**
-   * Sets the element builder type for generic collections when the element type's package is in the
-   * configured builder scope.
-   *
-   * @param typeName the TypeName to enhance
-   * @param context the type mapping context
-   */
-  private static void setElementBuilderTypeIfScopeMatches(
-      TypeName typeName, TypeMappingContext context) {
-    // Only process generic types
-    if (!(typeName instanceof TypeNameGeneric genericType)) {
-      return;
-    }
-
-    // Only process single-element generics (List<T>, Set<T>, etc.)
-    List<TypeName> innerTypeArguments = genericType.getInnerTypeArguments();
-    if (innerTypeArguments.size() != 1) {
-      return;
-    }
-
-    TypeName elementType = innerTypeArguments.get(0);
-    TypeElement elementTypeElement = retrieveTypeElementIfExists(elementType, context);
-
-    // Element type must be resolvable
-    if (elementTypeElement == null) {
-      return;
-    }
-
-    // Resolve usable element builder type through the generated type resolver
-    context
-        .resolveGeneratedType(elementTypeElement)
-        .ifPresent(genericType::setElementResolvedBuilder);
-  }
-
-  /**
-   * Gets the TypeElement for a given TypeName if it exists.
-   *
-   * @param typeName the type name to resolve
-   * @param context the type mapping context
-   * @return the TypeElement, or null if not found or not a TypeElement
-   */
-  private static TypeElement retrieveTypeElementIfExists(
-      TypeName typeName, TypeMappingContext context) {
-    Element element = context.getTypeElement(typeName.getFullQualifiedName());
-    return element instanceof TypeElement typeElement ? typeElement : null;
   }
 
   /**
@@ -280,11 +204,11 @@ public final class JavaLangMapper {
    * @param param the VariableElement representing the parameter
    * @param context the type mapping context
    */
-  private static void setBuilderAndConstructorInfo(
+  private static void setEmptyConstructorInfo(
       TypeName typeName, VariableElement param, TypeMappingContext context) {
     Element element = context.asElement(param.asType());
     if (element instanceof TypeElement typeElement) {
-      setBuilderAndConstructorInfo(typeName, typeElement, context);
+      setEmptyConstructorInfo(typeName, typeElement, context);
     }
   }
 

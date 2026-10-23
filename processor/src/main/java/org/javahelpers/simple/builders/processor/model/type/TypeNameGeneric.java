@@ -44,9 +44,6 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 public class TypeNameGeneric extends TypeName {
   private final List<TypeName> innerTypeArguments;
 
-  /** Resolved builder for the element type of this collection (if applicable). */
-  private ResolvedBuilder elementResolvedBuilder;
-
   /**
    * Creates a {@code TypeNameGeneric} based on another {@code TypeName} as outer type and a list of
    * inner type arguments.
@@ -132,34 +129,6 @@ public class TypeNameGeneric extends TypeName {
         : Optional.empty();
   }
 
-  /**
-   * Returns the builder type for the element type of this collection.
-   *
-   * @return optional element builder type
-   */
-  public Optional<TypeName> getElementBuilderType() {
-    return getElementResolvedBuilder().map(ResolvedBuilder::typeName);
-  }
-
-  /**
-   * Returns the resolved builder for the element type of this collection, including the
-   * instantiation paths generated code must use.
-   *
-   * @return optional resolved element builder
-   */
-  public Optional<ResolvedBuilder> getElementResolvedBuilder() {
-    return Optional.ofNullable(elementResolvedBuilder);
-  }
-
-  /**
-   * Sets the resolved builder for the element type of this collection.
-   *
-   * @param elementResolvedBuilder the resolved element builder
-   */
-  public void setElementResolvedBuilder(ResolvedBuilder elementResolvedBuilder) {
-    this.elementResolvedBuilder = elementResolvedBuilder;
-  }
-
   @Override
   public String getFullQualifiedName() {
     String baseName = super.getFullQualifiedName();
@@ -207,7 +176,6 @@ public class TypeNameGeneric extends TypeName {
     return new EqualsBuilder()
         .appendSuper(super.equals(o))
         .append(innerTypeArguments, that.innerTypeArguments)
-        .append(elementResolvedBuilder, that.elementResolvedBuilder)
         .isEquals();
   }
 
@@ -216,7 +184,6 @@ public class TypeNameGeneric extends TypeName {
     return new HashCodeBuilder(17, 37)
         .appendSuper(super.hashCode())
         .append(innerTypeArguments)
-        .append(elementResolvedBuilder)
         .toHashCode();
   }
 }

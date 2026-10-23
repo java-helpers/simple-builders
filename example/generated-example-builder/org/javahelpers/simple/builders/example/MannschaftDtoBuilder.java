@@ -36,7 +36,9 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  *     .sponsoren(Set.of(SponsorDtoBuilder.create().build()))
  *     .sponsoren(() -> Set.of(SponsorDtoBuilder.create().build()))
  *     .sponsoren(t -> t.add(sponsorDtoBuilder -> sponsorDtoBuilder))
+ *     .sponsoren(SponsorDtoBuilder.create().build(), SponsorDtoBuilder.create().build())
  *     .sponsorenUpdate(TreeSet::new)
+ *     .add2Sponsoren(SponsorDtoBuilder.create().build())
  *     .build();
  * }</pre>
  */
@@ -195,6 +197,12 @@ public class MannschaftDtoBuilder implements IBuilderBase<MannschaftDto> {
    * <p>
    * Generated from setter {@link MannschaftDto#setSponsoren(Set) setSponsoren(Set<SponsorDto> sponsoren)}
    * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.add2Sponsoren(SponsorDtoBuilder.create().build());
+   * }</pre>
+   * 
    * @param element the element to add
    * @return current instance of builder
    */
@@ -214,6 +222,12 @@ public class MannschaftDtoBuilder implements IBuilderBase<MannschaftDto> {
    * Sets the value for <code>sponsoren</code>.
    * <p>
    * Generated from setter {@link MannschaftDto#setSponsoren(Set) setSponsoren(Set<SponsorDto> sponsoren)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.sponsoren(SponsorDtoBuilder.create().build(), SponsorDtoBuilder.create().build());
+   * }</pre>
    * 
    * @param sponsoren sponsoren
    * @return current instance of builder

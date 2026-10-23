@@ -93,7 +93,7 @@ public class StringBuilderConsumerGenerator implements MethodGenerator {
       return false;
     }
     // Don't apply if field has a builder or empty constructor (higher priority)
-    if (field.getFieldType().getBuilderType().isPresent()
+    if (context.resolveBuilderType(field.getFieldType()).isPresent()
         || field.getFieldType().hasEmptyConstructor()) {
       return false;
     }

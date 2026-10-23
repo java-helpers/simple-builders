@@ -28,16 +28,16 @@ import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
 import org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
-import org.javahelpers.simple.builders.processor.model.type.BuilderInstantiation;
 import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
+import org.javahelpers.simple.builders.processor.model.type.TypeInstantiation;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 
 /**
- * Enhancer that adds the private prefilling methods backing {@link
- * BuilderInstantiation.PrefillCall} resolutions: one {@code prefill<Builder>(T value)} method per
- * referenced builder type, obtaining an empty builder and calling one field function per readable
- * property. Several fields referencing the same type share one prefilling method.
+ * Enhancer that adds the private prefilling methods backing {@link TypeInstantiation.PrefillCall}
+ * resolutions: one {@code prefill<Builder>(T value)} method per referenced builder type, obtaining
+ * an empty builder and calling one field function per readable property. Several fields referencing
+ * the same type share one prefilling method.
  */
 public class FieldPrefillEnhancer implements BuilderEnhancer {
 
@@ -52,13 +52,13 @@ public class FieldPrefillEnhancer implements BuilderEnhancer {
   public boolean appliesTo(
       BuilderDefinitionDto builderDto, TypeName dtoType, BuilderProcessingContext context) {
     return builderDto.getAllFieldsForBuilder().stream()
-        .anyMatch(field -> fieldPrefill(field).isPresent());
+        .anyMatch(field -> fieldPrefill(field, context).isPresent());
   }
 
   @Override
   public void enhanceBuilder(BuilderDefinitionDto builderDto, BuilderProcessingContext context) {
     builderDto.getAllFieldsForBuilder().stream()
-        .map(FieldPrefillEnhancer::fieldPrefill)
+        .map(field -> fieldPrefill(field, context))
         .flatMap(Optional::stream)
         .distinct()
         .map(MethodGeneratorUtil::createFieldPrefillMethod)
@@ -72,12 +72,12 @@ public class FieldPrefillEnhancer implements BuilderEnhancer {
    * @param field the field to inspect
    * @return the field-prefilling call, or empty
    */
-  private static Optional<BuilderInstantiation.PrefillCall> fieldPrefill(FieldDto field) {
-    return field
-        .getFieldType()
-        .getResolvedBuilder()
+  private static Optional<TypeInstantiation.PrefillCall> fieldPrefill(
+      FieldDto field, BuilderProcessingContext context) {
+    return context
+        .resolveBuilderType(field.getFieldType())
         .flatMap(ResolvedBuilder::funcForPrefilledBuilder)
-        .filter(BuilderInstantiation.PrefillCall.class::isInstance)
-        .map(BuilderInstantiation.PrefillCall.class::cast);
+        .filter(TypeInstantiation.PrefillCall.class::isInstance)
+        .map(TypeInstantiation.PrefillCall.class::cast);
   }
 }

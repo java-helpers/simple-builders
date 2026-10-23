@@ -163,16 +163,21 @@ public class VarArgsHelperGenerator implements MethodGenerator {
     // Add code block imports and example fragments for collection factory methods
     if (fieldType instanceof TypeNameList listType) {
       method.getMethodCodeDto().addCodeBlockImport(List.class);
-      MethodGeneratorUtil.addExampleChainFragmentVarArgs(method, listType.getElementType());
+      MethodGeneratorUtil.addExampleChainFragmentVarArgs(
+          method, listType.getElementType(), context::resolveBuilderType);
     } else if (fieldType instanceof TypeNameSet setType) {
       method.getMethodCodeDto().addCodeBlockImport(Set.class);
-      MethodGeneratorUtil.addExampleChainFragmentVarArgs(method, setType.getElementType());
+      MethodGeneratorUtil.addExampleChainFragmentVarArgs(
+          method, setType.getElementType(), context::resolveBuilderType);
     } else if (fieldType instanceof TypeNameMap mapType) {
       method.getMethodCodeDto().addCodeBlockImport(Map.class);
       // For maps, only add example if key type is String
       if (mapType.getKeyType().getClassName().equals("String")) {
         MethodGeneratorUtil.addExampleChainFragmentTemplate(
-            method, "#{methodName}(Map.entry(\"key\", #{exampleValue}))", mapType.getValueType());
+            method,
+            "#{methodName}(Map.entry(\"key\", #{exampleValue}))",
+            mapType.getValueType(),
+            context::resolveBuilderType);
       }
     }
 

@@ -46,9 +46,6 @@ public class TypeName {
   /** Annotations on this type (TYPE_USE). */
   private final java.util.List<AnnotationDto> annotations = new java.util.ArrayList<>();
 
-  /** Resolved builder for this type, including how generated code instantiates it. */
-  private ResolvedBuilder resolvedBuilder;
-
   /** Whether this type has an empty constructor. */
   private boolean hasEmptyConstructor = false;
 
@@ -123,34 +120,6 @@ public class TypeName {
    */
   public void addAnnotation(AnnotationDto annotation) {
     this.annotations.add(annotation);
-  }
-
-  /**
-   * Returns the builder type for this type if a usable builder was resolved.
-   *
-   * @return optional builder type
-   */
-  public Optional<TypeName> getBuilderType() {
-    return getResolvedBuilder().map(ResolvedBuilder::typeName);
-  }
-
-  /**
-   * Returns the resolved builder for this type, including the instantiation paths generated code
-   * must use.
-   *
-   * @return optional resolved builder
-   */
-  public Optional<ResolvedBuilder> getResolvedBuilder() {
-    return Optional.ofNullable(resolvedBuilder);
-  }
-
-  /**
-   * Sets the resolved builder for this type.
-   *
-   * @param resolvedBuilder the resolved builder
-   */
-  public void setResolvedBuilder(ResolvedBuilder resolvedBuilder) {
-    this.resolvedBuilder = resolvedBuilder;
   }
 
   /**
