@@ -354,7 +354,7 @@
                     <!-- Exclude DTOs (model package) from coverage -->
                     <exclude>**/codegen/model/**</exclude>
                     <!-- Exclude exception classes from coverage (simple constructors) -->
-                    <exclude>**/exceptions/**</exclude>
+                    <exclude>**/*Exception.java</exclude>
                     <!-- Exclude constants-only holders -->
                     <exclude>**/JavadocConstants.*</exclude>
                   </excludes>
