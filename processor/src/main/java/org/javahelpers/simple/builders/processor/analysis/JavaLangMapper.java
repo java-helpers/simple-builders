@@ -119,10 +119,7 @@ public final class JavaLangMapper {
       return null;
     }
 
-    // Set empty-constructor information on the TypeName (only if not already known)
-    if (!typeName.hasEmptyConstructor()) {
-      setEmptyConstructorInfo(typeName, param, context);
-    }
+    setEmptyConstructorInfo(typeName, param, context);
 
     result.setParameterTypeName(typeName);
     return result;
@@ -161,24 +158,11 @@ public final class JavaLangMapper {
     TypeMirror typeMirror = typeElement.asType();
     TypeName typeName = extractType(typeMirror, context);
 
-    // Set empty-constructor information on the TypeName (only if not already known)
-    if (typeName != null && !typeName.hasEmptyConstructor()) {
+    if (typeName != null) {
       setEmptyConstructorInfo(typeName, typeElement, context);
     }
 
     return typeName;
-  }
-
-  /**
-   * Sets empty-constructor information on the TypeName.
-   *
-   * @param typeName the TypeName to enhance with constructor info
-   * @param typeElement the TypeElement representing the type
-   * @param context the type mapping context
-   */
-  private static void setEmptyConstructorInfo(
-      TypeName typeName, TypeElement typeElement, TypeMappingContext context) {
-    setEmptyConstructorInfoIfAvailable(typeName, typeElement, context);
   }
 
   /**
@@ -188,9 +172,10 @@ public final class JavaLangMapper {
    * @param typeElement the type element to check
    * @param context the type mapping context
    */
-  private static void setEmptyConstructorInfoIfAvailable(
+  private static void setEmptyConstructorInfo(
       TypeName typeName, TypeElement typeElement, TypeMappingContext context) {
-    if (isConcreteClass(typeElement)
+    if (!typeName.hasEmptyConstructor()
+        && isConcreteClass(typeElement)
         && !TypeNameAnalyser.isJavaClass(typeName)
         && JavaLangAnalyser.hasEmptyConstructor(typeElement, context)) {
       typeName.setHasEmptyConstructor(true);
