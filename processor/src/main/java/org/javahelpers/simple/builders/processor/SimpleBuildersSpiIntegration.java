@@ -82,7 +82,7 @@ public final class SimpleBuildersSpiIntegration {
       TypeName beanType,
       TypeName builderType,
       String creationMethodName,
-      String resultMethodName,
+      String buildMethodName,
       String setterPrefix) {}
 
   private static volatile State state = State.INIT;
@@ -162,7 +162,7 @@ public final class SimpleBuildersSpiIntegration {
             beanType,
             builder.typeName(),
             factory.methodName(),
-            builder.resultMethodName(),
+            builder.buildMethodName(),
             setterPrefix);
     BY_BEAN.put(publishedBuilder.beanType().getFullQualifiedName(), publishedBuilder);
     BY_BUILDER.put(publishedBuilder.builderType().getFullQualifiedName(), publishedBuilder);

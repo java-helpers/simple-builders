@@ -247,7 +247,7 @@ public final class MethodGeneratorUtil {
     methodDto.addParameter(parameter);
 
     String buildExpression =
-        wrapConcreteCollectionType(field.getFieldType(), fieldBuilder.resultCall("builder"));
+        wrapConcreteCollectionType(field.getFieldType(), fieldBuilder.buildCall("builder"));
 
     methodDto.setCode(
         """

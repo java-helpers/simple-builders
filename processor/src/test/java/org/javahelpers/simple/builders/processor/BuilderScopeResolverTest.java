@@ -1153,7 +1153,7 @@ class BuilderScopeResolverTest {
         "lib.LibHelperBuilder",
         ResolverProbeProcessor.usageWithoutAnnotation.get().typeName().getFullQualifiedName());
     assertEquals(
-        "toTarget", ResolverProbeProcessor.usageWithoutAnnotation.get().resultMethodName());
+        "toTarget", ResolverProbeProcessor.usageWithoutAnnotation.get().buildMethodName());
   }
 
   @Test
@@ -1181,7 +1181,7 @@ class BuilderScopeResolverTest {
 
     assertThat(compilation).succeeded();
     // `build` wins over other signature-matching methods even if they sort earlier by name
-    assertEquals("build", ResolverProbeProcessor.usageWithoutAnnotation.get().resultMethodName());
+    assertEquals("build", ResolverProbeProcessor.usageWithoutAnnotation.get().buildMethodName());
   }
 
   @Test
@@ -1210,7 +1210,7 @@ class BuilderScopeResolverTest {
     assertThat(compilation).succeeded();
     // Without a `build` method, the pick is deterministic: the alphabetically first name
     assertEquals(
-        "assemble", ResolverProbeProcessor.usageWithoutAnnotation.get().resultMethodName());
+        "assemble", ResolverProbeProcessor.usageWithoutAnnotation.get().buildMethodName());
   }
 
   @Test
@@ -1245,7 +1245,7 @@ class BuilderScopeResolverTest {
     // Inherited members count for the contract: the build method declared on the superclass is
     // selected and its name recorded
     assertEquals(
-        "toTarget", ResolverProbeProcessor.usageWithoutAnnotation.get().resultMethodName());
+        "toTarget", ResolverProbeProcessor.usageWithoutAnnotation.get().buildMethodName());
   }
 
   @Test

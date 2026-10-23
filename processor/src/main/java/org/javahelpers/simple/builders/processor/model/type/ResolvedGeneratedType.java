@@ -39,14 +39,14 @@ import java.util.Optional;
  * @param funcForPrefilledInstance how to obtain an instance prefilled with a value (e.g. {@code
  *     new B(value)} or {@code B.of(value)}), or empty when the type offers no prefilled path;
  *     helpers needing one are then not generated
- * @param resultMethodName the name of the parameterless method returning the product (e.g. {@code
- *     build})
+ * @param buildMethodName the name of the parameterless method returning the built value (e.g.
+ *     {@code build})
  */
 public record ResolvedGeneratedType(
     TypeName typeName,
     TypeInstantiation funcForEmptyInstance,
     Optional<TypeInstantiation> funcForPrefilledInstance,
-    String resultMethodName) {
+    String buildMethodName) {
 
   /**
    * A resolution with a non-optional prefilled instantiation path.
@@ -54,27 +54,28 @@ public record ResolvedGeneratedType(
    * @param typeName the generated type to reference
    * @param funcForEmptyInstance how to obtain an empty instance
    * @param funcForPrefilledInstance how to obtain an instance prefilled with a value
-   * @param resultMethodName the name of the parameterless method returning the product
+   * @param buildMethodName the name of the parameterless method returning the built value
    */
   public ResolvedGeneratedType(
       TypeName typeName,
       TypeInstantiation funcForEmptyInstance,
       TypeInstantiation funcForPrefilledInstance,
-      String resultMethodName) {
+      String buildMethodName) {
     this(
         typeName,
         funcForEmptyInstance,
         Optional.ofNullable(funcForPrefilledInstance),
-        resultMethodName);
+        buildMethodName);
   }
 
   /**
-   * Renders the terminal call producing the product: {@code expression.resultMethodName()}.
+   * Renders the terminal call producing the built value: {@code
+   * builderExpression.buildMethodName()}.
    *
-   * @param expression expression evaluating to the generated-type instance (e.g. {@code generated})
-   * @return the terminal call code
+   * @param builderExpression expression evaluating to the builder instance (e.g. {@code builder})
+   * @return the build call code
    */
-  public String resultCall(String expression) {
-    return expression + "." + resultMethodName + "()";
+  public String buildCall(String builderExpression) {
+    return builderExpression + "." + buildMethodName + "()";
   }
 }

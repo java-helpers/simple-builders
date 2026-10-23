@@ -122,7 +122,7 @@ class SimpleBuildersSpiIntegrationTest {
             .isEmpty());
     assertEquals("test.PersonDtoBuilder", PERSON.builderType().getFullQualifiedName());
     assertEquals("create", PERSON.creationMethodName());
-    assertEquals("build", PERSON.resultMethodName());
+    assertEquals("build", PERSON.buildMethodName());
     assertEquals("", PERSON.setterPrefix());
   }
 

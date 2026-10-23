@@ -218,7 +218,7 @@ public class MapStructBuilderProvider implements BuilderProvider {
   private Optional<ExecutableElement> buildMethod(
       TypeElement builderElement, PublishedBuilder published) {
     return JavaLangAnalyser.findMethodWithoutParameters(
-        builderElement, published.resultMethodName(), Modifier.PUBLIC);
+        builderElement, published.buildMethodName(), Modifier.PUBLIC);
   }
 
   /**
