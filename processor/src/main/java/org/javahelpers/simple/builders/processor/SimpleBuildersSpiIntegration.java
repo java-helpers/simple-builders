@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.lang.model.util.Elements;
-import org.javahelpers.simple.builders.processor.model.type.ResolvedGeneratedType;
+import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
 import org.javahelpers.simple.builders.processor.model.type.TypeInstantiation.StaticFactoryCall;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 
@@ -152,8 +152,7 @@ public final class SimpleBuildersSpiIntegration {
    * Publishes the builder {@link BuilderProcessor} resolved for {@code beanType} in this
    * compilation — generated builders always create via a static factory.
    */
-  static void registerBuilder(
-      TypeName beanType, ResolvedGeneratedType builder, String setterPrefix) {
+  static void registerBuilder(TypeName beanType, ResolvedBuilder builder, String setterPrefix) {
     if (!(builder.funcForEmptyInstance() instanceof StaticFactoryCall factory)) {
       return;
     }

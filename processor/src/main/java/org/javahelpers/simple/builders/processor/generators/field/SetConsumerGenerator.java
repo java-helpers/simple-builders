@@ -38,7 +38,7 @@ import org.javahelpers.simple.builders.core.builders.HashSetBuilderWithElementBu
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
-import org.javahelpers.simple.builders.processor.model.type.ResolvedGeneratedType;
+import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
 import org.javahelpers.simple.builders.processor.model.type.TypeInstantiation;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
@@ -123,7 +123,7 @@ public class SetConsumerGenerator implements MethodGenerator {
     }
 
     TypeName elementType = fieldTypeGeneric.getElementType();
-    Optional<ResolvedGeneratedType> elementBuilder = context.resolveBuilderType(elementType);
+    Optional<ResolvedBuilder> elementBuilder = context.resolveBuilderType(elementType);
 
     if (elementBuilder.isPresent()
         && context.getConfiguration().shouldUseHashSetBuilderWithElementBuilders()) {
@@ -143,7 +143,7 @@ public class SetConsumerGenerator implements MethodGenerator {
       BuilderMethodDto method =
           createFieldConsumerWithBuilder(
               field,
-              new ResolvedGeneratedType(
+              new ResolvedBuilder(
                   builderTypeGeneric,
                   new TypeInstantiation.ConstructorCall(),
                   new TypeInstantiation.ConstructorCall(),
@@ -182,7 +182,7 @@ public class SetConsumerGenerator implements MethodGenerator {
   private void addExampleToSetConsumerWithSimpleValue(
       BuilderMethodDto method,
       TypeName elementType,
-      Function<TypeName, Optional<ResolvedGeneratedType>> builderResolver) {
+      Function<TypeName, Optional<ResolvedBuilder>> builderResolver) {
     addExampleChainFragmentTemplate(
         method, "#{methodName}(t -> t.add(#{exampleValue}))", elementType, builderResolver);
   }

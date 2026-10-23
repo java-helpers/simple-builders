@@ -29,7 +29,7 @@ import java.util.Optional;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
-import org.javahelpers.simple.builders.processor.model.type.ResolvedGeneratedType;
+import org.javahelpers.simple.builders.processor.model.type.TypeName;
 
 /**
  * Everything {@link JavaLangMapper} needs for mapping elements and type mirrors to {@code TypeName}
@@ -137,10 +137,10 @@ public interface TypeMappingContext {
   boolean shouldCopyTypeAnnotations();
 
   /**
-   * Resolves the generated type usable for the given type element (e.g. its builder).
+   * Resolves the generated type for the given type element.
    *
    * @param typeElement the type element to resolve
-   * @return the usable generated type, or empty when none applies
+   * @return the generated type name, or empty when none applies
    */
-  Optional<ResolvedGeneratedType> resolveGeneratedType(TypeElement typeElement);
+  Optional<TypeName> resolveGeneratedType(TypeElement typeElement);
 }

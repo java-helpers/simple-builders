@@ -27,13 +27,13 @@ package org.javahelpers.simple.builders.processor.model.type;
 import java.util.Optional;
 
 /**
- * A generated type resolved for a referenced field or element type, together with the instantiation
- * paths generated code must use to call it.
+ * A builder resolved for a referenced field or element type, together with the instantiation paths
+ * generated code must use to call it.
  *
  * <p>Each component records the concrete instantiation the contract check selected - constructor
  * call or static factory call - so generation sites emit exactly what was resolved.
  *
- * @param typeName the generated type to reference
+ * @param typeName the builder type to reference
  * @param funcForEmptyInstance how to obtain an empty instance (e.g. {@code new B()} or {@code
  *     B.create()})
  * @param funcForPrefilledInstance how to obtain an instance prefilled with a value (e.g. {@code new
@@ -42,7 +42,7 @@ import java.util.Optional;
  * @param buildMethodName the name of the parameterless method returning the built value (e.g.
  *     {@code build})
  */
-public record ResolvedGeneratedType(
+public record ResolvedBuilder(
     TypeName typeName,
     TypeInstantiation funcForEmptyInstance,
     Optional<TypeInstantiation> funcForPrefilledInstance,
@@ -51,12 +51,12 @@ public record ResolvedGeneratedType(
   /**
    * A resolution with a non-optional prefilled instantiation path.
    *
-   * @param typeName the generated type to reference
-   * @param funcForEmptyInstance how to obtain an empty instance
-   * @param funcForPrefilledInstance how to obtain an instance prefilled with a value
+   * @param typeName the builder type to reference
+   * @param funcForEmptyInstance how to obtain an empty builder instance
+   * @param funcForPrefilledInstance how to obtain a builder prefilled with a value
    * @param buildMethodName the name of the parameterless method returning the built value
    */
-  public ResolvedGeneratedType(
+  public ResolvedBuilder(
       TypeName typeName,
       TypeInstantiation funcForEmptyInstance,
       TypeInstantiation funcForPrefilledInstance,

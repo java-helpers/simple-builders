@@ -37,7 +37,7 @@ import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.GenericParameterDto;
-import org.javahelpers.simple.builders.processor.model.type.ResolvedGeneratedType;
+import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
 import org.javahelpers.simple.builders.processor.model.type.TypeInstantiation;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
@@ -232,7 +232,7 @@ public final class MethodGeneratorUtil {
    */
   public static BuilderMethodDto createFieldConsumerWithBuilder(
       FieldDto field,
-      ResolvedGeneratedType fieldBuilder,
+      ResolvedBuilder fieldBuilder,
       String existingValueConstructorArgs,
       String emptyConstructorArgs,
       Map<String, TypeName> additionalTemplateArguments,
@@ -381,7 +381,7 @@ public final class MethodGeneratorUtil {
   public static BuilderMethodDto createFieldConsumerWithElementBuilders(
       FieldDto field,
       TypeName collectionBuilderType,
-      ResolvedGeneratedType elementBuilder,
+      ResolvedBuilder elementBuilder,
       TypeName returnBuilderType,
       BuilderProcessingContext context) {
     // The collection builder receives a supplier for element builders: the resolved
@@ -390,7 +390,7 @@ public final class MethodGeneratorUtil {
         elementBuilder.funcForEmptyInstance().methodReference("$elementBuilderType:T");
     return createFieldConsumerWithBuilder(
         field,
-        new ResolvedGeneratedType(
+        new ResolvedBuilder(
             collectionBuilderType,
             new TypeInstantiation.ConstructorCall(),
             new TypeInstantiation.ConstructorCall(),
@@ -470,7 +470,7 @@ public final class MethodGeneratorUtil {
   public static void addExampleChainFragment(
       BuilderMethodDto methodDto,
       TypeName fieldType,
-      Function<TypeName, Optional<ResolvedGeneratedType>> builderResolver) {
+      Function<TypeName, Optional<ResolvedBuilder>> builderResolver) {
     addExampleChainFragmentTemplate(
         methodDto, "#{methodName}(#{exampleValue})", fieldType, builderResolver);
   }
@@ -492,7 +492,7 @@ public final class MethodGeneratorUtil {
   public static void addExampleChainFragmentVarArgs(
       BuilderMethodDto methodDto,
       TypeName elementType,
-      Function<TypeName, Optional<ResolvedGeneratedType>> builderResolver) {
+      Function<TypeName, Optional<ResolvedBuilder>> builderResolver) {
     addExampleChainFragmentTemplate(
         methodDto, "#{methodName}(#{exampleValue}, #{exampleValue})", elementType, builderResolver);
   }
@@ -514,7 +514,7 @@ public final class MethodGeneratorUtil {
   public static void addExampleChainFragmentWithSupplier(
       BuilderMethodDto methodDto,
       TypeName fieldType,
-      Function<TypeName, Optional<ResolvedGeneratedType>> builderResolver) {
+      Function<TypeName, Optional<ResolvedBuilder>> builderResolver) {
     if (fieldType.hasEmptyConstructor()) {
       addExampleChainFragmentTemplate(
           methodDto, "#{methodName}(" + fieldType.getClassName() + "::new)");
@@ -547,7 +547,7 @@ public final class MethodGeneratorUtil {
       BuilderMethodDto methodDto,
       String template,
       TypeName fieldType,
-      Function<TypeName, Optional<ResolvedGeneratedType>> builderResolver) {
+      Function<TypeName, Optional<ResolvedBuilder>> builderResolver) {
     String fragment = template.replace("#{methodName}", methodDto.getMethodName());
 
     if (fieldType != null) {

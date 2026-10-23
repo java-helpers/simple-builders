@@ -33,7 +33,7 @@ import java.util.Optional;
 import javax.lang.model.util.Elements;
 import org.javahelpers.simple.builders.processor.SimpleBuildersSpiIntegration.PublishedBuilder;
 import org.javahelpers.simple.builders.processor.SimpleBuildersSpiIntegration.State;
-import org.javahelpers.simple.builders.processor.model.type.ResolvedGeneratedType;
+import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
 import org.javahelpers.simple.builders.processor.model.type.TypeInstantiation.StaticFactoryCall;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.junit.jupiter.api.AfterEach;
@@ -49,8 +49,8 @@ class SimpleBuildersSpiIntegrationTest {
 
   private static final TypeName PERSON_BEAN = new TypeName("test", "PersonDto");
 
-  private static final ResolvedGeneratedType PERSON_RESOLVED =
-      new ResolvedGeneratedType(
+  private static final ResolvedBuilder PERSON_RESOLVED =
+      new ResolvedBuilder(
           new TypeName("test", "PersonDtoBuilder"),
           new StaticFactoryCall("create"),
           Optional.empty(),
