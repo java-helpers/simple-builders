@@ -164,10 +164,11 @@ public class VarArgsHelperGenerator implements MethodGenerator {
     if (fieldType instanceof TypeNameList listType) {
       method.getMethodCodeDto().addCodeBlockImport(List.class);
       MethodGeneratorUtil.addExampleChainFragmentVarArgs(
-          method, listType.getElementType(), context);
+          method, listType.getElementType(), context::resolveBuilderType);
     } else if (fieldType instanceof TypeNameSet setType) {
       method.getMethodCodeDto().addCodeBlockImport(Set.class);
-      MethodGeneratorUtil.addExampleChainFragmentVarArgs(method, setType.getElementType(), context);
+      MethodGeneratorUtil.addExampleChainFragmentVarArgs(
+          method, setType.getElementType(), context::resolveBuilderType);
     } else if (fieldType instanceof TypeNameMap mapType) {
       method.getMethodCodeDto().addCodeBlockImport(Map.class);
       // For maps, only add example if key type is String
@@ -176,7 +177,7 @@ public class VarArgsHelperGenerator implements MethodGenerator {
             method,
             "#{methodName}(Map.entry(\"key\", #{exampleValue}))",
             mapType.getValueType(),
-            context);
+            context::resolveBuilderType);
       }
     }
 

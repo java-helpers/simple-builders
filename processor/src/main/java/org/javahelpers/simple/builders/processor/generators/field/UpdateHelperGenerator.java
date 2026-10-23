@@ -236,7 +236,7 @@ public class UpdateHelperGenerator implements MethodGenerator {
     addExampleChainFragmentTemplate(methodDto, "#{methodName}(" + updateExpression.get() + ")");
 
     Optional<String> initialValue =
-        JavadocExampleValues.getExampleValue(field.getFieldType(), context);
+        JavadocExampleValues.getExampleValue(field.getFieldType(), context::resolveBuilderType);
     if (initialValue.isEmpty()) {
       return;
     }

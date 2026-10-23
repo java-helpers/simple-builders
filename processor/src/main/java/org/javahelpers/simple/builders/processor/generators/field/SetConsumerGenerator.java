@@ -31,6 +31,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.builders.HashSetBuilder;
 import org.javahelpers.simple.builders.core.builders.HashSetBuilderWithElementBuilders;
@@ -152,7 +153,7 @@ public class SetConsumerGenerator implements MethodGenerator {
               Map.of(),
               builderType,
               context);
-      addExampleToSetConsumerWithSimpleValue(method, elementType, context);
+      addExampleToSetConsumerWithSimpleValue(method, elementType, context::resolveBuilderType);
       return List.of(method);
     }
 
@@ -179,8 +180,10 @@ public class SetConsumerGenerator implements MethodGenerator {
    * @param elementType the element type
    */
   private void addExampleToSetConsumerWithSimpleValue(
-      BuilderMethodDto method, TypeName elementType, BuilderProcessingContext context) {
+      BuilderMethodDto method,
+      TypeName elementType,
+      Function<TypeName, Optional<ResolvedGeneratedType>> builderResolver) {
     addExampleChainFragmentTemplate(
-        method, "#{methodName}(t -> t.add(#{exampleValue}))", elementType, context);
+        method, "#{methodName}(t -> t.add(#{exampleValue}))", elementType, builderResolver);
   }
 }

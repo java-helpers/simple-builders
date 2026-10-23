@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
@@ -467,9 +468,11 @@ public final class MethodGeneratorUtil {
    * @param fieldType the field type to get an example value for
    */
   public static void addExampleChainFragment(
-      BuilderMethodDto methodDto, TypeName fieldType, BuilderProcessingContext context) {
+      BuilderMethodDto methodDto,
+      TypeName fieldType,
+      Function<TypeName, Optional<ResolvedGeneratedType>> builderResolver) {
     addExampleChainFragmentTemplate(
-        methodDto, "#{methodName}(#{exampleValue})", fieldType, context);
+        methodDto, "#{methodName}(#{exampleValue})", fieldType, builderResolver);
   }
 
   /**
@@ -487,9 +490,11 @@ public final class MethodGeneratorUtil {
    * @param elementType the element type to get an example value for
    */
   public static void addExampleChainFragmentVarArgs(
-      BuilderMethodDto methodDto, TypeName elementType, BuilderProcessingContext context) {
+      BuilderMethodDto methodDto,
+      TypeName elementType,
+      Function<TypeName, Optional<ResolvedGeneratedType>> builderResolver) {
     addExampleChainFragmentTemplate(
-        methodDto, "#{methodName}(#{exampleValue}, #{exampleValue})", elementType, context);
+        methodDto, "#{methodName}(#{exampleValue}, #{exampleValue})", elementType, builderResolver);
   }
 
   /**
@@ -507,13 +512,15 @@ public final class MethodGeneratorUtil {
    * @param fieldType the field type to get an example value for
    */
   public static void addExampleChainFragmentWithSupplier(
-      BuilderMethodDto methodDto, TypeName fieldType, BuilderProcessingContext context) {
+      BuilderMethodDto methodDto,
+      TypeName fieldType,
+      Function<TypeName, Optional<ResolvedGeneratedType>> builderResolver) {
     if (fieldType.hasEmptyConstructor()) {
       addExampleChainFragmentTemplate(
           methodDto, "#{methodName}(" + fieldType.getClassName() + "::new)");
     } else {
       addExampleChainFragmentTemplate(
-          methodDto, "#{methodName}(() -> #{exampleValue})", fieldType, context);
+          methodDto, "#{methodName}(() -> #{exampleValue})", fieldType, builderResolver);
     }
   }
 
@@ -540,11 +547,12 @@ public final class MethodGeneratorUtil {
       BuilderMethodDto methodDto,
       String template,
       TypeName fieldType,
-      BuilderProcessingContext context) {
+      Function<TypeName, Optional<ResolvedGeneratedType>> builderResolver) {
     String fragment = template.replace("#{methodName}", methodDto.getMethodName());
 
     if (fieldType != null) {
-      Optional<String> exampleValue = JavadocExampleValues.getExampleValue(fieldType, context);
+      Optional<String> exampleValue =
+          JavadocExampleValues.getExampleValue(fieldType, builderResolver);
       if (exampleValue.isEmpty()) {
         return;
       }

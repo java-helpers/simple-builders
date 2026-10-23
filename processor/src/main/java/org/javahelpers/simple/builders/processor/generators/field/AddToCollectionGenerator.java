@@ -191,7 +191,7 @@ public class AddToCollectionGenerator implements MethodGenerator {
 
     // Store the fluent-chain fragment so the class-level enhancer can synthesise both the
     // method-level example block and the class-level kitchen-sink chain from one source of truth.
-    addExampleChainFragment(methodDto, elementType, context);
+    addExampleChainFragment(methodDto, elementType, context::resolveBuilderType);
 
     return methodDto;
   }

@@ -33,6 +33,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.builders.ArrayListBuilder;
 import org.javahelpers.simple.builders.core.builders.ArrayListBuilderWithElementBuilders;
@@ -161,7 +162,7 @@ public class ListConsumerGenerator implements MethodGenerator {
               context);
 
       // Add method-level example for list consumer
-      addExampleToListConsumerWithSimpleValue(method, elementType, context);
+      addExampleToListConsumerWithSimpleValue(method, elementType, context::resolveBuilderType);
 
       return List.of(method);
     }
@@ -189,8 +190,10 @@ public class ListConsumerGenerator implements MethodGenerator {
    * @param elementType the element type
    */
   private void addExampleToListConsumerWithSimpleValue(
-      BuilderMethodDto method, TypeName elementType, BuilderProcessingContext context) {
+      BuilderMethodDto method,
+      TypeName elementType,
+      Function<TypeName, Optional<ResolvedGeneratedType>> builderResolver) {
     addExampleChainFragmentTemplate(
-        method, "#{methodName}(t -> t.add(#{exampleValue}))", elementType, context);
+        method, "#{methodName}(t -> t.add(#{exampleValue}))", elementType, builderResolver);
   }
 }
