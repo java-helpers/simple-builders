@@ -110,7 +110,7 @@ public class OptionalHelperGenerator implements MethodGenerator {
     method.getMethodCodeDto().addCodeBlockImport(Optional.class);
 
     // Add example fragment for Optional helper method
-    MethodGeneratorUtil.addExampleChainFragment(method, innerType);
+    MethodGeneratorUtil.addExampleChainFragment(method, innerType, context);
 
     return Collections.singletonList(method);
   }

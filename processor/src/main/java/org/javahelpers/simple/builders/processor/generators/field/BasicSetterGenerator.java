@@ -92,7 +92,7 @@ public class BasicSetterGenerator implements MethodGenerator {
 
     // Store the fluent-chain fragment so the class-level enhancer can synthesise both the
     // method-level example block and the class-level kitchen-sink chain from one source of truth.
-    MethodGeneratorUtil.addExampleChainFragment(setterMethod, field.getFieldType());
+    MethodGeneratorUtil.addExampleChainFragment(setterMethod, field.getFieldType(), context);
 
     return Collections.singletonList(setterMethod);
   }

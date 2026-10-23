@@ -106,7 +106,7 @@ public class SetConsumerGenerator implements MethodGenerator {
       return false;
     }
     // Don't apply if field itself has a builder (higher priority)
-    if (field.getFieldType().getResolvedGeneratedType().isPresent()) {
+    if (context.resolveGeneratedType(field.getFieldType()).isPresent()) {
       return false;
     }
     return context.getConfiguration().shouldUseHashSetBuilder()
@@ -123,7 +123,7 @@ public class SetConsumerGenerator implements MethodGenerator {
 
     TypeName elementType = fieldTypeGeneric.getElementType();
     Optional<ResolvedGeneratedType> elementGeneratedType =
-        fieldTypeGeneric.getElementResolvedGeneratedType();
+        context.resolveGeneratedType(elementType);
 
     if (elementGeneratedType.isPresent()
         && context.getConfiguration().shouldUseHashSetBuilderWithElementBuilders()) {
@@ -144,16 +144,16 @@ public class SetConsumerGenerator implements MethodGenerator {
           createFieldConsumerWithBuilder(
               field,
               new ResolvedGeneratedType(
-              builderTypeGeneric,
-              new TypeInstantiation.ConstructorCall(),
-              new TypeInstantiation.ConstructorCall(),
-              "build"),
+                  builderTypeGeneric,
+                  new TypeInstantiation.ConstructorCall(),
+                  new TypeInstantiation.ConstructorCall(),
+                  "build"),
               "this.$fieldName:N.value()",
               "",
               Map.of(),
               builderType,
               context);
-      addExampleToSetConsumerWithSimpleValue(method, elementType);
+      addExampleToSetConsumerWithSimpleValue(method, elementType, context);
       return List.of(method);
     }
 
@@ -180,8 +180,8 @@ public class SetConsumerGenerator implements MethodGenerator {
    * @param elementType the element type
    */
   private void addExampleToSetConsumerWithSimpleValue(
-      BuilderMethodDto method, TypeName elementType) {
+      BuilderMethodDto method, TypeName elementType, BuilderProcessingContext context) {
     addExampleChainFragmentTemplate(
-        method, "#{methodName}(t -> t.add(#{exampleValue}))", elementType);
+        method, "#{methodName}(t -> t.add(#{exampleValue}))", elementType, context);
   }
 }

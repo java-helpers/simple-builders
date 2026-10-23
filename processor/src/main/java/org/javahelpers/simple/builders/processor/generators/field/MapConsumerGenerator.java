@@ -119,7 +119,7 @@ public class MapConsumerGenerator implements MethodGenerator {
         // Map must be parameterized (has key/value types)
         && fieldTypeGeneric.isParameterized()
         // Field shouldn't have its own builder (higher priority)
-        && !fieldTypeGeneric.getResolvedGeneratedType().isPresent()
+        && !context.resolveGeneratedType(fieldTypeGeneric).isPresent()
         // Field shouldn't have empty constructor (higher priority)
         && !fieldTypeGeneric.hasEmptyConstructor();
   }
@@ -149,10 +149,10 @@ public class MapConsumerGenerator implements MethodGenerator {
         createFieldConsumerWithBuilder(
             field,
             new ResolvedGeneratedType(
-            builderTargetTypeName,
-            new TypeInstantiation.ConstructorCall(),
-            new TypeInstantiation.ConstructorCall(),
-            "build"),
+                builderTargetTypeName,
+                new TypeInstantiation.ConstructorCall(),
+                new TypeInstantiation.ConstructorCall(),
+                "build"),
             "this.$fieldName:N.value()",
             "",
             Map.of(),

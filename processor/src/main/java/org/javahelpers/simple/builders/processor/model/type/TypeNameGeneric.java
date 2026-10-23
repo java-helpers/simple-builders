@@ -44,9 +44,6 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 public class TypeNameGeneric extends TypeName {
   private final List<TypeName> innerTypeArguments;
 
-  /** Resolved builder for the element type of this collection (if applicable). */
-  private ResolvedGeneratedType elementResolvedGeneratedType;
-
   /**
    * Creates a {@code TypeNameGeneric} based on another {@code TypeName} as outer type and a list of
    * inner type arguments.
@@ -132,25 +129,6 @@ public class TypeNameGeneric extends TypeName {
         : Optional.empty();
   }
 
-  /**
-   * Returns the resolved generated type for the element type of this collection, including the
-   * instantiation paths generated code must use.
-   *
-   * @return optional resolved element generated type
-   */
-  public Optional<ResolvedGeneratedType> getElementResolvedGeneratedType() {
-    return Optional.ofNullable(elementResolvedGeneratedType);
-  }
-
-  /**
-   * Sets the resolved generated type for the element type of this collection.
-   *
-   * @param elementResolvedGeneratedType the resolved element generated type
-   */
-  public void setElementResolvedGeneratedType(ResolvedGeneratedType elementResolvedGeneratedType) {
-    this.elementResolvedGeneratedType = elementResolvedGeneratedType;
-  }
-
   @Override
   public String getFullQualifiedName() {
     String baseName = super.getFullQualifiedName();
@@ -198,7 +176,6 @@ public class TypeNameGeneric extends TypeName {
     return new EqualsBuilder()
         .appendSuper(super.equals(o))
         .append(innerTypeArguments, that.innerTypeArguments)
-        .append(elementResolvedGeneratedType, that.elementResolvedGeneratedType)
         .isEquals();
   }
 
@@ -207,7 +184,6 @@ public class TypeNameGeneric extends TypeName {
     return new HashCodeBuilder(17, 37)
         .appendSuper(super.hashCode())
         .append(innerTypeArguments)
-        .append(elementResolvedGeneratedType)
         .toHashCode();
   }
 }

@@ -44,8 +44,8 @@ import javax.tools.JavaFileObject;
 import org.javahelpers.simple.builders.core.enums.OptionState;
 import org.javahelpers.simple.builders.processor.analysis.BuilderScopeResolver;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
-import org.javahelpers.simple.builders.processor.model.type.TypeInstantiation;
 import org.javahelpers.simple.builders.processor.model.type.ResolvedGeneratedType;
+import org.javahelpers.simple.builders.processor.model.type.TypeInstantiation;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 import org.javahelpers.simple.builders.processor.processing.ProcessingTarget;
@@ -346,8 +346,7 @@ class BuilderScopeResolverTest {
     assertInstanceOf(TypeInstantiation.NestedFactoryCall.class, resolved.funcForEmptyInstance());
     TypeInstantiation.NestedFactoryCall prefilled =
         assertInstanceOf(
-            TypeInstantiation.NestedFactoryCall.class,
-            resolved.funcForPrefilledInstance().get());
+            TypeInstantiation.NestedFactoryCall.class, resolved.funcForPrefilledInstance().get());
     assertEquals("builder", prefilled.methodName());
   }
 
@@ -880,8 +879,7 @@ class BuilderScopeResolverTest {
     ResolvedGeneratedType generated =
         ResolverProbeProcessor.usageGeneratedWithExistingDisabled.get();
     assertEquals("lib.LibHelperBuilder", generated.typeName().getFullQualifiedName());
-    assertInstanceOf(
-        TypeInstantiation.StaticFactoryCall.class, generated.funcForEmptyInstance());
+    assertInstanceOf(TypeInstantiation.StaticFactoryCall.class, generated.funcForEmptyInstance());
     assertInstanceOf(
         TypeInstantiation.ConstructorCall.class, generated.funcForPrefilledInstance().get());
   }
@@ -1114,13 +1112,11 @@ class BuilderScopeResolverTest {
     return field;
   }
 
-  private static void assertFactoryMethod(
-      String expectedMethod, TypeInstantiation instantiation) {
+  private static void assertFactoryMethod(String expectedMethod, TypeInstantiation instantiation) {
     if (expectedMethod != null) {
       assertEquals(
           expectedMethod,
-          assertInstanceOf(TypeInstantiation.StaticFactoryCall.class, instantiation)
-              .methodName());
+          assertInstanceOf(TypeInstantiation.StaticFactoryCall.class, instantiation).methodName());
     }
   }
 
@@ -1152,8 +1148,7 @@ class BuilderScopeResolverTest {
     assertEquals(
         "lib.LibHelperBuilder",
         ResolverProbeProcessor.usageWithoutAnnotation.get().typeName().getFullQualifiedName());
-    assertEquals(
-        "toTarget", ResolverProbeProcessor.usageWithoutAnnotation.get().buildMethodName());
+    assertEquals("toTarget", ResolverProbeProcessor.usageWithoutAnnotation.get().buildMethodName());
   }
 
   @Test
@@ -1209,8 +1204,7 @@ class BuilderScopeResolverTest {
 
     assertThat(compilation).succeeded();
     // Without a `build` method, the pick is deterministic: the alphabetically first name
-    assertEquals(
-        "assemble", ResolverProbeProcessor.usageWithoutAnnotation.get().buildMethodName());
+    assertEquals("assemble", ResolverProbeProcessor.usageWithoutAnnotation.get().buildMethodName());
   }
 
   @Test
@@ -1244,8 +1238,7 @@ class BuilderScopeResolverTest {
     assertThat(compilation).succeeded();
     // Inherited members count for the contract: the build method declared on the superclass is
     // selected and its name recorded
-    assertEquals(
-        "toTarget", ResolverProbeProcessor.usageWithoutAnnotation.get().buildMethodName());
+    assertEquals("toTarget", ResolverProbeProcessor.usageWithoutAnnotation.get().buildMethodName());
   }
 
   @Test

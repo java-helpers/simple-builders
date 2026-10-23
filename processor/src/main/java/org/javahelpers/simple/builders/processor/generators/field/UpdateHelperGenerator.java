@@ -212,11 +212,11 @@ public class UpdateHelperGenerator implements MethodGenerator {
     }
     TypeName fieldType = field.getFieldType();
     String methodName = generateBuilderMethodName(field.getOriginalFieldName(), context);
-    if (fieldType.getResolvedGeneratedType().isPresent()) {
+    if (context.resolveGeneratedType(fieldType).isPresent()) {
       return "\n" + NESTED_DTO_GUIDANCE.formatted(methodName);
     }
     if (fieldType instanceof TypeNameGeneric genericType
-        && genericType.getElementResolvedGeneratedType().isPresent()) {
+        && genericType.getInnerType().flatMap(context::resolveGeneratedType).isPresent()) {
       return "\n" + COLLECTION_ELEMENT_DTO_GUIDANCE.formatted(methodName);
     }
     return "";
@@ -235,7 +235,8 @@ public class UpdateHelperGenerator implements MethodGenerator {
     }
     addExampleChainFragmentTemplate(methodDto, "#{methodName}(" + updateExpression.get() + ")");
 
-    Optional<String> initialValue = JavadocExampleValues.getExampleValue(field.getFieldType());
+    Optional<String> initialValue =
+        JavadocExampleValues.getExampleValue(field.getFieldType(), context);
     if (initialValue.isEmpty()) {
       return;
     }

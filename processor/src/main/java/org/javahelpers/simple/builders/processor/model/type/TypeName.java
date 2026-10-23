@@ -46,9 +46,6 @@ public class TypeName {
   /** Annotations on this type (TYPE_USE). */
   private final java.util.List<AnnotationDto> annotations = new java.util.ArrayList<>();
 
-  /** Resolved builder for this type, including how generated code instantiates it. */
-  private ResolvedGeneratedType resolvedGeneratedType;
-
   /** Whether this type has an empty constructor. */
   private boolean hasEmptyConstructor = false;
 
@@ -123,25 +120,6 @@ public class TypeName {
    */
   public void addAnnotation(AnnotationDto annotation) {
     this.annotations.add(annotation);
-  }
-
-  /**
-   * Returns the resolved generated type for this type, including the instantiation paths generated
-   * code must use.
-   *
-   * @return optional resolved generated type
-   */
-  public Optional<ResolvedGeneratedType> getResolvedGeneratedType() {
-    return Optional.ofNullable(resolvedGeneratedType);
-  }
-
-  /**
-   * Sets the resolved generated type for this type.
-   *
-   * @param resolvedGeneratedType the resolved generated type
-   */
-  public void setResolvedGeneratedType(ResolvedGeneratedType resolvedGeneratedType) {
-    this.resolvedGeneratedType = resolvedGeneratedType;
   }
 
   /**

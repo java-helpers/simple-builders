@@ -96,7 +96,7 @@ public class FieldInstanceConsumerGenerator implements MethodGenerator {
     }
 
     // Only apply if no builder consumer applies (builder has higher priority)
-    if (field.getFieldType().getResolvedGeneratedType().isPresent()) {
+    if (context.resolveGeneratedType(field.getFieldType()).isPresent()) {
       return false;
     }
 

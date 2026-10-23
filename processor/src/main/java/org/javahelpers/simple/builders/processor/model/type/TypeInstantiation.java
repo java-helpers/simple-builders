@@ -125,8 +125,8 @@ public sealed interface TypeInstantiation {
   }
 
   /**
-   * Instantiation by prefilling the generated type through its field functions: a generated
-   * static {@code methodName} on the target class obtains an empty instance via {@code
+   * Instantiation by prefilling the generated type through its field functions: a generated static
+   * {@code methodName} on the target class obtains an empty instance via {@code
    * funcForEmptyInstance} and calls one field function per prefilled property of the source value.
    * {@link #instantiationCode} renders the call to that generated method.
    *
@@ -159,9 +159,8 @@ public sealed interface TypeInstantiation {
     }
 
     /**
-     * The generated type's field function for a prefilled field: {@code <property>} when the
-     * prefix is empty, otherwise {@code <prefix><Property>} (e.g. {@code setName} or {@code
-     * withName}).
+     * The generated type's field function for a prefilled field: {@code <property>} when the prefix
+     * is empty, otherwise {@code <prefix><Property>} (e.g. {@code setName} or {@code withName}).
      *
      * @param field the prefilled field
      * @return the field function's name on the generated type

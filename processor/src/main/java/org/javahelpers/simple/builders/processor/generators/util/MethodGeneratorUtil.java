@@ -31,13 +31,14 @@ import java.util.function.Consumer;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
+import org.javahelpers.simple.builders.processor.analysis.TypeMappingContext;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
-import org.javahelpers.simple.builders.processor.model.type.TypeInstantiation;
 import org.javahelpers.simple.builders.processor.model.type.GenericParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.ResolvedGeneratedType;
+import org.javahelpers.simple.builders.processor.model.type.TypeInstantiation;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameList;
@@ -288,8 +289,8 @@ public final class MethodGeneratorUtil {
   }
 
   /**
-   * Creates the private prefilling method backing a {@link TypeInstantiation.PrefillCall}:
-   * obtains an empty builder and calls one field function per prefilled property of the value.
+   * Creates the private prefilling method backing a {@link TypeInstantiation.PrefillCall}: obtains
+   * an empty builder and calls one field function per prefilled property of the value.
    *
    * @param prefillCall the resolved field-prefilling instantiation
    * @return the method DTO for the prefilling method
@@ -466,8 +467,10 @@ public final class MethodGeneratorUtil {
    * @param methodDto the method DTO to add the fragment to
    * @param fieldType the field type to get an example value for
    */
-  public static void addExampleChainFragment(BuilderMethodDto methodDto, TypeName fieldType) {
-    addExampleChainFragmentTemplate(methodDto, "#{methodName}(#{exampleValue})", fieldType);
+  public static void addExampleChainFragment(
+      BuilderMethodDto methodDto, TypeName fieldType, TypeMappingContext context) {
+    addExampleChainFragmentTemplate(
+        methodDto, "#{methodName}(#{exampleValue})", fieldType, context);
   }
 
   /**
@@ -485,9 +488,9 @@ public final class MethodGeneratorUtil {
    * @param elementType the element type to get an example value for
    */
   public static void addExampleChainFragmentVarArgs(
-      BuilderMethodDto methodDto, TypeName elementType) {
+      BuilderMethodDto methodDto, TypeName elementType, TypeMappingContext context) {
     addExampleChainFragmentTemplate(
-        methodDto, "#{methodName}(#{exampleValue}, #{exampleValue})", elementType);
+        methodDto, "#{methodName}(#{exampleValue}, #{exampleValue})", elementType, context);
   }
 
   /**
@@ -505,12 +508,13 @@ public final class MethodGeneratorUtil {
    * @param fieldType the field type to get an example value for
    */
   public static void addExampleChainFragmentWithSupplier(
-      BuilderMethodDto methodDto, TypeName fieldType) {
+      BuilderMethodDto methodDto, TypeName fieldType, TypeMappingContext context) {
     if (fieldType.hasEmptyConstructor()) {
       addExampleChainFragmentTemplate(
           methodDto, "#{methodName}(" + fieldType.getClassName() + "::new)");
     } else {
-      addExampleChainFragmentTemplate(methodDto, "#{methodName}(() -> #{exampleValue})", fieldType);
+      addExampleChainFragmentTemplate(
+          methodDto, "#{methodName}(() -> #{exampleValue})", fieldType, context);
     }
   }
 
@@ -534,11 +538,11 @@ public final class MethodGeneratorUtil {
    * @param fieldType the field type to get an example value for (can be {@code null})
    */
   public static void addExampleChainFragmentTemplate(
-      BuilderMethodDto methodDto, String template, TypeName fieldType) {
+      BuilderMethodDto methodDto, String template, TypeName fieldType, TypeMappingContext context) {
     String fragment = template.replace("#{methodName}", methodDto.getMethodName());
 
     if (fieldType != null) {
-      Optional<String> exampleValue = JavadocExampleValues.getExampleValue(fieldType);
+      Optional<String> exampleValue = JavadocExampleValues.getExampleValue(fieldType, context);
       if (exampleValue.isEmpty()) {
         return;
       }

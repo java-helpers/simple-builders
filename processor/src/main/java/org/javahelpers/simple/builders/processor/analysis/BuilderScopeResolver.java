@@ -41,8 +41,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.core.PackageScopes;
-import org.javahelpers.simple.builders.processor.model.type.TypeInstantiation;
 import org.javahelpers.simple.builders.processor.model.type.ResolvedGeneratedType;
+import org.javahelpers.simple.builders.processor.model.type.TypeInstantiation;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 
@@ -491,8 +491,7 @@ public final class BuilderScopeResolver {
    * @param builderTypeElement the candidate builder type to inspect
    * @return the instantiation to emit, or empty when the builder offers neither
    */
-  private Optional<TypeInstantiation> resolveFuncForEmptyBuilder(
-      TypeElement builderTypeElement) {
+  private Optional<TypeInstantiation> resolveFuncForEmptyBuilder(TypeElement builderTypeElement) {
     Optional<TypeInstantiation> func = findStaticFactoryCall(builderTypeElement, List.of());
     if (func.isEmpty() && JavaLangAnalyser.hasEmptyConstructor(builderTypeElement, context)) {
       func = Optional.of(new TypeInstantiation.ConstructorCall());
@@ -733,9 +732,7 @@ public final class BuilderScopeResolver {
                     (ExecutableElement method) ->
                         preferredFactoryNameRank(method.getSimpleName().toString()))
                 .thenComparing(method -> method.getSimpleName().toString()))
-        .map(
-            method ->
-                new TypeInstantiation.StaticFactoryCall(method.getSimpleName().toString()));
+        .map(method -> new TypeInstantiation.StaticFactoryCall(method.getSimpleName().toString()));
   }
 
   private static int preferredFactoryNameRank(String name) {

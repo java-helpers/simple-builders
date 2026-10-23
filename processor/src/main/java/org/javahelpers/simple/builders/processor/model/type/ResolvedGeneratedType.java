@@ -27,8 +27,8 @@ package org.javahelpers.simple.builders.processor.model.type;
 import java.util.Optional;
 
 /**
- * A generated type resolved for a referenced field or element type, together with the
- * instantiation paths generated code must use to call it.
+ * A generated type resolved for a referenced field or element type, together with the instantiation
+ * paths generated code must use to call it.
  *
  * <p>Each component records the concrete instantiation the contract check selected - constructor
  * call or static factory call - so generation sites emit exactly what was resolved.
@@ -36,9 +36,9 @@ import java.util.Optional;
  * @param typeName the generated type to reference
  * @param funcForEmptyInstance how to obtain an empty instance (e.g. {@code new B()} or {@code
  *     B.create()})
- * @param funcForPrefilledInstance how to obtain an instance prefilled with a value (e.g. {@code
- *     new B(value)} or {@code B.of(value)}), or empty when the type offers no prefilled path;
- *     helpers needing one are then not generated
+ * @param funcForPrefilledInstance how to obtain an instance prefilled with a value (e.g. {@code new
+ *     B(value)} or {@code B.of(value)}), or empty when the type offers no prefilled path; helpers
+ *     needing one are then not generated
  * @param buildMethodName the name of the parameterless method returning the built value (e.g.
  *     {@code build})
  */
