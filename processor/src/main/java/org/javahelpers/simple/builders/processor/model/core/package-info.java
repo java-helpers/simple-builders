@@ -33,7 +33,7 @@
  * <ul>
  *   <li>{@link BuilderConfiguration} - Configuration for builder generation
  *   <li>{@link BuilderDefinitionDto} - Complete definition of a builder to be generated
- *   <li>{@link FieldDto} - Field definition with metadata for generation
+ *   <li>{@link BuilderFieldDto} - Field definition with metadata for generation
  * </ul>
  *
  * <p>These classes form the core data model that flows through the entire processor pipeline from

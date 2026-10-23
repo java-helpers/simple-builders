@@ -28,7 +28,7 @@ import java.util.Collections;
 import java.util.List;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil;
-import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
@@ -78,13 +78,14 @@ public class BasicSetterGenerator implements MethodGenerator {
   }
 
   @Override
-  public boolean appliesTo(FieldDto field, TypeName dtoType, BuilderProcessingContext context) {
+  public boolean appliesTo(
+      BuilderFieldDto field, TypeName dtoType, BuilderProcessingContext context) {
     return true;
   }
 
   @Override
   public List<BuilderMethodDto> generateMethods(
-      FieldDto field, TypeName builderType, BuilderProcessingContext context) {
+      BuilderFieldDto field, TypeName builderType, BuilderProcessingContext context) {
 
     BuilderMethodDto setterMethod =
         MethodGeneratorUtil.createBuilderMethodForFieldWithTransform(

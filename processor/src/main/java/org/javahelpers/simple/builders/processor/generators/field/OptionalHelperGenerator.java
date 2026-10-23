@@ -32,7 +32,7 @@ import java.util.Optional;
 import org.apache.commons.collections4.CollectionUtils;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil;
-import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
@@ -83,7 +83,8 @@ public class OptionalHelperGenerator implements MethodGenerator {
   }
 
   @Override
-  public boolean appliesTo(FieldDto field, TypeName dtoType, BuilderProcessingContext context) {
+  public boolean appliesTo(
+      BuilderFieldDto field, TypeName dtoType, BuilderProcessingContext context) {
     if (!context.getConfiguration().shouldGenerateUnboxedOptional()) {
       return false;
     }
@@ -92,7 +93,7 @@ public class OptionalHelperGenerator implements MethodGenerator {
 
   @Override
   public List<BuilderMethodDto> generateMethods(
-      FieldDto field, TypeName builderType, BuilderProcessingContext context) {
+      BuilderFieldDto field, TypeName builderType, BuilderProcessingContext context) {
 
     TypeNameGeneric genericType = (TypeNameGeneric) field.getFieldType();
     List<TypeName> innerTypes = genericType.getInnerTypeArguments();

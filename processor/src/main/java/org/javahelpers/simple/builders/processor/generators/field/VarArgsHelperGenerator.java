@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.Set;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil;
-import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameArray;
@@ -88,7 +88,8 @@ public class VarArgsHelperGenerator implements MethodGenerator {
   }
 
   @Override
-  public boolean appliesTo(FieldDto field, TypeName dtoType, BuilderProcessingContext context) {
+  public boolean appliesTo(
+      BuilderFieldDto field, TypeName dtoType, BuilderProcessingContext context) {
     if (!context.getConfiguration().shouldGenerateVarArgsHelpers()) {
       return false;
     }
@@ -99,7 +100,7 @@ public class VarArgsHelperGenerator implements MethodGenerator {
 
   @Override
   public List<BuilderMethodDto> generateMethods(
-      FieldDto field, TypeName builderType, BuilderProcessingContext context) {
+      BuilderFieldDto field, TypeName builderType, BuilderProcessingContext context) {
 
     TypeName fieldType = field.getFieldType();
     TypeName parameterType = null;
@@ -136,7 +137,7 @@ public class VarArgsHelperGenerator implements MethodGenerator {
    * @return the method DTO for the setter
    */
   private BuilderMethodDto createFieldSetterByVarArgs(
-      FieldDto field,
+      BuilderFieldDto field,
       TypeName parameterType,
       TypeName builderType,
       BuilderProcessingContext context) {

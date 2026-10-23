@@ -40,7 +40,7 @@ import org.javahelpers.simple.builders.processor.model.type.TypeName;
  * Definition of a field. Containing all information to generate methods in builder to set or modify
  * that field.
  */
-public class FieldDto {
+public class BuilderFieldDto {
   /** Name of the field as it appears in the original DTO (used for method names and setters). */
   private String originalFieldName;
 

@@ -30,7 +30,7 @@ import static org.javahelpers.simple.builders.processor.generators.util.MethodGe
 import java.util.List;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.generators.util.JavadocConstants;
-import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
@@ -83,13 +83,14 @@ public class ArrayConversionGenerator implements MethodGenerator {
   }
 
   @Override
-  public boolean appliesTo(FieldDto field, TypeName dtoType, BuilderProcessingContext context) {
+  public boolean appliesTo(
+      BuilderFieldDto field, TypeName dtoType, BuilderProcessingContext context) {
     return field.getFieldType() instanceof TypeNameArray;
   }
 
   @Override
   public List<BuilderMethodDto> generateMethods(
-      FieldDto field, TypeName builderType, BuilderProcessingContext context) {
+      BuilderFieldDto field, TypeName builderType, BuilderProcessingContext context) {
 
     TypeName fieldType = field.getFieldType();
 
@@ -107,7 +108,7 @@ public class ArrayConversionGenerator implements MethodGenerator {
   }
 
   private BuilderMethodDto createFieldSetterForArrayFromList(
-      FieldDto field,
+      BuilderFieldDto field,
       TypeName listType,
       TypeName elementType,
       TypeName builderType,

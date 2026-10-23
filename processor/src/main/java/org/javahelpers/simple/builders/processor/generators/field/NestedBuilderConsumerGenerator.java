@@ -32,7 +32,7 @@ import java.util.Map;
 import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
-import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
@@ -89,7 +89,8 @@ public class NestedBuilderConsumerGenerator implements MethodGenerator {
   }
 
   @Override
-  public boolean appliesTo(FieldDto field, TypeName dtoType, BuilderProcessingContext context) {
+  public boolean appliesTo(
+      BuilderFieldDto field, TypeName dtoType, BuilderProcessingContext context) {
     if (!context.getConfiguration().shouldGenerateBuilderConsumer()) {
       return false;
     }
@@ -98,7 +99,7 @@ public class NestedBuilderConsumerGenerator implements MethodGenerator {
 
   @Override
   public List<BuilderMethodDto> generateMethods(
-      FieldDto field, TypeName builderType, BuilderProcessingContext context) {
+      BuilderFieldDto field, TypeName builderType, BuilderProcessingContext context) {
     Optional<ResolvedBuilder> fieldBuilderOpt = context.resolveBuilderType(field.getFieldType());
     if (fieldBuilderOpt.isEmpty() || fieldBuilderOpt.get().funcForPrefilledBuilder().isEmpty()) {
       return Collections.emptyList();

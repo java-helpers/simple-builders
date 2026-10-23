@@ -34,7 +34,7 @@ import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
 import org.javahelpers.simple.builders.processor.generators.Generator;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
-import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
@@ -94,7 +94,7 @@ public class GeneratorRegistry {
    * @return list of all generated methods from all applicable generators
    */
   public List<BuilderMethodDto> generateAllMethods(
-      FieldDto field, TypeName dtoType, TypeName builderType) {
+      BuilderFieldDto field, TypeName dtoType, TypeName builderType) {
     List<BuilderMethodDto> allMethods = new ArrayList<>();
 
     context.debugStartOperation("Processing method generators");

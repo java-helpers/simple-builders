@@ -32,7 +32,7 @@ import java.util.function.Function;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
-import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
@@ -171,7 +171,7 @@ public final class MethodGeneratorUtil {
    * @return the method DTO for the setter
    */
   public static BuilderMethodDto createBuilderMethodForFieldWithTransform(
-      FieldDto field,
+      BuilderFieldDto field,
       String transform,
       TypeName parameterType,
       TypeName builderType,
@@ -231,7 +231,7 @@ public final class MethodGeneratorUtil {
    * @return the method DTO for the consumer
    */
   public static BuilderMethodDto createFieldConsumerWithBuilder(
-      FieldDto field,
+      BuilderFieldDto field,
       ResolvedBuilder fieldBuilder,
       String existingValueConstructorArgs,
       String emptyConstructorArgs,
@@ -379,7 +379,7 @@ public final class MethodGeneratorUtil {
    * @return the method DTO for the consumer
    */
   public static BuilderMethodDto createFieldConsumerWithElementBuilders(
-      FieldDto field,
+      BuilderFieldDto field,
       TypeName collectionBuilderType,
       ResolvedBuilder elementBuilder,
       TypeName returnBuilderType,
@@ -411,7 +411,10 @@ public final class MethodGeneratorUtil {
    * @return the method DTO for the simple field consumer
    */
   public static BuilderMethodDto createSimpleFieldConsumer(
-      FieldDto field, TypeName fieldType, TypeName builderType, BuilderProcessingContext context) {
+      BuilderFieldDto field,
+      TypeName fieldType,
+      TypeName builderType,
+      BuilderProcessingContext context) {
     TypeNameGeneric consumerType = createConsumerType(fieldType);
     MethodParameterDto parameter = new MethodParameterDto();
     parameter.setParameterName(field.getOriginalFieldName() + SUFFIX_CONSUMER);

@@ -36,7 +36,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.generators.util.JavadocConstants;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
-import org.javahelpers.simple.builders.processor.model.core.FieldDto;
+import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
@@ -90,7 +90,8 @@ public class StringFormatHelperGenerator implements MethodGenerator {
   }
 
   @Override
-  public boolean appliesTo(FieldDto field, TypeName dtoType, BuilderProcessingContext context) {
+  public boolean appliesTo(
+      BuilderFieldDto field, TypeName dtoType, BuilderProcessingContext context) {
     if (!context.getConfiguration().shouldGenerateStringFormatHelpers()) {
       return false;
     }
@@ -113,7 +114,7 @@ public class StringFormatHelperGenerator implements MethodGenerator {
 
   @Override
   public List<BuilderMethodDto> generateMethods(
-      FieldDto field, TypeName builderType, BuilderProcessingContext context) {
+      BuilderFieldDto field, TypeName builderType, BuilderProcessingContext context) {
 
     List<BuilderMethodDto> methods = new ArrayList<>();
     TypeName fieldType = field.getFieldType();

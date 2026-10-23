@@ -42,13 +42,13 @@ public sealed interface Generator permits MethodGenerator, BuilderEnhancer {
 }
 
 public non-sealed interface MethodGenerator extends Generator {
-    boolean appliesTo(FieldDto field, TypeName dtoType, ProcessingContext context);
-    List<MethodDto> generateMethods(FieldDto field, TypeName builderType, ProcessingContext context);
+    boolean appliesTo(BuilderFieldDto field, TypeName dtoType, BuilderProcessingContext context);
+    List<BuilderMethodDto> generateMethods(BuilderFieldDto field, TypeName builderType, BuilderProcessingContext context);
 }
 
 public non-sealed interface BuilderEnhancer extends Generator {
-    boolean appliesTo(BuilderDefinitionDto builderDto, TypeName dtoType, ProcessingContext context);
-    void enhanceBuilder(BuilderDefinitionDto builderDto, ProcessingContext context);
+    boolean appliesTo(BuilderDefinitionDto builderDto, TypeName dtoType, BuilderProcessingContext context);
+    void enhanceBuilder(BuilderDefinitionDto builderDto, BuilderProcessingContext context);
 }
 ```
 
@@ -56,7 +56,7 @@ This sealed hierarchy ensures type safety while allowing extensibility. **Custom
 
 ### Field-Level Method Generation
 
-Method generators create individual methods for builder fields by implementing `appliesTo(FieldDto, ...)` and `generateMethods()`.
+Method generators create individual methods for builder fields by implementing `appliesTo(BuilderFieldDto, ...)` and `generateMethods()`.
 
 **Use cases**:
 - Custom setter methods (e.g., validation setters)
@@ -84,31 +84,31 @@ A single generator can implement both field-level and builder-level functionalit
 package com.yourpackage;
 
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
-import org.javahelpers.simple.builders.processor.model.core.FieldDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
+import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
+import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 
 import java.util.List;
 
 public class CustomValidationGenerator implements MethodGenerator {
     
     @Override
-    public boolean appliesTo(FieldDto field, TypeName dtoType, ProcessingContext context) {
+    public boolean appliesTo(BuilderFieldDto field, TypeName dtoType, BuilderProcessingContext context) {
         // Only apply to String fields with @Email annotation
         return "java.lang.String".equals(field.getFieldType().getFullQualifiedName())
             && field.hasAnnotation("javax.validation.constraints.Email");
     }
     
     @Override
-    public List<MethodDto> generateMethods(FieldDto field, TypeName builderType, ProcessingContext context) {
+    public List<BuilderMethodDto> generateMethods(BuilderFieldDto field, TypeName builderType, BuilderProcessingContext context) {
         String fieldInDto = field.getOriginalFieldName();
         String fieldInBuilder = field.getFieldNameInBuilder();
         String methodName = "validated" + capitalize(fieldInDto);
         
         // Generate validation setter method
-        MethodDto method = new MethodDto(methodName, builderType);
+        BuilderMethodDto method = new BuilderMethodDto(methodName, builderType);
         
         // Add parameter
         String parameterName = fieldInDto;
@@ -148,12 +148,12 @@ package com.yourpackage;
 import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
+import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 
 public class CustomValidationEnhancer implements BuilderEnhancer {
     
     @Override
-    public boolean appliesTo(BuilderDefinitionDto builderDto, TypeName dtoType, ProcessingContext context) {
+    public boolean appliesTo(BuilderDefinitionDto builderDto, TypeName dtoType, BuilderProcessingContext context) {
         // Only apply to DTOs with validation annotations
         return builderDto.getAllFieldsForBuilder().stream()
             .flatMap(field -> field.getParameterAnnotations().stream())
@@ -165,9 +165,9 @@ public class CustomValidationEnhancer implements BuilderEnhancer {
     }
     
     @Override
-    public void enhanceBuilder(BuilderDefinitionDto builderDto, ProcessingContext context) {
+    public void enhanceBuilder(BuilderDefinitionDto builderDto, BuilderProcessingContext context) {
         // Add validation method to builder
-        MethodDto validateMethod = createValidateMethod();
+        BuilderMethodDto validateMethod = createValidateMethod();
         builderDto.addCoreMethod(validateMethod);
         
         // Add @Valid annotation if available
@@ -186,14 +186,14 @@ public class CustomValidationEnhancer implements BuilderEnhancer {
         return 500; // Medium priority
     }
     
-    private MethodDto createValidateMethod() {
+    private BuilderMethodDto createValidateMethod() {
         TypeName returnType = new TypeName("java.lang", "Void");
-        MethodDto method = new MethodDto("validate", returnType);
+        BuilderMethodDto method = new BuilderMethodDto("validate", returnType);
         method.setCode("// Validation logic here");
         return method;
     }
     
-    private boolean isValidationAvailable(ProcessingContext context) {
+    private boolean isValidationAvailable(BuilderProcessingContext context) {
         return context.getTypeElement("javax.validation.Valid") != null;
     }
 }
@@ -317,7 +317,7 @@ The column is the generator's *execution* priority. Emission order inside the ge
 
 ```java
 @Override
-public List<MethodDto> generateMethods(FieldDto field, TypeName builderType, ProcessingContext context) {
+public List<BuilderMethodDto> generateMethods(BuilderFieldDto field, TypeName builderType, BuilderProcessingContext context) {
     try {
         // Your generation logic
         return methods;
@@ -332,7 +332,7 @@ public List<MethodDto> generateMethods(FieldDto field, TypeName builderType, Pro
 
 ```java
 @Override
-public boolean appliesTo(FieldDto field, TypeName dtoType, ProcessingContext context) {
+public boolean appliesTo(BuilderFieldDto field, TypeName dtoType, BuilderProcessingContext context) {
     // Check if your component should apply
     if (!shouldApply(field, context)) {
         return false;
@@ -411,18 +411,18 @@ Creates setters that parse string dates into `LocalDate`:
 public class DateParserGenerator implements MethodGenerator {
     
     @Override
-    public boolean appliesTo(FieldDto field, TypeName dtoType, ProcessingContext context) {
+    public boolean appliesTo(BuilderFieldDto field, TypeName dtoType, BuilderProcessingContext context) {
         return "java.time.LocalDate".equals(field.getFieldType().getFullQualifiedName())
             && field.hasAnnotation("com.example.ParseFromString");
     }
     
     @Override
-    public List<MethodDto> generateMethods(FieldDto field, TypeName builderType, ProcessingContext context) {
+    public List<BuilderMethodDto> generateMethods(BuilderFieldDto field, TypeName builderType, BuilderProcessingContext context) {
         String fieldInDto = field.getOriginalFieldName();
         String fieldInBuilder = field.getFieldNameInBuilder();
         String methodName = fieldInDto + "FromString";
         
-        MethodDto method = new MethodDto(methodName, builderType);
+        BuilderMethodDto method = new BuilderMethodDto(methodName, builderType);
         
         // Add parameter
         String parameterName = fieldInDto + "String";
@@ -457,17 +457,17 @@ Adds static factory methods to builders:
 public class BuilderFactoryEnhancer implements BuilderEnhancer {
     
     @Override
-    public boolean appliesTo(BuilderDefinitionDto builderDto, TypeName dtoType, ProcessingContext context) {
+    public boolean appliesTo(BuilderDefinitionDto builderDto, TypeName dtoType, BuilderProcessingContext context) {
         return dtoType.hasAnnotation("com.example.BuilderFactory");
     }
     
     @Override
-    public void enhanceBuilder(BuilderDefinitionDto builderDto, ProcessingContext context) {
+    public void enhanceBuilder(BuilderDefinitionDto builderDto, BuilderProcessingContext context) {
         TypeName builderType = builderDto.getBuilderTypeName();
         TypeName dtoType = builderDto.getTargetTypeName();
         
         // Add static factory method
-        MethodDto factoryMethod = new MethodDto("from", builderType);
+        BuilderMethodDto factoryMethod = new BuilderMethodDto("from", builderType);
         factoryMethod.setStatic(true);
         
         // Add parameter
@@ -499,14 +499,14 @@ Integrates with Bean Validation API:
 public class BeanValidationEnhancer implements BuilderEnhancer {
     
     @Override
-    public boolean appliesTo(BuilderDefinitionDto builderDto, TypeName dtoType, ProcessingContext context) {
+    public boolean appliesTo(BuilderDefinitionDto builderDto, TypeName dtoType, BuilderProcessingContext context) {
         return isBeanValidationAvailable(context);
     }
     
     @Override
-    public void enhanceBuilder(BuilderDefinitionDto builderDto, ProcessingContext context) {
+    public void enhanceBuilder(BuilderDefinitionDto builderDto, BuilderProcessingContext context) {
         // Add validate() method
-        MethodDto validateMethod = createValidateMethod(builderDto);
+        BuilderMethodDto validateMethod = createValidateMethod(builderDto);
         builderDto.addCoreMethod(validateMethod);
         
         // Add @Validated annotation
@@ -520,7 +520,7 @@ public class BeanValidationEnhancer implements BuilderEnhancer {
         return 200; // High priority for validation
     }
     
-    private boolean isBeanValidationAvailable(ProcessingContext context) {
+    private boolean isBeanValidationAvailable(BuilderProcessingContext context) {
         return context.getTypeElement("javax.validation.Validator") != null;
     }
 }
@@ -651,12 +651,12 @@ Custom generators **must** be in a separate module, not the same project where y
 public class SpringBuilderEnhancer implements BuilderEnhancer {
     
     @Override
-    public boolean appliesTo(BuilderDefinitionDto builderDto, TypeName dtoType, ProcessingContext context) {
+    public boolean appliesTo(BuilderDefinitionDto builderDto, TypeName dtoType, BuilderProcessingContext context) {
         return isSpringAvailable(context);
     }
     
     @Override
-    public void enhanceBuilder(BuilderDefinitionDto builderDto, ProcessingContext context) {
+    public void enhanceBuilder(BuilderDefinitionDto builderDto, BuilderProcessingContext context) {
         // Add @Component annotation
         AnnotationDto componentAnnotation = new AnnotationDto();
         componentAnnotation.setAnnotationType(new TypeName("org.springframework.stereotype", "Component"));
@@ -664,7 +664,7 @@ public class SpringBuilderEnhancer implements BuilderEnhancer {
         builderDto.addClassAnnotation(componentAnnotation);
     }
     
-    private boolean isSpringAvailable(ProcessingContext context) {
+    private boolean isSpringAvailable(BuilderProcessingContext context) {
         return context.getTypeElement("org.springframework.stereotype.Component") != null;
     }
 }
