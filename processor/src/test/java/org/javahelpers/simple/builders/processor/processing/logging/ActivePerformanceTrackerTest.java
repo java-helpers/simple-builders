@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.codegen.logging;
+package org.javahelpers.simple.builders.processor.processing.logging;
 
 import static org.junit.jupiter.api.Assertions.*;
 
