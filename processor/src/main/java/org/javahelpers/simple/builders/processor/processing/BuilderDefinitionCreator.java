@@ -25,10 +25,10 @@
 package org.javahelpers.simple.builders.processor.processing;
 
 import static java.util.stream.Collectors.toSet;
-import static org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyser.*;
-import static org.javahelpers.simple.builders.processor.analysis.JavaLangMapper.map2MethodParameter;
-import static org.javahelpers.simple.builders.processor.analysis.JavaLangMapper.map2TypeName;
 import static org.javahelpers.simple.builders.processor.processing.AnnotationValidator.validateAnnotatedElement;
+import static org.javahelpers.simple.codegen.analysis.JavaLangAnalyser.*;
+import static org.javahelpers.simple.codegen.analysis.JavaLangMapper.map2MethodParameter;
+import static org.javahelpers.simple.codegen.analysis.JavaLangMapper.map2TypeName;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -47,25 +47,25 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.javahelpers.simple.builders.core.annotations.IgnoreInBuilder;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilderConstructor;
-import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.core.util.TrackedValue;
-import org.javahelpers.simple.builders.processor.analysis.FieldAnnotationExtractor;
-import org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyser;
-import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 import org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil;
-import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
-import org.javahelpers.simple.builders.processor.model.core.ClassFieldDto;
-import org.javahelpers.simple.builders.processor.model.core.DeprecationInfoDto;
 import org.javahelpers.simple.builders.processor.model.core.GetterInfoDto;
-import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
-import org.javahelpers.simple.builders.processor.model.method.ConstructorDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
+import org.javahelpers.simple.codegen.analysis.FieldAnnotationExtractor;
+import org.javahelpers.simple.codegen.analysis.JavaLangAnalyser;
+import org.javahelpers.simple.codegen.analysis.JavaLangMapper;
+import org.javahelpers.simple.codegen.enums.AccessModifier;
+import org.javahelpers.simple.codegen.model.annotation.AnnotationDto;
+import org.javahelpers.simple.codegen.model.core.ClassFieldDto;
+import org.javahelpers.simple.codegen.model.core.DeprecationInfoDto;
+import org.javahelpers.simple.codegen.model.javadoc.JavadocDto;
+import org.javahelpers.simple.codegen.model.method.ConstructorDto;
+import org.javahelpers.simple.codegen.model.method.MethodParameterDto;
+import org.javahelpers.simple.codegen.model.type.TypeName;
+import org.javahelpers.simple.codegen.model.type.TypeNameGeneric;
 
 /** Class for creating a specific BuilderDefinitionDto for an annotated DTO class. */
 public class BuilderDefinitionCreator {
@@ -318,9 +318,9 @@ public class BuilderDefinitionCreator {
    * their field/class method lists so they are never mapped to the rendering DTO.
    *
    * <p>A generic safety net in {@link
-   * org.javahelpers.simple.builders.processor.classgen.roaster.RoasterCodeGenerator#resolveMethodConflicts}
-   * handles any remaining duplicates (e.g., from enhancer methods added after this step) by keeping
-   * the first occurrence.
+   * org.javahelpers.simple.codegen.roaster.RoasterCodeGenerator#resolveMethodConflicts} handles any
+   * remaining duplicates (e.g., from enhancer methods added after this step) by keeping the first
+   * occurrence.
    *
    * @param builderDto the builder definition containing all methods
    * @param context the processing context for logging

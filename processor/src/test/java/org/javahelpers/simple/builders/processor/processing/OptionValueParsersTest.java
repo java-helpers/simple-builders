@@ -27,9 +27,9 @@ package org.javahelpers.simple.builders.processor.processing;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.javahelpers.simple.builders.core.enums.AccessModifier;
-import org.javahelpers.simple.builders.core.enums.OptionState;
 import org.javahelpers.simple.builders.processor.testing.CapturingProcessingLogger;
+import org.javahelpers.simple.codegen.enums.AccessModifier;
+import org.javahelpers.simple.codegen.enums.OptionState;
 import org.junit.jupiter.api.Test;
 
 /**

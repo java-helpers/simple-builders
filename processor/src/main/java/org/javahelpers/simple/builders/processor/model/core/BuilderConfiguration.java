@@ -24,23 +24,23 @@
 
 package org.javahelpers.simple.builders.processor.model.core;
 
-import static org.javahelpers.simple.builders.core.enums.AccessModifier.*;
-import static org.javahelpers.simple.builders.core.enums.OptionState.*;
+import static org.javahelpers.simple.codegen.enums.AccessModifier.*;
+import static org.javahelpers.simple.codegen.enums.OptionState.*;
 
 import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
-import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
-import org.javahelpers.simple.builders.core.enums.AccessModifier;
-import org.javahelpers.simple.builders.core.enums.FormattingMode;
-import org.javahelpers.simple.builders.core.enums.OptionState;
+import org.javahelpers.simple.codegen.enums.AccessModifier;
+import org.javahelpers.simple.codegen.enums.FormattingMode;
+import org.javahelpers.simple.codegen.enums.OptionState;
+import org.javahelpers.simple.codegen.model.core.PackageScopes;
 
 /**
  * Configuration for builder generation. Combines annotation values with compiler options. Priority:
  * Annotation > Compiler Options > Defaults
  *
- * <p>Properties and defaults are read from {@link SimpleBuilder.Options} annotation defaults via
+ * <p>Properties and defaults are read from {@code SimpleBuilder.Options} annotation defaults via
  * reflection.
  *
  * @param generateFieldSupplier Generate field supplier methods
@@ -275,7 +275,7 @@ public record BuilderConfiguration(
 
   /**
    * The package generated builders are placed in, or {@code null} when the default applies (the
-   * package of the annotated type, resp. of the {@code @SimpleBuilderFor} holder).
+   * package of the annotated type, resp. of the {@code SimpleBuilderFor} holder).
    *
    * @return the configured builder package, or {@code null} if unset
    */

@@ -54,6 +54,8 @@
   
   <modules>
     <module>core</module>
+    <module>simple-codegen</module>
+    <module>simple-codegen-roaster</module>
     <module>processor</module>
     <module>example-custom-generator</module>
     <module>example</module>
@@ -73,13 +75,13 @@
     <sonar.organization>java-helpers</sonar.organization>
     <sonar.projectName>Simple Builders</sonar.projectName>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
-    <sonar.java.binaries>${project.basedir}/core/target/classes,${project.basedir}/processor/target/classes</sonar.java.binaries>
+    <sonar.java.binaries>${project.basedir}/core/target/classes,${project.basedir}/simple-codegen/target/classes,${project.basedir}/simple-codegen-roaster/target/classes,${project.basedir}/processor/target/classes</sonar.java.binaries>
     <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/processor/target/site/jacoco-aggregate/jacoco.xml,${project.basedir}/processor/target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
     <sonar.exclusions>**/example/**</sonar.exclusions>
     <!-- Coverage exclusion needs to match jacoco configuration in processor module.
          Only genuine boilerplate is excluded (DTO model, exception classes, constants
          holders, generated sources); mapper logic is intentionally measured. -->
-    <sonar.coverage.exclusions>**/processor/model/**,**/exceptions/**,**/generated/**,**/JavadocConstants.java</sonar.coverage.exclusions>
+    <sonar.coverage.exclusions>**/codegen/model/**,**/*Exception.*,**/generated/**,**/JavadocConstants.java</sonar.coverage.exclusions>
     
     <!-- Plugin Versions -->
     <plugin.maven.compiler.version>3.16.0</plugin.maven.compiler.version>

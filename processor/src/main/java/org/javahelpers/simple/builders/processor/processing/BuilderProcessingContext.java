@@ -32,8 +32,10 @@ import org.javahelpers.simple.builders.processor.analysis.BuilderScopeResolver;
 import org.javahelpers.simple.builders.processor.generators.registry.GeneratorRegistry;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
+import org.javahelpers.simple.codegen.logging.ProcessingLogger;
+import org.javahelpers.simple.codegen.model.type.TypeName;
+import org.javahelpers.simple.codegen.processing.AnnotationProcessingContext;
+import org.javahelpers.simple.codegen.processing.AnnotationProcessingOptions;
 
 /**
  * Context object that wraps Elements, Types, and logging utilities from annotation processing,

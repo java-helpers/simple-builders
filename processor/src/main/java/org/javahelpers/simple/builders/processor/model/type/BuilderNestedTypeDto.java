@@ -27,10 +27,11 @@ package org.javahelpers.simple.builders.processor.model.type;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import org.javahelpers.simple.builders.core.enums.AccessModifier;
-import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
-import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
+import org.javahelpers.simple.codegen.enums.AccessModifier;
+import org.javahelpers.simple.codegen.model.annotation.AnnotationDto;
+import org.javahelpers.simple.codegen.model.javadoc.JavadocDto;
+import org.javahelpers.simple.codegen.model.type.NestedTypeDto;
 
 /**
  * Generation-side DTO for a nested type (interface or class) to be generated inside the builder.

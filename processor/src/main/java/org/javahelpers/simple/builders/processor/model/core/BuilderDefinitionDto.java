@@ -30,20 +30,22 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import org.javahelpers.simple.builders.core.enums.AccessModifier;
-import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
-import org.javahelpers.simple.builders.processor.model.annotation.InterfaceName;
-import org.javahelpers.simple.builders.processor.model.imports.ImportStatement;
-import org.javahelpers.simple.builders.processor.model.imports.RegularImport;
-import org.javahelpers.simple.builders.processor.model.imports.StaticImport;
-import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
-import org.javahelpers.simple.builders.processor.model.method.ConstructorDto;
 import org.javahelpers.simple.builders.processor.model.type.BuilderNestedTypeDto;
-import org.javahelpers.simple.builders.processor.model.type.GenericParameterDto;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameArray;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
+import org.javahelpers.simple.codegen.enums.AccessModifier;
+import org.javahelpers.simple.codegen.model.annotation.AnnotationDto;
+import org.javahelpers.simple.codegen.model.annotation.InterfaceName;
+import org.javahelpers.simple.codegen.model.core.ClassFieldDto;
+import org.javahelpers.simple.codegen.model.core.GenerationTargetClassDto;
+import org.javahelpers.simple.codegen.model.imports.ImportStatement;
+import org.javahelpers.simple.codegen.model.imports.RegularImport;
+import org.javahelpers.simple.codegen.model.imports.StaticImport;
+import org.javahelpers.simple.codegen.model.javadoc.JavadocDto;
+import org.javahelpers.simple.codegen.model.method.ConstructorDto;
+import org.javahelpers.simple.codegen.model.type.GenericParameterDto;
+import org.javahelpers.simple.codegen.model.type.TypeName;
+import org.javahelpers.simple.codegen.model.type.TypeNameArray;
+import org.javahelpers.simple.codegen.model.type.TypeNameGeneric;
 
 /**
  * Generation-side DTO holding all information for generating a builder.

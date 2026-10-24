@@ -34,8 +34,8 @@ import javax.lang.model.util.Elements;
 import org.javahelpers.simple.builders.processor.SimpleBuildersSpiIntegration.PublishedBuilder;
 import org.javahelpers.simple.builders.processor.SimpleBuildersSpiIntegration.State;
 import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
-import org.javahelpers.simple.builders.processor.model.type.TypeInstantiation.StaticFactoryCall;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.simple.codegen.model.type.TypeInstantiation.StaticFactoryCall;
+import org.javahelpers.simple.codegen.model.type.TypeName;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 

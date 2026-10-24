@@ -30,11 +30,11 @@ import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUti
 import com.google.testing.compile.Compilation;
 import java.util.stream.Stream;
 import javax.tools.JavaFileObject;
-import org.javahelpers.simple.builders.processor.analysis.FieldAnnotationExtractor;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.model.type.TypeNamePrimitive;
 import org.javahelpers.simple.builders.processor.testing.ProcessorAsserts;
 import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
+import org.javahelpers.simple.codegen.analysis.FieldAnnotationExtractor;
+import org.javahelpers.simple.codegen.model.type.TypeName;
+import org.javahelpers.simple.codegen.model.type.TypeNamePrimitive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;

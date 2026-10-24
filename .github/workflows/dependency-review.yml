@@ -66,14 +66,19 @@ jobs:
           # Fail the PR when it introduces a vulnerability at or above this severity.
           fail-on-severity: high
           # Fail closed with licenses derived from the project's full dependency tree,
-          # replacing the deprecated deny-licenses option.
-          allow-licenses: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, EPL-1.0, EPL-2.0, CDDL-1.0, CDDL-1.1, ISC, Unlicense, CC0-1.0
+          # replacing the deprecated deny-licenses option. ECL-2.0 (Eclipse
+          # Collections License) is OSI-approved permissive and ships inside
+          # roaster-jdt, a real runtime dependency of simple-codegen-roaster.
+          allow-licenses: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, EPL-1.0, EPL-2.0, ECL-2.0, CDDL-1.0, CDDL-1.1, ISC, Unlicense, CC0-1.0
           # Per-dependency exceptions to the allowlist above. Each flagged
           # package is executed as an unmodified tool on the runner or the
           # build machine — not distributed, not a derivative work — so its
           # license imposes no obligations on the published artifacts:
           #   - sonarqube-scan-action (fork-sonar.yml): LGPL-3.0 CI action.
           #   - sonar-maven-plugin (pluginManagement): LGPL-3.0 build plugin.
+          #   - maven-javadoc-plugin / maven-site-plugin (release-profile build
+          #     plugins in the codegen module poms): GitHub's licensee reports
+          #     LicenseRef-scancode-public-domain — a misdetection.
           #   - lombok (performance-test 'lombok' profile, provided scope):
           #     MIT-licensed, but GitHub's licensee reports its LICENSE as
           #     LicenseRef-bad-non-standard (NOASSERTION) — a misdetection.
@@ -83,4 +88,6 @@ jobs:
           allow-dependencies-licenses: >-
             pkg:githubactions/SonarSource/sonarqube-scan-action,
             pkg:maven/org.sonarsource.scanner.maven/sonar-maven-plugin,
+            pkg:maven/org.apache.maven.plugins/maven-javadoc-plugin,
+            pkg:maven/org.apache.maven.plugins/maven-site-plugin,
             pkg:maven/org.projectlombok/lombok

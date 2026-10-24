@@ -96,6 +96,16 @@
       <artifactId>simple-builders-core</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>io.github.java-helpers</groupId>
+      <artifactId>simple-codegen</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.github.java-helpers</groupId>
+      <artifactId>simple-codegen-roaster</artifactId>
+      <version>${project.version}</version>
+    </dependency>
     <!-- Utility functions for java.lang classes -->
     <dependency>
       <groupId>org.apache.commons</groupId>
@@ -401,10 +411,8 @@
                 </goals>
                 <configuration>
                   <excludes>
-                    <!-- Exclude DTOs (model package) from coverage -->
-                    <exclude>**/processor/model/**</exclude>
                     <!-- Exclude exception classes from coverage (simple constructors) -->
-                    <exclude>**/exceptions/**</exclude>
+                    <exclude>**/*Exception.*</exclude>
                     <!-- Exclude constants-only holders -->
                     <exclude>**/JavadocConstants.*</exclude>
                   </excludes>

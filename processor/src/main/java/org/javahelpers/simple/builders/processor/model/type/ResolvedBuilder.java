@@ -25,6 +25,8 @@
 package org.javahelpers.simple.builders.processor.model.type;
 
 import java.util.Optional;
+import org.javahelpers.simple.codegen.model.type.TypeInstantiation;
+import org.javahelpers.simple.codegen.model.type.TypeName;
 
 /**
  * A builder resolved for a referenced field or element type, together with the instantiation paths

@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.processing.logging;
+package org.javahelpers.simple.codegen.logging;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -31,9 +31,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import org.javahelpers.simple.builders.processor.classgen.GenerationPhases;
 import org.javahelpers.simple.builders.processor.processing.PipelinePhases;
 import org.javahelpers.simple.builders.processor.testing.CapturingProcessingLogger;
+import org.javahelpers.simple.codegen.GenerationPhases;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 

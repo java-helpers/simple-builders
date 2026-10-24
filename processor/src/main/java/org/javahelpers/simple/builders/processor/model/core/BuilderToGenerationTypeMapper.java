@@ -28,15 +28,17 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
 import org.apache.commons.lang3.StringUtils;
-import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
-import org.javahelpers.simple.builders.processor.model.method.ConstructorDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodCodePlaceholder;
-import org.javahelpers.simple.builders.processor.model.method.MethodCodeStringPlaceholder;
-import org.javahelpers.simple.builders.processor.model.method.MethodCodeTypePlaceholder;
-import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 import org.javahelpers.simple.builders.processor.model.type.BuilderNestedTypeDto;
-import org.javahelpers.simple.builders.processor.model.type.NestedTypeDto;
+import org.javahelpers.simple.codegen.model.core.ClassFieldDto;
+import org.javahelpers.simple.codegen.model.core.GenerationTargetClassDto;
+import org.javahelpers.simple.codegen.model.javadoc.JavadocDto;
+import org.javahelpers.simple.codegen.model.method.ConstructorDto;
+import org.javahelpers.simple.codegen.model.method.MethodCodePlaceholder;
+import org.javahelpers.simple.codegen.model.method.MethodCodeStringPlaceholder;
+import org.javahelpers.simple.codegen.model.method.MethodCodeTypePlaceholder;
+import org.javahelpers.simple.codegen.model.method.MethodDto;
+import org.javahelpers.simple.codegen.model.type.NestedTypeDto;
 
 /**
  * Maps generation-side DTOs ({@link BuilderDefinitionDto}, {@link BuilderMethodDto}, {@link

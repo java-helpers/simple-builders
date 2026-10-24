@@ -26,9 +26,9 @@ package org.javahelpers.simple.builders.processor.processing;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
-import org.javahelpers.simple.builders.core.enums.AccessModifier;
-import org.javahelpers.simple.builders.core.enums.OptionState;
-import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
+import org.javahelpers.simple.codegen.enums.AccessModifier;
+import org.javahelpers.simple.codegen.enums.OptionState;
+import org.javahelpers.simple.codegen.logging.ProcessingLogger;
 
 /**
  * Parsers for raw option values coming from compiler arguments or annotation attributes.
