@@ -36,18 +36,18 @@ import org.javahelpers.simple.builders.processor.classgen.SourceFormatter;
 import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterCodeGenerator;
 import org.javahelpers.simple.builders.processor.classgen.roaster.exceptions.RoasterMapperException;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
-import org.javahelpers.simple.builders.processor.model.core.GenerationTargetClassDto;
-import org.javahelpers.simple.builders.processor.model.method.ConstructorDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodCodeDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodCodePlaceholder;
-import org.javahelpers.simple.builders.processor.model.method.MethodDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 import org.javahelpers.simple.builders.processor.processing.SourceFormatterResolver;
 import org.javahelpers.simple.builders.processor.testing.CapturingProcessingLogger;
 import org.javahelpers.simple.builders.processor.testing.ProcessingEnvironmentStub;
 import org.javahelpers.simple.codegen.logging.ProcessingLogger;
+import org.javahelpers.simple.codegen.model.core.GenerationTargetClassDto;
+import org.javahelpers.simple.codegen.model.method.ConstructorDto;
+import org.javahelpers.simple.codegen.model.method.MethodCodeDto;
+import org.javahelpers.simple.codegen.model.method.MethodCodePlaceholder;
+import org.javahelpers.simple.codegen.model.method.MethodDto;
+import org.javahelpers.simple.codegen.model.method.MethodParameterDto;
+import org.javahelpers.simple.codegen.model.type.TypeName;
 import org.junit.jupiter.api.Test;
 
 /**

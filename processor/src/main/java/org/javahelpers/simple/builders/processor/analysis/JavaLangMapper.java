@@ -40,17 +40,17 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.SimpleTypeVisitor14;
 import org.apache.commons.lang3.Strings;
-import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
-import org.javahelpers.simple.builders.processor.model.type.GenericParameterDto;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameArray;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameList;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameMap;
-import org.javahelpers.simple.builders.processor.model.type.TypeNamePrimitive;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameSet;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameVariable;
+import org.javahelpers.simple.codegen.model.annotation.AnnotationDto;
+import org.javahelpers.simple.codegen.model.method.MethodParameterDto;
+import org.javahelpers.simple.codegen.model.type.GenericParameterDto;
+import org.javahelpers.simple.codegen.model.type.TypeName;
+import org.javahelpers.simple.codegen.model.type.TypeNameArray;
+import org.javahelpers.simple.codegen.model.type.TypeNameGeneric;
+import org.javahelpers.simple.codegen.model.type.TypeNameList;
+import org.javahelpers.simple.codegen.model.type.TypeNameMap;
+import org.javahelpers.simple.codegen.model.type.TypeNamePrimitive;
+import org.javahelpers.simple.codegen.model.type.TypeNameSet;
+import org.javahelpers.simple.codegen.model.type.TypeNameVariable;
 
 /** Helper functions to create simple builder types from java.lang types. */
 public final class JavaLangMapper {

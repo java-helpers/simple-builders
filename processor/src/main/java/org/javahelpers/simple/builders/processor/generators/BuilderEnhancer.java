@@ -24,8 +24,8 @@
 package org.javahelpers.simple.builders.processor.generators;
 
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
+import org.javahelpers.simple.codegen.model.type.TypeName;
 
 /**
  * Interface for enhancing or modifying generated builders beyond the basic field-based methods.

@@ -28,14 +28,14 @@ import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
 import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
 import org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
-import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.BuilderNestedTypeDto;
-import org.javahelpers.simple.builders.processor.model.type.NestedTypeDto;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
+import org.javahelpers.simple.codegen.model.javadoc.JavadocDto;
+import org.javahelpers.simple.codegen.model.method.MethodParameterDto;
+import org.javahelpers.simple.codegen.model.type.NestedTypeDto;
+import org.javahelpers.simple.codegen.model.type.TypeName;
+import org.javahelpers.simple.codegen.model.type.TypeNameGeneric;
 
 /**
  * Enhancer that adds the "With" interface to generated builders.

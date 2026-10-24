@@ -31,21 +31,21 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
-import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
-import org.javahelpers.simple.builders.processor.model.annotation.InterfaceName;
-import org.javahelpers.simple.builders.processor.model.core.GenerationTargetClassDto;
-import org.javahelpers.simple.builders.processor.model.imports.ImportStatement;
-import org.javahelpers.simple.builders.processor.model.imports.RegularImport;
-import org.javahelpers.simple.builders.processor.model.method.MethodCodePlaceholder;
-import org.javahelpers.simple.builders.processor.model.method.MethodCodeTypePlaceholder;
-import org.javahelpers.simple.builders.processor.model.method.MethodDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
-import org.javahelpers.simple.builders.processor.model.type.GenericParameterDto;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameArray;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
-import org.javahelpers.simple.builders.processor.model.type.TypeNamePrimitive;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameVariable;
+import org.javahelpers.simple.codegen.model.annotation.AnnotationDto;
+import org.javahelpers.simple.codegen.model.annotation.InterfaceName;
+import org.javahelpers.simple.codegen.model.core.GenerationTargetClassDto;
+import org.javahelpers.simple.codegen.model.imports.ImportStatement;
+import org.javahelpers.simple.codegen.model.imports.RegularImport;
+import org.javahelpers.simple.codegen.model.method.MethodCodePlaceholder;
+import org.javahelpers.simple.codegen.model.method.MethodCodeTypePlaceholder;
+import org.javahelpers.simple.codegen.model.method.MethodDto;
+import org.javahelpers.simple.codegen.model.method.MethodParameterDto;
+import org.javahelpers.simple.codegen.model.type.GenericParameterDto;
+import org.javahelpers.simple.codegen.model.type.TypeName;
+import org.javahelpers.simple.codegen.model.type.TypeNameArray;
+import org.javahelpers.simple.codegen.model.type.TypeNameGeneric;
+import org.javahelpers.simple.codegen.model.type.TypeNamePrimitive;
+import org.javahelpers.simple.codegen.model.type.TypeNameVariable;
 
 /**
  * Utility class for collecting, deduplicating, and sorting imports for generated classes.

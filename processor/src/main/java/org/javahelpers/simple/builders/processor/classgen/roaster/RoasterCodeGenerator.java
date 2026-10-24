@@ -48,24 +48,24 @@ import org.javahelpers.simple.builders.processor.classgen.CodeGenerationExceptio
 import org.javahelpers.simple.builders.processor.classgen.GenerationEnvironment;
 import org.javahelpers.simple.builders.processor.classgen.GenerationIssueReporter;
 import org.javahelpers.simple.builders.processor.classgen.SourceFormatter;
-import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
-import org.javahelpers.simple.builders.processor.model.annotation.InterfaceName;
-import org.javahelpers.simple.builders.processor.model.core.ClassFieldDto;
-import org.javahelpers.simple.builders.processor.model.core.GenerationTargetClassDto;
-import org.javahelpers.simple.builders.processor.model.imports.ImportStatement;
-import org.javahelpers.simple.builders.processor.model.javadoc.JavadocCodeBlockDto;
-import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
-import org.javahelpers.simple.builders.processor.model.javadoc.JavadocTagDto;
-import org.javahelpers.simple.builders.processor.model.method.ConstructorDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodCodeDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
-import org.javahelpers.simple.builders.processor.model.type.NestedTypeDto;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameArray;
 import org.javahelpers.simple.builders.processor.util.ImportCollector;
 import org.javahelpers.simple.codegen.logging.PerformanceTracker;
 import org.javahelpers.simple.codegen.logging.ProcessingLogger;
+import org.javahelpers.simple.codegen.model.annotation.AnnotationDto;
+import org.javahelpers.simple.codegen.model.annotation.InterfaceName;
+import org.javahelpers.simple.codegen.model.core.ClassFieldDto;
+import org.javahelpers.simple.codegen.model.core.GenerationTargetClassDto;
+import org.javahelpers.simple.codegen.model.imports.ImportStatement;
+import org.javahelpers.simple.codegen.model.javadoc.JavadocCodeBlockDto;
+import org.javahelpers.simple.codegen.model.javadoc.JavadocDto;
+import org.javahelpers.simple.codegen.model.javadoc.JavadocTagDto;
+import org.javahelpers.simple.codegen.model.method.ConstructorDto;
+import org.javahelpers.simple.codegen.model.method.MethodCodeDto;
+import org.javahelpers.simple.codegen.model.method.MethodDto;
+import org.javahelpers.simple.codegen.model.method.MethodParameterDto;
+import org.javahelpers.simple.codegen.model.type.NestedTypeDto;
+import org.javahelpers.simple.codegen.model.type.TypeName;
+import org.javahelpers.simple.codegen.model.type.TypeNameArray;
 import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster.model.source.AnnotationSource;
 import org.jboss.forge.roaster.model.source.FieldSource;
@@ -392,12 +392,11 @@ public class RoasterCodeGenerator implements ClassCodeGenerator {
 
   private void addGenericDeclarations(
       JavaClassSource source,
-      List<org.javahelpers.simple.builders.processor.model.type.GenericParameterDto> generics) {
+      List<org.javahelpers.simple.codegen.model.type.GenericParameterDto> generics) {
     if (CollectionUtils.isEmpty(generics)) {
       return;
     }
-    for (org.javahelpers.simple.builders.processor.model.type.GenericParameterDto generic :
-        generics) {
+    for (org.javahelpers.simple.codegen.model.type.GenericParameterDto generic : generics) {
       TypeVariableSource<JavaClassSource> typeVariable = source.addTypeVariable(generic.getName());
       if (CollectionUtils.isNotEmpty(generic.getUpperBounds())) {
         typeVariable.setBounds(
@@ -408,12 +407,11 @@ public class RoasterCodeGenerator implements ClassCodeGenerator {
 
   private void addGenericDeclarations(
       MethodSource<?> source,
-      List<org.javahelpers.simple.builders.processor.model.type.GenericParameterDto> generics) {
+      List<org.javahelpers.simple.codegen.model.type.GenericParameterDto> generics) {
     if (CollectionUtils.isEmpty(generics)) {
       return;
     }
-    for (org.javahelpers.simple.builders.processor.model.type.GenericParameterDto generic :
-        generics) {
+    for (org.javahelpers.simple.codegen.model.type.GenericParameterDto generic : generics) {
       TypeVariableSource<?> typeVariable = source.addTypeVariable(generic.getName());
       if (CollectionUtils.isNotEmpty(generic.getUpperBounds())) {
         typeVariable.setBounds(

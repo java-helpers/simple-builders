@@ -54,18 +54,18 @@ import org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyser;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 import org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil;
-import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
-import org.javahelpers.simple.builders.processor.model.core.ClassFieldDto;
-import org.javahelpers.simple.builders.processor.model.core.DeprecationInfoDto;
 import org.javahelpers.simple.builders.processor.model.core.GetterInfoDto;
-import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
-import org.javahelpers.simple.builders.processor.model.method.ConstructorDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
+import org.javahelpers.simple.codegen.model.annotation.AnnotationDto;
+import org.javahelpers.simple.codegen.model.core.ClassFieldDto;
+import org.javahelpers.simple.codegen.model.core.DeprecationInfoDto;
+import org.javahelpers.simple.codegen.model.javadoc.JavadocDto;
+import org.javahelpers.simple.codegen.model.method.ConstructorDto;
+import org.javahelpers.simple.codegen.model.method.MethodParameterDto;
+import org.javahelpers.simple.codegen.model.type.TypeName;
+import org.javahelpers.simple.codegen.model.type.TypeNameGeneric;
 
 /** Class for creating a specific BuilderDefinitionDto for an annotated DTO class. */
 public class BuilderDefinitionCreator {

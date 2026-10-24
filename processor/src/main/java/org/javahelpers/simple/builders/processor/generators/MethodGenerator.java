@@ -27,8 +27,8 @@ package org.javahelpers.simple.builders.processor.generators;
 import java.util.List;
 import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
+import org.javahelpers.simple.codegen.model.type.TypeName;
 
 /**
  * Service Provider Interface (SPI) for generating builder methods for fields.

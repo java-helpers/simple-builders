@@ -48,15 +48,15 @@ import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.generators.util.JavadocConstants;
 import org.javahelpers.simple.builders.processor.generators.util.JavadocExampleValues;
 import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
-import org.javahelpers.simple.builders.processor.model.javadoc.JavadocCodeBlockDto;
-import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
-import org.javahelpers.simple.builders.processor.model.type.TypeNamePrimitive;
-import org.javahelpers.simple.builders.processor.model.type.TypeNamePrimitive.PrimitiveTypeEnum;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
+import org.javahelpers.simple.codegen.model.javadoc.JavadocCodeBlockDto;
+import org.javahelpers.simple.codegen.model.javadoc.JavadocDto;
+import org.javahelpers.simple.codegen.model.method.MethodParameterDto;
+import org.javahelpers.simple.codegen.model.type.TypeName;
+import org.javahelpers.simple.codegen.model.type.TypeNameGeneric;
+import org.javahelpers.simple.codegen.model.type.TypeNamePrimitive;
+import org.javahelpers.simple.codegen.model.type.TypeNamePrimitive.PrimitiveTypeEnum;
 
 /**
  * Generates update helper methods for builder fields.

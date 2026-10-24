@@ -27,13 +27,13 @@ package org.javahelpers.simple.builders.processor.generators.builder;
 import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
-import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
-import org.javahelpers.simple.builders.processor.model.method.ConstructorDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodCodeDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.model.type.TypeNamePrimitive;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
+import org.javahelpers.simple.codegen.model.javadoc.JavadocDto;
+import org.javahelpers.simple.codegen.model.method.ConstructorDto;
+import org.javahelpers.simple.codegen.model.method.MethodCodeDto;
+import org.javahelpers.simple.codegen.model.method.MethodParameterDto;
+import org.javahelpers.simple.codegen.model.type.TypeName;
+import org.javahelpers.simple.codegen.model.type.TypeNamePrimitive;
 
 /**
  * Enhancer that adds builder constructors.

@@ -24,10 +24,10 @@
 package org.javahelpers.simple.builders.processor.generators.builder;
 
 import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
-import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
+import org.javahelpers.simple.codegen.model.annotation.AnnotationDto;
+import org.javahelpers.simple.codegen.model.type.TypeName;
 
 /**
  * Enhancer that adds the @JsonPOJOBuilder annotation to generated builder classes.

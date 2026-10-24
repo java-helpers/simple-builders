@@ -28,17 +28,17 @@ import java.util.List;
 import java.util.Map;
 import org.apache.commons.collections4.CollectionUtils;
 import org.javahelpers.simple.builders.processor.classgen.roaster.exceptions.RoasterMapperException;
-import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
-import org.javahelpers.simple.builders.processor.model.annotation.InterfaceName;
-import org.javahelpers.simple.builders.processor.model.method.CodeTemplateDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodCodePlaceholder;
-import org.javahelpers.simple.builders.processor.model.method.MethodCodeStringPlaceholder;
-import org.javahelpers.simple.builders.processor.model.method.MethodCodeTypePlaceholder;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameArray;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
-import org.javahelpers.simple.builders.processor.model.type.TypeNamePrimitive;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameVariable;
+import org.javahelpers.simple.codegen.model.annotation.AnnotationDto;
+import org.javahelpers.simple.codegen.model.annotation.InterfaceName;
+import org.javahelpers.simple.codegen.model.method.CodeTemplateDto;
+import org.javahelpers.simple.codegen.model.method.MethodCodePlaceholder;
+import org.javahelpers.simple.codegen.model.method.MethodCodeStringPlaceholder;
+import org.javahelpers.simple.codegen.model.method.MethodCodeTypePlaceholder;
+import org.javahelpers.simple.codegen.model.type.TypeName;
+import org.javahelpers.simple.codegen.model.type.TypeNameArray;
+import org.javahelpers.simple.codegen.model.type.TypeNameGeneric;
+import org.javahelpers.simple.codegen.model.type.TypeNamePrimitive;
+import org.javahelpers.simple.codegen.model.type.TypeNameVariable;
 
 /** Helper functions to create Roaster-compatible source code strings from DTOs. */
 public final class RoasterMapper {

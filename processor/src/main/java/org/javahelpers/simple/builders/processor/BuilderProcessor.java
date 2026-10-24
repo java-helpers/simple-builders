@@ -72,11 +72,6 @@ import org.javahelpers.simple.builders.processor.generators.integration.JacksonM
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.model.core.BuilderToGenerationTypeMapper;
-import org.javahelpers.simple.builders.processor.model.core.GenerationTargetClassDto;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameList;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameMap;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameSet;
 import org.javahelpers.simple.builders.processor.processing.BuilderConfigurationReader;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsEnum;
@@ -85,6 +80,11 @@ import org.javahelpers.simple.builders.processor.processing.ProcessingTarget;
 import org.javahelpers.simple.builders.processor.processing.SourceFormatterResolver;
 import org.javahelpers.simple.codegen.logging.PerformanceTracker;
 import org.javahelpers.simple.codegen.logging.ProcessingLogger;
+import org.javahelpers.simple.codegen.model.core.GenerationTargetClassDto;
+import org.javahelpers.simple.codegen.model.type.TypeName;
+import org.javahelpers.simple.codegen.model.type.TypeNameList;
+import org.javahelpers.simple.codegen.model.type.TypeNameMap;
+import org.javahelpers.simple.codegen.model.type.TypeNameSet;
 
 /**
  * BuilderProcessor is an annotation processor for execution in generate-sources phase. The

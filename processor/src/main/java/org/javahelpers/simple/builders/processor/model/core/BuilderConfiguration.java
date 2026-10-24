@@ -35,6 +35,7 @@ import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.core.enums.FormattingMode;
 import org.javahelpers.simple.builders.core.enums.OptionState;
+import org.javahelpers.simple.codegen.model.core.PackageScopes;
 
 /**
  * Configuration for builder generation. Combines annotation values with compiler options. Priority:
