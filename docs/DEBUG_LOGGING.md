@@ -104,6 +104,16 @@ When debug logging is enabled, you'll see detailed output with visual separators
 [INFO] [DEBUG] │  │  ├─ Analyzing method: setAge(int)
 [INFO] [DEBUG] │  │  │  └─ Adding field: age (type: int)
 [INFO] [DEBUG] │  └─ Processed 2 possible setters: added 2 fields, skipped 0
+[INFO] [DEBUG] Processing element: OrderDto
+[INFO] [DEBUG] ├─ Extracting builder definition from: org.example.OrderDto
+[INFO] [DEBUG] │  └─ Builder will be generated as: org.example.OrderDtoBuilder
+[INFO] [DEBUG] │  └─ Processed 1 possible setters: added 1 fields, skipped 0
+[INFO] [DEBUG] Processing element: CustomerDto (with conflicts)
+[INFO] [DEBUG] ├─ Extracting builder definition from: org.example.CustomerDto
+[INFO] [DEBUG] │  └─ Builder will be generated as: org.example.CustomerDtoBuilder
+[INFO] [DEBUG] │  └─ Processed 2 possible setters: added 2 fields, skipped 0
+[WARNING]      │  │  └─ Builder field conflict: field 'name' (type Optional) renamed to 'nameOptional' to avoid conflict
+[INFO] [DEBUG] Generating targets for: PersonDto
 [INFO] [DEBUG] ├─ Code generation for builder: PersonDtoBuilder
 [INFO] [DEBUG] │  ├─ Class builder created
 [INFO] [DEBUG] │  ├─ Generating 0 constructor fields and 2 setter fields
@@ -113,17 +123,10 @@ When debug logging is enabled, you'll see detailed output with visual separators
 [INFO] [DEBUG] │  ├─ Using JDT source formatting with Eclipse formatter profile 'eclipse-java-format.xml'.
 [INFO] [DEBUG] │  ├─ Writing builder class to file: org.example.PersonDtoBuilder
 [INFO] [DEBUG] │  └─ Successfully generated builder: PersonDtoBuilder
-[INFO] [DEBUG] Processing element: OrderDto
-[INFO] [DEBUG] ├─ Extracting builder definition from: org.example.OrderDto
-[INFO] [DEBUG] │  └─ Builder will be generated as: org.example.OrderDtoBuilder
-[INFO] [DEBUG] │  └─ Processed 1 possible setters: added 1 fields, skipped 0
+[INFO] [DEBUG] Generating targets for: OrderDto
 [INFO] [DEBUG] ├─ Code generation for builder: OrderDtoBuilder
 [INFO] [DEBUG] │  └─ Successfully generated builder: OrderDtoBuilder
-[INFO] [DEBUG] Processing element: CustomerDto (with conflicts)
-[INFO] [DEBUG] ├─ Extracting builder definition from: org.example.CustomerDto
-[INFO] [DEBUG] │  └─ Builder will be generated as: org.example.CustomerDtoBuilder
-[INFO] [DEBUG] │  └─ Processed 2 possible setters: added 2 fields, skipped 0
-[WARNING]      │  │  └─ Builder field conflict: field 'name' (type Optional) renamed to 'nameOptional' to avoid conflict
+[INFO] [DEBUG] Generating targets for: CustomerDto
 [INFO] [DEBUG] ├─ Code generation for builder: CustomerDtoBuilder
 [INFO] [DEBUG] │  └─ Successfully generated builder: CustomerDtoBuilder
 [INFO]         simple-builders: Successfully generated 3 builder(s) in this processing round

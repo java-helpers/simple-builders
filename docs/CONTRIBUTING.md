@@ -250,6 +250,7 @@ For complete documentation, see [DEBUG_LOGGING.md](DEBUG_LOGGING.md).
 [DEBUG] │  │  ├─ Analyzing method: setName(java.lang.String)
 [DEBUG] │  │  │  └─ Adding field: name (type: java.lang.String)
 [DEBUG] │  └─ Processed 1 possible setters: added 1 fields, skipped 0
+[DEBUG] Generating targets for: Project
 [DEBUG] ├─ Code generation for builder: ProjectBuilder
 [DEBUG] │  ├─ Adding Methods for 4 candidates
 [DEBUG] │  │  └─ 4 Methods added

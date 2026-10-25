@@ -142,6 +142,7 @@ class BuilderProcessorTest {
         "[DEBUG] │  ├─ Builder will be generated as: VerboseTestBuilder",
         "[DEBUG] │  └─ Builder definition extracted: VerboseTestBuilder",
         // Round 1 — code generation
+        "[DEBUG] Generating targets for: VerboseTest",
         "[DEBUG] ├─ Code generation for class: VerboseTestBuilder",
         "[DEBUG] │  ├─ JavaClassSource created",
         "[DEBUG] │  ├─ Class metadata added",
