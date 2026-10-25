@@ -48,7 +48,8 @@ public final class CodegenBackendRegistry {
    */
   public ClassCodeGenerator resolveCodeGenerator(GenerationEnvironment environment) {
     for (ClassCodeGeneratorProvider provider :
-        ServiceLoader.load(ClassCodeGeneratorProvider.class)) {
+        ServiceLoader.load(
+            ClassCodeGeneratorProvider.class, ClassCodeGeneratorProvider.class.getClassLoader())) {
       return provider.create(environment);
     }
     throw new IllegalStateException(
@@ -63,7 +64,9 @@ public final class CodegenBackendRegistry {
    */
   public SourceFormatterResolver.FormatterFactory resolveFormatterFactory() {
     for (SourceFormatterResolver.FormatterFactory factory :
-        ServiceLoader.load(SourceFormatterResolver.FormatterFactory.class)) {
+        ServiceLoader.load(
+            SourceFormatterResolver.FormatterFactory.class,
+            SourceFormatterResolver.FormatterFactory.class.getClassLoader())) {
       return factory;
     }
     throw new IllegalStateException(
