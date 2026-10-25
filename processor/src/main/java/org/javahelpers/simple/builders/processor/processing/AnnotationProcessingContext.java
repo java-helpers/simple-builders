@@ -39,6 +39,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+import org.javahelpers.simple.builders.processor.analysis.GeneratedTypes;
 import org.javahelpers.simple.builders.processor.analysis.TypeMappingContext;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.logging.ActivePerformanceTracker;
@@ -72,6 +73,12 @@ public class AnnotationProcessingContext implements TypeMappingContext {
 
   /** Static options supplied by the concrete context. */
   protected final AnnotationProcessingOptions options;
+
+  /**
+   * Registry of the types generated in the current processing round — the up-front recognition of
+   * former (and planned) generated classes.
+   */
+  private final GeneratedTypes generatedTypes = new GeneratedTypes();
 
   /** Package generated code is written to, or {@code null} when not generating into a package. */
   private String generatedPackageName;
@@ -205,6 +212,17 @@ public class AnnotationProcessingContext implements TypeMappingContext {
   @Override
   public Optional<TypeName> resolveGeneratedType(TypeElement typeElement) {
     return Optional.empty();
+  }
+
+  /**
+   * The registry of types generated in the current processing round. Domains register planned
+   * outputs before generating, so references to them resolve; downstream code queries via {@link
+   * GeneratedTypes#findGenerated}.
+   *
+   * @return the generated-types registry
+   */
+  public GeneratedTypes getGeneratedTypes() {
+    return generatedTypes;
   }
 
   /**

@@ -79,7 +79,8 @@ public final class BuilderScopeResolver {
   private ResolutionInputs cachedResolutionInputs;
   private PackageScopes usagePackages = PackageScopes.unscoped();
   private final Map<String, Optional<ResolvedBuilder>> resolvedBuilderTypes = new HashMap<>();
-  private final GeneratedTypes generatedBuilders = new GeneratedTypes();
+  // Generated-types registry lives on the context (shared with the processing driver)
+  private final GeneratedTypes generatedBuilders;
 
   /**
    * Creates a new resolver for the given processing context.
@@ -88,6 +89,7 @@ public final class BuilderScopeResolver {
    */
   public BuilderScopeResolver(BuilderProcessingContext context) {
     this.context = context;
+    this.generatedBuilders = context.getGeneratedTypes();
   }
 
   /**
