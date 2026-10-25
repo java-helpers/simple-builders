@@ -51,7 +51,6 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.ElementFilter;
-import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.codegen.processing.AbstractCodegenProcessor;
 import org.javahelpers.codegen.processing.AnnotationElementSpec;
 import org.javahelpers.codegen.processing.CodegenTask;
@@ -59,7 +58,6 @@ import org.javahelpers.codegen.processing.ElementCollection;
 import org.javahelpers.codegen.processing.ElementSelector;
 import org.javahelpers.codegen.processing.ProcessingTarget;
 import org.javahelpers.codegen.processing.ProcessorOptionRegistry;
-import org.javahelpers.codegen.processing.SourceFormatterResolver;
 import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder.Template;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFor;
@@ -67,11 +65,7 @@ import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFors;
 import org.javahelpers.simple.builders.processor.analysis.BuilderScopeResolver;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyser;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
-import org.javahelpers.simple.builders.processor.classgen.ClassCodeGenerator;
 import org.javahelpers.simple.builders.processor.classgen.CodeGenerationException;
-import org.javahelpers.simple.builders.processor.classgen.GenerationEnvironment;
-import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterCodeGenerator;
-import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterSourceFormatter;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 import org.javahelpers.simple.builders.processor.generators.integration.JacksonModuleGenerator;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
@@ -136,17 +130,6 @@ public class BuilderProcessor
   private JacksonModuleGenerator jacksonModuleGenerator;
 
   @Override
-  protected ProcessingLogger createLogger(
-      ProcessingEnvironment processingEnv, CompilerArgumentsReader reader) {
-    ProcessingLogger logger =
-        reader.readBooleanValue(CompilerArgumentsEnum.VERBOSE)
-            ? ProcessingLogger.createVerbose(processingEnv)
-            : ProcessingLogger.create(processingEnv);
-    logger.debug("Starting BuilderProcessor...");
-    return logger;
-  }
-
-  @Override
   protected BuilderProcessingContext createContext(
       ProcessingEnvironment processingEnv,
       CompilerArgumentsReader reader,
@@ -158,27 +141,11 @@ public class BuilderProcessor
   }
 
   @Override
-  protected ClassCodeGenerator createGenerator(
-      ProcessingEnvironment processingEnv, ProcessingLogger logger, BuilderProcessingContext ctx) {
-    return new RoasterCodeGenerator(
-        new GenerationEnvironment(
-            processingEnv, logger, ctx.getPerformanceTracker(), ctx::reportBasedOnStrictMode));
-  }
-
-  @Override
-  protected SourceFormatterResolver createFormatterResolver(
-      CompilerArgumentsReader reader, ProcessingLogger logger) {
-    return new SourceFormatterResolver(
-        logger,
-        StringUtils.trimToNull(reader.readValue(CompilerArgumentsEnum.FORMATTER_PROFILE)),
-        RoasterSourceFormatter::new);
-  }
-
-  @Override
   protected void onInit(
       ProcessingEnvironment processingEnv,
       CompilerArgumentsReader reader,
       BuilderProcessingContext ctx) {
+    ctx.debug("Starting BuilderProcessor...");
     this.jacksonModuleGenerator = new JacksonModuleGenerator(processingEnv, logger, globalConfig);
 
     // Initialize GeneratorRegistry once during processor initialization

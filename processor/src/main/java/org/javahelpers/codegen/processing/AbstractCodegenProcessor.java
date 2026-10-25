@@ -35,6 +35,7 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
 import org.javahelpers.simple.builders.processor.classgen.ClassCodeGenerator;
 import org.javahelpers.simple.builders.processor.classgen.CodeGenerationException;
+import org.javahelpers.simple.builders.processor.classgen.GenerationEnvironment;
 import org.javahelpers.simple.builders.processor.model.core.GenerationTargetClassDto;
 import org.javahelpers.simple.builders.processor.processing.AnnotationProcessingContext;
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsReader;
@@ -82,6 +83,7 @@ public abstract class AbstractCodegenProcessor<
   /** Logger for the domain's hooks (init, last-round reports). */
   protected ProcessingLogger logger;
 
+  private final CodegenBackendRegistry backendRegistry = new CodegenBackendRegistry();
   private ClassCodeGenerator codeGenerator;
   private SourceFormatterResolver formatterResolver;
   private boolean supportedJdk = true;
@@ -281,9 +283,21 @@ public abstract class AbstractCodegenProcessor<
     }
   }
 
-  /** Creates the logger honoring the domain's verbosity option. */
-  protected abstract ProcessingLogger createLogger(
-      ProcessingEnvironment processingEnv, CompilerArgumentsReader reader);
+  /**
+   * Creates the logger. Default: verbose when the domain's declared verbose option or the javac
+   * {@code -verbose} flag requests it — see {@link ProcessorOptionRegistry#isVerboseRequested}.
+   */
+  protected ProcessingLogger createLogger(
+      ProcessingEnvironment processingEnv, CompilerArgumentsReader reader) {
+    return optionRegistry().isVerboseRequested(reader)
+        ? ProcessingLogger.createVerbose(processingEnv)
+        : ProcessingLogger.create(processingEnv);
+  }
+
+  /** The backend registry resolving the code-generation engine and formatter factory. */
+  protected CodegenBackendRegistry backendRegistry() {
+    return backendRegistry;
+  }
 
   /**
    * Creates the domain's processing context.
@@ -296,13 +310,33 @@ public abstract class AbstractCodegenProcessor<
   protected abstract C createContext(
       ProcessingEnvironment processingEnv, CompilerArgumentsReader reader, ProcessingLogger logger);
 
-  /** Creates the code generation engine — the {@link ClassCodeGenerator} backend port. */
-  protected abstract ClassCodeGenerator createGenerator(
-      ProcessingEnvironment processingEnv, ProcessingLogger logger, C context);
+  /**
+   * Creates the code generation engine — the {@link ClassCodeGenerator} backend port. Default: the
+   * engine discovered by {@link CodegenBackendRegistry} over a {@link GenerationEnvironment} wired
+   * from the processing environment and context.
+   */
+  protected ClassCodeGenerator createGenerator(
+      ProcessingEnvironment processingEnv, ProcessingLogger logger, C context) {
+    return backendRegistry.resolveCodeGenerator(
+        new GenerationEnvironment(
+            processingEnv,
+            logger,
+            context.getPerformanceTracker(),
+            context::reportBasedOnStrictMode));
+  }
 
-  /** Creates the source formatter resolver for the configured profile. */
-  protected abstract SourceFormatterResolver createFormatterResolver(
-      CompilerArgumentsReader reader, ProcessingLogger logger);
+  /**
+   * Creates the source formatter resolver for the configured profile. Default: the profile from
+   * {@link ProcessorOptionRegistry#formatterProfile} and the factory discovered by {@link
+   * CodegenBackendRegistry}.
+   */
+  protected SourceFormatterResolver createFormatterResolver(
+      CompilerArgumentsReader reader, ProcessingLogger logger) {
+    return new SourceFormatterResolver(
+        logger,
+        optionRegistry().formatterProfile(reader),
+        backendRegistry.resolveFormatterFactory());
+  }
 
   /** Which elements the domain generates code for. */
   protected abstract AnnotationElementSpec elementSpec();
