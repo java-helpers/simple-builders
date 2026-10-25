@@ -462,14 +462,20 @@ public class BuilderProcessor
   }
 
   @Override
+  protected String analysisPhase() {
+    return PHASE_BUILDER_DEFINITION_EXTRACTION;
+  }
+
+  @Override
+  protected String mappingPhase() {
+    return PHASE_DTO_MAPPING;
+  }
+
+  @Override
   protected BuilderDefinitionDto analyse(
       CodegenTask<BuilderConfiguration> task, BuilderProcessingContext ctx)
       throws BuilderException {
-    PerformanceTracker tracker = ctx.getPerformanceTracker();
-    tracker.startPhase();
-    BuilderDefinitionDto builderDef = extractFromElement(task.element(), ctx);
-    tracker.endPhase(PHASE_BUILDER_DEFINITION_EXTRACTION);
-    return builderDef;
+    return extractFromElement(task.element(), ctx);
   }
 
   @Override
@@ -477,12 +483,8 @@ public class BuilderProcessor
       BuilderDefinitionDto definition,
       CodegenTask<BuilderConfiguration> task,
       BuilderProcessingContext ctx) {
-    PerformanceTracker tracker = ctx.getPerformanceTracker();
-    tracker.startPhase();
-    GenerationTargetClassDto renderingDto =
-        new BuilderToGenerationTypeMapper(task.configuration()).toRenderingDto(definition);
-    tracker.endPhase(PHASE_DTO_MAPPING);
-    return List.of(renderingDto);
+    return List.of(
+        new BuilderToGenerationTypeMapper(task.configuration()).toRenderingDto(definition));
   }
 
   @Override

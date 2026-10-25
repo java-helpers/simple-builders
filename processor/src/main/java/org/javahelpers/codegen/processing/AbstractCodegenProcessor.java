@@ -92,6 +92,12 @@ public abstract class AbstractCodegenProcessor<
   /** Performance phase target generation is reported under — framework-owned. */
   private static final String PHASE_CODE_GENERATION = "Code Generation";
 
+  /** Default performance phase for {@link #analyse} — domains may name their own. */
+  private static final String PHASE_ANALYSIS = "Analysis";
+
+  /** Default performance phase for {@link #mapToTargets} — domains may name their own. */
+  private static final String PHASE_TARGET_MAPPING = "Target Mapping";
+
   /** The domain's context instance. */
   protected C context;
 
@@ -179,8 +185,20 @@ public abstract class AbstractCodegenProcessor<
       try {
         context.initProcessingTarget(
             new ProcessingTarget<>(task.configuration(), task.outputPackage()));
-        D definition = analyse(task, context);
-        List<GenerationTargetClassDto> targets = mapToTargets(definition, task, context);
+        tracker.startPhase();
+        D definition;
+        try {
+          definition = analyse(task, context);
+        } finally {
+          tracker.endPhase(analysisPhase());
+        }
+        tracker.startPhase();
+        List<GenerationTargetClassDto> targets;
+        try {
+          targets = mapToTargets(definition, task, context);
+        } finally {
+          tracker.endPhase(mappingPhase());
+        }
         tracker.startPhase();
         for (GenerationTargetClassDto target : targets) {
           generateTarget(target);
@@ -497,6 +515,22 @@ public abstract class AbstractCodegenProcessor<
    */
   protected boolean isFinished(C context) {
     return processedOnce;
+  }
+
+  /**
+   * The performance phase {@link #analyse} is reported under — domain-named. Default {@value
+   * #PHASE_ANALYSIS}.
+   */
+  protected String analysisPhase() {
+    return PHASE_ANALYSIS;
+  }
+
+  /**
+   * The performance phase {@link #mapToTargets} is reported under — domain-named. Default {@value
+   * #PHASE_TARGET_MAPPING}.
+   */
+  protected String mappingPhase() {
+    return PHASE_TARGET_MAPPING;
   }
 
   /**
