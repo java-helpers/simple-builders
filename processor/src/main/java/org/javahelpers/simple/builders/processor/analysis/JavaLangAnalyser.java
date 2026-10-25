@@ -322,7 +322,7 @@ public final class JavaLangAnalyser {
    * @param context the processing context providing element utilities
    * @return the attribute's raw items, or an empty list when absent or not array-valued
    */
-  public static List<?> findAnnotationAttributeValues(
+  public static List<?> findAnnotationAttributeArray(
       AnnotationMirror annotationMirror,
       String attributeName,
       AnnotationProcessingContext context) {

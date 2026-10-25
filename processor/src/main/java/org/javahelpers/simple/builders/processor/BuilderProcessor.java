@@ -357,7 +357,7 @@ public class BuilderProcessor
     Map<String, TypeElement> targets = new LinkedHashMap<>();
     // For an array-valued attribute javac always delivers a list, even for a single entry.
     for (Object item :
-        JavaLangAnalyser.findAnnotationAttributeValues(annotationInstance, "value", context)) {
+        JavaLangAnalyser.findAnnotationAttributeArray(annotationInstance, "value", context)) {
       TypeElement target = resolveExternalTargetType(holder, item);
       targets.put(target.getQualifiedName().toString(), target);
     }
@@ -374,7 +374,7 @@ public class BuilderProcessor
    * instance.
    */
   private List<String> readSourcePackageNames(AnnotationMirror annotationInstance) {
-    return JavaLangAnalyser.findAnnotationAttributeValues(
+    return JavaLangAnalyser.findAnnotationAttributeArray(
             annotationInstance, "sourcePackages", context)
         .stream()
         .map(item -> item instanceof AnnotationValue value ? value.getValue() : null)
