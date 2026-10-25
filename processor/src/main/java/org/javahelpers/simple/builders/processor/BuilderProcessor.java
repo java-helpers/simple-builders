@@ -56,11 +56,13 @@ import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
+import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.codegen.processing.AnnotationElementSpec;
 import org.javahelpers.codegen.processing.ElementCollection;
 import org.javahelpers.codegen.processing.ElementSelector;
 import org.javahelpers.codegen.processing.ProcessingTarget;
 import org.javahelpers.codegen.processing.ProcessorOptionRegistry;
+import org.javahelpers.codegen.processing.SourceFormatterResolver;
 import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder.Template;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFor;
@@ -72,6 +74,7 @@ import org.javahelpers.simple.builders.processor.classgen.ClassCodeGenerator;
 import org.javahelpers.simple.builders.processor.classgen.CodeGenerationException;
 import org.javahelpers.simple.builders.processor.classgen.GenerationEnvironment;
 import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterCodeGenerator;
+import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterSourceFormatter;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 import org.javahelpers.simple.builders.processor.generators.integration.JacksonModuleGenerator;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
@@ -86,7 +89,6 @@ import org.javahelpers.simple.builders.processor.processing.BuilderConfiguration
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsEnum;
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsReader;
-import org.javahelpers.simple.builders.processor.processing.SourceFormatterResolver;
 import org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker;
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 
@@ -160,7 +162,11 @@ public class BuilderProcessor extends AbstractProcessor {
                 logger,
                 context.getPerformanceTracker(),
                 context::reportBasedOnStrictMode));
-    this.formatterResolver = new SourceFormatterResolver(processingEnv, logger);
+    this.formatterResolver =
+        new SourceFormatterResolver(
+            logger,
+            StringUtils.trimToNull(reader.readValue(CompilerArgumentsEnum.FORMATTER_PROFILE)),
+            RoasterSourceFormatter::new);
     this.jacksonModuleGenerator = new JacksonModuleGenerator(processingEnv, logger, globalConfig);
 
     // Initialize GeneratorRegistry once during processor initialization

@@ -22,41 +22,53 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.processing;
+package org.javahelpers.codegen.processing;
 
 import java.util.EnumMap;
-import javax.annotation.processing.ProcessingEnvironment;
-import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.enums.FormattingMode;
 import org.javahelpers.simple.builders.processor.classgen.SourceFormatter;
-import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterSourceFormatter;
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 
 /**
- * Resolves the {@link SourceFormatter} for a formatting mode, applying the Eclipse formatter
- * profile configured via the {@code formatterProfile} compiler argument.
+ * Resolves the {@link SourceFormatter} for a formatting mode, applying the formatter profile the
+ * domain configured.
  *
  * <p>At most one formatter instance per {@link FormattingMode} is created, lazily on first resolve.
+ * The concrete formatter implementation is supplied by the domain — the processing machinery only
+ * knows the {@link SourceFormatter} contract.
  */
 public class SourceFormatterResolver {
 
+  /** Creates a {@link SourceFormatter} for a mode under a formatter profile. */
+  @FunctionalInterface
+  public interface FormatterFactory {
+    /**
+     * @param logger logger for formatter warnings
+     * @param mode the formatting mode
+     * @param profile the formatter profile path, or {@code null} for the built-in profile
+     * @return the formatter to use
+     */
+    SourceFormatter create(ProcessingLogger logger, FormattingMode mode, String profile);
+  }
+
   private final ProcessingLogger logger;
   private final String formatterProfile;
+  private final FormatterFactory factory;
   private final EnumMap<FormattingMode, SourceFormatter> formatterCache =
       new EnumMap<>(FormattingMode.class);
 
   /**
-   * Creates a resolver reading the formatter profile from compiler arguments.
+   * Creates a resolver.
    *
-   * @param processingEnv the processing environment (for compiler argument access)
    * @param logger logger for formatter warnings
+   * @param formatterProfile the configured formatter profile path, or {@code null}
+   * @param factory creates the formatter per mode
    */
-  public SourceFormatterResolver(ProcessingEnvironment processingEnv, ProcessingLogger logger) {
+  public SourceFormatterResolver(
+      ProcessingLogger logger, String formatterProfile, FormatterFactory factory) {
     this.logger = logger;
-    this.formatterProfile =
-        StringUtils.trimToNull(
-            new CompilerArgumentsReader(processingEnv)
-                .readValue(CompilerArgumentsEnum.FORMATTER_PROFILE));
+    this.formatterProfile = formatterProfile;
+    this.factory = factory;
   }
 
   /**
@@ -66,7 +78,6 @@ public class SourceFormatterResolver {
    * @return a cached or new formatter instance
    */
   public SourceFormatter resolve(FormattingMode mode) {
-    return formatterCache.computeIfAbsent(
-        mode, m -> new RoasterSourceFormatter(logger, m, formatterProfile));
+    return formatterCache.computeIfAbsent(mode, m -> factory.create(logger, m, formatterProfile));
   }
 }
