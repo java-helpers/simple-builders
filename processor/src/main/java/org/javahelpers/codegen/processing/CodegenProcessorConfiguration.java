@@ -25,7 +25,6 @@
 package org.javahelpers.codegen.processing;
 
 import java.util.List;
-import javax.lang.model.SourceVersion;
 
 /**
  * Static declarations of an {@link AbstractCodegenProcessor}: everything the framework needs to
@@ -36,13 +35,13 @@ import javax.lang.model.SourceVersion;
  *
  * @param elementSpec which elements the domain generates code for (required)
  * @param optionRegistry the processor's declared compiler options; default: an empty registry
- * @param requiredSourceVersion the minimum source level; default: {@link
- *     SourceVersion#latestSupported()}
+ * @param requiredSourceVersion the minimum source level by name (e.g. {@code "RELEASE_17"});
+ *     default: the running JDK's latest supported release
  */
 public record CodegenProcessorConfiguration(
     AnnotationElementSpec elementSpec,
     ProcessorOptionRegistry optionRegistry,
-    SourceVersion requiredSourceVersion) {
+    String requiredSourceVersion) {
 
   /**
    * Creates a builder with all defaults applied — only {@link #elementSpec(AnnotationElementSpec)}
@@ -58,7 +57,7 @@ public record CodegenProcessorConfiguration(
   public static final class Builder {
     private AnnotationElementSpec elementSpec;
     private ProcessorOptionRegistry optionRegistry = new ProcessorOptionRegistry(List.of());
-    private SourceVersion requiredSourceVersion = SourceVersion.latestSupported();
+    private String requiredSourceVersion;
 
     private Builder() {}
 
@@ -85,12 +84,15 @@ public record CodegenProcessorConfiguration(
     }
 
     /**
-     * Sets the minimum source level the processor supports.
+     * Sets the minimum source level the processor supports, by {@code SourceVersion} constant name
+     * (e.g. {@code "RELEASE_17"}). A name — not the enum constant — keeps the check resolvable at
+     * processing time: a JDK whose {@code SourceVersion} lacks the constant still reports a
+     * graceful error instead of a linkage failure.
      *
-     * @param requiredSourceVersion the required source version
+     * @param requiredSourceVersion the required source version name
      * @return this builder
      */
-    public Builder requiredSourceVersion(SourceVersion requiredSourceVersion) {
+    public Builder requiredSourceVersion(String requiredSourceVersion) {
       this.requiredSourceVersion = requiredSourceVersion;
       return this;
     }

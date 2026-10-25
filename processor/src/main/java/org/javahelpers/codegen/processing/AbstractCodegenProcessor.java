@@ -51,26 +51,27 @@ import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLo
  * the domain plugs in its hooks — collect, plan, register, analyse/map, generate, finalize.
  *
  * <p>A new processor declares its static surface once as {@link CodegenProcessorConfiguration}
- * (passed to the constructor — element spec, options, source level, diagnostic names) and
- * implements only the domain hooks marked {@code [implement]}: {@link #createContext}, {@link
- * #plan}, {@link #predictedGeneratedTypeName}, {@link #analyse} and {@link #mapToTargets}. Every
- * other step is framework-owned or an optional {@code [default]} the domain may override.
+ * (passed to the constructor — element spec, options, source level) and implements only the domain
+ * hooks marked {@code [implement]}: {@link #createContext}, {@link #planTasks}, {@link
+ * #registerPlannedGenerationTargets}, {@link #analyse} and {@link #mapToTargets}. Every other step
+ * is framework-owned or an optional {@code [default]} the domain may override.
  *
  * <p>The round spine:
  *
  * <pre>
  *   ctx      = createContext(env, reader, logger)                       [implement — in init]
  *   elements = findElements(annotations, roundEnv, ctx)                 [default: configuration's elementSpec]
- *   tasks    = plan(elements, ctx)                                      [implement]
- *   registerPlannedOutputs(tasks, ctx)                                  [default: registerPlannedGenerationTargets() — implement]
- *   for each task (guarded, strict-mode reporting):                     [framework]
+ *   tasks    = planTasks(elements, ctx)                                 [implement]
+ *   registerPlannedOutputs(tasks, ctx)                                  [framework; per-task names from registerPlannedGenerationTargets() — implement]
+ *   loop 1 — specification (guarded, strict-mode reporting):            [framework]
  *     def     = analyse(task, ctx)                                      [implement]
  *     targets = mapToTargets(def, task, ctx)                            [implement]
+ *   loop 2 — generation:                                                [framework]
  *     for each target:
  *       existsGuard → engine.generate(target, formatterResolver.resolve(target.mode))  [framework]
- *     onTaskGenerated(def, targets, task, ctx)                            [default: no-op]
+ *     onTaskGenerated(def, targets, task, ctx)                          [default: no-op]
  *   endRound(ctx)                                                       [default: no-op]
- *   last round: onProcessingOver(ctx)                                   [default: deferredTargets() loop]
+ *   last round: onProcessingOver(ctx)                                   [default: drains context.getDeferredTargets()]
  * </pre>
  *
  * <p>Per-element failures are caught and reported through {@link
@@ -132,9 +133,9 @@ public abstract class AbstractCodegenProcessor<
     this.formatterResolver = createFormatterResolver(reader, logger);
 
     SourceVersion current = processingEnv.getSourceVersion();
-    this.supportedJdk = current.ordinal() >= requiredSourceVersion().ordinal();
+    this.supportedJdk = isAtLeast(current, requiredSourceVersion());
     if (!this.supportedJdk) {
-      String releaseNumber = requiredSourceVersion().toString().replace("RELEASE_", "");
+      String releaseNumber = requiredSourceVersion().replace("RELEASE_", "");
       context.error(
           "%s requires Java %s or higher for annotation processing. Detected: '%s'. Please upgrade to JDK %s+ or disable the processor.",
           processorTag(), releaseNumber, current, releaseNumber);
@@ -453,8 +454,21 @@ public abstract class AbstractCodegenProcessor<
     return false;
   }
 
-  private SourceVersion requiredSourceVersion() {
+  private String requiredSourceVersion() {
     return processorConfiguration.requiredSourceVersion();
+  }
+
+  /**
+   * Whether {@code current} meets the named minimum. The name resolves inside the check so a JDK
+   * whose {@link SourceVersion} lacks the constant (e.g. a processor built on a newer JDK running
+   * under an older one) reports the graceful error path instead of a linkage failure.
+   */
+  private static boolean isAtLeast(SourceVersion current, String requiredName) {
+    try {
+      return current.ordinal() >= SourceVersion.valueOf(requiredName).ordinal();
+    } catch (IllegalArgumentException ex) {
+      return false;
+    }
   }
 
   private String processorTag() {

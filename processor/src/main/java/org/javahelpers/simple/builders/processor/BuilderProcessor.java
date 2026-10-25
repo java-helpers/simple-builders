@@ -41,7 +41,6 @@ import java.util.Optional;
 import java.util.Set;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.Processor;
-import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
@@ -126,7 +125,7 @@ public class BuilderProcessor
       CodegenProcessorConfiguration.builder()
           .elementSpec(ELEMENT_SPEC)
           .optionRegistry(OPTION_REGISTRY)
-          .requiredSourceVersion(SourceVersion.RELEASE_17)
+          .requiredSourceVersion("RELEASE_17")
           .build();
 
   /** Creates the processor — javac instantiates it reflectively. */
