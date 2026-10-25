@@ -39,4 +39,5 @@ import javax.lang.model.element.Element;
  * @param reportingElement the element diagnostics are reported on — the declaring holder for
  *     externally declared types, otherwise the element itself
  */
-public record CodegenTask<K>(Element element, K configuration, Element reportingElement) {}
+public record CodegenTask<K extends CodegenConfiguration>(
+    Element element, K configuration, Element reportingElement) {}

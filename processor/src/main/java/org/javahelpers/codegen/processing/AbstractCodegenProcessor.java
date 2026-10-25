@@ -70,7 +70,10 @@ import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLo
  * @param <K> the domain's configuration type carried by {@link CodegenTask}
  * @param <D> the domain's definition type — the analysis result mapped to render targets
  */
-public abstract class AbstractCodegenProcessor<C extends AnnotationProcessingContext, K, D>
+public abstract class AbstractCodegenProcessor<
+        C extends AnnotationProcessingContext,
+        K extends CodegenConfiguration,
+        D extends CodegenDefinition>
     extends AbstractProcessor {
 
   /** The domain's context instance. */
