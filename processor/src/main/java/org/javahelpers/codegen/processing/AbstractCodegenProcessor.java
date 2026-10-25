@@ -169,16 +169,9 @@ public abstract class AbstractCodegenProcessor<
     context.debug("%s: Processing round started.", processorTag());
 
     List<CodegenTask<K>> tasks = plan(collected, context);
-    if (collected.isEmpty() || isFinished(context)) {
+    if (tasks.isEmpty()) {
       return claimsAnnotations(supportedAnnotationTypes());
     }
-    if (!tasks.isEmpty()) {
-      // The default one-shot is consumed by the first round that planned work — an empty round
-      // leaves it open for a later one carrying matching elements.
-      processedOnce = true;
-    }
-
-    registerPlannedOutputs(tasks, context);
 
     // First loop: specification — analyse every task and map its render targets.
     List<PlannedWork<K, D>> planned = new ArrayList<>();
@@ -501,6 +494,29 @@ public abstract class AbstractCodegenProcessor<
   }
 
   /**
+   * The planning step — runs the domain's {@link #planTasks}, applies the finished gate and the
+   * one-shot marker, and registers the round's planned outputs. Framework bookkeeping lives here so
+   * the domain function below stays pure planning.
+   *
+   * @param collected the elements matched by {@link #findElements}
+   * @param context the processing context
+   * @return the round's tasks, or empty when the round is gated out
+   */
+  private List<CodegenTask<K>> plan(ElementCollection collected, C context) {
+    List<CodegenTask<K>> tasks = planTasks(collected, context);
+    if (collected.isEmpty() || isFinished(context)) {
+      return List.of();
+    }
+    if (!tasks.isEmpty()) {
+      // The default one-shot is consumed by the first round that planned work — an empty round
+      // leaves it open for a later one carrying matching elements.
+      processedOnce = true;
+    }
+    registerPlannedOutputs(tasks, context);
+    return tasks;
+  }
+
+  /**
    * Plans the tasks of this round from the collected elements: resolves per-element configuration,
    * expands multi-target declarations and applies domain scoping rules.
    *
@@ -508,7 +524,7 @@ public abstract class AbstractCodegenProcessor<
    * @param context the processing context
    * @return the generation plan, possibly empty
    */
-  protected abstract List<CodegenTask<K>> plan(ElementCollection collected, C context);
+  protected abstract List<CodegenTask<K>> planTasks(ElementCollection collected, C context);
 
   /**
    * Registers the types this round will generate, up front, so references to them resolve during

@@ -173,7 +173,7 @@ public class BuilderProcessor
   }
 
   @Override
-  protected List<CodegenTask<BuilderConfiguration>> plan(
+  protected List<CodegenTask<BuilderConfiguration>> planTasks(
       ElementCollection collected, BuilderProcessingContext ctx) {
     List<Element> sortedElements = collected.byName(GROUP_ANNOTATED_ELEMENTS);
     List<Element> sortedHolders = collected.byName(GROUP_EXTERNAL_TYPE_HOLDERS);
