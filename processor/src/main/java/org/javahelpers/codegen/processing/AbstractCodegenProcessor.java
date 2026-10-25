@@ -99,9 +99,9 @@ public abstract class AbstractCodegenProcessor<
     onInit(processingEnv, reader, context);
 
     SourceVersion current = processingEnv.getSourceVersion();
-    this.supportedJdk = isAtLeast(current, requiredSourceVersion());
+    this.supportedJdk = current.ordinal() >= requiredSourceVersion().ordinal();
     if (!this.supportedJdk) {
-      String releaseNumber = requiredSourceVersion().replace("RELEASE_", "");
+      String releaseNumber = requiredSourceVersion().toString().replace("RELEASE_", "");
       context.error(
           "%s requires Java %s or higher for annotation processing. Detected: '%s'. Please upgrade to JDK %s+ or disable the processor.",
           processorTag(), releaseNumber, current, releaseNumber);
@@ -271,19 +271,6 @@ public abstract class AbstractCodegenProcessor<
   }
 
   /**
-   * Checks whether the current SourceVersion is at least the required one, in a backwards
-   * compatible way (the required constant may not exist on older JDKs).
-   */
-  private static boolean isAtLeast(SourceVersion current, String requiredName) {
-    try {
-      return current.ordinal() >= SourceVersion.valueOf(requiredName).ordinal();
-    } catch (IllegalArgumentException ex) {
-      // Running on a JDK where the required release does not exist
-      return false;
-    }
-  }
-
-  /**
    * Creates the logger. Default: verbose when the domain's declared verbose option or the javac
    * {@code -verbose} flag requests it — see {@link ProcessorOptionRegistry#isVerboseRequested}.
    */
@@ -341,8 +328,13 @@ public abstract class AbstractCodegenProcessor<
   /** Which elements the domain generates code for. */
   protected abstract AnnotationElementSpec elementSpec();
 
-  /** The processor's declared compiler options. */
-  protected abstract ProcessorOptionRegistry optionRegistry();
+  /**
+   * The processor's declared compiler options. Default: an empty registry — a processor without
+   * options declares nothing.
+   */
+  protected ProcessorOptionRegistry optionRegistry() {
+    return new ProcessorOptionRegistry(List.of());
+  }
 
   /**
    * Whether {@link #process} claims the supported annotations. Default {@code false} — claiming
@@ -355,14 +347,26 @@ public abstract class AbstractCodegenProcessor<
     return false;
   }
 
-  /** The minimum source level the processor supports, as a {@link SourceVersion} name. */
-  protected abstract String requiredSourceVersion();
+  /**
+   * The minimum source level the processor supports. Default: {@link
+   * SourceVersion#latestSupported()}.
+   */
+  protected SourceVersion requiredSourceVersion() {
+    return SourceVersion.latestSupported();
+  }
 
-  /** Diagnostic tag prefixing messages, e.g. {@code "simple-builders"}. */
-  protected abstract String processorTag();
+  /**
+   * Diagnostic tag prefixing messages, e.g. {@code "simple-builders"}. Default: the processor's
+   * simple class name.
+   */
+  protected String processorTag() {
+    return getClass().getSimpleName();
+  }
 
-  /** What one generated unit is called in diagnostics, e.g. {@code "builder"}. */
-  protected abstract String generatedKind();
+  /** What one generated unit is called in diagnostics, e.g. {@code "builder"}. Default: class. */
+  protected String generatedKind() {
+    return "class";
+  }
 
   /** Domain-specific initialization, after the framework wiring is in place. */
   protected void onInit(
@@ -449,8 +453,10 @@ public abstract class AbstractCodegenProcessor<
   protected void afterGenerate(
       D definition, List<GenerationTargetClassDto> targets, CodegenTask<K> task, C context) {}
 
-  /** The performance phase wrapping target generation. */
-  protected abstract String generationPhase();
+  /** The performance phase wrapping target generation. Default {@code "code-generation"}. */
+  protected String generationPhase() {
+    return "code-generation";
+  }
 
   /** Callback for the last processing round — deferred outputs and final reports. */
   protected void onProcessingOver(C context) {}

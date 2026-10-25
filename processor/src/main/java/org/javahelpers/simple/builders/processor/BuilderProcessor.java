@@ -43,6 +43,7 @@ import java.util.Optional;
 import java.util.Set;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.Processor;
+import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
@@ -168,8 +169,8 @@ public class BuilderProcessor
   }
 
   @Override
-  protected String requiredSourceVersion() {
-    return "RELEASE_17";
+  protected SourceVersion requiredSourceVersion() {
+    return SourceVersion.RELEASE_17;
   }
 
   @Override
