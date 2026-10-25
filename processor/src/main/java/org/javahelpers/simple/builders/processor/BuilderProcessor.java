@@ -65,7 +65,6 @@ import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFor;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFors;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyser;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
-import org.javahelpers.simple.builders.processor.classgen.CodeGenerationException;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 import org.javahelpers.simple.builders.processor.generators.integration.JacksonModuleGenerator;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
@@ -567,27 +566,22 @@ public class BuilderProcessor
     return configured == null ? context.getPackageName(reportingElement) : configured;
   }
 
+  @Override
+  protected List<GenerationTargetClassDto> deferredTargets(BuilderProcessingContext ctx) {
+    return jacksonModuleGenerator.getModuleDefinitions();
+  }
+
+  @Override
+  protected String deferredTargetsKind() {
+    return "Jackson module";
+  }
+
   /** Generates all Jackson modules after the last processing round and reports the metrics. */
   @Override
   protected void onProcessingOver(BuilderProcessingContext ctx) {
     SimpleBuildersSpiIntegration.finishCompilation();
-    PerformanceTracker tracker = ctx.getPerformanceTracker();
-    tracker.generateReport(logger);
-
-    List<GenerationTargetClassDto> moduleClassDefs = jacksonModuleGenerator.getModuleDefinitions();
-    for (GenerationTargetClassDto moduleClassDef : moduleClassDefs) {
-      String packageName = moduleClassDef.getTypeName().getPackageName();
-      ctx.info("Generating Jackson Module in package '%s'", packageName);
-      try {
-        generateTarget(moduleClassDef);
-      } catch (CodeGenerationException e) {
-        // By default Jackson module generation failures are warnings. In opt-in strict mode
-        // they are promoted to errors that fail the build.
-        ctx.reportBasedOnStrictMode(
-            "simple-builders: Error generating Jackson module for package %s: %s",
-            packageName, e.getMessage());
-      }
-    }
+    ctx.getPerformanceTracker().generateReport(logger);
+    super.onProcessingOver(ctx);
     // Reset indentation after Jackson module generation as well
     ctx.resetIndentation();
   }
