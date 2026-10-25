@@ -1,0 +1,366 @@
+/*
+ * MIT License
+ *
+ * Copyright (c) 2025-2026 Andreas Igel
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.javahelpers.codegen.processing;
+
+import java.util.List;
+import java.util.Set;
+import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.annotation.processing.RoundEnvironment;
+import javax.annotation.processing.SupportedAnnotationTypes;
+import javax.lang.model.SourceVersion;
+import javax.lang.model.element.TypeElement;
+import org.javahelpers.simple.builders.processor.classgen.ClassCodeGenerator;
+import org.javahelpers.simple.builders.processor.classgen.CodeGenerationException;
+import org.javahelpers.simple.builders.processor.model.core.GenerationTargetClassDto;
+import org.javahelpers.simple.builders.processor.processing.AnnotationProcessingContext;
+import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsReader;
+import org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker;
+import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
+
+/**
+ * Driver of a generic annotation-processing pipeline: the framework owns the processing lifecycle,
+ * the domain plugs in its hooks — collect, plan, register, analyse/map, generate, finalize.
+ *
+ * <p>The round spine:
+ *
+ * <pre>
+ *   ctx      = domain.createContext(env, logger)                       [in init]
+ *   elements = elementSpec().collect(annotations, roundEnv, logger)
+ *   tasks    = domain.plan(elements, ctx)
+ *   domain.registerPlannedOutputs(tasks, ctx)                          [up-front type recognition]
+ *   for each task (guarded, strict-mode reporting):
+ *     def     = domain.analyse(task, ctx)
+ *     targets = domain.mapToTargets(def, task, ctx)
+ *     for each target:
+ *       existsGuard → engine.generate(target, formatterResolver.resolve(target.mode))
+ *     domain.afterGenerate(def, targets, task, ctx)
+ *   domain.endRound(ctx)
+ *   last round: domain.onProcessingOver(ctx)                           [deferred outputs, reports]
+ * </pre>
+ *
+ * <p>Per-element failures are caught and reported through {@link
+ * AnnotationProcessingContext#reportBasedOnStrictMode}, so one broken element does not abort the
+ * round; in strict mode they become errors.
+ *
+ * @param <C> the domain's processing context type
+ * @param <K> the domain's configuration type carried by {@link CodegenTask}
+ * @param <D> the domain's definition type — the analysis result mapped to render targets
+ */
+public abstract class AbstractCodegenProcessor<C extends AnnotationProcessingContext, K, D>
+    extends AbstractProcessor {
+
+  /** The domain's context instance. */
+  protected C context;
+
+  /** Logger for the domain's hooks (init, last-round reports). */
+  protected ProcessingLogger logger;
+
+  private ClassCodeGenerator codeGenerator;
+  private SourceFormatterResolver formatterResolver;
+  private boolean supportedJdk = true;
+
+  @Override
+  public synchronized void init(ProcessingEnvironment processingEnv) {
+    super.init(processingEnv);
+    CompilerArgumentsReader reader = new CompilerArgumentsReader(processingEnv);
+    this.logger = createLogger(processingEnv, reader);
+    this.context = createContext(processingEnv, reader, logger);
+    this.codeGenerator = createGenerator(processingEnv, logger, context);
+    this.formatterResolver = createFormatterResolver(reader, logger);
+    onInit(processingEnv, reader, context);
+
+    SourceVersion current = processingEnv.getSourceVersion();
+    this.supportedJdk = isAtLeast(current, requiredSourceVersion());
+    if (!this.supportedJdk) {
+      String releaseNumber = requiredSourceVersion().replace("RELEASE_", "");
+      context.error(
+          "%s requires Java %s or higher for annotation processing. Detected: '%s'. Please upgrade to JDK %s+ or disable the processor.",
+          processorTag(), releaseNumber, current, releaseNumber);
+    }
+  }
+
+  /**
+   * Runs one processing round — see the class javadoc for the spine. Never claims annotations:
+   * claiming is all-or-nothing over the supported set and {@link SupportedAnnotationTypes} must
+   * stay {@code "*"} to discover user-defined (meta-annotated) annotation types; claiming would
+   * hide foreign annotations from later processors (hence the {@code java:S3516} suppression).
+   */
+  @Override
+  @SuppressWarnings("java:S3516")
+  public final boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+    if (!supportedJdk) {
+      // Fail fast: init() already emitted the error; do not attempt any processing.
+      return false;
+    }
+    if (roundEnv.processingOver()) {
+      onProcessingOver(context);
+      return false;
+    }
+
+    PerformanceTracker tracker = context.getPerformanceTracker();
+    context.info("%s: PROCESSING ROUND START", processorTag());
+
+    tracker.startPhase();
+    ElementCollection collected = elementSpec().collect(annotations, roundEnv, logger);
+    tracker.endPhase(elementSpec().collectionPhase());
+    context.debug("%s: Processing round started.", processorTag());
+
+    List<CodegenTask<K>> tasks = plan(collected, context);
+    if (collected.isEmpty() || isFinished(context)) {
+      return false;
+    }
+
+    registerPlannedOutputs(tasks, context);
+
+    int successfulGenerations = 0;
+    for (CodegenTask<K> task : tasks) {
+      context.debugStartOperation("Processing element: " + task.element().getSimpleName());
+      tracker.startClass(task.element().getSimpleName().toString());
+      try {
+        D definition = analyse(task, context);
+        List<GenerationTargetClassDto> targets = mapToTargets(definition, task, context);
+        tracker.startPhase();
+        for (GenerationTargetClassDto target : targets) {
+          generateTarget(target);
+        }
+        tracker.endPhase(generationPhase());
+        afterGenerate(definition, targets, task, context);
+        successfulGenerations++;
+      } catch (Exception ex) {
+        // By default generation failures are warnings so other targets are still generated.
+        // In opt-in strict mode they are promoted to errors that fail the build.
+        context.reportBasedOnStrictMode(
+            task.reportingElement(),
+            "%s: Failed to generate %s - %s",
+            processorTag(),
+            generatedKind(),
+            ex.getMessage());
+      } finally {
+        context.debugEndOperation();
+      }
+    }
+
+    if (successfulGenerations > 0) {
+      context.info(
+          "%s: Successfully generated %d %s(s) in this processing round",
+          processorTag(), successfulGenerations, generatedKind());
+    }
+
+    // Reset indentation level at the end of each processing round to prevent cascading errors
+    context.resetIndentation();
+    endRound(context);
+    return false;
+  }
+
+  @Override
+  public final Set<String> getSupportedOptions() {
+    return optionRegistry().supportedOptions();
+  }
+
+  @Override
+  public SourceVersion getSupportedSourceVersion() {
+    return SourceVersion.latestSupported();
+  }
+
+  /**
+   * Generates one target class through the configured engine after checking the target does not
+   * already exist. Also usable by the domain's {@link #onProcessingOver} implementation for
+   * deferred outputs.
+   *
+   * @param target the class definition to generate
+   * @throws CodeGenerationException if the target exists or generation fails
+   */
+  protected final void generateTarget(GenerationTargetClassDto target)
+      throws CodeGenerationException {
+    assertTargetDoesNotExist(target);
+    codeGenerator.generateClass(target, formatterResolver.resolve(target.getFormattingMode()));
+  }
+
+  /**
+   * Fails the build with a descriptive error when the class to be generated already exists (a
+   * manually written class or a leftover from a previous compilation).
+   *
+   * @param target the class definition to check
+   * @throws CodeGenerationException if a class with the target qualified name already exists
+   */
+  private void assertTargetDoesNotExist(GenerationTargetClassDto target)
+      throws CodeGenerationException {
+    String qualifiedName = target.getTypeName().getFullQualifiedName();
+    boolean exists;
+    try {
+      exists = context.getTypeElement(qualifiedName) != null;
+    } catch (Exception e) {
+      context.debug(
+          "Error checking if class '%s' already exists: %s",
+          qualifiedName, e.getMessage() != null ? e.getMessage() : "No message");
+      exists = false;
+    }
+    if (exists) {
+      String kind = generatedKind();
+      String capitalized = Character.toUpperCase(kind.charAt(0)) + kind.substring(1);
+      throw new CodeGenerationException(
+          """
+              %s class '%s' already exists. This may be a manually written %s or a previously generated %s.
+              To resolve this:
+              1. If you have a manual %s, consider renaming it or removing the annotation triggering generation
+              2. If this is from a previous compilation, clean and rebuild the project
+              3. Check that you're not trying to generate multiple %ss for the same target type
+              """
+              .formatted(capitalized, qualifiedName, kind, kind, kind, kind));
+    }
+  }
+
+  /**
+   * Checks whether the current SourceVersion is at least the required one, in a backwards
+   * compatible way (the required constant may not exist on older JDKs).
+   */
+  private static boolean isAtLeast(SourceVersion current, String requiredName) {
+    try {
+      return current.ordinal() >= SourceVersion.valueOf(requiredName).ordinal();
+    } catch (IllegalArgumentException ex) {
+      // Running on a JDK where the required release does not exist
+      return false;
+    }
+  }
+
+  /** Creates the logger honoring the domain's verbosity option. */
+  protected abstract ProcessingLogger createLogger(
+      ProcessingEnvironment processingEnv, CompilerArgumentsReader reader);
+
+  /**
+   * Creates the domain's processing context.
+   *
+   * @param processingEnv the processing environment
+   * @param reader compiler-argument access — global configuration typically comes from here
+   * @param logger logger for output
+   * @return the domain's context instance
+   */
+  protected abstract C createContext(
+      ProcessingEnvironment processingEnv, CompilerArgumentsReader reader, ProcessingLogger logger);
+
+  /** Creates the code generation engine — the {@link ClassCodeGenerator} backend port. */
+  protected abstract ClassCodeGenerator createGenerator(
+      ProcessingEnvironment processingEnv, ProcessingLogger logger, C context);
+
+  /** Creates the source formatter resolver for the configured profile. */
+  protected abstract SourceFormatterResolver createFormatterResolver(
+      CompilerArgumentsReader reader, ProcessingLogger logger);
+
+  /** Which elements the domain generates code for. */
+  protected abstract AnnotationElementSpec elementSpec();
+
+  /** The processor's declared compiler options. */
+  protected abstract ProcessorOptionRegistry optionRegistry();
+
+  /** The minimum source level the processor supports, as a {@link SourceVersion} name. */
+  protected abstract String requiredSourceVersion();
+
+  /** Diagnostic tag prefixing messages, e.g. {@code "simple-builders"}. */
+  protected abstract String processorTag();
+
+  /** What one generated unit is called in diagnostics, e.g. {@code "builder"}. */
+  protected abstract String generatedKind();
+
+  /** Domain-specific initialization, after the framework wiring is in place. */
+  protected void onInit(
+      ProcessingEnvironment processingEnv, CompilerArgumentsReader reader, C context) {}
+
+  /**
+   * Plans the tasks of this round from the collected elements: resolves per-element configuration,
+   * expands multi-target declarations and applies domain scoping rules.
+   *
+   * @param collected the elements matched by {@link #elementSpec()}
+   * @param context the processing context
+   * @return the generation plan, possibly empty
+   */
+  protected abstract List<CodegenTask<K>> plan(ElementCollection collected, C context);
+
+  /**
+   * Registers the types this round will generate, up front, so references to them resolve during
+   * analysis. Domains register into {@link AnnotationProcessingContext#getGeneratedTypes()}.
+   * Default: no registration.
+   *
+   * @param tasks the planned tasks
+   * @param context the processing context
+   */
+  protected void registerPlannedOutputs(List<CodegenTask<K>> tasks, C context) {}
+
+  /**
+   * Whether the domain generates in exactly one round and that round already ran. Default {@code
+   * false} — every round with matching elements is processed.
+   *
+   * @param context the processing context
+   * @return {@code true} to skip this round
+   */
+  protected boolean isFinished(C context) {
+    return false;
+  }
+
+  /**
+   * Analyses one planned task into its domain definition — the analysis half of the
+   * analysis/generation separation.
+   *
+   * @param task the planned task
+   * @param context the processing context
+   * @return the domain definition
+   * @throws Exception when analysis fails; reported as a per-element failure
+   */
+  protected abstract D analyse(CodegenTask<K> task, C context) throws Exception;
+
+  /**
+   * Maps a domain definition to render targets — the generation half of the analysis/generation
+   * separation, separated by the {@link GenerationTargetClassDto} boundary.
+   *
+   * @param definition the analysed definition
+   * @param task the planned task
+   * @param context the processing context
+   * @return the class definitions to generate (usually one)
+   * @throws Exception when mapping fails; reported as a per-element failure
+   */
+  protected abstract List<GenerationTargetClassDto> mapToTargets(
+      D definition, CodegenTask<K> task, C context) throws Exception;
+
+  /**
+   * Runs after all targets of a task generated successfully — e.g. deferred-output accumulation and
+   * per-class metrics. Default: nothing.
+   *
+   * @param definition the analysed definition
+   * @param targets the generated class definitions
+   * @param task the planned task
+   * @param context the processing context
+   */
+  protected void afterGenerate(
+      D definition, List<GenerationTargetClassDto> targets, CodegenTask<K> task, C context) {}
+
+  /** The performance phase wrapping target generation. */
+  protected abstract String generationPhase();
+
+  /** Callback for the last processing round — deferred outputs and final reports. */
+  protected void onProcessingOver(C context) {}
+
+  /** Callback at the end of a generating round — domain finalization. */
+  protected void endRound(C context) {}
+}

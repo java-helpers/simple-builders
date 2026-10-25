@@ -28,12 +28,14 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import javax.annotation.processing.ProcessingEnvironment;
+import org.javahelpers.codegen.processing.SourceFormatterResolver;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.core.enums.FormattingMode;
 import org.javahelpers.simple.builders.processor.classgen.CodeGenerationException;
 import org.javahelpers.simple.builders.processor.classgen.GenerationEnvironment;
 import org.javahelpers.simple.builders.processor.classgen.SourceFormatter;
 import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterCodeGenerator;
+import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterSourceFormatter;
 import org.javahelpers.simple.builders.processor.classgen.roaster.exceptions.RoasterMapperException;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.core.GenerationTargetClassDto;
@@ -44,7 +46,6 @@ import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
-import org.javahelpers.simple.builders.processor.processing.SourceFormatterResolver;
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 import org.javahelpers.simple.builders.processor.testing.CapturingProcessingLogger;
 import org.javahelpers.simple.builders.processor.testing.ProcessingEnvironmentStub;
@@ -93,7 +94,8 @@ class RoasterCodeGeneratorResilienceTest {
                 env, logger, context.getPerformanceTracker(), context::reportBasedOnStrictMode));
 
     SourceFormatter formatter =
-        new SourceFormatterResolver(env, logger).resolve(FormattingMode.NONE);
+        new SourceFormatterResolver(logger, null, RoasterSourceFormatter::new)
+            .resolve(FormattingMode.NONE);
     CodeGenerationException thrown =
         assertThrows(
             CodeGenerationException.class, () -> generator.generateClass(classDef, formatter));
@@ -129,7 +131,8 @@ class RoasterCodeGeneratorResilienceTest {
                 context::reportBasedOnStrictMode));
 
     SourceFormatter formatter =
-        new SourceFormatterResolver(env, capturing.logger()).resolve(FormattingMode.NONE);
+        new SourceFormatterResolver(capturing.logger(), null, RoasterSourceFormatter::new)
+            .resolve(FormattingMode.NONE);
     // generation itself succeeds; only the file-write step fails on the stub's null filer
     assertThrows(NullPointerException.class, () -> generator.generateClass(classDef, formatter));
     capturing.assertMessage(

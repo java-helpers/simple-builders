@@ -41,12 +41,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.Processor;
-import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
-import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
@@ -57,7 +54,9 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import org.apache.commons.lang3.StringUtils;
+import org.javahelpers.codegen.processing.AbstractCodegenProcessor;
 import org.javahelpers.codegen.processing.AnnotationElementSpec;
+import org.javahelpers.codegen.processing.CodegenTask;
 import org.javahelpers.codegen.processing.ElementCollection;
 import org.javahelpers.codegen.processing.ElementSelector;
 import org.javahelpers.codegen.processing.ProcessingTarget;
@@ -94,14 +93,14 @@ import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLo
 
 /**
  * BuilderProcessor is an annotation processor for execution in generate-sources phase. The
- * BuilderProcessor using the Java way for generating builders, by implementing {@code
- * javax.annotation.processing.AbstractProcessor}.
+ * BuilderProcessor using the Java way for generating builders, plugged into the generic pipeline
+ * driven by {@link AbstractCodegenProcessor}.
  */
 @AutoService(Processor.class)
 @SupportedAnnotationTypes("*")
-public class BuilderProcessor extends AbstractProcessor {
-  private static final String MSG_FAILED_TO_GENERATE =
-      "simple-builders: Failed to generate builder - %s";
+public class BuilderProcessor
+    extends AbstractCodegenProcessor<
+        BuilderProcessingContext, BuilderConfiguration, BuilderDefinitionDto> {
   private static final String GROUP_ANNOTATED_ELEMENTS = "annotatedElements";
   private static final String GROUP_EXTERNAL_TYPE_HOLDERS = "externalTypeHolders";
 
@@ -130,170 +129,137 @@ public class BuilderProcessor extends AbstractProcessor {
                   null)),
           PHASE_ELEMENT_COLLECTION);
 
-  private BuilderProcessingContext context;
-  private ProcessingLogger logger;
-  private ClassCodeGenerator codeGenerator;
-  private SourceFormatterResolver formatterResolver;
+  /** The global configuration resolved from compiler arguments — needed by several hooks. */
+  private BuilderConfiguration globalConfig;
+
   private JacksonModuleGenerator jacksonModuleGenerator;
-  private boolean supportedJdk = true;
 
   @Override
-  public synchronized void init(ProcessingEnvironment processingEnv) {
-    super.init(processingEnv);
-    // Read global configuration from compiler arguments
-    CompilerArgumentsReader reader = new CompilerArgumentsReader(processingEnv);
-    this.logger =
+  protected ProcessingLogger createLogger(
+      ProcessingEnvironment processingEnv, CompilerArgumentsReader reader) {
+    ProcessingLogger logger =
         reader.readBooleanValue(CompilerArgumentsEnum.VERBOSE)
             ? ProcessingLogger.createVerbose(processingEnv)
             : ProcessingLogger.create(processingEnv);
     logger.debug("Starting BuilderProcessor...");
+    return logger;
+  }
 
-    BuilderConfiguration globalConfig =
-        BuilderConfigurationReader.readCompilerConfiguration(reader, logger);
+  @Override
+  protected BuilderProcessingContext createContext(
+      ProcessingEnvironment processingEnv,
+      CompilerArgumentsReader reader,
+      ProcessingLogger logger) {
+    this.globalConfig = BuilderConfigurationReader.readCompilerConfiguration(reader, logger);
     logger.debug("Loaded global configuration from compiler arguments: %s", globalConfig);
-
     SimpleBuildersSpiIntegration.initCompilation(processingEnv.getElementUtils());
+    return new BuilderProcessingContext(logger, globalConfig, processingEnv);
+  }
 
-    this.context = new BuilderProcessingContext(logger, globalConfig, processingEnv);
-    this.codeGenerator =
-        new RoasterCodeGenerator(
-            new GenerationEnvironment(
-                processingEnv,
-                logger,
-                context.getPerformanceTracker(),
-                context::reportBasedOnStrictMode));
-    this.formatterResolver =
-        new SourceFormatterResolver(
-            logger,
-            StringUtils.trimToNull(reader.readValue(CompilerArgumentsEnum.FORMATTER_PROFILE)),
-            RoasterSourceFormatter::new);
+  @Override
+  protected ClassCodeGenerator createGenerator(
+      ProcessingEnvironment processingEnv, ProcessingLogger logger, BuilderProcessingContext ctx) {
+    return new RoasterCodeGenerator(
+        new GenerationEnvironment(
+            processingEnv, logger, ctx.getPerformanceTracker(), ctx::reportBasedOnStrictMode));
+  }
+
+  @Override
+  protected SourceFormatterResolver createFormatterResolver(
+      CompilerArgumentsReader reader, ProcessingLogger logger) {
+    return new SourceFormatterResolver(
+        logger,
+        StringUtils.trimToNull(reader.readValue(CompilerArgumentsEnum.FORMATTER_PROFILE)),
+        RoasterSourceFormatter::new);
+  }
+
+  @Override
+  protected void onInit(
+      ProcessingEnvironment processingEnv,
+      CompilerArgumentsReader reader,
+      BuilderProcessingContext ctx) {
     this.jacksonModuleGenerator = new JacksonModuleGenerator(processingEnv, logger, globalConfig);
 
     // Initialize GeneratorRegistry once during processor initialization
-    context.debugStartOperation("Initializing generator registry");
+    ctx.debugStartOperation("Initializing generator registry");
     try {
-      context.getGeneratorRegistry();
+      ctx.getGeneratorRegistry();
     } finally {
-      context.debugEndOperation();
-    }
-
-    SourceVersion current = processingEnv.getSourceVersion();
-    this.supportedJdk = isAtLeastJava17(current);
-    if (!this.supportedJdk) {
-      context.error(
-          "simple-builders requires Java 17 or higher for annotation processing. Detected: '%s'. Please upgrade to JDK 17+ or disable the processor.",
-          current);
+      ctx.debugEndOperation();
     }
   }
 
-  /**
-   * Generates all builders in exactly one round — the first round carrying simple-builders
-   * annotations — and marks the SPI registry final when that round ends.
-   *
-   * <p>Always returns {@code false}, so this method intentionally never claims annotations (hence
-   * the {@code java:S3516} suppression). Claiming is all-or-nothing over the supported set and
-   * {@link SupportedAnnotationTypes} must stay {@code "*"} to discover user-defined template
-   * annotations; claiming would therefore hide every annotation in the round — including foreign
-   * ones like MapStruct's {@code @Mapper} — from later processors.
-   */
   @Override
-  @SuppressWarnings("java:S3516")
-  public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-    if (!supportedJdk) {
-      // Fail fast: we already emitted an error in init(); do not attempt any processing.
-      return false;
-    }
+  protected AnnotationElementSpec elementSpec() {
+    return ELEMENT_SPEC;
+  }
 
-    // Generate Jackson Module if processing is over and feature is enabled
-    if (roundEnv.processingOver()) {
-      SimpleBuildersSpiIntegration.finishCompilation();
-      generateJacksonModules(context.getPerformanceTracker());
-      return false;
-    }
-    PerformanceTracker tracker = context.getPerformanceTracker();
-    context.info("simple-builders: PROCESSING ROUND START");
+  @Override
+  protected ProcessorOptionRegistry optionRegistry() {
+    return OPTION_REGISTRY;
+  }
 
-    tracker.startPhase();
-    ElementCollection collected = ELEMENT_SPEC.collect(annotations, roundEnv, logger);
+  @Override
+  protected String requiredSourceVersion() {
+    return "RELEASE_17";
+  }
+
+  @Override
+  protected String processorTag() {
+    return "simple-builders";
+  }
+
+  @Override
+  protected String generatedKind() {
+    return "builder";
+  }
+
+  @Override
+  protected String generationPhase() {
+    return PHASE_CODE_GENERATION;
+  }
+
+  @Override
+  protected List<CodegenTask<BuilderConfiguration>> plan(
+      ElementCollection collected, BuilderProcessingContext ctx) {
     List<Element> sortedElements = collected.byName(GROUP_ANNOTATED_ELEMENTS);
     List<Element> sortedHolders = collected.byName(GROUP_EXTERNAL_TYPE_HOLDERS);
-    tracker.endPhase(ELEMENT_SPEC.collectionPhase());
-
-    context.debug("simple-builders: Processing round started.");
-    context.debug("simple-builders: Found %d annotated elements.", sortedElements.size());
-    context.debug(
+    ctx.debug("simple-builders: Found %d annotated elements.", sortedElements.size());
+    ctx.debug(
         "simple-builders: Found %d type(s) for generation with @SimpleBuilderFor.",
         sortedHolders.size());
-
-    // Resolve configuration and apply generation scopes before processing any builder. This lets
-    // the scope resolver know every builder that will be generated in this round.
-    List<ElementToGenerate> elementsToGenerate =
+    List<CodegenTask<BuilderConfiguration>> tasks =
         resolveGenerationPlan(
-            sortedElements, sortedHolders, context.getConfigurationReader(), tracker);
-    context.debug(
+            sortedElements,
+            sortedHolders,
+            ctx.getConfigurationReader(),
+            ctx.getPerformanceTracker());
+    ctx.debug(
         "simple-builders: %d of %d annotated element(s) are inside the builderGenerationPackages scope.",
-        elementsToGenerate.size(), sortedElements.size());
-    if (SimpleBuildersSpiIntegration.isSimpleBuildersFinishedForIntegration(
-            processingEnv.getElementUtils())
-        || (sortedElements.isEmpty() && sortedHolders.isEmpty())) {
-      // simple-builders generates in exactly one round — the first round carrying its
-      // annotations; elements first appearing in later rounds get no builder.
-      return false;
-    }
-    registerGeneratedTypes(elementsToGenerate);
-
-    int successfulGenerations = generateBuilders(elementsToGenerate, tracker);
-
-    // Log summary of builder generation
-    if (successfulGenerations > 0) {
-      context.info(
-          "simple-builders: Successfully generated %d builder(s) in this processing round",
-          successfulGenerations);
-    }
-
-    // Reset indentation level at the end of each processing round to prevent cascading errors
-    context.resetIndentation();
-    // The generating round is done — the registry is final for SPI adapters from here on.
-    SimpleBuildersSpiIntegration.finishCompilation();
-    return false;
+        tasks.size(), sortedElements.size());
+    return tasks;
   }
 
-  /** Generates all Jackson modules after the last processing round and reports the metrics. */
-  private void generateJacksonModules(PerformanceTracker tracker) {
-    tracker.generateReport(logger);
-
-    List<GenerationTargetClassDto> moduleClassDefs = jacksonModuleGenerator.getModuleDefinitions();
-    for (GenerationTargetClassDto moduleClassDef : moduleClassDefs) {
-      String packageName = moduleClassDef.getTypeName().getPackageName();
-      context.info("Generating Jackson Module in package '%s'", packageName);
-      try {
-        assertTargetClassDoesNotExist(moduleClassDef);
-        codeGenerator.generateClass(
-            moduleClassDef, formatterResolver.resolve(moduleClassDef.getFormattingMode()));
-      } catch (CodeGenerationException e) {
-        // By default Jackson module generation failures are warnings. In opt-in strict mode
-        // they are promoted to errors that fail the build.
-        context.reportBasedOnStrictMode(
-            "simple-builders: Error generating Jackson module for package %s: %s",
-            packageName, e.getMessage());
-      }
-    }
-    // Reset indentation after Jackson module generation as well
-    context.resetIndentation();
+  @Override
+  protected boolean isFinished(BuilderProcessingContext ctx) {
+    // simple-builders generates in exactly one round — the first round carrying its
+    // annotations; elements first appearing in later rounds get no builder.
+    return SimpleBuildersSpiIntegration.isSimpleBuildersFinishedForIntegration(
+        processingEnv.getElementUtils());
   }
 
   /**
    * Resolves the configuration per element and applies the {@code builderGenerationPackages} scope,
-   * returning the elements that will have a builder generated in this round. External types listed
-   * in {@code @SimpleBuilderFor} are expanded afterwards so a directly annotated DTO always wins
-   * over an external-type request for the same builder name.
+   * returning the tasks for this round. External types listed in {@code @SimpleBuilderFor} are
+   * expanded afterwards so a directly annotated DTO always wins over an external-type request for
+   * the same builder name.
    */
-  private List<ElementToGenerate> resolveGenerationPlan(
+  private List<CodegenTask<BuilderConfiguration>> resolveGenerationPlan(
       List<Element> sortedElements,
       List<Element> sortedHolders,
       BuilderConfigurationReader reader,
       PerformanceTracker tracker) {
-    List<ElementToGenerate> elementsToGenerate = new ArrayList<>();
+    List<CodegenTask<BuilderConfiguration>> tasks = new ArrayList<>();
     // Builder names already planned in this round: needed for conflict detection, so a directly
     // annotated type wins over an external-type declaration producing the same builder name
     // (the conflicting @SimpleBuilderFor entry is skipped with a warning).
@@ -302,11 +268,12 @@ public class BuilderProcessor extends AbstractProcessor {
       context.debugStartOperation("Processing element: " + annotatedElement.getSimpleName());
       try {
         planGenerationOfAnnotatedElement(annotatedElement, reader, alreadyPlannedBuilders, tracker)
-            .ifPresent(elementsToGenerate::add);
+            .ifPresent(tasks::add);
       } catch (BuilderException ex) {
         // By default builder generation failures are warnings so other builders are still
         // generated. In opt-in strict mode they are promoted to errors that fail the build.
-        context.reportBasedOnStrictMode(annotatedElement, MSG_FAILED_TO_GENERATE, ex.getMessage());
+        context.reportBasedOnStrictMode(
+            annotatedElement, "simple-builders: Failed to generate builder - %s", ex.getMessage());
       } finally {
         context.debugEndOperation();
       }
@@ -315,22 +282,22 @@ public class BuilderProcessor extends AbstractProcessor {
     for (Element holder : sortedHolders) {
       context.debugStartOperation("Processing @SimpleBuilderFor holder: " + holder.getSimpleName());
       try {
-        elementsToGenerate.addAll(
-            planGenerationOfTypeByHolder(holder, reader, alreadyPlannedBuilders, tracker));
+        tasks.addAll(planGenerationOfTypeByHolder(holder, reader, alreadyPlannedBuilders, tracker));
       } catch (BuilderException ex) {
-        context.reportBasedOnStrictMode(holder, MSG_FAILED_TO_GENERATE, ex.getMessage());
+        context.reportBasedOnStrictMode(
+            holder, "simple-builders: Failed to generate builder - %s", ex.getMessage());
       } finally {
         context.debugEndOperation();
       }
     }
-    return elementsToGenerate;
+    return tasks;
   }
 
   /**
    * Resolves the configuration of one annotated element and plans its builder, or returns empty
    * when the element is outside the {@code builderGenerationPackages} scope.
    */
-  private Optional<ElementToGenerate> planGenerationOfAnnotatedElement(
+  private Optional<CodegenTask<BuilderConfiguration>> planGenerationOfAnnotatedElement(
       Element annotatedElement,
       BuilderConfigurationReader reader,
       Set<TypeName> alreadyPlannedBuilders,
@@ -346,7 +313,7 @@ public class BuilderProcessor extends AbstractProcessor {
     alreadyPlannedBuilders.add(
         builderTypeName(
             annotatedElement, effectiveBuilderPackage(annotatedElement, config), config));
-    return Optional.of(new ElementToGenerate(annotatedElement, config, annotatedElement));
+    return Optional.of(new CodegenTask<>(annotatedElement, config, annotatedElement));
   }
 
   /**
@@ -356,7 +323,7 @@ public class BuilderProcessor extends AbstractProcessor {
    * into different packages via {@code packageName}; without a configured package the holder's
    * package is used.
    */
-  private List<ElementToGenerate> planGenerationOfTypeByHolder(
+  private List<CodegenTask<BuilderConfiguration>> planGenerationOfTypeByHolder(
       Element holder,
       BuilderConfigurationReader reader,
       Set<TypeName> alreadyPlannedBuilders,
@@ -367,7 +334,7 @@ public class BuilderProcessor extends AbstractProcessor {
         JavaLangAnalyser.findAnnotationInstances(
             holder, SimpleBuilderFor.class, SimpleBuilderFors.class, context);
 
-    List<ElementToGenerate> results = new ArrayList<>();
+    List<CodegenTask<BuilderConfiguration>> results = new ArrayList<>();
     for (AnnotationMirror annotationInstance : annotationInstances) {
       List<TypeElement> targets = extractExternalTargetTypes(holder, annotationInstance);
       if (targets.isEmpty()) {
@@ -398,7 +365,7 @@ public class BuilderProcessor extends AbstractProcessor {
    * and the {@code builderGenerationPackages} scope only filters annotated types, so a scope that
    * would exclude an explicitly named type is a contradictory configuration and only warns.
    */
-  private Optional<ElementToGenerate> planExternalTarget(
+  private Optional<CodegenTask<BuilderConfiguration>> planExternalTarget(
       TypeElement target,
       Element holder,
       BuilderConfiguration config,
@@ -423,7 +390,7 @@ public class BuilderProcessor extends AbstractProcessor {
           builderName.getFullQualifiedName());
       return Optional.empty();
     }
-    return Optional.of(new ElementToGenerate(target, config, holder));
+    return Optional.of(new CodegenTask<>(target, config, holder));
   }
 
   /**
@@ -536,109 +503,66 @@ public class BuilderProcessor extends AbstractProcessor {
    * can trust them without a type search. The actual builder type name is registered, which may
    * differ from the target's package for {@code @SimpleBuilderFor} targets.
    */
-  private void registerGeneratedTypes(List<ElementToGenerate> elementsToGenerate) {
-    BuilderScopeResolver scopeResolver = context.getBuilderScopeResolver();
+  @Override
+  protected void registerPlannedOutputs(
+      List<CodegenTask<BuilderConfiguration>> tasks, BuilderProcessingContext ctx) {
+    BuilderScopeResolver scopeResolver = ctx.getBuilderScopeResolver();
     scopeResolver.resetGeneratedBuilders();
-    for (ElementToGenerate elementToGenerate : elementsToGenerate) {
-      if (!(elementToGenerate.element() instanceof TypeElement targetType)) {
+    for (CodegenTask<BuilderConfiguration> task : tasks) {
+      if (!(task.element() instanceof TypeElement targetType)) {
         continue;
       }
-      TypeName beanType = JavaLangMapper.mapToTypeName(targetType, context);
+      TypeName beanType = JavaLangMapper.mapToTypeName(targetType, ctx);
       TypeName builderType =
           builderTypeName(
               targetType,
-              effectiveBuilderPackage(
-                  elementToGenerate.reportingElement(), elementToGenerate.config()),
-              elementToGenerate.config());
+              effectiveBuilderPackage(task.reportingElement(), task.configuration()),
+              task.configuration());
       scopeResolver.registerGeneratedBuilder(beanType, builderType);
       scopeResolver
           .resolveGeneratedBuilder(targetType)
           .ifPresent(
               resolvedBuilder ->
                   SimpleBuildersSpiIntegration.registerBuilder(
-                      beanType, resolvedBuilder, elementToGenerate.config().getSetterPrefix()));
+                      beanType, resolvedBuilder, task.configuration().getSetterPrefix()));
     }
-  }
-
-  /** Generates a builder for each planned element and returns the number of successes. */
-  private int generateBuilders(
-      List<ElementToGenerate> elementsToGenerate, PerformanceTracker tracker) {
-    int successfulGenerations = 0;
-    for (ElementToGenerate elementToGenerate : elementsToGenerate) {
-      Element annotatedElement = elementToGenerate.element();
-      context.debugStartOperation("Processing element: " + annotatedElement.getSimpleName());
-      tracker.startClass(annotatedElement.getSimpleName().toString());
-      try {
-        process(annotatedElement, elementToGenerate.config(), builderPackageOf(elementToGenerate));
-        successfulGenerations++;
-      } catch (BuilderException ex) {
-        // By default builder generation failures are warnings so other builders are still
-        // generated. In opt-in strict mode they are promoted to errors that fail the build.
-        context.reportBasedOnStrictMode(
-            elementToGenerate.reportingElement(), MSG_FAILED_TO_GENERATE, ex.getMessage());
-      } finally {
-        context.debugEndOperation();
-      }
-    }
-    return successfulGenerations;
   }
 
   @Override
-  public Set<String> getSupportedOptions() {
-    return OPTION_REGISTRY.supportedOptions();
-  }
-
-  @Override
-  public SourceVersion getSupportedSourceVersion() {
-    return SourceVersion.latestSupported();
-  }
-
-  /**
-   * Fails the build with a descriptive error when the class to be generated already exists (a
-   * manually written class or a leftover from a previous compilation).
-   *
-   * @param classDef the class definition to check
-   * @throws CodeGenerationException if a class with the target qualified name already exists
-   */
-  private void assertTargetClassDoesNotExist(GenerationTargetClassDto classDef)
-      throws CodeGenerationException {
-    String qualifiedName = classDef.getTypeName().getFullQualifiedName();
-    boolean exists;
-    try {
-      exists = context.getTypeElement(qualifiedName) != null;
-    } catch (Exception e) {
-      context.debug(
-          "Error checking if class '%s' already exists: %s",
-          qualifiedName, e.getMessage() != null ? e.getMessage() : "No message");
-      exists = false;
-    }
-    if (exists) {
-      throw new CodeGenerationException(
-          """
-              Builder class '%s' already exists. This may be a manually written builder or a previously generated builder.
-              To resolve this:
-              1. If you have a manual builder, consider renaming it or removing @SimpleBuilder from the DTO
-              2. If this is from a previous compilation, clean and rebuild the project
-              3. Check that you're not trying to generate multiple builders for the same DTO
-              """
-              .formatted(qualifiedName));
-    }
-  }
-
-  private void process(Element annotatedElement, BuilderConfiguration config, String builderPackage)
+  protected BuilderDefinitionDto analyse(
+      CodegenTask<BuilderConfiguration> task, BuilderProcessingContext ctx)
       throws BuilderException {
-    context.initProcessingTarget(new ProcessingTarget<>(config, builderPackage));
-    PerformanceTracker tracker = context.getPerformanceTracker();
-    // Track Builder Definition Extraction
+    ctx.initProcessingTarget(new ProcessingTarget<>(task.configuration(), builderPackageOf(task)));
+    PerformanceTracker tracker = ctx.getPerformanceTracker();
     tracker.startPhase();
-    BuilderDefinitionDto builderDef = extractFromElement(annotatedElement, context);
+    BuilderDefinitionDto builderDef = extractFromElement(task.element(), ctx);
     tracker.endPhase(PHASE_BUILDER_DEFINITION_EXTRACTION);
+    return builderDef;
+  }
 
-    // Compute class-level metrics now that the definition is available
-    int fieldCount = builderDef.getAllFieldsForBuilder().size();
+  @Override
+  protected List<GenerationTargetClassDto> mapToTargets(
+      BuilderDefinitionDto definition,
+      CodegenTask<BuilderConfiguration> task,
+      BuilderProcessingContext ctx) {
+    PerformanceTracker tracker = ctx.getPerformanceTracker();
+    tracker.startPhase();
+    GenerationTargetClassDto renderingDto =
+        new BuilderToGenerationTypeMapper(task.configuration()).toRenderingDto(definition);
+    tracker.endPhase(PHASE_DTO_MAPPING);
+    return List.of(renderingDto);
+  }
+
+  @Override
+  protected void afterGenerate(
+      BuilderDefinitionDto definition,
+      List<GenerationTargetClassDto> targets,
+      CodegenTask<BuilderConfiguration> task,
+      BuilderProcessingContext ctx) {
+    GenerationTargetClassDto renderingDto = targets.get(0);
     int collectionCount =
         (int)
-            builderDef.getAllFieldsForBuilder().stream()
+            definition.getAllFieldsForBuilder().stream()
                 .filter(
                     f ->
                         f.getFieldType() instanceof TypeNameList
@@ -646,58 +570,29 @@ public class BuilderProcessor extends AbstractProcessor {
                             || f.getFieldType() instanceof TypeNameMap)
                 .count();
 
-    // Track DTO Mapping
-    tracker.startPhase();
-    GenerationTargetClassDto renderingDto =
-        new BuilderToGenerationTypeMapper(config).toRenderingDto(builderDef);
-    tracker.endPhase(PHASE_DTO_MAPPING);
-
-    // Track Code Generation (parent phase; sub-phases tracked inside RoasterCodeGenerator)
-    tracker.startPhase();
-
-    try {
-      assertTargetClassDoesNotExist(renderingDto);
-      codeGenerator.generateClass(
-          renderingDto, formatterResolver.resolve(renderingDto.getFormattingMode()));
-    } catch (CodeGenerationException e) {
-      throw new BuilderException(annotatedElement, e);
-    }
-    tracker.endPhase(PHASE_CODE_GENERATION);
-
     // Collect info for Jackson Module if enabled
-    jacksonModuleGenerator.addEntry(builderDef, annotatedElement);
-    context.debug("Jackson module entry added");
+    jacksonModuleGenerator.addEntry(definition, task.element());
+    ctx.debug("Jackson module entry added");
 
-    // End class-level timing (started in caller before config resolution)
-    tracker.endClass(fieldCount, collectionCount);
+    // End class-level timing (started by the driver before analysis)
+    ctx.getPerformanceTracker()
+        .endClass(definition.getAllFieldsForBuilder().size(), collectionCount);
 
     // Add summary of what was generated
-    context.debugEndOperation(
+    ctx.debugEndOperation(
         "Generated builder with %d fields and %d methods for %s",
-        builderDef.getAllFieldsForBuilder().size(),
+        definition.getAllFieldsForBuilder().size(),
         renderingDto.getMethods().size(),
-        builderDef.getBuilderTypeName().getClassName());
+        definition.getBuilderTypeName().getClassName());
   }
-
-  /**
-   * A type a builder is generated for.
-   *
-   * @param element the type element to generate the builder for
-   * @param config the resolved builder configuration
-   * @param reportingElement the element diagnostics are reported on - the {@code @SimpleBuilderFor}
-   *     holder for external types, otherwise the type itself
-   */
-  private record ElementToGenerate(
-      Element element, BuilderConfiguration config, Element reportingElement) {}
 
   /**
    * The package the builder is generated into: the configured {@code packageName} option when set,
    * otherwise the package of the element the generation is reported on - the
    * {@code @SimpleBuilderFor} holder for external types, the annotated type itself otherwise.
    */
-  private String builderPackageOf(ElementToGenerate elementToGenerate) {
-    return effectiveBuilderPackage(
-        elementToGenerate.reportingElement(), elementToGenerate.config());
+  private String builderPackageOf(CodegenTask<BuilderConfiguration> task) {
+    return effectiveBuilderPackage(task.reportingElement(), task.configuration());
   }
 
   /**
@@ -709,16 +604,34 @@ public class BuilderProcessor extends AbstractProcessor {
     return configured == null ? context.getPackageName(reportingElement) : configured;
   }
 
-  /**
-   * Checks whether the provided SourceVersion is at least Java 17 in a backwards compatible way.
-   */
-  private static boolean isAtLeastJava17(SourceVersion current) {
-    try {
-      SourceVersion seventeen = SourceVersion.valueOf("RELEASE_17");
-      return current.ordinal() >= seventeen.ordinal();
-    } catch (IllegalArgumentException ex) {
-      // Running on a JDK where RELEASE_17 does not exist (e.g., JDK 8)
-      return false;
+  /** Generates all Jackson modules after the last processing round and reports the metrics. */
+  @Override
+  protected void onProcessingOver(BuilderProcessingContext ctx) {
+    SimpleBuildersSpiIntegration.finishCompilation();
+    PerformanceTracker tracker = ctx.getPerformanceTracker();
+    tracker.generateReport(logger);
+
+    List<GenerationTargetClassDto> moduleClassDefs = jacksonModuleGenerator.getModuleDefinitions();
+    for (GenerationTargetClassDto moduleClassDef : moduleClassDefs) {
+      String packageName = moduleClassDef.getTypeName().getPackageName();
+      ctx.info("Generating Jackson Module in package '%s'", packageName);
+      try {
+        generateTarget(moduleClassDef);
+      } catch (CodeGenerationException e) {
+        // By default Jackson module generation failures are warnings. In opt-in strict mode
+        // they are promoted to errors that fail the build.
+        ctx.reportBasedOnStrictMode(
+            "simple-builders: Error generating Jackson module for package %s: %s",
+            packageName, e.getMessage());
+      }
     }
+    // Reset indentation after Jackson module generation as well
+    ctx.resetIndentation();
+  }
+
+  @Override
+  protected void endRound(BuilderProcessingContext ctx) {
+    // The generating round is done — the registry is final for SPI adapters from here on.
+    SimpleBuildersSpiIntegration.finishCompilation();
   }
 }
