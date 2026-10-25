@@ -40,10 +40,10 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
-import org.javahelpers.codegen.processing.DeferredTarget;
 import org.javahelpers.codegen.processing.ProcessingTarget;
 import org.javahelpers.simple.builders.processor.analysis.GeneratedTypes;
 import org.javahelpers.simple.builders.processor.analysis.TypeMappingContext;
+import org.javahelpers.simple.builders.processor.model.core.GenerationTargetClassDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.logging.ActivePerformanceTracker;
 import org.javahelpers.simple.builders.processor.processing.logging.NoOpPerformanceTracker;
@@ -93,7 +93,7 @@ public class AnnotationProcessingContext implements TypeMappingContext {
    * Class definitions the domain pushed for deferred last-round generation — drained by the
    * processing driver in the last round.
    */
-  private final List<DeferredTarget> deferredTargets = new ArrayList<>();
+  private final List<GenerationTargetClassDto> deferredTargets = new ArrayList<>();
 
   /**
    * Creates the context with default options (strict mode enabled, performance tracking disabled).
@@ -167,7 +167,7 @@ public class AnnotationProcessingContext implements TypeMappingContext {
    *
    * @param target the deferred output and its diagnostic kind
    */
-  public void addDeferredTarget(DeferredTarget target) {
+  public void addDeferredTarget(GenerationTargetClassDto target) {
     deferredTargets.add(target);
   }
 
@@ -176,7 +176,7 @@ public class AnnotationProcessingContext implements TypeMappingContext {
    *
    * @return the mutable deferred-target list
    */
-  public List<DeferredTarget> getDeferredTargets() {
+  public List<GenerationTargetClassDto> getDeferredTargets() {
     return deferredTargets;
   }
 

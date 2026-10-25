@@ -51,7 +51,6 @@ import org.javahelpers.codegen.processing.AbstractCodegenProcessor;
 import org.javahelpers.codegen.processing.AnnotationElementSpec;
 import org.javahelpers.codegen.processing.CodegenProcessorConfiguration;
 import org.javahelpers.codegen.processing.CodegenTask;
-import org.javahelpers.codegen.processing.DeferredTarget;
 import org.javahelpers.codegen.processing.ElementCollection;
 import org.javahelpers.codegen.processing.ProcessorOptionRegistry;
 import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration;
@@ -526,7 +525,10 @@ public class BuilderProcessor
     ctx.getPerformanceTracker().generateReport(logger);
     for (GenerationTargetClassDto moduleDefinition :
         jacksonModuleGenerator.getModuleDefinitions()) {
-      ctx.addDeferredTarget(new DeferredTarget(moduleDefinition, "Jackson module"));
+      ctx.info(
+          "simple-builders: Generating Jackson module in package '%s'",
+          moduleDefinition.getTypeName().getPackageName());
+      ctx.addDeferredTarget(moduleDefinition);
     }
     super.onProcessingOver(ctx);
     // Reset indentation after Jackson module generation as well

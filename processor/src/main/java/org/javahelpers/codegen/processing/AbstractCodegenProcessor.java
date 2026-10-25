@@ -594,28 +594,21 @@ public abstract class AbstractCodegenProcessor<
       D definition, GenerationTargetClassDto target, CodegenTask<K> task, C context) {}
 
   /**
-   * Callback for the last processing round — generates every {@link DeferredTarget} the domain
-   * pushed onto the context through the same guarded path as round targets. Domain extensions push
-   * their deferred outputs and call {@code super.onProcessingOver(context)} to drain, wrapped in
-   * their finalization (SPI flush, reports).
+   * Callback for the last processing round — generates every target the domain pushed onto the
+   * context through {@link AnnotationProcessingContext#addDeferredTarget} via the same guarded path
+   * as round targets. Domain extensions log and push their deferred outputs, then call {@code
+   * super.onProcessingOver(context)} to drain, wrapped in their finalization (SPI flush, reports).
    *
    * @param context the processing context
    */
   protected void onProcessingOver(C context) {
-    for (DeferredTarget deferred : context.getDeferredTargets()) {
-      GenerationTargetClassDto target = deferred.target();
-      String packageName = target.getTypeName().getPackageName();
-      String kind = deferred.kind();
-      logger.infoTagged(
-          "Generating %s in package '%s'",
-          Character.toUpperCase(kind.charAt(0)) + kind.substring(1), packageName);
+    for (GenerationTargetClassDto target : context.getDeferredTargets()) {
       try {
         generateTarget(target);
       } catch (Exception e) {
         context.reportBasedOnStrictMode(
-            logger.prefixed("Error generating %s for package %s: %s"),
-            kind,
-            packageName,
+            logger.prefixed("Error generating target for package %s: %s"),
+            target.getTypeName().getPackageName(),
             e.getMessage());
       }
     }
