@@ -593,16 +593,18 @@ public abstract class AbstractCodegenProcessor<
       D definition, List<GenerationTargetClassDto> targets, CodegenTask<K> task, C context) {}
 
   /**
-   * Callback for the last processing round — generates the domain's {@link #deferredTargets
-   * deferred targets} through the same guarded path as round targets. Domain extensions wrap this
-   * with their finalization (SPI flush, reports).
+   * Callback for the last processing round — generates every {@link DeferredTarget} the domain
+   * pushed onto the context through the same guarded path as round targets. Domain extensions push
+   * their deferred outputs and call {@code super.onProcessingOver(context)} to drain, wrapped in
+   * their finalization (SPI flush, reports).
    *
    * @param context the processing context
    */
   protected void onProcessingOver(C context) {
-    for (GenerationTargetClassDto target : deferredTargets(context)) {
+    for (DeferredTarget deferred : context.getDeferredTargets()) {
+      GenerationTargetClassDto target = deferred.target();
       String packageName = target.getTypeName().getPackageName();
-      String kind = deferredTargetsKind();
+      String kind = deferred.kind();
       context.info(
           "%s: Generating %s in package '%s'",
           processorTag(), Character.toUpperCase(kind.charAt(0)) + kind.substring(1), packageName);
@@ -614,21 +616,6 @@ public abstract class AbstractCodegenProcessor<
             processorTag(), kind, packageName, e.getMessage());
       }
     }
-  }
-
-  /**
-   * The class definitions generated deferred in the last round — accumulated during {@link
-   * #onTaskGenerated}. Default: none.
-   *
-   * @param context the processing context
-   * @return the deferred targets, possibly empty
-   */
-  protected List<GenerationTargetClassDto> deferredTargets(C context) {
-    return List.of();
-  }
-
-  private String deferredTargetsKind() {
-    return processorConfiguration.deferredTargetsKind();
   }
 
   /** Callback at the end of a generating round — domain finalization. */

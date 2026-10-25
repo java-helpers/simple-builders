@@ -54,6 +54,7 @@ import org.javahelpers.codegen.processing.AbstractCodegenProcessor;
 import org.javahelpers.codegen.processing.AnnotationElementSpec;
 import org.javahelpers.codegen.processing.CodegenProcessorConfiguration;
 import org.javahelpers.codegen.processing.CodegenTask;
+import org.javahelpers.codegen.processing.DeferredTarget;
 import org.javahelpers.codegen.processing.ElementCollection;
 import org.javahelpers.codegen.processing.ProcessorOptionRegistry;
 import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration;
@@ -128,7 +129,6 @@ public class BuilderProcessor
           .requiredSourceVersion(SourceVersion.RELEASE_17)
           .processorTag("simple-builders")
           .generatedKind("builder")
-          .deferredTargetsKind("Jackson module")
           .build();
 
   /** Creates the processor — javac instantiates it reflectively. */
@@ -529,16 +529,15 @@ public class BuilderProcessor
     return configured == null ? context.getPackageName(reportingElement) : configured;
   }
 
-  @Override
-  protected List<GenerationTargetClassDto> deferredTargets(BuilderProcessingContext ctx) {
-    return jacksonModuleGenerator.getModuleDefinitions();
-  }
-
   /** Generates all Jackson modules after the last processing round and reports the metrics. */
   @Override
   protected void onProcessingOver(BuilderProcessingContext ctx) {
     SimpleBuildersSpiIntegration.finishCompilation();
     ctx.getPerformanceTracker().generateReport(logger);
+    for (GenerationTargetClassDto moduleDefinition :
+        jacksonModuleGenerator.getModuleDefinitions()) {
+      ctx.addDeferredTarget(new DeferredTarget(moduleDefinition, "Jackson module"));
+    }
     super.onProcessingOver(ctx);
     // Reset indentation after Jackson module generation as well
     ctx.resetIndentation();

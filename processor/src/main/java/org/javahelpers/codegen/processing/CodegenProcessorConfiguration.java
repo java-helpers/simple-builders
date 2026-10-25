@@ -41,16 +41,13 @@ import javax.lang.model.SourceVersion;
  * @param processorTag diagnostic tag prefixing messages; default: {@code null} — the processor's
  *     simple class name is used
  * @param generatedKind what one generated unit is called in diagnostics; default: {@code "class"}
- * @param deferredTargetsKind what deferred targets are called in diagnostics; default: {@code
- *     "deferred target"}
  */
 public record CodegenProcessorConfiguration(
     AnnotationElementSpec elementSpec,
     ProcessorOptionRegistry optionRegistry,
     SourceVersion requiredSourceVersion,
     String processorTag,
-    String generatedKind,
-    String deferredTargetsKind) {
+    String generatedKind) {
 
   /**
    * Creates a builder with all defaults applied — only {@link #elementSpec(AnnotationElementSpec)}
@@ -69,7 +66,6 @@ public record CodegenProcessorConfiguration(
     private SourceVersion requiredSourceVersion = SourceVersion.latestSupported();
     private String processorTag;
     private String generatedKind = "class";
-    private String deferredTargetsKind = "deferred target";
 
     private Builder() {}
 
@@ -129,17 +125,6 @@ public record CodegenProcessorConfiguration(
     }
 
     /**
-     * Sets what deferred targets are called in diagnostics.
-     *
-     * @param deferredTargetsKind the deferred targets kind
-     * @return this builder
-     */
-    public Builder deferredTargetsKind(String deferredTargetsKind) {
-      this.deferredTargetsKind = deferredTargetsKind;
-      return this;
-    }
-
-    /**
      * Builds the configuration.
      *
      * @return the configuration
@@ -150,12 +135,7 @@ public record CodegenProcessorConfiguration(
         throw new IllegalStateException("elementSpec is required");
       }
       return new CodegenProcessorConfiguration(
-          elementSpec,
-          optionRegistry,
-          requiredSourceVersion,
-          processorTag,
-          generatedKind,
-          deferredTargetsKind);
+          elementSpec, optionRegistry, requiredSourceVersion, processorTag, generatedKind);
     }
   }
 }

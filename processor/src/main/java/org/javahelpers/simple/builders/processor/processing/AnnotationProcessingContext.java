@@ -24,6 +24,7 @@
 
 package org.javahelpers.simple.builders.processor.processing;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +40,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+import org.javahelpers.codegen.processing.DeferredTarget;
 import org.javahelpers.codegen.processing.ProcessingTarget;
 import org.javahelpers.simple.builders.processor.analysis.GeneratedTypes;
 import org.javahelpers.simple.builders.processor.analysis.TypeMappingContext;
@@ -86,6 +88,12 @@ public class AnnotationProcessingContext implements TypeMappingContext {
 
   /** Per-target processing state for the type currently being generated. */
   private ProcessingTarget<?> processingTarget;
+
+  /**
+   * Class definitions the domain pushed for deferred last-round generation — drained by the
+   * processing driver in the last round.
+   */
+  private final List<DeferredTarget> deferredTargets = new ArrayList<>();
 
   /**
    * Creates the context with default options (strict mode enabled, performance tracking disabled).
@@ -150,6 +158,26 @@ public class AnnotationProcessingContext implements TypeMappingContext {
    */
   public ProcessingTarget<?> getProcessingTarget() {
     return processingTarget;
+  }
+
+  /**
+   * Queues a class definition for deferred generation in the last processing round. Domains push
+   * during a round ({@code onTaskGenerated}, end-of-round or finalization events) and the driver
+   * generates them once specification of every target has finished.
+   *
+   * @param target the deferred output and its diagnostic kind
+   */
+  public void addDeferredTarget(DeferredTarget target) {
+    deferredTargets.add(target);
+  }
+
+  /**
+   * The deferred outputs queued so far.
+   *
+   * @return the mutable deferred-target list
+   */
+  public List<DeferredTarget> getDeferredTargets() {
+    return deferredTargets;
   }
 
   /**
