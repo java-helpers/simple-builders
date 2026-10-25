@@ -53,8 +53,8 @@ import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLo
  * <p>A new processor declares its static surface once as {@link CodegenProcessorConfiguration}
  * (passed to the constructor — element spec, options, source level) and implements only the domain
  * hooks marked {@code [implement]}: {@link #createContext}, {@link #planTasks}, {@link
- * #registerPlannedGenerationTargets}, {@link #analyse} and {@link #mapToTargets}. Every other step
- * is framework-owned or an optional {@code [default]} the domain may override.
+ * #registerPlannedGenerationTargets}, {@link #analyse} and {@link #mapToTargetSpecification}. Every
+ * other step is framework-owned or an optional {@code [default]} the domain may override.
  *
  * <p>The round spine:
  *
@@ -65,11 +65,11 @@ import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLo
  *   registerPlannedOutputs(tasks, ctx)                                  [framework; per-task names from registerPlannedGenerationTargets() — implement]
  *   loop 1 — specification (guarded, strict-mode reporting):            [framework]
  *     defs    = analyse(task, ctx)                                      [implement]
- *     targets = mapToTargets(def, task, ctx)  (per def)                 [implement]
+ *     target  = mapToTargetSpecification(def, cfg, ctx)  (per def)      [implement]
  *   loop 2 — generation:                                                [framework]
  *     for each target:
  *       existsGuard → engine.generate(target, formatterResolver.resolve(target.mode))  [framework]
- *     onTaskGenerated(def, targets, task, ctx)                          [default: no-op]
+ *     onTaskGenerated(def, target, task, ctx)                          [default: no-op]
  *   endRound(ctx)                                                       [default: no-op]
  *   last round: onProcessingOver(ctx)                                   [default: drains context.getDeferredTargets()]
  * </pre>
@@ -97,7 +97,9 @@ public abstract class AbstractCodegenProcessor<
   /** Default performance phase for {@link #analyse} — domains may name their own. */
   private static final String PHASE_ANALYSIS = "Analysis";
 
-  /** Default performance phase for {@link #mapToTargets} — domains may name their own. */
+  /**
+   * Default performance phase for {@link #mapToTargetSpecification} — domains may name their own.
+   */
   private static final String PHASE_TARGET_MAPPING = "Target Mapping";
 
   /** The domain's context instance. */
@@ -190,13 +192,13 @@ public abstract class AbstractCodegenProcessor<
         }
         for (D definition : definitions) {
           tracker.startPhase();
-          List<GenerationTargetClassDto> targets;
+          GenerationTargetClassDto target;
           try {
-            targets = mapToTargets(definition, task, context);
+            target = mapToTargetSpecification(definition, task.configuration(), context);
           } finally {
             tracker.endPhase(mappingPhase());
           }
-          planned.add(new PlannedWork<>(task, definition, targets));
+          planned.add(new PlannedWork<>(task, definition, target));
         }
       } catch (Exception ex) {
         // By default generation failures are warnings so other targets are still generated.
@@ -221,11 +223,9 @@ public abstract class AbstractCodegenProcessor<
         context.initProcessingTarget(
             new ProcessingTarget<>(work.task().configuration(), work.task().outputPackage()));
         tracker.startPhase();
-        for (GenerationTargetClassDto target : work.targets()) {
-          generateTarget(target);
-        }
+        generateTarget(work.target());
         tracker.endPhase(PHASE_CODE_GENERATION);
-        onTaskGenerated(work.definition(), work.targets(), work.task(), context);
+        onTaskGenerated(work.definition(), work.target(), work.task(), context);
         successfulGenerations++;
       } catch (Exception ex) {
         context.reportBasedOnStrictMode(
@@ -597,8 +597,8 @@ public abstract class AbstractCodegenProcessor<
   }
 
   /**
-   * The performance phase {@link #mapToTargets} is reported under — domain-named. Default {@value
-   * #PHASE_TARGET_MAPPING}.
+   * The performance phase {@link #mapToTargetSpecification} is reported under — domain-named.
+   * Default {@value #PHASE_TARGET_MAPPING}.
    */
   protected String mappingPhase() {
     return PHASE_TARGET_MAPPING;
@@ -617,29 +617,30 @@ public abstract class AbstractCodegenProcessor<
   protected abstract List<D> analyse(CodegenTask<K> task, C context) throws Exception;
 
   /**
-   * Maps a domain definition to render targets — the generation half of the analysis/generation
-   * separation, separated by the {@link GenerationTargetClassDto} boundary.
+   * Maps a domain definition to its render target — the generation half of the analysis/generation
+   * separation, separated by the {@link GenerationTargetClassDto} boundary. One definition
+   * specifies exactly one target.
    *
    * @param definition the analysed definition
-   * @param task the planned task
+   * @param configuration the configuration the task resolved
    * @param context the processing context
-   * @return the class definitions to generate (usually one)
+   * @return the class definition to generate
    * @throws Exception when mapping fails; reported as a per-element failure
    */
-  protected abstract List<GenerationTargetClassDto> mapToTargets(
-      D definition, CodegenTask<K> task, C context) throws Exception;
+  protected abstract GenerationTargetClassDto mapToTargetSpecification(
+      D definition, K configuration, C context) throws Exception;
 
   /**
-   * Event after all targets of a task generated successfully — the insert point for deferred-output
+   * Event after a task's target generated successfully — the insert point for deferred-output
    * accumulation, per-class metrics, and domain bookkeeping. Default: nothing.
    *
    * @param definition the analysed definition
-   * @param targets the generated class definitions
+   * @param target the generated class definition
    * @param task the planned task
    * @param context the processing context
    */
   protected void onTaskGenerated(
-      D definition, List<GenerationTargetClassDto> targets, CodegenTask<K> task, C context) {}
+      D definition, GenerationTargetClassDto target, CodegenTask<K> task, C context) {}
 
   /**
    * Callback for the last processing round — generates every {@link DeferredTarget} the domain
@@ -672,5 +673,5 @@ public abstract class AbstractCodegenProcessor<
 
   /** One task's specification output, carried from the analysis loop into the generation loop. */
   private record PlannedWork<K extends CodegenConfiguration, D>(
-      CodegenTask<K> task, D definition, List<GenerationTargetClassDto> targets) {}
+      CodegenTask<K> task, D definition, GenerationTargetClassDto target) {}
 }

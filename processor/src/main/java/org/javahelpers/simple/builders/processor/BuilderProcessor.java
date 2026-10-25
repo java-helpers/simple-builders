@@ -488,21 +488,20 @@ public class BuilderProcessor
   }
 
   @Override
-  protected List<GenerationTargetClassDto> mapToTargets(
+  protected GenerationTargetClassDto mapToTargetSpecification(
       BuilderDefinitionDto definition,
-      CodegenTask<BuilderConfiguration> task,
+      BuilderConfiguration configuration,
       BuilderProcessingContext ctx) {
-    return List.of(
-        new BuilderToGenerationTypeMapper(task.configuration()).toRenderingDto(definition));
+    return new BuilderToGenerationTypeMapper(configuration).toRenderingDto(definition);
   }
 
   @Override
   protected void onTaskGenerated(
       BuilderDefinitionDto definition,
-      List<GenerationTargetClassDto> targets,
+      GenerationTargetClassDto target,
       CodegenTask<BuilderConfiguration> task,
       BuilderProcessingContext ctx) {
-    GenerationTargetClassDto renderingDto = targets.get(0);
+    GenerationTargetClassDto renderingDto = target;
     int collectionCount =
         (int)
             definition.getAllFieldsForBuilder().stream()
