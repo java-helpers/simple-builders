@@ -92,7 +92,7 @@ class BuilderProcessorTest {
         compilation,
         // Processor init
         "[DEBUG] Starting BuilderProcessor...",
-        "[DEBUG] Loaded global configuration from compiler arguments: BuilderConfiguration[]",
+        "[DEBUG] Loaded global configuration from compiler arguments: BuilderConfiguration[verbose=ENABLED]",
         "[DEBUG] Initializing generator registry",
         "[DEBUG] ├─ Loaded 15 method generators and 10 builder enhancers total",
         "[DEBUG] └─ Initialized GeneratorRegistry with 15 method generators and 10 builder",
