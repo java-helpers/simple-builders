@@ -27,8 +27,9 @@ package org.javahelpers.simple.builders.processor;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
 import javax.lang.model.util.Elements;
+import org.javahelpers.codegen.processing.ProcessorSpiIntegration;
+import org.javahelpers.codegen.processing.ProcessorSpiIntegration.State;
 import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
 import org.javahelpers.simple.builders.processor.model.type.TypeInstantiation.StaticFactoryCall;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
@@ -39,39 +40,14 @@ import org.javahelpers.simple.builders.processor.model.type.TypeName;
  * resolved builder's type, creation and build method names plus the bean's configured {@code
  * setterPrefix}, so adapters do not scan candidates or read annotation configuration themselves.
  *
- * <p>The lifecycle reports where {@link BuilderProcessor}'s builder generation stands and is
- * transitioned by that processor alone — SPI adapters only ever read this holder, they never
- * initialize or mutate it. All state is compilation-scoped: javac initializes each processor lazily
- * when its turn in a round comes, so before {@link BuilderProcessor} has run its {@code init()}
- * nothing static can be trusted — values may be leftovers of a previous compilation in a long-lived
- * JVM (Gradle daemon, incremental builds). Adapters therefore pass their own {@link Elements}
- * instance to every read: javac hands every processor of one compilation the same {@code Elements}
- * instance, so a mismatch means this holder still describes an older run.
+ * <p>The lifecycle — where {@link BuilderProcessor}'s builder generation stands — is delegated to a
+ * {@link ProcessorSpiIntegration} instance and transitioned by the processor alone: SPI adapters
+ * only ever read this holder, they never initialize or mutate it.
  */
 public final class SimpleBuildersSpiIntegration {
 
-  /**
-   * Where {@link BuilderProcessor}'s builder generation stands in the current compilation, as the
-   * SPI adapters observe it.
-   */
-  public enum State {
-    /**
-     * No processor init happened in this compilation yet — static content may be a previous run's,
-     * and the registry must be treated as possibly still filling.
-     */
-    INIT,
-    /**
-     * {@code BuilderProcessor} initialized: its single generating round may not have run yet — the
-     * registry must be treated as possibly still filling.
-     */
-    PROCESSING,
-    /**
-     * The generating round ran: the registry is final for this compilation. {@code
-     * BuilderProcessor} generates in exactly one round — the first round carrying its annotations —
-     * so elements first appearing in later rounds get no builder.
-     */
-    FINISHED
-  }
+  /** The processor-lifecycle holder this domain's SPI integration delegates to. */
+  private static final ProcessorSpiIntegration LIFECYCLE = new ProcessorSpiIntegration();
 
   /**
    * One bean-to-builder pair resolved at registration time: the type this processor emits for
@@ -85,11 +61,6 @@ public final class SimpleBuildersSpiIntegration {
       String buildMethodName,
       String setterPrefix) {}
 
-  private static volatile State state = State.INIT;
-
-  /** The {@link Elements} of the compilation this holder's content describes. */
-  private static final AtomicReference<Elements> compilationElements = new AtomicReference<>();
-
   /** Builders published for the current compilation, keyed by bean qualified name. */
   private static final Map<String, PublishedBuilder> BY_BEAN = new HashMap<>();
 
@@ -102,8 +73,7 @@ public final class SimpleBuildersSpiIntegration {
   static void initCompilation(Elements elements) {
     BY_BEAN.clear();
     BY_BUILDER.clear();
-    compilationElements.set(elements);
-    state = State.PROCESSING;
+    LIFECYCLE.initCompilation(elements);
   }
 
   /**
@@ -111,41 +81,29 @@ public final class SimpleBuildersSpiIntegration {
    * compilation ended without one) — no more builders will be published.
    */
   static void finishCompilation() {
-    state = State.FINISHED;
+    LIFECYCLE.finishCompilation();
   }
 
   /**
-   * Whether {@code observed} belongs to the compilation this holder currently describes — {@code
-   * false} while it still carries a previous run's leftovers. javac creates one {@link Elements}
-   * per compilation and shares it between all processors, so reference identity is a reliable
-   * staleness check that never requires the SPI adapters to write anything.
+   * Whether {@code observed} belongs to the compilation this holder currently describes — see
+   * {@link ProcessorSpiIntegration#isCurrentCompilation}.
    */
   static boolean isCurrentCompilation(Elements observed) {
-    return observed != null && observed == compilationElements.get();
+    return LIFECYCLE.isCurrentCompilation(observed);
   }
 
   /** The lifecycle state of the current compilation. */
   static State state() {
-    return state;
+    return LIFECYCLE.state();
   }
 
   /**
    * Whether {@link BuilderProcessor} finished generating builders for the compilation {@code
-   * observed} belongs to — {@code false} while this holder still describes another run.
-   *
-   * <p>The guard is not optional: this holder's statics live in the processor-path classloader,
-   * which build tools reuse across compilations (Gradle daemon, in-process javac, IDE builds,
-   * repeated compiles in one JVM). In a new compilation's first round — before {@link
-   * BuilderProcessor}'s {@code init()} had its turn — {@code state} can still be the previous run's
-   * {@link State#FINISHED} and the registry still holds its entries. Trusting them would claim
-   * beans by qualified name they were never planned with here and answer misses as final instead of
-   * deferring. javac hands every processor of one compilation the same {@link Elements} instance
-   * and a different one per compilation, so identity is the read-only, order-independent boundary
-   * marker — an SPI-side reset cannot work, because SPI init order against {@link
-   * BuilderProcessor}'s init is path-order dependent.
+   * observed} belongs to — {@code false} while this holder still describes another run. See {@link
+   * ProcessorSpiIntegration#isFinishedForIntegration} for the staleness semantics.
    */
   public static boolean isSimpleBuildersFinishedForIntegration(Elements observed) {
-    return isCurrentCompilation(observed) && state == State.FINISHED;
+    return LIFECYCLE.isFinishedForIntegration(observed);
   }
 
   /**
