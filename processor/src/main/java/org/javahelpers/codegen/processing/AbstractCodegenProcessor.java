@@ -24,6 +24,7 @@
 
 package org.javahelpers.codegen.processing;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
@@ -178,7 +179,8 @@ public abstract class AbstractCodegenProcessor<
 
     registerPlannedOutputs(tasks, context);
 
-    int successfulGenerations = 0;
+    // First loop: specification — analyse every task and map its render targets.
+    List<PlannedWork<K, D>> planned = new ArrayList<>();
     for (CodegenTask<K> task : tasks) {
       context.debugStartOperation("Processing element: " + task.element().getSimpleName());
       tracker.startClass(task.element().getSimpleName().toString());
@@ -199,18 +201,39 @@ public abstract class AbstractCodegenProcessor<
         } finally {
           tracker.endPhase(mappingPhase());
         }
-        tracker.startPhase();
-        for (GenerationTargetClassDto target : targets) {
-          generateTarget(target);
-        }
-        tracker.endPhase(PHASE_CODE_GENERATION);
-        onTaskGenerated(definition, targets, task, context);
-        successfulGenerations++;
+        planned.add(new PlannedWork<>(task, definition, targets));
       } catch (Exception ex) {
         // By default generation failures are warnings so other targets are still generated.
         // In opt-in strict mode they are promoted to errors that fail the build.
         context.reportBasedOnStrictMode(
             task.reportingElement(),
+            "%s: Failed to generate %s - %s",
+            processorTag(),
+            generatedKind(),
+            ex.getMessage());
+      } finally {
+        context.debugEndOperation();
+      }
+    }
+
+    // Second loop: generation — every specification exists before any file is written.
+    int successfulGenerations = 0;
+    for (PlannedWork<K, D> work : planned) {
+      context.debugStartOperation(
+          "Generating targets for: " + work.task().element().getSimpleName());
+      try {
+        context.initProcessingTarget(
+            new ProcessingTarget<>(work.task().configuration(), work.task().outputPackage()));
+        tracker.startPhase();
+        for (GenerationTargetClassDto target : work.targets()) {
+          generateTarget(target);
+        }
+        tracker.endPhase(PHASE_CODE_GENERATION);
+        onTaskGenerated(work.definition(), work.targets(), work.task(), context);
+        successfulGenerations++;
+      } catch (Exception ex) {
+        context.reportBasedOnStrictMode(
+            work.task().reportingElement(),
             "%s: Failed to generate %s - %s",
             processorTag(),
             generatedKind(),
@@ -610,4 +633,8 @@ public abstract class AbstractCodegenProcessor<
 
   /** Callback at the end of a generating round — domain finalization. */
   protected void endRound(C context) {}
+
+  /** One task's specification output, carried from the analysis loop into the generation loop. */
+  private record PlannedWork<K extends CodegenConfiguration, D>(
+      CodegenTask<K> task, D definition, List<GenerationTargetClassDto> targets) {}
 }
