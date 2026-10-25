@@ -57,7 +57,6 @@ import org.javahelpers.codegen.processing.AnnotationElementSpec;
 import org.javahelpers.codegen.processing.CodegenProcessorConfiguration;
 import org.javahelpers.codegen.processing.CodegenTask;
 import org.javahelpers.codegen.processing.ElementCollection;
-import org.javahelpers.codegen.processing.ElementSelector;
 import org.javahelpers.codegen.processing.ProcessingTarget;
 import org.javahelpers.codegen.processing.ProcessorOptionRegistry;
 import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration;
@@ -112,16 +111,16 @@ public class BuilderProcessor
   private static final AnnotationElementSpec ELEMENT_SPEC =
       AnnotationElementSpec.builder()
           .selector(
-              ElementSelector.builder()
-                  .name(GROUP_ANNOTATED_ELEMENTS)
-                  .metaMarker(Template.class)
-                  .optOutAnnotation(Ignore4BuilderGeneration.class)
-                  .build())
+              selector ->
+                  selector
+                      .name(GROUP_ANNOTATED_ELEMENTS)
+                      .metaMarker(Template.class)
+                      .optOutAnnotation(Ignore4BuilderGeneration.class))
           .selector(
-              ElementSelector.builder()
-                  .name(GROUP_EXTERNAL_TYPE_HOLDERS)
-                  .annotationTypes(SimpleBuilderFor.class, SimpleBuilderFors.class)
-                  .build())
+              selector ->
+                  selector
+                      .name(GROUP_EXTERNAL_TYPE_HOLDERS)
+                      .annotationTypes(SimpleBuilderFor.class, SimpleBuilderFors.class))
           .collectionPhase(PHASE_ELEMENT_COLLECTION)
           .build();
 

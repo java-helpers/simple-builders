@@ -31,6 +31,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -81,6 +82,13 @@ public final class AnnotationElementSpec {
     public Builder selector(ElementSelector selector) {
       this.selectors.add(selector);
       return this;
+    }
+
+    /** Adds a selection group declared inline on a fresh {@link ElementSelector.Builder}. */
+    public Builder selector(Consumer<ElementSelector.Builder> selectorDeclaration) {
+      ElementSelector.Builder selectorBuilder = ElementSelector.builder();
+      selectorDeclaration.accept(selectorBuilder);
+      return selector(selectorBuilder.build());
     }
 
     /** The performance-tracking phase the collection is reported under, or {@code null}. */
