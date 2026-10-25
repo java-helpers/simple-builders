@@ -109,19 +109,20 @@ public class BuilderProcessor
    * {@code @SimpleBuilderFor}.
    */
   private static final AnnotationElementSpec ELEMENT_SPEC =
-      new AnnotationElementSpec(
-          List.of(
-              new ElementSelector(
-                  GROUP_ANNOTATED_ELEMENTS,
-                  Set.of(),
-                  Template.class,
-                  Ignore4BuilderGeneration.class),
-              new ElementSelector(
-                  GROUP_EXTERNAL_TYPE_HOLDERS,
-                  Set.of(SimpleBuilderFor.class, SimpleBuilderFors.class),
-                  null,
-                  null)),
-          PHASE_ELEMENT_COLLECTION);
+      AnnotationElementSpec.builder()
+          .selector(
+              ElementSelector.builder()
+                  .name(GROUP_ANNOTATED_ELEMENTS)
+                  .metaMarker(Template.class)
+                  .optOutAnnotation(Ignore4BuilderGeneration.class)
+                  .build())
+          .selector(
+              ElementSelector.builder()
+                  .name(GROUP_EXTERNAL_TYPE_HOLDERS)
+                  .annotationTypes(SimpleBuilderFor.class, SimpleBuilderFors.class)
+                  .build())
+          .collectionPhase(PHASE_ELEMENT_COLLECTION)
+          .build();
 
   /** The global configuration resolved from compiler arguments — needed by several hooks. */
   private BuilderConfiguration globalConfig;

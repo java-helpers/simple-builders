@@ -64,6 +64,38 @@ public final class AnnotationElementSpec {
   }
 
   /**
+   * A builder for an element spec.
+   *
+   * @return a new builder
+   */
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  /** Fluent builder for {@link AnnotationElementSpec}. */
+  public static final class Builder {
+    private final List<ElementSelector> selectors = new ArrayList<>();
+    private String collectionPhase;
+
+    /** Adds a named selection group, in declaration order. */
+    public Builder selector(ElementSelector selector) {
+      this.selectors.add(selector);
+      return this;
+    }
+
+    /** The performance-tracking phase the collection is reported under, or {@code null}. */
+    public Builder collectionPhase(String collectionPhase) {
+      this.collectionPhase = collectionPhase;
+      return this;
+    }
+
+    /** Builds the spec. */
+    public AnnotationElementSpec build() {
+      return new AnnotationElementSpec(selectors, collectionPhase);
+    }
+  }
+
+  /**
    * The performance-tracking phase the collection is reported under.
    *
    * @return the phase name, or {@code null} when untimed

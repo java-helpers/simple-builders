@@ -44,4 +44,52 @@ public record ElementSelector(
     String name,
     Set<Class<? extends Annotation>> annotationTypes,
     Class<? extends Annotation> metaMarker,
-    Class<? extends Annotation> optOutAnnotation) {}
+    Class<? extends Annotation> optOutAnnotation) {
+
+  /**
+   * A builder for an element selector.
+   *
+   * @return a new builder
+   */
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  /** Fluent builder for {@link ElementSelector}. */
+  public static final class Builder {
+    private String name;
+    private Set<Class<? extends Annotation>> annotationTypes = Set.of();
+    private Class<? extends Annotation> metaMarker;
+    private Class<? extends Annotation> optOutAnnotation;
+
+    /** The group name results are keyed by. */
+    public Builder name(String name) {
+      this.name = name;
+      return this;
+    }
+
+    /** Annotation types that directly select an element. */
+    @SafeVarargs
+    public final Builder annotationTypes(Class<? extends Annotation>... annotationTypes) {
+      this.annotationTypes = Set.of(annotationTypes);
+      return this;
+    }
+
+    /** Meta-annotation marking annotation types that also select, or {@code null}. */
+    public Builder metaMarker(Class<? extends Annotation> metaMarker) {
+      this.metaMarker = metaMarker;
+      return this;
+    }
+
+    /** Annotation that excludes a selected element again, or {@code null}. */
+    public Builder optOutAnnotation(Class<? extends Annotation> optOutAnnotation) {
+      this.optOutAnnotation = optOutAnnotation;
+      return this;
+    }
+
+    /** Builds the selector. */
+    public ElementSelector build() {
+      return new ElementSelector(name, annotationTypes, metaMarker, optOutAnnotation);
+    }
+  }
+}
