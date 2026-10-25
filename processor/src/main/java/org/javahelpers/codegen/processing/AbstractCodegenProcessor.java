@@ -33,10 +33,12 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
+import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
 import org.javahelpers.simple.builders.processor.classgen.ClassCodeGenerator;
 import org.javahelpers.simple.builders.processor.classgen.CodeGenerationException;
 import org.javahelpers.simple.builders.processor.classgen.GenerationEnvironment;
 import org.javahelpers.simple.builders.processor.model.core.GenerationTargetClassDto;
+import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.AnnotationProcessingContext;
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsReader;
 import org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker;
@@ -398,13 +400,46 @@ public abstract class AbstractCodegenProcessor<
 
   /**
    * Registers the types this round will generate, up front, so references to them resolve during
-   * analysis. Domains register into {@link AnnotationProcessingContext#getGeneratedTypes()}.
-   * Default: no registration.
+   * analysis. Default: clears {@link AnnotationProcessingContext#getGeneratedTypes()} and registers
+   * each task's {@link #predictedTypeName predicted output} — a 1:1 map from task to generated type
+   * name. Domains may override {@link #registerPlannedOutput} to add per-task registrations (e.g.
+   * SPI), or this whole method for a different shape.
    *
    * @param tasks the planned tasks
    * @param context the processing context
    */
-  protected void registerPlannedOutputs(List<CodegenTask<K>> tasks, C context) {}
+  protected void registerPlannedOutputs(List<CodegenTask<K>> tasks, C context) {
+    context.getGeneratedTypes().clear();
+    for (CodegenTask<K> task : tasks) {
+      registerPlannedOutput(task, context);
+    }
+  }
+
+  /**
+   * Registers one task's predicted output. Default: adds the map {@code element's type →
+   * predictedTypeName} to {@link AnnotationProcessingContext#getGeneratedTypes()}.
+   *
+   * @param task the planned task
+   * @param context the processing context
+   */
+  protected void registerPlannedOutput(CodegenTask<K> task, C context) {
+    TypeName generatedTypeName = predictedTypeName(task, context);
+    if (generatedTypeName != null && task.element() instanceof TypeElement targetType) {
+      context
+          .getGeneratedTypes()
+          .add(JavaLangMapper.mapToTypeName(targetType, context), generatedTypeName);
+    }
+  }
+
+  /**
+   * The name of the type this task will generate — the domain's 1:1 task → output type-name
+   * prediction, evaluated at plan registration time.
+   *
+   * @param task the planned task
+   * @param context the processing context
+   * @return the generated type's name, or {@code null} when the task registers nothing
+   */
+  protected abstract TypeName predictedTypeName(CodegenTask<K> task, C context);
 
   /**
    * Whether the domain generates in exactly one round and that round already ran. Default {@code

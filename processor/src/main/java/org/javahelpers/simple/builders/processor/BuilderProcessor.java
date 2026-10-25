@@ -63,7 +63,6 @@ import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder.Template;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFor;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFors;
-import org.javahelpers.simple.builders.processor.analysis.BuilderScopeResolver;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyser;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
 import org.javahelpers.simple.builders.processor.classgen.CodeGenerationException;
@@ -464,27 +463,31 @@ public class BuilderProcessor
    * differ from the target's package for {@code @SimpleBuilderFor} targets.
    */
   @Override
-  protected void registerPlannedOutputs(
-      List<CodegenTask<BuilderConfiguration>> tasks, BuilderProcessingContext ctx) {
-    BuilderScopeResolver scopeResolver = ctx.getBuilderScopeResolver();
-    scopeResolver.resetGeneratedBuilders();
-    for (CodegenTask<BuilderConfiguration> task : tasks) {
-      if (!(task.element() instanceof TypeElement targetType)) {
-        continue;
-      }
-      TypeName beanType = JavaLangMapper.mapToTypeName(targetType, ctx);
-      TypeName builderType =
-          builderTypeName(
-              targetType,
-              effectiveBuilderPackage(task.reportingElement(), task.configuration()),
-              task.configuration());
-      scopeResolver.registerGeneratedBuilder(beanType, builderType);
-      scopeResolver
+  protected TypeName predictedTypeName(
+      CodegenTask<BuilderConfiguration> task, BuilderProcessingContext ctx) {
+    if (!(task.element() instanceof TypeElement targetType)) {
+      return null;
+    }
+    return builderTypeName(
+        targetType,
+        effectiveBuilderPackage(task.reportingElement(), task.configuration()),
+        task.configuration());
+  }
+
+  /** SPI-exports the registered builder, on top of the generic generated-type registration. */
+  @Override
+  protected void registerPlannedOutput(
+      CodegenTask<BuilderConfiguration> task, BuilderProcessingContext ctx) {
+    super.registerPlannedOutput(task, ctx);
+    if (task.element() instanceof TypeElement targetType) {
+      ctx.getBuilderScopeResolver()
           .resolveGeneratedBuilder(targetType)
           .ifPresent(
               resolvedBuilder ->
                   SimpleBuildersSpiIntegration.registerBuilder(
-                      beanType, resolvedBuilder, task.configuration().getSetterPrefix()));
+                      JavaLangMapper.mapToTypeName(targetType, ctx),
+                      resolvedBuilder,
+                      task.configuration().getSetterPrefix()));
     }
   }
 
