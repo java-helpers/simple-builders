@@ -103,7 +103,11 @@ public class BuilderProcessor
 
   /** The processor's declared compiler options — the supported set is derived, not duplicated. */
   private static final ProcessorOptionRegistry OPTION_REGISTRY =
-      new ProcessorOptionRegistry(List.of(CompilerArgumentsEnum.values()));
+      ProcessorOptionRegistry.builder()
+          .options(List.of(CompilerArgumentsEnum.values()))
+          .verboseOption(CompilerArgumentsEnum.VERBOSE)
+          .formatterProfileOption(CompilerArgumentsEnum.FORMATTER_PROFILE)
+          .build();
 
   /**
    * Which elements builders are generated for: types carrying {@code @SimpleBuilder} or a

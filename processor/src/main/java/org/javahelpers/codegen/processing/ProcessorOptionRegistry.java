@@ -29,6 +29,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import javax.annotation.processing.ProcessingEnvironment;
+import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsReader;
 import org.javahelpers.simple.builders.processor.processing.CompilerOption;
 
@@ -41,6 +42,17 @@ import org.javahelpers.simple.builders.processor.processing.CompilerOption;
 public final class ProcessorOptionRegistry {
 
   private final List<CompilerOption> options;
+  private final CompilerOption verboseOption;
+  private final CompilerOption formatterProfileOption;
+
+  private ProcessorOptionRegistry(
+      Collection<? extends CompilerOption> options,
+      CompilerOption verboseOption,
+      CompilerOption formatterProfileOption) {
+    this.options = List.copyOf(options);
+    this.verboseOption = verboseOption;
+    this.formatterProfileOption = formatterProfileOption;
+  }
 
   /**
    * Creates a registry over the given declared options.
@@ -48,7 +60,17 @@ public final class ProcessorOptionRegistry {
    * @param options the processor's compiler options
    */
   public ProcessorOptionRegistry(Collection<? extends CompilerOption> options) {
-    this.options = List.copyOf(options);
+    this(options, null, null);
+  }
+
+  /**
+   * A builder for a registry with the framework-level options wired: the verbose flag and the
+   * formatter profile option.
+   *
+   * @return a new builder
+   */
+  public static Builder builder() {
+    return new Builder();
   }
 
   /**
@@ -74,5 +96,60 @@ public final class ProcessorOptionRegistry {
    */
   public CompilerArgumentsReader reader(ProcessingEnvironment processingEnv) {
     return new CompilerArgumentsReader(processingEnv);
+  }
+
+  /**
+   * Whether verbose diagnostic output was requested — either via the declared verbose option or the
+   * javac {@code -verbose} flag (also surfaced by {@code mvn -X}).
+   *
+   * @param reader the option value reader
+   * @return {@code true} when verbose output was requested
+   */
+  public boolean isVerboseRequested(CompilerArgumentsReader reader) {
+    return (verboseOption != null && reader.readBooleanValue(verboseOption))
+        || reader.hasOption("-verbose");
+  }
+
+  /**
+   * The configured source-formatter profile name, or {@code null} when no formatter profile option
+   * was declared or set.
+   *
+   * @param reader the option value reader
+   * @return the trimmed profile name, or {@code null}
+   */
+  public String formatterProfile(CompilerArgumentsReader reader) {
+    return formatterProfileOption != null
+        ? StringUtils.trimToNull(reader.readValue(formatterProfileOption))
+        : null;
+  }
+
+  /** Builder for {@link ProcessorOptionRegistry}. */
+  public static final class Builder {
+    private Collection<? extends CompilerOption> options = List.of();
+    private CompilerOption verboseOption;
+    private CompilerOption formatterProfileOption;
+
+    /** The processor's declared compiler options. */
+    public Builder options(Collection<? extends CompilerOption> options) {
+      this.options = options;
+      return this;
+    }
+
+    /** The option that enables verbose diagnostic output. */
+    public Builder verboseOption(CompilerOption verboseOption) {
+      this.verboseOption = verboseOption;
+      return this;
+    }
+
+    /** The option that names the source-formatter profile. */
+    public Builder formatterProfileOption(CompilerOption formatterProfileOption) {
+      this.formatterProfileOption = formatterProfileOption;
+      return this;
+    }
+
+    /** Builds the registry. */
+    public ProcessorOptionRegistry build() {
+      return new ProcessorOptionRegistry(options, verboseOption, formatterProfileOption);
+    }
   }
 }

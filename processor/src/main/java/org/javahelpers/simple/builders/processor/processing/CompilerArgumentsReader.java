@@ -100,6 +100,17 @@ public class CompilerArgumentsReader {
   }
 
   /**
+   * Whether an option name is present in the compiler options map — for raw javac flags like {@code
+   * -verbose} that are not declared {@link CompilerOption}s.
+   *
+   * @param optionName the raw option name (e.g. {@code "-verbose"})
+   * @return {@code true} when the option is present
+   */
+  public boolean hasOption(String optionName) {
+    return processingEnv.getOptions().containsKey(optionName);
+  }
+
+  /**
    * Reads the value of a compiler argument as a boolean with an explicit default — the same
    * resolution SPI adapters can use on the options map their host framework hands them.
    *
