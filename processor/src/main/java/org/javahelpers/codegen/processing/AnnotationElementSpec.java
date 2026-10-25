@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -110,6 +111,31 @@ public final class AnnotationElementSpec {
    */
   public String collectionPhase() {
     return collectionPhase;
+  }
+
+  /**
+   * Whether any selector uses meta-annotation discovery. Then the supported annotation types cannot
+   * be enumerated — user-defined annotation types match the marker without being named.
+   *
+   * @return {@code true} when a selector has a meta marker
+   */
+  public boolean hasMetaMarkedSelector() {
+    return selectors.stream().anyMatch(selector -> selector.metaMarker() != null);
+  }
+
+  /**
+   * The concrete annotation type names declared across all selectors.
+   *
+   * @return the canonical annotation type names the spec selects directly
+   */
+  public Set<String> annotationTypeNames() {
+    Set<String> names = new LinkedHashSet<>();
+    for (ElementSelector selector : selectors) {
+      for (Class<? extends java.lang.annotation.Annotation> type : selector.annotationTypes()) {
+        names.add(type.getCanonicalName());
+      }
+    }
+    return names;
   }
 
   /**

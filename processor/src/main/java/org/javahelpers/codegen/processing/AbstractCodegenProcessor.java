@@ -26,6 +26,7 @@ package org.javahelpers.codegen.processing;
 
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -129,9 +130,9 @@ public abstract class AbstractCodegenProcessor<
 
   /**
    * Runs one processing round — see the class javadoc for the spine. Claims the supported
-   * annotations only when {@link #claimsAnnotations(Set)} says so — under the default {@code "*"} set
-   * it does not claim, because claiming would hide foreign annotations from later processors (hence
-   * the {@code java:S3516} suppression).
+   * annotations only when {@link #claimsAnnotations(Set)} says so — under the default {@code "*"}
+   * set it does not claim, because claiming would hide foreign annotations from later processors
+   * (hence the {@code java:S3516} suppression).
    */
   @Override
   @SuppressWarnings("java:S3516")
@@ -219,15 +220,35 @@ public abstract class AbstractCodegenProcessor<
 
   /**
    * The annotation type names this processor supports. Default: the {@link
-   * SupportedAnnotationTypes} annotation on the processor class when present, else {@code "*"} —
-   * the framework declares support by method. Domains either annotate their processor class or
-   * override this function (e.g. to compose a computed set).
+   * SupportedAnnotationTypes} annotation on the processor class when present, else the concrete
+   * annotation types of the configured {@link CodegenProcessorConfiguration#elementSpec} — or
+   * {@code "*"} when a selector uses meta-annotation discovery (its types cannot be enumerated).
+   * Domains either annotate their processor class, declare concrete types in the element spec or
+   * override this function.
    *
    * @return the supported annotation type names
    */
   protected Set<String> supportedAnnotationTypes() {
+    return supportedAnnotationTypesByAnnotation().orElseGet(this::supportedAnnotationTypesBySpec);
+  }
+
+  /**
+   * The supported annotation type names declared by the {@link SupportedAnnotationTypes} annotation
+   * on the processor class.
+   *
+   * @return the declared names, or empty when the class is not annotated
+   */
+  protected Optional<Set<String>> supportedAnnotationTypesByAnnotation() {
     SupportedAnnotationTypes annotation = getClass().getAnnotation(SupportedAnnotationTypes.class);
-    return annotation != null ? Set.copyOf(List.of(annotation.value())) : Set.of("*");
+    return annotation != null
+        ? Optional.of(Set.copyOf(List.of(annotation.value())))
+        : Optional.empty();
+  }
+
+  private Set<String> supportedAnnotationTypesBySpec() {
+    return elementSpec().hasMetaMarkedSelector()
+        ? Set.of("*")
+        : elementSpec().annotationTypeNames();
   }
 
   /**
