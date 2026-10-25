@@ -51,8 +51,8 @@ import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLo
  * <p>A new processor declares its static surface once as {@link CodegenProcessorConfiguration}
  * (passed to the constructor — element spec, options, source level, diagnostic names) and
  * implements only the domain hooks marked {@code [implement]}: {@link #createContext}, {@link
- * #plan}, {@link #predictedTypeName}, {@link #analyse} and {@link #mapToTargets}. Every other step
- * is framework-owned or an optional {@code [default]} the domain may override.
+ * #plan}, {@link #predictedGeneratedTypeName}, {@link #analyse} and {@link #mapToTargets}. Every
+ * other step is framework-owned or an optional {@code [default]} the domain may override.
  *
  * <p>The round spine:
  *
@@ -60,7 +60,7 @@ import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLo
  *   ctx      = createContext(env, reader, logger)                       [implement — in init]
  *   elements = findElements(annotations, roundEnv, ctx)                 [default: configuration's elementSpec]
  *   tasks    = plan(elements, ctx)                                      [implement]
- *   registerPlannedOutputs(tasks, ctx)                                  [default: predictedTypeName() — implement]
+ *   registerPlannedOutputs(tasks, ctx)                                  [default: predictedGeneratedTypeName() — implement]
  *   for each task (guarded, strict-mode reporting):                     [framework]
  *     def     = analyse(task, ctx)                                      [implement]
  *     targets = mapToTargets(def, task, ctx)                            [implement]
@@ -417,9 +417,9 @@ public abstract class AbstractCodegenProcessor<
   /**
    * Registers the types this round will generate, up front, so references to them resolve during
    * analysis. Default: clears {@link AnnotationProcessingContext#getGeneratedTypes()} and registers
-   * each task's {@link #predictedTypeName predicted output} — a 1:1 map from task to generated type
-   * name. Domains may override {@link #registerPlannedOutput} to add per-task registrations (e.g.
-   * SPI), or this whole method for a different shape.
+   * each task's {@link #predictedGeneratedTypeName predicted output} — a 1:1 map from task to
+   * generated type name. Domains may override {@link #registerPlannedOutput} to add per-task
+   * registrations (e.g. SPI), or this whole method for a different shape.
    *
    * @param tasks the planned tasks
    * @param context the processing context
@@ -433,13 +433,13 @@ public abstract class AbstractCodegenProcessor<
 
   /**
    * Registers one task's predicted output. Default: adds the map {@code element's type →
-   * predictedTypeName} to {@link AnnotationProcessingContext#getGeneratedTypes()}.
+   * predictedGeneratedTypeName} to {@link AnnotationProcessingContext#getGeneratedTypes()}.
    *
    * @param task the planned task
    * @param context the processing context
    */
   protected void registerPlannedOutput(CodegenTask<K> task, C context) {
-    TypeName generatedTypeName = predictedTypeName(task, context);
+    TypeName generatedTypeName = predictedGeneratedTypeName(task, context);
     if (generatedTypeName != null && task.element() instanceof TypeElement targetType) {
       context
           .getGeneratedTypes()
@@ -455,7 +455,7 @@ public abstract class AbstractCodegenProcessor<
    * @param context the processing context
    * @return the generated type's name, or {@code null} when the task registers nothing
    */
-  protected abstract TypeName predictedTypeName(CodegenTask<K> task, C context);
+  protected abstract TypeName predictedGeneratedTypeName(CodegenTask<K> task, C context);
 
   /**
    * Whether the domain's generating round already ran. Default: one-shot — the base marks the

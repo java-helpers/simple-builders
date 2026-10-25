@@ -450,7 +450,7 @@ public class BuilderProcessor
    * differ from the target's package for {@code @SimpleBuilderFor} targets.
    */
   @Override
-  protected TypeName predictedTypeName(
+  protected TypeName predictedGeneratedTypeName(
       CodegenTask<BuilderConfiguration> task, BuilderProcessingContext ctx) {
     if (!(task.element() instanceof TypeElement targetType)) {
       return null;
