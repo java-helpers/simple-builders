@@ -40,7 +40,7 @@ import javax.lang.model.element.Element;
  *     externally declared types, otherwise the element itself
  * @param outputPackage the package generated code is written to, or {@code null} when the domain
  *     does not carry one — planning computes it so the driver can initialize {@link
- *     ProcessingTarget} before analysis
+ *     ProcessingTargetPackage} before analysis
  */
 public record CodegenTask<K extends CodegenConfiguration>(
     Element element, K configuration, Element reportingElement, String outputPackage) {}

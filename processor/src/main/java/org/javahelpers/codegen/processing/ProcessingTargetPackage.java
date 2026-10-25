@@ -38,4 +38,4 @@ package org.javahelpers.codegen.processing;
  *     here
  * @param <T> the domain configuration type
  */
-public record ProcessingTarget<T>(T configuration, String targetPackage) {}
+public record ProcessingTargetPackage<T>(T configuration, String targetPackage) {}

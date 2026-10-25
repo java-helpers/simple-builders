@@ -40,7 +40,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
-import org.javahelpers.codegen.processing.ProcessingTarget;
+import org.javahelpers.codegen.processing.ProcessingTargetPackage;
 import org.javahelpers.simple.builders.processor.analysis.GeneratedTypes;
 import org.javahelpers.simple.builders.processor.analysis.TypeMappingContext;
 import org.javahelpers.simple.builders.processor.model.core.GenerationTargetClassDto;
@@ -87,7 +87,7 @@ public class AnnotationProcessingContext implements TypeMappingContext {
   private String generatedPackageName;
 
   /** Per-target processing state for the type currently being generated. */
-  private ProcessingTarget<?> processingTarget;
+  private ProcessingTargetPackage<?> processingTargetPackage;
 
   /**
    * Class definitions the domain pushed for deferred last-round generation — drained by the
@@ -139,16 +139,17 @@ public class AnnotationProcessingContext implements TypeMappingContext {
   }
 
   /**
-   * Initializes the per-target state ({@link ProcessingTarget}) for the type currently being
+   * Initializes the per-target state ({@link ProcessingTargetPackage}) for the type currently being
    * generated. The processing driver calls this once per planned task before analysis starts, so
    * downstream code can reach the current configuration and output package without threading both
    * through every call.
    *
-   * @param processingTarget the resolved configuration and output package of the current target
+   * @param processingTargetPackage the resolved configuration and output package of the current
+   *     target
    */
-  public void initProcessingTarget(ProcessingTarget<?> processingTarget) {
-    this.processingTarget = processingTarget;
-    setGeneratedPackageName(processingTarget.targetPackage());
+  public void initProcessingTargetPackage(ProcessingTargetPackage<?> processingTargetPackage) {
+    this.processingTargetPackage = processingTargetPackage;
+    setGeneratedPackageName(processingTargetPackage.targetPackage());
   }
 
   /**
@@ -156,8 +157,8 @@ public class AnnotationProcessingContext implements TypeMappingContext {
    *
    * @return the current target's configuration and output package
    */
-  public ProcessingTarget<?> getProcessingTarget() {
-    return processingTarget;
+  public ProcessingTargetPackage<?> getProcessingTargetPackage() {
+    return processingTargetPackage;
   }
 
   /**

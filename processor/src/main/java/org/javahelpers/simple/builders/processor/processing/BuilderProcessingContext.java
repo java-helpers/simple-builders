@@ -84,7 +84,7 @@ public final class BuilderProcessingContext extends AnnotationProcessingContext 
    * @return the builder configuration for the target being processed
    */
   public BuilderConfiguration getConfiguration() {
-    return (BuilderConfiguration) getProcessingTarget().configuration();
+    return (BuilderConfiguration) getProcessingTargetPackage().configuration();
   }
 
   /**
@@ -93,7 +93,7 @@ public final class BuilderProcessingContext extends AnnotationProcessingContext 
    * @return the qualified package name of the generated builder
    */
   public String getBuilderPackageName() {
-    return getProcessingTarget().targetPackage();
+    return getProcessingTargetPackage().targetPackage();
   }
 
   /**
