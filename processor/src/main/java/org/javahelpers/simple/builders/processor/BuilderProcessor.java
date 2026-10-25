@@ -439,7 +439,7 @@ public class BuilderProcessor
    * targets.
    */
   @Override
-  protected List<TypeName> registerPlannedGenerationTargets(
+  protected List<TypeName> plannedTaskResultTypeNames(
       CodegenTask<BuilderConfiguration> task, BuilderProcessingContext ctx) {
     if (!(task.element() instanceof TypeElement targetType)) {
       return List.of();
@@ -449,7 +449,7 @@ public class BuilderProcessor
 
   /** SPI-exports the registered builder on top of the generic generated-type registration. */
   @Override
-  protected void onPlannedOutputRegistered(
+  protected void onTaskResultRegistered(
       CodegenTask<BuilderConfiguration> task,
       TypeName generatedName,
       BuilderProcessingContext ctx) {

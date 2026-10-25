@@ -53,8 +53,8 @@ import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLo
  * <p>A new processor declares its static surface once as {@link CodegenProcessorConfiguration}
  * (passed to the constructor — element spec, options, source level) and implements only the domain
  * hooks marked {@code [implement]}: {@link #createContext}, {@link #planTasks}, {@link
- * #registerPlannedGenerationTargets}, {@link #analyse} and {@link #mapToTargetSpecification}. Every
- * other step is framework-owned or an optional {@code [default]} the domain may override.
+ * #plannedTaskResultTypeNames}, {@link #analyse} and {@link #mapToTargetSpecification}. Every other
+ * step is framework-owned or an optional {@code [default]} the domain may override.
  *
  * <p>The round spine:
  *
@@ -62,7 +62,7 @@ import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLo
  *   ctx      = createContext(env, reader, logger)                       [implement — in init]
  *   elements = findElements(annotations, roundEnv, ctx)                 [default: configuration's elementSpec]
  *   tasks    = planTasks(elements, ctx)                                 [implement]
- *   registerPlannedTaskResults(tasks, ctx)                                  [framework; per-task names from registerPlannedGenerationTargets() — implement]
+ *   registerPlannedTaskResults(tasks, ctx)                                  [framework; per-task names from plannedTaskResultTypeNames() — implement]
  *   loop 1 — specification (guarded, strict-mode reporting):            [framework]
  *     defs    = analyse(task, ctx)                                      [implement]
  *     target  = mapToTargetSpecification(def, cfg, ctx)  (per def)      [implement]
@@ -498,8 +498,8 @@ public abstract class AbstractCodegenProcessor<
   /**
    * Registers the types this round will generate, up front, so references to them resolve during
    * analysis. Default: clears {@link AnnotationProcessingContext#getGeneratedTypes()} and registers
-   * every name each task's {@link #registerPlannedGenerationTargets} predicts — a task may produce
-   * several generated types. Each registration fires {@link #onPlannedOutputRegistered} for domain
+   * every name each task's {@link #plannedTaskResultTypeNames} predicts — a task may produce
+   * several generated types. Each registration fires {@link #onTaskResultRegistered} for domain
    * extras (e.g. SPI publication); override this whole method only for a different shape.
    *
    * @param tasks the planned tasks
@@ -512,9 +512,9 @@ public abstract class AbstractCodegenProcessor<
         continue;
       }
       TypeName elementName = JavaLangMapper.mapToTypeName(targetType, context);
-      for (TypeName generated : registerPlannedGenerationTargets(task, context)) {
+      for (TypeName generated : plannedTaskResultTypeNames(task, context)) {
         context.getGeneratedTypes().add(elementName, generated);
-        onPlannedOutputRegistered(task, generated, context);
+        onTaskResultRegistered(task, generated, context);
       }
     }
   }
@@ -522,14 +522,13 @@ public abstract class AbstractCodegenProcessor<
   /**
    * The names of the types this task will generate — the domain's task → result type-name
    * predictions, evaluated at registration time. Keep this pure: registrations and their side
-   * effects belong to {@link #onPlannedOutputRegistered}.
+   * effects belong to {@link #onTaskResultRegistered}.
    *
    * @param task the planned task
    * @param context the processing context
    * @return the generated type names (empty when the task registers nothing)
    */
-  protected abstract List<TypeName> registerPlannedGenerationTargets(
-      CodegenTask<K> task, C context);
+  protected abstract List<TypeName> plannedTaskResultTypeNames(CodegenTask<K> task, C context);
 
   /**
    * Runs after a predicted type name is registered for a task — the extension point for domain
@@ -539,8 +538,7 @@ public abstract class AbstractCodegenProcessor<
    * @param generatedName the type name just registered for it
    * @param context the processing context
    */
-  protected void onPlannedOutputRegistered(
-      CodegenTask<K> task, TypeName generatedName, C context) {}
+  protected void onTaskResultRegistered(CodegenTask<K> task, TypeName generatedName, C context) {}
 
   /**
    * Whether the domain's generating round already ran. Default: one-shot — the base marks the
