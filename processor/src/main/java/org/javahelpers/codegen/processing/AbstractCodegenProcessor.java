@@ -62,7 +62,7 @@ import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLo
  *   ctx      = createContext(env, reader, logger)                       [implement — in init]
  *   elements = findElements(annotations, roundEnv, ctx)                 [default: configuration's elementSpec]
  *   tasks    = planTasks(elements, ctx)                                 [implement]
- *   registerPlannedOutputs(tasks, ctx)                                  [framework; per-task names from registerPlannedGenerationTargets() — implement]
+ *   registerPlannedTaskResults(tasks, ctx)                                  [framework; per-task names from registerPlannedGenerationTargets() — implement]
  *   loop 1 — specification (guarded, strict-mode reporting):            [framework]
  *     defs    = analyse(task, ctx)                                      [implement]
  *     target  = mapToTargetSpecification(def, cfg, ctx)  (per def)      [implement]
@@ -481,7 +481,7 @@ public abstract class AbstractCodegenProcessor<
       // leaves it open for a later one carrying matching elements.
       processedOnce = true;
     }
-    registerPlannedOutputs(tasks, context);
+    registerPlannedTaskResults(tasks, context);
     return tasks;
   }
 
@@ -505,7 +505,7 @@ public abstract class AbstractCodegenProcessor<
    * @param tasks the planned tasks
    * @param context the processing context
    */
-  protected void registerPlannedOutputs(List<CodegenTask<K>> tasks, C context) {
+  protected void registerPlannedTaskResults(List<CodegenTask<K>> tasks, C context) {
     context.getGeneratedTypes().clear();
     for (CodegenTask<K> task : tasks) {
       if (!(task.element() instanceof TypeElement targetType)) {
@@ -520,7 +520,7 @@ public abstract class AbstractCodegenProcessor<
   }
 
   /**
-   * The names of the types this task will generate — the domain's task → output type-name
+   * The names of the types this task will generate — the domain's task → result type-name
    * predictions, evaluated at registration time. Keep this pure: registrations and their side
    * effects belong to {@link #onPlannedOutputRegistered}.
    *
