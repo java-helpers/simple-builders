@@ -444,10 +444,13 @@ public abstract class AbstractCodegenProcessor<
    * whose {@link SourceVersion} lacks the constant (e.g. a processor built on a newer JDK running
    * under an older one) reports the graceful error path instead of a linkage failure.
    */
-  private static boolean isAtLeast(SourceVersion current, String requiredName) {
+  private boolean isAtLeast(SourceVersion current, String requiredName) {
     try {
       return current.ordinal() >= SourceVersion.valueOf(requiredName).ordinal();
     } catch (IllegalArgumentException ex) {
+      logger.debug(
+          "Required source version name '%s' is unknown to this JDK — treating as unsupported",
+          requiredName);
       return false;
     }
   }
