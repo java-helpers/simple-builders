@@ -24,6 +24,7 @@
 
 package org.javahelpers.codegen.processing;
 
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import javax.annotation.processing.AbstractProcessor;
@@ -103,21 +104,21 @@ public abstract class AbstractCodegenProcessor<C extends AnnotationProcessingCon
   }
 
   /**
-   * Runs one processing round — see the class javadoc for the spine. Never claims annotations:
-   * claiming is all-or-nothing over the supported set and {@link SupportedAnnotationTypes} must
-   * stay {@code "*"} to discover user-defined (meta-annotated) annotation types; claiming would
-   * hide foreign annotations from later processors (hence the {@code java:S3516} suppression).
+   * Runs one processing round — see the class javadoc for the spine. Claims the supported
+   * annotations only when {@link #claimsAnnotations()} says so — under the default {@code "*"} set
+   * it does not claim, because claiming would hide foreign annotations from later processors (hence
+   * the {@code java:S3516} suppression).
    */
   @Override
   @SuppressWarnings("java:S3516")
   public final boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
     if (!supportedJdk) {
       // Fail fast: init() already emitted the error; do not attempt any processing.
-      return false;
+      return claimsAnnotations();
     }
     if (roundEnv.processingOver()) {
       onProcessingOver(context);
-      return false;
+      return claimsAnnotations();
     }
 
     PerformanceTracker tracker = context.getPerformanceTracker();
@@ -130,7 +131,7 @@ public abstract class AbstractCodegenProcessor<C extends AnnotationProcessingCon
 
     List<CodegenTask<K>> tasks = plan(collected, context);
     if (collected.isEmpty() || isFinished(context)) {
-      return false;
+      return claimsAnnotations();
     }
 
     registerPlannedOutputs(tasks, context);
@@ -172,12 +173,25 @@ public abstract class AbstractCodegenProcessor<C extends AnnotationProcessingCon
     // Reset indentation level at the end of each processing round to prevent cascading errors
     context.resetIndentation();
     endRound(context);
-    return false;
+    return claimsAnnotations();
   }
 
   @Override
   public final Set<String> getSupportedOptions() {
-    return optionRegistry().supportedOptions();
+    Set<String> options = new LinkedHashSet<>(optionRegistry().supportedOptions());
+    options.addAll(additionalSupportedOptions());
+    return options;
+  }
+
+  /**
+   * Additional supported option names beyond the declared registry — for wrapper or embedder
+   * processors adding their own options without redeclaring the domain's set (the seam MapStruct
+   * uses for its processor wrappers). Default: none.
+   *
+   * @return extra option names
+   */
+  protected Set<String> additionalSupportedOptions() {
+    return Set.of();
   }
 
   @Override
@@ -274,6 +288,20 @@ public abstract class AbstractCodegenProcessor<C extends AnnotationProcessingCon
 
   /** The processor's declared compiler options. */
   protected abstract ProcessorOptionRegistry optionRegistry();
+
+  /**
+   * Whether {@link #process} claims the supported annotations. Default: claims only when the
+   * supported set is concrete — under {@code "*"} (the JDK's default when the domain declares no
+   * {@link SupportedAnnotationTypes} and does not override {@link #getSupportedAnnotationTypes()})
+   * claiming would hide foreign annotations from later processors. Domains narrow the set the
+   * standard JSR-269 way — annotating the processor class or overriding {@code
+   * getSupportedAnnotationTypes()} — and this default claims for them.
+   *
+   * @return {@code true} to claim the supported annotations
+   */
+  protected boolean claimsAnnotations() {
+    return !getSupportedAnnotationTypes().contains("*");
+  }
 
   /** The minimum source level the processor supports, as a {@link SourceVersion} name. */
   protected abstract String requiredSourceVersion();
