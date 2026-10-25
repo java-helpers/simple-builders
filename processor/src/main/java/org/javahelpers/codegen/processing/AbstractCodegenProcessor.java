@@ -278,8 +278,8 @@ public abstract class AbstractCodegenProcessor<
   }
 
   /**
-   * Creates the logger. Default: verbose when the domain's declared verbose option or the javac
-   * {@code -verbose} flag requests it — see {@link ProcessorOptionRegistry#isVerboseRequested}.
+   * Creates the logger. Default: verbose when the domain's declared verbose option requests it —
+   * see {@link ProcessorOptionRegistry#isVerboseRequested}.
    */
   protected ProcessingLogger createLogger(
       ProcessingEnvironment processingEnv, CompilerArgumentsReader reader) {

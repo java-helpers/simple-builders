@@ -99,15 +99,16 @@ public final class ProcessorOptionRegistry {
   }
 
   /**
-   * Whether verbose diagnostic output was requested — either via the declared verbose option or the
-   * javac {@code -verbose} flag (also surfaced by {@code mvn -X}).
+   * Whether verbose diagnostic output was requested via the declared verbose option. The javac
+   * {@code -verbose} flag (and {@code mvn -X} which sets it) cannot be detected here — javac
+   * exposes only {@code -A} options in {@link
+   * javax.annotation.processing.ProcessingEnvironment#getOptions()}.
    *
    * @param reader the option value reader
    * @return {@code true} when verbose output was requested
    */
   public boolean isVerboseRequested(CompilerArgumentsReader reader) {
-    return (verboseOption != null && reader.readBooleanValue(verboseOption))
-        || reader.hasOption("-verbose");
+    return verboseOption != null && reader.readBooleanValue(verboseOption);
   }
 
   /**
