@@ -121,6 +121,47 @@ public class ProcessingLogger {
     return tag;
   }
 
+  /**
+   * Applies this logger's "{@code tag: }" prefix to a message format — the one place the tag-prefix
+   * pattern is defined. Untagged loggers return the format unchanged.
+   *
+   * @param format the message format
+   * @return the format prefixed with this logger's tag
+   */
+  public String prefixed(String format) {
+    return tag != null ? tag + ": " + format : format;
+  }
+
+  /**
+   * Logs an error message prefixed with this logger's tag.
+   *
+   * @param format the message format
+   * @param args the format arguments
+   */
+  public void errorTagged(String format, Object... args) {
+    error(prefixed(format), args);
+  }
+
+  /**
+   * Logs an info message prefixed with this logger's tag.
+   *
+   * @param format the message format
+   * @param args the format arguments
+   */
+  public void infoTagged(String format, Object... args) {
+    info(prefixed(format), args);
+  }
+
+  /**
+   * Logs a debug message prefixed with this logger's tag.
+   *
+   * @param format the message format
+   * @param args the format arguments
+   */
+  public void debugTagged(String format, Object... args) {
+    debug(prefixed(format), args);
+  }
+
   /** Resets ThreadLocal state to ensure clean state between test runs. */
   private void resetThreadLocalState() {
     indentationLevel.set(0);

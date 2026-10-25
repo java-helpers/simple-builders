@@ -131,16 +131,16 @@ public class BuilderProcessor
     super(PROCESSOR_CONFIGURATION);
   }
 
-  /** The tag prefixing diagnostics — the project name, not the class name. */
-  @Override
-  protected String loggerTag() {
-    return "simple-builders";
-  }
-
   /** The global configuration resolved from compiler arguments — needed by several hooks. */
   private BuilderConfiguration globalConfig;
 
   private JacksonModuleGenerator jacksonModuleGenerator;
+
+  /** The project name prefixes diagnostics — not the class name. */
+  @Override
+  protected String provideLoggerPrefix() {
+    return "simple-builders";
+  }
 
   @Override
   protected BuilderProcessingContext createContext(

@@ -144,7 +144,7 @@ public abstract class AbstractCodegenProcessor<
     String releaseNumber = requiredSourceVersion().replace("RELEASE_", "");
     context.error(
         "%s requires Java %s or higher for annotation processing. Detected: '%s'. Please upgrade to JDK %s+ or disable the processor.",
-        processorTag(), releaseNumber, current, releaseNumber);
+        logger.getTag(), releaseNumber, current, releaseNumber);
   }
 
   /**
@@ -166,12 +166,12 @@ public abstract class AbstractCodegenProcessor<
     }
 
     PerformanceTracker tracker = context.getPerformanceTracker();
-    context.info("%s: PROCESSING ROUND START", processorTag());
+    logger.infoTagged("PROCESSING ROUND START");
 
     tracker.startPhase();
     ElementCollection collected = findElements(annotations, roundEnv, context);
     tracker.endPhase("Element Collection");
-    context.debug("%s: Processing round started.", processorTag());
+    logger.debugTagged("Processing round started.");
 
     List<CodegenTask<K>> tasks = plan(collected, context);
     if (tasks.isEmpty()) {
@@ -208,8 +208,7 @@ public abstract class AbstractCodegenProcessor<
         // In opt-in strict mode they are promoted to errors that fail the build.
         context.reportBasedOnStrictMode(
             task.reportingElement(),
-            "%s: Failed to generate target - %s",
-            processorTag(),
+            logger.prefixed("Failed to generate target - %s"),
             ex.getMessage());
       } finally {
         context.debugEndOperation();
@@ -232,8 +231,7 @@ public abstract class AbstractCodegenProcessor<
       } catch (Exception ex) {
         context.reportBasedOnStrictMode(
             work.task().reportingElement(),
-            "%s: Failed to generate target - %s",
-            processorTag(),
+            logger.prefixed("Failed to generate target - %s"),
             ex.getMessage());
       } finally {
         context.debugEndOperation();
@@ -241,9 +239,8 @@ public abstract class AbstractCodegenProcessor<
     }
 
     if (successfulGenerations > 0) {
-      context.info(
-          "%s: Successfully generated %d target(s) in this processing round",
-          processorTag(), successfulGenerations);
+      logger.infoTagged(
+          "Successfully generated %d target(s) in this processing round", successfulGenerations);
     }
 
     // Reset indentation level at the end of each processing round to prevent cascading errors
@@ -341,26 +338,27 @@ public abstract class AbstractCodegenProcessor<
   }
 
   /**
-   * The diagnostic tag the processor's messages are prefixed with — carried by the logger. Default:
-   * the processor's simple class name; override for a shorter domain tag.
+   * The diagnostic prefix the processor's tagged messages carry — see {@link
+   * ProcessingLogger#prefixed}. Default: the processor's simple class name; override for a shorter
+   * domain prefix.
    *
-   * @return the tag
+   * @return the logger prefix
    */
-  protected String loggerTag() {
+  protected String provideLoggerPrefix() {
     return getClass().getSimpleName();
   }
 
   /**
-   * Creates the logger. Default: verbose when the domain's declared verbose option requests it —
-   * see {@link ProcessorOptionRegistry#isVerboseRequested}. The logger carries {@link
-   * #loggerTag()}.
+   * Creates the logger: verbose when the domain's declared verbose option requests it — see {@link
+   * ProcessorOptionRegistry#isVerboseRequested} — and carrying {@link #provideLoggerPrefix()}.
    */
-  protected ProcessingLogger createLogger(
+  private ProcessingLogger createLogger(
       ProcessingEnvironment processingEnv, CompilerArgumentsReader reader) {
+    String loggerPrefix = provideLoggerPrefix();
     ProcessingLogger logger =
         optionRegistry().isVerboseRequested(reader)
-            ? ProcessingLogger.createVerbose(processingEnv, loggerTag())
-            : ProcessingLogger.create(processingEnv, loggerTag());
+            ? ProcessingLogger.createVerbose(processingEnv, loggerPrefix)
+            : ProcessingLogger.create(processingEnv, loggerPrefix);
     logger.debug("Starting %s...", getClass().getSimpleName());
     return logger;
   }
@@ -447,10 +445,6 @@ public abstract class AbstractCodegenProcessor<
           requiredName);
       return false;
     }
-  }
-
-  private String processorTag() {
-    return logger.getTag();
   }
 
   /**
@@ -612,15 +606,17 @@ public abstract class AbstractCodegenProcessor<
       GenerationTargetClassDto target = deferred.target();
       String packageName = target.getTypeName().getPackageName();
       String kind = deferred.kind();
-      context.info(
-          "%s: Generating %s in package '%s'",
-          processorTag(), Character.toUpperCase(kind.charAt(0)) + kind.substring(1), packageName);
+      logger.infoTagged(
+          "Generating %s in package '%s'",
+          Character.toUpperCase(kind.charAt(0)) + kind.substring(1), packageName);
       try {
         generateTarget(target);
       } catch (Exception e) {
         context.reportBasedOnStrictMode(
-            "%s: Error generating %s for package %s: %s",
-            processorTag(), kind, packageName, e.getMessage());
+            logger.prefixed("Error generating %s for package %s: %s"),
+            kind,
+            packageName,
+            e.getMessage());
       }
     }
   }
