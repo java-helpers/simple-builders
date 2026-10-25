@@ -41,8 +41,6 @@ import javax.lang.model.SourceVersion;
  * @param processorTag diagnostic tag prefixing messages; default: {@code null} — the processor's
  *     simple class name is used
  * @param generatedKind what one generated unit is called in diagnostics; default: {@code "class"}
- * @param generationPhase the performance phase wrapping target generation; default: {@code
- *     "code-generation"}
  * @param deferredTargetsKind what deferred targets are called in diagnostics; default: {@code
  *     "deferred target"}
  */
@@ -52,7 +50,6 @@ public record CodegenProcessorConfiguration(
     SourceVersion requiredSourceVersion,
     String processorTag,
     String generatedKind,
-    String generationPhase,
     String deferredTargetsKind) {
 
   /**
@@ -72,7 +69,6 @@ public record CodegenProcessorConfiguration(
     private SourceVersion requiredSourceVersion = SourceVersion.latestSupported();
     private String processorTag;
     private String generatedKind = "class";
-    private String generationPhase = "code-generation";
     private String deferredTargetsKind = "deferred target";
 
     private Builder() {}
@@ -133,17 +129,6 @@ public record CodegenProcessorConfiguration(
     }
 
     /**
-     * Sets the performance phase wrapping target generation.
-     *
-     * @param generationPhase the generation phase name
-     * @return this builder
-     */
-    public Builder generationPhase(String generationPhase) {
-      this.generationPhase = generationPhase;
-      return this;
-    }
-
-    /**
      * Sets what deferred targets are called in diagnostics.
      *
      * @param deferredTargetsKind the deferred targets kind
@@ -170,7 +155,6 @@ public record CodegenProcessorConfiguration(
           requiredSourceVersion,
           processorTag,
           generatedKind,
-          generationPhase,
           deferredTargetsKind);
     }
   }

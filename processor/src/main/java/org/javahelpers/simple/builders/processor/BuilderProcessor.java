@@ -26,10 +26,8 @@ package org.javahelpers.simple.builders.processor;
 
 import static org.javahelpers.simple.builders.processor.processing.BuilderDefinitionCreator.extractFromElement;
 import static org.javahelpers.simple.builders.processor.processing.PipelinePhases.PHASE_BUILDER_DEFINITION_EXTRACTION;
-import static org.javahelpers.simple.builders.processor.processing.PipelinePhases.PHASE_CODE_GENERATION;
 import static org.javahelpers.simple.builders.processor.processing.PipelinePhases.PHASE_CONFIGURATION_RESOLUTION;
 import static org.javahelpers.simple.builders.processor.processing.PipelinePhases.PHASE_DTO_MAPPING;
-import static org.javahelpers.simple.builders.processor.processing.PipelinePhases.PHASE_ELEMENT_COLLECTION;
 
 import com.google.auto.service.AutoService;
 import java.util.ArrayList;
@@ -121,7 +119,6 @@ public class BuilderProcessor
                   selector
                       .name(GROUP_EXTERNAL_TYPE_HOLDERS)
                       .annotationTypes(SimpleBuilderFor.class, SimpleBuilderFors.class))
-          .collectionPhase(PHASE_ELEMENT_COLLECTION)
           .build();
 
   /** The processor's static declarations handed to the framework driver. */
@@ -132,7 +129,6 @@ public class BuilderProcessor
           .requiredSourceVersion(SourceVersion.RELEASE_17)
           .processorTag("simple-builders")
           .generatedKind("builder")
-          .generationPhase(PHASE_CODE_GENERATION)
           .deferredTargetsKind("Jackson module")
           .build();
 

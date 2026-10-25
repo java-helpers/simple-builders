@@ -86,6 +86,12 @@ public abstract class AbstractCodegenProcessor<
         D extends CodegenDefinition>
     extends AbstractProcessor {
 
+  /** Performance phase the element collection is reported under — framework-owned. */
+  private static final String PHASE_ELEMENT_COLLECTION = "Element Collection";
+
+  /** Performance phase target generation is reported under — framework-owned. */
+  private static final String PHASE_CODE_GENERATION = "Code Generation";
+
   /** The domain's context instance. */
   protected C context;
 
@@ -151,7 +157,7 @@ public abstract class AbstractCodegenProcessor<
 
     tracker.startPhase();
     ElementCollection collected = findElements(annotations, roundEnv, context);
-    tracker.endPhase(elementSpec().collectionPhase());
+    tracker.endPhase(PHASE_ELEMENT_COLLECTION);
     context.debug("%s: Processing round started.", processorTag());
 
     List<CodegenTask<K>> tasks = plan(collected, context);
@@ -177,7 +183,7 @@ public abstract class AbstractCodegenProcessor<
         for (GenerationTargetClassDto target : targets) {
           generateTarget(target);
         }
-        tracker.endPhase(generationPhase());
+        tracker.endPhase(PHASE_CODE_GENERATION);
         afterGenerate(definition, targets, task, context);
         successfulGenerations++;
       } catch (Exception ex) {
@@ -522,10 +528,6 @@ public abstract class AbstractCodegenProcessor<
    */
   protected void afterGenerate(
       D definition, List<GenerationTargetClassDto> targets, CodegenTask<K> task, C context) {}
-
-  private String generationPhase() {
-    return processorConfiguration.generationPhase();
-  }
 
   /**
    * Callback for the last processing round — generates the domain's {@link #deferredTargets

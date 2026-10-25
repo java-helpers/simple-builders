@@ -51,18 +51,14 @@ import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLo
 public final class AnnotationElementSpec {
 
   private final List<ElementSelector> selectors;
-  private final String collectionPhase;
 
   /**
    * Creates a spec.
    *
    * @param selectors the named selection groups, in declaration order
-   * @param collectionPhase performance-tracking phase name the collection is reported under, or
-   *     {@code null} to skip timing
    */
-  public AnnotationElementSpec(List<ElementSelector> selectors, String collectionPhase) {
+  public AnnotationElementSpec(List<ElementSelector> selectors) {
     this.selectors = selectors;
-    this.collectionPhase = collectionPhase;
   }
 
   /**
@@ -77,7 +73,6 @@ public final class AnnotationElementSpec {
   /** Fluent builder for {@link AnnotationElementSpec}. */
   public static final class Builder {
     private final List<ElementSelector> selectors = new ArrayList<>();
-    private String collectionPhase;
 
     /** Adds a named selection group, in declaration order. */
     public Builder selector(ElementSelector selector) {
@@ -92,25 +87,10 @@ public final class AnnotationElementSpec {
       return selector(selectorBuilder.build());
     }
 
-    /** The performance-tracking phase the collection is reported under, or {@code null}. */
-    public Builder collectionPhase(String collectionPhase) {
-      this.collectionPhase = collectionPhase;
-      return this;
-    }
-
     /** Builds the spec. */
     public AnnotationElementSpec build() {
-      return new AnnotationElementSpec(selectors, collectionPhase);
+      return new AnnotationElementSpec(selectors);
     }
-  }
-
-  /**
-   * The performance-tracking phase the collection is reported under.
-   *
-   * @return the phase name, or {@code null} when untimed
-   */
-  public String collectionPhase() {
-    return collectionPhase;
   }
 
   /**
