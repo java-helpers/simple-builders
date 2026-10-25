@@ -435,32 +435,33 @@ public class BuilderProcessor
   }
 
   /**
-   * Registers the types whose builders will be generated this round with the scope resolver, so it
-   * can trust them without a type search. The actual builder type name is registered, which may
-   * differ from the target's package for {@code @SimpleBuilderFor} targets.
+   * The builder type this task will generate — registered up front so references to it resolve
+   * during analysis. The package may differ from the target's for {@code @SimpleBuilderFor}
+   * targets.
    */
   @Override
-  protected TypeName predictedGeneratedTypeName(
+  protected List<TypeName> registerPlannedGenerationTargets(
       CodegenTask<BuilderConfiguration> task, BuilderProcessingContext ctx) {
     if (!(task.element() instanceof TypeElement targetType)) {
-      return null;
+      return List.of();
     }
-    return builderTypeName(
-        targetType,
-        effectiveBuilderPackage(task.reportingElement(), task.configuration()),
-        task.configuration());
+    return List.of(
+        builderTypeName(
+            targetType,
+            effectiveBuilderPackage(task.reportingElement(), task.configuration()),
+            task.configuration()));
   }
 
-  /** SPI-exports the registered builder, on top of the generic generated-type registration. */
+  /** SPI-exports the registered builder on top of the generic generated-type registration. */
   @Override
-  protected void registerPlannedOutput(
-      CodegenTask<BuilderConfiguration> task, BuilderProcessingContext ctx) {
-    super.registerPlannedOutput(task, ctx);
-    TypeName builderName = predictedGeneratedTypeName(task, ctx);
-    if (task.element() instanceof TypeElement targetType && builderName != null) {
+  protected void onPlannedOutputRegistered(
+      CodegenTask<BuilderConfiguration> task,
+      TypeName generatedName,
+      BuilderProcessingContext ctx) {
+    if (task.element() instanceof TypeElement targetType) {
       SimpleBuildersSpiIntegration.registerBuilder(
           JavaLangMapper.mapToTypeName(targetType, ctx),
-          ctx.getBuilderScopeResolver().generatedBuilderContract(builderName),
+          ctx.getBuilderScopeResolver().generatedBuilderContract(generatedName),
           task.configuration().getSetterPrefix());
     }
   }
