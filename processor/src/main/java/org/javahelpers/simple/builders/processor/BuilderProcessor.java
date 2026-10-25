@@ -145,7 +145,6 @@ public class BuilderProcessor
       ProcessingEnvironment processingEnv,
       CompilerArgumentsReader reader,
       BuilderProcessingContext ctx) {
-    ctx.debug("Starting BuilderProcessor...");
     this.jacksonModuleGenerator = new JacksonModuleGenerator(processingEnv, logger, globalConfig);
 
     // Initialize GeneratorRegistry once during processor initialization

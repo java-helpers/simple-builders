@@ -283,9 +283,12 @@ public abstract class AbstractCodegenProcessor<
    */
   protected ProcessingLogger createLogger(
       ProcessingEnvironment processingEnv, CompilerArgumentsReader reader) {
-    return optionRegistry().isVerboseRequested(reader)
-        ? ProcessingLogger.createVerbose(processingEnv)
-        : ProcessingLogger.create(processingEnv);
+    ProcessingLogger logger =
+        optionRegistry().isVerboseRequested(reader)
+            ? ProcessingLogger.createVerbose(processingEnv)
+            : ProcessingLogger.create(processingEnv);
+    logger.debug("Starting %s...", getClass().getSimpleName());
+    return logger;
   }
 
   /** The backend registry resolving the code-generation engine and formatter factory. */
