@@ -67,7 +67,7 @@ import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLo
  *     targets = mapToTargets(def, task, ctx)                            [implement]
  *     for each target:
  *       existsGuard → engine.generate(target, formatterResolver.resolve(target.mode))  [framework]
- *     afterGenerate(def, targets, task, ctx)                            [default: no-op]
+ *     onTaskGenerated(def, targets, task, ctx)                            [default: no-op]
  *   endRound(ctx)                                                       [default: no-op]
  *   last round: onProcessingOver(ctx)                                   [default: deferredTargets() loop]
  * </pre>
@@ -204,7 +204,7 @@ public abstract class AbstractCodegenProcessor<
           generateTarget(target);
         }
         tracker.endPhase(PHASE_CODE_GENERATION);
-        afterGenerate(definition, targets, task, context);
+        onTaskGenerated(definition, targets, task, context);
         successfulGenerations++;
       } catch (Exception ex) {
         // By default generation failures are warnings so other targets are still generated.
@@ -558,15 +558,15 @@ public abstract class AbstractCodegenProcessor<
       D definition, CodegenTask<K> task, C context) throws Exception;
 
   /**
-   * Runs after all targets of a task generated successfully — e.g. deferred-output accumulation and
-   * per-class metrics. Default: nothing.
+   * Event after all targets of a task generated successfully — the insert point for deferred-output
+   * accumulation, per-class metrics, and domain bookkeeping. Default: nothing.
    *
    * @param definition the analysed definition
    * @param targets the generated class definitions
    * @param task the planned task
    * @param context the processing context
    */
-  protected void afterGenerate(
+  protected void onTaskGenerated(
       D definition, List<GenerationTargetClassDto> targets, CodegenTask<K> task, C context) {}
 
   /**
@@ -595,7 +595,7 @@ public abstract class AbstractCodegenProcessor<
 
   /**
    * The class definitions generated deferred in the last round — accumulated during {@link
-   * #afterGenerate}. Default: none.
+   * #onTaskGenerated}. Default: none.
    *
    * @param context the processing context
    * @return the deferred targets, possibly empty

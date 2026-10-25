@@ -488,7 +488,7 @@ public class BuilderProcessor
   }
 
   @Override
-  protected void afterGenerate(
+  protected void onTaskGenerated(
       BuilderDefinitionDto definition,
       List<GenerationTargetClassDto> targets,
       CodegenTask<BuilderConfiguration> task,
