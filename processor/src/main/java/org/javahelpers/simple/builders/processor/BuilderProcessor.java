@@ -60,6 +60,7 @@ import org.javahelpers.codegen.processing.AnnotationElementSpec;
 import org.javahelpers.codegen.processing.ElementCollection;
 import org.javahelpers.codegen.processing.ElementSelector;
 import org.javahelpers.codegen.processing.ProcessingTarget;
+import org.javahelpers.codegen.processing.ProcessorOptionRegistry;
 import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder.Template;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFor;
@@ -101,6 +102,10 @@ public class BuilderProcessor extends AbstractProcessor {
       "simple-builders: Failed to generate builder - %s";
   private static final String GROUP_ANNOTATED_ELEMENTS = "annotatedElements";
   private static final String GROUP_EXTERNAL_TYPE_HOLDERS = "externalTypeHolders";
+
+  /** The processor's declared compiler options — the supported set is derived, not duplicated. */
+  private static final ProcessorOptionRegistry OPTION_REGISTRY =
+      new ProcessorOptionRegistry(List.of(CompilerArgumentsEnum.values()));
 
   /**
    * Which elements builders are generated for: types carrying {@code @SimpleBuilder} or a
@@ -574,12 +579,7 @@ public class BuilderProcessor extends AbstractProcessor {
 
   @Override
   public Set<String> getSupportedOptions() {
-    Set<String> options = new HashSet<>();
-    for (CompilerArgumentsEnum arg : CompilerArgumentsEnum.values()) {
-      options.add(arg.getOptionName()); // e.g., "verbose"
-      options.add(arg.getCompilerArgument()); // e.g., "simplebuilder.verbose"
-    }
-    return options;
+    return OPTION_REGISTRY.supportedOptions();
   }
 
   @Override
