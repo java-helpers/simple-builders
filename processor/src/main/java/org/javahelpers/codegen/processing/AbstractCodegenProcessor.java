@@ -49,7 +49,7 @@ import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLo
  *
  * <pre>
  *   ctx      = domain.createContext(env, logger)                       [in init]
- *   elements = elementSpec().collect(annotations, roundEnv, logger)
+ *   elements = findElements(annotations, roundEnv, ctx)                [default: elementSpec()]
  *   tasks    = domain.plan(elements, ctx)
  *   domain.registerPlannedOutputs(tasks, ctx)                          [up-front type recognition]
  *   for each task (guarded, strict-mode reporting):
@@ -125,7 +125,7 @@ public abstract class AbstractCodegenProcessor<C extends AnnotationProcessingCon
     context.info("%s: PROCESSING ROUND START", processorTag());
 
     tracker.startPhase();
-    ElementCollection collected = elementSpec().collect(annotations, roundEnv, logger);
+    ElementCollection collected = findElements(annotations, roundEnv, context);
     tracker.endPhase(elementSpec().collectionPhase());
     context.debug("%s: Processing round started.", processorTag());
 
@@ -181,6 +181,24 @@ public abstract class AbstractCodegenProcessor<C extends AnnotationProcessingCon
     Set<String> options = new LinkedHashSet<>(optionRegistry().supportedOptions());
     options.addAll(additionalSupportedOptions());
     return options;
+  }
+
+  @Override
+  public final Set<String> getSupportedAnnotationTypes() {
+    return supportedAnnotationTypes();
+  }
+
+  /**
+   * The annotation type names this processor supports. Default: the {@link
+   * SupportedAnnotationTypes} annotation on the processor class when present, else {@code "*"} —
+   * the framework declares support by method. Domains either annotate their processor class or
+   * override this function (e.g. to compose a computed set).
+   *
+   * @return the supported annotation type names
+   */
+  protected Set<String> supportedAnnotationTypes() {
+    SupportedAnnotationTypes annotation = getClass().getAnnotation(SupportedAnnotationTypes.class);
+    return annotation != null ? Set.copyOf(List.of(annotation.value())) : Set.of("*");
   }
 
   /**
@@ -290,17 +308,14 @@ public abstract class AbstractCodegenProcessor<C extends AnnotationProcessingCon
   protected abstract ProcessorOptionRegistry optionRegistry();
 
   /**
-   * Whether {@link #process} claims the supported annotations. Default: claims only when the
-   * supported set is concrete — under {@code "*"} (the JDK's default when the domain declares no
-   * {@link SupportedAnnotationTypes} and does not override {@link #getSupportedAnnotationTypes()})
-   * claiming would hide foreign annotations from later processors. Domains narrow the set the
-   * standard JSR-269 way — annotating the processor class or overriding {@code
-   * getSupportedAnnotationTypes()} — and this default claims for them.
+   * Whether {@link #process} claims the supported annotations. Default {@code false} — claiming
+   * would hide them from later processors, which is especially wrong under the default {@code "*"}
+   * supported set. Override to claim when the processor owns a concrete annotation set.
    *
    * @return {@code true} to claim the supported annotations
    */
   protected boolean claimsAnnotations() {
-    return !getSupportedAnnotationTypes().contains("*");
+    return false;
   }
 
   /** The minimum source level the processor supports, as a {@link SourceVersion} name. */
@@ -317,10 +332,24 @@ public abstract class AbstractCodegenProcessor<C extends AnnotationProcessingCon
       ProcessingEnvironment processingEnv, CompilerArgumentsReader reader, C context) {}
 
   /**
+   * Finds the elements of this round the domain generates code for. Default delegates to {@link
+   * #elementSpec()}'s collector; override for custom element discovery.
+   *
+   * @param annotations the annotation types requested this round
+   * @param roundEnv the round environment
+   * @param context the processing context
+   * @return the collected elements
+   */
+  protected ElementCollection findElements(
+      Set<? extends TypeElement> annotations, RoundEnvironment roundEnv, C context) {
+    return elementSpec().collect(annotations, roundEnv, logger);
+  }
+
+  /**
    * Plans the tasks of this round from the collected elements: resolves per-element configuration,
    * expands multi-target declarations and applies domain scoping rules.
    *
-   * @param collected the elements matched by {@link #elementSpec()}
+   * @param collected the elements matched by {@link #findElements}
    * @param context the processing context
    * @return the generation plan, possibly empty
    */
