@@ -129,7 +129,7 @@ class JacksonModuleWarningTest {
             .compile(dto(), collidingModule());
 
     assertThat(compilation).succeeded();
-    assertThat(compilation).hadWarningContaining("Error generating Jackson module");
+    assertThat(compilation).hadWarningContaining("Error generating target");
   }
 
   @Test
@@ -143,6 +143,6 @@ class JacksonModuleWarningTest {
             .compile(dto(), collidingModule());
 
     assertThat(compilation).failed();
-    assertThat(compilation).hadErrorContaining("Error generating Jackson module");
+    assertThat(compilation).hadErrorContaining("Error generating target");
   }
 }
