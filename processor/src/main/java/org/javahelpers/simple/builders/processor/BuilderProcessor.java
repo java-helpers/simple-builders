@@ -466,15 +466,12 @@ public class BuilderProcessor
   protected void registerPlannedOutput(
       CodegenTask<BuilderConfiguration> task, BuilderProcessingContext ctx) {
     super.registerPlannedOutput(task, ctx);
-    if (task.element() instanceof TypeElement targetType) {
-      ctx.getBuilderScopeResolver()
-          .resolveGeneratedBuilder(targetType)
-          .ifPresent(
-              resolvedBuilder ->
-                  SimpleBuildersSpiIntegration.registerBuilder(
-                      JavaLangMapper.mapToTypeName(targetType, ctx),
-                      resolvedBuilder,
-                      task.configuration().getSetterPrefix()));
+    TypeName builderName = predictedGeneratedTypeName(task, ctx);
+    if (task.element() instanceof TypeElement targetType && builderName != null) {
+      SimpleBuildersSpiIntegration.registerBuilder(
+          JavaLangMapper.mapToTypeName(targetType, ctx),
+          ctx.getBuilderScopeResolver().generatedBuilderContract(builderName),
+          task.configuration().getSetterPrefix());
     }
   }
 

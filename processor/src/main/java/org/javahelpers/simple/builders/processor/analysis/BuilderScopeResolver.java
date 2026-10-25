@@ -143,26 +143,17 @@ public final class BuilderScopeResolver {
   }
 
   /**
-   * The builder contract of a type whose builder this processor registered for the current round —
-   * always the generated {@code create()} factory for the empty path and the constructor for the
-   * copy path. Only the SPI integrations consume this, to publish the emitted contract.
+   * Wraps a builder type name with the instantiation contract every generated builder emits — a
+   * static {@code create()} factory for the empty path and a constructor for the copy path.
    *
-   * <p>Unlike {@link #resolveUsableBuilderType(TypeElement)} this does not read the per-element
-   * configuration and is safe to call during generation-plan registration.
-   *
-   * @param referencedType the type element being referenced
-   * @return the resolved builder, or empty if no generated builder is registered for the type
+   * @param builder the generated builder's type name
+   * @return the resolved builder carrying its contract
    */
-  public Optional<ResolvedBuilder> resolveGeneratedBuilder(TypeElement referencedType) {
-    TypeName referencedTypeName = JavaLangMapper.mapToTypeName(referencedType, context);
-    return generatedBuilders
-        .findGenerated(referencedTypeName)
-        .map(
-            builder ->
-                new ResolvedBuilder(
-                    builder,
-                    new TypeInstantiation.StaticFactoryCall(GENERATED_FACTORY_METHOD_NAME),
-                    new TypeInstantiation.ConstructorCall()));
+  public ResolvedBuilder generatedBuilderContract(TypeName builder) {
+    return new ResolvedBuilder(
+        builder,
+        new TypeInstantiation.StaticFactoryCall(GENERATED_FACTORY_METHOD_NAME),
+        new TypeInstantiation.ConstructorCall());
   }
 
   /**
@@ -247,12 +238,7 @@ public final class BuilderScopeResolver {
     if (generatedBuilder.isPresent()) {
       // Our generators always emit a static create() and no create(T) - the empty path uses
       // the factory, the copy path the constructor
-      return generatedBuilder.map(
-          builder ->
-              new ResolvedBuilder(
-                  builder,
-                  new TypeInstantiation.StaticFactoryCall(GENERATED_FACTORY_METHOD_NAME),
-                  new TypeInstantiation.ConstructorCall()));
+      return generatedBuilder.map(this::generatedBuilderContract);
     }
 
     // Reusing builders not generated in this round - nested or anchored inside the referenced
