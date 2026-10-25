@@ -38,16 +38,11 @@ import javax.lang.model.SourceVersion;
  * @param optionRegistry the processor's declared compiler options; default: an empty registry
  * @param requiredSourceVersion the minimum source level; default: {@link
  *     SourceVersion#latestSupported()}
- * @param processorTag diagnostic tag prefixing messages; default: {@code null} — the processor's
- *     simple class name is used
- * @param generatedKind what one generated unit is called in diagnostics; default: {@code "class"}
  */
 public record CodegenProcessorConfiguration(
     AnnotationElementSpec elementSpec,
     ProcessorOptionRegistry optionRegistry,
-    SourceVersion requiredSourceVersion,
-    String processorTag,
-    String generatedKind) {
+    SourceVersion requiredSourceVersion) {
 
   /**
    * Creates a builder with all defaults applied — only {@link #elementSpec(AnnotationElementSpec)}
@@ -64,8 +59,6 @@ public record CodegenProcessorConfiguration(
     private AnnotationElementSpec elementSpec;
     private ProcessorOptionRegistry optionRegistry = new ProcessorOptionRegistry(List.of());
     private SourceVersion requiredSourceVersion = SourceVersion.latestSupported();
-    private String processorTag;
-    private String generatedKind = "class";
 
     private Builder() {}
 
@@ -103,28 +96,6 @@ public record CodegenProcessorConfiguration(
     }
 
     /**
-     * Sets the diagnostic tag prefixing messages.
-     *
-     * @param processorTag the processor tag
-     * @return this builder
-     */
-    public Builder processorTag(String processorTag) {
-      this.processorTag = processorTag;
-      return this;
-    }
-
-    /**
-     * Sets what one generated unit is called in diagnostics.
-     *
-     * @param generatedKind the generated kind
-     * @return this builder
-     */
-    public Builder generatedKind(String generatedKind) {
-      this.generatedKind = generatedKind;
-      return this;
-    }
-
-    /**
      * Builds the configuration.
      *
      * @return the configuration
@@ -134,8 +105,7 @@ public record CodegenProcessorConfiguration(
       if (elementSpec == null) {
         throw new IllegalStateException("elementSpec is required");
       }
-      return new CodegenProcessorConfiguration(
-          elementSpec, optionRegistry, requiredSourceVersion, processorTag, generatedKind);
+      return new CodegenProcessorConfiguration(elementSpec, optionRegistry, requiredSourceVersion);
     }
   }
 }

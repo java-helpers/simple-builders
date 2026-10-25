@@ -127,13 +127,23 @@ public class BuilderProcessor
           .elementSpec(ELEMENT_SPEC)
           .optionRegistry(OPTION_REGISTRY)
           .requiredSourceVersion(SourceVersion.RELEASE_17)
-          .processorTag("simple-builders")
-          .generatedKind("builder")
           .build();
 
   /** Creates the processor — javac instantiates it reflectively. */
   public BuilderProcessor() {
     super(PROCESSOR_CONFIGURATION);
+  }
+
+  /** The tag prefixing diagnostics — the project name, not the class name. */
+  @Override
+  protected String loggerTag() {
+    return "simple-builders";
+  }
+
+  /** Builders are what this processor generates — the noun diagnostics use. */
+  @Override
+  protected String generatedKind() {
+    return "builder";
   }
 
   /** The global configuration resolved from compiler arguments — needed by several hooks. */

@@ -365,15 +365,26 @@ public abstract class AbstractCodegenProcessor<
   }
 
   /**
+   * The diagnostic tag the processor's messages are prefixed with — carried by the logger. Default:
+   * the processor's simple class name; override for a shorter domain tag.
+   *
+   * @return the tag
+   */
+  protected String loggerTag() {
+    return getClass().getSimpleName();
+  }
+
+  /**
    * Creates the logger. Default: verbose when the domain's declared verbose option requests it —
-   * see {@link ProcessorOptionRegistry#isVerboseRequested}.
+   * see {@link ProcessorOptionRegistry#isVerboseRequested}. The logger carries {@link
+   * #loggerTag()}.
    */
   protected ProcessingLogger createLogger(
       ProcessingEnvironment processingEnv, CompilerArgumentsReader reader) {
     ProcessingLogger logger =
         optionRegistry().isVerboseRequested(reader)
-            ? ProcessingLogger.createVerbose(processingEnv)
-            : ProcessingLogger.create(processingEnv);
+            ? ProcessingLogger.createVerbose(processingEnv, loggerTag())
+            : ProcessingLogger.create(processingEnv, loggerTag());
     logger.debug("Starting %s...", getClass().getSimpleName());
     return logger;
   }
@@ -447,12 +458,17 @@ public abstract class AbstractCodegenProcessor<
   }
 
   private String processorTag() {
-    String configured = processorConfiguration.processorTag();
-    return configured != null ? configured : getClass().getSimpleName();
+    return logger.getTag();
   }
 
-  private String generatedKind() {
-    return processorConfiguration.generatedKind();
+  /**
+   * What one generated unit is called in diagnostics ("Failed to generate %s", "generated N %s(s)")
+   * — the domain's noun lives in domain code. Default {@code "class"}.
+   *
+   * @return the generated unit's name
+   */
+  protected String generatedKind() {
+    return "class";
   }
 
   /**

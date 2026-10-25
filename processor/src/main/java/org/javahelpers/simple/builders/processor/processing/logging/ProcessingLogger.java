@@ -41,6 +41,12 @@ public class ProcessingLogger {
   /** Verbosity level of this logger. */
   private final Verbosity verbosity;
 
+  /**
+   * Diagnostic tag identifying the processor — domains read it back via {@link #getTag()} to prefix
+   * their own messages.
+   */
+  private final String tag;
+
   /** Thread-local indentation level for hierarchical logging. */
   private static final ThreadLocal<Integer> indentationLevel = ThreadLocal.withInitial(() -> 0);
 
@@ -61,7 +67,18 @@ public class ProcessingLogger {
    * @return a processing logger reporting errors, warnings and info messages
    */
   public static ProcessingLogger create(ProcessingEnvironment processingEnv) {
-    return new ProcessingLogger(processingEnv, Verbosity.NORMAL);
+    return new ProcessingLogger(processingEnv, Verbosity.NORMAL, null);
+  }
+
+  /**
+   * Creates a new ProcessingLogger carrying a diagnostic tag.
+   *
+   * @param processingEnv the processing environment providing the messager
+   * @param tag the processor's diagnostic tag, or {@code null}
+   * @return a processing logger reporting errors, warnings and info messages
+   */
+  public static ProcessingLogger create(ProcessingEnvironment processingEnv, String tag) {
+    return new ProcessingLogger(processingEnv, Verbosity.NORMAL, tag);
   }
 
   /**
@@ -71,15 +88,37 @@ public class ProcessingLogger {
    * @return a debug-enabled processing logger
    */
   public static ProcessingLogger createVerbose(ProcessingEnvironment processingEnv) {
-    return new ProcessingLogger(processingEnv, Verbosity.VERBOSE);
+    return new ProcessingLogger(processingEnv, Verbosity.VERBOSE, null);
   }
 
-  private ProcessingLogger(ProcessingEnvironment processingEnv, Verbosity verbosity) {
+  /**
+   * Creates a new debug-enabled ProcessingLogger carrying a diagnostic tag.
+   *
+   * @param processingEnv the processing environment providing the messager
+   * @param tag the processor's diagnostic tag, or {@code null}
+   * @return a debug-enabled processing logger
+   */
+  public static ProcessingLogger createVerbose(ProcessingEnvironment processingEnv, String tag) {
+    return new ProcessingLogger(processingEnv, Verbosity.VERBOSE, tag);
+  }
+
+  private ProcessingLogger(ProcessingEnvironment processingEnv, Verbosity verbosity, String tag) {
     // Reset ThreadLocal state to ensure clean state between test runs
     resetThreadLocalState();
 
     this.messager = processingEnv.getMessager();
     this.verbosity = verbosity;
+    this.tag = tag;
+  }
+
+  /**
+   * The diagnostic tag this logger was created with (typically the processor's name or a shorter
+   * domain tag), or {@code null}.
+   *
+   * @return the tag
+   */
+  public String getTag() {
+    return tag;
   }
 
   /** Resets ThreadLocal state to ensure clean state between test runs. */
