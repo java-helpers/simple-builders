@@ -313,6 +313,43 @@ public final class JavaLangAnalyser {
   }
 
   /**
+   * Reads an array-typed attribute of an annotation mirror as the raw item list.
+   *
+   * <p>For an array-valued attribute javac always delivers a list, even for a single entry.
+   *
+   * @param annotationMirror the annotation to read
+   * @param attributeName the simple name of the attribute (e.g. {@code "value"})
+   * @param context the processing context providing element utilities
+   * @return the attribute's raw items, or an empty list when absent or not array-valued
+   */
+  public static List<?> findAnnotationAttributeValues(
+      AnnotationMirror annotationMirror,
+      String attributeName,
+      AnnotationProcessingContext context) {
+    return findAnnotationAttribute(annotationMirror, attributeName, context)
+        .map(AnnotationValue::getValue)
+        .filter(List.class::isInstance)
+        .map(List.class::cast)
+        .orElse(List.of());
+  }
+
+  /**
+   * Resolves one class-valued item of an annotation attribute to its type element.
+   *
+   * @param item a raw attribute item, typically an {@link AnnotationValue} wrapping a {@link
+   *     TypeMirror}
+   * @param context the processing context providing type utilities
+   * @return the resolved type element, or empty when the item does not hold a type
+   */
+  public static Optional<TypeElement> resolveTypeElement(
+      Object item, AnnotationProcessingContext context) {
+    Object typeValue = item instanceof AnnotationValue value ? value.getValue() : null;
+    Element resolved =
+        typeValue instanceof TypeMirror typeMirror ? context.asElement(typeMirror) : null;
+    return resolved instanceof TypeElement targetType ? Optional.of(targetType) : Optional.empty();
+  }
+
+  /**
    * Single-parameter variant of {@link #findMethodsStatic(TypeElement, List, TypeName,
    * AnnotationProcessingContext)}.
    */

@@ -15,16 +15,19 @@ public class PersonDtoMapperImpl implements PersonDtoMapper {
             return null;
         }
 
-        PersonDtoBuilder personDto = PersonDtoBuilder.create();
+        String name = null;
 
-        personDto.birthdate( source.getBirthdate() );
-        personDto.mannschaft( source.getMannschaft() );
-        personDto.name( source.getName() );
+        name = source.getName();
+
+        PersonDto personDto = new PersonDto( name );
+
         List<String> list = source.getNickNames();
         if ( list != null ) {
-            personDto.nickNames( new ArrayList<String>( list ) );
+            personDto.setNickNames( new ArrayList<String>( list ) );
         }
+        personDto.setBirthdate( source.getBirthdate() );
+        personDto.setMannschaft( source.getMannschaft() );
 
-        return personDto.build();
+        return personDto;
     }
 }

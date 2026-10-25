@@ -51,7 +51,6 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.codegen.processing.AbstractCodegenProcessor;
@@ -403,7 +402,8 @@ public class BuilderProcessor
       Element holder, AnnotationMirror annotationInstance) throws BuilderException {
     Map<String, TypeElement> targets = new LinkedHashMap<>();
     // For an array-valued attribute javac always delivers a list, even for a single entry.
-    for (Object item : readArrayAttribute(annotationInstance, "value")) {
+    for (Object item :
+        JavaLangAnalyser.findAnnotationAttributeValues(annotationInstance, "value", context)) {
       TypeElement target = resolveExternalTargetType(holder, item);
       targets.put(target.getQualifiedName().toString(), target);
     }
@@ -415,21 +415,14 @@ public class BuilderProcessor
     return List.copyOf(targets.values());
   }
 
-  /** Reads an array-typed attribute of an annotation mirror as the raw item list. */
-  private List<?> readArrayAttribute(AnnotationMirror annotationInstance, String attributeName) {
-    return JavaLangAnalyser.findAnnotationAttribute(annotationInstance, attributeName, context)
-        .map(AnnotationValue::getValue)
-        .filter(List.class::isInstance)
-        .map(List.class::cast)
-        .orElse(List.of());
-  }
-
   /**
    * Reads the {@code sourcePackages} attribute of one {@code @SimpleBuilderFor} annotation
    * instance.
    */
   private List<String> readSourcePackageNames(AnnotationMirror annotationInstance) {
-    return readArrayAttribute(annotationInstance, "sourcePackages").stream()
+    return JavaLangAnalyser.findAnnotationAttributeValues(
+            annotationInstance, "sourcePackages", context)
+        .stream()
         .map(item -> item instanceof AnnotationValue value ? value.getValue() : null)
         .filter(String.class::isInstance)
         .map(String.class::cast)
@@ -479,17 +472,14 @@ public class BuilderProcessor
   /** Resolves one entry of a {@code @SimpleBuilderFor} {@code value} attribute to its type. */
   private TypeElement resolveExternalTargetType(Element holder, Object item)
       throws BuilderException {
-    Object typeValue = item instanceof AnnotationValue value ? value.getValue() : null;
-    Element resolved =
-        typeValue instanceof TypeMirror typeMirror ? context.asElement(typeMirror) : null;
-    if (!(resolved instanceof TypeElement targetType)) {
-      throw new BuilderException(
-          holder,
-          "Value '%s' in @SimpleBuilderFor on '%s' could not be resolved to a type",
-          typeValue,
-          holder.getSimpleName());
-    }
-    return targetType;
+    return JavaLangAnalyser.resolveTypeElement(item, context)
+        .orElseThrow(
+            () ->
+                new BuilderException(
+                    holder,
+                    "Value '%s' in @SimpleBuilderFor on '%s' could not be resolved to a type",
+                    item instanceof AnnotationValue value ? value.getValue() : null,
+                    holder.getSimpleName()));
   }
 
   /** Computes the type name of the builder a given target type would produce. */
