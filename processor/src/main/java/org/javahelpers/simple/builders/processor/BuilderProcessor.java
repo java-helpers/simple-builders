@@ -56,6 +56,9 @@ import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
+import org.javahelpers.codegen.processing.AnnotationElementSpec;
+import org.javahelpers.codegen.processing.ElementCollection;
+import org.javahelpers.codegen.processing.ElementSelector;
 import org.javahelpers.codegen.processing.ProcessingTarget;
 import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder.Template;
@@ -96,6 +99,29 @@ import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLo
 public class BuilderProcessor extends AbstractProcessor {
   private static final String MSG_FAILED_TO_GENERATE =
       "simple-builders: Failed to generate builder - %s";
+  private static final String GROUP_ANNOTATED_ELEMENTS = "annotatedElements";
+  private static final String GROUP_EXTERNAL_TYPE_HOLDERS = "externalTypeHolders";
+
+  /**
+   * Which elements builders are generated for: types carrying {@code @SimpleBuilder} or a
+   * user-defined {@code @SimpleBuilder.Template}-meta-annotated annotation (opt-out via
+   * {@code @Ignore4BuilderGeneration}), plus classes declaring external types with
+   * {@code @SimpleBuilderFor}.
+   */
+  private static final AnnotationElementSpec ELEMENT_SPEC =
+      new AnnotationElementSpec(
+          List.of(
+              new ElementSelector(
+                  GROUP_ANNOTATED_ELEMENTS,
+                  Set.of(),
+                  Template.class,
+                  Ignore4BuilderGeneration.class),
+              new ElementSelector(
+                  GROUP_EXTERNAL_TYPE_HOLDERS,
+                  Set.of(SimpleBuilderFor.class, SimpleBuilderFors.class),
+                  null,
+                  null)),
+          PHASE_ELEMENT_COLLECTION);
 
   private BuilderProcessingContext context;
   private ProcessingLogger logger;
@@ -177,24 +203,16 @@ public class BuilderProcessor extends AbstractProcessor {
     context.info("simple-builders: PROCESSING ROUND START");
 
     tracker.startPhase();
-    Set<Element> elementsToProcess = collectElementsToProcess(annotations, roundEnv);
-    Set<Element> externalTypeHolders = collectExternalTypeHolders(roundEnv);
-    // Sort elements alphabetically by simple name for deterministic processing
-    List<Element> sortedElements =
-        elementsToProcess.stream()
-            .sorted(Comparator.comparing(element -> element.getSimpleName().toString()))
-            .toList();
-    List<Element> sortedHolders =
-        externalTypeHolders.stream()
-            .sorted(Comparator.comparing(element -> element.getSimpleName().toString()))
-            .toList();
-    tracker.endPhase(PHASE_ELEMENT_COLLECTION);
+    ElementCollection collected = ELEMENT_SPEC.collect(annotations, roundEnv, logger);
+    List<Element> sortedElements = collected.byName(GROUP_ANNOTATED_ELEMENTS);
+    List<Element> sortedHolders = collected.byName(GROUP_EXTERNAL_TYPE_HOLDERS);
+    tracker.endPhase(ELEMENT_SPEC.collectionPhase());
 
     context.debug("simple-builders: Processing round started.");
-    context.debug("simple-builders: Found %d annotated elements.", elementsToProcess.size());
+    context.debug("simple-builders: Found %d annotated elements.", sortedElements.size());
     context.debug(
         "simple-builders: Found %d type(s) for generation with @SimpleBuilderFor.",
-        externalTypeHolders.size());
+        sortedHolders.size());
 
     // Resolve configuration and apply generation scopes before processing any builder. This lets
     // the scope resolver know every builder that will be generated in this round.
@@ -251,47 +269,6 @@ public class BuilderProcessor extends AbstractProcessor {
     }
     // Reset indentation after Jackson module generation as well
     context.resetIndentation();
-  }
-
-  /**
-   * Collects all elements annotated with {@code @SimpleBuilderFor} in this round. These are holder
-   * classes declaring external types a builder is generated for. Repeated declarations arrive
-   * wrapped in the {@code @SimpleBuilderFors} container, so both are collected.
-   */
-  private Set<Element> collectExternalTypeHolders(RoundEnvironment roundEnv) {
-    Set<Element> holders = new HashSet<>(roundEnv.getElementsAnnotatedWith(SimpleBuilderFor.class));
-    holders.addAll(roundEnv.getElementsAnnotatedWith(SimpleBuilderFors.class));
-    return holders;
-  }
-
-  /**
-   * Collects all elements to process in this round: any element annotated with an annotation that
-   * is meta-annotated with {@code @SimpleBuilder.Template} (including {@code @SimpleBuilder}
-   * itself), minus elements opted out via {@code @Ignore4BuilderGeneration}.
-   */
-  private Set<Element> collectElementsToProcess(
-      Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-    Set<Element> elementsToProcess = new HashSet<>();
-    for (TypeElement annotation : extractingAnnotationsWithTemplate(annotations)) {
-      elementsToProcess.addAll(roundEnv.getElementsAnnotatedWith(annotation));
-    }
-
-    // Only directly-declared annotations are checked: the type itself must carry
-    // the opt-out; a parent carrying it does not cascade, matching the fact that
-    // @Ignore4BuilderGeneration is intentionally NOT @Inherited.
-    elementsToProcess.removeIf(
-        element -> {
-          Optional<AnnotationMirror> ignoreAnnotation =
-              JavaLangAnalyser.findAnnotation(element, Ignore4BuilderGeneration.class);
-          if (ignoreAnnotation.isPresent()) {
-            context.debug(
-                "Skipping element '%s' due to @Ignore4BuilderGeneration opt-out.",
-                element.getSimpleName());
-            return true;
-          }
-          return false;
-        });
-    return elementsToProcess;
   }
 
   /**
@@ -737,28 +714,5 @@ public class BuilderProcessor extends AbstractProcessor {
       // Running on a JDK where RELEASE_17 does not exist (e.g., JDK 8)
       return false;
     }
-  }
-
-  private static List<TypeElement> extractingAnnotationsWithTemplate(
-      Set<? extends TypeElement> annotationsFound) {
-    List<TypeElement> result = new ArrayList<>();
-    for (TypeElement annotation : annotationsFound) {
-      if (shouldSkipAnnotation(annotation)) {
-        continue;
-      }
-      Template templateAnnotation =
-          annotation.getAnnotation(
-              org.javahelpers.simple.builders.core.annotations.SimpleBuilder.Template.class);
-      if (templateAnnotation != null) {
-        result.add(annotation);
-      }
-    }
-    return result;
-  }
-
-  private static boolean shouldSkipAnnotation(TypeElement annotation) {
-    // Only process real annotation specifications. @SimpleBuilder is now a built-in template, so
-    // it is processed through the same path as custom template annotations.
-    return annotation.getKind() != javax.lang.model.element.ElementKind.ANNOTATION_TYPE;
   }
 }
