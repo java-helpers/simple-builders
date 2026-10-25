@@ -48,21 +48,26 @@ import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLo
  * Driver of a generic annotation-processing pipeline: the framework owns the processing lifecycle,
  * the domain plugs in its hooks — collect, plan, register, analyse/map, generate, finalize.
  *
+ * <p>A new processor implements only the domain hooks marked {@code [implement]}: {@link
+ * #createContext}, {@link #elementSpec}, {@link #plan}, {@link #predictedTypeName}, {@link
+ * #analyse} and {@link #mapToTargets}. Every other step is framework-owned or an optional {@code
+ * [default]} the domain may override.
+ *
  * <p>The round spine:
  *
  * <pre>
- *   ctx      = domain.createContext(env, logger)                       [in init]
- *   elements = findElements(annotations, roundEnv, ctx)                [default: elementSpec()]
- *   tasks    = domain.plan(elements, ctx)
- *   domain.registerPlannedOutputs(tasks, ctx)                          [up-front type recognition]
- *   for each task (guarded, strict-mode reporting):
- *     def     = domain.analyse(task, ctx)
- *     targets = domain.mapToTargets(def, task, ctx)
+ *   ctx      = createContext(env, reader, logger)                       [implement — in init]
+ *   elements = findElements(annotations, roundEnv, ctx)                 [default: elementSpec() — implement]
+ *   tasks    = plan(elements, ctx)                                      [implement]
+ *   registerPlannedOutputs(tasks, ctx)                                  [default: predictedTypeName() — implement]
+ *   for each task (guarded, strict-mode reporting):                     [framework]
+ *     def     = analyse(task, ctx)                                      [implement]
+ *     targets = mapToTargets(def, task, ctx)                            [implement]
  *     for each target:
- *       existsGuard → engine.generate(target, formatterResolver.resolve(target.mode))
- *     domain.afterGenerate(def, targets, task, ctx)
- *   domain.endRound(ctx)
- *   last round: domain.onProcessingOver(ctx)                           [deferred outputs, reports]
+ *       existsGuard → engine.generate(target, formatterResolver.resolve(target.mode))  [framework]
+ *     afterGenerate(def, targets, task, ctx)                            [default: no-op]
+ *   endRound(ctx)                                                       [default: no-op]
+ *   last round: onProcessingOver(ctx)                                   [default: deferredTargets() loop]
  * </pre>
  *
  * <p>Per-element failures are caught and reported through {@link
