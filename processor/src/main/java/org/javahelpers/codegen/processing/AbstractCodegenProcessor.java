@@ -96,6 +96,7 @@ public abstract class AbstractCodegenProcessor<
   private ClassCodeGenerator codeGenerator;
   private SourceFormatterResolver formatterResolver;
   private boolean supportedJdk = true;
+  private boolean processedOnce;
 
   /**
    * Creates the processor on its static configuration. javac still instantiates the concrete
@@ -157,6 +158,12 @@ public abstract class AbstractCodegenProcessor<
     if (collected.isEmpty() || isFinished(context)) {
       return claimsAnnotations();
     }
+    if (!tasks.isEmpty()) {
+      // The default one-shot is consumed by the first round that planned work — an empty round
+      // leaves it open for a later one carrying matching elements.
+      processedOnce = true;
+    }
+
     registerPlannedOutputs(tasks, context);
 
     int successfulGenerations = 0;
@@ -451,14 +458,16 @@ public abstract class AbstractCodegenProcessor<
   protected abstract TypeName predictedTypeName(CodegenTask<K> task, C context);
 
   /**
-   * Whether the domain generates in exactly one round and that round already ran. Default {@code
-   * false} — every round with matching elements is processed.
+   * Whether the domain's generating round already ran. Default: one-shot — the base marks the
+   * processor finished after the first round that planned tasks, so elements first appearing in a
+   * later round get nothing. Override for a custom lifecycle rule (e.g. a cross-compilation
+   * finished-marker).
    *
    * @param context the processing context
    * @return {@code true} to skip this round
    */
   protected boolean isFinished(C context) {
-    return false;
+    return processedOnce;
   }
 
   /**
