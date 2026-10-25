@@ -177,6 +177,8 @@ public abstract class AbstractCodegenProcessor<
       context.debugStartOperation("Processing element: " + task.element().getSimpleName());
       tracker.startClass(task.element().getSimpleName().toString());
       try {
+        context.initProcessingTarget(
+            new ProcessingTarget<>(task.configuration(), task.outputPackage()));
         D definition = analyse(task, context);
         List<GenerationTargetClassDto> targets = mapToTargets(definition, task, context);
         tracker.startPhase();

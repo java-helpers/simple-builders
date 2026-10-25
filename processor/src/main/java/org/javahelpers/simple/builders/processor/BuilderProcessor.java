@@ -55,7 +55,6 @@ import org.javahelpers.codegen.processing.AnnotationElementSpec;
 import org.javahelpers.codegen.processing.CodegenProcessorConfiguration;
 import org.javahelpers.codegen.processing.CodegenTask;
 import org.javahelpers.codegen.processing.ElementCollection;
-import org.javahelpers.codegen.processing.ProcessingTarget;
 import org.javahelpers.codegen.processing.ProcessorOptionRegistry;
 import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder.Template;
@@ -255,10 +254,10 @@ public class BuilderProcessor
     if (!context.getBuilderScopeResolver().isInGenerationScope(annotatedElement, config)) {
       return Optional.empty();
     }
-    alreadyPlannedBuilders.add(
-        builderTypeName(
-            annotatedElement, effectiveBuilderPackage(annotatedElement, config), config));
-    return Optional.of(new CodegenTask<>(annotatedElement, config, annotatedElement));
+    String builderPackage = effectiveBuilderPackage(annotatedElement, config);
+    alreadyPlannedBuilders.add(builderTypeName(annotatedElement, builderPackage, config));
+    return Optional.of(
+        new CodegenTask<>(annotatedElement, config, annotatedElement, builderPackage));
   }
 
   /**
@@ -335,7 +334,7 @@ public class BuilderProcessor
           builderName.getFullQualifiedName());
       return Optional.empty();
     }
-    return Optional.of(new CodegenTask<>(target, config, holder));
+    return Optional.of(new CodegenTask<>(target, config, holder, builderPackage));
   }
 
   /**
@@ -445,11 +444,7 @@ public class BuilderProcessor
     if (!(task.element() instanceof TypeElement targetType)) {
       return List.of();
     }
-    return List.of(
-        builderTypeName(
-            targetType,
-            effectiveBuilderPackage(task.reportingElement(), task.configuration()),
-            task.configuration()));
+    return List.of(builderTypeName(targetType, task.outputPackage(), task.configuration()));
   }
 
   /** SPI-exports the registered builder on top of the generic generated-type registration. */
@@ -470,7 +465,6 @@ public class BuilderProcessor
   protected BuilderDefinitionDto analyse(
       CodegenTask<BuilderConfiguration> task, BuilderProcessingContext ctx)
       throws BuilderException {
-    ctx.initProcessingTarget(new ProcessingTarget<>(task.configuration(), builderPackageOf(task)));
     PerformanceTracker tracker = ctx.getPerformanceTracker();
     tracker.startPhase();
     BuilderDefinitionDto builderDef = extractFromElement(task.element(), ctx);
@@ -522,15 +516,6 @@ public class BuilderProcessor
         definition.getAllFieldsForBuilder().size(),
         renderingDto.getMethods().size(),
         definition.getBuilderTypeName().getClassName());
-  }
-
-  /**
-   * The package the builder is generated into: the configured {@code packageName} option when set,
-   * otherwise the package of the element the generation is reported on - the
-   * {@code @SimpleBuilderFor} holder for external types, the annotated type itself otherwise.
-   */
-  private String builderPackageOf(CodegenTask<BuilderConfiguration> task) {
-    return effectiveBuilderPackage(task.reportingElement(), task.configuration());
   }
 
   /**

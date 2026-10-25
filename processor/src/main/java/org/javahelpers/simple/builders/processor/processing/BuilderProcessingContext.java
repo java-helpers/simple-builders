@@ -28,7 +28,6 @@ import java.util.Optional;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
-import org.javahelpers.codegen.processing.ProcessingTarget;
 import org.javahelpers.simple.builders.processor.analysis.BuilderScopeResolver;
 import org.javahelpers.simple.builders.processor.generators.registry.GeneratorRegistry;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
@@ -47,7 +46,6 @@ public final class BuilderProcessingContext extends AnnotationProcessingContext 
   private final BuilderScopeResolver builderScopeResolver;
 
   private GeneratorRegistry generatorRegistry;
-  private ProcessingTarget<BuilderConfiguration> processingTarget;
 
   /**
    * Creates a new processing context.
@@ -81,23 +79,12 @@ public final class BuilderProcessingContext extends AnnotationProcessingContext 
   }
 
   /**
-   * Initializes the per-target state ({@link ProcessingTarget}) for the type whose builder is
-   * currently being generated. Called once per target before extraction starts.
-   *
-   * @param processingTarget the resolved configuration and builder package of the current target
-   */
-  public void initProcessingTarget(ProcessingTarget<BuilderConfiguration> processingTarget) {
-    this.processingTarget = processingTarget;
-    setGeneratedPackageName(processingTarget.targetPackage());
-  }
-
-  /**
    * Gets the configuration for the current processing target.
    *
    * @return the builder configuration for the target being processed
    */
   public BuilderConfiguration getConfiguration() {
-    return this.processingTarget.configuration();
+    return (BuilderConfiguration) getProcessingTarget().configuration();
   }
 
   /**
@@ -106,7 +93,7 @@ public final class BuilderProcessingContext extends AnnotationProcessingContext 
    * @return the qualified package name of the generated builder
    */
   public String getBuilderPackageName() {
-    return this.processingTarget.targetPackage();
+    return getProcessingTarget().targetPackage();
   }
 
   /**

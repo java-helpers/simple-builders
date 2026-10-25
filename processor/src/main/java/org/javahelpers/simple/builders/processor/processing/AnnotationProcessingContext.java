@@ -39,6 +39,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+import org.javahelpers.codegen.processing.ProcessingTarget;
 import org.javahelpers.simple.builders.processor.analysis.GeneratedTypes;
 import org.javahelpers.simple.builders.processor.analysis.TypeMappingContext;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
@@ -83,6 +84,9 @@ public class AnnotationProcessingContext implements TypeMappingContext {
   /** Package generated code is written to, or {@code null} when not generating into a package. */
   private String generatedPackageName;
 
+  /** Per-target processing state for the type currently being generated. */
+  private ProcessingTarget<?> processingTarget;
+
   /**
    * Creates the context with default options (strict mode enabled, performance tracking disabled).
    *
@@ -124,6 +128,28 @@ public class AnnotationProcessingContext implements TypeMappingContext {
    */
   protected void setGeneratedPackageName(String generatedPackageName) {
     this.generatedPackageName = generatedPackageName;
+  }
+
+  /**
+   * Initializes the per-target state ({@link ProcessingTarget}) for the type currently being
+   * generated. The processing driver calls this once per planned task before analysis starts, so
+   * downstream code can reach the current configuration and output package without threading both
+   * through every call.
+   *
+   * @param processingTarget the resolved configuration and output package of the current target
+   */
+  public void initProcessingTarget(ProcessingTarget<?> processingTarget) {
+    this.processingTarget = processingTarget;
+    setGeneratedPackageName(processingTarget.targetPackage());
+  }
+
+  /**
+   * The state of the current processing target.
+   *
+   * @return the current target's configuration and output package
+   */
+  public ProcessingTarget<?> getProcessingTarget() {
+    return processingTarget;
   }
 
   /**
