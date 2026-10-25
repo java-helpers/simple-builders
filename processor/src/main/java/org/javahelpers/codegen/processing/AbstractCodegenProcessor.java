@@ -116,7 +116,6 @@ public abstract class AbstractCodegenProcessor<
     this.context = createContext(processingEnv, reader, logger);
     this.codeGenerator = createGenerator(processingEnv, logger, context);
     this.formatterResolver = createFormatterResolver(reader, logger);
-    onInit(processingEnv, reader, context);
 
     SourceVersion current = processingEnv.getSourceVersion();
     this.supportedJdk = current.ordinal() >= requiredSourceVersion().ordinal();
@@ -384,10 +383,6 @@ public abstract class AbstractCodegenProcessor<
   private String generatedKind() {
     return processorConfiguration.generatedKind();
   }
-
-  /** Domain-specific initialization, after the framework wiring is in place. */
-  protected void onInit(
-      ProcessingEnvironment processingEnv, CompilerArgumentsReader reader, C context) {}
 
   /**
    * Finds the elements of this round the domain generates code for. Default delegates to the

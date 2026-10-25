@@ -154,15 +154,9 @@ public class BuilderProcessor
     this.globalConfig = BuilderConfigurationReader.readCompilerConfiguration(reader, logger);
     logger.debug("Loaded global configuration from compiler arguments: %s", globalConfig);
     SimpleBuildersSpiIntegration.initCompilation(processingEnv.getElementUtils());
-    return new BuilderProcessingContext(logger, globalConfig, processingEnv);
-  }
-
-  @Override
-  protected void onInit(
-      ProcessingEnvironment processingEnv,
-      CompilerArgumentsReader reader,
-      BuilderProcessingContext ctx) {
     this.jacksonModuleGenerator = new JacksonModuleGenerator(processingEnv, logger, globalConfig);
+    BuilderProcessingContext ctx =
+        new BuilderProcessingContext(logger, globalConfig, processingEnv);
 
     // Initialize GeneratorRegistry once during processor initialization
     ctx.debugStartOperation("Initializing generator registry");
@@ -171,6 +165,7 @@ public class BuilderProcessor
     } finally {
       ctx.debugEndOperation();
     }
+    return ctx;
   }
 
   @Override
