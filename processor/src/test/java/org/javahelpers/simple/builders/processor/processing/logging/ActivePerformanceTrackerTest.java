@@ -53,7 +53,7 @@ class ActivePerformanceTrackerTest {
         new ActivePerformanceTracker(outputFile, PipelinePhases.PIPELINE_HIERARCHY);
     tracker.startClass("TestClassA");
     tracker.startPhase();
-    tracker.endPhase(PipelinePhases.PHASE_BUILDER_DEFINITION_EXTRACTION);
+    tracker.endPhase(PipelinePhases.PHASE_ANALYSIS);
     tracker.startGenerator();
     tracker.endGenerator("FieldSupplierGenerator");
     tracker.startEnhancer();
@@ -62,7 +62,7 @@ class ActivePerformanceTrackerTest {
 
     tracker.startClass("TestClassB");
     tracker.startPhase();
-    tracker.endPhase(PipelinePhases.PHASE_DTO_MAPPING);
+    tracker.endPhase(PipelinePhases.PHASE_TARGET_MAPPING);
     tracker.endClass(3, 1);
 
     CapturingProcessingLogger capturing = CapturingProcessingLogger.create();
@@ -285,8 +285,8 @@ class ActivePerformanceTrackerTest {
 
     JsonNode phases = root.get("phaseBreakdown");
     assertTrue(phases.has(PipelinePhases.PHASE_CONFIGURATION_RESOLUTION));
-    assertTrue(phases.has(PipelinePhases.PHASE_BUILDER_DEFINITION_EXTRACTION));
-    assertTrue(phases.has(PipelinePhases.PHASE_DTO_MAPPING));
+    assertTrue(phases.has(PipelinePhases.PHASE_ANALYSIS));
+    assertTrue(phases.has(PipelinePhases.PHASE_TARGET_MAPPING));
     assertTrue(phases.has(PipelinePhases.PHASE_CODE_GENERATION));
 
     JsonNode codeGen = phases.get(PipelinePhases.PHASE_CODE_GENERATION);

@@ -25,9 +25,7 @@
 package org.javahelpers.simple.builders.processor;
 
 import static org.javahelpers.simple.builders.processor.processing.BuilderDefinitionCreator.extractFromElement;
-import static org.javahelpers.simple.builders.processor.processing.PipelinePhases.PHASE_BUILDER_DEFINITION_EXTRACTION;
 import static org.javahelpers.simple.builders.processor.processing.PipelinePhases.PHASE_CONFIGURATION_RESOLUTION;
-import static org.javahelpers.simple.builders.processor.processing.PipelinePhases.PHASE_DTO_MAPPING;
 
 import com.google.auto.service.AutoService;
 import java.util.ArrayList;
@@ -468,16 +466,6 @@ public class BuilderProcessor
           ctx.getBuilderScopeResolver().generatedBuilderContract(generatedName),
           task.configuration().getSetterPrefix());
     }
-  }
-
-  @Override
-  protected String analysisPhase() {
-    return PHASE_BUILDER_DEFINITION_EXTRACTION;
-  }
-
-  @Override
-  protected String mappingPhase() {
-    return PHASE_DTO_MAPPING;
   }
 
   @Override

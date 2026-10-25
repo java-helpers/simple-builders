@@ -89,10 +89,8 @@ public abstract class AbstractCodegenProcessor<
     extends AbstractProcessor {
 
   /** Performance phase the element collection is reported under — framework-owned. */
-  private static final String PHASE_ELEMENT_COLLECTION = "Element Collection";
 
   /** Performance phase target generation is reported under — framework-owned. */
-  private static final String PHASE_CODE_GENERATION = "Code Generation";
 
   /** Default performance phase for {@link #analyse} — domains may name their own. */
   private static final String PHASE_ANALYSIS = "Analysis";
@@ -172,7 +170,7 @@ public abstract class AbstractCodegenProcessor<
 
     tracker.startPhase();
     ElementCollection collected = findElements(annotations, roundEnv, context);
-    tracker.endPhase(PHASE_ELEMENT_COLLECTION);
+    tracker.endPhase("Element Collection");
     context.debug("%s: Processing round started.", processorTag());
 
     List<CodegenTask<K>> tasks = plan(collected, context);
@@ -193,7 +191,7 @@ public abstract class AbstractCodegenProcessor<
         try {
           definitions = analyse(task, context);
         } finally {
-          tracker.endPhase(analysisPhase());
+          tracker.endPhase("Analysis");
         }
         for (D definition : definitions) {
           tracker.startPhase();
@@ -201,7 +199,7 @@ public abstract class AbstractCodegenProcessor<
           try {
             target = mapToTargetSpecification(definition, task.configuration(), context);
           } finally {
-            tracker.endPhase(mappingPhase());
+            tracker.endPhase("Target Mapping");
           }
           planned.add(new PlannedWork<>(task, definition, target));
         }
@@ -229,7 +227,7 @@ public abstract class AbstractCodegenProcessor<
             new ProcessingTarget<>(work.task().configuration(), work.task().outputPackage()));
         tracker.startPhase();
         generateTarget(work.target());
-        tracker.endPhase(PHASE_CODE_GENERATION);
+        tracker.endPhase("Code Generation");
         onTaskGenerated(work.definition(), work.target(), work.task(), context);
         successfulGenerations++;
       } catch (Exception ex) {
@@ -575,22 +573,6 @@ public abstract class AbstractCodegenProcessor<
    */
   protected boolean isFinished(C context) {
     return processedOnce;
-  }
-
-  /**
-   * The performance phase {@link #analyse} is reported under — domain-named. Default {@value
-   * #PHASE_ANALYSIS}.
-   */
-  protected String analysisPhase() {
-    return PHASE_ANALYSIS;
-  }
-
-  /**
-   * The performance phase {@link #mapToTargetSpecification} is reported under — domain-named.
-   * Default {@value #PHASE_TARGET_MAPPING}.
-   */
-  protected String mappingPhase() {
-    return PHASE_TARGET_MAPPING;
   }
 
   /**
