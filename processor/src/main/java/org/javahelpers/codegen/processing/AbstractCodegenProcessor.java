@@ -48,16 +48,17 @@ import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLo
  * Driver of a generic annotation-processing pipeline: the framework owns the processing lifecycle,
  * the domain plugs in its hooks — collect, plan, register, analyse/map, generate, finalize.
  *
- * <p>A new processor implements only the domain hooks marked {@code [implement]}: {@link
- * #createContext}, {@link #elementSpec}, {@link #plan}, {@link #predictedTypeName}, {@link
- * #analyse} and {@link #mapToTargets}. Every other step is framework-owned or an optional {@code
- * [default]} the domain may override.
+ * <p>A new processor declares its static surface once as {@link CodegenProcessorConfiguration}
+ * (passed to the constructor — element spec, options, source level, diagnostic names) and
+ * implements only the domain hooks marked {@code [implement]}: {@link #createContext}, {@link
+ * #plan}, {@link #predictedTypeName}, {@link #analyse} and {@link #mapToTargets}. Every other step
+ * is framework-owned or an optional {@code [default]} the domain may override.
  *
  * <p>The round spine:
  *
  * <pre>
  *   ctx      = createContext(env, reader, logger)                       [implement — in init]
- *   elements = findElements(annotations, roundEnv, ctx)                 [default: elementSpec() — implement]
+ *   elements = findElements(annotations, roundEnv, ctx)                 [default: configuration's elementSpec]
  *   tasks    = plan(elements, ctx)                                      [implement]
  *   registerPlannedOutputs(tasks, ctx)                                  [default: predictedTypeName() — implement]
  *   for each task (guarded, strict-mode reporting):                     [framework]
@@ -90,10 +91,21 @@ public abstract class AbstractCodegenProcessor<
   /** Logger for the domain's hooks (init, last-round reports). */
   protected ProcessingLogger logger;
 
+  private final CodegenProcessorConfiguration processorConfiguration;
   private final CodegenBackendRegistry backendRegistry = new CodegenBackendRegistry();
   private ClassCodeGenerator codeGenerator;
   private SourceFormatterResolver formatterResolver;
   private boolean supportedJdk = true;
+
+  /**
+   * Creates the processor on its static configuration. javac still instantiates the concrete
+   * subclass through its no-arg constructor, which hands the configuration to this constructor.
+   *
+   * @param processorConfiguration the processor's static declarations
+   */
+  protected AbstractCodegenProcessor(CodegenProcessorConfiguration processorConfiguration) {
+    this.processorConfiguration = processorConfiguration;
+  }
 
   @Override
   public synchronized void init(ProcessingEnvironment processingEnv) {
@@ -145,7 +157,6 @@ public abstract class AbstractCodegenProcessor<
     if (collected.isEmpty() || isFinished(context)) {
       return claimsAnnotations();
     }
-
     registerPlannedOutputs(tasks, context);
 
     int successfulGenerations = 0;
@@ -335,15 +346,12 @@ public abstract class AbstractCodegenProcessor<
         backendRegistry.resolveFormatterFactory());
   }
 
-  /** Which elements the domain generates code for. */
-  protected abstract AnnotationElementSpec elementSpec();
+  private AnnotationElementSpec elementSpec() {
+    return processorConfiguration.elementSpec();
+  }
 
-  /**
-   * The processor's declared compiler options. Default: an empty registry — a processor without
-   * options declares nothing.
-   */
-  protected ProcessorOptionRegistry optionRegistry() {
-    return new ProcessorOptionRegistry(List.of());
+  private ProcessorOptionRegistry optionRegistry() {
+    return processorConfiguration.optionRegistry();
   }
 
   /**
@@ -357,25 +365,17 @@ public abstract class AbstractCodegenProcessor<
     return false;
   }
 
-  /**
-   * The minimum source level the processor supports. Default: {@link
-   * SourceVersion#latestSupported()}.
-   */
-  protected SourceVersion requiredSourceVersion() {
-    return SourceVersion.latestSupported();
+  private SourceVersion requiredSourceVersion() {
+    return processorConfiguration.requiredSourceVersion();
   }
 
-  /**
-   * Diagnostic tag prefixing messages, e.g. {@code "simple-builders"}. Default: the processor's
-   * simple class name.
-   */
-  protected String processorTag() {
-    return getClass().getSimpleName();
+  private String processorTag() {
+    String configured = processorConfiguration.processorTag();
+    return configured != null ? configured : getClass().getSimpleName();
   }
 
-  /** What one generated unit is called in diagnostics, e.g. {@code "builder"}. Default: class. */
-  protected String generatedKind() {
-    return "class";
+  private String generatedKind() {
+    return processorConfiguration.generatedKind();
   }
 
   /** Domain-specific initialization, after the framework wiring is in place. */
@@ -383,8 +383,9 @@ public abstract class AbstractCodegenProcessor<
       ProcessingEnvironment processingEnv, CompilerArgumentsReader reader, C context) {}
 
   /**
-   * Finds the elements of this round the domain generates code for. Default delegates to {@link
-   * #elementSpec()}'s collector; override for custom element discovery.
+   * Finds the elements of this round the domain generates code for. Default delegates to the
+   * configured {@link CodegenProcessorConfiguration#elementSpec}'s collector; override for custom
+   * element discovery.
    *
    * @param annotations the annotation types requested this round
    * @param roundEnv the round environment
@@ -496,9 +497,8 @@ public abstract class AbstractCodegenProcessor<
   protected void afterGenerate(
       D definition, List<GenerationTargetClassDto> targets, CodegenTask<K> task, C context) {}
 
-  /** The performance phase wrapping target generation. Default {@code "code-generation"}. */
-  protected String generationPhase() {
-    return "code-generation";
+  private String generationPhase() {
+    return processorConfiguration.generationPhase();
   }
 
   /**
@@ -536,12 +536,8 @@ public abstract class AbstractCodegenProcessor<
     return List.of();
   }
 
-  /**
-   * What the deferred targets are called in diagnostics, e.g. {@code "Jackson module"}. Default:
-   * {@code "deferred target"}.
-   */
-  protected String deferredTargetsKind() {
-    return "deferred target";
+  private String deferredTargetsKind() {
+    return processorConfiguration.deferredTargetsKind();
   }
 
   /** Callback at the end of a generating round — domain finalization. */

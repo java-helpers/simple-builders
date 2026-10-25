@@ -54,6 +54,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.ElementFilter;
 import org.javahelpers.codegen.processing.AbstractCodegenProcessor;
 import org.javahelpers.codegen.processing.AnnotationElementSpec;
+import org.javahelpers.codegen.processing.CodegenProcessorConfiguration;
 import org.javahelpers.codegen.processing.CodegenTask;
 import org.javahelpers.codegen.processing.ElementCollection;
 import org.javahelpers.codegen.processing.ElementSelector;
@@ -124,6 +125,23 @@ public class BuilderProcessor
           .collectionPhase(PHASE_ELEMENT_COLLECTION)
           .build();
 
+  /** The processor's static declarations handed to the framework driver. */
+  private static final CodegenProcessorConfiguration PROCESSOR_CONFIGURATION =
+      CodegenProcessorConfiguration.builder()
+          .elementSpec(ELEMENT_SPEC)
+          .optionRegistry(OPTION_REGISTRY)
+          .requiredSourceVersion(SourceVersion.RELEASE_17)
+          .processorTag("simple-builders")
+          .generatedKind("builder")
+          .generationPhase(PHASE_CODE_GENERATION)
+          .deferredTargetsKind("Jackson module")
+          .build();
+
+  /** Creates the processor — javac instantiates it reflectively. */
+  public BuilderProcessor() {
+    super(PROCESSOR_CONFIGURATION);
+  }
+
   /** The global configuration resolved from compiler arguments — needed by several hooks. */
   private BuilderConfiguration globalConfig;
 
@@ -154,36 +172,6 @@ public class BuilderProcessor
     } finally {
       ctx.debugEndOperation();
     }
-  }
-
-  @Override
-  protected AnnotationElementSpec elementSpec() {
-    return ELEMENT_SPEC;
-  }
-
-  @Override
-  protected ProcessorOptionRegistry optionRegistry() {
-    return OPTION_REGISTRY;
-  }
-
-  @Override
-  protected SourceVersion requiredSourceVersion() {
-    return SourceVersion.RELEASE_17;
-  }
-
-  @Override
-  protected String processorTag() {
-    return "simple-builders";
-  }
-
-  @Override
-  protected String generatedKind() {
-    return "builder";
-  }
-
-  @Override
-  protected String generationPhase() {
-    return PHASE_CODE_GENERATION;
   }
 
   @Override
@@ -569,11 +557,6 @@ public class BuilderProcessor
   @Override
   protected List<GenerationTargetClassDto> deferredTargets(BuilderProcessingContext ctx) {
     return jacksonModuleGenerator.getModuleDefinitions();
-  }
-
-  @Override
-  protected String deferredTargetsKind() {
-    return "Jackson module";
   }
 
   /** Generates all Jackson modules after the last processing round and reports the metrics. */
