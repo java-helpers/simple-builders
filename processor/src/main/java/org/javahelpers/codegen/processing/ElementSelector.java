@@ -28,7 +28,7 @@ import java.lang.annotation.Annotation;
 import java.util.Set;
 
 /**
- * One named element selection group inside {@link AnnotationElementSpec}.
+ * One named element selection group inside {@link ElementCollector}.
  *
  * <p>An element is selected when it carries one of the {@link #annotationTypes}, or an annotation
  * type that is itself meta-annotated with {@link #metaMarker} (the only way to discover

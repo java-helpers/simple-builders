@@ -30,21 +30,21 @@ import java.util.List;
  * Static declarations of an {@link AbstractCodegenProcessor}: everything the framework needs to
  * know up front, collected in one record the processor hands to the base constructor.
  *
- * <p>Only {@link #elementSpec} is required; all other components carry defaults a minimal processor
- * can leave unset. Use {@link #builder()} to build an instance.
+ * <p>Only {@link #elementCollector} is required; all other components carry defaults a minimal
+ * processor can leave unset. Use {@link #builder()} to build an instance.
  *
- * @param elementSpec which elements the domain generates code for (required)
+ * @param elementCollector which elements the domain generates code for (required)
  * @param optionRegistry the processor's declared compiler options; default: an empty registry
  * @param requiredSourceVersion the minimum source level by name (e.g. {@code "RELEASE_17"});
  *     default: the running JDK's latest supported release
  */
 public record CodegenProcessorConfiguration(
-    AnnotationElementSpec elementSpec,
+    ElementCollector elementCollector,
     ProcessorOptionRegistry optionRegistry,
     String requiredSourceVersion) {
 
   /**
-   * Creates a builder with all defaults applied — only {@link #elementSpec(AnnotationElementSpec)}
+   * Creates a builder with all defaults applied — only {@link #elementCollector(ElementCollector)}
    * must be set.
    *
    * @return a new builder
@@ -55,7 +55,7 @@ public record CodegenProcessorConfiguration(
 
   /** Fluent builder for {@link CodegenProcessorConfiguration}. */
   public static final class Builder {
-    private AnnotationElementSpec elementSpec;
+    private ElementCollector elementCollector;
     private ProcessorOptionRegistry optionRegistry = new ProcessorOptionRegistry(List.of());
     private String requiredSourceVersion;
 
@@ -64,11 +64,11 @@ public record CodegenProcessorConfiguration(
     /**
      * Sets which elements the domain generates code for (required).
      *
-     * @param elementSpec the element specification
+     * @param elementCollector the collector declaring which elements to process
      * @return this builder
      */
-    public Builder elementSpec(AnnotationElementSpec elementSpec) {
-      this.elementSpec = elementSpec;
+    public Builder elementCollector(ElementCollector elementCollector) {
+      this.elementCollector = elementCollector;
       return this;
     }
 
@@ -101,13 +101,14 @@ public record CodegenProcessorConfiguration(
      * Builds the configuration.
      *
      * @return the configuration
-     * @throws IllegalStateException when no {@link #elementSpec} was set
+     * @throws IllegalStateException when no {@link #elementCollector} was set
      */
     public CodegenProcessorConfiguration build() {
-      if (elementSpec == null) {
-        throw new IllegalStateException("elementSpec is required");
+      if (elementCollector == null) {
+        throw new IllegalStateException("elementCollector is required");
       }
-      return new CodegenProcessorConfiguration(elementSpec, optionRegistry, requiredSourceVersion);
+      return new CodegenProcessorConfiguration(
+          elementCollector, optionRegistry, requiredSourceVersion);
     }
   }
 }

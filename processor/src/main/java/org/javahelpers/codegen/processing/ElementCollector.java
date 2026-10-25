@@ -47,7 +47,7 @@ import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLo
  * responsibility in the planning step — per-instance configuration, repeatable-annotation expansion
  * and conflict detection are domain semantics the spec does not know.
  */
-public final class AnnotationElementSpec {
+public final class ElementCollector {
 
   private final List<ElementSelector> selectors;
 
@@ -56,7 +56,7 @@ public final class AnnotationElementSpec {
    *
    * @param selectors the named selection groups, in declaration order
    */
-  public AnnotationElementSpec(List<ElementSelector> selectors) {
+  public ElementCollector(List<ElementSelector> selectors) {
     this.selectors = selectors;
   }
 
@@ -69,7 +69,7 @@ public final class AnnotationElementSpec {
     return new Builder();
   }
 
-  /** Fluent builder for {@link AnnotationElementSpec}. */
+  /** Fluent builder for {@link ElementCollector}. */
   public static final class Builder {
     private final List<ElementSelector> selectors = new ArrayList<>();
 
@@ -87,8 +87,8 @@ public final class AnnotationElementSpec {
     }
 
     /** Builds the spec. */
-    public AnnotationElementSpec build() {
-      return new AnnotationElementSpec(selectors);
+    public ElementCollector build() {
+      return new ElementCollector(selectors);
     }
   }
 

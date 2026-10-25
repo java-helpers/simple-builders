@@ -60,7 +60,7 @@ import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLo
  *
  * <pre>
  *   ctx      = createContext(env, reader, logger)                       [implement — in init]
- *   elements = findElements(annotations, roundEnv, ctx)                 [default: configuration's elementSpec]
+ *   elements = findElements(annotations, roundEnv, ctx)                 [default: configuration's elementCollector]
  *   tasks    = planTasks(elements, ctx)                                 [implement]
  *   registerPlannedTaskResults(tasks, ctx)                                  [framework; per-task names from plannedTaskResultTypeNames() — implement]
  *   loop 1 — specification (guarded, strict-mode reporting):            [framework]
@@ -407,8 +407,8 @@ public abstract class AbstractCodegenProcessor<
         backendRegistry.resolveFormatterFactory());
   }
 
-  private AnnotationElementSpec elementSpec() {
-    return processorConfiguration.elementSpec();
+  private ElementCollector elementCollector() {
+    return processorConfiguration.elementCollector();
   }
 
   private ProcessorOptionRegistry optionRegistry() {
@@ -449,8 +449,8 @@ public abstract class AbstractCodegenProcessor<
 
   /**
    * Finds the elements of this round the domain generates code for. Default delegates to the
-   * configured {@link CodegenProcessorConfiguration#elementSpec}'s collector; override for custom
-   * element discovery.
+   * configured {@link CodegenProcessorConfiguration#elementCollector}; override for custom element
+   * discovery.
    *
    * @param annotations the annotation types requested this round
    * @param roundEnv the round environment
@@ -459,7 +459,7 @@ public abstract class AbstractCodegenProcessor<
    */
   protected ElementCollection findElements(
       Set<? extends TypeElement> annotations, RoundEnvironment roundEnv, C context) {
-    return elementSpec().collect(annotations, roundEnv, logger);
+    return elementCollector().collect(annotations, roundEnv, logger);
   }
 
   /**

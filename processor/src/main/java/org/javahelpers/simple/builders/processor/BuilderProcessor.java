@@ -48,10 +48,10 @@ import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.ElementFilter;
 import org.javahelpers.codegen.processing.AbstractCodegenProcessor;
-import org.javahelpers.codegen.processing.AnnotationElementSpec;
 import org.javahelpers.codegen.processing.CodegenProcessorConfiguration;
 import org.javahelpers.codegen.processing.CodegenTask;
 import org.javahelpers.codegen.processing.ElementCollection;
+import org.javahelpers.codegen.processing.ElementCollector;
 import org.javahelpers.codegen.processing.ProcessorOptionRegistry;
 import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder.Template;
@@ -102,8 +102,8 @@ public class BuilderProcessor
    * {@code @Ignore4BuilderGeneration}), plus classes declaring external types with
    * {@code @SimpleBuilderFor}.
    */
-  private static final AnnotationElementSpec ELEMENT_SPEC =
-      AnnotationElementSpec.builder()
+  private static final ElementCollector ELEMENT_SPEC =
+      ElementCollector.builder()
           .selector(
               selector ->
                   selector
@@ -120,7 +120,7 @@ public class BuilderProcessor
   /** The processor's static declarations handed to the framework driver. */
   private static final CodegenProcessorConfiguration PROCESSOR_CONFIGURATION =
       CodegenProcessorConfiguration.builder()
-          .elementSpec(ELEMENT_SPEC)
+          .elementCollector(ELEMENT_SPEC)
           .optionRegistry(OPTION_REGISTRY)
           .requiredSourceVersion("RELEASE_17")
           .build();

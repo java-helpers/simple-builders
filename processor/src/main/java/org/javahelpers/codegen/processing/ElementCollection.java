@@ -29,7 +29,7 @@ import java.util.Map;
 import javax.lang.model.element.Element;
 
 /**
- * The result of {@link AnnotationElementSpec#collect}: per-selector-name, deterministically ordered
+ * The result of {@link ElementCollector#collect}: per-selector-name, deterministically ordered
  * element lists. Elements are sorted by simple name so generated output is reproducible.
  */
 public final class ElementCollection {
