@@ -64,8 +64,8 @@ import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLo
  *   tasks    = planTasks(elements, ctx)                                 [implement]
  *   registerPlannedOutputs(tasks, ctx)                                  [framework; per-task names from registerPlannedGenerationTargets() — implement]
  *   loop 1 — specification (guarded, strict-mode reporting):            [framework]
- *     def     = analyse(task, ctx)                                      [implement]
- *     targets = mapToTargets(def, task, ctx)                            [implement]
+ *     defs    = analyse(task, ctx)                                      [implement]
+ *     targets = mapToTargets(def, task, ctx)  (per def)                 [implement]
  *   loop 2 — generation:                                                [framework]
  *     for each target:
  *       existsGuard → engine.generate(target, formatterResolver.resolve(target.mode))  [framework]
@@ -182,20 +182,22 @@ public abstract class AbstractCodegenProcessor<
         context.initProcessingTarget(
             new ProcessingTarget<>(task.configuration(), task.outputPackage()));
         tracker.startPhase();
-        D definition;
+        List<D> definitions;
         try {
-          definition = analyse(task, context);
+          definitions = analyse(task, context);
         } finally {
           tracker.endPhase(analysisPhase());
         }
-        tracker.startPhase();
-        List<GenerationTargetClassDto> targets;
-        try {
-          targets = mapToTargets(definition, task, context);
-        } finally {
-          tracker.endPhase(mappingPhase());
+        for (D definition : definitions) {
+          tracker.startPhase();
+          List<GenerationTargetClassDto> targets;
+          try {
+            targets = mapToTargets(definition, task, context);
+          } finally {
+            tracker.endPhase(mappingPhase());
+          }
+          planned.add(new PlannedWork<>(task, definition, targets));
         }
-        planned.add(new PlannedWork<>(task, definition, targets));
       } catch (Exception ex) {
         // By default generation failures are warnings so other targets are still generated.
         // In opt-in strict mode they are promoted to errors that fail the build.
@@ -603,15 +605,16 @@ public abstract class AbstractCodegenProcessor<
   }
 
   /**
-   * Analyses one planned task into its domain definition — the analysis half of the
-   * analysis/generation separation.
+   * Analyses one planned task into its domain definitions — the analysis half of the
+   * analysis/generation separation. A task may resolve to several definitions (e.g. a repeatable
+   * annotation on one element).
    *
    * @param task the planned task
    * @param context the processing context
-   * @return the domain definition
+   * @return the domain definitions, possibly empty
    * @throws Exception when analysis fails; reported as a per-element failure
    */
-  protected abstract D analyse(CodegenTask<K> task, C context) throws Exception;
+  protected abstract List<D> analyse(CodegenTask<K> task, C context) throws Exception;
 
   /**
    * Maps a domain definition to render targets — the generation half of the analysis/generation

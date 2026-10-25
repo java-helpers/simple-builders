@@ -481,10 +481,10 @@ public class BuilderProcessor
   }
 
   @Override
-  protected BuilderDefinitionDto analyse(
+  protected List<BuilderDefinitionDto> analyse(
       CodegenTask<BuilderConfiguration> task, BuilderProcessingContext ctx)
       throws BuilderException {
-    return extractFromElement(task.element(), ctx);
+    return List.of(extractFromElement(task.element(), ctx));
   }
 
   @Override
