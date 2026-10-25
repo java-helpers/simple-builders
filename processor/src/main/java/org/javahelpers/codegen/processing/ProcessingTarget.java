@@ -22,22 +22,20 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.processing;
-
-import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
+package org.javahelpers.codegen.processing;
 
 /**
- * Per-target processing state for the type whose builder is currently being generated.
+ * Per-target processing state for the type that is currently being generated.
  *
- * <p>{@link org.javahelpers.simple.builders.processor.BuilderProcessor} sets one instance per
- * processed type on the {@link BuilderProcessingContext} before extraction starts, so downstream
- * analysis can reach it without threading both values through every call.
+ * <p>The processing driver sets one instance per processed type on the processing context before
+ * extraction starts, so downstream analysis can reach it without threading both values through
+ * every call.
  *
- * @param configuration the resolved builder configuration for the current target
- * @param builderPackage the package the generated builder is written to. This is the configured
- *     {@code packageName} option when set; otherwise the processed type's own package for
- *     {@code @SimpleBuilder} targets, resp. the holder's package for {@code @SimpleBuilderFor}
- *     targets. It cannot always be derived from the processed element itself, which is why it is
- *     carried explicitly here
+ * @param configuration the resolved domain configuration for the current target
+ * @param targetPackage the package the generated class is written to. This is the configured output
+ *     package when set; otherwise a package derived from the processed element itself. It cannot
+ *     always be derived from the processed element itself, which is why it is carried explicitly
+ *     here
+ * @param <T> the domain configuration type
  */
-public record ProcessingTarget(BuilderConfiguration configuration, String builderPackage) {}
+public record ProcessingTarget<T>(T configuration, String targetPackage) {}

@@ -28,6 +28,7 @@ import java.util.Optional;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
+import org.javahelpers.codegen.processing.ProcessingTarget;
 import org.javahelpers.simple.builders.processor.analysis.BuilderScopeResolver;
 import org.javahelpers.simple.builders.processor.generators.registry.GeneratorRegistry;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
@@ -46,7 +47,7 @@ public final class BuilderProcessingContext extends AnnotationProcessingContext 
   private final BuilderScopeResolver builderScopeResolver;
 
   private GeneratorRegistry generatorRegistry;
-  private ProcessingTarget processingTarget;
+  private ProcessingTarget<BuilderConfiguration> processingTarget;
 
   /**
    * Creates a new processing context.
@@ -85,9 +86,9 @@ public final class BuilderProcessingContext extends AnnotationProcessingContext 
    *
    * @param processingTarget the resolved configuration and builder package of the current target
    */
-  public void initProcessingTarget(ProcessingTarget processingTarget) {
+  public void initProcessingTarget(ProcessingTarget<BuilderConfiguration> processingTarget) {
     this.processingTarget = processingTarget;
-    setGeneratedPackageName(processingTarget.builderPackage());
+    setGeneratedPackageName(processingTarget.targetPackage());
   }
 
   /**
@@ -105,7 +106,7 @@ public final class BuilderProcessingContext extends AnnotationProcessingContext 
    * @return the qualified package name of the generated builder
    */
   public String getBuilderPackageName() {
-    return this.processingTarget.builderPackage();
+    return this.processingTarget.targetPackage();
   }
 
   /**

@@ -56,6 +56,7 @@ import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
+import org.javahelpers.codegen.processing.ProcessingTarget;
 import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder.Template;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFor;
@@ -81,7 +82,6 @@ import org.javahelpers.simple.builders.processor.processing.BuilderConfiguration
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsEnum;
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsReader;
-import org.javahelpers.simple.builders.processor.processing.ProcessingTarget;
 import org.javahelpers.simple.builders.processor.processing.SourceFormatterResolver;
 import org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker;
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
@@ -644,7 +644,7 @@ public class BuilderProcessor extends AbstractProcessor {
 
   private void process(Element annotatedElement, BuilderConfiguration config, String builderPackage)
       throws BuilderException {
-    context.initProcessingTarget(new ProcessingTarget(config, builderPackage));
+    context.initProcessingTarget(new ProcessingTarget<>(config, builderPackage));
     PerformanceTracker tracker = context.getPerformanceTracker();
     // Track Builder Definition Extraction
     tracker.startPhase();
