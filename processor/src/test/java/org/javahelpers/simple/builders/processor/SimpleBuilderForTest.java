@@ -120,7 +120,7 @@ class SimpleBuilderForTest {
             .compile(unconstructable, holder("test", "Builders", "ext.Singleton"));
 
     assertThat(compilation).succeeded();
-    assertThat(compilation).hadWarningContaining("Failed to generate builder");
+    assertThat(compilation).hadWarningContaining("Failed to generate target");
     assertThat(compilation).hadWarningContaining("No accessible constructor");
     ProcessorAsserts.assertNoBuilderGenerated(
         compilation, "Singleton", "A type without accessible constructor must not get a builder");
@@ -165,7 +165,7 @@ class SimpleBuilderForTest {
             .compile(unconstructable, holder("test", "Builders", "ext.Singleton"));
 
     assertThat(compilation).failed();
-    assertThat(compilation).hadErrorContaining("Failed to generate builder");
+    assertThat(compilation).hadErrorContaining("Failed to generate target");
     assertThat(compilation).hadErrorContaining("No accessible constructor");
   }
 

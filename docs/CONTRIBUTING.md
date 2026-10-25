@@ -255,7 +255,7 @@ For complete documentation, see [DEBUG_LOGGING.md](DEBUG_LOGGING.md).
 [DEBUG] │  ├─ Adding Methods for 4 candidates
 [DEBUG] │  │  └─ 4 Methods added
 [DEBUG] │  └─ Successfully generated builder: ProjectBuilder
-simple-builders: Successfully generated 1 builder(s) in this processing round
+simple-builders: Successfully generated 1 target(s) in this processing round
 =============================================
 
 ========== Generated Source Files ==========

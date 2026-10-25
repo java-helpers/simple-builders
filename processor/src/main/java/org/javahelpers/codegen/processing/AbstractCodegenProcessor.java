@@ -208,9 +208,8 @@ public abstract class AbstractCodegenProcessor<
         // In opt-in strict mode they are promoted to errors that fail the build.
         context.reportBasedOnStrictMode(
             task.reportingElement(),
-            "%s: Failed to generate %s - %s",
+            "%s: Failed to generate target - %s",
             processorTag(),
-            generatedKind(),
             ex.getMessage());
       } finally {
         context.debugEndOperation();
@@ -233,9 +232,8 @@ public abstract class AbstractCodegenProcessor<
       } catch (Exception ex) {
         context.reportBasedOnStrictMode(
             work.task().reportingElement(),
-            "%s: Failed to generate %s - %s",
+            "%s: Failed to generate target - %s",
             processorTag(),
-            generatedKind(),
             ex.getMessage());
       } finally {
         context.debugEndOperation();
@@ -244,8 +242,8 @@ public abstract class AbstractCodegenProcessor<
 
     if (successfulGenerations > 0) {
       context.info(
-          "%s: Successfully generated %d %s(s) in this processing round",
-          processorTag(), successfulGenerations, generatedKind());
+          "%s: Successfully generated %d target(s) in this processing round",
+          processorTag(), successfulGenerations);
     }
 
     // Reset indentation level at the end of each processing round to prevent cascading errors
@@ -330,17 +328,15 @@ public abstract class AbstractCodegenProcessor<
       exists = false;
     }
     if (exists) {
-      String kind = generatedKind();
-      String capitalized = Character.toUpperCase(kind.charAt(0)) + kind.substring(1);
       throw new CodeGenerationException(
           """
-              %s class '%s' already exists. This may be a manually written %s or a previously generated %s.
+              Target class '%s' already exists. This may be a manually written target or a previously generated target.
               To resolve this:
-              1. If you have a manual %s, consider renaming it or removing the annotation triggering generation
+              1. If you have a manual target, consider renaming it or removing the annotation triggering generation
               2. If this is from a previous compilation, clean and rebuild the project
-              3. Check that you're not trying to generate multiple %ss for the same target type
+              3. Check that you're not trying to generate multiple targets for the same target type
               """
-              .formatted(capitalized, qualifiedName, kind, kind, kind, kind));
+              .formatted(qualifiedName));
     }
   }
 
@@ -455,16 +451,6 @@ public abstract class AbstractCodegenProcessor<
 
   private String processorTag() {
     return logger.getTag();
-  }
-
-  /**
-   * What one generated unit is called in diagnostics ("Failed to generate %s", "generated N %s(s)")
-   * — the domain's noun lives in domain code. Default {@code "class"}.
-   *
-   * @return the generated unit's name
-   */
-  protected String generatedKind() {
-    return "class";
   }
 
   /**

@@ -73,12 +73,12 @@ The Simple Builders processor provides **conditional hierarchical logging** to b
 ### **When Debug Mode is DISABLED (Default):**
 - INFO and WARNING messages appear flat without indentation
 - Suitable for production systems where log noise should be minimized
-- Example: `simple-builders: Successfully generated 3 builder(s) in this processing round`
+- Example: `simple-builders: Successfully generated 3 target(s) in this processing round`
 
 ### **When Debug Mode is ENABLED (-Averbose=true):**
 - INFO and WARNING messages have no extra prefix, DEBUG messages are posted on `[INFO]` chanel so they have the prefix `[INFO] [DEBUG]`
 - Provides full visibility into the processing hierarchy
-- Example: `[INFO]         │  └─ simple-builders: Successfully generated 3 builder(s) in this processing round`
+- Example: `[INFO]         │  └─ simple-builders: Successfully generated 3 target(s) in this processing round`
 - Example: `[WARNING]      │  │  ├─ Builder field conflict: field 'name'...`
 - Example: `[INFO] [DEBUG] │  │  │  └─ Processing method: setName`
 - All message types align vertically despite different prefix lengths
@@ -129,7 +129,7 @@ When debug logging is enabled, you'll see detailed output with visual separators
 [INFO] [DEBUG] Generating targets for: CustomerDto
 [INFO] [DEBUG] ├─ Code generation for builder: CustomerDtoBuilder
 [INFO] [DEBUG] │  └─ Successfully generated builder: CustomerDtoBuilder
-[INFO]         simple-builders: Successfully generated 3 builder(s) in this processing round
+[INFO]         simple-builders: Successfully generated 3 target(s) in this processing round
 [INFO] simple-builders: PROCESSING ROUND START
 [INFO] [DEBUG] simple-builders: Processing round started.
 [INFO] [DEBUG] simple-builders: Found 0 annotated elements.
@@ -145,7 +145,7 @@ Without debug logging enabled, you only see the INFO-level messages:
 
 ```
 [INFO] simple-builders: PROCESSING ROUND START
-[INFO] simple-builders: Successfully generated 3 builder(s) in this processing round
+[INFO] simple-builders: Successfully generated 3 target(s) in this processing round
 ```
 
 ## Troubleshooting

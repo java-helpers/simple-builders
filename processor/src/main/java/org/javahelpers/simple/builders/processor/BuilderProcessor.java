@@ -137,12 +137,6 @@ public class BuilderProcessor
     return "simple-builders";
   }
 
-  /** Builders are what this processor generates — the noun diagnostics use. */
-  @Override
-  protected String generatedKind() {
-    return "builder";
-  }
-
   /** The global configuration resolved from compiler arguments — needed by several hooks. */
   private BuilderConfiguration globalConfig;
 

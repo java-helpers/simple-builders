@@ -183,7 +183,7 @@ class RoasterCodeGeneratorEdgeCasesTest {
     assertThat(compilation).succeeded();
     assertThat(compilation)
         .hadWarningContaining(
-            "Failed to generate builder - Builder class 'test.PersonDtoBuilder' already exists");
+            "Failed to generate target - Target class 'test.PersonDtoBuilder' already exists");
   }
 
   /**

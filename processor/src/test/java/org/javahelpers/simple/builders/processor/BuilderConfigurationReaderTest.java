@@ -646,7 +646,7 @@ class BuilderConfigurationReaderTest {
 
     // Then: Builder generation fails but compilation succeeds (no invalid Java code generated)
     assertThat(compilation).succeeded();
-    assertThat(compilation).hadWarningContaining("Failed to generate builder");
+    assertThat(compilation).hadWarningContaining("Failed to generate target");
     assertThat(compilation).hadWarningContaining("builderAccess=PRIVATE");
     assertThat(compilation).hadWarningContaining("Java does not allow private top-level classes");
   }
@@ -682,7 +682,7 @@ class BuilderConfigurationReaderTest {
 
     // Then: Builder generation fails but compilation succeeds (no invalid Java code generated)
     assertThat(compilation).succeeded();
-    assertThat(compilation).hadWarningContaining("Failed to generate builder");
+    assertThat(compilation).hadWarningContaining("Failed to generate target");
     assertThat(compilation).hadWarningContaining("methodAccess=PRIVATE");
     assertThat(compilation).hadWarningContaining("makes all setter methods inaccessible");
   }

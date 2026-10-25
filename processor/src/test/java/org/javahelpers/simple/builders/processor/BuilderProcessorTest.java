@@ -163,7 +163,7 @@ class BuilderProcessorTest {
         "[DEBUG] │  └─ Successfully generated class: VerboseTestBuilder",
         "[DEBUG] ├─ Jackson module entry added",
         "[DEBUG] └─ Generated builder with 1 fields and 10 methods for VerboseTestBuilder",
-        "simple-builders: Successfully generated 1 builder(s) in this processing round",
+        "simple-builders: Successfully generated 1 target(s) in this processing round",
         // Round 2 — no new elements
         "simple-builders: PROCESSING ROUND START",
         "[DEBUG] simple-builders: Processing round started.",
@@ -3592,7 +3592,7 @@ class BuilderProcessorTest {
     assertThat(compilation).succeeded();
     assertThat(compilation)
         .hadWarningContaining(
-            "Failed to generate builder - Builder class 'test.PersonDtoBuilder' already exists.");
+            "Failed to generate target - Target class 'test.PersonDtoBuilder' already exists.");
 
     // The processor should detect the conflict and handle it gracefully
     // Either by skipping generation or by generating with a different approach
@@ -3639,7 +3639,7 @@ class BuilderProcessorTest {
     assertThat(compilation).succeeded();
     assertThat(compilation)
         .hadWarningContaining(
-            "Failed to generate builder - Unable to create builder class 'test.OrderDtoFactory': Attempt to recreate a file for type test.OrderDtoFactory.");
+            "Failed to generate target - Unable to create builder class 'test.OrderDtoFactory': Attempt to recreate a file for type test.OrderDtoFactory.");
 
     // Verify that a builder was generated
     String generatedCode = loadGeneratedSource(compilation, "OrderDtoFactory");
