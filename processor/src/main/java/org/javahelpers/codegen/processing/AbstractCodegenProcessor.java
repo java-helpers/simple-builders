@@ -129,7 +129,7 @@ public abstract class AbstractCodegenProcessor<
 
   /**
    * Runs one processing round — see the class javadoc for the spine. Claims the supported
-   * annotations only when {@link #claimsAnnotations()} says so — under the default {@code "*"} set
+   * annotations only when {@link #claimsAnnotations(Set)} says so — under the default {@code "*"} set
    * it does not claim, because claiming would hide foreign annotations from later processors (hence
    * the {@code java:S3516} suppression).
    */
@@ -138,11 +138,11 @@ public abstract class AbstractCodegenProcessor<
   public final boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
     if (!supportedJdk) {
       // Fail fast: init() already emitted the error; do not attempt any processing.
-      return claimsAnnotations();
+      return false;
     }
     if (roundEnv.processingOver()) {
       onProcessingOver(context);
-      return claimsAnnotations();
+      return claimsAnnotations(supportedAnnotationTypes());
     }
 
     PerformanceTracker tracker = context.getPerformanceTracker();
@@ -155,7 +155,7 @@ public abstract class AbstractCodegenProcessor<
 
     List<CodegenTask<K>> tasks = plan(collected, context);
     if (collected.isEmpty() || isFinished(context)) {
-      return claimsAnnotations();
+      return claimsAnnotations(supportedAnnotationTypes());
     }
     if (!tasks.isEmpty()) {
       // The default one-shot is consumed by the first round that planned work — an empty round
@@ -202,7 +202,7 @@ public abstract class AbstractCodegenProcessor<
     // Reset indentation level at the end of each processing round to prevent cascading errors
     context.resetIndentation();
     endRound(context);
-    return claimsAnnotations();
+    return claimsAnnotations(supportedAnnotationTypes());
   }
 
   @Override
@@ -365,9 +365,10 @@ public abstract class AbstractCodegenProcessor<
    * would hide them from later processors, which is especially wrong under the default {@code "*"}
    * supported set. Override to claim when the processor owns a concrete annotation set.
    *
+   * @param supportedTypes the supported annotation type names the round was processed for
    * @return {@code true} to claim the supported annotations
    */
-  protected boolean claimsAnnotations() {
+  protected boolean claimsAnnotations(Set<String> supportedTypes) {
     return false;
   }
 
