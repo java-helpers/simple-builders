@@ -501,11 +501,10 @@ public class BuilderProcessor
 
   @Override
   protected void onTaskGenerated(
-      BuilderDefinitionDto definition,
-      GenerationTargetClassDto target,
-      CodegenTask<BuilderConfiguration> task,
+      PlannedGeneration<BuilderConfiguration, BuilderDefinitionDto> generation,
       BuilderProcessingContext ctx) {
-    GenerationTargetClassDto renderingDto = target;
+    BuilderDefinitionDto definition = generation.definition();
+    GenerationTargetClassDto renderingDto = generation.target();
     int collectionCount =
         (int)
             definition.getAllFieldsForBuilder().stream()
@@ -517,7 +516,7 @@ public class BuilderProcessor
                 .count();
 
     // Collect info for Jackson Module if enabled
-    jacksonModuleGenerator.addEntry(definition, task.element());
+    jacksonModuleGenerator.addEntry(definition, generation.task().element());
     ctx.debug("Jackson module entry added");
 
     // End class-level timing (started by the driver before analysis)

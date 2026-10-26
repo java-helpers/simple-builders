@@ -67,7 +67,7 @@ import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLo
  *   loop 2 — generation:                                                [framework]
  *     for each target:
  *       existsGuard → engine.generate(target, formatterResolver.resolve(target.mode))  [framework]
- *     onTaskGenerated(def, target, task, ctx)                          [default: no-op]
+ *     onTaskGenerated(generation, ctx)                              [default: no-op]
  *   endRound(ctx)                                                       [default: no-op]
  *   last round: onProcessingOver(ctx)                                   [default: drains context.getDeferredTargets()]
  * </pre>
@@ -222,7 +222,7 @@ public abstract class AbstractCodegenProcessor<
         tracker.startPhase();
         generateTarget(work.target());
         tracker.endPhase("Code Generation");
-        onTaskGenerated(work.definition(), work.target(), work.task(), context);
+        onTaskGenerated(work, context);
         successfulGenerations++;
       } catch (Exception ex) {
         context.reportBasedOnStrictMode(
@@ -546,13 +546,10 @@ public abstract class AbstractCodegenProcessor<
    * Event after a task's target generated successfully — the insert point for deferred-output
    * accumulation, per-class metrics, and domain bookkeeping. Default: nothing.
    *
-   * @param definition the analysed definition
-   * @param target the generated class definition
-   * @param task the planned task
+   * @param generation the planned generation — task, analysed definition and generated target
    * @param context the processing context
    */
-  protected void onTaskGenerated(
-      D definition, GenerationTargetClassDto target, CodegenTask<K> task, C context) {}
+  protected void onTaskGenerated(PlannedGeneration<K, D> generation, C context) {}
 
   /**
    * Callback for the last processing round — generates every target the domain pushed onto the
@@ -578,7 +575,11 @@ public abstract class AbstractCodegenProcessor<
   /** Callback at the end of a generating round — domain finalization. */
   protected void endRound(C context) {}
 
-  /** One task's specification output, carried from the analysis loop into the generation loop. */
-  private record PlannedGeneration<K extends CodegenConfiguration, D>(
+  /**
+   * One planned generation, carried from the analysis loop into the generation loop and handed to
+   * {@link #onTaskGenerated} as a whole — the record domains read for their generated-task
+   * callback.
+   */
+  protected record PlannedGeneration<K extends CodegenConfiguration, D>(
       CodegenTask<K> task, D definition, GenerationTargetClassDto target) {}
 }
