@@ -25,7 +25,6 @@
 package org.javahelpers.codegen.processing;
 
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -248,9 +247,7 @@ public abstract class AbstractCodegenProcessor<
 
   @Override
   public final Set<String> getSupportedOptions() {
-    Set<String> options = new LinkedHashSet<>(optionRegistry().supportedOptions());
-    options.addAll(additionalSupportedOptions());
-    return options;
+    return optionRegistry().supportedOptions();
   }
 
   @Override
@@ -270,17 +267,6 @@ public abstract class AbstractCodegenProcessor<
     return annotation != null
         ? Optional.of(Set.copyOf(List.of(annotation.value())))
         : Optional.empty();
-  }
-
-  /**
-   * Additional supported option names beyond the declared registry — for wrapper or embedder
-   * processors adding their own options without redeclaring the domain's set (the seam MapStruct
-   * uses for its processor wrappers). Default: none.
-   *
-   * @return extra option names
-   */
-  protected Set<String> additionalSupportedOptions() {
-    return Set.of();
   }
 
   @Override
