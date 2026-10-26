@@ -174,7 +174,7 @@ public abstract class AbstractCodegenProcessor<
     }
 
     // First loop: specification — analyse every task and map its render targets.
-    List<PlannedWork<K, D>> planned = new ArrayList<>();
+    List<PlannedGeneration<K, D>> planned = new ArrayList<>();
     for (CodegenTask<K> task : tasks) {
       context.debugStartOperation("Processing element: " + task.element().getSimpleName());
       tracker.startClass(task.element().getSimpleName().toString());
@@ -196,7 +196,7 @@ public abstract class AbstractCodegenProcessor<
           } finally {
             tracker.endPhase("Target Mapping");
           }
-          planned.add(new PlannedWork<>(task, definition, target));
+          planned.add(new PlannedGeneration<>(task, definition, target));
         }
       } catch (Exception ex) {
         // By default generation failures are warnings so other targets are still generated.
@@ -212,7 +212,7 @@ public abstract class AbstractCodegenProcessor<
 
     // Second loop: generation — every specification exists before any file is written.
     int successfulGenerations = 0;
-    for (PlannedWork<K, D> work : planned) {
+    for (PlannedGeneration<K, D> work : planned) {
       context.debugStartOperation(
           "Generating targets for: " + work.task().element().getSimpleName());
       try {
@@ -579,6 +579,6 @@ public abstract class AbstractCodegenProcessor<
   protected void endRound(C context) {}
 
   /** One task's specification output, carried from the analysis loop into the generation loop. */
-  private record PlannedWork<K extends CodegenConfiguration, D>(
+  private record PlannedGeneration<K extends CodegenConfiguration, D>(
       CodegenTask<K> task, D definition, GenerationTargetClassDto target) {}
 }
