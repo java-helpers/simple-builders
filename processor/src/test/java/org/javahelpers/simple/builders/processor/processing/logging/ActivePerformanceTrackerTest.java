@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import org.javahelpers.simple.builders.processor.classgen.GenerationPhases;
 import org.javahelpers.simple.builders.processor.processing.PipelinePhases;
 import org.javahelpers.simple.builders.processor.testing.CapturingProcessingLogger;
@@ -71,6 +72,72 @@ class ActivePerformanceTrackerTest {
 
     String jsonContent = Files.readString(Path.of(outputFile));
     return new ObjectMapper().readTree(jsonContent);
+  }
+
+  /**
+   * Pins the complete tagged report layout: every line carries the logger's diagnostic prefix and
+   * the tree connectors sit after it. Timing values are normalized to {@code <n>} — the structure,
+   * labels and indentation are what is asserted.
+   */
+  @Test
+  void generateReport_prefixedLogger_producesExpectedTaggedLayout() {
+    ActivePerformanceTracker tracker =
+        new ActivePerformanceTracker(null, PipelinePhases.PIPELINE_HIERARCHY);
+    tracker.startClass("MyClass");
+    tracker.startPhase();
+    tracker.endPhase(PipelinePhases.PHASE_ANALYSIS);
+    tracker.startGenerator();
+    tracker.endGenerator("MyGenerator");
+    tracker.startEnhancer();
+    tracker.endEnhancer("MyEnhancer");
+    tracker.endClass(5, 2);
+
+    CapturingProcessingLogger capturing = CapturingProcessingLogger.create("simple-builders");
+    tracker.generateReport(capturing.logger());
+
+    List<String> actual =
+        capturing.messages().stream()
+            .map(m -> m.replaceFirst("^[A-Z]+: ", ""))
+            .map(m -> m.replaceAll("\\d+(\\.\\d+)?", "<n>"))
+            .toList();
+
+    assertEquals(
+        List.of(
+            "simple-builders: PERFORMANCE REPORT",
+            "simple-builders: ================================",
+            "simple-builders: Total classes processed: <n>",
+            "simple-builders: Total processing time: <n>s",
+            "simple-builders: ",
+            "simple-builders: Phase breakdown:",
+            "simple-builders: ├─ Element Collection: <n>s (<n>%)",
+            "simple-builders: ├─ Configuration Resolution: <n>s (<n>%)",
+            "simple-builders: ├─ Analysis: <n>s (<n>%)",
+            "simple-builders: ├─ Target Mapping: <n>s (<n>%)",
+            "simple-builders: └─ Code Generation: <n>s (<n>%)",
+            "simple-builders:    ├─ Source Construction: <n>s (<n>%)",
+            "simple-builders:    │  ├─ Element Building: <n>s (<n>%)",
+            "simple-builders:    │  │  ├─ Class Creation: <n>s (<n>%)",
+            "simple-builders:    │  │  ├─ Class Metadata: <n>s (<n>%)",
+            "simple-builders:    │  │  ├─ Fields: <n>s (<n>%)",
+            "simple-builders:    │  │  ├─ Constructors: <n>s (<n>%)",
+            "simple-builders:    │  │  ├─ Methods: <n>s (<n>%)",
+            "simple-builders:    │  │  ├─ Nested Types: <n>s (<n>%)",
+            "simple-builders:    │  │  └─ Class Annotations: <n>s (<n>%)",
+            "simple-builders:    │  ├─ String Generation: <n>s (<n>%)",
+            "simple-builders:    │  └─ Formatting: <n>s (<n>%)",
+            "simple-builders:    └─ File Writing: <n>s (<n>%)",
+            "simple-builders: ",
+            "simple-builders: Average per class: <n>ms",
+            "simple-builders: ",
+            "simple-builders: Top <n> slowest classes:",
+            "simple-builders:   <n>. MyClass - <n>ms (<n> fields, <n> collections)",
+            "simple-builders: ",
+            "simple-builders: Top <n> slowest MethodGenerators:",
+            "simple-builders:   <n>. MyGenerator - <n>s (<n> calls, <n>ms/call)",
+            "simple-builders: ",
+            "simple-builders: Top <n> slowest BuilderEnhancers:",
+            "simple-builders:   <n>. MyEnhancer - <n>s (<n> calls, <n>ms/call)"),
+        actual);
   }
 
   @Test

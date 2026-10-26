@@ -74,9 +74,20 @@ public final class CapturingProcessingLogger {
    * @return a new capturing logger instance
    */
   public static CapturingProcessingLogger create() {
+    return create(null);
+  }
+
+  /**
+   * Creates a new capturing logger carrying a diagnostic logging prefix.
+   *
+   * @param loggingPrefix the logger's diagnostic prefix, or {@code null} for unprefixed output
+   * @return a new capturing logger instance
+   */
+  public static CapturingProcessingLogger create(String loggingPrefix) {
     List<String> messages = new ArrayList<>();
     ProcessingLogger logger =
-        ProcessingLogger.create(createCapturingEnvironment(messages, Collections.emptyMap()));
+        ProcessingLogger.create(
+            createCapturingEnvironment(messages, Collections.emptyMap()), loggingPrefix);
     return new CapturingProcessingLogger(messages, logger);
   }
 
