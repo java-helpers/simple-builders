@@ -25,7 +25,9 @@
 package org.javahelpers.codegen.processing;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -41,7 +43,7 @@ import org.javahelpers.simple.builders.processor.processing.CompilerOption;
  */
 public final class ProcessorOptionRegistry {
 
-  private final List<CompilerOption> options;
+  private final Set<CompilerOption> options;
   private final CompilerOption verboseOption;
   private final CompilerOption formatterProfileOption;
 
@@ -49,7 +51,7 @@ public final class ProcessorOptionRegistry {
       Collection<? extends CompilerOption> options,
       CompilerOption verboseOption,
       CompilerOption formatterProfileOption) {
-    this.options = List.copyOf(options);
+    this.options = Collections.unmodifiableSet(new LinkedHashSet<>(options));
     this.verboseOption = verboseOption;
     this.formatterProfileOption = formatterProfileOption;
   }
