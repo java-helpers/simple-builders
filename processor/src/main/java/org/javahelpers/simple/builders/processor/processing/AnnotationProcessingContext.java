@@ -241,6 +241,17 @@ public class AnnotationProcessingContext implements TypeMappingContext {
   }
 
   /**
+   * Registers one type planned to be generated for a processed element — a convenience over {@link
+   * #getGeneratedTypes()} for the common registration call.
+   *
+   * @param elementType the processed element's type the generated type belongs to
+   * @param generatedType the type planned to be generated for it
+   */
+  public void addGeneratedType(TypeName elementType, TypeName generatedType) {
+    generatedTypes.add(elementType, generatedType);
+  }
+
+  /**
    * Get the TypeElement for a given qualified class name.
    *
    * @param qualifiedName the canonical class name (e.g., "java.lang.String")

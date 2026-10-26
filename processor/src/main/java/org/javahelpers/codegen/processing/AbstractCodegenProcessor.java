@@ -509,9 +509,9 @@ public abstract class AbstractCodegenProcessor<
         continue;
       }
       TypeName elementName = JavaLangMapper.mapToTypeName(targetType, context);
-      for (TypeName generated : plannedTaskResultTypeNames(task, context)) {
-        context.getGeneratedTypes().add(elementName, generated);
-        onTaskResultRegistered(task, generated, context);
+      for (TypeName planned : plannedTaskResultTypeNames(task, context)) {
+        context.addGeneratedType(elementName, planned);
+        onTaskResultRegistered(task, planned, context);
       }
     }
   }
@@ -533,11 +533,11 @@ public abstract class AbstractCodegenProcessor<
    * extras on registration (e.g. SPI publication). Default: nothing.
    *
    * @param task the planned task
-   * @param generatedName the type name just registered for it
+   * @param plannedName the predicted type name just registered for it
    * @param context the processing context
    */
   // codeql[java/unused-parameter] — extension point; domains may need every parameter.
-  protected void onTaskResultRegistered(CodegenTask<K> task, TypeName generatedName, C context) {
+  protected void onTaskResultRegistered(CodegenTask<K> task, TypeName plannedName, C context) {
     // Extension point for domains — registration bookkeeping is already done by the driver.
   }
 

@@ -457,13 +457,11 @@ public class BuilderProcessor
   /** SPI-exports the registered builder on top of the generic generated-type registration. */
   @Override
   protected void onTaskResultRegistered(
-      CodegenTask<BuilderConfiguration> task,
-      TypeName generatedName,
-      BuilderProcessingContext ctx) {
+      CodegenTask<BuilderConfiguration> task, TypeName plannedName, BuilderProcessingContext ctx) {
     if (task.element() instanceof TypeElement targetType) {
       SimpleBuildersSpiIntegration.registerBuilder(
           JavaLangMapper.mapToTypeName(targetType, ctx),
-          ctx.getBuilderScopeResolver().generatedBuilderContract(generatedName),
+          ctx.getBuilderScopeResolver().generatedBuilderContract(plannedName),
           task.configuration().getSetterPrefix());
     }
   }
