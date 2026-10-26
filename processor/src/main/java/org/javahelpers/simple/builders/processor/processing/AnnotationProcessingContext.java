@@ -82,8 +82,6 @@ public class AnnotationProcessingContext implements TypeMappingContext {
   private final GeneratedTypes generatedTypes = new GeneratedTypes();
 
   /** Package generated code is written to, or {@code null} when not generating into a package. */
-  private String generatedPackageName;
-
   /** Per-target processing state for the type currently being generated. */
   private ProcessingTargetPackage<?> processingTargetPackage;
 
@@ -121,16 +119,6 @@ public class AnnotationProcessingContext implements TypeMappingContext {
   }
 
   /**
-   * Sets the name of the package generated code is written to. Called when the current generation
-   * target is known.
-   *
-   * @param generatedPackageName the qualified name of the package generated classes are placed in
-   */
-  protected void setGeneratedPackageName(String generatedPackageName) {
-    this.generatedPackageName = generatedPackageName;
-  }
-
-  /**
    * Initializes the per-target state ({@link ProcessingTargetPackage}) for the type currently being
    * generated. The processing driver calls this once per planned task before analysis starts, so
    * downstream code can reach the current configuration and output package without threading both
@@ -141,7 +129,6 @@ public class AnnotationProcessingContext implements TypeMappingContext {
    */
   public void initProcessingTargetPackage(ProcessingTargetPackage<?> processingTargetPackage) {
     this.processingTargetPackage = processingTargetPackage;
-    setGeneratedPackageName(processingTargetPackage.targetPackage());
   }
 
   /**
@@ -173,7 +160,8 @@ public class AnnotationProcessingContext implements TypeMappingContext {
     if (member.getModifiers().contains(Modifier.PRIVATE)) {
       return false;
     }
-    return generatedPackageName != null && getPackageName(member).equals(generatedPackageName);
+    return processingTargetPackage != null
+        && getPackageName(member).equals(processingTargetPackage.targetPackage());
   }
 
   /**
