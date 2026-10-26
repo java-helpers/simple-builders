@@ -178,10 +178,8 @@ public class BuilderProcessor
       ElementGroups collected, BuilderProcessingContext ctx) {
     List<Element> sortedElements = collected.byGroup(GROUP_ANNOTATED_ELEMENTS);
     List<Element> sortedHolders = collected.byGroup(GROUP_EXTERNAL_TYPE_HOLDERS);
-    ctx.debug("simple-builders: Found %d annotated elements.", sortedElements.size());
-    ctx.debug(
-        "simple-builders: Found %d type(s) for generation with @SimpleBuilderFor.",
-        sortedHolders.size());
+    ctx.debug("Found %d annotated elements.", sortedElements.size());
+    ctx.debug("Found %d type(s) for generation with @SimpleBuilderFor.", sortedHolders.size());
     List<CodegenTask<BuilderConfiguration>> tasks =
         resolveGenerationPlan(
             sortedElements,
@@ -189,7 +187,7 @@ public class BuilderProcessor
             ctx.getConfigurationReader(),
             ctx.getPerformanceTracker());
     ctx.debug(
-        "simple-builders: %d of %d annotated element(s) are inside the builderGenerationPackages scope.",
+        "%d of %d annotated element(s) are inside the builderGenerationPackages scope.",
         tasks.size(), sortedElements.size());
     return tasks;
   }
@@ -227,7 +225,7 @@ public class BuilderProcessor
         // By default builder generation failures are warnings so other builders are still
         // generated. In opt-in strict mode they are promoted to errors that fail the build.
         context.reportBasedOnStrictMode(
-            annotatedElement, "simple-builders: Failed to generate builder - %s", ex.getMessage());
+            annotatedElement, "Failed to generate builder - %s", ex.getMessage());
       } finally {
         context.debugEndOperation();
       }
@@ -238,8 +236,7 @@ public class BuilderProcessor
       try {
         tasks.addAll(planGenerationOfTypeByHolder(holder, reader, alreadyPlannedBuilders, tracker));
       } catch (BuilderException ex) {
-        context.reportBasedOnStrictMode(
-            holder, "simple-builders: Failed to generate builder - %s", ex.getMessage());
+        context.reportBasedOnStrictMode(holder, "Failed to generate builder - %s", ex.getMessage());
       } finally {
         context.debugEndOperation();
       }
@@ -294,7 +291,7 @@ public class BuilderProcessor
       if (targets.isEmpty()) {
         context.warning(
             holder,
-            "simple-builders: @SimpleBuilderFor on '%s' resolves no types - nothing to generate",
+            "@SimpleBuilderFor on '%s' resolves no types - nothing to generate",
             holder.getSimpleName());
         continue;
       }
@@ -329,7 +326,7 @@ public class BuilderProcessor
         && !config.builderGenerationPackages().includes(builderPackage)) {
       context.warning(
           holder,
-          "simple-builders: @SimpleBuilderFor on '%s' generates builder for '%s' in package '%s', which is outside builderGenerationPackages - the explicit declaration takes precedence",
+          "@SimpleBuilderFor on '%s' generates builder for '%s' in package '%s', which is outside builderGenerationPackages - the explicit declaration takes precedence",
           holder.getSimpleName(),
           target.getQualifiedName(),
           builderPackage);
@@ -338,7 +335,7 @@ public class BuilderProcessor
     if (!alreadyPlannedBuilders.add(builderName)) {
       context.warning(
           holder,
-          "simple-builders: skipping '%s' declared in @SimpleBuilderFor on '%s' - builder '%s' is already generated elsewhere",
+          "skipping '%s' declared in @SimpleBuilderFor on '%s' - builder '%s' is already generated elsewhere",
           target.getQualifiedName(),
           holder.getSimpleName(),
           builderName.getFullQualifiedName());
@@ -394,7 +391,7 @@ public class BuilderProcessor
     if (packageElement == null) {
       context.warning(
           holder,
-          "simple-builders: package '%s' in @SimpleBuilderFor on '%s' could not be resolved - skipped",
+          "package '%s' in @SimpleBuilderFor on '%s' could not be resolved - skipped",
           packageName,
           holder.getSimpleName());
       return List.of();
@@ -405,7 +402,7 @@ public class BuilderProcessor
         targets.add(type);
       } else {
         context.debug(
-            "simple-builders: skipping %s '%s' in package '%s' declared by @SimpleBuilderFor on '%s' - no builder can be generated",
+            "skipping %s '%s' in package '%s' declared by @SimpleBuilderFor on '%s' - no builder can be generated",
             type.getKind().toString().toLowerCase(),
             type.getQualifiedName(),
             packageName,
@@ -535,15 +532,14 @@ public class BuilderProcessor
     for (GenerationTargetClassDto moduleDefinition :
         jacksonModuleGenerator.getModuleDefinitions()) {
       ctx.info(
-          "simple-builders: Generating Jackson module in package '%s'",
+          "Generating Jackson module in package '%s'",
           moduleDefinition.getTypeName().getPackageName());
       try {
         generateTarget(moduleDefinition);
       } catch (Exception e) {
         ctx.reportBasedOnStrictMode(
-            logger.prefixed("Error generating Jackson module for package %s: %s"),
-            moduleDefinition.getTypeName().getPackageName(),
-            e.getMessage());
+            "Error generating Jackson module for package %s: %s",
+            moduleDefinition.getTypeName().getPackageName(), e.getMessage());
       }
     }
     // Reset indentation after Jackson module generation as well

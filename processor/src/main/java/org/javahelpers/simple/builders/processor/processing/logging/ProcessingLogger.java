@@ -32,7 +32,8 @@ import javax.tools.Diagnostic;
 /**
  * Logger for all messages during annotation processing. Providing util-functions for posting
  * messages easily. Using a {@code javax.annotation.processing.Messager} inside to publish the
- * messages.
+ * messages. Every emitted message is prefixed with the logger's diagnostic tag ("{@code tag: }")
+ * when one was supplied at creation.
  */
 public class ProcessingLogger {
   /** Util class for exposing messages of type {@code javax.annotation.processing.Messager}. */
@@ -41,10 +42,7 @@ public class ProcessingLogger {
   /** Verbosity level of this logger. */
   private final Verbosity verbosity;
 
-  /**
-   * Diagnostic tag identifying the processor — domains read it back via {@link #getTag()} to prefix
-   * their own messages.
-   */
+  /** Diagnostic tag identifying the processor — every emitted message is prefixed with it. */
   private final String tag;
 
   /** Thread-local indentation level for hierarchical logging. */
@@ -112,54 +110,14 @@ public class ProcessingLogger {
   }
 
   /**
-   * The diagnostic tag this logger was created with (typically the processor's name or a shorter
-   * domain tag), or {@code null}.
+   * Applies this logger's "{@code tag: }" prefix to a message — the one place the tag-prefix
+   * pattern is defined. Untagged loggers return the message unchanged.
    *
-   * @return the tag
+   * @param message the message or message format
+   * @return the message prefixed with this logger's tag
    */
-  public String getTag() {
-    return tag;
-  }
-
-  /**
-   * Applies this logger's "{@code tag: }" prefix to a message format — the one place the tag-prefix
-   * pattern is defined. Untagged loggers return the format unchanged.
-   *
-   * @param format the message format
-   * @return the format prefixed with this logger's tag
-   */
-  public String prefixed(String format) {
-    return tag != null ? tag + ": " + format : format;
-  }
-
-  /**
-   * Logs an error message prefixed with this logger's tag.
-   *
-   * @param format the message format
-   * @param args the format arguments
-   */
-  public void errorTagged(String format, Object... args) {
-    error(prefixed(format), args);
-  }
-
-  /**
-   * Logs an info message prefixed with this logger's tag.
-   *
-   * @param format the message format
-   * @param args the format arguments
-   */
-  public void infoTagged(String format, Object... args) {
-    info(prefixed(format), args);
-  }
-
-  /**
-   * Logs a debug message prefixed with this logger's tag.
-   *
-   * @param format the message format
-   * @param args the format arguments
-   */
-  public void debugTagged(String format, Object... args) {
-    debug(prefixed(format), args);
+  private String prefixed(String message) {
+    return tag != null ? tag + ": " + message : message;
   }
 
   /** Resets ThreadLocal state to ensure clean state between test runs. */
@@ -174,7 +132,7 @@ public class ProcessingLogger {
    * @param args arguments referenced by the format specifiers in the format string
    */
   public void error(String format, Object... args) {
-    messager.printMessage(Diagnostic.Kind.ERROR, String.format(format, args));
+    messager.printMessage(Diagnostic.Kind.ERROR, String.format(prefixed(format), args));
   }
 
   /**
@@ -185,7 +143,7 @@ public class ProcessingLogger {
    * @param args arguments referenced by the format specifiers in the format string
    */
   public void error(Element e, String format, Object... args) {
-    messager.printMessage(Diagnostic.Kind.ERROR, String.format(format, args), e);
+    messager.printMessage(Diagnostic.Kind.ERROR, String.format(prefixed(format), args), e);
   }
 
   /**
@@ -195,7 +153,7 @@ public class ProcessingLogger {
    * @param message the info message to be posted
    */
   public void info(String message) {
-    messager.printMessage(Diagnostic.Kind.NOTE, message);
+    messager.printMessage(Diagnostic.Kind.NOTE, prefixed(message));
   }
 
   /**
@@ -219,7 +177,7 @@ public class ProcessingLogger {
    * @param args arguments referenced by the format specifiers in the format string
    */
   public void info(String format, Object... args) {
-    String message = String.format(format, args);
+    String message = String.format(prefixed(format), args);
     if (verbosity == Verbosity.VERBOSE) {
       // When debug is enabled, add spaces to align with [DEBUG] prefix (which is 6 characters
       // longer)
@@ -240,7 +198,7 @@ public class ProcessingLogger {
    */
   public void debug(String message) {
     if (verbosity == Verbosity.VERBOSE) {
-      String indentedMessage = formatWithIndentation(message);
+      String indentedMessage = formatWithIndentation(prefixed(message));
       messager.printMessage(Diagnostic.Kind.OTHER, indentedMessage);
     }
   }
@@ -254,7 +212,7 @@ public class ProcessingLogger {
    */
   public void debug(String format, Object... args) {
     if (verbosity == Verbosity.VERBOSE) {
-      String message = String.format(format, args);
+      String message = String.format(prefixed(format), args);
       String indentedMessage = formatWithIndentation(message);
       messager.printMessage(Diagnostic.Kind.OTHER, indentedMessage);
     }
@@ -268,7 +226,7 @@ public class ProcessingLogger {
    * @param args arguments referenced by the format specifiers in the format string
    */
   public void warning(String format, Object... args) {
-    String message = String.format(format, args);
+    String message = String.format(prefixed(format), args);
     if (verbosity == Verbosity.VERBOSE) {
       // When debug is enabled, add spaces to align with [DEBUG] prefix (which is 5 characters
       // longer)
@@ -288,7 +246,7 @@ public class ProcessingLogger {
    * @param args arguments referenced by the format specifiers in the format string
    */
   public void warning(Element e, String format, Object... args) {
-    String message = String.format(format, args);
+    String message = String.format(prefixed(format), args);
     if (verbosity == Verbosity.VERBOSE) {
       // When debug is enabled, add spaces to align with [DEBUG] prefix (which is 5 characters
       // longer)
@@ -370,7 +328,8 @@ public class ProcessingLogger {
 
     // Log the operation start message with proper prefix handling
     if (verbosity == Verbosity.VERBOSE) {
-      String operationMessage = formatWithIndentation(String.format(formatClosingMessage, args));
+      String operationMessage =
+          formatWithIndentation(String.format(prefixed(formatClosingMessage), args));
       messager.printMessage(Diagnostic.Kind.NOTE, operationMessage);
     }
 
@@ -403,7 +362,7 @@ public class ProcessingLogger {
 
     // Log the closing message with └─ to indicate it's the last operation at this level
     if (verbosity == Verbosity.VERBOSE) {
-      String closingMessage = String.format(formatClosingMessage, args);
+      String closingMessage = String.format(prefixed(formatClosingMessage), args);
       String operationMessage = formatWithIndentation(closingMessage, "└─ ");
       messager.printMessage(Diagnostic.Kind.NOTE, operationMessage);
     }

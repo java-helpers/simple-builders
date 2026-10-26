@@ -140,11 +140,8 @@ public abstract class AbstractCodegenProcessor<
     if (!supported) {
       String releaseNumber = requiredSourceVersion().replace("RELEASE_", "");
       context.error(
-          logger.prefixed(
-              "requires Java %s or higher for annotation processing. Detected: '%s'. Please upgrade to JDK %s+ or disable the processor."),
-          releaseNumber,
-          current,
-          releaseNumber);
+          "requires Java %s or higher for annotation processing. Detected: '%s'. Please upgrade to JDK %s+ or disable the processor.",
+          releaseNumber, current, releaseNumber);
     }
     return supported;
   }
@@ -168,13 +165,13 @@ public abstract class AbstractCodegenProcessor<
     }
 
     PerformanceTracker tracker = context.getPerformanceTracker();
-    logger.infoTagged("PROCESSING ROUND START");
+    logger.info("PROCESSING ROUND START");
     onRoundStart(context);
 
     tracker.startPhase();
     ElementGroups collected = findElements(annotations, roundEnv);
     tracker.endPhase("Element Collection");
-    logger.debugTagged("Processing round started.");
+    logger.debug("Processing round started.");
 
     List<CodegenTask<K>> tasks = plan(collected, context);
     onTasksPlanned(tasks, context);
@@ -211,9 +208,7 @@ public abstract class AbstractCodegenProcessor<
         // By default generation failures are warnings so other targets are still generated.
         // In opt-in strict mode they are promoted to errors that fail the build.
         context.reportBasedOnStrictMode(
-            task.reportingElement(),
-            logger.prefixed("Failed to generate target - %s"),
-            ex.getMessage());
+            task.reportingElement(), "Failed to generate target - %s", ex.getMessage());
       } finally {
         context.debugEndOperation();
       }
@@ -235,16 +230,14 @@ public abstract class AbstractCodegenProcessor<
         successfulGenerations++;
       } catch (Exception ex) {
         context.reportBasedOnStrictMode(
-            work.task().reportingElement(),
-            logger.prefixed("Failed to generate target - %s"),
-            ex.getMessage());
+            work.task().reportingElement(), "Failed to generate target - %s", ex.getMessage());
       } finally {
         context.debugEndOperation();
       }
     }
 
     if (successfulGenerations > 0) {
-      logger.infoTagged(
+      logger.info(
           "Successfully generated %d target(s) in this processing round", successfulGenerations);
     }
 
@@ -331,8 +324,8 @@ public abstract class AbstractCodegenProcessor<
   }
 
   /**
-   * The diagnostic prefix the processor's tagged messages carry — see {@link
-   * ProcessingLogger#prefixed}. Default: the processor's simple class name; override for a shorter
+   * The diagnostic prefix carried by every emitted log line ("{@code prefix: }" — applied by the
+   * logger to each message). Default: the processor's simple class name; override for a shorter
    * domain prefix.
    *
    * @return the logger prefix
@@ -444,7 +437,7 @@ public abstract class AbstractCodegenProcessor<
     try {
       return current.ordinal() >= SourceVersion.valueOf(requiredName).ordinal();
     } catch (IllegalArgumentException ex) {
-      logger.debugTagged(
+      logger.debug(
           "Required source version name '%s' is unknown to this JDK — treating as unsupported",
           requiredName);
       return false;

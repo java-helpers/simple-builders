@@ -243,18 +243,18 @@ For complete documentation, see [DEBUG_LOGGING.md](DEBUG_LOGGING.md).
 [DEBUG] simple-builders: Found 1 annotated elements.
 [DEBUG] simple-builders: Found 0 type(s) for generation with @SimpleBuilderFor.
 [DEBUG] simple-builders: 1 of 1 annotated element(s) are inside the builderGenerationPackages scope.
-[DEBUG] Processing element: Project
-[DEBUG] ├─ Extracting builder definition from: test.Project
-[DEBUG] │  ├─ Builder will be generated as: test.ProjectBuilder
-[DEBUG] │  ├─ Analysing setters for finding fields
-[DEBUG] │  │  ├─ Analyzing method: setName(java.lang.String)
-[DEBUG] │  │  │  └─ Adding field: name (type: java.lang.String)
-[DEBUG] │  └─ Processed 1 possible setters: added 1 fields, skipped 0
-[DEBUG] Generating targets for: Project
-[DEBUG] ├─ Code generation for builder: ProjectBuilder
-[DEBUG] │  ├─ Adding Methods for 4 candidates
-[DEBUG] │  │  └─ 4 Methods added
-[DEBUG] │  └─ Successfully generated builder: ProjectBuilder
+[DEBUG] simple-builders: Processing element: Project
+[DEBUG] ├─ simple-builders: Extracting builder definition from: test.Project
+[DEBUG] │  ├─ simple-builders: Builder will be generated as: test.ProjectBuilder
+[DEBUG] │  ├─ simple-builders: Analysing setters for finding fields
+[DEBUG] │  │  ├─ simple-builders: Analyzing method: setName(java.lang.String)
+[DEBUG] │  │  │  └─ simple-builders: Adding field: name (type: java.lang.String)
+[DEBUG] │  └─ simple-builders: Processed 1 possible setters: added 1 fields, skipped 0
+[DEBUG] simple-builders: Generating targets for: Project
+[DEBUG] ├─ simple-builders: Code generation for builder: ProjectBuilder
+[DEBUG] │  ├─ simple-builders: Adding Methods for 4 candidates
+[DEBUG] │  │  └─ simple-builders: 4 Methods added
+[DEBUG] │  └─ simple-builders: Successfully generated builder: ProjectBuilder
 simple-builders: Successfully generated 1 target(s) in this processing round
 =============================================
 

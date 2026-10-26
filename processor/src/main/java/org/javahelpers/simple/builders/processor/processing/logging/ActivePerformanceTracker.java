@@ -182,7 +182,7 @@ public final class ActivePerformanceTracker implements PerformanceTracker {
     long totalTime = System.nanoTime() - totalStartTime;
     double totalSeconds = totalTime / 1_000_000_000.0;
 
-    logger.info("simple-builders: PERFORMANCE REPORT");
+    logger.info("PERFORMANCE REPORT");
     logger.info("================================");
     logger.info("Total classes processed: %d", totalClasses.get());
     logger.info(String.format(Locale.US, "Total processing time: %.1fs", totalSeconds));

@@ -112,7 +112,7 @@ public class JacksonModuleGenerator {
     if (!jacksonAvailable) {
       logger.warning(
           sourceElement,
-          "simple-builders: generateJacksonModule is enabled for %s, but Jackson dependencies (com.fasterxml.jackson.databind.module.SimpleModule) are not found on the classpath. Module generation skipped.",
+          "generateJacksonModule is enabled for %s, but Jackson dependencies (com.fasterxml.jackson.databind.module.SimpleModule) are not found on the classpath. Module generation skipped.",
           sourceElement.getSimpleName());
       return false;
     }
@@ -120,7 +120,7 @@ public class JacksonModuleGenerator {
     if (!config.shouldUseJacksonDeserializerAnnotation()) {
       logger.warning(
           sourceElement,
-          "simple-builders: generateJacksonModule is enabled but usingJacksonDeserializerAnnotation is disabled. "
+          "generateJacksonModule is enabled but usingJacksonDeserializerAnnotation is disabled. "
               + "This is a misconfiguration. Jackson Module will NOT be generated for %s.",
           sourceElement.getSimpleName());
       return false;
@@ -143,7 +143,7 @@ public class JacksonModuleGenerator {
     List<GenerationTargetClassDto> definitions = new ArrayList<>();
     if (!entriesByPackage.isEmpty()) {
       logger.info(
-          "simple-builders: Processing OVER. JacksonModuleEnabled: true, Packages: %d",
+          "Processing OVER. JacksonModuleEnabled: true, Packages: %d",
           entriesByPackage.keySet().size());
 
       for (String packageName : entriesByPackage.keySet()) {
