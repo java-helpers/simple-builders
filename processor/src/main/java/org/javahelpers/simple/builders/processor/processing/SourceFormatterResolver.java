@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.codegen.processing;
+package org.javahelpers.simple.builders.processor.processing;
 
 import java.util.EnumMap;
 import org.javahelpers.simple.builders.core.enums.FormattingMode;

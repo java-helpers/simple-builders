@@ -26,6 +26,7 @@ package org.javahelpers.codegen.processing;
 
 import java.util.List;
 import org.javahelpers.simple.builders.processor.classgen.SourceFormatter;
+import org.javahelpers.simple.builders.processor.processing.SourceFormatterResolver;
 
 /**
  * Static declarations of an {@link AbstractCodegenProcessor}: everything the framework needs to
