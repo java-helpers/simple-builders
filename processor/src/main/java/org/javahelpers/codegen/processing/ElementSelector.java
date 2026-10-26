@@ -35,13 +35,13 @@ import java.util.Set;
  * user-defined annotation types, since the supported annotation types stay {@code "*"}). Selected
  * elements carrying the {@link #optOutAnnotation} are dropped again.
  *
- * @param name the group name results are keyed by in {@link ElementCollection}
+ * @param groupName the group name results are keyed by in {@link ElementCollection}
  * @param annotationTypes annotation types that directly select an element
  * @param metaMarker meta-annotation marking annotation types that also select, or {@code null}
  * @param optOutAnnotation annotation that excludes a selected element again, or {@code null}
  */
 public record ElementSelector(
-    String name,
+    String groupName,
     Set<Class<? extends Annotation>> annotationTypes,
     Class<? extends Annotation> metaMarker,
     Class<? extends Annotation> optOutAnnotation) {
@@ -57,14 +57,14 @@ public record ElementSelector(
 
   /** Fluent builder for {@link ElementSelector}. */
   public static final class Builder {
-    private String name;
+    private String groupName;
     private Set<Class<? extends Annotation>> annotationTypes = Set.of();
     private Class<? extends Annotation> metaMarker;
     private Class<? extends Annotation> optOutAnnotation;
 
     /** The group name results are keyed by. */
-    public Builder name(String name) {
-      this.name = name;
+    public Builder groupName(String groupName) {
+      this.groupName = groupName;
       return this;
     }
 
@@ -89,7 +89,7 @@ public record ElementSelector(
 
     /** Builds the selector. */
     public ElementSelector build() {
-      return new ElementSelector(name, annotationTypes, metaMarker, optOutAnnotation);
+      return new ElementSelector(groupName, annotationTypes, metaMarker, optOutAnnotation);
     }
   }
 }

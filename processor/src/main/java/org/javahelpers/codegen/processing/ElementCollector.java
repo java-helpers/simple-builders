@@ -126,7 +126,7 @@ public final class ElementCollector {
             });
       }
       groups.put(
-          selector.name(),
+          selector.groupName(),
           selected.stream()
               .sorted(Comparator.comparing(element -> element.getSimpleName().toString()))
               .toList());

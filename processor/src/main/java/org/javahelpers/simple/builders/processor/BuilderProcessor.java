@@ -113,13 +113,13 @@ public class BuilderProcessor
           .selector(
               selector ->
                   selector
-                      .name(GROUP_ANNOTATED_ELEMENTS)
+                      .groupName(GROUP_ANNOTATED_ELEMENTS)
                       .metaMarker(Template.class)
                       .optOutAnnotation(Ignore4BuilderGeneration.class))
           .selector(
               selector ->
                   selector
-                      .name(GROUP_EXTERNAL_TYPE_HOLDERS)
+                      .groupName(GROUP_EXTERNAL_TYPE_HOLDERS)
                       .annotationTypes(SimpleBuilderFor.class, SimpleBuilderFors.class))
           .build();
 
@@ -189,8 +189,8 @@ public class BuilderProcessor
   @Override
   protected List<CodegenTask<BuilderConfiguration>> planTasks(
       ElementCollection collected, BuilderProcessingContext ctx) {
-    List<Element> sortedElements = collected.byName(GROUP_ANNOTATED_ELEMENTS);
-    List<Element> sortedHolders = collected.byName(GROUP_EXTERNAL_TYPE_HOLDERS);
+    List<Element> sortedElements = collected.byGroup(GROUP_ANNOTATED_ELEMENTS);
+    List<Element> sortedHolders = collected.byGroup(GROUP_EXTERNAL_TYPE_HOLDERS);
     ctx.debug("simple-builders: Found %d annotated elements.", sortedElements.size());
     ctx.debug(
         "simple-builders: Found %d type(s) for generation with @SimpleBuilderFor.",
