@@ -43,7 +43,7 @@ public final class ElementGroups {
   /**
    * The elements selected by the named selector, sorted by simple name.
    *
-   * @param selectorName name of an {@link ElementSelector}
+   * @param groupName name of the selecting {@link ElementSelector}'s group
    * @return the selected elements, or an empty list when the selector matched nothing
    */
   public List<Element> byGroup(String groupName) {

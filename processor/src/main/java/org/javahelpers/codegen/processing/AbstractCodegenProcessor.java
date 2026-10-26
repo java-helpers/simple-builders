@@ -50,10 +50,11 @@ import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLo
  * the domain plugs in its hooks — collect, plan, register, analyse/map, generate, finalize.
  *
  * <p>A new processor declares its static surface once as {@link CodegenProcessorConfiguration}
- * (passed to the constructor — element spec, options, source level) and implements only the domain
- * hooks marked {@code [implement]}: {@link #createContext}, {@link #planTasks}, {@link
- * #plannedTaskResultTypeNames}, {@link #analyse} and {@link #mapToTargetSpecification}. Every other
- * step is framework-owned or an optional {@code [default]} the domain may override.
+ * (passed to the constructor — element collector, options, source level, formatter factory) and
+ * implements only the domain hooks marked {@code [implement]}: {@link #createContext}, {@link
+ * #planTasks}, {@link #plannedTaskResultTypeNames}, {@link #analyse} and {@link
+ * #mapToTargetSpecification}. Every other step is framework-owned or an optional {@code [default]}
+ * the domain may override.
  *
  * <p>The round spine:
  *
@@ -262,8 +263,9 @@ public abstract class AbstractCodegenProcessor<
 
   /**
    * The supported annotation type names declared by the {@link SupportedAnnotationTypes} annotation
-   * on the processor class. The element spec's annotation types are for collection filtering — not
-   * the supported-set declaration — so without the annotation the supported set stays {@code "*"}.
+   * on the processor class. The element collector's annotation types are for collection filtering —
+   * not the supported-set declaration — so without the annotation the supported set stays {@code
+   * "*"}.
    *
    * @return the declared names, or empty when the class is not annotated
    */
@@ -365,6 +367,11 @@ public abstract class AbstractCodegenProcessor<
   /**
    * Creates the code generation engine — the {@link ClassCodeGenerator} backend port the domain
    * wires over {@link #generationEnvironment}.
+   *
+   * @param processingEnv the processing environment
+   * @param logger the processing logger
+   * @param context the processing context
+   * @return the domain's code generation engine
    */
   protected abstract ClassCodeGenerator createGenerator(
       ProcessingEnvironment processingEnv, ProcessingLogger logger, C context);
@@ -387,6 +394,10 @@ public abstract class AbstractCodegenProcessor<
   /**
    * Creates the source formatter resolver for the configured profile — profile name and formatter
    * factory come from the processor's declared options and configuration.
+   *
+   * @param reader the compiler arguments reader
+   * @param logger the processing logger
+   * @return the formatter resolver
    */
   protected SourceFormatterResolver createFormatterResolver(
       CompilerArgumentsReader reader, ProcessingLogger logger) {
@@ -621,7 +632,11 @@ public abstract class AbstractCodegenProcessor<
     // Extension point for domains — e.g. last-round outputs via {@link #generateTarget}.
   }
 
-  /** Callback at the end of a generating round — domain finalization. */
+  /**
+   * Callback at the end of a generating round — domain finalization.
+   *
+   * @param context the processing context
+   */
   // codeql[java/unused-parameter] — extension point; domains may need every parameter.
   protected void endRound(C context) {
     // Extension point for domains — e.g. per-round finalization.

@@ -48,8 +48,8 @@ public record CodegenProcessorConfiguration(
     SourceFormatterResolver.FormatterFactory formatterFactory) {
 
   /**
-   * Creates a builder with all defaults applied — only {@link #elementCollector(ElementCollector)}
-   * must be set.
+   * Creates a builder with all defaults applied — only {@link
+   * Builder#elementCollector(ElementCollector)} must be set.
    *
    * @return a new builder
    */
