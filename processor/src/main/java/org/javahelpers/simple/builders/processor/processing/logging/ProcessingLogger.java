@@ -32,8 +32,8 @@ import javax.tools.Diagnostic;
 /**
  * Logger for all messages during annotation processing. Providing util-functions for posting
  * messages easily. Using a {@code javax.annotation.processing.Messager} inside to publish the
- * messages. Every emitted message is prefixed with the logger's diagnostic tag ("{@code tag: }")
- * when one was supplied at creation.
+ * messages. Every emitted message is prefixed with the logger's diagnostic prefix ("{@code prefix:
+ * }") when one was supplied at creation.
  */
 public class ProcessingLogger {
   /** Util class for exposing messages of type {@code javax.annotation.processing.Messager}. */
@@ -42,8 +42,8 @@ public class ProcessingLogger {
   /** Verbosity level of this logger. */
   private final Verbosity verbosity;
 
-  /** Diagnostic tag identifying the processor — every emitted message is prefixed with it. */
-  private final String tag;
+  /** Diagnostic prefix identifying the processor — every emitted message is prefixed with it. */
+  private final String loggingPrefix;
 
   /** Thread-local indentation level for hierarchical logging. */
   private static final ThreadLocal<Integer> indentationLevel = ThreadLocal.withInitial(() -> 0);
@@ -69,14 +69,14 @@ public class ProcessingLogger {
   }
 
   /**
-   * Creates a new ProcessingLogger carrying a diagnostic tag.
+   * Creates a new ProcessingLogger carrying a diagnostic prefix.
    *
    * @param processingEnv the processing environment providing the messager
-   * @param tag the processor's diagnostic tag, or {@code null}
+   * @param loggingPrefix the processor's diagnostic prefix, or {@code null}
    * @return a processing logger reporting errors, warnings and info messages
    */
-  public static ProcessingLogger create(ProcessingEnvironment processingEnv, String tag) {
-    return new ProcessingLogger(processingEnv, Verbosity.NORMAL, tag);
+  public static ProcessingLogger create(ProcessingEnvironment processingEnv, String loggingPrefix) {
+    return new ProcessingLogger(processingEnv, Verbosity.NORMAL, loggingPrefix);
   }
 
   /**
@@ -90,34 +90,36 @@ public class ProcessingLogger {
   }
 
   /**
-   * Creates a new debug-enabled ProcessingLogger carrying a diagnostic tag.
+   * Creates a new debug-enabled ProcessingLogger carrying a diagnostic prefix.
    *
    * @param processingEnv the processing environment providing the messager
-   * @param tag the processor's diagnostic tag, or {@code null}
+   * @param loggingPrefix the processor's diagnostic prefix, or {@code null}
    * @return a debug-enabled processing logger
    */
-  public static ProcessingLogger createVerbose(ProcessingEnvironment processingEnv, String tag) {
-    return new ProcessingLogger(processingEnv, Verbosity.VERBOSE, tag);
+  public static ProcessingLogger createVerbose(
+      ProcessingEnvironment processingEnv, String loggingPrefix) {
+    return new ProcessingLogger(processingEnv, Verbosity.VERBOSE, loggingPrefix);
   }
 
-  private ProcessingLogger(ProcessingEnvironment processingEnv, Verbosity verbosity, String tag) {
+  private ProcessingLogger(
+      ProcessingEnvironment processingEnv, Verbosity verbosity, String loggingPrefix) {
     // Reset ThreadLocal state to ensure clean state between test runs
     resetThreadLocalState();
 
     this.messager = processingEnv.getMessager();
     this.verbosity = verbosity;
-    this.tag = tag;
+    this.loggingPrefix = loggingPrefix;
   }
 
   /**
-   * Applies this logger's "{@code tag: }" prefix to a message — the one place the tag-prefix
-   * pattern is defined. Untagged loggers return the message unchanged.
+   * Applies this logger's "{@code prefix: }" prefix to a message — the one place the prefix pattern
+   * is defined. Loggers without a prefix return the message unchanged.
    *
    * @param message the message or message format
-   * @return the message prefixed with this logger's tag
+   * @return the message prefixed with this logger's prefix
    */
   private String prefixed(String message) {
-    return tag != null ? tag + ": " + message : message;
+    return loggingPrefix != null ? loggingPrefix + ": " + message : message;
   }
 
   /** Resets ThreadLocal state to ensure clean state between test runs. */
