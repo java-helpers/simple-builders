@@ -122,19 +122,25 @@ public abstract class AbstractCodegenProcessor<
     this.codeGenerator = createGenerator(processingEnv, logger, context);
     this.formatterResolver = createFormatterResolver(reader, logger);
 
-    SourceVersion current = processingEnv.getSourceVersion();
-    this.supportedJdk = isAtLeast(current, requiredSourceVersion());
-    if (!this.supportedJdk) {
-      reportUnsupportedJdk(current);
-    }
+    this.supportedJdk = verifySupportedJdk();
   }
 
-  /** Reports that the running JDK cannot meet the required source level. */
-  private void reportUnsupportedJdk(SourceVersion current) {
-    String releaseNumber = requiredSourceVersion().replace("RELEASE_", "");
-    context.error(
-        "%s requires Java %s or higher for annotation processing. Detected: '%s'. Please upgrade to JDK %s+ or disable the processor.",
-        logger.getTag(), releaseNumber, current, releaseNumber);
+  /**
+   * Checks the running JDK against {@link #requiredSourceVersion} and reports a descriptive error
+   * when it cannot meet the requirement.
+   *
+   * @return {@code true} when the running JDK supports the required source level
+   */
+  private boolean verifySupportedJdk() {
+    SourceVersion current = processingEnv.getSourceVersion();
+    boolean supported = isAtLeast(current, requiredSourceVersion());
+    if (!supported) {
+      String releaseNumber = requiredSourceVersion().replace("RELEASE_", "");
+      context.error(
+          "%s requires Java %s or higher for annotation processing. Detected: '%s'. Please upgrade to JDK %s+ or disable the processor.",
+          logger.getTag(), releaseNumber, current, releaseNumber);
+    }
+    return supported;
   }
 
   /**
