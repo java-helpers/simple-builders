@@ -108,7 +108,7 @@ public class BuilderProcessor
    * {@code @Ignore4BuilderGeneration}), plus classes declaring external types with
    * {@code @SimpleBuilderFor}.
    */
-  private static final ElementCollector ELEMENT_SPEC =
+  private static final ElementCollector ELEMENT_COLLECTOR =
       ElementCollector.builder()
           .selector(
               selector ->
@@ -126,7 +126,7 @@ public class BuilderProcessor
   /** The processor's static declarations handed to the framework driver. */
   private static final CodegenProcessorConfiguration PROCESSOR_CONFIGURATION =
       CodegenProcessorConfiguration.builder()
-          .elementCollector(ELEMENT_SPEC)
+          .elementCollector(ELEMENT_COLLECTOR)
           .optionRegistry(OPTION_REGISTRY)
           .requiredSourceVersion("RELEASE_17")
           .build();
