@@ -141,13 +141,11 @@ public final class ElementCollector {
       if (annotation.getKind() != ElementKind.ANNOTATION_TYPE) {
         continue;
       }
-      boolean direct =
-          selector.annotationTypes().stream()
-              .anyMatch(
-                  type -> type.getCanonicalName().equals(annotation.getQualifiedName().toString()));
+      // Direct annotation types are already covered by the Class overload above — only
+      // meta-annotated types (e.g. template annotations carrying the marker) remain to match
       boolean metaMarked =
           selector.metaMarker() != null && annotation.getAnnotation(selector.metaMarker()) != null;
-      if (direct || metaMarked) {
+      if (metaMarked) {
         result.add(annotation);
       }
     }
