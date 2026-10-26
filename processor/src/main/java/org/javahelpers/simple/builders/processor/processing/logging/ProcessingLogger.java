@@ -169,7 +169,7 @@ public class ProcessingLogger {
   private String formatHierarchicalMessage(String message, int spaces) {
     String prefix = getCurrentIndentationLevel() > 0 ? "└─ " : "";
     String spacing = " ".repeat(spaces);
-    return String.format("%s%s", spacing, formatWithIndentationNoDebug(message, prefix));
+    return spacing + prefixed(formatWithIndentationNoDebug(message, prefix));
   }
 
   /**
@@ -179,7 +179,7 @@ public class ProcessingLogger {
    * @param args arguments referenced by the format specifiers in the format string
    */
   public void info(String format, Object... args) {
-    String message = String.format(prefixed(format), args);
+    String message = String.format(format, args);
     if (verbosity == Verbosity.VERBOSE) {
       // When debug is enabled, add spaces to align with [DEBUG] prefix (which is 6 characters
       // longer)
@@ -187,7 +187,7 @@ public class ProcessingLogger {
       messager.printMessage(Diagnostic.Kind.NOTE, indentedMessage);
     } else {
       // When debug is disabled, use flat formatting (current behavior)
-      messager.printMessage(Diagnostic.Kind.NOTE, message);
+      messager.printMessage(Diagnostic.Kind.NOTE, prefixed(message));
     }
   }
 
@@ -200,7 +200,7 @@ public class ProcessingLogger {
    */
   public void debug(String message) {
     if (verbosity == Verbosity.VERBOSE) {
-      String indentedMessage = formatWithIndentation(prefixed(message));
+      String indentedMessage = formatWithIndentation(message);
       messager.printMessage(Diagnostic.Kind.OTHER, indentedMessage);
     }
   }
@@ -214,7 +214,7 @@ public class ProcessingLogger {
    */
   public void debug(String format, Object... args) {
     if (verbosity == Verbosity.VERBOSE) {
-      String message = String.format(prefixed(format), args);
+      String message = String.format(format, args);
       String indentedMessage = formatWithIndentation(message);
       messager.printMessage(Diagnostic.Kind.OTHER, indentedMessage);
     }
@@ -228,7 +228,7 @@ public class ProcessingLogger {
    * @param args arguments referenced by the format specifiers in the format string
    */
   public void warning(String format, Object... args) {
-    String message = String.format(prefixed(format), args);
+    String message = String.format(format, args);
     if (verbosity == Verbosity.VERBOSE) {
       // When debug is enabled, add spaces to align with [DEBUG] prefix (which is 5 characters
       // longer)
@@ -236,7 +236,7 @@ public class ProcessingLogger {
       messager.printMessage(Diagnostic.Kind.WARNING, indentedMessage);
     } else {
       // When debug is disabled, print flat
-      messager.printMessage(Diagnostic.Kind.WARNING, message);
+      messager.printMessage(Diagnostic.Kind.WARNING, prefixed(message));
     }
   }
 
@@ -248,7 +248,7 @@ public class ProcessingLogger {
    * @param args arguments referenced by the format specifiers in the format string
    */
   public void warning(Element e, String format, Object... args) {
-    String message = String.format(prefixed(format), args);
+    String message = String.format(format, args);
     if (verbosity == Verbosity.VERBOSE) {
       // When debug is enabled, add spaces to align with [DEBUG] prefix (which is 5 characters
       // longer)
@@ -256,7 +256,7 @@ public class ProcessingLogger {
       messager.printMessage(Diagnostic.Kind.WARNING, indentedMessage, e);
     } else {
       // When debug is disabled, print flat
-      messager.printMessage(Diagnostic.Kind.WARNING, message, e);
+      messager.printMessage(Diagnostic.Kind.WARNING, prefixed(message), e);
     }
   }
 
@@ -271,7 +271,7 @@ public class ProcessingLogger {
     int level = indentationLevel.get();
     if (level == 0) {
       // At level 0, no indentation or prefix
-      return "[DEBUG] " + message;
+      return "[DEBUG] " + prefixed(message);
     }
 
     // Use │ characters with proper spacing for better visual connection between hierarchical levels
@@ -281,7 +281,7 @@ public class ProcessingLogger {
     }
     // Add the specified prefix
     indent.append(prefix);
-    return "[DEBUG] " + indent + message;
+    return "[DEBUG] " + prefixed(indent.toString() + message);
   }
 
   /**
@@ -330,8 +330,7 @@ public class ProcessingLogger {
 
     // Log the operation start message with proper prefix handling
     if (verbosity == Verbosity.VERBOSE) {
-      String operationMessage =
-          formatWithIndentation(String.format(prefixed(formatClosingMessage), args));
+      String operationMessage = formatWithIndentation(String.format(formatClosingMessage, args));
       messager.printMessage(Diagnostic.Kind.NOTE, operationMessage);
     }
 
@@ -364,7 +363,7 @@ public class ProcessingLogger {
 
     // Log the closing message with └─ to indicate it's the last operation at this level
     if (verbosity == Verbosity.VERBOSE) {
-      String closingMessage = String.format(prefixed(formatClosingMessage), args);
+      String closingMessage = String.format(formatClosingMessage, args);
       String operationMessage = formatWithIndentation(closingMessage, "└─ ");
       messager.printMessage(Diagnostic.Kind.NOTE, operationMessage);
     }
