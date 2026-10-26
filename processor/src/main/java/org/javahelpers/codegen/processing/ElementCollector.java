@@ -145,9 +145,9 @@ public final class ElementCollector {
           selector.annotationTypes().stream()
               .anyMatch(
                   type -> type.getCanonicalName().equals(annotation.getQualifiedName().toString()));
-      boolean meta =
+      boolean metaMarked =
           selector.metaMarker() != null && annotation.getAnnotation(selector.metaMarker()) != null;
-      if (direct || meta) {
+      if (direct || metaMarked) {
         result.add(annotation);
       }
     }
