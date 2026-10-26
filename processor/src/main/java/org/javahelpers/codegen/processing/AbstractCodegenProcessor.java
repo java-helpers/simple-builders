@@ -140,8 +140,11 @@ public abstract class AbstractCodegenProcessor<
     if (!supported) {
       String releaseNumber = requiredSourceVersion().replace("RELEASE_", "");
       context.error(
-          "%s requires Java %s or higher for annotation processing. Detected: '%s'. Please upgrade to JDK %s+ or disable the processor.",
-          logger.getTag(), releaseNumber, current, releaseNumber);
+          logger.prefixed(
+              "requires Java %s or higher for annotation processing. Detected: '%s'. Please upgrade to JDK %s+ or disable the processor."),
+          releaseNumber,
+          current,
+          releaseNumber);
     }
     return supported;
   }
@@ -441,7 +444,7 @@ public abstract class AbstractCodegenProcessor<
     try {
       return current.ordinal() >= SourceVersion.valueOf(requiredName).ordinal();
     } catch (IllegalArgumentException ex) {
-      logger.debug(
+      logger.debugTagged(
           "Required source version name '%s' is unknown to this JDK — treating as unsupported",
           requiredName);
       return false;
