@@ -47,14 +47,12 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.ElementFilter;
-import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.codegen.processing.AbstractCodegenProcessor;
 import org.javahelpers.codegen.processing.CodegenProcessorConfiguration;
 import org.javahelpers.codegen.processing.CodegenTask;
 import org.javahelpers.codegen.processing.ElementCollector;
 import org.javahelpers.codegen.processing.ElementGroups;
 import org.javahelpers.codegen.processing.ProcessorOptionRegistry;
-import org.javahelpers.codegen.processing.SourceFormatterResolver;
 import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder.Template;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFor;
@@ -128,6 +126,7 @@ public class BuilderProcessor
           .elementCollector(ELEMENT_COLLECTOR)
           .optionRegistry(OPTION_REGISTRY)
           .requiredSourceVersion("RELEASE_17")
+          .formatterFactory(RoasterSourceFormatter::new)
           .build();
 
   /** Creates the processor — javac instantiates it reflectively. */
@@ -150,15 +149,6 @@ public class BuilderProcessor
   protected ClassCodeGenerator createGenerator(
       ProcessingEnvironment processingEnv, ProcessingLogger logger, BuilderProcessingContext ctx) {
     return new RoasterCodeGenerator(generationEnvironment(processingEnv, logger, ctx));
-  }
-
-  @Override
-  protected SourceFormatterResolver createFormatterResolver(
-      CompilerArgumentsReader reader, ProcessingLogger logger) {
-    return new SourceFormatterResolver(
-        logger,
-        StringUtils.trimToNull(reader.readValue(CompilerArgumentsEnum.FORMATTER_PROFILE)),
-        RoasterSourceFormatter::new);
   }
 
   @Override
