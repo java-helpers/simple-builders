@@ -27,13 +27,13 @@ package org.javahelpers.codegen.processing;
 /**
  * Per-target processing state for the type that is currently being generated.
  *
- * <p>The processing driver sets one instance per processed type on the processing context before
- * extraction starts, so downstream analysis can reach it without threading both values through
- * every call.
+ * <p>{@link AbstractCodegenProcessor} sets one instance per processed type on the processing
+ * context before extraction starts, so downstream analysis can reach it without threading both
+ * values through every call.
  *
  * @param configuration the resolved domain configuration for the current target
- * @param targetPackage the package the generated class is written to. This is the configured output
- *     package when set; otherwise a package derived from the processed element itself. It cannot
+ * @param targetPackage the package the generated code is written to. This is the configured output
+ *     package option when set; otherwise a package derived from the processed element. It cannot
  *     always be derived from the processed element itself, which is why it is carried explicitly
  *     here
  * @param <T> the domain configuration type
