@@ -37,6 +37,7 @@ import javax.lang.model.element.TypeElement;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
 import org.javahelpers.simple.builders.processor.classgen.ClassCodeGenerator;
 import org.javahelpers.simple.builders.processor.classgen.CodeGenerationException;
+import org.javahelpers.simple.builders.processor.classgen.GenerationEnvironment;
 import org.javahelpers.simple.builders.processor.model.core.GenerationTargetClassDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.AnnotationProcessingContext;
@@ -359,10 +360,25 @@ public abstract class AbstractCodegenProcessor<
 
   /**
    * Creates the code generation engine — the {@link ClassCodeGenerator} backend port the domain
-   * wires over the processing environment, logger and context.
+   * wires over {@link #generationEnvironment}.
    */
   protected abstract ClassCodeGenerator createGenerator(
       ProcessingEnvironment processingEnv, ProcessingLogger logger, C context);
+
+  /**
+   * The {@link GenerationEnvironment} the engine runs against — processing environment, logger,
+   * performance tracker and the strict-mode reporter, wired from the context the driver created.
+   *
+   * @param processingEnv the processing environment
+   * @param logger the processing logger
+   * @param context the processing context
+   * @return the generation environment for the engine's constructor
+   */
+  protected GenerationEnvironment generationEnvironment(
+      ProcessingEnvironment processingEnv, ProcessingLogger logger, C context) {
+    return new GenerationEnvironment(
+        processingEnv, logger, context.getPerformanceTracker(), context::reportBasedOnStrictMode);
+  }
 
   /**
    * Creates the source formatter resolver for the configured profile — the domain supplies the

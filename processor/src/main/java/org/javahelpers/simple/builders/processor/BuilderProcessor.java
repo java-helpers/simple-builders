@@ -62,7 +62,6 @@ import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFors;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyser;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
 import org.javahelpers.simple.builders.processor.classgen.ClassCodeGenerator;
-import org.javahelpers.simple.builders.processor.classgen.GenerationEnvironment;
 import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterCodeGenerator;
 import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterSourceFormatter;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
@@ -150,9 +149,7 @@ public class BuilderProcessor
   @Override
   protected ClassCodeGenerator createGenerator(
       ProcessingEnvironment processingEnv, ProcessingLogger logger, BuilderProcessingContext ctx) {
-    return new RoasterCodeGenerator(
-        new GenerationEnvironment(
-            processingEnv, logger, ctx.getPerformanceTracker(), ctx::reportBasedOnStrictMode));
+    return new RoasterCodeGenerator(generationEnvironment(processingEnv, logger, ctx));
   }
 
   @Override
