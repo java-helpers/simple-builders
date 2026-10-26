@@ -79,8 +79,6 @@ public final class BuilderScopeResolver {
   private ResolutionInputs cachedResolutionInputs;
   private PackageScopes usagePackages = PackageScopes.unscoped();
   private final Map<String, Optional<ResolvedBuilder>> resolvedBuilderTypes = new HashMap<>();
-  // Generated-types registry lives on the context (shared with the processing driver)
-  private final GeneratedTypes generatedBuilders;
 
   /**
    * Creates a new resolver for the given processing context.
@@ -89,7 +87,6 @@ public final class BuilderScopeResolver {
    */
   public BuilderScopeResolver(BuilderProcessingContext context) {
     this.context = context;
-    this.generatedBuilders = context.getGeneratedTypes();
   }
 
   /**
@@ -203,7 +200,7 @@ public final class BuilderScopeResolver {
    * @param builderType the generated builder's type name
    */
   public void registerGeneratedBuilder(TypeName targetType, TypeName builderType) {
-    generatedBuilders.add(targetType, builderType);
+    context.getGeneratedTypes().add(targetType, builderType);
     resolvedBuilderTypes.clear();
   }
 
@@ -212,7 +209,7 @@ public final class BuilderScopeResolver {
    * processing round, so stale registrations and resolutions of the previous round are dropped.
    */
   public void resetGeneratedBuilders() {
-    generatedBuilders.clear();
+    context.getGeneratedTypes().clear();
     resolvedBuilderTypes.clear();
   }
 
@@ -234,7 +231,8 @@ public final class BuilderScopeResolver {
     // Types whose builders are generated in the current processing round are trusted
     // immediately — our own generators always produce the builder contract, so no
     // classpath lookup or contract check is needed.
-    Optional<TypeName> generatedBuilder = generatedBuilders.findGenerated(referencedTypeName);
+    Optional<TypeName> generatedBuilder =
+        context.getGeneratedTypes().findGenerated(referencedTypeName);
     if (generatedBuilder.isPresent()) {
       // Our generators always emit a static create() and no create(T) - the empty path uses
       // the factory, the copy path the constructor
