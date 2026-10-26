@@ -59,8 +59,10 @@ import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLo
  *
  * <pre>
  *   ctx      = createContext(env, reader, logger)                       [implement — in init]
+ *   onRoundStart(ctx)                                                 [default: no-op]
  *   elements = findElements(annotations, roundEnv)                 [default: configuration's elementCollector]
  *   tasks    = planTasks(elements, ctx)                                 [implement]
+ *   onTasksPlanned(tasks, ctx)                                          [default: no-op]
  *   registerPlannedTaskResults(tasks, ctx)                                  [framework; per-task names from plannedTaskResultTypeNames() — implement]
  *   loop 1 — specification (guarded, strict-mode reporting):            [framework]
  *     defs    = analyse(task, ctx)                                      [implement]
@@ -163,6 +165,7 @@ public abstract class AbstractCodegenProcessor<
 
     PerformanceTracker tracker = context.getPerformanceTracker();
     logger.infoTagged("PROCESSING ROUND START");
+    onRoundStart(context);
 
     tracker.startPhase();
     ElementGroups collected = findElements(annotations, roundEnv);
@@ -170,6 +173,7 @@ public abstract class AbstractCodegenProcessor<
     logger.debugTagged("Processing round started.");
 
     List<CodegenTask<K>> tasks = plan(collected, context);
+    onTasksPlanned(tasks, context);
     if (tasks.isEmpty()) {
       return claimsAnnotations(getSupportedAnnotationTypes());
     }
@@ -522,7 +526,32 @@ public abstract class AbstractCodegenProcessor<
    * @param generatedName the type name just registered for it
    * @param context the processing context
    */
-  protected void onTaskResultRegistered(CodegenTask<K> task, TypeName generatedName, C context) {}
+  protected void onTaskResultRegistered(CodegenTask<K> task, TypeName generatedName, C context) {
+    // Extension point for domains — registration bookkeeping is already done by the driver.
+  }
+
+  /**
+   * Event at the start of every processing round — the domain's hook for per-round preparation
+   * (resetting round state, round-specific logging). Called after the processing-over check, before
+   * element collection. Default: nothing.
+   *
+   * @param context the processing context
+   */
+  protected void onRoundStart(C context) {
+    // Extension point for domains — the driver performs no per-round setup beyond logging.
+  }
+
+  /**
+   * Event after the round's tasks were planned and their predicted results registered — the
+   * domain's hook to inspect the plan before analysis starts. Called every generating round with
+   * that round's task list, which may be empty when the round produced nothing. Default: nothing.
+   *
+   * @param tasks the tasks the domain's {@link #planTasks} produced this round
+   * @param context the processing context
+   */
+  protected void onTasksPlanned(List<? extends CodegenTask<K>> tasks, C context) {
+    // Extension point for domains — planning bookkeeping is already done by the driver.
+  }
 
   /**
    * Whether the domain's generating round already ran. Default: one-shot — the base marks the
@@ -570,7 +599,9 @@ public abstract class AbstractCodegenProcessor<
    * @param generation the planned generation — task, analysed definition and generated target
    * @param context the processing context
    */
-  protected void onTaskGenerated(PlannedGeneration<K, D> generation, C context) {}
+  protected void onTaskGenerated(PlannedGeneration<K, D> generation, C context) {
+    // Extension point for domains — the target is already generated at this point.
+  }
 
   /**
    * Callback when processing is over — the domain's last-round finalization: SPI flush, reports,
@@ -578,10 +609,14 @@ public abstract class AbstractCodegenProcessor<
    *
    * @param context the processing context
    */
-  protected void onProcessingOver(C context) {}
+  protected void onProcessingOver(C context) {
+    // Extension point for domains — e.g. last-round outputs via {@link #generateTarget}.
+  }
 
   /** Callback at the end of a generating round — domain finalization. */
-  protected void endRound(C context) {}
+  protected void endRound(C context) {
+    // Extension point for domains — e.g. per-round finalization.
+  }
 
   /**
    * One planned generation, carried from the analysis loop into the generation loop and handed to
