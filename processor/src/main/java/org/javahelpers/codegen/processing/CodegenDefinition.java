@@ -33,9 +33,17 @@ import org.javahelpers.simple.builders.processor.model.type.TypeName;
 public interface CodegenDefinition {
 
   /**
-   * The type this definition was analysed from.
+   * The definition's primary type name — the analysed type's own name.
    *
-   * @return the analysed type's name
+   * @return the primary type name
    */
   TypeName getTypeName();
+
+  /**
+   * The name of the type the definition's target will generate — the prediction a domain makes at
+   * task level, confirmed once the definition exists.
+   *
+   * @return the generated target type's name
+   */
+  TypeName targetTypeName();
 }

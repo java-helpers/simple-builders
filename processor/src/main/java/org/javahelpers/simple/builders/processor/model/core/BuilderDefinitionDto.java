@@ -143,6 +143,11 @@ public class BuilderDefinitionDto implements CodegenDefinition {
     return getBuilderTypeName();
   }
 
+  @Override
+  public TypeName targetTypeName() {
+    return getBuilderTypeName();
+  }
+
   public void setTypeName(TypeName typeName) {
     setBuilderTypeName(typeName);
   }
