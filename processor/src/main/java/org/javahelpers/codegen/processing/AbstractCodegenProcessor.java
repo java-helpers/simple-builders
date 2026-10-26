@@ -164,7 +164,7 @@ public abstract class AbstractCodegenProcessor<
     logger.infoTagged("PROCESSING ROUND START");
 
     tracker.startPhase();
-    ElementCollection collected = findElements(annotations, roundEnv);
+    ElementGroups collected = findElements(annotations, roundEnv);
     tracker.endPhase("Element Collection");
     logger.debugTagged("Processing round started.");
 
@@ -420,7 +420,7 @@ public abstract class AbstractCodegenProcessor<
    * @param roundEnv the round environment
    * @return the collected elements
    */
-  protected ElementCollection findElements(
+  protected ElementGroups findElements(
       Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
     return elementCollector().collect(annotations, roundEnv, logger);
   }
@@ -434,7 +434,7 @@ public abstract class AbstractCodegenProcessor<
    * @param context the processing context
    * @return the round's tasks, or empty when the round is gated out
    */
-  private List<CodegenTask<K>> plan(ElementCollection collected, C context) {
+  private List<CodegenTask<K>> plan(ElementGroups collected, C context) {
     List<CodegenTask<K>> tasks = planTasks(collected, context);
     if (collected.isEmpty() || isFinished(context)) {
       return List.of();
@@ -456,7 +456,7 @@ public abstract class AbstractCodegenProcessor<
    * @param context the processing context
    * @return the generation plan, possibly empty
    */
-  protected abstract List<CodegenTask<K>> planTasks(ElementCollection collected, C context);
+  protected abstract List<CodegenTask<K>> planTasks(ElementGroups collected, C context);
 
   /**
    * Registers the types this round will generate, up front, so references to them resolve during

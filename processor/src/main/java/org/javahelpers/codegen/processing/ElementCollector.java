@@ -100,7 +100,7 @@ public final class ElementCollector {
    * @param logger logger for opt-out diagnostics
    * @return the per-selector element groups, sorted by simple name
    */
-  public ElementCollection collect(
+  public ElementGroups collect(
       Set<? extends TypeElement> annotations, RoundEnvironment roundEnv, ProcessingLogger logger) {
     Map<String, List<Element>> groups = new LinkedHashMap<>();
     for (ElementSelector selector : selectors) {
@@ -131,7 +131,7 @@ public final class ElementCollector {
               .sorted(Comparator.comparing(element -> element.getSimpleName().toString()))
               .toList());
     }
-    return new ElementCollection(groups);
+    return new ElementGroups(groups);
   }
 
   private static List<TypeElement> matchingAnnotations(

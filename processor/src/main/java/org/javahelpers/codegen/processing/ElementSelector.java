@@ -35,7 +35,7 @@ import java.util.Set;
  * user-defined annotation types, since the supported annotation types stay {@code "*"}). Selected
  * elements carrying the {@link #optOutAnnotation} are dropped again.
  *
- * @param groupName the group name results are keyed by in {@link ElementCollection}
+ * @param groupName the group name results are keyed by in {@link ElementGroups}
  * @param annotationTypes annotation types that directly select an element
  * @param metaMarker meta-annotation marking annotation types that also select, or {@code null}
  * @param optOutAnnotation annotation that excludes a selected element again, or {@code null}

@@ -51,8 +51,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.codegen.processing.AbstractCodegenProcessor;
 import org.javahelpers.codegen.processing.CodegenProcessorConfiguration;
 import org.javahelpers.codegen.processing.CodegenTask;
-import org.javahelpers.codegen.processing.ElementCollection;
 import org.javahelpers.codegen.processing.ElementCollector;
+import org.javahelpers.codegen.processing.ElementGroups;
 import org.javahelpers.codegen.processing.ProcessorOptionRegistry;
 import org.javahelpers.codegen.processing.SourceFormatterResolver;
 import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration;
@@ -188,7 +188,7 @@ public class BuilderProcessor
 
   @Override
   protected List<CodegenTask<BuilderConfiguration>> planTasks(
-      ElementCollection collected, BuilderProcessingContext ctx) {
+      ElementGroups collected, BuilderProcessingContext ctx) {
     List<Element> sortedElements = collected.byGroup(GROUP_ANNOTATED_ELEMENTS);
     List<Element> sortedHolders = collected.byGroup(GROUP_EXTERNAL_TYPE_HOLDERS);
     ctx.debug("simple-builders: Found %d annotated elements.", sortedElements.size());

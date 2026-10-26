@@ -32,11 +32,11 @@ import javax.lang.model.element.Element;
  * The result of {@link ElementCollector#collect}: per-selector-name, deterministically ordered
  * element lists. Elements are sorted by simple name so generated output is reproducible.
  */
-public final class ElementCollection {
+public final class ElementGroups {
 
   private final Map<String, List<Element>> groups;
 
-  ElementCollection(Map<String, List<Element>> groups) {
+  ElementGroups(Map<String, List<Element>> groups) {
     this.groups = groups;
   }
 
@@ -46,8 +46,8 @@ public final class ElementCollection {
    * @param selectorName name of an {@link ElementSelector}
    * @return the selected elements, or an empty list when the selector matched nothing
    */
-  public List<Element> byName(String selectorName) {
-    return groups.getOrDefault(selectorName, List.of());
+  public List<Element> byGroup(String groupName) {
+    return groups.getOrDefault(groupName, List.of());
   }
 
   /**
