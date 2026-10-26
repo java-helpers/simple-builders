@@ -550,9 +550,15 @@ public class BuilderProcessor
       ctx.info(
           "simple-builders: Generating Jackson module in package '%s'",
           moduleDefinition.getTypeName().getPackageName());
-      ctx.addDeferredTarget(moduleDefinition);
+      try {
+        generateTarget(moduleDefinition);
+      } catch (Exception e) {
+        ctx.reportBasedOnStrictMode(
+            logger.prefixed("Error generating Jackson module for package %s: %s"),
+            moduleDefinition.getTypeName().getPackageName(),
+            e.getMessage());
+      }
     }
-    super.onProcessingOver(ctx);
     // Reset indentation after Jackson module generation as well
     ctx.resetIndentation();
   }

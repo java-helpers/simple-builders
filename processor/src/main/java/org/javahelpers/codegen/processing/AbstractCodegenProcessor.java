@@ -69,7 +69,7 @@ import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLo
  *       existsGuard → engine.generate(target, formatterResolver.resolve(target.mode))  [framework]
  *     onTaskGenerated(generation, ctx)                              [default: no-op]
  *   endRound(ctx)                                                       [default: no-op]
- *   last round: onProcessingOver(ctx)                                   [default: drains context.getDeferredTargets()]
+ *   last round: onProcessingOver(ctx)                                   [default: no-op]
  * </pre>
  *
  * <p>Per-element failures are caught and reported through {@link
@@ -277,7 +277,7 @@ public abstract class AbstractCodegenProcessor<
   /**
    * Generates one target class through the configured engine after checking the target does not
    * already exist. Also usable by the domain's {@link #onProcessingOver} implementation for
-   * deferred outputs.
+   * last-round outputs.
    *
    * @param target the class definition to generate
    * @throws CodeGenerationException if the target exists or generation fails
@@ -543,8 +543,8 @@ public abstract class AbstractCodegenProcessor<
       D definition, K configuration, C context) throws Exception;
 
   /**
-   * Event after a task's target generated successfully — the insert point for deferred-output
-   * accumulation, per-class metrics, and domain bookkeeping. Default: nothing.
+   * Event after a task's target generated successfully — the insert point for per-class metrics and
+   * domain bookkeeping. Default: nothing.
    *
    * @param generation the planned generation — task, analysed definition and generated target
    * @param context the processing context
@@ -552,25 +552,12 @@ public abstract class AbstractCodegenProcessor<
   protected void onTaskGenerated(PlannedGeneration<K, D> generation, C context) {}
 
   /**
-   * Callback for the last processing round — generates every target the domain pushed onto the
-   * context through {@link AnnotationProcessingContext#addDeferredTarget} via the same guarded path
-   * as round targets. Domain extensions log and push their deferred outputs, then call {@code
-   * super.onProcessingOver(context)} to drain, wrapped in their finalization (SPI flush, reports).
+   * Callback when processing is over — the domain's last-round finalization: SPI flush, reports,
+   * and last-round outputs generated directly through {@link #generateTarget}. Default: nothing.
    *
    * @param context the processing context
    */
-  protected void onProcessingOver(C context) {
-    for (GenerationTargetClassDto target : context.getDeferredTargets()) {
-      try {
-        generateTarget(target);
-      } catch (Exception e) {
-        context.reportBasedOnStrictMode(
-            logger.prefixed("Error generating target for package %s: %s"),
-            target.getTypeName().getPackageName(),
-            e.getMessage());
-      }
-    }
-  }
+  protected void onProcessingOver(C context) {}
 
   /** Callback at the end of a generating round — domain finalization. */
   protected void endRound(C context) {}

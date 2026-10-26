@@ -24,7 +24,6 @@
 
 package org.javahelpers.simple.builders.processor.processing;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,7 +42,6 @@ import javax.lang.model.util.Types;
 import org.javahelpers.codegen.processing.ProcessingTargetPackage;
 import org.javahelpers.simple.builders.processor.analysis.GeneratedTypes;
 import org.javahelpers.simple.builders.processor.analysis.TypeMappingContext;
-import org.javahelpers.simple.builders.processor.model.core.GenerationTargetClassDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.logging.ActivePerformanceTracker;
 import org.javahelpers.simple.builders.processor.processing.logging.NoOpPerformanceTracker;
@@ -88,12 +86,6 @@ public class AnnotationProcessingContext implements TypeMappingContext {
 
   /** Per-target processing state for the type currently being generated. */
   private ProcessingTargetPackage<?> processingTargetPackage;
-
-  /**
-   * Class definitions the domain pushed for deferred last-round generation — drained by the
-   * processing driver in the last round.
-   */
-  private final List<GenerationTargetClassDto> deferredTargets = new ArrayList<>();
 
   /**
    * Creates the context with default options (strict mode enabled, performance tracking disabled).
@@ -159,26 +151,6 @@ public class AnnotationProcessingContext implements TypeMappingContext {
    */
   public ProcessingTargetPackage<?> getProcessingTargetPackage() {
     return processingTargetPackage;
-  }
-
-  /**
-   * Queues a class definition for deferred generation in the last processing round. Domains push
-   * during a round ({@code onTaskGenerated}, end-of-round or finalization events) and the driver
-   * generates them once specification of every target has finished.
-   *
-   * @param target the deferred output and its diagnostic kind
-   */
-  public void addDeferredTarget(GenerationTargetClassDto target) {
-    deferredTargets.add(target);
-  }
-
-  /**
-   * The deferred outputs queued so far.
-   *
-   * @return the mutable deferred-target list
-   */
-  public List<GenerationTargetClassDto> getDeferredTargets() {
-    return deferredTargets;
   }
 
   /**
