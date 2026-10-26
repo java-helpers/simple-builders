@@ -59,7 +59,7 @@ import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLo
  *
  * <pre>
  *   ctx      = createContext(env, reader, logger)                       [implement — in init]
- *   elements = findElements(annotations, roundEnv, ctx)                 [default: configuration's elementCollector]
+ *   elements = findElements(annotations, roundEnv)                 [default: configuration's elementCollector]
  *   tasks    = planTasks(elements, ctx)                                 [implement]
  *   registerPlannedTaskResults(tasks, ctx)                                  [framework; per-task names from plannedTaskResultTypeNames() — implement]
  *   loop 1 — specification (guarded, strict-mode reporting):            [framework]
@@ -165,7 +165,7 @@ public abstract class AbstractCodegenProcessor<
     logger.infoTagged("PROCESSING ROUND START");
 
     tracker.startPhase();
-    ElementCollection collected = findElements(annotations, roundEnv, context);
+    ElementCollection collected = findElements(annotations, roundEnv);
     tracker.endPhase("Element Collection");
     logger.debugTagged("Processing round started.");
 
@@ -432,11 +432,10 @@ public abstract class AbstractCodegenProcessor<
    *
    * @param annotations the annotation types requested this round
    * @param roundEnv the round environment
-   * @param context the processing context
    * @return the collected elements
    */
   protected ElementCollection findElements(
-      Set<? extends TypeElement> annotations, RoundEnvironment roundEnv, C context) {
+      Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
     return elementCollector().collect(annotations, roundEnv, logger);
   }
 
