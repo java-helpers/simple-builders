@@ -77,7 +77,8 @@ public final class ProcessorOptionRegistry {
 
   /**
    * All supported option names: both the javac-style {@code -A} option name and the legacy
-   * compiler-argument spelling of every declared option.
+   * compiler-argument spelling of every declared option, including the framework-wired verbose and
+   * formatter-profile options.
    *
    * @return the supported option names for {@code AbstractProcessor.getSupportedOptions()}
    */
@@ -86,6 +87,12 @@ public final class ProcessorOptionRegistry {
     for (CompilerOption option : options) {
       supported.add(option.getOptionName());
       supported.add(option.getCompilerArgument());
+    }
+    for (CompilerOption wired : List.of(verboseOption, formatterProfileOption)) {
+      if (wired != null) {
+        supported.add(wired.getOptionName());
+        supported.add(wired.getCompilerArgument());
+      }
     }
     return supported;
   }
