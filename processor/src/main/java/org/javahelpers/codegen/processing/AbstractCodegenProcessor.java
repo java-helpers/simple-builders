@@ -91,14 +91,6 @@ public abstract class AbstractCodegenProcessor<
 
   /** Performance phase target generation is reported under — framework-owned. */
 
-  /** Default performance phase for {@link #analyse} — domains may name their own. */
-  private static final String PHASE_ANALYSIS = "Analysis";
-
-  /**
-   * Default performance phase for {@link #mapToTargetSpecification} — domains may name their own.
-   */
-  private static final String PHASE_TARGET_MAPPING = "Target Mapping";
-
   /** The domain's context instance. */
   protected C context;
 
