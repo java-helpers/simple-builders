@@ -81,7 +81,6 @@ public class AnnotationProcessingContext implements TypeMappingContext {
    */
   private final GeneratedTypes generatedTypes = new GeneratedTypes();
 
-  /** Package generated code is written to, or {@code null} when not generating into a package. */
   /** Per-target processing state for the type currently being generated. */
   private ProcessingTargetPackage<?> processingTargetPackage;
 
