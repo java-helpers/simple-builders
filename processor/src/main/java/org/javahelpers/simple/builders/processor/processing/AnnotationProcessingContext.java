@@ -39,7 +39,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
-import org.javahelpers.codegen.processing.ProcessingTargetPackage;
+import org.javahelpers.codegen.processing.CodegenTask;
 import org.javahelpers.simple.builders.processor.analysis.GeneratedTypes;
 import org.javahelpers.simple.builders.processor.analysis.TypeMappingContext;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
@@ -81,8 +81,8 @@ public class AnnotationProcessingContext implements TypeMappingContext {
    */
   private final GeneratedTypes generatedTypes = new GeneratedTypes();
 
-  /** Per-target processing state for the type currently being generated. */
-  private ProcessingTargetPackage<?> processingTargetPackage;
+  /** The task currently being processed — set by the driver before analysis and generation. */
+  private CodegenTask<?> currentTask;
 
   /**
    * Creates the context with default options (strict mode enabled, performance tracking disabled).
@@ -118,25 +118,23 @@ public class AnnotationProcessingContext implements TypeMappingContext {
   }
 
   /**
-   * Initializes the per-target state ({@link ProcessingTargetPackage}) for the type currently being
-   * generated. The processing driver calls this once per planned task before analysis starts, so
-   * downstream code can reach the current configuration and output package without threading both
-   * through every call.
+   * Initializes the task currently being processed. The processing driver calls this once per
+   * planned task before analysis starts, so downstream code can reach the current configuration and
+   * output package without threading both through every call.
    *
-   * @param processingTargetPackage the resolved configuration and output package of the current
-   *     target
+   * @param task the task currently being processed
    */
-  public void initProcessingTargetPackage(ProcessingTargetPackage<?> processingTargetPackage) {
-    this.processingTargetPackage = processingTargetPackage;
+  public void initProcessingTask(CodegenTask<?> task) {
+    this.currentTask = task;
   }
 
   /**
-   * The state of the current processing target.
+   * The task currently being processed.
    *
-   * @return the current target's configuration and output package
+   * @return the current task with its element, configuration and output package
    */
-  public ProcessingTargetPackage<?> getProcessingTargetPackage() {
-    return processingTargetPackage;
+  public CodegenTask<?> getCurrentTask() {
+    return currentTask;
   }
 
   /**
@@ -159,8 +157,7 @@ public class AnnotationProcessingContext implements TypeMappingContext {
     if (member.getModifiers().contains(Modifier.PRIVATE)) {
       return false;
     }
-    return processingTargetPackage != null
-        && getPackageName(member).equals(processingTargetPackage.targetPackage());
+    return currentTask != null && getPackageName(member).equals(currentTask.outputPackage());
   }
 
   /**

@@ -186,8 +186,7 @@ public abstract class AbstractCodegenProcessor<
       context.debugStartOperation("Processing element: " + task.element().getSimpleName());
       tracker.startClass(task.element().getSimpleName().toString());
       try {
-        context.initProcessingTargetPackage(
-            new ProcessingTargetPackage<>(task.configuration(), task.outputPackage()));
+        context.initProcessingTask(task);
         tracker.startPhase();
         List<D> definitions;
         try {
@@ -221,9 +220,7 @@ public abstract class AbstractCodegenProcessor<
       context.debugStartOperation(
           "Generating targets for: " + work.task().element().getSimpleName());
       try {
-        context.initProcessingTargetPackage(
-            new ProcessingTargetPackage<>(
-                work.task().configuration(), work.task().outputPackage()));
+        context.initProcessingTask(work.task());
         tracker.startPhase();
         generateTarget(work.target());
         tracker.endPhase("Code Generation");

@@ -41,7 +41,7 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
 import javax.tools.JavaFileObject;
-import org.javahelpers.codegen.processing.ProcessingTargetPackage;
+import org.javahelpers.codegen.processing.CodegenTask;
 import org.javahelpers.simple.builders.core.enums.OptionState;
 import org.javahelpers.simple.builders.processor.analysis.BuilderScopeResolver;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
@@ -1314,8 +1314,8 @@ class BuilderScopeResolverTest {
       BuilderProcessingContext context =
           new BuilderProcessingContext(
               ProcessingLogger.create(processingEnv), BuilderConfiguration.DEFAULT, processingEnv);
-      context.initProcessingTargetPackage(
-          new ProcessingTargetPackage(configuration("lib", "Builder"), ""));
+      context.initProcessingTask(
+          new CodegenTask<>(helper, configuration("lib", "Builder"), helper, ""));
       BuilderScopeResolver resolver = context.getBuilderScopeResolver();
       // Register the type as generated, mirroring the real processor which calls
       // registerGeneratedBuilder before any resolution happens.
@@ -1325,59 +1325,59 @@ class BuilderScopeResolverTest {
       second = resolver.resolveUsableBuilderType(helper);
       // Clear registration before testing scope-only behavior
       resolver.resetGeneratedBuilders();
-      context.initProcessingTargetPackage(
-          new ProcessingTargetPackage(configuration("other", "OtherBuilder"), ""));
+      context.initProcessingTask(
+          new CodegenTask<>(helper, configuration("other", "OtherBuilder"), helper, ""));
       afterConfigurationChange = resolver.resolveUsableBuilderType(helper);
-      context.initProcessingTargetPackage(
-          new ProcessingTargetPackage(usageOnlyConfiguration("other"), ""));
+      context.initProcessingTask(
+          new CodegenTask<>(helper, usageOnlyConfiguration("other"), helper, ""));
       beforeRegistration = resolver.resolveUsableBuilderType(helper);
       // Registration alone is not enough — the type must be in scope
       resolver.registerGeneratedBuilder(
           new TypeName("lib", "LibHelper"), new TypeName("lib", "LibHelperBuilder"));
       afterRegistration = resolver.resolveUsableBuilderType(helper);
       // Clear registration for usage-scope classpath lookup tests
-      context.initProcessingTargetPackage(
-          new ProcessingTargetPackage(usageOnlyConfiguration("lib"), ""));
+      context.initProcessingTask(
+          new CodegenTask<>(helper, usageOnlyConfiguration("lib"), helper, ""));
       resolver.resetGeneratedBuilders();
       usageBeforeRegistration = resolver.resolveUsableBuilderType(helper);
       resolver.registerGeneratedBuilder(
           new TypeName("lib", "LibHelper"), new TypeName("lib", "LibHelperBuilder"));
       usageAfterRegistration = resolver.resolveUsableBuilderType(helper);
       // Usage scope without @SimpleBuilder annotation — type existence check only
-      context.initProcessingTargetPackage(
-          new ProcessingTargetPackage(usageOnlyConfiguration("lib"), ""));
+      context.initProcessingTask(
+          new CodegenTask<>(helper, usageOnlyConfiguration("lib"), helper, ""));
       resolver.resetGeneratedBuilders();
       usageWithoutAnnotation = resolver.resolveUsableBuilderType(helper);
       // Usage scope with builderUsageSuffix="Factory"
-      context.initProcessingTargetPackage(
-          new ProcessingTargetPackage(usageWithSuffixConfiguration("lib", "Factory"), ""));
+      context.initProcessingTask(
+          new CodegenTask<>(helper, usageWithSuffixConfiguration("lib", "Factory"), helper, ""));
       usageWithSuffix = resolver.resolveUsableBuilderType(helper);
       // Usage scope with default suffix (no builderUsageSuffix configured)
-      context.initProcessingTargetPackage(
-          new ProcessingTargetPackage(usageOnlyConfiguration("lib"), ""));
+      context.initProcessingTask(
+          new CodegenTask<>(helper, usageOnlyConfiguration("lib"), helper, ""));
       usageDefaultSuffix = resolver.resolveUsableBuilderType(helper);
       // Generated builder in the same package as the referenced builder: package-private
       // contract members are accessible
-      context.initProcessingTargetPackage(
-          new ProcessingTargetPackage(usageOnlyConfiguration("lib"), "lib"));
+      context.initProcessingTask(
+          new CodegenTask<>(helper, usageOnlyConfiguration("lib"), helper, "lib"));
       usagePackagePrivate = resolver.resolveUsableBuilderType(helper);
       // usingExistingBuilders=DISABLED: existing builders are not reused, but a builder
       // generated in the current round is own generation and still resolves
-      context.initProcessingTargetPackage(
-          new ProcessingTargetPackage(existingBuildersDisabledConfiguration("lib"), ""));
+      context.initProcessingTask(
+          new CodegenTask<>(helper, existingBuildersDisabledConfiguration("lib"), helper, ""));
       usageWithExistingDisabled = resolver.resolveUsableBuilderType(helper);
       resolver.registerGeneratedBuilder(
           new TypeName("lib", "LibHelper"), new TypeName("lib", "LibHelperBuilder"));
       usageGeneratedWithExistingDisabled = resolver.resolveUsableBuilderType(helper);
       // usingFieldFunctionPrefill=DISABLED: field functions are not used as prefilled path
-      context.initProcessingTargetPackage(
-          new ProcessingTargetPackage(prefillDisabledConfiguration("lib"), ""));
+      context.initProcessingTask(
+          new CodegenTask<>(helper, prefillDisabledConfiguration("lib"), helper, ""));
       resolver.resetGeneratedBuilders();
       usagePrefillDisabled = resolver.resolveUsableBuilderType(helper);
       // Builder-contract probe for java.lang.String: StringBuilder must not resolve because its
       // only parameterless method returning String is toString(), an Object signature
-      context.initProcessingTargetPackage(
-          new ProcessingTargetPackage(usageOnlyConfiguration("java.lang"), ""));
+      context.initProcessingTask(
+          new CodegenTask<>(helper, usageOnlyConfiguration("java.lang"), helper, ""));
       resolver.resetGeneratedBuilders();
       TypeElement stringElement =
           processingEnv.getElementUtils().getTypeElement("java.lang.String");

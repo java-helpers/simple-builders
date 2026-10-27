@@ -39,8 +39,9 @@ import javax.lang.model.element.Element;
  * @param reportingElement the element diagnostics are reported on — the declaring holder for
  *     externally declared types, otherwise the element itself
  * @param outputPackage the package generated code is written to, or {@code null} when the domain
- *     does not carry one — planning computes it so the driver can initialize {@link
- *     ProcessingTargetPackage} before analysis
+ *     does not carry one — planning computes it so the driver can pass the task to {@link
+ *     org.javahelpers.simple.builders.processor.processing.AnnotationProcessingContext#initProcessingTask}
+ *     before analysis
  */
 public record CodegenTask<K extends CodegenConfiguration>(
     Element element, K configuration, Element reportingElement, String outputPackage) {}
