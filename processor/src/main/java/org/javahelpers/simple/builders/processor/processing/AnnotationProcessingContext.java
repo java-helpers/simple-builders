@@ -118,13 +118,13 @@ public class AnnotationProcessingContext implements TypeMappingContext {
   }
 
   /**
-   * Initializes the task currently being processed. The processing driver calls this once per
-   * planned task before analysis starts, so downstream code can reach the current configuration and
-   * output package without threading both through every call.
+   * Sets the task currently being processed. The processing driver calls this once per planned task
+   * before analysis starts, so downstream code can reach the current configuration and output
+   * package without threading both through every call.
    *
    * @param task the task currently being processed
    */
-  public void initProcessingTask(CodegenTask<?> task) {
+  public void setCurrentTask(CodegenTask<?> task) {
     this.currentTask = task;
   }
 
