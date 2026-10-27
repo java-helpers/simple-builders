@@ -76,10 +76,10 @@ The Simple Builders processor provides **conditional hierarchical logging** to b
 - Example: `simple-builders: Successfully generated 3 target(s) in this processing round`
 
 ### **When Debug Mode is ENABLED (-Averbose=true):**
-- INFO and WARNING messages have no extra prefix, DEBUG messages are posted on `[INFO]` chanel so they have the prefix `[INFO] [DEBUG]`
+- Every message carries the `simple-builders:` logger prefix; DEBUG messages are posted on the `[INFO]` chanel so they show as `[INFO] [DEBUG]`
 - Provides full visibility into the processing hierarchy
-- Example: `[INFO]         │  └─ simple-builders: Successfully generated 3 target(s) in this processing round`
-- Example: `[WARNING]      │  │  ├─ Builder field conflict: field 'name'...`
+- Example: `[INFO]         simple-builders: │  └─ Successfully generated 3 target(s) in this processing round`
+- Example: `[WARNING]      simple-builders: │  │  ├─ Builder field conflict: field 'name'...`
 - Example: `[INFO] [DEBUG] simple-builders: │  │  │  └─ Processing method: setName`
 - All message types align vertically despite different prefix lengths
 
@@ -112,7 +112,7 @@ When debug logging is enabled, you'll see detailed output with visual separators
 [INFO] [DEBUG] simple-builders: ├─ Extracting builder definition from: org.example.CustomerDto
 [INFO] [DEBUG] simple-builders: │  └─ Builder will be generated as: org.example.CustomerDtoBuilder
 [INFO] [DEBUG] simple-builders: │  └─ Processed 2 possible setters: added 2 fields, skipped 0
-[WARNING]      │  │  └─ simple-builders: Builder field conflict: field 'name' (type Optional) renamed to 'nameOptional' to avoid conflict
+[WARNING]      simple-builders: │  │  └─ Builder field conflict: field 'name' (type Optional) renamed to 'nameOptional' to avoid conflict
 [INFO] [DEBUG] simple-builders: Generating targets for: PersonDto
 [INFO] [DEBUG] simple-builders: ├─ Code generation for builder: PersonDtoBuilder
 [INFO] [DEBUG] simple-builders: │  ├─ Class builder created
