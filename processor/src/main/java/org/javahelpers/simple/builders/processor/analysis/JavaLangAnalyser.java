@@ -322,15 +322,15 @@ public final class JavaLangAnalyser {
    * @param context the processing context providing element utilities
    * @return the attribute's raw items, or an empty list when absent or not array-valued
    */
-  public static List<?> findAnnotationAttributeArray(
+  public static List<Object> findAnnotationAttributeArray(
       AnnotationMirror annotationMirror,
       String attributeName,
       AnnotationProcessingContext context) {
-    return findAnnotationAttribute(annotationMirror, attributeName, context)
-        .map(AnnotationValue::getValue)
-        .filter(List.class::isInstance)
-        .map(List.class::cast)
-        .orElse(List.of());
+    Object value =
+        findAnnotationAttribute(annotationMirror, attributeName, context)
+            .map(AnnotationValue::getValue)
+            .orElse(null);
+    return value instanceof List<?> list ? new ArrayList<>(list) : List.of();
   }
 
   /**
