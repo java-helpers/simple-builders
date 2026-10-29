@@ -580,6 +580,7 @@ public abstract class AbstractCodegenProcessor<
    * @return the domain definitions, possibly empty
    * @throws Exception when analysis fails; reported as a per-element failure
    */
+  @SuppressWarnings("java:S112") // extension point — the domain cannot enumerate its failures
   protected abstract List<D> analyse(CodegenTask<K> task, C context) throws Exception;
 
   /**
@@ -593,6 +594,7 @@ public abstract class AbstractCodegenProcessor<
    * @return the class definition to generate
    * @throws Exception when mapping fails; reported as a per-element failure
    */
+  @SuppressWarnings("java:S112") // extension point — the domain cannot enumerate its failures
   protected abstract GenerationTargetClassDto mapToTargetSpecification(
       D definition, K configuration, C context) throws Exception;
 
