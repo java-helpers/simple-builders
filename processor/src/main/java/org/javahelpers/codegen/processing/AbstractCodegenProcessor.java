@@ -335,12 +335,12 @@ public abstract class AbstractCodegenProcessor<
   private ProcessingLogger createLogger(
       ProcessingEnvironment processingEnv, CompilerArgumentsReader reader) {
     String loggerPrefix = provideLoggerPrefix();
-    ProcessingLogger logger =
+    ProcessingLogger processingLogger =
         optionRegistry().isVerboseRequested(reader)
             ? ProcessingLogger.createVerbose(processingEnv, loggerPrefix)
             : ProcessingLogger.create(processingEnv, loggerPrefix);
-    logger.debug("Starting %s...", getClass().getSimpleName());
-    return logger;
+    processingLogger.debug("Starting %s...", getClass().getSimpleName());
+    return processingLogger;
   }
 
   /**
