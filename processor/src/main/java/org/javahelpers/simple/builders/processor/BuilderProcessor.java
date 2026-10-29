@@ -134,9 +134,6 @@ public class BuilderProcessor
     super(PROCESSOR_CONFIGURATION);
   }
 
-  /** The global configuration resolved from compiler arguments — needed by several hooks. */
-  private BuilderConfiguration globalConfig;
-
   private JacksonModuleGenerator jacksonModuleGenerator;
 
   /** The project name prefixes diagnostics — not the class name. */
@@ -156,7 +153,8 @@ public class BuilderProcessor
       ProcessingEnvironment processingEnv,
       CompilerArgumentsReader reader,
       ProcessingLogger logger) {
-    this.globalConfig = BuilderConfigurationReader.readCompilerConfiguration(reader, logger);
+    BuilderConfiguration globalConfig =
+        BuilderConfigurationReader.readCompilerConfiguration(reader, logger);
     logger.debug("Loaded global configuration from compiler arguments: %s", globalConfig);
     SimpleBuildersSpiIntegration.initCompilation(processingEnv.getElementUtils());
     this.jacksonModuleGenerator = new JacksonModuleGenerator(processingEnv, logger, globalConfig);
