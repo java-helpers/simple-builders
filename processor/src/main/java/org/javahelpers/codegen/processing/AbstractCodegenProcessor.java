@@ -91,10 +91,6 @@ public abstract class AbstractCodegenProcessor<
         D extends CodegenDefinition>
     extends AbstractProcessor {
 
-  /** Performance phase the element collection is reported under — framework-owned. */
-
-  /** Performance phase target generation is reported under — framework-owned. */
-
   /** The domain's context instance. */
   protected C context;
 
@@ -417,8 +413,7 @@ public abstract class AbstractCodegenProcessor<
    * @param supportedTypes the supported annotation type names the round was processed for
    * @return {@code true} to claim the supported annotations
    */
-  // codeql[java/unused-parameter] — extension point; domains may need every parameter.
-  protected boolean claimsAnnotations(Set<String> supportedTypes) {
+  protected boolean claimsAnnotations(Set<String> supportedTypes) { // codeql[java/unused-parameter]
     return false;
   }
 
@@ -522,8 +517,8 @@ public abstract class AbstractCodegenProcessor<
    * @param context the processing context
    * @return the generated type names (empty when the task registers nothing)
    */
-  // codeql[java/unused-parameter] — extension point; domains may need every parameter.
-  protected abstract List<TypeName> plannedTaskResultTypeNames(CodegenTask<K> task, C context);
+  protected abstract List<TypeName> plannedTaskResultTypeNames(
+      CodegenTask<K> task, C context); // codeql[java/unused-parameter]
 
   /**
    * Runs after a predicted type name is registered for a task — the extension point for domain
@@ -533,8 +528,8 @@ public abstract class AbstractCodegenProcessor<
    * @param plannedName the predicted type name just registered for it
    * @param context the processing context
    */
-  // codeql[java/unused-parameter] — extension point; domains may need every parameter.
-  protected void onTaskResultRegistered(CodegenTask<K> task, TypeName plannedName, C context) {
+  protected void onTaskResultRegistered(
+      CodegenTask<K> task, TypeName plannedName, C context) { // codeql[java/unused-parameter]
     // Extension point for domains — registration bookkeeping is already done by the driver.
   }
 
@@ -545,8 +540,7 @@ public abstract class AbstractCodegenProcessor<
    *
    * @param context the processing context
    */
-  // codeql[java/unused-parameter] — extension point; domains may need every parameter.
-  protected void onRoundStart(C context) {
+  protected void onRoundStart(C context) { // codeql[java/unused-parameter]
     // Extension point for domains — the driver performs no per-round setup beyond logging.
   }
 
@@ -558,8 +552,8 @@ public abstract class AbstractCodegenProcessor<
    * @param tasks the tasks the domain's {@link #planTasks} produced this round
    * @param context the processing context
    */
-  // codeql[java/unused-parameter] — extension point; domains may need every parameter.
-  protected void onTasksPlanned(List<? extends CodegenTask<K>> tasks, C context) {
+  protected void onTasksPlanned(
+      List<? extends CodegenTask<K>> tasks, C context) { // codeql[java/unused-parameter]
     // Extension point for domains — planning bookkeeping is already done by the driver.
   }
 
@@ -572,8 +566,7 @@ public abstract class AbstractCodegenProcessor<
    * @param context the processing context
    * @return {@code true} to skip this round
    */
-  // codeql[java/unused-parameter] — extension point; domains may need every parameter.
-  protected boolean isFinished(C context) {
+  protected boolean isFinished(C context) { // codeql[java/unused-parameter]
     return processedOnce;
   }
 
@@ -610,8 +603,8 @@ public abstract class AbstractCodegenProcessor<
    * @param generation the planned generation — task, analysed definition and generated target
    * @param context the processing context
    */
-  // codeql[java/unused-parameter] — extension point; domains may need every parameter.
-  protected void onTaskGenerated(PlannedGeneration<K, D> generation, C context) {
+  protected void onTaskGenerated(
+      PlannedGeneration<K, D> generation, C context) { // codeql[java/unused-parameter]
     // Extension point for domains — the target is already generated at this point.
   }
 
@@ -621,8 +614,7 @@ public abstract class AbstractCodegenProcessor<
    *
    * @param context the processing context
    */
-  // codeql[java/unused-parameter] — extension point; domains may need every parameter.
-  protected void onProcessingOver(C context) {
+  protected void onProcessingOver(C context) { // codeql[java/unused-parameter]
     // Extension point for domains — e.g. last-round outputs via {@link #generateTarget}.
   }
 
@@ -631,8 +623,7 @@ public abstract class AbstractCodegenProcessor<
    *
    * @param context the processing context
    */
-  // codeql[java/unused-parameter] — extension point; domains may need every parameter.
-  protected void endRound(C context) {
+  protected void endRound(C context) { // codeql[java/unused-parameter]
     // Extension point for domains — e.g. per-round finalization.
   }
 
