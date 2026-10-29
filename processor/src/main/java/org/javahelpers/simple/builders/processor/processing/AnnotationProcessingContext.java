@@ -133,6 +133,7 @@ public class AnnotationProcessingContext implements TypeMappingContext {
    *
    * @return the current task with its element, configuration and output package
    */
+  @SuppressWarnings("java:S1452") // the task's configuration type varies per domain
   public CodegenTask<?> getCurrentTask() {
     return currentTask;
   }
