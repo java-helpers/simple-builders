@@ -553,7 +553,7 @@ public abstract class AbstractCodegenProcessor<
    * @param context the processing context
    */
   protected void onTasksPlanned(
-      List<? extends CodegenTask<K>> tasks, C context) { // codeql[java/unused-parameter]
+      List<CodegenTask<K>> tasks, C context) { // codeql[java/unused-parameter]
     // Extension point for domains — planning bookkeeping is already done by the driver.
   }
 
