@@ -754,6 +754,22 @@ class SimpleBuilderForTest {
         """);
   }
 
+  @Test
+  void sourcePackages_NoResolvableTypes_Warns() {
+    JavaFileObject holder =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFor;
+            @SimpleBuilderFor(sourcePackages = "nonexistent.pkg")
+            public class Builders {}
+            """);
+
+    Compilation compilation = ProcessorTestUtils.createCompiler().compile(holder);
+
+    assertThat(compilation).hadWarningContaining("resolves no types - nothing to generate");
+  }
+
   private static JavaFileObject holder(String pkg, String className, String targetType) {
     return ProcessorTestUtils.forSource(
         """
