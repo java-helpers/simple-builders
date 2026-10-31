@@ -1,8 +1,8 @@
 package org.javahelpers.codegen.processing;
 
 import static com.google.testing.compile.CompilationSubject.assertThat;
-import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.contains;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils.loadGeneratedSource;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.google.testing.compile.Compilation;
 import java.lang.annotation.ElementType;
@@ -26,7 +26,6 @@ import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.AnnotationProcessingContext;
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsReader;
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
-import org.javahelpers.simple.builders.processor.testing.ProcessorAsserts;
 import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
 import org.junit.jupiter.api.Test;
 
@@ -182,11 +181,23 @@ public class MinimalCodegenProcessorTest {
     // Then
     assertThat(compilation).succeeded();
     String generatedCode = loadGeneratedSource(compilation, "PersonBuilder");
-    ProcessorAsserts.assertingResult(
-        generatedCode,
-        contains("public class PersonBuilder"),
-        contains("private Person target = new Person();"),
-        contains("target.setName(name);"),
-        contains("public Person build()"));
+    // The whole expected target as one textblock — the Roaster output pins structure,
+    // delegation and the target field; nothing generated is left unchecked.
+    assertEquals(
+        """
+        package test;
+        public class PersonBuilder {
+
+        \tprivate Person target = new Person();
+
+        \tpublic PersonBuilder name(String name) {
+        \t\ttarget.setName(name);
+        \t\treturn this;
+        \t}
+
+        \tpublic Person build() {
+        \t\treturn target;
+        \t} }""",
+        generatedCode.strip());
   }
 }
