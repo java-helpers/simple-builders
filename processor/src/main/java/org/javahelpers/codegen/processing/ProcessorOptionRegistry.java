@@ -24,6 +24,7 @@
 
 package org.javahelpers.codegen.processing;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -88,7 +89,7 @@ public final class ProcessorOptionRegistry {
       supported.add(option.getOptionName());
       supported.add(option.getCompilerArgument());
     }
-    for (CompilerOption wired : List.of(verboseOption, formatterProfileOption)) {
+    for (CompilerOption wired : Arrays.asList(verboseOption, formatterProfileOption)) {
       if (wired != null) {
         supported.add(wired.getOptionName());
         supported.add(wired.getCompilerArgument());
