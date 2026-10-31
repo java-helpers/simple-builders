@@ -206,20 +206,20 @@ public class MinimalCodegenProcessorTest {
     // The whole expected target as one textblock — the Roaster output pins structure,
     // delegation and the target field; nothing generated is left unchecked.
     assertEquals(
-        """
-        package test;
-        public class PersonBuilder {
+"""
+package test;
+public class PersonBuilder {
 
-        \tprivate Person target = new Person();
+	private Person target = new Person();
 
-        \tpublic PersonBuilder name(String name) {
-        \t\ttarget.setName(name);
-        \t\treturn this;
-        \t}
+	public PersonBuilder name(String name) {
+		target.setName(name);
+		return this;
+	}
 
-        \tpublic Person build() {
-        \t\treturn target;
-        \t} }""",
+	public Person build() {
+		return target;
+	} }""",
         generatedCode.strip());
   }
 }
