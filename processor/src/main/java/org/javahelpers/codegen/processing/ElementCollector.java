@@ -136,6 +136,10 @@ public final class ElementCollector {
 
   private static List<TypeElement> matchingAnnotations(
       Set<? extends TypeElement> annotations, ElementSelector selector) {
+    Class<? extends java.lang.annotation.Annotation> metaMarker = selector.metaMarker();
+    if (metaMarker == null) {
+      return List.of();
+    }
     List<TypeElement> result = new ArrayList<>();
     for (TypeElement annotation : annotations) {
       if (annotation.getKind() != ElementKind.ANNOTATION_TYPE) {
@@ -143,9 +147,7 @@ public final class ElementCollector {
       }
       // Direct annotation types are already covered by the Class overload above — only
       // meta-annotated types (e.g. template annotations carrying the marker) remain to match
-      boolean metaMarked =
-          selector.metaMarker() != null && annotation.getAnnotation(selector.metaMarker()) != null;
-      if (metaMarked) {
+      if (annotation.getAnnotation(metaMarker) != null) {
         result.add(annotation);
       }
     }
