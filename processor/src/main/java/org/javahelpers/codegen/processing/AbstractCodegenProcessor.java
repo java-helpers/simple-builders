@@ -38,6 +38,7 @@ import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
 import org.javahelpers.simple.builders.processor.classgen.ClassCodeGenerator;
 import org.javahelpers.simple.builders.processor.classgen.CodeGenerationException;
 import org.javahelpers.simple.builders.processor.classgen.GenerationEnvironment;
+import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterCodeGenerator;
 import org.javahelpers.simple.builders.processor.model.core.GenerationTargetClassDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.AnnotationProcessingContext;
@@ -357,15 +358,18 @@ public abstract class AbstractCodegenProcessor<
 
   /**
    * Creates the code generation engine — the {@link ClassCodeGenerator} backend port the domain
-   * wires over {@link #generationEnvironment}.
+   * wires over {@link #generationEnvironment}. Default: the Roaster backend; override to plug in a
+   * different engine.
    *
    * @param processingEnv the processing environment
    * @param logger the processing logger
    * @param context the processing context
    * @return the domain's code generation engine
    */
-  protected abstract ClassCodeGenerator createGenerator(
-      ProcessingEnvironment processingEnv, ProcessingLogger logger, C context);
+  protected ClassCodeGenerator createGenerator(
+      ProcessingEnvironment processingEnv, ProcessingLogger logger, C context) {
+    return new RoasterCodeGenerator(generationEnvironment(processingEnv, logger, context));
+  }
 
   /**
    * The {@link GenerationEnvironment} the engine runs against — processing environment, logger,

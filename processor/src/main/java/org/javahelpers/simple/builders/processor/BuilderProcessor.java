@@ -59,8 +59,6 @@ import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFor;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFors;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyser;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
-import org.javahelpers.simple.builders.processor.classgen.ClassCodeGenerator;
-import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterCodeGenerator;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 import org.javahelpers.simple.builders.processor.generators.integration.JacksonModuleGenerator;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
@@ -137,12 +135,6 @@ public class BuilderProcessor
   }
 
   private JacksonModuleGenerator jacksonModuleGenerator;
-
-  @Override
-  protected ClassCodeGenerator createGenerator(
-      ProcessingEnvironment processingEnv, ProcessingLogger logger, BuilderProcessingContext ctx) {
-    return new RoasterCodeGenerator(generationEnvironment(processingEnv, logger, ctx));
-  }
 
   @Override
   protected BuilderProcessingContext createContext(
