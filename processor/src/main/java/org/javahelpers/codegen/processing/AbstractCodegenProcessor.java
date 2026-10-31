@@ -319,13 +319,14 @@ public abstract class AbstractCodegenProcessor<
 
   /**
    * The diagnostic prefix carried by every emitted log line ("{@code prefix: }" — applied by the
-   * logger to each message). Default: the processor's simple class name; override for a shorter
-   * domain prefix.
+   * logger to each message). Default: the {@link CodegenProcessorConfiguration#loggerPrefix()}
+   * declaration, or the processor's simple class name when unset; override for a dynamic prefix.
    *
    * @return the logger prefix
    */
   protected String provideLoggerPrefix() {
-    return getClass().getSimpleName();
+    String configured = processorConfiguration.loggerPrefix();
+    return configured != null ? configured : getClass().getSimpleName();
   }
 
   /**

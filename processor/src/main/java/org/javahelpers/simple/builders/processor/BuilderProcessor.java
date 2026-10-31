@@ -128,6 +128,7 @@ public class BuilderProcessor
           .elementCollector(ELEMENT_COLLECTOR)
           .optionRegistry(OPTION_REGISTRY)
           .requiredSourceVersion("RELEASE_17")
+          .loggerPrefix("simple-builders")
           .build();
 
   /** Creates the processor — javac instantiates it reflectively. */
@@ -136,12 +137,6 @@ public class BuilderProcessor
   }
 
   private JacksonModuleGenerator jacksonModuleGenerator;
-
-  /** The project name prefixes diagnostics — not the class name. */
-  @Override
-  protected String provideLoggerPrefix() {
-    return "simple-builders";
-  }
 
   @Override
   protected ClassCodeGenerator createGenerator(

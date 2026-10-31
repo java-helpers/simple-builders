@@ -37,11 +37,14 @@ import java.util.List;
  * @param optionRegistry the processor's declared compiler options; default: an empty registry
  * @param requiredSourceVersion the minimum source level by name (e.g. {@code "RELEASE_17"});
  *     default: the running JDK's latest supported release
+ * @param loggerPrefix the diagnostic prefix carried by every emitted log line ({@code "prefix: "});
+ *     default: the processor's simple class name
  */
 public record CodegenProcessorConfiguration(
     ElementCollector elementCollector,
     ProcessorOptionRegistry optionRegistry,
-    String requiredSourceVersion) {
+    String requiredSourceVersion,
+    String loggerPrefix) {
 
   /**
    * Creates a builder with all defaults applied — only {@link
@@ -58,6 +61,7 @@ public record CodegenProcessorConfiguration(
     private ElementCollector elementCollector;
     private ProcessorOptionRegistry optionRegistry = new ProcessorOptionRegistry(List.of());
     private String requiredSourceVersion;
+    private String loggerPrefix;
 
     private Builder() {}
 
@@ -98,6 +102,18 @@ public record CodegenProcessorConfiguration(
     }
 
     /**
+     * Sets the diagnostic prefix every emitted log line carries ({@code "prefix: "}). Default: the
+     * processor's simple class name.
+     *
+     * @param loggerPrefix the logger prefix
+     * @return this builder
+     */
+    public Builder loggerPrefix(String loggerPrefix) {
+      this.loggerPrefix = loggerPrefix;
+      return this;
+    }
+
+    /**
      * Builds the configuration.
      *
      * @return the configuration
@@ -108,7 +124,7 @@ public record CodegenProcessorConfiguration(
         throw new IllegalStateException("elementCollector is required");
       }
       return new CodegenProcessorConfiguration(
-          elementCollector, optionRegistry, requiredSourceVersion);
+          elementCollector, optionRegistry, requiredSourceVersion, loggerPrefix);
     }
   }
 }
