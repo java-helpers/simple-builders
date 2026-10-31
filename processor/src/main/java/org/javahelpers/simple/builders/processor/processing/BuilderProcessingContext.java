@@ -116,23 +116,17 @@ public final class BuilderProcessingContext extends AnnotationProcessingContext 
   }
 
   /**
-   * Get the unified generator registry for both field-level method generation and builder-level
-   * enhancement.
-   *
-   * <p>The registry is lazily initialized on first access to avoid circular dependency issues.
+   * The unified generator registry for both field-level method generation and builder-level
+   * enhancement — lazily initialized on first access to avoid circular dependency issues, so the
+   * first call doubles as the init.
    *
    * @return the generator registry
    */
-  public GeneratorRegistry getGeneratorRegistry() {
+  public GeneratorRegistry initGeneratorRegistry() {
     if (generatorRegistry == null) {
       generatorRegistry = new GeneratorRegistry(this, processingEnv);
     }
     return generatorRegistry;
-  }
-
-  /** Initializes the generator registry eagerly — triggers the lazy creation up front. */
-  public void initGeneratorRegistry() {
-    getGeneratorRegistry();
   }
 
   /**
