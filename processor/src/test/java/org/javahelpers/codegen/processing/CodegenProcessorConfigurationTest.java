@@ -33,8 +33,8 @@ class CodegenProcessorConfigurationTest {
 
   @Test
   void build_withoutElementCollector_throwsIllegalState() {
-    assertThrows(
-        IllegalStateException.class, () -> CodegenProcessorConfiguration.builder().build());
+    CodegenProcessorConfiguration.Builder builder = CodegenProcessorConfiguration.builder();
+    assertThrows(IllegalStateException.class, builder::build);
   }
 
   @Test
