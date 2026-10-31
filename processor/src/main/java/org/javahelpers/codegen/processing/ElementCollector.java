@@ -86,6 +86,20 @@ public final class ElementCollector {
       return selector(selectorBuilder.build());
     }
 
+    /**
+     * Adds a selector matching elements by annotation type alone — the convenience for the common
+     * single-annotation case with no meta-marker, opt-out or named group (read the result via
+     * {@link ElementGroups#all()}).
+     *
+     * @param annotationTypes the annotation types selecting an element
+     * @return this builder
+     */
+    @SafeVarargs
+    public final Builder selector(
+        Class<? extends java.lang.annotation.Annotation>... annotationTypes) {
+      return selector(selector -> selector.groupName("default").annotationTypes(annotationTypes));
+    }
+
     /** Builds the spec. */
     public ElementCollector build() {
       return new ElementCollector(selectors);
