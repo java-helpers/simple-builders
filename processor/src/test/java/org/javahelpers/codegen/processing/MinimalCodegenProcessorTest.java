@@ -15,6 +15,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.tools.JavaFileObject;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.core.enums.FormattingMode;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyser;
@@ -132,7 +133,7 @@ public class MinimalCodegenProcessorTest {
 
       for (ExecutableElement setter : definition.setters()) {
         String setterName = setter.getSimpleName().toString();
-        String methodName = StringUtils.uncapitalize(StringUtils.removeStart(setterName, "set"));
+        String methodName = StringUtils.uncapitalize(Strings.CI.removeStart(setterName, "set"));
         MethodDto method = new MethodDto(methodName, definition.builderTypeName());
         method.setModifier(AccessModifier.PUBLIC);
         String paramName = setter.getParameters().get(0).getSimpleName().toString();
