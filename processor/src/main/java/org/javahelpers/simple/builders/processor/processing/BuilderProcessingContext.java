@@ -130,6 +130,11 @@ public final class BuilderProcessingContext extends AnnotationProcessingContext 
     return generatorRegistry;
   }
 
+  /** Initializes the generator registry eagerly — triggers the lazy creation up front. */
+  public void initGeneratorRegistry() {
+    getGeneratorRegistry();
+  }
+
   /**
    * Get the builder scope resolver for deciding whether a builder may be referenced.
    *

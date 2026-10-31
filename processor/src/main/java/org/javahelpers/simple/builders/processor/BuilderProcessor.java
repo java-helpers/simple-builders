@@ -152,7 +152,7 @@ public class BuilderProcessor
     // Initialize GeneratorRegistry once during processor initialization
     ctx.debugStartOperation("Initializing generator registry");
     try {
-      ctx.getGeneratorRegistry();
+      ctx.initGeneratorRegistry();
     } finally {
       ctx.debugEndOperation();
     }
