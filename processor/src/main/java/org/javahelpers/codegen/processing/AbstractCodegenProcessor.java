@@ -463,10 +463,15 @@ public abstract class AbstractCodegenProcessor<
    * @return the round's tasks, or empty when the round is gated out
    */
   private List<CodegenTask<K>> plan(ElementGroups collected, C context) {
-    List<CodegenTask<K>> tasks = planTasks(collected, context);
-    if (collected.isEmpty() || isFinished(context)) {
+    if (collected.isEmpty()) {
+      context.debug("No matching elements collected — skipping planning for this round.");
       return List.of();
     }
+    if (isFinished(context)) {
+      context.debug("Processing is already finished — skipping planning for this round.");
+      return List.of();
+    }
+    List<CodegenTask<K>> tasks = planTasks(collected, context);
     if (!tasks.isEmpty()) {
       // The default one-shot is consumed by the first round that planned work — an empty round
       // leaves it open for a later one carrying matching elements.
