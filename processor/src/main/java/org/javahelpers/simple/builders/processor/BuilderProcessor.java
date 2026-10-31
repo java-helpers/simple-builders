@@ -433,7 +433,7 @@ public class BuilderProcessor
    * targets.
    */
   @Override
-  protected List<TypeName> plannedTaskResultTypeNames(
+  protected List<TypeName> predictTaskResultTypeNames(
       CodegenTask<BuilderConfiguration> task, BuilderProcessingContext ctx) {
     if (!(task.element() instanceof TypeElement targetType)) {
       return List.of();

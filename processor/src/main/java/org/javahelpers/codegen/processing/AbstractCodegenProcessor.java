@@ -54,7 +54,7 @@ import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLo
  * <p>A new processor declares its static surface once as {@link CodegenProcessorConfiguration}
  * (passed to the constructor — element collector, options, source level, formatter factory) and
  * implements only the domain hooks marked {@code [implement]}: {@link #createContext}, {@link
- * #planTasks}, {@link #plannedTaskResultTypeNames}, {@link #analyse} and {@link
+ * #planTasks}, {@link #predictTaskResultTypeNames}, {@link #analyse} and {@link
  * #mapToTargetSpecification}. Every other step is framework-owned or an optional {@code [default]}
  * the domain may override.
  *
@@ -66,7 +66,7 @@ import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLo
  *   elements = findElements(annotations, roundEnv)                 [default: configuration's elementCollector]
  *   tasks    = planTasks(elements, ctx)                                 [implement]
  *   onTasksPlanned(tasks, ctx)                                          [default: no-op]
- *   registerPlannedTaskResults(tasks, ctx)                                  [framework; per-task names from plannedTaskResultTypeNames() — implement]
+ *   registerPlannedTaskResults(tasks, ctx)                                  [framework; per-task names from predictTaskResultTypeNames() — implement]
  *   loop 1 — specification (guarded, strict-mode reporting):            [framework]
  *     defs    = analyse(task, ctx)                                      [implement]
  *     target  = mapToTargetSpecification(def, cfg, ctx)  (per def)      [implement]
@@ -494,7 +494,7 @@ public abstract class AbstractCodegenProcessor<
   /**
    * Registers the types this round will generate, up front, so references to them resolve during
    * analysis. Default: clears {@link AnnotationProcessingContext#getGeneratedTypes()} and registers
-   * every name each task's {@link #plannedTaskResultTypeNames} predicts — a task may produce
+   * every name each task's {@link #predictTaskResultTypeNames} predicts — a task may produce
    * several generated types. Each registration fires {@link #onTaskResultRegistered} for domain
    * extras (e.g. SPI publication); override this whole method only for a different shape.
    *
@@ -508,7 +508,7 @@ public abstract class AbstractCodegenProcessor<
         continue;
       }
       TypeName elementName = JavaLangMapper.mapToTypeName(targetType, context);
-      for (TypeName planned : plannedTaskResultTypeNames(task, context)) {
+      for (TypeName planned : predictTaskResultTypeNames(task, context)) {
         context.addGeneratedType(elementName, planned);
         onTaskResultRegistered(task, planned, context);
       }
@@ -516,15 +516,20 @@ public abstract class AbstractCodegenProcessor<
   }
 
   /**
-   * The names of the types this task will generate — the domain's task → result type-name
-   * predictions, evaluated at registration time. Keep this pure: registrations and their side
-   * effects belong to {@link #onTaskResultRegistered}.
+   * Predicts the names of the types this task will generate — evaluated at registration time,
+   * before anything is generated. The prediction lets generated types reference each other's
+   * planned names (see {@link AnnotationProcessingContext#resolveGeneratedType}) without a
+   * generation-order dependency: analysis of every task already knows every target name.
+   *
+   * <p>A domain whose generated types never reference other generated types may return an empty
+   * list — registration then simply records nothing for the task. Keep this pure: registrations and
+   * their side effects belong to {@link #onTaskResultRegistered}.
    *
    * @param task the planned task
    * @param context the processing context
-   * @return the generated type names (empty when the task registers nothing)
+   * @return the predicted generated type names (empty when the task registers nothing)
    */
-  protected abstract List<TypeName> plannedTaskResultTypeNames(CodegenTask<K> task, C context);
+  protected abstract List<TypeName> predictTaskResultTypeNames(CodegenTask<K> task, C context);
 
   /**
    * Runs after a predicted type name is registered for a task — the extension point for domain
