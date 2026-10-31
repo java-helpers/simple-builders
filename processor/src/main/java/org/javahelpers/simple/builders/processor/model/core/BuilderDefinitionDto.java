@@ -139,6 +139,7 @@ public class BuilderDefinitionDto implements CodegenDefinition {
     this.typeName = builderClassName;
   }
 
+  @Override
   public TypeName getTypeName() {
     return getBuilderTypeName();
   }
