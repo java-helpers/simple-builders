@@ -44,4 +44,56 @@ import javax.lang.model.element.Element;
  *     before analysis
  */
 public record CodegenTask<K extends CodegenConfiguration>(
-    Element element, K configuration, Element reportingElement, String outputPackage) {}
+    Element element, K configuration, Element reportingElement, String outputPackage) {
+
+  /**
+   * A task builder — {@code reportingElement} defaults to the task's element when not set.
+   *
+   * @param <K> the configuration type
+   * @return a new builder
+   */
+  public static <K extends CodegenConfiguration> Builder<K> builder() {
+    return new Builder<>();
+  }
+
+  /** Fluent builder for {@link CodegenTask}. */
+  public static final class Builder<K extends CodegenConfiguration> {
+    private Element element;
+    private K configuration;
+    private Element reportingElement;
+    private String outputPackage;
+
+    /** The element the task generates for. */
+    public Builder<K> element(Element element) {
+      this.element = element;
+      return this;
+    }
+
+    /** The resolved per-element configuration. */
+    public Builder<K> configuration(K configuration) {
+      this.configuration = configuration;
+      return this;
+    }
+
+    /** The element diagnostics are reported on; defaults to {@link #element}. */
+    public Builder<K> reportingElement(Element reportingElement) {
+      this.reportingElement = reportingElement;
+      return this;
+    }
+
+    /** The package generated code is written to, or {@code null}. */
+    public Builder<K> outputPackage(String outputPackage) {
+      this.outputPackage = outputPackage;
+      return this;
+    }
+
+    /** Builds the task; the reporting element defaults to the task element. */
+    public CodegenTask<K> build() {
+      return new CodegenTask<>(
+          element,
+          configuration,
+          reportingElement != null ? reportingElement : element,
+          outputPackage);
+    }
+  }
+}
