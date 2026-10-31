@@ -34,6 +34,20 @@ package org.javahelpers.codegen.processing;
  */
 public interface CodegenConfiguration {
 
+  /** The framework default: strict mode enabled, verbose disabled. */
+  CodegenConfiguration DEFAULT =
+      new CodegenConfiguration() {
+        @Override
+        public boolean isStrictModeEnabled() {
+          return true;
+        }
+
+        @Override
+        public boolean isVerboseEnabled() {
+          return false;
+        }
+      };
+
   /**
    * Whether generation problems are reported as errors (fail-fast) instead of warnings.
    *
