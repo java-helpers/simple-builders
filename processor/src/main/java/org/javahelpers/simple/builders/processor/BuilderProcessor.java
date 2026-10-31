@@ -87,7 +87,10 @@ import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLo
 public class BuilderProcessor
     extends AbstractCodegenProcessor<
         BuilderProcessingContext, BuilderConfiguration, BuilderDefinitionDto> {
+  /** Group of elements carrying {@code @SimpleBuilder} or a template-meta-annotated annotation. */
   private static final String GROUP_ANNOTATED_ELEMENTS = "annotatedElements";
+
+  /** Group of holder classes declaring external types via {@code @SimpleBuilderFor}. */
   private static final String GROUP_EXTERNAL_TYPE_HOLDERS = "externalTypeHolders";
 
   /** The processor's declared compiler options — the supported set is derived, not duplicated. */
