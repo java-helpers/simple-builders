@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Set;
 import org.javahelpers.simple.builders.processor.classgen.GenerationPhases;
 import org.javahelpers.simple.builders.processor.processing.PipelinePhases;
 import org.javahelpers.simple.builders.processor.testing.CapturingProcessingLogger;
@@ -308,8 +309,12 @@ class ActivePerformanceTrackerTest {
 
     JsonNode classMetrics = root.get("classMetrics");
     assertEquals(2, classMetrics.size());
-    assertEquals("TestClassA", classMetrics.get(0).get("className").asText());
-    assertEquals("TestClassB", classMetrics.get(1).get("className").asText());
+    // Ordering is the contract (desc by elapsed); which class is first is timing-dependent.
+    assertEquals(
+        Set.of("TestClassA", "TestClassB"),
+        Set.of(
+            classMetrics.get(0).get("className").asText(),
+            classMetrics.get(1).get("className").asText()));
     assertTrue(
         classMetrics.get(0).get("elapsedNanos").asLong()
             >= classMetrics.get(1).get("elapsedNanos").asLong());
@@ -320,7 +325,13 @@ class ActivePerformanceTrackerTest {
     Path jsonFile = tempDir.resolve("report.json");
     JsonNode root = generateReportAndParseJson(jsonFile.toString());
 
-    JsonNode classA = root.get("classMetrics").get(0);
+    JsonNode classA = null;
+    for (JsonNode cm : root.get("classMetrics")) {
+      if ("TestClassA".equals(cm.get("className").asText())) {
+        classA = cm;
+      }
+    }
+    assertNotNull(classA);
     assertEquals(5, classA.get("fieldCount").asInt());
     assertEquals(2, classA.get("collectionCount").asInt());
     assertTrue(classA.has("elapsedMs"));
