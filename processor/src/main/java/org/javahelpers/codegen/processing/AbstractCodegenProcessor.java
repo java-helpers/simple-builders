@@ -133,6 +133,9 @@ public abstract class AbstractCodegenProcessor<
    * @return {@code true} when the running JDK supports the required source level
    */
   private boolean verifySupportedJdk() {
+    if (requiredSourceVersion() == null) {
+      return true;
+    }
     SourceVersion current = processingEnv.getSourceVersion();
     boolean supported = isAtLeast(current, requiredSourceVersion());
     if (!supported) {
