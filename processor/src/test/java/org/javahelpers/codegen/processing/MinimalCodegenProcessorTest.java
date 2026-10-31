@@ -24,8 +24,8 @@
 package org.javahelpers.codegen.processing;
 
 import static com.google.testing.compile.CompilationSubject.assertThat;
+import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.assertNormalizedEquals;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils.loadGeneratedSource;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.google.testing.compile.Compilation;
 import java.lang.annotation.ElementType;
@@ -203,23 +203,25 @@ public class MinimalCodegenProcessorTest {
     // Then
     assertThat(compilation).succeeded();
     String generatedCode = loadGeneratedSource(compilation, "PersonBuilder");
-    // The whole expected target as one textblock — the Roaster output pins structure,
-    // delegation and the target field; nothing generated is left unchecked.
-    assertEquals(
-"""
-package test;
-public class PersonBuilder {
+    // The whole expected target as one textblock — pins structure, delegation and the target
+    // field; whitespace-normalized compare, nothing generated is left unchecked.
+    assertNormalizedEquals(
+        """
+        package test;
+        public class PersonBuilder {
 
-	private Person target = new Person();
+          private Person target = new Person();
 
-	public PersonBuilder name(String name) {
-		target.setName(name);
-		return this;
-	}
+          public PersonBuilder name(String name) {
+            target.setName(name);
+            return this;
+          }
 
-	public Person build() {
-		return target;
-	} }""",
-        generatedCode.strip());
+          public Person build() {
+            return target;
+          }
+        }""",
+        generatedCode,
+        "generated PersonBuilder must match the expected source");
   }
 }
