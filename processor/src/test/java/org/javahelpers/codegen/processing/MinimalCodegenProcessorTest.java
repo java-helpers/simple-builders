@@ -97,7 +97,7 @@ public class MinimalCodegenProcessorTest {
       if (!(task.element() instanceof TypeElement target)) {
         return List.of();
       }
-      return List.of(builderName(target));
+      return List.of(builderName(target, ctx));
     }
 
     @Override
@@ -109,7 +109,7 @@ public class MinimalCodegenProcessorTest {
       return List.of(
           new MinimalTargetDefinition(
               JavaLangMapper.mapToTypeName(target, ctx),
-              builderName(target),
+              builderName(target, ctx),
               JavaLangAnalyser.findAllPossibleSettersOfClass(target, ctx)));
     }
 
@@ -152,10 +152,8 @@ public class MinimalCodegenProcessorTest {
       return target;
     }
 
-    private static TypeName builderName(TypeElement target) {
-      String qualified = target.getQualifiedName().toString();
-      return new TypeName(
-          qualified.substring(0, qualified.lastIndexOf('.')), target.getSimpleName() + "Builder");
+    private static TypeName builderName(TypeElement target, AnnotationProcessingContext ctx) {
+      return new TypeName(ctx.getPackageName(target), target.getSimpleName() + "Builder");
     }
   }
 
