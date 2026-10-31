@@ -22,22 +22,26 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.processing;
+package org.javahelpers.codegen.processing;
 
-import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
+import javax.lang.model.element.Element;
 
 /**
- * Per-target processing state for the type whose builder is currently being generated.
+ * A planned generation: one element to generate code for, with the configuration the domain
+ * resolved during planning.
  *
- * <p>{@link org.javahelpers.simple.builders.processor.BuilderProcessor} sets one instance per
- * processed type on the {@link BuilderProcessingContext} before extraction starts, so downstream
- * analysis can reach it without threading both values through every call.
+ * <p>One round element may expand into several tasks (e.g. an annotation declaring multiple
+ * external types).
  *
- * @param configuration the resolved builder configuration for the current target
- * @param builderPackage the package the generated builder is written to. This is the configured
- *     {@code packageName} option when set; otherwise the processed type's own package for
- *     {@code @SimpleBuilder} targets, resp. the holder's package for {@code @SimpleBuilderFor}
- *     targets. It cannot always be derived from the processed element itself, which is why it is
- *     carried explicitly here
+ * @param <K> the domain's configuration type
+ * @param element the element code is generated for
+ * @param configuration the resolved per-element configuration
+ * @param reportingElement the element diagnostics are reported on — the declaring holder for
+ *     externally declared types, otherwise the element itself
+ * @param outputPackage the package generated code is written to, or {@code null} when the domain
+ *     does not carry one — planning computes it so the driver can pass the task to {@link
+ *     org.javahelpers.simple.builders.processor.processing.AnnotationProcessingContext#setCurrentTask}
+ *     before analysis
  */
-public record ProcessingTarget(BuilderConfiguration configuration, String builderPackage) {}
+public record CodegenTask<K extends CodegenConfiguration>(
+    Element element, K configuration, Element reportingElement, String outputPackage) {}
