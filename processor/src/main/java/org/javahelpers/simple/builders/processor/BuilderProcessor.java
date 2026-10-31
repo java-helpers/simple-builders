@@ -340,8 +340,9 @@ public class BuilderProcessor
       Element holder, AnnotationMirror annotationInstance) throws BuilderException {
     Map<String, TypeElement> targets = new LinkedHashMap<>();
     // For an array-valued attribute javac always delivers a list, even for a single entry.
-    for (Object item :
-        JavaLangAnalyser.findAnnotationAttributeArray(annotationInstance, "value", context)) {
+    List<Object> annotationAttributeArray =
+        JavaLangAnalyser.findAnnotationAttributeArray(annotationInstance, "value", context);
+    for (Object item : annotationAttributeArray) {
       TypeElement target = resolveExternalTargetType(holder, item);
       targets.put(target.getQualifiedName().toString(), target);
     }
