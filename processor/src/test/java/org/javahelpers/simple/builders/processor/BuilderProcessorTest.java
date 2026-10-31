@@ -164,13 +164,11 @@ class BuilderProcessorTest {
         "[DEBUG] simple-builders: ├─ Jackson module entry added",
         "[DEBUG] simple-builders: └─ Generated builder with 1 fields and 10 methods for VerboseTestBuilder",
         "simple-builders: Successfully generated 1 target(s) in this processing round",
-        // Round 2 — no new elements
+        // Round 2 — no new elements: planning is skipped before the domain hook runs
         "simple-builders: PROCESSING ROUND START",
         "[DEBUG] simple-builders: Processing round started.",
-        "[DEBUG] simple-builders: Found 0 annotated elements.",
-        "[DEBUG] simple-builders: Found 0 type(s) for generation with @SimpleBuilderFor.",
-        "[DEBUG] simple-builders: 0 of 0 annotated element(s) are inside the"
-            + " builderGenerationPackages scope.");
+        "[DEBUG] simple-builders: No matching elements collected — skipping planning for this"
+            + " round.");
   }
 
   @Test

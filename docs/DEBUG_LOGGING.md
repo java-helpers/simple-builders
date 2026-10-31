@@ -132,9 +132,7 @@ When debug logging is enabled, you'll see detailed output with visual separators
 [INFO]         simple-builders: Successfully generated 3 target(s) in this processing round
 [INFO] simple-builders: PROCESSING ROUND START
 [INFO] [DEBUG] simple-builders: Processing round started.
-[INFO] [DEBUG] simple-builders: Found 0 annotated elements.
-[INFO] [DEBUG] simple-builders: Found 0 type(s) for generation with @SimpleBuilderFor.
-[INFO] [DEBUG] simple-builders: 0 of 0 annotated element(s) are inside the builderGenerationPackages scope.
+[INFO] [DEBUG] simple-builders: No matching elements collected — skipping planning for this round.
 ```
 
 **Note**: Debug messages are prefixed with `[DEBUG]` and use `Diagnostic.Kind.OTHER` which appears as `[INFO]` in Maven output.
