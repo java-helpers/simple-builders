@@ -51,6 +51,15 @@ public final class ElementGroups {
   }
 
   /**
+   * Every selected element across all groups, in group declaration order.
+   *
+   * @return all selected elements
+   */
+  public List<Element> all() {
+    return groups.values().stream().flatMap(List::stream).toList();
+  }
+
+  /**
    * Whether every selected group is empty.
    *
    * @return {@code true} when no selector matched any element
