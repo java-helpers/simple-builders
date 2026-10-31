@@ -61,7 +61,6 @@ import org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyser;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
 import org.javahelpers.simple.builders.processor.classgen.ClassCodeGenerator;
 import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterCodeGenerator;
-import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterSourceFormatter;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 import org.javahelpers.simple.builders.processor.generators.integration.JacksonModuleGenerator;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
@@ -126,7 +125,6 @@ public class BuilderProcessor
           .elementCollector(ELEMENT_COLLECTOR)
           .optionRegistry(OPTION_REGISTRY)
           .requiredSourceVersion("RELEASE_17")
-          .formatterFactory(RoasterSourceFormatter::new)
           .build();
 
   /** Creates the processor — javac instantiates it reflectively. */

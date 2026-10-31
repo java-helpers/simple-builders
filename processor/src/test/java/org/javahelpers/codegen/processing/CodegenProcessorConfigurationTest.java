@@ -36,14 +36,4 @@ class CodegenProcessorConfigurationTest {
     CodegenProcessorConfiguration.Builder builder = CodegenProcessorConfiguration.builder();
     assertThrows(IllegalStateException.class, builder::build);
   }
-
-  @Test
-  void formatterFactory_defaultFormatsSourceUnchanged() {
-    CodegenProcessorConfiguration config =
-        CodegenProcessorConfiguration.builder()
-            .elementCollector(ElementCollector.builder().build())
-            .build();
-
-    assertEquals("raw", config.formatterFactory().create(null, null, null).format("raw"));
-  }
 }

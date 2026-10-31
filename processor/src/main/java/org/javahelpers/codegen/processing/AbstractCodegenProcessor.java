@@ -382,8 +382,8 @@ public abstract class AbstractCodegenProcessor<
   }
 
   /**
-   * Creates the source formatter resolver for the configured profile — profile name and formatter
-   * factory come from the processor's declared options and configuration.
+   * Creates the source formatter resolver for the configured profile — the profile name comes from
+   * the processor's declared options.
    *
    * @param reader the compiler arguments reader
    * @param logger the processing logger
@@ -391,10 +391,7 @@ public abstract class AbstractCodegenProcessor<
    */
   protected SourceFormatterResolver createFormatterResolver(
       CompilerArgumentsReader reader, ProcessingLogger logger) {
-    return new SourceFormatterResolver(
-        logger,
-        optionRegistry().formatterProfile(reader),
-        processorConfiguration.formatterFactory());
+    return new SourceFormatterResolver(logger, optionRegistry().formatterProfile(reader));
   }
 
   private ElementCollector elementCollector() {

@@ -34,7 +34,6 @@ import org.javahelpers.simple.builders.processor.classgen.CodeGenerationExceptio
 import org.javahelpers.simple.builders.processor.classgen.GenerationEnvironment;
 import org.javahelpers.simple.builders.processor.classgen.SourceFormatter;
 import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterCodeGenerator;
-import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterSourceFormatter;
 import org.javahelpers.simple.builders.processor.classgen.roaster.exceptions.RoasterMapperException;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.core.GenerationTargetClassDto;
@@ -94,8 +93,7 @@ class RoasterCodeGeneratorResilienceTest {
                 env, logger, context.getPerformanceTracker(), context::reportBasedOnStrictMode));
 
     SourceFormatter formatter =
-        new SourceFormatterResolver(logger, null, RoasterSourceFormatter::new)
-            .resolve(FormattingMode.NONE);
+        new SourceFormatterResolver(logger, null).resolve(FormattingMode.NONE);
     CodeGenerationException thrown =
         assertThrows(
             CodeGenerationException.class, () -> generator.generateClass(classDef, formatter));
@@ -131,8 +129,7 @@ class RoasterCodeGeneratorResilienceTest {
                 context::reportBasedOnStrictMode));
 
     SourceFormatter formatter =
-        new SourceFormatterResolver(capturing.logger(), null, RoasterSourceFormatter::new)
-            .resolve(FormattingMode.NONE);
+        new SourceFormatterResolver(capturing.logger(), null).resolve(FormattingMode.NONE);
     // generation itself succeeds; only the file-write step fails on the stub's null filer
     assertThrows(NullPointerException.class, () -> generator.generateClass(classDef, formatter));
     capturing.assertMessage(

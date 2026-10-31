@@ -25,8 +25,6 @@
 package org.javahelpers.codegen.processing;
 
 import java.util.List;
-import org.javahelpers.simple.builders.processor.classgen.SourceFormatter;
-import org.javahelpers.simple.builders.processor.processing.SourceFormatterResolver;
 
 /**
  * Static declarations of an {@link AbstractCodegenProcessor}: everything the framework needs to
@@ -39,14 +37,11 @@ import org.javahelpers.simple.builders.processor.processing.SourceFormatterResol
  * @param optionRegistry the processor's declared compiler options; default: an empty registry
  * @param requiredSourceVersion the minimum source level by name (e.g. {@code "RELEASE_17"});
  *     default: the running JDK's latest supported release
- * @param formatterFactory creates the {@link SourceFormatter} for a formatting mode and profile;
- *     default: a pass-through formatter leaving sources unchanged
  */
 public record CodegenProcessorConfiguration(
     ElementCollector elementCollector,
     ProcessorOptionRegistry optionRegistry,
-    String requiredSourceVersion,
-    SourceFormatterResolver.FormatterFactory formatterFactory) {
+    String requiredSourceVersion) {
 
   /**
    * Creates a builder with all defaults applied — only {@link
@@ -63,8 +58,6 @@ public record CodegenProcessorConfiguration(
     private ElementCollector elementCollector;
     private ProcessorOptionRegistry optionRegistry = new ProcessorOptionRegistry(List.of());
     private String requiredSourceVersion;
-    private SourceFormatterResolver.FormatterFactory formatterFactory =
-        (logger, mode, profile) -> raw -> raw;
 
     private Builder() {}
 
@@ -105,18 +98,6 @@ public record CodegenProcessorConfiguration(
     }
 
     /**
-     * Sets the factory creating the {@link SourceFormatter} for a formatting mode and profile — the
-     * domain's formatter backend. Default: pass-through.
-     *
-     * @param formatterFactory the formatter factory
-     * @return this builder
-     */
-    public Builder formatterFactory(SourceFormatterResolver.FormatterFactory formatterFactory) {
-      this.formatterFactory = formatterFactory;
-      return this;
-    }
-
-    /**
      * Builds the configuration.
      *
      * @return the configuration
@@ -127,7 +108,7 @@ public record CodegenProcessorConfiguration(
         throw new IllegalStateException("elementCollector is required");
       }
       return new CodegenProcessorConfiguration(
-          elementCollector, optionRegistry, requiredSourceVersion, formatterFactory);
+          elementCollector, optionRegistry, requiredSourceVersion);
     }
   }
 }
