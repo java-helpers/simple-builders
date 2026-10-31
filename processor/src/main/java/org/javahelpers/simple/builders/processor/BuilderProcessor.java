@@ -162,19 +162,19 @@ public class BuilderProcessor
   @Override
   protected List<CodegenTask<BuilderConfiguration>> planTasks(
       ElementGroups collected, BuilderProcessingContext ctx) {
-    List<Element> sortedElements = collected.byGroup(GROUP_ANNOTATED_ELEMENTS);
-    List<Element> sortedHolders = collected.byGroup(GROUP_EXTERNAL_TYPE_HOLDERS);
-    ctx.debug("Found %d annotated elements.", sortedElements.size());
-    ctx.debug("Found %d type(s) for generation with @SimpleBuilderFor.", sortedHolders.size());
+    List<Element> annotatedElements = collected.byGroup(GROUP_ANNOTATED_ELEMENTS);
+    List<Element> holderElements = collected.byGroup(GROUP_EXTERNAL_TYPE_HOLDERS);
+    ctx.debug("Found %d annotated elements.", annotatedElements.size());
+    ctx.debug("Found %d type(s) for generation with @SimpleBuilderFor.", holderElements.size());
     List<CodegenTask<BuilderConfiguration>> tasks =
         resolveGenerationPlan(
-            sortedElements,
-            sortedHolders,
+            annotatedElements,
+            holderElements,
             ctx.getConfigurationReader(),
             ctx.getPerformanceTracker());
     ctx.debug(
         "%d of %d annotated element(s) are inside the builderGenerationPackages scope.",
-        tasks.size(), sortedElements.size());
+        tasks.size(), annotatedElements.size());
     return tasks;
   }
 
