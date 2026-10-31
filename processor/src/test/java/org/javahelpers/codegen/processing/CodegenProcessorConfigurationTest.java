@@ -34,6 +34,6 @@ class CodegenProcessorConfigurationTest {
   @Test
   void build_withoutElementCollector_throwsIllegalState() {
     CodegenProcessorConfiguration.Builder builder = CodegenProcessorConfiguration.builder();
-    assertThrows(IllegalStateException.class, builder::build);
+    assertThrows(IllegalStateException.class, () -> builder.build());
   }
 }
