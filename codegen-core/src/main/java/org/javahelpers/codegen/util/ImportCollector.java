@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.util;
+package util;
 
 import java.util.Comparator;
 import java.util.LinkedHashSet;
