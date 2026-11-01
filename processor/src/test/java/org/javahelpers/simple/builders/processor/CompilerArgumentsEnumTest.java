@@ -30,11 +30,11 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.javahelpers.simple.builders.core.enums.AccessModifier;
-import org.javahelpers.simple.builders.core.enums.OptionState;
+import org.javahelpers.codegen.enums.AccessModifier;
+import org.javahelpers.codegen.enums.OptionState;
+import org.javahelpers.codegen.testing.CapturingProcessingLogger;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsEnum;
-import org.javahelpers.codegen.testing.CapturingProcessingLogger;
 import org.junit.jupiter.api.Test;
 
 /**

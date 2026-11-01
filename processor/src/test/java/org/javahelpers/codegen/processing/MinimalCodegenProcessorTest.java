@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.javahelpers.codegen.processing;
+package org.javahelpers.simple.builders.processor.processing;
 
 import static com.google.testing.compile.CompilationSubject.assertThat;
 import static org.javahelpers.codegen.testing.ProcessorAsserts.assertNormalizedEquals;
@@ -39,19 +39,26 @@ import javax.lang.model.element.TypeElement;
 import javax.tools.JavaFileObject;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
-import org.javahelpers.simple.builders.core.enums.AccessModifier;
-import org.javahelpers.simple.builders.core.enums.FormattingMode;
 import org.javahelpers.codegen.ClassCodeGenerator;
 import org.javahelpers.codegen.FormatterResolver;
 import org.javahelpers.codegen.analysis.JavaLangAnalyser;
 import org.javahelpers.codegen.analysis.JavaLangMapper;
+import org.javahelpers.codegen.enums.AccessModifier;
+import org.javahelpers.codegen.enums.FormattingMode;
+import org.javahelpers.codegen.logging.ProcessingLogger;
 import org.javahelpers.codegen.model.core.ClassFieldDto;
 import org.javahelpers.codegen.model.core.GenerationTargetClassDto;
 import org.javahelpers.codegen.model.method.MethodDto;
 import org.javahelpers.codegen.model.type.TypeName;
+import org.javahelpers.codegen.processing.AbstractCodegenProcessor;
 import org.javahelpers.codegen.processing.AnnotationProcessingContext;
+import org.javahelpers.codegen.processing.CodegenConfiguration;
+import org.javahelpers.codegen.processing.CodegenDefinition;
+import org.javahelpers.codegen.processing.CodegenProcessorConfiguration;
+import org.javahelpers.codegen.processing.CodegenTask;
 import org.javahelpers.codegen.processing.CompilerArgumentsReader;
-import org.javahelpers.codegen.logging.ProcessingLogger;
+import org.javahelpers.codegen.processing.ElementCollector;
+import org.javahelpers.codegen.processing.ElementGroups;
 import org.javahelpers.codegen.roaster.RoasterCodeGenerator;
 import org.javahelpers.codegen.roaster.SourceFormatterResolver;
 import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
@@ -107,7 +114,9 @@ public class MinimalCodegenProcessorTest {
 
     @Override
     protected ClassCodeGenerator createGenerator(
-        ProcessingEnvironment processingEnv, ProcessingLogger logger, AnnotationProcessingContext ctx) {
+        ProcessingEnvironment processingEnv,
+        ProcessingLogger logger,
+        AnnotationProcessingContext ctx) {
       return new RoasterCodeGenerator(generationEnvironment(processingEnv, logger, ctx));
     }
 
@@ -194,7 +203,7 @@ public class MinimalCodegenProcessorTest {
         ProcessorTestUtils.forSource(
             """
             package test;
-            import org.javahelpers.codegen.processing.MinimalCodegenProcessorTest.GenerateBuilder;
+            import org.javahelpers.simple.builders.processor.processing.MinimalCodegenProcessorTest.GenerateBuilder;
             @GenerateBuilder
             public class Person {
               private String name;

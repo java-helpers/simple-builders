@@ -22,14 +22,14 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.codegen;
-
 /**
  * Failure of a {@link ClassCodeGenerator} to produce or write generated source code.
  *
  * <p>The exception type of the code generation layer: it intentionally knows nothing about
  * builders. Callers generating builders translate it into their domain exception.
  */
+package org.javahelpers.codegen;
+
 public class CodeGenerationException extends Exception {
 
   private static final long serialVersionUID = 1L;

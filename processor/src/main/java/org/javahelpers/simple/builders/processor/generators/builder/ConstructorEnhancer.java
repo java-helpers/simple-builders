@@ -24,15 +24,15 @@
 
 package org.javahelpers.simple.builders.processor.generators.builder;
 
-import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
-import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
-import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
 import org.javahelpers.codegen.model.javadoc.JavadocDto;
 import org.javahelpers.codegen.model.method.ConstructorDto;
 import org.javahelpers.codegen.model.method.MethodCodeDto;
 import org.javahelpers.codegen.model.method.MethodParameterDto;
 import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.codegen.model.type.TypeNamePrimitive;
+import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
+import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
+import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 
 /**

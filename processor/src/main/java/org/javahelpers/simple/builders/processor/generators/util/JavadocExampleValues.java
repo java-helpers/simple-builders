@@ -27,7 +27,6 @@ package org.javahelpers.simple.builders.processor.generators.util;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
-import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
 import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.codegen.model.type.TypeNameArray;
 import org.javahelpers.codegen.model.type.TypeNameCollection;
@@ -36,6 +35,7 @@ import org.javahelpers.codegen.model.type.TypeNameMap;
 import org.javahelpers.codegen.model.type.TypeNamePrimitive;
 import org.javahelpers.codegen.model.type.TypeNamePrimitive.PrimitiveTypeEnum;
 import org.javahelpers.codegen.model.type.TypeNameSet;
+import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
 
 /**
  * Provides default example values for Javadoc code examples.

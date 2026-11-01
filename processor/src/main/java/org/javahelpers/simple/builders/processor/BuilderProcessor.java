@@ -24,8 +24,8 @@
 
 package org.javahelpers.simple.builders.processor;
 
-import static org.javahelpers.simple.builders.processor.processing.BuilderDefinitionCreator.extractFromElement;
 import static org.javahelpers.codegen.processing.PipelinePhases.PHASE_CONFIGURATION_RESOLUTION;
+import static org.javahelpers.simple.builders.processor.processing.BuilderDefinitionCreator.extractFromElement;
 
 import com.google.auto.service.AutoService;
 import java.util.ArrayList;
@@ -47,9 +47,21 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.ElementFilter;
+import org.javahelpers.codegen.ClassCodeGenerator;
+import org.javahelpers.codegen.FormatterResolver;
+import org.javahelpers.codegen.analysis.JavaLangAnalyser;
+import org.javahelpers.codegen.analysis.JavaLangMapper;
+import org.javahelpers.codegen.logging.PerformanceTracker;
+import org.javahelpers.codegen.logging.ProcessingLogger;
+import org.javahelpers.codegen.model.core.GenerationTargetClassDto;
+import org.javahelpers.codegen.model.type.TypeName;
+import org.javahelpers.codegen.model.type.TypeNameList;
+import org.javahelpers.codegen.model.type.TypeNameMap;
+import org.javahelpers.codegen.model.type.TypeNameSet;
 import org.javahelpers.codegen.processing.AbstractCodegenProcessor;
 import org.javahelpers.codegen.processing.CodegenProcessorConfiguration;
 import org.javahelpers.codegen.processing.CodegenTask;
+import org.javahelpers.codegen.processing.CompilerArgumentsReader;
 import org.javahelpers.codegen.processing.ElementCollector;
 import org.javahelpers.codegen.processing.ElementGroups;
 import org.javahelpers.codegen.processing.ProcessorOptionRegistry;
@@ -59,26 +71,14 @@ import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder.Template;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFor;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFors;
-import org.javahelpers.codegen.ClassCodeGenerator;
-import org.javahelpers.codegen.FormatterResolver;
-import org.javahelpers.codegen.analysis.JavaLangAnalyser;
-import org.javahelpers.codegen.analysis.JavaLangMapper;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 import org.javahelpers.simple.builders.processor.generators.integration.JacksonModuleGenerator;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.model.core.BuilderToGenerationTypeMapper;
-import org.javahelpers.codegen.model.core.GenerationTargetClassDto;
-import org.javahelpers.codegen.model.type.TypeName;
-import org.javahelpers.codegen.model.type.TypeNameList;
-import org.javahelpers.codegen.model.type.TypeNameMap;
-import org.javahelpers.codegen.model.type.TypeNameSet;
 import org.javahelpers.simple.builders.processor.processing.BuilderConfigurationReader;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsEnum;
-import org.javahelpers.codegen.processing.CompilerArgumentsReader;
-import org.javahelpers.codegen.logging.PerformanceTracker;
-import org.javahelpers.codegen.logging.ProcessingLogger;
 
 /**
  * BuilderProcessor is an annotation processor for execution in generate-sources phase. The

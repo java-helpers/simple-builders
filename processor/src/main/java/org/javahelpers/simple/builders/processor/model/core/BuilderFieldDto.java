@@ -31,10 +31,11 @@ import java.util.List;
 import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.codegen.model.annotation.AnnotationDto;
+import org.javahelpers.codegen.model.core.DeprecationInfoDto;
 import org.javahelpers.codegen.model.javadoc.JavadocDto;
-import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.codegen.model.type.GenericParameterDto;
 import org.javahelpers.codegen.model.type.TypeName;
+import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 
 /**
  * Definition of a field. Containing all information to generate methods in builder to set or modify

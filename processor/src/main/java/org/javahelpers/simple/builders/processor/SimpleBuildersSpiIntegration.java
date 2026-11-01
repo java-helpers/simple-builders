@@ -29,9 +29,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.lang.model.util.Elements;
-import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
 import org.javahelpers.codegen.model.type.TypeInstantiation.StaticFactoryCall;
 import org.javahelpers.codegen.model.type.TypeName;
+import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
 
 /**
  * The builders {@link BuilderProcessor} generates, published to SPI adapters of other frameworks

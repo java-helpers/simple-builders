@@ -30,12 +30,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import org.apache.commons.collections4.CollectionUtils;
+import org.javahelpers.codegen.model.type.TypeName;
+import org.javahelpers.codegen.model.type.TypeNameGeneric;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil;
 import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
-import org.javahelpers.codegen.model.type.TypeName;
-import org.javahelpers.codegen.model.type.TypeNameGeneric;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 
 /**

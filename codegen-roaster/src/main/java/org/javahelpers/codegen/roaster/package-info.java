@@ -22,8 +22,10 @@
  * SOFTWARE.
  */
 
+package org.javahelpers.codegen.roaster;
+
 /**
- * Package org.javahelpers.simple.builders.processor.classgen.roaster
+ * Package org.javahelpers.codegen.roaster.roaster
  *
  * <p>Roaster-based code generation for simple-builders processor.
  *
@@ -45,4 +47,3 @@
  *       mapping errors
  * </ul>
  */
-package org.javahelpers.codegen.roaster;

@@ -103,7 +103,7 @@ public final class JavaLangMapper {
 
   /**
    * Mapping a method parameter to {@code
-   * org.javahelpers.simple.builders.processor.dtos.MethodParameterDto}.
+   * org.javahelpers.codegen.model.method.MethodParameterDto}.
    *
    * @param param Parameter variable to be mapped
    * @param context the type mapping context

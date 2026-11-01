@@ -33,16 +33,16 @@ import org.apache.commons.collections4.SetValuedMap;
 import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
 import org.javahelpers.codegen.enums.AccessModifier;
 import org.javahelpers.codegen.enums.FormattingMode;
+import org.javahelpers.codegen.logging.ProcessingLogger;
 import org.javahelpers.codegen.model.annotation.AnnotationDto;
-import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
-import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
 import org.javahelpers.codegen.model.core.GenerationTargetClassDto;
 import org.javahelpers.codegen.model.integration.JacksonModuleEntryDto;
 import org.javahelpers.codegen.model.method.ConstructorDto;
 import org.javahelpers.codegen.model.method.MethodCodeDto;
 import org.javahelpers.codegen.model.type.NestedTypeDto;
 import org.javahelpers.codegen.model.type.TypeName;
-import org.javahelpers.codegen.logging.ProcessingLogger;
+import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
+import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
 
 /**
  * Generates Jackson SimpleModules to register all generated builders.

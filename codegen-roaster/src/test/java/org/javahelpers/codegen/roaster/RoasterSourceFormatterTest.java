@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.javahelpers.simple.builders.processor.classgen.roaster;
+package org.javahelpers.codegen.roaster;
 
 import static org.javahelpers.codegen.testing.FormatterProfileTestUtils.createFormatterProfile;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -33,7 +33,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.stream.Stream;
-import org.javahelpers.simple.builders.core.enums.FormattingMode;
+import org.javahelpers.codegen.enums.FormattingMode;
 import org.javahelpers.codegen.testing.CapturingProcessingLogger;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;

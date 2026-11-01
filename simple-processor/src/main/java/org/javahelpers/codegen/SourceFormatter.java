@@ -22,8 +22,6 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.codegen;
-
 /**
  * Formats generated source code before it is written to disk.
  *
@@ -32,6 +30,8 @@ package org.javahelpers.codegen;
  * ClassCodeGenerator#generateClass}. Formatting-heavy backends may implement richer formatters
  * behind this interface.
  */
+package org.javahelpers.codegen;
+
 @FunctionalInterface
 public interface SourceFormatter {
 

@@ -23,7 +23,7 @@
  */
 
 /**
- * Package org.javahelpers.simple.builders.processor.model.method
+ * Package org.javahelpers.codegen.model.method
  *
  * <p>Method model classes for the simple-builders processor.
  *

@@ -22,14 +22,14 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.codegen.model.imports;
-
 /**
  * Represents an import statement in generated code.
  *
  * <p>This is the base interface for all import types (regular and static imports). This is a pure
  * data holder - business logic for filtering imports belongs in ImportCollector.
  */
+package org.javahelpers.codegen.model.imports;
+
 public interface ImportStatement {
 
   /**

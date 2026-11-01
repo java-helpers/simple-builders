@@ -23,7 +23,7 @@
  */
 
 /**
- * Package org.javahelpers.simple.builders.processor.model.annotation
+ * Package org.javahelpers.codegen.model.annotation
  *
  * <p>Annotation model classes for the simple-builders processor.
  *

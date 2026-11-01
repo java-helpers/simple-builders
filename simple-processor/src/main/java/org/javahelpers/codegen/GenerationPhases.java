@@ -22,12 +22,12 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.codegen;
-
 /**
  * Phase names a {@link ClassCodeGenerator} may report through {@code PerformanceTracker.endPhase}
  * while turning a class definition into a source file.
  */
+package org.javahelpers.codegen;
+
 public final class GenerationPhases {
 
   // Code Generation children

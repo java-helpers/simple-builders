@@ -34,6 +34,9 @@ import org.javahelpers.codegen.enums.AccessModifier;
 import org.javahelpers.codegen.model.annotation.AnnotationDto;
 import org.javahelpers.codegen.model.javadoc.JavadocCodeBlockDto;
 import org.javahelpers.codegen.model.javadoc.JavadocDto;
+import org.javahelpers.codegen.model.method.MethodCodeDto;
+import org.javahelpers.codegen.model.method.MethodDto;
+import org.javahelpers.codegen.model.method.MethodParameterDto;
 import org.javahelpers.codegen.model.type.GenericParameterDto;
 import org.javahelpers.codegen.model.type.TypeName;
 

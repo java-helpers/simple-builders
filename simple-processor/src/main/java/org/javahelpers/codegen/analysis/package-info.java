@@ -23,7 +23,7 @@
  */
 
 /**
- * Package org.javahelpers.simple.builders.processor.analysis
+ * Package org.javahelpers.codegen.analysis
  *
  * <p>Analysis components for the simple-builders processor.
  *

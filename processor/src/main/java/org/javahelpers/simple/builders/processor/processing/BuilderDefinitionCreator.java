@@ -45,27 +45,27 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
-import org.javahelpers.simple.builders.core.annotations.IgnoreInBuilder;
-import org.javahelpers.simple.builders.core.annotations.SimpleBuilderConstructor;
-import org.javahelpers.codegen.enums.AccessModifier;
-import org.javahelpers.simple.builders.core.util.TrackedValue;
 import org.javahelpers.codegen.analysis.FieldAnnotationExtractor;
 import org.javahelpers.codegen.analysis.JavaLangAnalyser;
 import org.javahelpers.codegen.analysis.JavaLangMapper;
-import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
-import org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil;
+import org.javahelpers.codegen.enums.AccessModifier;
 import org.javahelpers.codegen.model.annotation.AnnotationDto;
-import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
-import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
 import org.javahelpers.codegen.model.core.ClassFieldDto;
 import org.javahelpers.codegen.model.core.DeprecationInfoDto;
-import org.javahelpers.simple.builders.processor.model.core.GetterInfoDto;
 import org.javahelpers.codegen.model.javadoc.JavadocDto;
-import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.codegen.model.method.ConstructorDto;
 import org.javahelpers.codegen.model.method.MethodParameterDto;
 import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.codegen.model.type.TypeNameGeneric;
+import org.javahelpers.simple.builders.core.annotations.IgnoreInBuilder;
+import org.javahelpers.simple.builders.core.annotations.SimpleBuilderConstructor;
+import org.javahelpers.simple.builders.core.util.TrackedValue;
+import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
+import org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil;
+import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
+import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
+import org.javahelpers.simple.builders.processor.model.core.GetterInfoDto;
+import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 
 /** Class for creating a specific BuilderDefinitionDto for an annotated DTO class. */
 public class BuilderDefinitionCreator {
@@ -316,9 +316,9 @@ public class BuilderDefinitionCreator {
    * their field/class method lists so they are never mapped to the rendering DTO.
    *
    * <p>A generic safety net in {@link
-   * org.javahelpers.codegen.roaster.RoasterCodeGenerator#resolveMethodConflicts}
-   * handles any remaining duplicates (e.g., from enhancer methods added after this step) by keeping
-   * the first occurrence.
+   * org.javahelpers.codegen.roaster.RoasterCodeGenerator#resolveMethodConflicts} handles any
+   * remaining duplicates (e.g., from enhancer methods added after this step) by keeping the first
+   * occurrence.
    *
    * @param builderDto the builder definition containing all methods
    * @param context the processing context for logging

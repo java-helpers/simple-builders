@@ -23,10 +23,10 @@
  */
 package org.javahelpers.simple.builders.processor.generators.builder;
 
-import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
 import org.javahelpers.codegen.model.annotation.AnnotationDto;
-import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
 import org.javahelpers.codegen.model.type.TypeName;
+import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
+import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 
 /**

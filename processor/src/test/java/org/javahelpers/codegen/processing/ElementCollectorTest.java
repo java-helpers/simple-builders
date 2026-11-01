@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.codegen.processing;
+package org.javahelpers.simple.builders.processor.processing;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -39,6 +39,8 @@ import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.TypeMirror;
+import org.javahelpers.codegen.processing.ElementCollector;
+import org.javahelpers.codegen.processing.ElementGroups;
 import org.javahelpers.codegen.testing.CapturingProcessingLogger;
 import org.junit.jupiter.api.Test;
 

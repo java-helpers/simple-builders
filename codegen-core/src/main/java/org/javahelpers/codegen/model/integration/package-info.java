@@ -23,7 +23,7 @@
  */
 
 /**
- * Package org.javahelpers.simple.builders.processor.model.integration
+ * Package org.javahelpers.codegen.model.integration
  *
  * <p>Integration model classes for the simple-builders processor.
  *
