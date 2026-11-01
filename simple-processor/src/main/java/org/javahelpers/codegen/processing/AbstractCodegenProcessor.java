@@ -34,7 +34,7 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
-import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
+import org.javahelpers.codegen.analysis.JavaLangMapper;
 import org.javahelpers.codegen.ClassCodeGenerator;
 import org.javahelpers.codegen.CodeGenerationException;
 import org.javahelpers.codegen.GenerationEnvironment;

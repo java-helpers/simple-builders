@@ -30,7 +30,7 @@ import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUti
 import com.google.testing.compile.Compilation;
 import java.util.stream.Stream;
 import javax.tools.JavaFileObject;
-import org.javahelpers.simple.builders.processor.analysis.FieldAnnotationExtractor;
+import org.javahelpers.codegen.analysis.FieldAnnotationExtractor;
 import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.codegen.model.type.TypeNamePrimitive;
 import org.javahelpers.simple.builders.processor.testing.ProcessorAsserts;

@@ -31,7 +31,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.codegen.enums.AccessModifier;
-import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
+import org.javahelpers.codegen.analysis.JavaLangMapper;
 import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
 import org.javahelpers.codegen.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;

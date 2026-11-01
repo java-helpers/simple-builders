@@ -38,7 +38,7 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
-import org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyser;
+import org.javahelpers.codegen.analysis.JavaLangAnalyser;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;

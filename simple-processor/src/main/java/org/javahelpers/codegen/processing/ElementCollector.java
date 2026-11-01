@@ -36,7 +36,7 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
-import org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyser;
+import org.javahelpers.codegen.analysis.JavaLangAnalyser;
 import org.javahelpers.codegen.logging.ProcessingLogger;
 
 /**

@@ -26,7 +26,7 @@ package org.javahelpers.simple.builders.processor.generators.builder;
 import java.util.ArrayList;
 import java.util.List;
 import org.javahelpers.codegen.enums.AccessModifier;
-import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
+import org.javahelpers.codegen.analysis.JavaLangMapper;
 import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
 import org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil;
 import org.javahelpers.codegen.model.annotation.AnnotationDto;

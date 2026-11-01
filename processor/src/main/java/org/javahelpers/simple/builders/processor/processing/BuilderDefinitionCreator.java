@@ -25,9 +25,9 @@
 package org.javahelpers.simple.builders.processor.processing;
 
 import static java.util.stream.Collectors.toSet;
-import static org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyser.*;
-import static org.javahelpers.simple.builders.processor.analysis.JavaLangMapper.map2MethodParameter;
-import static org.javahelpers.simple.builders.processor.analysis.JavaLangMapper.map2TypeName;
+import static org.javahelpers.codegen.analysis.JavaLangAnalyser.*;
+import static org.javahelpers.codegen.analysis.JavaLangMapper.map2MethodParameter;
+import static org.javahelpers.codegen.analysis.JavaLangMapper.map2TypeName;
 import static org.javahelpers.simple.builders.processor.processing.AnnotationValidator.validateAnnotatedElement;
 
 import java.util.ArrayList;
@@ -49,9 +49,9 @@ import org.javahelpers.simple.builders.core.annotations.IgnoreInBuilder;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilderConstructor;
 import org.javahelpers.codegen.enums.AccessModifier;
 import org.javahelpers.simple.builders.core.util.TrackedValue;
-import org.javahelpers.simple.builders.processor.analysis.FieldAnnotationExtractor;
-import org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyser;
-import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
+import org.javahelpers.codegen.analysis.FieldAnnotationExtractor;
+import org.javahelpers.codegen.analysis.JavaLangAnalyser;
+import org.javahelpers.codegen.analysis.JavaLangMapper;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 import org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil;
 import org.javahelpers.codegen.model.annotation.AnnotationDto;

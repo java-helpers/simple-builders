@@ -24,7 +24,7 @@
 package org.javahelpers.simple.builders.processor.generators.builder;
 
 import org.javahelpers.simple.builders.core.annotations.BuilderImplementation;
-import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
+import org.javahelpers.codegen.analysis.JavaLangMapper;
 import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
 import org.javahelpers.codegen.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
