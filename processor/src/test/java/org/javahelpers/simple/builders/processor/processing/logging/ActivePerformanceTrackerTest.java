@@ -31,7 +31,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashSet;
 import java.util.Set;
 import org.javahelpers.simple.builders.processor.classgen.GenerationPhases;
 import org.javahelpers.simple.builders.processor.processing.PipelinePhases;
@@ -75,15 +74,6 @@ class ActivePerformanceTrackerTest {
     return new ObjectMapper().readTree(jsonContent);
   }
 
-  /** The {@code className} values of all class-metric entries. */
-  private static Set<String> classNames(JsonNode classMetrics) {
-    Set<String> names = new HashSet<>();
-    for (JsonNode cm : classMetrics) {
-      names.add(cm.get("className").asText());
-    }
-    return names;
-  }
-
   /** Asserts the metric entries are ordered by {@code elapsedNanos} descending. */
   private static void assertSortedByElapsedDesc(JsonNode metrics) {
     for (int i = 1; i < metrics.size(); i++) {
@@ -92,16 +82,6 @@ class ActivePerformanceTrackerTest {
               >= metrics.get(i).get("elapsedNanos").asLong(),
           "metrics not sorted by elapsedNanos descending at index " + i);
     }
-  }
-
-  /** The class-metric entry for the given class name — fails the test when absent. */
-  private static JsonNode classMetricByName(JsonNode root, String className) {
-    for (JsonNode cm : root.get("classMetrics")) {
-      if (className.equals(cm.get("className").asText())) {
-        return cm;
-      }
-    }
-    return fail("No classMetric entry for " + className);
   }
 
   /**
