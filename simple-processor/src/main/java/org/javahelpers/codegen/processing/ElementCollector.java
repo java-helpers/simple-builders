@@ -37,7 +37,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyser;
-import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
+import org.javahelpers.codegen.logging.ProcessingLogger;
 
 /**
  * Declarative specification of which elements a processor works on.

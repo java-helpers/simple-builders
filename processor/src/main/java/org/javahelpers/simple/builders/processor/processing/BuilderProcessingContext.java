@@ -33,7 +33,7 @@ import org.javahelpers.simple.builders.processor.generators.registry.GeneratorRe
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
 import org.javahelpers.codegen.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
+import org.javahelpers.codegen.logging.ProcessingLogger;
 
 /**
  * Context object that wraps Elements, Types, and logging utilities from annotation processing,

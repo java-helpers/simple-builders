@@ -43,10 +43,10 @@ import org.javahelpers.codegen.processing.CodegenTask;
 import org.javahelpers.simple.builders.processor.analysis.GeneratedTypes;
 import org.javahelpers.simple.builders.processor.analysis.TypeMappingContext;
 import org.javahelpers.codegen.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.processing.logging.ActivePerformanceTracker;
-import org.javahelpers.simple.builders.processor.processing.logging.NoOpPerformanceTracker;
-import org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker;
-import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
+import org.javahelpers.codegen.logging.ActivePerformanceTracker;
+import org.javahelpers.codegen.logging.NoOpPerformanceTracker;
+import org.javahelpers.codegen.logging.PerformanceTracker;
+import org.javahelpers.codegen.logging.ProcessingLogger;
 
 /**
  * Generic annotation-processing context: wraps {@link ProcessingEnvironment}, {@link Elements},

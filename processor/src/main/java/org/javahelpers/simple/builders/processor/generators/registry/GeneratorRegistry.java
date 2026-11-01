@@ -38,7 +38,7 @@ import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
-import org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker;
+import org.javahelpers.codegen.logging.PerformanceTracker;
 
 /**
  * Unified registry that manages all generators (both method generators and builder enhancers).

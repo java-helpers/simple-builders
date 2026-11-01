@@ -49,7 +49,7 @@ import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
 import org.javahelpers.codegen.model.type.TypeInstantiation;
 import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
-import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
+import org.javahelpers.codegen.logging.ProcessingLogger;
 import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

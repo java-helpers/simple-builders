@@ -25,8 +25,8 @@
 package org.javahelpers.codegen;
 
 import javax.annotation.processing.ProcessingEnvironment;
-import org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker;
-import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
+import org.javahelpers.codegen.logging.PerformanceTracker;
+import org.javahelpers.codegen.logging.ProcessingLogger;
 
 /**
  * Environment handed to a {@link ClassCodeGenerator}: the annotation processing environment, the

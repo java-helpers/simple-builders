@@ -49,7 +49,7 @@ import org.javahelpers.codegen.model.method.MethodDto;
 import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.codegen.processing.AnnotationProcessingContext;
 import org.javahelpers.codegen.processing.CompilerArgumentsReader;
-import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
+import org.javahelpers.codegen.logging.ProcessingLogger;
 import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
 import org.junit.jupiter.api.Test;
 

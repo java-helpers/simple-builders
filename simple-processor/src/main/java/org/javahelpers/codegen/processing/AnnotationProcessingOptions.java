@@ -26,7 +26,7 @@ package org.javahelpers.codegen.processing;
 
 import java.util.List;
 import java.util.Map;
-import org.javahelpers.simple.builders.processor.processing.logging.PhaseHierarchy;
+import org.javahelpers.codegen.logging.PhaseHierarchy;
 
 /**
  * Static options a concrete annotation-processing context supplies to {@link

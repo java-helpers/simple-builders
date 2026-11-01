@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.processing.logging;
+package org.javahelpers.codegen.logging;
 
 /**
  * Interface for tracking performance metrics during annotation processing.

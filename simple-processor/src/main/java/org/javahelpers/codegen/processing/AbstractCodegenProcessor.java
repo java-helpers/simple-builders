@@ -44,8 +44,8 @@ import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.codegen.processing.AnnotationProcessingContext;
 import org.javahelpers.codegen.processing.CompilerArgumentsReader;
 import org.javahelpers.codegen.processing.SourceFormatterResolver;
-import org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker;
-import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
+import org.javahelpers.codegen.logging.PerformanceTracker;
+import org.javahelpers.codegen.logging.ProcessingLogger;
 
 /**
  * Driver of a generic annotation-processing pipeline: the framework owns the processing lifecycle,
