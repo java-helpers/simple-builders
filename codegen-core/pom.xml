@@ -103,10 +103,6 @@
       <artifactId>commons-collections4</artifactId>
       <version>${commons-collections.version}</version>
     </dependency>
-    <!-- Utility for generate service file -->
-    <!-- Utility library for generate java code -->
-    <!-- MapStruct SPI (BuilderProvider) - only needed to compile the SPI implementation;
-         loaded by mapstruct-processor at annotation processing time, never at runtime -->
     
     <!-- Test Dependencies -->
     <dependency>
@@ -127,12 +123,8 @@
       <version>${junit-jupiter.version}</version>
       <scope>test</scope>
     </dependency>
-    
-    <!-- Google Compile Testing for annotation processor testing -->
-    
-    <!-- MapStruct annotations for compiling test mappers against the SPI integration -->
 
-    <!-- Jackson Annotations for testing Jackson support -->
+
   </dependencies>
     
   <build>
@@ -203,7 +195,6 @@
           <source>${java.version}</source>
           <target>${java.version}</target>
           <release>${java.version}</release>
-          <!-- Allow @AutoService to run but exclude our own processor to avoid circular dependency -->
         </configuration>
       </plugin>
       
@@ -221,7 +212,7 @@
         <version>${plugin.maven.install.version}</version>
       </plugin>
 
-      <!-- JaCoCo Code Coverage (processor module only) -->
+      <!-- JaCoCo Code Coverage -->
       <!-- moved to 'coverage' profile -->
     </plugins>
   </build>
