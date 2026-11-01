@@ -67,9 +67,6 @@ public record CodegenTask<K extends CodegenConfiguration>(
     /** The element the task generates for; also the default {@link #reportingElement}. */
     public Builder<K> element(Element element) {
       this.element = element;
-      if (this.reportingElement == null) {
-        this.reportingElement = element;
-      }
       return this;
     }
 
@@ -96,7 +93,7 @@ public record CodegenTask<K extends CodegenConfiguration>(
       return new CodegenTask<>(
           Objects.requireNonNull(element, "element"),
           Objects.requireNonNull(configuration, "configuration"),
-          Objects.requireNonNull(reportingElement, "reportingElement"),
+          reportingElement != null ? reportingElement : element,
           Objects.requireNonNull(outputPackage, "outputPackage"));
     }
   }
