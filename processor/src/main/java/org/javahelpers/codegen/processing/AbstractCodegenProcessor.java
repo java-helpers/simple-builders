@@ -186,26 +186,7 @@ public abstract class AbstractCodegenProcessor<
       tracker.startClass(task.element().getSimpleName().toString());
       try {
         context.setCurrentTask(task);
-        tracker.startPhase();
-        List<D> definitions;
-        try {
-          definitions = analyse(task, context);
-        } finally {
-          tracker.endPhase("Analysis");
-        }
-        if (definitions.isEmpty()) {
-          context.debug("Analysis produced no targets for " + task.element().getSimpleName());
-        }
-        for (D definition : definitions) {
-          tracker.startPhase();
-          GenerationTargetClassDto target;
-          try {
-            target = mapToTargetSpecification(definition, task.configuration(), context);
-          } finally {
-            tracker.endPhase("Target Mapping");
-          }
-          planned.add(new PlannedGeneration<>(task, definition, target));
-        }
+        planned.addAll(specify(task, context, tracker));
       } catch (Exception ex) {
         // By default generation failures are warnings so other targets are still generated.
         // In opt-in strict mode they are promoted to errors that fail the build.
@@ -250,6 +231,43 @@ public abstract class AbstractCodegenProcessor<
     context.resetIndentation();
     endRound(context);
     return claimsAnnotations(getSupportedAnnotationTypes());
+  }
+
+  /**
+   * Analyses one task and maps every resulting definition to its render target, tracking both
+   * phases on the class-level timer the caller started. Runs inside the task's debug scope.
+   *
+   * @param task the task to specify
+   * @param context the processing context
+   * @param tracker the round's performance tracker
+   * @return the planned generations of this task (possibly empty)
+   * @throws Exception forwarded from the domain's {@link #analyse}/{@link
+   *     #mapToTargetSpecification}
+   */
+  private List<PlannedGeneration<K, D>> specify(
+      CodegenTask<K> task, C context, PerformanceTracker tracker) throws Exception {
+    tracker.startPhase();
+    List<D> definitions;
+    try {
+      definitions = analyse(task, context);
+    } finally {
+      tracker.endPhase("Analysis");
+    }
+    if (definitions.isEmpty()) {
+      context.debug("Analysis produced no targets for " + task.element().getSimpleName());
+    }
+    List<PlannedGeneration<K, D>> planned = new ArrayList<>();
+    for (D definition : definitions) {
+      tracker.startPhase();
+      GenerationTargetClassDto target;
+      try {
+        target = mapToTargetSpecification(definition, task.configuration(), context);
+      } finally {
+        tracker.endPhase("Target Mapping");
+      }
+      planned.add(new PlannedGeneration<>(task, definition, target));
+    }
+    return planned;
   }
 
   @Override
