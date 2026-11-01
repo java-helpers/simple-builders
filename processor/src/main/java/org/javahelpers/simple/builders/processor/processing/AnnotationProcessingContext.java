@@ -39,6 +39,8 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+import org.javahelpers.codegen.processing.CodegenTask;
+import org.javahelpers.simple.builders.processor.analysis.GeneratedTypes;
 import org.javahelpers.simple.builders.processor.analysis.TypeMappingContext;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.logging.ActivePerformanceTracker;
@@ -73,8 +75,14 @@ public class AnnotationProcessingContext implements TypeMappingContext {
   /** Static options supplied by the concrete context. */
   protected final AnnotationProcessingOptions options;
 
-  /** Package generated code is written to, or {@code null} when not generating into a package. */
-  private String generatedPackageName;
+  /**
+   * Registry of the types generated in the current processing round — the up-front recognition of
+   * former (and planned) generated classes.
+   */
+  private final GeneratedTypes generatedTypes = new GeneratedTypes();
+
+  /** The task currently being processed — set by the driver before analysis and generation. */
+  private CodegenTask<?> currentTask;
 
   /**
    * Creates the context with default options (strict mode enabled, performance tracking disabled).
@@ -110,13 +118,24 @@ public class AnnotationProcessingContext implements TypeMappingContext {
   }
 
   /**
-   * Sets the name of the package generated code is written to. Called when the current generation
-   * target is known.
+   * Sets the task currently being processed. The processing driver calls this once per planned task
+   * before analysis starts, so downstream code can reach the current configuration and output
+   * package without threading both through every call.
    *
-   * @param generatedPackageName the qualified name of the package generated classes are placed in
+   * @param task the task currently being processed
    */
-  protected void setGeneratedPackageName(String generatedPackageName) {
-    this.generatedPackageName = generatedPackageName;
+  public void setCurrentTask(CodegenTask<?> task) {
+    this.currentTask = task;
+  }
+
+  /**
+   * The task currently being processed.
+   *
+   * @return the current task with its element, configuration and output package
+   */
+  @SuppressWarnings("java:S1452") // the task's configuration type varies per domain
+  public CodegenTask<?> getCurrentTask() {
+    return currentTask;
   }
 
   /**
@@ -139,7 +158,7 @@ public class AnnotationProcessingContext implements TypeMappingContext {
     if (member.getModifiers().contains(Modifier.PRIVATE)) {
       return false;
     }
-    return generatedPackageName != null && getPackageName(member).equals(generatedPackageName);
+    return currentTask != null && getPackageName(member).equals(currentTask.outputPackage());
   }
 
   /**
@@ -205,6 +224,28 @@ public class AnnotationProcessingContext implements TypeMappingContext {
   @Override
   public Optional<TypeName> resolveGeneratedType(TypeElement typeElement) {
     return Optional.empty();
+  }
+
+  /**
+   * The registry of types generated in the current processing round. Domains register planned
+   * outputs before generating, so references to them resolve; downstream code queries via {@link
+   * GeneratedTypes#findGenerated}.
+   *
+   * @return the generated-types registry
+   */
+  public GeneratedTypes getGeneratedTypes() {
+    return generatedTypes;
+  }
+
+  /**
+   * Registers one type planned to be generated for a processed element — a convenience over {@link
+   * #getGeneratedTypes()} for the common registration call.
+   *
+   * @param elementType the processed element's type the generated type belongs to
+   * @param generatedType the type planned to be generated for it
+   */
+  public void addGeneratedType(TypeName elementType, TypeName generatedType) {
+    generatedTypes.add(elementType, generatedType);
   }
 
   /**

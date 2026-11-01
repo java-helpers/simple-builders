@@ -147,8 +147,9 @@ public class RoasterCodeGenerator implements ClassCodeGenerator {
     writeClassToFile(sourceCode, classDef);
     performanceTracker.endPhase(PHASE_FILE_WRITING);
 
-    logger.debugEndOperation(
-        "Successfully generated class: %s", classDef.getTypeName().getClassName());
+    // The generation scope stays open — the caller's post-generation step (onTaskGenerated in the
+    // task driver) closes it with its summary line (see AbstractCodegenProcessor.generateTarget).
+    logger.debug("Successfully generated class: %s", classDef.getTypeName().getClassName());
   }
 
   private JavaClassSource buildClassSource(GenerationTargetClassDto classDef) {
@@ -222,12 +223,14 @@ public class RoasterCodeGenerator implements ClassCodeGenerator {
 
   private void appendFields(JavaClassSource source, GenerationTargetClassDto classDef) {
     performanceTracker.startPhase();
+    if (CollectionUtils.isEmpty(classDef.getClassFields())) {
+      performanceTracker.endPhase(PHASE_FIELDS);
+      return;
+    }
     logger.debugStartOperation("Generating %d fields", classDef.getClassFields().size());
-
     for (ClassFieldDto fieldDto : classDef.getClassFields()) {
       appendField(source, fieldDto);
     }
-
     logger.debugEndOperation("Fields added: %d fields", source.getFields().size());
     performanceTracker.endPhase(PHASE_FIELDS);
   }
@@ -243,12 +246,14 @@ public class RoasterCodeGenerator implements ClassCodeGenerator {
 
   private void appendConstructors(JavaClassSource source, GenerationTargetClassDto classDef) {
     performanceTracker.startPhase();
+    if (CollectionUtils.isEmpty(classDef.getConstructors())) {
+      performanceTracker.endPhase(PHASE_CONSTRUCTORS);
+      return;
+    }
     logger.debugStartOperation("Generating %d constructors", classDef.getConstructors().size());
-
     for (ConstructorDto constructor : classDef.getConstructors()) {
       appendConstructor(source, constructor);
     }
-
     logger.debugEndOperation("Constructors added: %d", classDef.getConstructors().size());
     performanceTracker.endPhase(PHASE_CONSTRUCTORS);
   }
@@ -267,6 +272,10 @@ public class RoasterCodeGenerator implements ClassCodeGenerator {
 
   private void appendMethods(JavaClassSource source, GenerationTargetClassDto classDef) {
     performanceTracker.startPhase();
+    if (CollectionUtils.isEmpty(classDef.getMethods())) {
+      performanceTracker.endPhase(PHASE_METHODS);
+      return;
+    }
     logger.debugStartOperation("Generating %d method candidates", classDef.getMethods().size());
 
     // Resolve method conflicts by signature and priority
@@ -562,13 +571,11 @@ public class RoasterCodeGenerator implements ClassCodeGenerator {
 
   private void writeClassToFile(String sourceCode, GenerationTargetClassDto classDef)
       throws CodeGenerationException {
-    logger.debug(
-        "Writing class to file: %s.%s",
-        classDef.getTypeName().getPackageName(), classDef.getTypeName().getClassName());
-
     String qualifiedName = classDef.getTypeName().getFullQualifiedName();
+    logger.debug("Creating JavaFileObject: %s", qualifiedName);
     try {
       JavaFileObject file = processingEnv.getFiler().createSourceFile(qualifiedName);
+      logger.debug("Writing class to file: %s", file.toUri().getPath());
       try (Writer writer = file.openWriter()) {
         writer.write(sourceCode);
       }

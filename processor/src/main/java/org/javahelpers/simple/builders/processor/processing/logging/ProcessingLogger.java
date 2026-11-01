@@ -32,7 +32,8 @@ import javax.tools.Diagnostic;
 /**
  * Logger for all messages during annotation processing. Providing util-functions for posting
  * messages easily. Using a {@code javax.annotation.processing.Messager} inside to publish the
- * messages.
+ * messages. Every emitted message is prefixed with the logger's diagnostic prefix ("{@code prefix:
+ * }") when one was supplied at creation.
  */
 public class ProcessingLogger {
   /** Util class for exposing messages of type {@code javax.annotation.processing.Messager}. */
@@ -40,6 +41,9 @@ public class ProcessingLogger {
 
   /** Verbosity level of this logger. */
   private final Verbosity verbosity;
+
+  /** Diagnostic prefix identifying the processor — every emitted message is prefixed with it. */
+  private final String loggingPrefix;
 
   /** Thread-local indentation level for hierarchical logging. */
   private static final ThreadLocal<Integer> indentationLevel = ThreadLocal.withInitial(() -> 0);
@@ -61,7 +65,18 @@ public class ProcessingLogger {
    * @return a processing logger reporting errors, warnings and info messages
    */
   public static ProcessingLogger create(ProcessingEnvironment processingEnv) {
-    return new ProcessingLogger(processingEnv, Verbosity.NORMAL);
+    return new ProcessingLogger(processingEnv, Verbosity.NORMAL, null);
+  }
+
+  /**
+   * Creates a new ProcessingLogger carrying a diagnostic prefix.
+   *
+   * @param processingEnv the processing environment providing the messager
+   * @param loggingPrefix the processor's diagnostic prefix, or {@code null}
+   * @return a processing logger reporting errors, warnings and info messages
+   */
+  public static ProcessingLogger create(ProcessingEnvironment processingEnv, String loggingPrefix) {
+    return new ProcessingLogger(processingEnv, Verbosity.NORMAL, loggingPrefix);
   }
 
   /**
@@ -71,15 +86,40 @@ public class ProcessingLogger {
    * @return a debug-enabled processing logger
    */
   public static ProcessingLogger createVerbose(ProcessingEnvironment processingEnv) {
-    return new ProcessingLogger(processingEnv, Verbosity.VERBOSE);
+    return new ProcessingLogger(processingEnv, Verbosity.VERBOSE, null);
   }
 
-  private ProcessingLogger(ProcessingEnvironment processingEnv, Verbosity verbosity) {
+  /**
+   * Creates a new debug-enabled ProcessingLogger carrying a diagnostic prefix.
+   *
+   * @param processingEnv the processing environment providing the messager
+   * @param loggingPrefix the processor's diagnostic prefix, or {@code null}
+   * @return a debug-enabled processing logger
+   */
+  public static ProcessingLogger createVerbose(
+      ProcessingEnvironment processingEnv, String loggingPrefix) {
+    return new ProcessingLogger(processingEnv, Verbosity.VERBOSE, loggingPrefix);
+  }
+
+  private ProcessingLogger(
+      ProcessingEnvironment processingEnv, Verbosity verbosity, String loggingPrefix) {
     // Reset ThreadLocal state to ensure clean state between test runs
     resetThreadLocalState();
 
     this.messager = processingEnv.getMessager();
     this.verbosity = verbosity;
+    this.loggingPrefix = loggingPrefix;
+  }
+
+  /**
+   * Applies this logger's "{@code prefix: }" prefix to a message — the one place the prefix pattern
+   * is defined. Loggers without a prefix return the message unchanged.
+   *
+   * @param message the message or message format
+   * @return the message prefixed with this logger's prefix
+   */
+  private String prefixed(String message) {
+    return loggingPrefix != null ? loggingPrefix + ": " + message : message;
   }
 
   /** Resets ThreadLocal state to ensure clean state between test runs. */
@@ -94,7 +134,7 @@ public class ProcessingLogger {
    * @param args arguments referenced by the format specifiers in the format string
    */
   public void error(String format, Object... args) {
-    messager.printMessage(Diagnostic.Kind.ERROR, String.format(format, args));
+    messager.printMessage(Diagnostic.Kind.ERROR, String.format(prefixed(format), args));
   }
 
   /**
@@ -105,7 +145,7 @@ public class ProcessingLogger {
    * @param args arguments referenced by the format specifiers in the format string
    */
   public void error(Element e, String format, Object... args) {
-    messager.printMessage(Diagnostic.Kind.ERROR, String.format(format, args), e);
+    messager.printMessage(Diagnostic.Kind.ERROR, String.format(prefixed(format), args), e);
   }
 
   /**
@@ -115,7 +155,7 @@ public class ProcessingLogger {
    * @param message the info message to be posted
    */
   public void info(String message) {
-    messager.printMessage(Diagnostic.Kind.NOTE, message);
+    messager.printMessage(Diagnostic.Kind.NOTE, prefixed(message));
   }
 
   /**
@@ -129,7 +169,7 @@ public class ProcessingLogger {
   private String formatHierarchicalMessage(String message, int spaces) {
     String prefix = getCurrentIndentationLevel() > 0 ? "└─ " : "";
     String spacing = " ".repeat(spaces);
-    return String.format("%s%s", spacing, formatWithIndentationNoDebug(message, prefix));
+    return spacing + prefixed(formatWithIndentationNoDebug(message, prefix));
   }
 
   /**
@@ -147,7 +187,7 @@ public class ProcessingLogger {
       messager.printMessage(Diagnostic.Kind.NOTE, indentedMessage);
     } else {
       // When debug is disabled, use flat formatting (current behavior)
-      messager.printMessage(Diagnostic.Kind.NOTE, message);
+      messager.printMessage(Diagnostic.Kind.NOTE, prefixed(message));
     }
   }
 
@@ -196,7 +236,7 @@ public class ProcessingLogger {
       messager.printMessage(Diagnostic.Kind.WARNING, indentedMessage);
     } else {
       // When debug is disabled, print flat
-      messager.printMessage(Diagnostic.Kind.WARNING, message);
+      messager.printMessage(Diagnostic.Kind.WARNING, prefixed(message));
     }
   }
 
@@ -216,7 +256,7 @@ public class ProcessingLogger {
       messager.printMessage(Diagnostic.Kind.WARNING, indentedMessage, e);
     } else {
       // When debug is disabled, print flat
-      messager.printMessage(Diagnostic.Kind.WARNING, message, e);
+      messager.printMessage(Diagnostic.Kind.WARNING, prefixed(message), e);
     }
   }
 
@@ -231,7 +271,7 @@ public class ProcessingLogger {
     int level = indentationLevel.get();
     if (level == 0) {
       // At level 0, no indentation or prefix
-      return "[DEBUG] " + message;
+      return "[DEBUG] " + prefixed(message);
     }
 
     // Use │ characters with proper spacing for better visual connection between hierarchical levels
@@ -241,7 +281,7 @@ public class ProcessingLogger {
     }
     // Add the specified prefix
     indent.append(prefix);
-    return "[DEBUG] " + indent + message;
+    return "[DEBUG] " + prefixed(indent.toString() + message);
   }
 
   /**

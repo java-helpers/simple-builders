@@ -22,22 +22,28 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.processing;
+package org.javahelpers.codegen.processing;
 
-import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
+import org.javahelpers.simple.builders.processor.model.type.TypeName;
 
 /**
- * Per-target processing state for the type whose builder is currently being generated.
- *
- * <p>{@link org.javahelpers.simple.builders.processor.BuilderProcessor} sets one instance per
- * processed type on the {@link BuilderProcessingContext} before extraction starts, so downstream
- * analysis can reach it without threading both values through every call.
- *
- * @param configuration the resolved builder configuration for the current target
- * @param builderPackage the package the generated builder is written to. This is the configured
- *     {@code packageName} option when set; otherwise the processed type's own package for
- *     {@code @SimpleBuilder} targets, resp. the holder's package for {@code @SimpleBuilderFor}
- *     targets. It cannot always be derived from the processed element itself, which is why it is
- *     carried explicitly here
+ * The common contract of a domain's analysed definition — the analysis result the domain maps to
+ * {@code GenerationTargetClassDto} render targets.
  */
-public record ProcessingTarget(BuilderConfiguration configuration, String builderPackage) {}
+public interface CodegenDefinition {
+
+  /**
+   * The definition's primary type name — the analysed type's own name.
+   *
+   * @return the primary type name
+   */
+  TypeName getTypeName();
+
+  /**
+   * The name of the type the definition's target will generate — the prediction a domain makes at
+   * task level, confirmed once the definition exists.
+   *
+   * @return the generated target type's name
+   */
+  TypeName targetTypeName();
+}

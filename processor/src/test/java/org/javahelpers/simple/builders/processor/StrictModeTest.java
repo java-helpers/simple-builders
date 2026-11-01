@@ -68,7 +68,7 @@ class StrictModeTest {
     Compilation compilation = createCompiler().compile(dto(), collidingBuilder());
 
     assertThat(compilation).succeeded();
-    assertThat(compilation).hadWarningContaining("Failed to generate builder");
+    assertThat(compilation).hadWarningContaining("Failed to generate target");
   }
 
   @Test
@@ -79,6 +79,6 @@ class StrictModeTest {
             .compile(dto(), collidingBuilder());
 
     assertThat(compilation).failed();
-    assertThat(compilation).hadErrorContaining("Failed to generate builder");
+    assertThat(compilation).hadErrorContaining("Failed to generate target");
   }
 }

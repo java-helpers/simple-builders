@@ -30,6 +30,7 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import org.javahelpers.codegen.processing.CodegenDefinition;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.annotation.InterfaceName;
@@ -53,7 +54,7 @@ import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
  * GenerationTargetClassDto} (rendering DTO) during finalization in {@code
  * BuilderDefinitionCreator.finalizeDefinition()}.
  */
-public class BuilderDefinitionDto {
+public class BuilderDefinitionDto implements CodegenDefinition {
 
   // --- Builder-specific fields ---
 
@@ -138,7 +139,13 @@ public class BuilderDefinitionDto {
     this.typeName = builderClassName;
   }
 
+  @Override
   public TypeName getTypeName() {
+    return getBuilderTypeName();
+  }
+
+  @Override
+  public TypeName targetTypeName() {
     return getBuilderTypeName();
   }
 

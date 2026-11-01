@@ -31,6 +31,7 @@ import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
+import org.javahelpers.codegen.processing.CodegenConfiguration;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.core.enums.FormattingMode;
@@ -83,6 +84,7 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
  * @param formattingMode Formatting mode for generated source code (null = inherit from compiler
  *     arg)
  * @param strict Strict/fail-fast generation mode
+ * @param verbose Verbose diagnostic output
  */
 public record BuilderConfiguration(
     OptionState generateFieldSupplier,
@@ -120,7 +122,9 @@ public record BuilderConfiguration(
     String builderUsageSuffix,
     String setterPrefix,
     String formattingMode,
-    OptionState strict) {
+    OptionState strict,
+    OptionState verbose)
+    implements CodegenConfiguration {
 
   public BuilderConfiguration {
     builderGenerationPackages =
@@ -165,6 +169,7 @@ public record BuilderConfiguration(
           .setterPrefix("")
           .formattingMode(FormattingMode.JDT.getOptionValue())
           .strict(DISABLED)
+          .verbose(DISABLED)
           .build();
 
   // === Convenience accessors with 'is' prefix for boolean properties ===
@@ -326,8 +331,14 @@ public record BuilderConfiguration(
     return setterPrefix;
   }
 
+  @Override
   public boolean isStrictModeEnabled() {
     return strict == ENABLED;
+  }
+
+  @Override
+  public boolean isVerboseEnabled() {
+    return verbose == ENABLED;
   }
 
   public FormattingMode formattingModeEnum() {
@@ -414,6 +425,7 @@ public record BuilderConfiguration(
         .setterPrefix(mergeString(other.setterPrefix, this.setterPrefix))
         .formattingMode(mergeString(other.formattingMode, this.formattingMode))
         .strict(mergeOptionState(other.strict, this.strict))
+        .verbose(mergeOptionState(other.verbose, this.verbose))
         .build();
   }
 
@@ -505,6 +517,7 @@ public record BuilderConfiguration(
         .appendIfNotEmpty("setterPrefix", setterPrefix)
         .appendIfNotEmpty("formattingMode", formattingMode)
         .appendValueIfSet("strict", strict)
+        .appendValueIfSet("verbose", verbose)
         .toString();
   }
 
@@ -600,6 +613,9 @@ public record BuilderConfiguration(
 
     // === Error Handling ===
     private OptionState strict = OptionState.UNSET;
+
+    // === Diagnostics ===
+    private OptionState verbose = OptionState.UNSET;
 
     // === Setters ===
     public Builder generateSupplier(OptionState value) {
@@ -932,6 +948,16 @@ public record BuilderConfiguration(
       return this;
     }
 
+    public Builder verbose(OptionState value) {
+      this.verbose = value;
+      return this;
+    }
+
+    public Builder verbose(boolean value) {
+      this.verbose = value ? ENABLED : DISABLED;
+      return this;
+    }
+
     public BuilderConfiguration build() {
       return new BuilderConfiguration(
           generateFieldSupplier,
@@ -969,7 +995,8 @@ public record BuilderConfiguration(
           builderUsageSuffix,
           setterPrefix,
           formattingMode,
-          strict);
+          strict,
+          verbose);
     }
   }
 

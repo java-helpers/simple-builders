@@ -120,7 +120,7 @@ class SimpleBuilderForTest {
             .compile(unconstructable, holder("test", "Builders", "ext.Singleton"));
 
     assertThat(compilation).succeeded();
-    assertThat(compilation).hadWarningContaining("Failed to generate builder");
+    assertThat(compilation).hadWarningContaining("Failed to generate target");
     assertThat(compilation).hadWarningContaining("No accessible constructor");
     ProcessorAsserts.assertNoBuilderGenerated(
         compilation, "Singleton", "A type without accessible constructor must not get a builder");
@@ -165,7 +165,7 @@ class SimpleBuilderForTest {
             .compile(unconstructable, holder("test", "Builders", "ext.Singleton"));
 
     assertThat(compilation).failed();
-    assertThat(compilation).hadErrorContaining("Failed to generate builder");
+    assertThat(compilation).hadErrorContaining("Failed to generate target");
     assertThat(compilation).hadErrorContaining("No accessible constructor");
   }
 
@@ -752,6 +752,22 @@ class SimpleBuilderForTest {
           public BaseDto() {}
         }
         """);
+  }
+
+  @Test
+  void sourcePackages_NoResolvableTypes_Warns() {
+    JavaFileObject holder =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFor;
+            @SimpleBuilderFor(sourcePackages = "nonexistent.pkg")
+            public class Builders {}
+            """);
+
+    Compilation compilation = ProcessorTestUtils.createCompiler().compile(holder);
+
+    assertThat(compilation).hadWarningContaining("resolves no types - nothing to generate");
   }
 
   private static JavaFileObject holder(String pkg, String className, String targetType) {

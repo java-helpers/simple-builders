@@ -31,6 +31,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.Set;
 import org.javahelpers.simple.builders.processor.classgen.GenerationPhases;
 import org.javahelpers.simple.builders.processor.processing.PipelinePhases;
 import org.javahelpers.simple.builders.processor.testing.CapturingProcessingLogger;
@@ -53,7 +55,7 @@ class ActivePerformanceTrackerTest {
         new ActivePerformanceTracker(outputFile, PipelinePhases.PIPELINE_HIERARCHY);
     tracker.startClass("TestClassA");
     tracker.startPhase();
-    tracker.endPhase(PipelinePhases.PHASE_BUILDER_DEFINITION_EXTRACTION);
+    tracker.endPhase(PipelinePhases.PHASE_ANALYSIS);
     tracker.startGenerator();
     tracker.endGenerator("FieldSupplierGenerator");
     tracker.startEnhancer();
@@ -62,7 +64,7 @@ class ActivePerformanceTrackerTest {
 
     tracker.startClass("TestClassB");
     tracker.startPhase();
-    tracker.endPhase(PipelinePhases.PHASE_DTO_MAPPING);
+    tracker.endPhase(PipelinePhases.PHASE_TARGET_MAPPING);
     tracker.endClass(3, 1);
 
     CapturingProcessingLogger capturing = CapturingProcessingLogger.create();
@@ -71,6 +73,108 @@ class ActivePerformanceTrackerTest {
 
     String jsonContent = Files.readString(Path.of(outputFile));
     return new ObjectMapper().readTree(jsonContent);
+  }
+
+  /** Asserts the metric entries are ordered by {@code elapsedNanos} descending. */
+  private static void assertSortedByElapsedDesc(JsonNode metrics) {
+    for (int i = 1; i < metrics.size(); i++) {
+      assertTrue(
+          metrics.get(i - 1).get("elapsedNanos").asLong()
+              >= metrics.get(i).get("elapsedNanos").asLong(),
+          "metrics not sorted by elapsedNanos descending at index " + i);
+    }
+  }
+
+  /** Asserts the class-metric entries carry exactly the given class names. */
+  private static void assertClassNames(JsonNode classMetrics, Set<String> expected) {
+    Set<String> names = new HashSet<>();
+    for (JsonNode cm : classMetrics) {
+      names.add(cm.get("className").asText());
+    }
+    assertEquals(expected, names);
+  }
+
+  /** The class-metric entry for the given class name — fails the test when absent. */
+  private static JsonNode classMetricByName(JsonNode root, String className) {
+    for (JsonNode cm : root.get("classMetrics")) {
+      if (className.equals(cm.get("className").asText())) {
+        return cm;
+      }
+    }
+    return fail("No classMetric entry for " + className);
+  }
+
+  /**
+   * Pins the complete tagged report layout: every line carries the logger's diagnostic prefix and
+   * the tree connectors sit after it. Timing values are normalized to {@code <n>} — the structure,
+   * labels and indentation are what is asserted.
+   */
+  @Test
+  void generateReport_prefixedLogger_producesExpectedTaggedLayout() {
+    ActivePerformanceTracker tracker =
+        new ActivePerformanceTracker(null, PipelinePhases.PIPELINE_HIERARCHY);
+    tracker.startClass("MyClass");
+    tracker.startPhase();
+    tracker.endPhase(PipelinePhases.PHASE_ANALYSIS);
+    tracker.startGenerator();
+    tracker.endGenerator("MyGenerator");
+    tracker.startEnhancer();
+    tracker.endEnhancer("MyEnhancer");
+    tracker.endClass(5, 2);
+
+    CapturingProcessingLogger capturing = CapturingProcessingLogger.create("simple-builders");
+    tracker.generateReport(capturing.logger());
+
+    // Remove the diagnostic kind marker and the exact measurements (durations, percentages,
+    // counts) before comparing — the assertion pins the report's structure, labels and
+    // indentation, not the timings
+    String actual =
+        String.join(
+            "\n",
+            capturing.messages().stream()
+                .map(m -> m.replaceFirst("^[A-Z]+: ", ""))
+                .map(m -> m.replaceAll("\\d+(\\.\\d+)?", "<n>"))
+                .map(String::stripTrailing)
+                .toList());
+
+    assertEquals(
+        """
+        simple-builders: PERFORMANCE REPORT
+        simple-builders: ================================
+        simple-builders: Total classes processed: <n>
+        simple-builders: Total processing time: <n>s
+        simple-builders:
+        simple-builders: Phase breakdown:
+        simple-builders: ├─ Element Collection: <n>s (<n>%)
+        simple-builders: ├─ Configuration Resolution: <n>s (<n>%)
+        simple-builders: ├─ Analysis: <n>s (<n>%)
+        simple-builders: ├─ Target Mapping: <n>s (<n>%)
+        simple-builders: └─ Code Generation: <n>s (<n>%)
+        simple-builders:    ├─ Source Construction: <n>s (<n>%)
+        simple-builders:    │  ├─ Element Building: <n>s (<n>%)
+        simple-builders:    │  │  ├─ Class Creation: <n>s (<n>%)
+        simple-builders:    │  │  ├─ Class Metadata: <n>s (<n>%)
+        simple-builders:    │  │  ├─ Fields: <n>s (<n>%)
+        simple-builders:    │  │  ├─ Constructors: <n>s (<n>%)
+        simple-builders:    │  │  ├─ Methods: <n>s (<n>%)
+        simple-builders:    │  │  ├─ Nested Types: <n>s (<n>%)
+        simple-builders:    │  │  └─ Class Annotations: <n>s (<n>%)
+        simple-builders:    │  ├─ String Generation: <n>s (<n>%)
+        simple-builders:    │  └─ Formatting: <n>s (<n>%)
+        simple-builders:    └─ File Writing: <n>s (<n>%)
+        simple-builders:
+        simple-builders: Average per class: <n>ms
+        simple-builders:
+        simple-builders: Top <n> slowest classes:
+        simple-builders:   <n>. MyClass - <n>ms (<n> fields, <n> collections)
+        simple-builders:
+        simple-builders: Top <n> slowest MethodGenerators:
+        simple-builders:   <n>. MyGenerator - <n>s (<n> calls, <n>ms/call)
+        simple-builders:
+        simple-builders: Top <n> slowest BuilderEnhancers:
+        simple-builders:   <n>. MyEnhancer - <n>s (<n> calls, <n>ms/call)\
+        """,
+        actual);
   }
 
   @Test
@@ -236,11 +340,9 @@ class ActivePerformanceTrackerTest {
 
     JsonNode classMetrics = root.get("classMetrics");
     assertEquals(2, classMetrics.size());
-    assertEquals("TestClassA", classMetrics.get(0).get("className").asText());
-    assertEquals("TestClassB", classMetrics.get(1).get("className").asText());
-    assertTrue(
-        classMetrics.get(0).get("elapsedNanos").asLong()
-            >= classMetrics.get(1).get("elapsedNanos").asLong());
+    // Ordering is the contract (desc by elapsed); which class is first is timing-dependent.
+    assertClassNames(classMetrics, Set.of("TestClassA", "TestClassB"));
+    assertSortedByElapsedDesc(classMetrics);
   }
 
   @Test
@@ -248,7 +350,7 @@ class ActivePerformanceTrackerTest {
     Path jsonFile = tempDir.resolve("report.json");
     JsonNode root = generateReportAndParseJson(jsonFile.toString());
 
-    JsonNode classA = root.get("classMetrics").get(0);
+    JsonNode classA = classMetricByName(root, "TestClassA");
     assertEquals(5, classA.get("fieldCount").asInt());
     assertEquals(2, classA.get("collectionCount").asInt());
     assertTrue(classA.has("elapsedMs"));
@@ -285,8 +387,8 @@ class ActivePerformanceTrackerTest {
 
     JsonNode phases = root.get("phaseBreakdown");
     assertTrue(phases.has(PipelinePhases.PHASE_CONFIGURATION_RESOLUTION));
-    assertTrue(phases.has(PipelinePhases.PHASE_BUILDER_DEFINITION_EXTRACTION));
-    assertTrue(phases.has(PipelinePhases.PHASE_DTO_MAPPING));
+    assertTrue(phases.has(PipelinePhases.PHASE_ANALYSIS));
+    assertTrue(phases.has(PipelinePhases.PHASE_TARGET_MAPPING));
     assertTrue(phases.has(PipelinePhases.PHASE_CODE_GENERATION));
 
     JsonNode codeGen = phases.get(PipelinePhases.PHASE_CODE_GENERATION);
@@ -481,13 +583,9 @@ class ActivePerformanceTrackerTest {
 
     JsonNode root = new ObjectMapper().readTree(Files.readString(jsonFile));
     JsonNode genStats = root.get("generatorStats");
-    long first = genStats.get(0).get("elapsedNanos").asLong();
-    long second = genStats.get(1).get("elapsedNanos").asLong();
-    assertTrue(first >= second, "Generator stats should be sorted by elapsed descending");
+    assertSortedByElapsedDesc(genStats);
 
     JsonNode enhStats = root.get("enhancerStats");
-    long firstE = enhStats.get(0).get("elapsedNanos").asLong();
-    long secondE = enhStats.get(1).get("elapsedNanos").asLong();
-    assertTrue(firstE >= secondE, "Enhancer stats should be sorted by elapsed descending");
+    assertSortedByElapsedDesc(enhStats);
   }
 }

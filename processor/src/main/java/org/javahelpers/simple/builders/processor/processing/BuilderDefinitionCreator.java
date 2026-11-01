@@ -129,7 +129,7 @@ public class BuilderDefinitionCreator {
     result.addAllFields(setterFields);
 
     // Apply builder enhancers (including With interface generation)
-    context.getGeneratorRegistry().enhanceBuilder(result, result.getBuildingTargetTypeName());
+    context.initGeneratorRegistry().enhanceBuilder(result, result.getBuildingTargetTypeName());
 
     // Propagate @Deprecated from the DTO type to the generated builder class and its factory
     // methods. Done after enhancement so the class javadoc, create() method and constructors
@@ -143,8 +143,6 @@ public class BuilderDefinitionCreator {
 
     // Finalize the definition - convert to generic class representation
     finalizeDefinition(result, context);
-
-    context.debug("Builder will be generated as: %s", result.getBuilderTypeName().getClassName());
 
     context.debugEndOperation(
         "Builder definition extracted: %s", result.getBuilderTypeName().getClassName());
@@ -878,7 +876,7 @@ public class BuilderDefinitionCreator {
 
     // Use GeneratorRegistry to generate all methods for this field
     List<BuilderMethodDto> generatedMethods =
-        context.getGeneratorRegistry().generateAllMethods(field, dtoType, builderType);
+        context.initGeneratorRegistry().generateAllMethods(field, dtoType, builderType);
     generatedMethods.forEach(field::addMethod);
 
     // Apply @Deprecated annotation and @deprecated javadoc to every generated builder method for

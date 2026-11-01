@@ -39,6 +39,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
+import org.javahelpers.simple.builders.core.enums.OptionState;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
@@ -150,6 +151,9 @@ public class BuilderConfigurationReader {
     Stream.of(CompilerArgumentsEnum.values())
         .filter(option -> !option.isAnnotationOnly())
         .forEach(option -> option.apply(builder, reader.readValue(option), logger));
+    if (reader.readBooleanValue(CompilerArgumentsEnum.VERBOSE)) {
+      builder.verbose(OptionState.ENABLED);
+    }
     return builder.build();
   }
 

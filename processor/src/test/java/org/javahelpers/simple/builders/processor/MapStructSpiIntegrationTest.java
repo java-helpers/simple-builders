@@ -75,6 +75,25 @@ class MapStructSpiIntegrationTest {
   }
 
   @Test
+  void mapStruct_markedBeanOutsideGenerationScope_shouldMapViaSetters() {
+    // A round whose plan is empty still finalizes the registry — MapStruct maps the out-of-scope
+    // bean without a builder instead of deferring until no implementation is created
+    Compilation compilation =
+        mapStructCompiler(new BuilderProcessor(), new MappingProcessor())
+            .withOptions(
+                "-Amapstruct.suppressGeneratorTimestamp=true",
+                "-Amapstruct.suppressGeneratorVersionInfoComment=true",
+                "-Asimplebuilder.builderGenerationPackages=scoped")
+            .compile(mutableDto(), mutableDtoMapper());
+    assertThat(compilation).succeeded();
+
+    String mapperImpl = loadGeneratedSource(compilation, "MutableDtoMapperImpl");
+    assertFalse(
+        mapperImpl.contains("MutableDtoBuilder"), "An out-of-scope bean gets no builder to bind");
+    assertTrue(mapperImpl.contains(".setName("), "MapStruct should fall back to setter mapping");
+  }
+
+  @Test
   void mapStruct_shouldNotReportHelpersAsUnmappedTargetProperties() {
     Compilation compilation = mapStructCompiler().compile(personDto(), personDtoMapper());
     assertThat(compilation).succeeded();

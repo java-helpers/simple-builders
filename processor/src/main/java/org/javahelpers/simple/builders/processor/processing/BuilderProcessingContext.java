@@ -46,7 +46,6 @@ public final class BuilderProcessingContext extends AnnotationProcessingContext 
   private final BuilderScopeResolver builderScopeResolver;
 
   private GeneratorRegistry generatorRegistry;
-  private ProcessingTarget processingTarget;
 
   /**
    * Creates a new processing context.
@@ -80,23 +79,12 @@ public final class BuilderProcessingContext extends AnnotationProcessingContext 
   }
 
   /**
-   * Initializes the per-target state ({@link ProcessingTarget}) for the type whose builder is
-   * currently being generated. Called once per target before extraction starts.
-   *
-   * @param processingTarget the resolved configuration and builder package of the current target
-   */
-  public void initProcessingTarget(ProcessingTarget processingTarget) {
-    this.processingTarget = processingTarget;
-    setGeneratedPackageName(processingTarget.builderPackage());
-  }
-
-  /**
    * Gets the configuration for the current processing target.
    *
    * @return the builder configuration for the target being processed
    */
   public BuilderConfiguration getConfiguration() {
-    return this.processingTarget.configuration();
+    return (BuilderConfiguration) getCurrentTask().configuration();
   }
 
   /**
@@ -105,7 +93,7 @@ public final class BuilderProcessingContext extends AnnotationProcessingContext 
    * @return the qualified package name of the generated builder
    */
   public String getBuilderPackageName() {
-    return this.processingTarget.builderPackage();
+    return getCurrentTask().outputPackage();
   }
 
   /**
@@ -128,14 +116,13 @@ public final class BuilderProcessingContext extends AnnotationProcessingContext 
   }
 
   /**
-   * Get the unified generator registry for both field-level method generation and builder-level
-   * enhancement.
-   *
-   * <p>The registry is lazily initialized on first access to avoid circular dependency issues.
+   * The unified generator registry for both field-level method generation and builder-level
+   * enhancement — lazily initialized on first access to avoid circular dependency issues, so the
+   * first call doubles as the init.
    *
    * @return the generator registry
    */
-  public GeneratorRegistry getGeneratorRegistry() {
+  public GeneratorRegistry initGeneratorRegistry() {
     if (generatorRegistry == null) {
       generatorRegistry = new GeneratorRegistry(this, processingEnv);
     }

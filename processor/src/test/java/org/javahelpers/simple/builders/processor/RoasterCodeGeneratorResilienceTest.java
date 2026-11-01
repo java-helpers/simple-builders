@@ -93,7 +93,7 @@ class RoasterCodeGeneratorResilienceTest {
                 env, logger, context.getPerformanceTracker(), context::reportBasedOnStrictMode));
 
     SourceFormatter formatter =
-        new SourceFormatterResolver(env, logger).resolve(FormattingMode.NONE);
+        new SourceFormatterResolver(logger, null).resolve(FormattingMode.NONE);
     CodeGenerationException thrown =
         assertThrows(
             CodeGenerationException.class, () -> generator.generateClass(classDef, formatter));
@@ -129,7 +129,7 @@ class RoasterCodeGeneratorResilienceTest {
                 context::reportBasedOnStrictMode));
 
     SourceFormatter formatter =
-        new SourceFormatterResolver(env, capturing.logger()).resolve(FormattingMode.NONE);
+        new SourceFormatterResolver(capturing.logger(), null).resolve(FormattingMode.NONE);
     // generation itself succeeds; only the file-write step fails on the stub's null filer
     assertThrows(NullPointerException.class, () -> generator.generateClass(classDef, formatter));
     capturing.assertMessage(

@@ -79,7 +79,6 @@ public final class BuilderScopeResolver {
   private ResolutionInputs cachedResolutionInputs;
   private PackageScopes usagePackages = PackageScopes.unscoped();
   private final Map<String, Optional<ResolvedBuilder>> resolvedBuilderTypes = new HashMap<>();
-  private final GeneratedTypes generatedBuilders = new GeneratedTypes();
 
   /**
    * Creates a new resolver for the given processing context.
@@ -96,7 +95,7 @@ public final class BuilderScopeResolver {
    * <p>This method reads the configuration from the processing context via {@link
    * org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext#getConfiguration()}.
    * The caller must ensure that {@link
-   * org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext#initProcessingTarget}
+   * org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext#setCurrentTask}
    * has been invoked with the owner element's resolved configuration beforehand, so that
    * per-element {@code builderUsagePackages} overrides are respected.
    *
@@ -141,26 +140,17 @@ public final class BuilderScopeResolver {
   }
 
   /**
-   * The builder contract of a type whose builder this processor registered for the current round —
-   * always the generated {@code create()} factory for the empty path and the constructor for the
-   * copy path. Only the SPI integrations consume this, to publish the emitted contract.
+   * Wraps a builder type name with the instantiation contract every generated builder emits — a
+   * static {@code create()} factory for the empty path and a constructor for the copy path.
    *
-   * <p>Unlike {@link #resolveUsableBuilderType(TypeElement)} this does not read the per-element
-   * configuration and is safe to call during generation-plan registration.
-   *
-   * @param referencedType the type element being referenced
-   * @return the resolved builder, or empty if no generated builder is registered for the type
+   * @param builder the generated builder's type name
+   * @return the resolved builder carrying its contract
    */
-  public Optional<ResolvedBuilder> resolveGeneratedBuilder(TypeElement referencedType) {
-    TypeName referencedTypeName = JavaLangMapper.mapToTypeName(referencedType, context);
-    return generatedBuilders
-        .findGenerated(referencedTypeName)
-        .map(
-            builder ->
-                new ResolvedBuilder(
-                    builder,
-                    new TypeInstantiation.StaticFactoryCall(GENERATED_FACTORY_METHOD_NAME),
-                    new TypeInstantiation.ConstructorCall()));
+  public ResolvedBuilder generatedBuilderContract(TypeName builder) {
+    return new ResolvedBuilder(
+        builder,
+        new TypeInstantiation.StaticFactoryCall(GENERATED_FACTORY_METHOD_NAME),
+        new TypeInstantiation.ConstructorCall());
   }
 
   /**
@@ -170,7 +160,7 @@ public final class BuilderScopeResolver {
    * <p>Unlike {@link #resolveUsableBuilderType(TypeElement)}, this method takes the configuration
    * as an explicit parameter rather than reading it from the processing context. This is because it
    * is called during generation-plan resolution, before {@link
-   * org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext#initProcessingTarget}
+   * org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext#setCurrentTask}
    * has been invoked for the element, so the context does not yet hold the per-element
    * configuration.
    *
@@ -210,7 +200,7 @@ public final class BuilderScopeResolver {
    * @param builderType the generated builder's type name
    */
   public void registerGeneratedBuilder(TypeName targetType, TypeName builderType) {
-    generatedBuilders.add(targetType, builderType);
+    context.getGeneratedTypes().add(targetType, builderType);
     resolvedBuilderTypes.clear();
   }
 
@@ -219,7 +209,7 @@ public final class BuilderScopeResolver {
    * processing round, so stale registrations and resolutions of the previous round are dropped.
    */
   public void resetGeneratedBuilders() {
-    generatedBuilders.clear();
+    context.getGeneratedTypes().clear();
     resolvedBuilderTypes.clear();
   }
 
@@ -241,16 +231,12 @@ public final class BuilderScopeResolver {
     // Types whose builders are generated in the current processing round are trusted
     // immediately — our own generators always produce the builder contract, so no
     // classpath lookup or contract check is needed.
-    Optional<TypeName> generatedBuilder = generatedBuilders.findGenerated(referencedTypeName);
+    Optional<TypeName> generatedBuilder =
+        context.getGeneratedTypes().findGenerated(referencedTypeName);
     if (generatedBuilder.isPresent()) {
       // Our generators always emit a static create() and no create(T) - the empty path uses
       // the factory, the copy path the constructor
-      return generatedBuilder.map(
-          builder ->
-              new ResolvedBuilder(
-                  builder,
-                  new TypeInstantiation.StaticFactoryCall(GENERATED_FACTORY_METHOD_NAME),
-                  new TypeInstantiation.ConstructorCall()));
+      return generatedBuilder.map(this::generatedBuilderContract);
     }
 
     // Reusing builders not generated in this round - nested or anchored inside the referenced

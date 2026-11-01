@@ -41,8 +41,8 @@ public final class PipelinePhases {
   // Top-level phases
   public static final String PHASE_ELEMENT_COLLECTION = "Element Collection";
   public static final String PHASE_CONFIGURATION_RESOLUTION = "Configuration Resolution";
-  public static final String PHASE_BUILDER_DEFINITION_EXTRACTION = "Builder Definition Extraction";
-  public static final String PHASE_DTO_MAPPING = "DTO Mapping";
+  public static final String PHASE_ANALYSIS = "Analysis";
+  public static final String PHASE_TARGET_MAPPING = "Target Mapping";
   public static final String PHASE_CODE_GENERATION = "Code Generation";
 
   /** Top-level phases of the pipeline, in report display order. */
@@ -50,8 +50,8 @@ public final class PipelinePhases {
       List.of(
           PHASE_ELEMENT_COLLECTION,
           PHASE_CONFIGURATION_RESOLUTION,
-          PHASE_BUILDER_DEFINITION_EXTRACTION,
-          PHASE_DTO_MAPPING,
+          PHASE_ANALYSIS,
+          PHASE_TARGET_MAPPING,
           PHASE_CODE_GENERATION);
 
   /** Phase hierarchy for report display: parent phase to ordered child phases. */

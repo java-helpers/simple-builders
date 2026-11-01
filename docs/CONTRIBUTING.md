@@ -242,19 +242,39 @@ For complete documentation, see [DEBUG_LOGGING.md](DEBUG_LOGGING.md).
 [DEBUG] simple-builders: Processing round started.
 [DEBUG] simple-builders: Found 1 annotated elements.
 [DEBUG] simple-builders: Found 0 type(s) for generation with @SimpleBuilderFor.
+[DEBUG] simple-builders: Processing element: Project
+[DEBUG] simple-builders: ├─ Resolving configuration for element: Project
+[DEBUG] simple-builders: │  └─ Resulting configuration resolved: BuilderConfiguration[builderSuffix=Builder,...]
 [DEBUG] simple-builders: 1 of 1 annotated element(s) are inside the builderGenerationPackages scope.
-[DEBUG] Processing element: Project
-[DEBUG] ├─ Extracting builder definition from: test.Project
-[DEBUG] │  ├─ Builder will be generated as: test.ProjectBuilder
-[DEBUG] │  ├─ Analysing setters for finding fields
-[DEBUG] │  │  ├─ Analyzing method: setName(java.lang.String)
-[DEBUG] │  │  │  └─ Adding field: name (type: java.lang.String)
-[DEBUG] │  └─ Processed 1 possible setters: added 1 fields, skipped 0
-[DEBUG] ├─ Code generation for builder: ProjectBuilder
-[DEBUG] │  ├─ Adding Methods for 4 candidates
-[DEBUG] │  │  └─ 4 Methods added
-[DEBUG] │  └─ Successfully generated builder: ProjectBuilder
-simple-builders: Successfully generated 1 builder(s) in this processing round
+[DEBUG] simple-builders: Processing element: Project
+[DEBUG] simple-builders: ├─ Extracting builder definition from: test.Project
+[DEBUG] simple-builders: │  ├─ Builder will be generated as: test.ProjectBuilder
+[DEBUG] simple-builders: │  ├─ Analysing setters for finding fields
+[DEBUG] simple-builders: │  │  ├─ Analyzing method: setName(java.lang.String)
+[DEBUG] simple-builders: │  │  │  ├─ Processing method generators
+[DEBUG] simple-builders: │  │  │  │  ├─ Applied: BasicSetterGenerator (priority: 100): +1 methods
+[DEBUG] simple-builders: │  │  │  │  └─ Generated 6 methods
+[DEBUG] simple-builders: │  │  │  └─ Adding field: name (type: java.lang.String)
+[DEBUG] simple-builders: │  │  └─ Processed 1 possible setters: added 1 fields, skipped 0
+[DEBUG] simple-builders: │  ├─ Processing class based enhancer
+[DEBUG] simple-builders: │  │  ├─ Applied: CoreMethodsEnhancer (priority: 100): +3 methods
+[DEBUG] simple-builders: │  │  ├─ Applied: ConstructorEnhancer (priority: 95): +2 constructors
+[DEBUG] simple-builders: │  │  └─ Applied 8 builder enhancers
+[DEBUG] simple-builders: │  ├─ Finalizing builder definition
+[DEBUG] simple-builders: │  │  └─ Finalized: 1 class fields, 4 builder-level methods, 2 constructors
+[DEBUG] simple-builders: │  └─ Builder definition extracted: ProjectBuilder
+[DEBUG] simple-builders: Generating targets for: Project
+[DEBUG] simple-builders: ├─ Code generation for class: ProjectBuilder
+[DEBUG] simple-builders: │  ├─ Generating 1 fields
+[DEBUG] simple-builders: │  │  └─ Fields added: 1 fields
+[DEBUG] simple-builders: │  ├─ Generating 4 method candidates
+[DEBUG] simple-builders: │  │  ├─ Resolved to 4 methods after conflict resolution
+[DEBUG] simple-builders: │  │  └─ Methods added: 4
+[DEBUG] simple-builders: │  ├─ Creating JavaFileObject: test.ProjectBuilder
+[DEBUG] simple-builders: │  ├─ Writing class to file: /SOURCE_OUTPUT/test/ProjectBuilder.java
+[DEBUG] simple-builders: │  ├─ Successfully generated class: ProjectBuilder
+[DEBUG] simple-builders: │  └─ Generated builder with 1 fields and 4 methods for ProjectBuilder
+        simple-builders: Successfully generated 1 target(s) in this processing round
 =============================================
 
 ========== Generated Source Files ==========

@@ -25,16 +25,14 @@
 package org.javahelpers.simple.builders.processor.processing;
 
 import java.util.EnumMap;
-import javax.annotation.processing.ProcessingEnvironment;
-import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.enums.FormattingMode;
 import org.javahelpers.simple.builders.processor.classgen.SourceFormatter;
 import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterSourceFormatter;
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 
 /**
- * Resolves the {@link SourceFormatter} for a formatting mode, applying the Eclipse formatter
- * profile configured via the {@code formatterProfile} compiler argument.
+ * Resolves the {@link SourceFormatter} for a formatting mode, applying the formatter profile
+ * configured via the {@code formatterProfile} compiler argument.
  *
  * <p>At most one formatter instance per {@link FormattingMode} is created, lazily on first resolve.
  */
@@ -46,17 +44,14 @@ public class SourceFormatterResolver {
       new EnumMap<>(FormattingMode.class);
 
   /**
-   * Creates a resolver reading the formatter profile from compiler arguments.
+   * Creates a resolver.
    *
-   * @param processingEnv the processing environment (for compiler argument access)
    * @param logger logger for formatter warnings
+   * @param formatterProfile the configured formatter profile path, or {@code null}
    */
-  public SourceFormatterResolver(ProcessingEnvironment processingEnv, ProcessingLogger logger) {
+  public SourceFormatterResolver(ProcessingLogger logger, String formatterProfile) {
     this.logger = logger;
-    this.formatterProfile =
-        StringUtils.trimToNull(
-            new CompilerArgumentsReader(processingEnv)
-                .readValue(CompilerArgumentsEnum.FORMATTER_PROFILE));
+    this.formatterProfile = formatterProfile;
   }
 
   /**
