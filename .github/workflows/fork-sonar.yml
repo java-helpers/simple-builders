@@ -152,15 +152,23 @@ jobs:
       - name: Restore compiled classes and coverage reports
         run: |
           src="$RUNNER_TEMP/sonar-analysis-data"
-          mkdir -p core/target/classes processor/target/classes
-          mkdir -p core/target/test-classes processor/target/test-classes
+          mkdir -p core/target/classes codegen-core/target/classes simple-processor/target/classes codegen-roaster/target/classes codegen-testing/target/classes processor/target/classes
+          mkdir -p core/target/test-classes codegen-roaster/target/test-classes codegen-testing/target/test-classes processor/target/test-classes
           cp -a "$src/core-classes/." core/target/classes/ 2>/dev/null || true
+          cp -a "$src/codegen-core-classes/." codegen-core/target/classes/ 2>/dev/null || true
+          cp -a "$src/simple-processor-classes/." simple-processor/target/classes/ 2>/dev/null || true
+          cp -a "$src/codegen-roaster-classes/." codegen-roaster/target/classes/ 2>/dev/null || true
+          cp -a "$src/codegen-testing-classes/." codegen-testing/target/classes/ 2>/dev/null || true
           cp -a "$src/processor-classes/." processor/target/classes/ 2>/dev/null || true
           cp -a "$src/core-test-classes/." core/target/test-classes/ 2>/dev/null || true
+          cp -a "$src/codegen-roaster-test-classes/." codegen-roaster/target/test-classes/ 2>/dev/null || true
+          cp -a "$src/codegen-testing-test-classes/." codegen-testing/target/test-classes/ 2>/dev/null || true
           cp -a "$src/processor-test-classes/." processor/target/test-classes/ 2>/dev/null || true
-          mkdir -p processor/target/site/jacoco processor/target/site/jacoco-aggregate
+          mkdir -p processor/target/site/jacoco processor/target/site/jacoco-aggregate codegen-roaster/target/site/jacoco codegen-testing/target/site/jacoco
           cp -a "$src/processor-jacoco.xml" processor/target/site/jacoco/jacoco.xml 2>/dev/null || true
           cp -a "$src/jacoco-aggregate.xml" processor/target/site/jacoco-aggregate/jacoco.xml 2>/dev/null || true
+          cp -a "$src/codegen-roaster-jacoco.xml" codegen-roaster/target/site/jacoco/jacoco.xml 2>/dev/null || true
+          cp -a "$src/codegen-testing-jacoco.xml" codegen-testing/target/site/jacoco/jacoco.xml 2>/dev/null || true
 
       - name: Write scanner configuration
         # Written outside the workspace and selected via `project.settings`, so
@@ -172,16 +180,16 @@ jobs:
           sonar.projectKey=java-helpers_simple-builders
           sonar.organization=java-helpers
           sonar.projectName=Simple Builders
-          sonar.sources=core/src/main/java,processor/src/main/java
-          sonar.tests=core/src/test/java,processor/src/test/java
+          sonar.sources=core/src/main/java,codegen-core/src/main/java,simple-processor/src/main/java,codegen-roaster/src/main/java,codegen-testing/src/main/java,processor/src/main/java
+          sonar.tests=core/src/test/java,codegen-roaster/src/test/java,codegen-testing/src/test/java,processor/src/test/java
           sonar.java.source=17
-          sonar.java.binaries=core/target/classes,processor/target/classes
-          sonar.java.test.binaries=core/target/test-classes,processor/target/test-classes
+          sonar.java.binaries=core/target/classes,codegen-core/target/classes,simple-processor/target/classes,codegen-roaster/target/classes,codegen-testing/target/classes,processor/target/classes
+          sonar.java.test.binaries=core/target/test-classes,codegen-roaster/target/test-classes,codegen-testing/target/test-classes,processor/target/test-classes
           sonar.java.libraries=$libraries
           sonar.java.test.libraries=$libraries
-          sonar.coverage.jacoco.xmlReportPaths=processor/target/site/jacoco-aggregate/jacoco.xml,processor/target/site/jacoco/jacoco.xml
+          sonar.coverage.jacoco.xmlReportPaths=processor/target/site/jacoco-aggregate/jacoco.xml,processor/target/site/jacoco/jacoco.xml,codegen-roaster/target/site/jacoco/jacoco.xml,codegen-testing/target/site/jacoco/jacoco.xml
           sonar.exclusions=**/example/**
-          sonar.coverage.exclusions=**/processor/model/**,**/exceptions/**,**/generated/**
+          sonar.coverage.exclusions=**/processor/model/**,**/codegen/model/**,**/exceptions/**,**/generated/**
           sonar.scm.provider=git
           EOF
 
