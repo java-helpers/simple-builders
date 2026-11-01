@@ -89,7 +89,11 @@ public record ElementSelector(
 
     /** Builds the selector. */
     public ElementSelector build() {
-      return new ElementSelector(groupName, annotationTypes, metaMarker, optOutAnnotation);
+      return new ElementSelector(
+          java.util.Objects.requireNonNull(groupName, "groupName"),
+          annotationTypes,
+          metaMarker,
+          optOutAnnotation);
     }
   }
 }
