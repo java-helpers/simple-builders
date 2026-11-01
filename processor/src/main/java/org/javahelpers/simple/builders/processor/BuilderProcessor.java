@@ -491,9 +491,8 @@ public class BuilderProcessor
     ctx.getPerformanceTracker()
         .endClass(definition.getAllFieldsForBuilder().size(), collectionCount);
 
-    // Summary of what was generated, inside the still-open generation scope — the driver
-    // closes the scope silently afterwards
-    ctx.debug(
+    // Close the generation scope with the summary of what was generated
+    ctx.debugEndOperation(
         "Generated builder with %d fields and %d methods for %s",
         definition.getAllFieldsForBuilder().size(),
         renderingDto.getMethods().size(),

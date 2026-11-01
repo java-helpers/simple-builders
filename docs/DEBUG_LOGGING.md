@@ -156,7 +156,7 @@ The following is a verbatim excerpt of a real run (`mvn -pl example clean compil
 [INFO] [DEBUG] simple-builders: │  │  ├─ Creating JavaFileObject: org.javahelpers.simple.builders.example.SponsorDtoBuilder
 [INFO] [DEBUG] simple-builders: │  │  ├─ Writing class to file: …/example/generated-example-builder/org/javahelpers/simple/builders/example/SponsorDtoBuilder.java
 [INFO] [DEBUG] simple-builders: │  │  ├─ Successfully generated class: SponsorDtoBuilder
-[INFO] [DEBUG] simple-builders: │  │  ├─ Generated builder with 1 fields and 11 methods for SponsorDtoBuilder
+[INFO] [DEBUG] simple-builders: │  │  └─ Generated builder with 1 fields and 11 methods for SponsorDtoBuilder
 … (the same code-generation steps repeat for each remaining element; elements whose
     configuration enables the Jackson module additionally emit a registration line inside the
     same generation scope:)
@@ -187,7 +187,7 @@ Notes on individual lines:
 - `Applied: <generator/enhancer> (priority: N): +M <contribution>` — logged **after** each generator/enhancer ran, with what it actually contributed (methods, constructors, nested types, annotations, interfaces, or javadoc). An enhancer that adds nothing measurable prints just `Applied: <name> (priority: N)` with no suffix.
 - `Writing class to file:` — the real path of the generated source file, resolved via the filer's `JavaFileObject.toUri()`.
 - `Registered <Builder> for Jackson module in package '<pkg>'` — emitted inside the class's generation scope by the Jackson module generator, only when the builder actually registered for module generation (i.e. `generateJacksonModule` enabled on that element's configuration and Jackson on the classpath). It is not a generation step of its own.
-- `Generated builder with N fields and M methods for <Builder>` — the domain's summary line, emitted as the last child (`├─`) inside the `Code generation for class` scope, which stays open until the post-generation step ran and then closes silently.
+- `Generated builder with N fields and M methods for <Builder>` — the domain's summary line, emitted as the closing line (`└─`) of the `Code generation for class` scope, which stays open until the post-generation step ran.
 - A round or element that generates nothing logs why, for error analysis: `No matching elements collected — skipping planning for this round.`, `Processing is already finished — skipping planning for this round.`, `Planning produced no tasks — nothing to generate this round.`, or per element `Analysis produced no targets for <Element>`.
 - Code-generation phases with nothing to emit log nothing — a class without fields, methods or nested types (like `SimpleBuildersJacksonModule`, which only has a constructor and a mixin) produces no `Generating 0 …` / `added: 0` noise.
 
