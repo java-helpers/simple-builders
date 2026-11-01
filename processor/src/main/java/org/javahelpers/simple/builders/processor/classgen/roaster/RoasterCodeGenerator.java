@@ -222,13 +222,13 @@ public class RoasterCodeGenerator implements ClassCodeGenerator {
 
   private void appendFields(JavaClassSource source, GenerationTargetClassDto classDef) {
     performanceTracker.startPhase();
-    logger.debugStartOperation("Generating %d fields", classDef.getClassFields().size());
-
-    for (ClassFieldDto fieldDto : classDef.getClassFields()) {
-      appendField(source, fieldDto);
+    if (CollectionUtils.isNotEmpty(classDef.getClassFields())) {
+      logger.debugStartOperation("Generating %d fields", classDef.getClassFields().size());
+      for (ClassFieldDto fieldDto : classDef.getClassFields()) {
+        appendField(source, fieldDto);
+      }
+      logger.debugEndOperation("Fields added: %d fields", source.getFields().size());
     }
-
-    logger.debugEndOperation("Fields added: %d fields", source.getFields().size());
     performanceTracker.endPhase(PHASE_FIELDS);
   }
 
@@ -243,13 +243,13 @@ public class RoasterCodeGenerator implements ClassCodeGenerator {
 
   private void appendConstructors(JavaClassSource source, GenerationTargetClassDto classDef) {
     performanceTracker.startPhase();
-    logger.debugStartOperation("Generating %d constructors", classDef.getConstructors().size());
-
-    for (ConstructorDto constructor : classDef.getConstructors()) {
-      appendConstructor(source, constructor);
+    if (CollectionUtils.isNotEmpty(classDef.getConstructors())) {
+      logger.debugStartOperation("Generating %d constructors", classDef.getConstructors().size());
+      for (ConstructorDto constructor : classDef.getConstructors()) {
+        appendConstructor(source, constructor);
+      }
+      logger.debugEndOperation("Constructors added: %d", classDef.getConstructors().size());
     }
-
-    logger.debugEndOperation("Constructors added: %d", classDef.getConstructors().size());
     performanceTracker.endPhase(PHASE_CONSTRUCTORS);
   }
 
@@ -267,17 +267,19 @@ public class RoasterCodeGenerator implements ClassCodeGenerator {
 
   private void appendMethods(JavaClassSource source, GenerationTargetClassDto classDef) {
     performanceTracker.startPhase();
-    logger.debugStartOperation("Generating %d method candidates", classDef.getMethods().size());
+    if (CollectionUtils.isNotEmpty(classDef.getMethods())) {
+      logger.debugStartOperation("Generating %d method candidates", classDef.getMethods().size());
 
-    // Resolve method conflicts by signature and priority
-    List<MethodDto> resolvedMethods = resolveMethodConflicts(classDef.getMethods());
-    logger.debug("Resolved to %d methods after conflict resolution", resolvedMethods.size());
+      // Resolve method conflicts by signature and priority
+      List<MethodDto> resolvedMethods = resolveMethodConflicts(classDef.getMethods());
+      logger.debug("Resolved to %d methods after conflict resolution", resolvedMethods.size());
 
-    for (MethodDto methodDto : resolvedMethods) {
-      appendMethod(source, methodDto, false, false);
+      for (MethodDto methodDto : resolvedMethods) {
+        appendMethod(source, methodDto, false, false);
+      }
+
+      logger.debugEndOperation("Methods added: %d", resolvedMethods.size());
     }
-
-    logger.debugEndOperation("Methods added: %d", resolvedMethods.size());
     performanceTracker.endPhase(PHASE_METHODS);
   }
 

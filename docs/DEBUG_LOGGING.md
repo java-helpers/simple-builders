@@ -171,13 +171,8 @@ The following is a verbatim excerpt of a real run (`mvn -pl example clean compil
 [INFO] [DEBUG] simple-builders: Code generation for class: SimpleBuildersJacksonModule
 [INFO] [DEBUG] simple-builders: ├─ JavaClassSource created
 [INFO] [DEBUG] simple-builders: ├─ Class metadata added
-[INFO] [DEBUG] simple-builders: ├─ Generating 0 fields
-[INFO] [DEBUG] simple-builders: │  └─ Fields added: 0 fields
 [INFO] [DEBUG] simple-builders: ├─ Generating 1 constructors
 [INFO] [DEBUG] simple-builders: │  └─ Constructors added: 1
-[INFO] [DEBUG] simple-builders: ├─ Generating 0 method candidates
-[INFO] [DEBUG] simple-builders: │  ├─ Resolved to 0 methods after conflict resolution
-[INFO] [DEBUG] simple-builders: │  └─ Methods added: 0
 [INFO] [DEBUG] simple-builders: ├─ Generating 1 nested type(s)
 [INFO] [DEBUG] simple-builders: │  ├─ Generated nested type: JacksonIntegrationDtoMixin
 [INFO] [DEBUG] simple-builders: │  └─ Nested types added
@@ -192,6 +187,7 @@ Notes on individual lines:
 - `Applied: <generator/enhancer> (priority: N): +M <contribution>` — logged **after** each generator/enhancer ran, with what it actually contributed (methods, constructors, nested types, annotations, interfaces, or javadoc). An enhancer that adds nothing measurable prints just `Applied: <name> (priority: N)` with no suffix.
 - `Writing class to file:` — the real path of the generated source file, resolved via the filer's `JavaFileObject.toUri()`.
 - `Registered <Builder> for Jackson module in package '<pkg>'` — emitted by the Jackson module generator only when the builder actually registered for module generation (i.e. `generateJacksonModule` enabled on that element's configuration and Jackson on the classpath). It is not a generation step of its own.
+- Code-generation phases with nothing to emit log nothing — a class without fields, methods or nested types (like `SimpleBuildersJacksonModule`, which only has a constructor and a mixin) produces no `Generating 0 …` / `added: 0` noise.
 
 **Note**: Debug messages are prefixed with `[DEBUG]` and use `Diagnostic.Kind.OTHER` which appears as `[INFO]` in Maven output.
 
