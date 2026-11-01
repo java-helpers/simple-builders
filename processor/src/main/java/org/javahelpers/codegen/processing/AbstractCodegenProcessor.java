@@ -54,9 +54,8 @@ import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLo
  * <p>A new processor declares its static surface once as {@link CodegenProcessorConfiguration}
  * (passed to the constructor — element collector, options, source level, formatter factory) and
  * implements only the domain hooks marked {@code [implement]}: {@link #createContext}, {@link
- * #planTasks}, {@link #predictTaskResultTypeNames}, {@link #analyse} and {@link
- * #mapToTargetSpecification}. Every other step is framework-owned or an optional {@code [default]}
- * the domain may override.
+ * #planTasks}, {@link #analyse} and {@link #mapToTargetSpecification}. Every other step is
+ * framework-owned or an optional {@code [default]} the domain may override.
  *
  * <p>The round spine:
  *
@@ -66,7 +65,7 @@ import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLo
  *   elements = findElements(annotations, roundEnv)                 [default: configuration's elementCollector]
  *   tasks    = planTasks(elements, ctx)                                 [implement]
  *   onTasksPlanned(tasks, ctx)                                          [default: no-op]
- *   registerPlannedTaskResults(tasks, ctx)                                  [framework; per-task names from predictTaskResultTypeNames() — implement]
+ *   registerPlannedTaskResults(tasks, ctx)                                  [framework; per-task names from predictTaskResultTypeNames() — default: empty]
  *   loop 1 — specification (guarded, strict-mode reporting):            [framework]
  *     defs    = analyse(task, ctx)                                      [implement]
  *     target  = mapToTargetSpecification(def, cfg, ctx)  (per def)      [implement]
@@ -524,15 +523,17 @@ public abstract class AbstractCodegenProcessor<
    * planned names (see {@link AnnotationProcessingContext#resolveGeneratedType}) without a
    * generation-order dependency: analysis of every task already knows every target name.
    *
-   * <p>A domain whose generated types never reference other generated types may return an empty
-   * list — registration then simply records nothing for the task. Keep this pure: registrations and
-   * their side effects belong to {@link #onTaskResultRegistered}.
+   * <p>A domain whose generated types never reference other generated types needs no prediction —
+   * registration then simply records nothing for the task (the default). Keep this pure:
+   * registrations and their side effects belong to {@link #onTaskResultRegistered}.
    *
    * @param task the planned task
    * @param context the processing context
    * @return the predicted generated type names (empty when the task registers nothing)
    */
-  protected abstract List<TypeName> predictTaskResultTypeNames(CodegenTask<K> task, C context);
+  protected List<TypeName> predictTaskResultTypeNames(CodegenTask<K> task, C context) {
+    return List.of();
+  }
 
   /**
    * Runs after a predicted type name is registered for a task — the extension point for domain

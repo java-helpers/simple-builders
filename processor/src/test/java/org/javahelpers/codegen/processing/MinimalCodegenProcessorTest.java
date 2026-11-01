@@ -116,15 +116,6 @@ public class MinimalCodegenProcessorTest {
     }
 
     @Override
-    protected List<TypeName> predictTaskResultTypeNames(
-        CodegenTask<CodegenConfiguration> task, AnnotationProcessingContext ctx) {
-      if (!(task.element() instanceof TypeElement target)) {
-        return List.of();
-      }
-      return List.of(builderName(target, ctx));
-    }
-
-    @Override
     protected List<MinimalTargetDefinition> analyse(
         CodegenTask<CodegenConfiguration> task, AnnotationProcessingContext ctx) {
       if (!(task.element() instanceof TypeElement target)) {
