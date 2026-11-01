@@ -34,18 +34,15 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
-import org.javahelpers.codegen.analysis.JavaLangMapper;
 import org.javahelpers.codegen.ClassCodeGenerator;
 import org.javahelpers.codegen.CodeGenerationException;
+import org.javahelpers.codegen.FormatterResolver;
 import org.javahelpers.codegen.GenerationEnvironment;
-import org.javahelpers.codegen.roaster.RoasterCodeGenerator;
-import org.javahelpers.codegen.model.core.GenerationTargetClassDto;
-import org.javahelpers.codegen.model.type.TypeName;
-import org.javahelpers.codegen.processing.AnnotationProcessingContext;
-import org.javahelpers.codegen.processing.CompilerArgumentsReader;
-import org.javahelpers.codegen.processing.SourceFormatterResolver;
+import org.javahelpers.codegen.analysis.JavaLangMapper;
 import org.javahelpers.codegen.logging.PerformanceTracker;
 import org.javahelpers.codegen.logging.ProcessingLogger;
+import org.javahelpers.codegen.model.core.GenerationTargetClassDto;
+import org.javahelpers.codegen.model.type.TypeName;
 
 /**
  * Driver of a generic annotation-processing pipeline: the framework owns the processing lifecycle,
@@ -100,7 +97,7 @@ public abstract class AbstractCodegenProcessor<
 
   private final CodegenProcessorConfiguration processorConfiguration;
   private ClassCodeGenerator codeGenerator;
-  private SourceFormatterResolver formatterResolver;
+  private FormatterResolver formatterResolver;
   private boolean supportedJdk = true;
   private boolean processedOnce;
 
@@ -390,10 +387,8 @@ public abstract class AbstractCodegenProcessor<
    * @param context the processing context
    * @return the domain's code generation engine
    */
-  protected ClassCodeGenerator createGenerator(
-      ProcessingEnvironment processingEnv, ProcessingLogger logger, C context) {
-    return new RoasterCodeGenerator(generationEnvironment(processingEnv, logger, context));
-  }
+  protected abstract ClassCodeGenerator createGenerator(
+      ProcessingEnvironment processingEnv, ProcessingLogger logger, C context);
 
   /**
    * The {@link GenerationEnvironment} the engine runs against — processing environment, logger,
@@ -418,16 +413,14 @@ public abstract class AbstractCodegenProcessor<
    * @param logger the processing logger
    * @return the formatter resolver
    */
-  protected SourceFormatterResolver createFormatterResolver(
-      CompilerArgumentsReader reader, ProcessingLogger logger) {
-    return new SourceFormatterResolver(logger, optionRegistry().formatterProfile(reader));
-  }
+  protected abstract FormatterResolver createFormatterResolver(
+      CompilerArgumentsReader reader, ProcessingLogger logger);
 
   private ElementCollector elementCollector() {
     return processorConfiguration.elementCollector();
   }
 
-  private ProcessorOptionRegistry optionRegistry() {
+  protected ProcessorOptionRegistry optionRegistry() {
     return processorConfiguration.optionRegistry();
   }
 

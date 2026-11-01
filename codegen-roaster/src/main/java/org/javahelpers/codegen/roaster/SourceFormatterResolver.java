@@ -22,12 +22,12 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.codegen.processing;
+package org.javahelpers.codegen.roaster;
 
 import java.util.EnumMap;
-import org.javahelpers.codegen.enums.FormattingMode;
+import org.javahelpers.codegen.FormatterResolver;
 import org.javahelpers.codegen.SourceFormatter;
-import org.javahelpers.codegen.roaster.RoasterSourceFormatter;
+import org.javahelpers.codegen.enums.FormattingMode;
 import org.javahelpers.codegen.logging.ProcessingLogger;
 
 /**
@@ -36,7 +36,7 @@ import org.javahelpers.codegen.logging.ProcessingLogger;
  *
  * <p>At most one formatter instance per {@link FormattingMode} is created, lazily on first resolve.
  */
-public class SourceFormatterResolver {
+public class SourceFormatterResolver implements FormatterResolver {
 
   private final ProcessingLogger logger;
   private final String formatterProfile;

@@ -53,10 +53,14 @@ import org.javahelpers.codegen.processing.CodegenTask;
 import org.javahelpers.codegen.processing.ElementCollector;
 import org.javahelpers.codegen.processing.ElementGroups;
 import org.javahelpers.codegen.processing.ProcessorOptionRegistry;
+import org.javahelpers.codegen.roaster.RoasterCodeGenerator;
+import org.javahelpers.codegen.roaster.SourceFormatterResolver;
 import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder.Template;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFor;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFors;
+import org.javahelpers.codegen.ClassCodeGenerator;
+import org.javahelpers.codegen.FormatterResolver;
 import org.javahelpers.codegen.analysis.JavaLangAnalyser;
 import org.javahelpers.codegen.analysis.JavaLangMapper;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
@@ -157,6 +161,18 @@ public class BuilderProcessor
       ctx.debugEndOperation();
     }
     return ctx;
+  }
+
+  @Override
+  protected ClassCodeGenerator createGenerator(
+      ProcessingEnvironment processingEnv, ProcessingLogger logger, BuilderProcessingContext ctx) {
+    return new RoasterCodeGenerator(generationEnvironment(processingEnv, logger, ctx));
+  }
+
+  @Override
+  protected FormatterResolver createFormatterResolver(
+      CompilerArgumentsReader reader, ProcessingLogger logger) {
+    return new SourceFormatterResolver(logger, optionRegistry().formatterProfile(reader));
   }
 
   @Override

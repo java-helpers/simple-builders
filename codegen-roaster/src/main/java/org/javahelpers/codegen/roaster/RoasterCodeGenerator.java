@@ -42,12 +42,14 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.tools.JavaFileObject;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.javahelpers.codegen.enums.AccessModifier;
 import org.javahelpers.codegen.ClassCodeGenerator;
 import org.javahelpers.codegen.CodeGenerationException;
 import org.javahelpers.codegen.GenerationEnvironment;
 import org.javahelpers.codegen.GenerationIssueReporter;
 import org.javahelpers.codegen.SourceFormatter;
+import org.javahelpers.codegen.enums.AccessModifier;
+import org.javahelpers.codegen.logging.PerformanceTracker;
+import org.javahelpers.codegen.logging.ProcessingLogger;
 import org.javahelpers.codegen.model.annotation.AnnotationDto;
 import org.javahelpers.codegen.model.annotation.InterfaceName;
 import org.javahelpers.codegen.model.core.ClassFieldDto;
@@ -63,8 +65,6 @@ import org.javahelpers.codegen.model.method.MethodParameterDto;
 import org.javahelpers.codegen.model.type.NestedTypeDto;
 import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.codegen.model.type.TypeNameArray;
-import org.javahelpers.codegen.logging.PerformanceTracker;
-import org.javahelpers.codegen.logging.ProcessingLogger;
 import org.javahelpers.codegen.util.ImportCollector;
 import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster.model.source.AnnotationSource;
@@ -405,8 +405,7 @@ public class RoasterCodeGenerator implements ClassCodeGenerator {
     if (CollectionUtils.isEmpty(generics)) {
       return;
     }
-    for (org.javahelpers.codegen.model.type.GenericParameterDto generic :
-        generics) {
+    for (org.javahelpers.codegen.model.type.GenericParameterDto generic : generics) {
       TypeVariableSource<JavaClassSource> typeVariable = source.addTypeVariable(generic.getName());
       if (CollectionUtils.isNotEmpty(generic.getUpperBounds())) {
         typeVariable.setBounds(
@@ -421,8 +420,7 @@ public class RoasterCodeGenerator implements ClassCodeGenerator {
     if (CollectionUtils.isEmpty(generics)) {
       return;
     }
-    for (org.javahelpers.codegen.model.type.GenericParameterDto generic :
-        generics) {
+    for (org.javahelpers.codegen.model.type.GenericParameterDto generic : generics) {
       TypeVariableSource<?> typeVariable = source.addTypeVariable(generic.getName());
       if (CollectionUtils.isNotEmpty(generic.getUpperBounds())) {
         typeVariable.setBounds(

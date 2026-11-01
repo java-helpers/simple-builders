@@ -39,14 +39,13 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
-import org.javahelpers.codegen.processing.CodegenTask;
 import org.javahelpers.codegen.analysis.GeneratedTypes;
 import org.javahelpers.codegen.analysis.TypeMappingContext;
-import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.codegen.logging.ActivePerformanceTracker;
 import org.javahelpers.codegen.logging.NoOpPerformanceTracker;
 import org.javahelpers.codegen.logging.PerformanceTracker;
 import org.javahelpers.codegen.logging.ProcessingLogger;
+import org.javahelpers.codegen.model.type.TypeName;
 
 /**
  * Generic annotation-processing context: wraps {@link ProcessingEnvironment}, {@link Elements},

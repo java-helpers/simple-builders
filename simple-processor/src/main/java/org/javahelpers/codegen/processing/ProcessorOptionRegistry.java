@@ -33,8 +33,6 @@ import java.util.List;
 import java.util.Set;
 import javax.annotation.processing.ProcessingEnvironment;
 import org.apache.commons.lang3.StringUtils;
-import org.javahelpers.codegen.processing.CompilerArgumentsReader;
-import org.javahelpers.codegen.processing.CompilerOption;
 
 /**
  * The compiler options a processor declares, in one place.
