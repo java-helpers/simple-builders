@@ -32,7 +32,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import org.apache.commons.lang3.StringUtils;
-import org.javahelpers.simple.builders.core.enums.FormattingMode;
+import org.javahelpers.codegen.enums.FormattingMode;
 import org.javahelpers.simple.builders.processor.classgen.SourceFormatter;
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 import org.jboss.forge.roaster.Roaster;

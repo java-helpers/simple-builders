@@ -26,8 +26,8 @@ package org.javahelpers.simple.builders.processor.processing;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
-import org.javahelpers.simple.builders.core.enums.AccessModifier;
-import org.javahelpers.simple.builders.core.enums.OptionState;
+import org.javahelpers.codegen.enums.AccessModifier;
+import org.javahelpers.codegen.enums.OptionState;
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 
 /**

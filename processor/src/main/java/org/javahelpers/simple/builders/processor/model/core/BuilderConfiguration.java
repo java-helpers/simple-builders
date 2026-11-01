@@ -24,8 +24,8 @@
 
 package org.javahelpers.simple.builders.processor.model.core;
 
-import static org.javahelpers.simple.builders.core.enums.AccessModifier.*;
-import static org.javahelpers.simple.builders.core.enums.OptionState.*;
+import static org.javahelpers.codegen.enums.AccessModifier.*;
+import static org.javahelpers.codegen.enums.OptionState.*;
 
 import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
@@ -33,9 +33,9 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.javahelpers.codegen.processing.CodegenConfiguration;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
-import org.javahelpers.simple.builders.core.enums.AccessModifier;
-import org.javahelpers.simple.builders.core.enums.FormattingMode;
-import org.javahelpers.simple.builders.core.enums.OptionState;
+import org.javahelpers.codegen.enums.AccessModifier;
+import org.javahelpers.codegen.enums.FormattingMode;
+import org.javahelpers.codegen.enums.OptionState;
 
 /**
  * Configuration for builder generation. Combines annotation values with compiler options. Priority:

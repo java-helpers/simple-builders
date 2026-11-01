@@ -31,7 +31,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import org.javahelpers.codegen.processing.CodegenDefinition;
-import org.javahelpers.simple.builders.core.enums.AccessModifier;
+import org.javahelpers.codegen.enums.AccessModifier;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.annotation.InterfaceName;
 import org.javahelpers.simple.builders.processor.model.imports.ImportStatement;
