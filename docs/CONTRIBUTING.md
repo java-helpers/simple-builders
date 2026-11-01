@@ -242,6 +242,9 @@ For complete documentation, see [DEBUG_LOGGING.md](DEBUG_LOGGING.md).
 [DEBUG] simple-builders: Processing round started.
 [DEBUG] simple-builders: Found 1 annotated elements.
 [DEBUG] simple-builders: Found 0 type(s) for generation with @SimpleBuilderFor.
+[DEBUG] simple-builders: Processing element: Project
+[DEBUG] simple-builders: ├─ Resolving configuration for element: Project
+[DEBUG] simple-builders: │  └─ Resulting configuration resolved: BuilderConfiguration[builderSuffix=Builder,...]
 [DEBUG] simple-builders: 1 of 1 annotated element(s) are inside the builderGenerationPackages scope.
 [DEBUG] simple-builders: Processing element: Project
 [DEBUG] simple-builders: ├─ Extracting builder definition from: test.Project
@@ -249,13 +252,24 @@ For complete documentation, see [DEBUG_LOGGING.md](DEBUG_LOGGING.md).
 [DEBUG] simple-builders: │  ├─ Analysing setters for finding fields
 [DEBUG] simple-builders: │  │  ├─ Analyzing method: setName(java.lang.String)
 [DEBUG] simple-builders: │  │  │  └─ Adding field: name (type: java.lang.String)
-[DEBUG] simple-builders: │  └─ Processed 1 possible setters: added 1 fields, skipped 0
+[DEBUG] simple-builders: │  │  └─ Processed 1 possible setters: added 1 fields, skipped 0
+[DEBUG] simple-builders: │  ├─ Processing class based enhancer
+[DEBUG] simple-builders: │  │  └─ Applied 8 builder enhancers
+[DEBUG] simple-builders: │  ├─ Finalizing builder definition
+[DEBUG] simple-builders: │  │  └─ Finalized: 1 class fields, 4 builder-level methods, 2 constructors
+[DEBUG] simple-builders: │  └─ Builder definition extracted: ProjectBuilder
 [DEBUG] simple-builders: Generating targets for: Project
-[DEBUG] simple-builders: ├─ Code generation for builder: ProjectBuilder
-[DEBUG] simple-builders: │  ├─ Adding Methods for 4 candidates
-[DEBUG] simple-builders: │  │  └─ 4 Methods added
-[DEBUG] simple-builders: │  └─ Successfully generated builder: ProjectBuilder
-simple-builders: Successfully generated 1 target(s) in this processing round
+[DEBUG] simple-builders: ├─ Code generation for class: ProjectBuilder
+[DEBUG] simple-builders: │  ├─ Generating 1 fields
+[DEBUG] simple-builders: │  │  └─ Fields added: 1 fields
+[DEBUG] simple-builders: │  ├─ Generating 4 method candidates
+[DEBUG] simple-builders: │  │  ├─ Resolved to 4 methods after conflict resolution
+[DEBUG] simple-builders: │  │  └─ Methods added: 4
+[DEBUG] simple-builders: │  ├─ Writing class to file: test.ProjectBuilder
+[DEBUG] simple-builders: │  └─ Successfully generated class: ProjectBuilder
+[DEBUG] simple-builders: ├─ Jackson module entry added
+[DEBUG] simple-builders: └─ Generated builder with 1 fields and 4 methods for ProjectBuilder
+        simple-builders: Successfully generated 1 target(s) in this processing round
 =============================================
 
 ========== Generated Source Files ==========
