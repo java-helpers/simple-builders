@@ -31,11 +31,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.lang.reflect.Proxy;
 import java.util.Optional;
 import javax.lang.model.util.Elements;
+import org.javahelpers.codegen.model.type.TypeInstantiation.StaticFactoryCall;
+import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.SimpleBuildersSpiIntegration.PublishedBuilder;
 import org.javahelpers.simple.builders.processor.SimpleBuildersSpiIntegration.State;
 import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
-import org.javahelpers.simple.builders.processor.model.type.TypeInstantiation.StaticFactoryCall;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 

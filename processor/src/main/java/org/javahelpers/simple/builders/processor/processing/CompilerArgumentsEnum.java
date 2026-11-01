@@ -25,11 +25,14 @@
 package org.javahelpers.simple.builders.processor.processing;
 
 import java.util.function.BiConsumer;
-import org.javahelpers.simple.builders.core.enums.AccessModifier;
-import org.javahelpers.simple.builders.core.enums.OptionState;
+import org.javahelpers.codegen.enums.AccessModifier;
+import org.javahelpers.codegen.enums.OptionState;
+import org.javahelpers.codegen.logging.ProcessingLogger;
+import org.javahelpers.codegen.processing.CompilerArgumentsReader;
+import org.javahelpers.codegen.processing.CompilerOption;
+import org.javahelpers.codegen.processing.OptionValueParsers;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration.Builder;
-import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 
 /**
  * Enumeration of all builder configuration compiler arguments.
@@ -195,8 +198,8 @@ public enum CompilerArgumentsEnum implements CompilerOption {
   // === Performance Optimization ===
   /**
    * Option to control the formatting mode for generated source files. Accepts values {@code jdt},
-   * {@code lightweight}, or {@code none}. See {@link
-   * org.javahelpers.simple.builders.core.enums.FormattingMode} for details.
+   * {@code lightweight}, or {@code none}. See {@link org.javahelpers.codegen.enums.FormattingMode}
+   * for details.
    */
   FORMATTING_MODE("formattingMode", string(Builder::formattingMode)),
 

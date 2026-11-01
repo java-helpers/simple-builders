@@ -35,12 +35,12 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
 import javax.tools.JavaFileObject;
-import org.javahelpers.simple.builders.core.enums.AccessModifier;
-import org.javahelpers.simple.builders.core.enums.FormattingMode;
-import org.javahelpers.simple.builders.core.enums.OptionState;
+import org.javahelpers.codegen.enums.AccessModifier;
+import org.javahelpers.codegen.enums.FormattingMode;
+import org.javahelpers.codegen.enums.OptionState;
+import org.javahelpers.codegen.testing.FormatterProfileTestUtils;
+import org.javahelpers.codegen.testing.ProcessorAsserts;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
-import org.javahelpers.simple.builders.processor.testing.FormatterProfileTestUtils;
-import org.javahelpers.simple.builders.processor.testing.ProcessorAsserts;
 import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -440,6 +440,7 @@ class ConfigurationProcessingTest {
             package test;
 
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
             import org.javahelpers.simple.builders.core.enums.OptionState;
 
             @SimpleBuilder(options = @SimpleBuilder.Options(generateJavaDoc = OptionState.DISABLED))

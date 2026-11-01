@@ -30,15 +30,15 @@ import java.util.List;
 import java.util.ServiceLoader;
 import javax.annotation.processing.ProcessingEnvironment;
 import org.apache.commons.collections4.CollectionUtils;
+import org.javahelpers.codegen.logging.PerformanceTracker;
+import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
 import org.javahelpers.simple.builders.processor.generators.Generator;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
-import org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker;
 
 /**
  * Unified registry that manages all generators (both method generators and builder enhancers).

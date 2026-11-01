@@ -25,7 +25,7 @@
 package org.javahelpers.simple.builders.processor;
 
 import static com.google.testing.compile.CompilationSubject.assertThat;
-import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.assertContaining;
+import static org.javahelpers.codegen.testing.ProcessorAsserts.assertContaining;
 
 import com.google.testing.compile.Compilation;
 import javax.tools.JavaFileObject;

@@ -1,0 +1,401 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  
+  <groupId>io.github.java-helpers.codegen</groupId>
+  <artifactId>codegen-roaster</artifactId>
+  <version>0.7.0-SNAPSHOT</version>
+  <packaging>jar</packaging>
+  
+  <name>Codegen - Roaster</name>
+  <description>Roaster-based backend implementing the ClassCodeGenerator SPI of codegen-core.</description>
+  <url>https://github.com/java-helpers/simple-builders</url>
+  <inceptionYear>2025</inceptionYear>
+  
+  <licenses>
+    <license>
+      <name>MIT License</name>
+      <url>http://www.opensource.org/licenses/mit-license.php</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  
+  <scm>
+    <connection>scm:git:git://github.com/java-helpers/simple-builders.git</connection>
+    <developerConnection>scm:git:ssh://github.com/java-helpers/simple-builders.git</developerConnection>
+    <url>https://github.com/java-helpers/simple-builders/tree/main</url>
+    <tag>HEAD</tag>
+  </scm>
+  
+  <issueManagement>
+    <system>GitHub</system>
+    <url>https://github.com/java-helpers/simple-builders/issues</url>
+  </issueManagement>
+
+  <ciManagement>
+    <system>Github Actions</system>
+    <url>https://github.com/java-helpers/simple-builders/actions</url>
+  </ciManagement>
+
+  <developers>
+    <developer>
+      <name>Andreas Igel</name>
+      <id>aigel</id>
+      <email>Andreas.Igel@gmx.com</email>
+      <roles>
+        <role>Java Developer</role>
+        <role>Java Architect</role>
+      </roles>
+    </developer>
+  </developers>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <!-- Reproducible builds: fixed timestamp for archive entries. Updated automatically by the
+         release workflow; may be overridden per build with -Dproject.build.outputTimestamp. -->
+    <project.build.outputTimestamp>2026-09-21T20:18:24Z</project.build.outputTimestamp>
+    
+    <!-- Dependency Versions -->
+    <auto-service.version>1.1.1</auto-service.version>
+    <roaster.version>2.31.1.Final</roaster.version>
+    <commons-lang.version>3.21.0</commons-lang.version>
+    <commons-collections.version>4.6.0</commons-collections.version>
+    <junit-jupiter.version>6.1.3</junit-jupiter.version>
+    <google-compile-testing.version>0.24.0</google-compile-testing.version>
+    <jackson-databind.version>2.22.3</jackson-databind.version>
+    <mapstruct.version>1.6.3</mapstruct.version>
+    
+    <!-- Java and Compiler Properties -->
+    <java.version>17</java.version>
+    <maven.compiler.source>${java.version}</maven.compiler.source>
+    <maven.compiler.target>${java.version}</maven.compiler.target>
+    <maven.compiler.release>${java.version}</maven.compiler.release>
+    
+    <!-- Maven Central Publishing -->
+    <central.autoPublish>false</central.autoPublish>
+    
+    <!-- Plugin Versions -->
+    <plugin.central.publishing.version>0.12.0</plugin.central.publishing.version>
+    <plugin.cyclonedx.version>2.9.3</plugin.cyclonedx.version>
+    <plugin.maven.compiler.version>3.16.0</plugin.maven.compiler.version>
+    <plugin.maven.source.version>3.4.0</plugin.maven.source.version>
+    <plugin.maven.javadoc.version>3.12.0</plugin.maven.javadoc.version>
+    <plugin.maven.gpg.version>3.2.8</plugin.maven.gpg.version>
+    <plugin.maven.install.version>3.2.0</plugin.maven.install.version>
+    <plugin.maven.resources.version>3.5.0</plugin.maven.resources.version>
+    <plugin.maven.site.version>3.22.0</plugin.maven.site.version>
+    <plugin.maven.surefire.version>3.6.0</plugin.maven.surefire.version>
+    <plugin.code-format.version>2.29</plugin.code-format.version>
+    <plugin.license.version>5.1.2</plugin.license.version>
+    <plugin.jacoco.version>0.8.15</plugin.jacoco.version>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>io.github.java-helpers.codegen</groupId>
+      <artifactId>codegen-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <!-- Utility functions for java.lang classes -->
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>${commons-lang.version}</version>
+    </dependency>
+    <!-- Utility functions for collections -->
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-collections4</artifactId>
+      <version>${commons-collections.version}</version>
+    </dependency>
+    <!-- Utility library for generate java code -->
+    <dependency>
+      <groupId>org.jboss.forge.roaster</groupId>
+      <artifactId>roaster-api</artifactId>
+      <version>${roaster.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.forge.roaster</groupId>
+      <artifactId>roaster-jdt</artifactId>
+      <version>${roaster.version}</version>
+      <scope>runtime</scope>
+    </dependency>
+    
+    <!-- Test Dependencies -->
+    <dependency>
+      <groupId>io.github.java-helpers.codegen</groupId>
+      <artifactId>codegen-testing</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+      <version>${junit-jupiter.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-params</artifactId>
+      <version>${junit-jupiter.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-engine</artifactId>
+      <version>${junit-jupiter.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+
+  </dependencies>
+    
+  <build>
+    <plugins>
+      <!-- Code Formatting -->
+      <!-- Test Resources Plugin - Ensures test resources are processed -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>${plugin.maven.resources.version}</version>
+      </plugin>
+      
+      <!-- Surefire Plugin for running tests -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>${plugin.maven.surefire.version}</version>
+      </plugin>
+
+      <plugin>
+        <groupId>com.spotify.fmt</groupId>
+        <artifactId>fmt-maven-plugin</artifactId>
+        <version>${plugin.code-format.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>format</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- License Header Check -->
+      <plugin>
+        <groupId>com.mycila</groupId>
+        <artifactId>license-maven-plugin</artifactId>
+        <version>${plugin.license.version}</version>
+        <configuration>
+          <licenseSets>
+            <licenseSet>
+              <header>${maven.multiModuleProjectDirectory}/LICENSE.txt</header>
+              <includes>
+                <include>src/main/java/**</include>
+                <include>src/test/java/**</include>
+              </includes>
+              <excludes>
+                <exclude>generated-example-builder/**</exclude>
+                <exclude>target/**</exclude>
+              </excludes>
+            </licenseSet>
+          </licenseSets>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- Compiler Plugin -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>${plugin.maven.compiler.version}</version>
+        <configuration>
+          <source>${java.version}</source>
+          <target>${java.version}</target>
+          <release>${java.version}</release>
+        </configuration>
+      </plugin>
+      
+      <!-- Site Plugin -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-site-plugin</artifactId>
+        <version>${plugin.maven.site.version}</version>
+      </plugin>
+      
+      <!-- Install Plugin -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-install-plugin</artifactId>
+        <version>${plugin.maven.install.version}</version>
+      </plugin>
+
+      <!-- JaCoCo Code Coverage -->
+      <!-- moved to 'coverage' profile -->
+    </plugins>
+  </build>
+
+  <!-- Distribution management for Maven Central -->
+  <distributionManagement>
+    <snapshotRepository>
+      <id>central</id>
+      <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+    </snapshotRepository>
+    <repository>
+      <id>central</id>
+      <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+    </repository>
+  </distributionManagement>
+  
+  <profiles>
+    <profile>
+      <id>release</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.sonatype.central</groupId>
+            <artifactId>central-publishing-maven-plugin</artifactId>
+            <version>${plugin.central.publishing.version}</version>
+            <extensions>true</extensions>
+            <configuration>
+              <publishingServerId>central</publishingServerId>
+              <autoPublish>${central.autoPublish}</autoPublish>
+            </configuration>
+          </plugin>
+          <!-- SBOM generation (CycloneDX) -->
+          <plugin>
+            <groupId>org.cyclonedx</groupId>
+            <artifactId>cyclonedx-maven-plugin</artifactId>
+            <version>${plugin.cyclonedx.version}</version>
+            <executions>
+              <execution>
+                <id>generate-sbom</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>makeBom</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <!-- Reuse the derived artifact file name so artifactId/version aren't duplicated here. -->
+              <outputName>${project.build.finalName}-sbom</outputName>
+              <outputFormat>all</outputFormat>
+              <projectType>library</projectType>
+              <skipNotDeployed>false</skipNotDeployed>
+            </configuration>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+            <version>${plugin.maven.source.version}</version>
+            <executions>
+              <execution>
+                <id>attach-sources</id>
+                <goals>
+                  <goal>jar-no-fork</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <version>${plugin.maven.javadoc.version}</version>
+            <executions>
+              <execution>
+                <id>attach-javadocs</id>
+                <goals>
+                  <goal>jar</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <doclint>none</doclint>
+              <source>${java.version}</source>
+            </configuration>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>${plugin.maven.gpg.version}</version>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <gpgArguments>
+                <arg>--pinentry-mode</arg>
+                <arg>loopback</arg>
+              </gpgArguments>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>metrics</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.jacoco</groupId>
+            <artifactId>jacoco-maven-plugin</artifactId>
+            <version>${plugin.jacoco.version}</version>
+            <executions>
+              <execution>
+                <id>prepare-agent</id>
+                <goals>
+                  <goal>prepare-agent</goal>
+                </goals>
+              </execution>
+              <execution>
+                <id>report</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>report</goal>
+                </goals>
+                <configuration>
+                  <excludes>
+                    <!-- Exclude exception classes from coverage (simple constructors) -->
+                    <exclude>**/*Exception.*</exclude>
+                    <!-- Exclude constants-only holders -->
+                    <exclude>**/JavadocConstants.*</exclude>
+                  </excludes>
+                </configuration>
+              </execution>
+              <execution>
+                <id>report-aggregate</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>report-aggregate</goal>
+                </goals>
+                <configuration>
+                  <outputDirectory>${project.reporting.outputDirectory}/jacoco-aggregate</outputDirectory>
+                </configuration>
+              </execution>
+            </executions>
+            <configuration>
+              <!-- Only cover main sources of this module -->
+              <dataFile>${project.build.directory}/jacoco.exec</dataFile>
+              <outputDirectory>${project.reporting.outputDirectory}/jacoco</outputDirectory>
+              <excludes>
+                <!-- exclude any generated sources or test utilities if they ever get packaged under main -->
+                <exclude>**/generated/**</exclude>
+              </excludes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
+</project>

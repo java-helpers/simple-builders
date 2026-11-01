@@ -116,11 +116,19 @@ jobs:
       run: |
         mkdir -p sonar-analysis-data
         cp -a core/target/classes sonar-analysis-data/core-classes 2>/dev/null || true
+        cp -a codegen-core/target/classes sonar-analysis-data/codegen-core-classes 2>/dev/null || true
+        cp -a simple-processor/target/classes sonar-analysis-data/simple-processor-classes 2>/dev/null || true
+        cp -a codegen-roaster/target/classes sonar-analysis-data/codegen-roaster-classes 2>/dev/null || true
+        cp -a codegen-testing/target/classes sonar-analysis-data/codegen-testing-classes 2>/dev/null || true
         cp -a processor/target/classes sonar-analysis-data/processor-classes 2>/dev/null || true
         cp -a core/target/test-classes sonar-analysis-data/core-test-classes 2>/dev/null || true
+        cp -a codegen-roaster/target/test-classes sonar-analysis-data/codegen-roaster-test-classes 2>/dev/null || true
+        cp -a codegen-testing/target/test-classes sonar-analysis-data/codegen-testing-test-classes 2>/dev/null || true
         cp -a processor/target/test-classes sonar-analysis-data/processor-test-classes 2>/dev/null || true
         cp -a processor/target/site/jacoco-aggregate/jacoco.xml sonar-analysis-data/jacoco-aggregate.xml 2>/dev/null || true
         cp -a processor/target/site/jacoco/jacoco.xml sonar-analysis-data/processor-jacoco.xml 2>/dev/null || true
+        cp -a codegen-roaster/target/site/jacoco/jacoco.xml sonar-analysis-data/codegen-roaster-jacoco.xml 2>/dev/null || true
+        cp -a codegen-testing/target/site/jacoco/jacoco.xml sonar-analysis-data/codegen-testing-jacoco.xml 2>/dev/null || true
         {
           printf 'pr_number=%s\n' "$PR_NUMBER"
           printf 'pr_head_sha=%s\n' "$PR_HEAD_SHA"
@@ -177,8 +185,12 @@ jobs:
         mkdir -p codecov-payload/surefire codecov-payload/failsafe
         cp -f processor/target/site/jacoco/jacoco.xml codecov-payload/ 2>/dev/null || true
         cp -f processor/target/site/jacoco-aggregate/jacoco.xml codecov-payload/jacoco-aggregate.xml 2>/dev/null || true
+        cp -f codegen-roaster/target/site/jacoco/jacoco.xml codecov-payload/codegen-roaster-jacoco.xml 2>/dev/null || true
+        cp -f codegen-testing/target/site/jacoco/jacoco.xml codecov-payload/codegen-testing-jacoco.xml 2>/dev/null || true
         cp -f processor/target/surefire-reports/*.xml codecov-payload/surefire/ 2>/dev/null || true
         cp -f processor/target/failsafe-reports/*.xml codecov-payload/failsafe/ 2>/dev/null || true
+        cp -f codegen-roaster/target/surefire-reports/*.xml codecov-payload/surefire/ 2>/dev/null || true
+        cp -f codegen-testing/target/surefire-reports/*.xml codecov-payload/surefire/ 2>/dev/null || true
         {
           printf 'pr_number=%s\n' "$PR_NUMBER"
           printf 'pr_head_sha=%s\n' "$PR_HEAD_SHA"
@@ -202,6 +214,8 @@ jobs:
         files: |
           processor/target/surefire-reports/*.xml
           processor/target/failsafe-reports/*.xml
+          codegen-roaster/target/surefire-reports/*.xml
+          codegen-testing/target/surefire-reports/*.xml
         fail_ci_if_error: true
         verbose: false
 
@@ -214,6 +228,8 @@ jobs:
         files: |
           processor/target/site/jacoco/jacoco.xml
           processor/target/site/jacoco-aggregate/jacoco.xml
+          codegen-roaster/target/site/jacoco/jacoco.xml
+          codegen-testing/target/site/jacoco/jacoco.xml
         flags: processor
         name: codecov-upload
         verbose: false

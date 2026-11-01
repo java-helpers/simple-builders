@@ -22,10 +22,11 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.codegen.processing;
+package org.javahelpers.simple.builders.processor.processing;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.javahelpers.codegen.processing.CodegenProcessorConfiguration;
 import org.junit.jupiter.api.Test;
 
 /** Unit tests for {@link CodegenProcessorConfiguration}. */

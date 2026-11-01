@@ -90,7 +90,7 @@ jobs:
           echo "Setting version to $VERSION"
 
           # Update ALL POMs (root and every module, including profile-only
-          # ones). Only core and processor are deployed to Maven Central, but
+          # ones). Only the deployable artifacts are deployed to Maven Central, but
           # all modules must share the same version.
           .github/scripts/project-version.sh --set "$VERSION"
 
@@ -100,7 +100,7 @@ jobs:
           TIMESTAMP="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
           echo "Setting project.build.outputTimestamp to $TIMESTAMP for release $VERSION"
           # Pin archive entry timestamps to the release moment for reproducible builds.
-          mvn versions:set-property -Dproperty=project.build.outputTimestamp -DnewVersion="$TIMESTAMP" -DgenerateBackupPoms=false -pl core,processor
+          mvn versions:set-property -Dproperty=project.build.outputTimestamp -DnewVersion="$TIMESTAMP" -DgenerateBackupPoms=false -pl core,codegen-core,codegen-roaster,simple-processor,codegen-testing,processor
 
       - name: Commit version changes
         id: commit
@@ -148,7 +148,7 @@ jobs:
       - name: Generate SBOM (CycloneDX)
         run: |
           # Emit a CycloneDX SBOM (JSON + XML) for each published module.
-          mvn -B -Prelease -pl core,processor \
+          mvn -B -Prelease -pl core,codegen-core,codegen-roaster,simple-processor,codegen-testing,processor \
             org.cyclonedx:cyclonedx-maven-plugin:makeBom -DskipTests
 
       - name: Deploy (stage) to Maven Central
@@ -162,7 +162,7 @@ jobs:
           # (autoPublish defaults to false). A maintainer must review and
           # manually publish the staged deployment, so nothing is auto-released
           # to Maven Central without human approval.
-          mvn -B deploy -Prelease -pl core,processor -Dcentral.autoPublish=false
+          mvn -B deploy -Prelease -pl core,codegen-core,codegen-roaster,simple-processor,codegen-testing,processor -Dcentral.autoPublish=false
 
       # Generates a signed build-provenance attestation for the released JARs. This is
       # GitHub's official attestation action; the resulting SLSA attestation is stored in

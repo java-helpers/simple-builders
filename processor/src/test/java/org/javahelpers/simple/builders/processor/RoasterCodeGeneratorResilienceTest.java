@@ -28,26 +28,27 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import javax.annotation.processing.ProcessingEnvironment;
-import org.javahelpers.simple.builders.core.enums.AccessModifier;
-import org.javahelpers.simple.builders.core.enums.FormattingMode;
-import org.javahelpers.simple.builders.processor.classgen.CodeGenerationException;
-import org.javahelpers.simple.builders.processor.classgen.GenerationEnvironment;
-import org.javahelpers.simple.builders.processor.classgen.SourceFormatter;
-import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterCodeGenerator;
-import org.javahelpers.simple.builders.processor.classgen.roaster.exceptions.RoasterMapperException;
+import org.javahelpers.codegen.CodeGenerationException;
+import org.javahelpers.codegen.SourceFormatter;
+import org.javahelpers.codegen.enums.AccessModifier;
+import org.javahelpers.codegen.enums.FormattingMode;
+import org.javahelpers.codegen.logging.ProcessingLogger;
+import org.javahelpers.codegen.model.core.GenerationTargetClassDto;
+import org.javahelpers.codegen.model.method.ConstructorDto;
+import org.javahelpers.codegen.model.method.MethodCodeDto;
+import org.javahelpers.codegen.model.method.MethodCodePlaceholder;
+import org.javahelpers.codegen.model.method.MethodDto;
+import org.javahelpers.codegen.model.method.MethodParameterDto;
+import org.javahelpers.codegen.model.type.TypeName;
+import org.javahelpers.codegen.processing.AnnotationProcessingEnvironment;
+import org.javahelpers.codegen.processing.logging.MessagerProcessingLogger;
+import org.javahelpers.codegen.roaster.RoasterCodeGenerator;
+import org.javahelpers.codegen.roaster.SourceFormatterResolver;
+import org.javahelpers.codegen.roaster.exceptions.RoasterMapperException;
+import org.javahelpers.codegen.testing.CapturingProcessingLogger;
+import org.javahelpers.codegen.testing.ProcessingEnvironmentStub;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
-import org.javahelpers.simple.builders.processor.model.core.GenerationTargetClassDto;
-import org.javahelpers.simple.builders.processor.model.method.ConstructorDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodCodeDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodCodePlaceholder;
-import org.javahelpers.simple.builders.processor.model.method.MethodDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
-import org.javahelpers.simple.builders.processor.processing.SourceFormatterResolver;
-import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
-import org.javahelpers.simple.builders.processor.testing.CapturingProcessingLogger;
-import org.javahelpers.simple.builders.processor.testing.ProcessingEnvironmentStub;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -84,12 +85,12 @@ class RoasterCodeGeneratorResilienceTest {
     classDef.addConstructor(constructor);
 
     ProcessingEnvironment env = ProcessingEnvironmentStub.createEmpty();
-    ProcessingLogger logger = ProcessingLogger.create(env);
+    ProcessingLogger logger = MessagerProcessingLogger.create(env);
     BuilderProcessingContext context =
         new BuilderProcessingContext(logger, BuilderConfiguration.DEFAULT, env);
     RoasterCodeGenerator generator =
         new RoasterCodeGenerator(
-            new GenerationEnvironment(
+            new AnnotationProcessingEnvironment(
                 env, logger, context.getPerformanceTracker(), context::reportBasedOnStrictMode));
 
     SourceFormatter formatter =
@@ -122,7 +123,7 @@ class RoasterCodeGeneratorResilienceTest {
         new BuilderProcessingContext(capturing.logger(), BuilderConfiguration.DEFAULT, env);
     RoasterCodeGenerator generator =
         new RoasterCodeGenerator(
-            new GenerationEnvironment(
+            new AnnotationProcessingEnvironment(
                 env,
                 capturing.logger(),
                 context.getPerformanceTracker(),

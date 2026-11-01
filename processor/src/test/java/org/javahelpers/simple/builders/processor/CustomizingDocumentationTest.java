@@ -25,9 +25,9 @@
 package org.javahelpers.simple.builders.processor;
 
 import static com.google.testing.compile.CompilationSubject.assertThat;
-import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.assertGenerationSucceeded;
-import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.assertingResult;
-import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.contains;
+import static org.javahelpers.codegen.testing.ProcessorAsserts.assertGenerationSucceeded;
+import static org.javahelpers.codegen.testing.ProcessorAsserts.assertingResult;
+import static org.javahelpers.codegen.testing.ProcessorAsserts.contains;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils.createCompiler;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils.forSource;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils.loadGeneratedSource;
@@ -121,7 +121,7 @@ class CustomizingDocumentationTest {
             import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
             import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
             import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
-            import org.javahelpers.simple.builders.processor.model.type.TypeName;
+            import org.javahelpers.codegen.model.type.TypeName;
             import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
             import java.util.List;
 
@@ -164,7 +164,7 @@ class CustomizingDocumentationTest {
 
             import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
             import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
-            import org.javahelpers.simple.builders.processor.model.type.TypeName;
+            import org.javahelpers.codegen.model.type.TypeName;
             import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 
             public class TestBuilderEnhancer implements BuilderEnhancer {
@@ -206,8 +206,8 @@ class CustomizingDocumentationTest {
             import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
             import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
             import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
-            import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
-            import org.javahelpers.simple.builders.processor.model.type.TypeName;
+            import org.javahelpers.codegen.model.method.MethodParameterDto;
+            import org.javahelpers.codegen.model.type.TypeName;
             import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
             import java.util.List;
 
@@ -267,7 +267,7 @@ class CustomizingDocumentationTest {
             import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
             import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
             import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
-            import org.javahelpers.simple.builders.processor.model.type.TypeName;
+            import org.javahelpers.codegen.model.type.TypeName;
             import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
             import java.util.List;
 
@@ -310,7 +310,7 @@ class CustomizingDocumentationTest {
             import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
             import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
             import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
-            import org.javahelpers.simple.builders.processor.model.type.TypeName;
+            import org.javahelpers.codegen.model.type.TypeName;
             import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
             import java.util.List;
 
@@ -359,7 +359,7 @@ class CustomizingDocumentationTest {
             import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
             import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
             import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
-            import org.javahelpers.simple.builders.processor.model.type.TypeName;
+            import org.javahelpers.codegen.model.type.TypeName;
             import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
             import java.util.List;
 
@@ -413,8 +413,8 @@ class CustomizingDocumentationTest {
             import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
             import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
             import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
-            import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
-            import org.javahelpers.simple.builders.processor.model.type.TypeName;
+            import org.javahelpers.codegen.model.method.MethodParameterDto;
+            import org.javahelpers.codegen.model.type.TypeName;
             import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
             import java.util.List;
 
@@ -486,10 +486,10 @@ class CustomizingDocumentationTest {
             package com.example.test;
 
             import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
-            import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
+            import org.javahelpers.codegen.model.annotation.AnnotationDto;
             import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
             import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
-            import org.javahelpers.simple.builders.processor.model.type.TypeName;
+            import org.javahelpers.codegen.model.type.TypeName;
             import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 
             public class CustomValidationEnhancer implements BuilderEnhancer {
@@ -598,8 +598,8 @@ class CustomizingDocumentationTest {
             import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
             import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
             import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
-            import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
-            import org.javahelpers.simple.builders.processor.model.type.TypeName;
+            import org.javahelpers.codegen.model.method.MethodParameterDto;
+            import org.javahelpers.codegen.model.type.TypeName;
             import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
             import java.util.List;
 
@@ -662,8 +662,8 @@ class CustomizingDocumentationTest {
             import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
             import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
             import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
-            import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
-            import org.javahelpers.simple.builders.processor.model.type.TypeName;
+            import org.javahelpers.codegen.model.method.MethodParameterDto;
+            import org.javahelpers.codegen.model.type.TypeName;
             import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 
             public class BuilderFactoryEnhancer implements BuilderEnhancer {

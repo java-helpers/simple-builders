@@ -31,7 +31,7 @@ import com.google.testing.compile.Compilation;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.tools.JavaFileObject;
-import org.javahelpers.simple.builders.processor.testing.ProcessorAsserts;
+import org.javahelpers.codegen.testing.ProcessorAsserts;
 import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
 import org.junit.jupiter.api.Test;
 
