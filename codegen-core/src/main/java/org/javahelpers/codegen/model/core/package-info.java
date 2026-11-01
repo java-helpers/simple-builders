@@ -39,4 +39,4 @@
  * <p>These classes form the core data model that flows through the entire processor pipeline from
  * analysis to code generation.
  */
-package org.javahelpers.simple.builders.processor.model.core;
+package model.core;

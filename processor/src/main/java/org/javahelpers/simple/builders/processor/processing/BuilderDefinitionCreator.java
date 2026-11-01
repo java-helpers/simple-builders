@@ -57,8 +57,8 @@ import org.javahelpers.simple.builders.processor.generators.util.MethodGenerator
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
-import org.javahelpers.simple.builders.processor.model.core.ClassFieldDto;
-import org.javahelpers.simple.builders.processor.model.core.DeprecationInfoDto;
+import org.javahelpers.codegen.model.core.ClassFieldDto;
+import org.javahelpers.codegen.model.core.DeprecationInfoDto;
 import org.javahelpers.simple.builders.processor.model.core.GetterInfoDto;
 import org.javahelpers.codegen.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;

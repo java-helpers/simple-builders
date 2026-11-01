@@ -33,7 +33,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.annotation.InterfaceName;
-import org.javahelpers.simple.builders.processor.model.core.GenerationTargetClassDto;
+import org.javahelpers.codegen.model.core.GenerationTargetClassDto;
 import org.javahelpers.codegen.model.imports.ImportStatement;
 import org.javahelpers.codegen.model.imports.RegularImport;
 import org.javahelpers.codegen.model.method.MethodCodePlaceholder;

@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.model.core;
+package model.core;
 
 import java.util.LinkedHashSet;
 import java.util.LinkedList;

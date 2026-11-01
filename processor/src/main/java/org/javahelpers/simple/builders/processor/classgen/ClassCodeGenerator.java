@@ -24,7 +24,7 @@
 
 package org.javahelpers.simple.builders.processor.classgen;
 
-import org.javahelpers.simple.builders.processor.model.core.GenerationTargetClassDto;
+import org.javahelpers.codegen.model.core.GenerationTargetClassDto;
 
 /**
  * SPI for class code generators: turns a {@link GenerationTargetClassDto} into source code and

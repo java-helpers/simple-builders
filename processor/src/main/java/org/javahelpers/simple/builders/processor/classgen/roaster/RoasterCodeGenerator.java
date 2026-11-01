@@ -50,8 +50,8 @@ import org.javahelpers.simple.builders.processor.classgen.GenerationIssueReporte
 import org.javahelpers.simple.builders.processor.classgen.SourceFormatter;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.annotation.InterfaceName;
-import org.javahelpers.simple.builders.processor.model.core.ClassFieldDto;
-import org.javahelpers.simple.builders.processor.model.core.GenerationTargetClassDto;
+import org.javahelpers.codegen.model.core.ClassFieldDto;
+import org.javahelpers.codegen.model.core.GenerationTargetClassDto;
 import org.javahelpers.codegen.model.imports.ImportStatement;
 import org.javahelpers.codegen.model.javadoc.JavadocCodeBlockDto;
 import org.javahelpers.codegen.model.javadoc.JavadocDto;

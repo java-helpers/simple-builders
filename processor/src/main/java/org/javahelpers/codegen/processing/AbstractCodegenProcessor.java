@@ -39,7 +39,7 @@ import org.javahelpers.simple.builders.processor.classgen.ClassCodeGenerator;
 import org.javahelpers.simple.builders.processor.classgen.CodeGenerationException;
 import org.javahelpers.simple.builders.processor.classgen.GenerationEnvironment;
 import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterCodeGenerator;
-import org.javahelpers.simple.builders.processor.model.core.GenerationTargetClassDto;
+import org.javahelpers.codegen.model.core.GenerationTargetClassDto;
 import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.AnnotationProcessingContext;
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsReader;

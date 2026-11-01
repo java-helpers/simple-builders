@@ -36,7 +36,7 @@ import org.javahelpers.simple.builders.processor.classgen.SourceFormatter;
 import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterCodeGenerator;
 import org.javahelpers.simple.builders.processor.classgen.roaster.exceptions.RoasterMapperException;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
-import org.javahelpers.simple.builders.processor.model.core.GenerationTargetClassDto;
+import org.javahelpers.codegen.model.core.GenerationTargetClassDto;
 import org.javahelpers.codegen.model.method.ConstructorDto;
 import org.javahelpers.codegen.model.method.MethodCodeDto;
 import org.javahelpers.codegen.model.method.MethodCodePlaceholder;
