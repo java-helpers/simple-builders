@@ -22,33 +22,27 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.classgen;
+package org.javahelpers.codegen;
+
+import org.javahelpers.codegen.model.core.GenerationTargetClassDto;
 
 /**
- * Failure of a {@link ClassCodeGenerator} to produce or write generated source code.
+ * SPI for class code generators: turns a {@link GenerationTargetClassDto} into source code and
+ * writes it through the processing environment's filer.
  *
- * <p>The exception type of the code generation layer: it intentionally knows nothing about
- * builders. Callers generating builders translate it into their domain exception.
+ * <p>Implementations are backend-specific (e.g. Roaster, JavaPoet) and are instantiated with a
+ * {@link GenerationEnvironment} providing the processing environment, logger, and performance
+ * tracker.
  */
-public class CodeGenerationException extends Exception {
-
-  private static final long serialVersionUID = 1L;
+public interface ClassCodeGenerator {
 
   /**
-   * Creates a code generation failure with a message.
+   * Generates a class from the given class definition and writes the source file.
    *
-   * @param message the failure description
+   * @param classDef DTO containing all information to create the class
+   * @param formatter formats the generated source before it is written
+   * @throws CodeGenerationException if there is an error in source code generation
    */
-  public CodeGenerationException(String message) {
-    super(message);
-  }
-
-  /**
-   * Creates a code generation failure wrapping an underlying cause.
-   *
-   * @param cause the underlying failure
-   */
-  public CodeGenerationException(Throwable cause) {
-    super(cause.getMessage(), cause);
-  }
+  void generateClass(GenerationTargetClassDto classDef, SourceFormatter formatter)
+      throws CodeGenerationException;
 }

@@ -22,24 +22,33 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.classgen;
+package org.javahelpers.codegen;
 
 /**
- * Formats generated source code before it is written to disk.
+ * Failure of a {@link ClassCodeGenerator} to produce or write generated source code.
  *
- * <p>The generic formatting seam of the code generation layer: callers pick the formatter
- * implementation matching the target's formatting mode and pass it to {@link
- * ClassCodeGenerator#generateClass}. Formatting-heavy backends may implement richer formatters
- * behind this interface.
+ * <p>The exception type of the code generation layer: it intentionally knows nothing about
+ * builders. Callers generating builders translate it into their domain exception.
  */
-@FunctionalInterface
-public interface SourceFormatter {
+public class CodeGenerationException extends Exception {
+
+  private static final long serialVersionUID = 1L;
 
   /**
-   * Formats generated source code.
+   * Creates a code generation failure with a message.
    *
-   * @param rawSource the unformatted source code
-   * @return the formatted source code
+   * @param message the failure description
    */
-  String format(String rawSource);
+  public CodeGenerationException(String message) {
+    super(message);
+  }
+
+  /**
+   * Creates a code generation failure wrapping an underlying cause.
+   *
+   * @param cause the underlying failure
+   */
+  public CodeGenerationException(Throwable cause) {
+    super(cause.getMessage(), cause);
+  }
 }

@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.classgen;
+package org.javahelpers.codegen;
 
 /**
  * Phase names a {@link ClassCodeGenerator} may report through {@code PerformanceTracker.endPhase}

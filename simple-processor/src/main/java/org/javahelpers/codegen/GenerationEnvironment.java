@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.classgen;
+package org.javahelpers.codegen;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker;

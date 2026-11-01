@@ -33,7 +33,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
-import org.javahelpers.simple.builders.processor.classgen.GenerationPhases;
+import org.javahelpers.codegen.GenerationPhases;
 import org.javahelpers.simple.builders.processor.processing.PipelinePhases;
 import org.javahelpers.simple.builders.processor.testing.CapturingProcessingLogger;
 import org.junit.jupiter.api.Test;

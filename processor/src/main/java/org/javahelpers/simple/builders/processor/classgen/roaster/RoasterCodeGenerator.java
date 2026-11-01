@@ -24,7 +24,7 @@
 
 package org.javahelpers.simple.builders.processor.classgen.roaster;
 
-import static org.javahelpers.simple.builders.processor.classgen.GenerationPhases.*;
+import static org.javahelpers.codegen.GenerationPhases.*;
 import static org.javahelpers.simple.builders.processor.classgen.roaster.RoasterMapper.mapType;
 import static org.javahelpers.simple.builders.processor.classgen.roaster.RoasterMapper.resolveCodeTemplate;
 
@@ -43,11 +43,11 @@ import javax.tools.JavaFileObject;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.codegen.enums.AccessModifier;
-import org.javahelpers.simple.builders.processor.classgen.ClassCodeGenerator;
-import org.javahelpers.simple.builders.processor.classgen.CodeGenerationException;
-import org.javahelpers.simple.builders.processor.classgen.GenerationEnvironment;
-import org.javahelpers.simple.builders.processor.classgen.GenerationIssueReporter;
-import org.javahelpers.simple.builders.processor.classgen.SourceFormatter;
+import org.javahelpers.codegen.ClassCodeGenerator;
+import org.javahelpers.codegen.CodeGenerationException;
+import org.javahelpers.codegen.GenerationEnvironment;
+import org.javahelpers.codegen.GenerationIssueReporter;
+import org.javahelpers.codegen.SourceFormatter;
 import org.javahelpers.codegen.model.annotation.AnnotationDto;
 import org.javahelpers.codegen.model.annotation.InterfaceName;
 import org.javahelpers.codegen.model.core.ClassFieldDto;

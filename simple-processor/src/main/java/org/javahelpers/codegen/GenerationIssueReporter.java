@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.classgen;
+package org.javahelpers.codegen;
 
 /**
  * Reports a problem found during code generation. The receiving side decides the severity — e.g. an

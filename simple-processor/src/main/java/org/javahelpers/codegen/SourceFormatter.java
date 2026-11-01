@@ -22,27 +22,24 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.classgen;
-
-import org.javahelpers.codegen.model.core.GenerationTargetClassDto;
+package org.javahelpers.codegen;
 
 /**
- * SPI for class code generators: turns a {@link GenerationTargetClassDto} into source code and
- * writes it through the processing environment's filer.
+ * Formats generated source code before it is written to disk.
  *
- * <p>Implementations are backend-specific (e.g. Roaster, JavaPoet) and are instantiated with a
- * {@link GenerationEnvironment} providing the processing environment, logger, and performance
- * tracker.
+ * <p>The generic formatting seam of the code generation layer: callers pick the formatter
+ * implementation matching the target's formatting mode and pass it to {@link
+ * ClassCodeGenerator#generateClass}. Formatting-heavy backends may implement richer formatters
+ * behind this interface.
  */
-public interface ClassCodeGenerator {
+@FunctionalInterface
+public interface SourceFormatter {
 
   /**
-   * Generates a class from the given class definition and writes the source file.
+   * Formats generated source code.
    *
-   * @param classDef DTO containing all information to create the class
-   * @param formatter formats the generated source before it is written
-   * @throws CodeGenerationException if there is an error in source code generation
+   * @param rawSource the unformatted source code
+   * @return the formatted source code
    */
-  void generateClass(GenerationTargetClassDto classDef, SourceFormatter formatter)
-      throws CodeGenerationException;
+  String format(String rawSource);
 }

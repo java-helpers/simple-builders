@@ -24,7 +24,7 @@
 
 package org.javahelpers.simple.builders.processor.processing;
 
-import static org.javahelpers.simple.builders.processor.classgen.GenerationPhases.*;
+import static org.javahelpers.codegen.GenerationPhases.*;
 
 import java.util.LinkedHashMap;
 import java.util.List;
