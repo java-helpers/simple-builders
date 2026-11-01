@@ -273,7 +273,7 @@ For complete documentation, see [DEBUG_LOGGING.md](DEBUG_LOGGING.md).
 [DEBUG] simple-builders: │  ├─ Creating JavaFileObject: test.ProjectBuilder
 [DEBUG] simple-builders: │  ├─ Writing class to file: /SOURCE_OUTPUT/test/ProjectBuilder.java
 [DEBUG] simple-builders: │  ├─ Successfully generated class: ProjectBuilder
-[DEBUG] simple-builders: │  └─ Generated builder with 1 fields and 4 methods for ProjectBuilder
+[DEBUG] simple-builders: │  ├─ Generated builder with 1 fields and 4 methods for ProjectBuilder
         simple-builders: Successfully generated 1 target(s) in this processing round
 =============================================
 

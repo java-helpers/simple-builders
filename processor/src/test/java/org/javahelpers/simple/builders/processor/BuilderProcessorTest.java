@@ -162,7 +162,7 @@ class BuilderProcessorTest {
         "[DEBUG] simple-builders: │  ├─ Creating JavaFileObject: test.VerboseTestBuilder",
         "[DEBUG] simple-builders: │  ├─ Writing class to file: /SOURCE_OUTPUT/test/VerboseTestBuilder.java",
         "[DEBUG] simple-builders: │  ├─ Successfully generated class: VerboseTestBuilder",
-        "[DEBUG] simple-builders: │  └─ Generated builder with 1 fields and 10 methods for"
+        "[DEBUG] simple-builders: │  ├─ Generated builder with 1 fields and 10 methods for"
             + " VerboseTestBuilder",
         "simple-builders: Successfully generated 1 target(s) in this processing round",
         // Round 2 — no new elements: planning is skipped before the domain hook runs
