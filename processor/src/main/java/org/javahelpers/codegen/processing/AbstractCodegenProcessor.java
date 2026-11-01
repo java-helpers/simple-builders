@@ -321,24 +321,14 @@ public abstract class AbstractCodegenProcessor<
   }
 
   /**
-   * The diagnostic prefix carried by every emitted log line ("{@code prefix: }" — applied by the
-   * logger to each message). Default: the {@link CodegenProcessorConfiguration#loggerPrefix()}
-   * declaration, or the processor's simple class name when unset; override for a dynamic prefix.
-   *
-   * @return the logger prefix
-   */
-  protected String provideLoggerPrefix() {
-    String configured = processorConfiguration.loggerPrefix();
-    return configured != null ? configured : getClass().getSimpleName();
-  }
-
-  /**
    * Creates the logger: verbose when the domain's declared verbose option requests it — see {@link
-   * ProcessorOptionRegistry#isVerboseRequested} — and carrying {@link #provideLoggerPrefix()}.
+   * ProcessorOptionRegistry#isVerboseRequested} — and carrying the prefix from {@link
+   * CodegenProcessorConfiguration#loggerPrefix()}, or the processor's simple class name when unset.
    */
   private ProcessingLogger createLogger(
       ProcessingEnvironment processingEnv, CompilerArgumentsReader reader) {
-    String loggerPrefix = provideLoggerPrefix();
+    String configuredPrefix = processorConfiguration.loggerPrefix();
+    String loggerPrefix = configuredPrefix != null ? configuredPrefix : getClass().getSimpleName();
     ProcessingLogger processingLogger =
         optionRegistry().isVerboseRequested(reader)
             ? ProcessingLogger.createVerbose(processingEnv, loggerPrefix)
