@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.classgen.roaster.exceptions;
+package org.javahelpers.codegen.roaster.exceptions;
 
 /** Special exception for errors in mapping to Roaster classes. */
 public class RoasterMapperException extends RuntimeException {

@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.classgen.roaster;
+package org.javahelpers.codegen.roaster;
 
 import static org.javahelpers.codegen.GenerationPhases.*;
-import static org.javahelpers.simple.builders.processor.classgen.roaster.RoasterMapper.mapType;
-import static org.javahelpers.simple.builders.processor.classgen.roaster.RoasterMapper.resolveCodeTemplate;
+import static org.javahelpers.codegen.roaster.RoasterMapper.mapType;
+import static org.javahelpers.codegen.roaster.RoasterMapper.resolveCodeTemplate;
 
 import java.io.IOException;
 import java.io.Writer;

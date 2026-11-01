@@ -22,12 +22,12 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.classgen.roaster;
+package org.javahelpers.codegen.roaster;
 
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.collections4.CollectionUtils;
-import org.javahelpers.simple.builders.processor.classgen.roaster.exceptions.RoasterMapperException;
+import org.javahelpers.codegen.roaster.exceptions.RoasterMapperException;
 import org.javahelpers.codegen.model.annotation.AnnotationDto;
 import org.javahelpers.codegen.model.annotation.InterfaceName;
 import org.javahelpers.codegen.model.method.CodeTemplateDto;

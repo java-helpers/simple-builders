@@ -38,7 +38,7 @@ import org.javahelpers.codegen.analysis.JavaLangMapper;
 import org.javahelpers.codegen.ClassCodeGenerator;
 import org.javahelpers.codegen.CodeGenerationException;
 import org.javahelpers.codegen.GenerationEnvironment;
-import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterCodeGenerator;
+import org.javahelpers.codegen.roaster.RoasterCodeGenerator;
 import org.javahelpers.codegen.model.core.GenerationTargetClassDto;
 import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.codegen.processing.AnnotationProcessingContext;

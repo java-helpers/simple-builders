@@ -316,7 +316,7 @@ public class BuilderDefinitionCreator {
    * their field/class method lists so they are never mapped to the rendering DTO.
    *
    * <p>A generic safety net in {@link
-   * org.javahelpers.simple.builders.processor.classgen.roaster.RoasterCodeGenerator#resolveMethodConflicts}
+   * org.javahelpers.codegen.roaster.RoasterCodeGenerator#resolveMethodConflicts}
    * handles any remaining duplicates (e.g., from enhancer methods added after this step) by keeping
    * the first occurrence.
    *

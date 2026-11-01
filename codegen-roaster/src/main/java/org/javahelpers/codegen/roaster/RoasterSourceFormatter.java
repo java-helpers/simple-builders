@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.javahelpers.simple.builders.processor.classgen.roaster;
+package org.javahelpers.codegen.roaster;
 
 import java.io.IOException;
 import java.io.InputStream;

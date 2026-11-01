@@ -27,7 +27,7 @@ package org.javahelpers.codegen.processing;
 import java.util.EnumMap;
 import org.javahelpers.codegen.enums.FormattingMode;
 import org.javahelpers.codegen.SourceFormatter;
-import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterSourceFormatter;
+import org.javahelpers.codegen.roaster.RoasterSourceFormatter;
 import org.javahelpers.codegen.logging.ProcessingLogger;
 
 /**
