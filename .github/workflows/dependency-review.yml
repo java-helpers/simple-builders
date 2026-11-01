@@ -67,7 +67,7 @@ jobs:
           fail-on-severity: high
           # Fail closed with licenses derived from the project's full dependency tree,
           # replacing the deprecated deny-licenses option.
-          allow-licenses: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, EPL-1.0, EPL-2.0, CDDL-1.0, CDDL-1.1, ISC, Unlicense, CC0-1.0
+          allow-licenses: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, EPL-1.0, EPL-2.0, ECL-2.0, CDDL-1.0, CDDL-1.1, ISC, Unlicense, CC0-1.0
           # Per-dependency exceptions to the allowlist above. Each flagged
           # package is executed as an unmodified tool on the runner or the
           # build machine — not distributed, not a derivative work — so its
@@ -77,10 +77,21 @@ jobs:
           #   - lombok (performance-test 'lombok' profile, provided scope):
           #     MIT-licensed, but GitHub's licensee reports its LICENSE as
           #     LicenseRef-bad-non-standard (NOASSERTION) — a misdetection.
+          #   - maven-javadoc-plugin, maven-site-plugin (build plugins used to
+          #     publish javadoc/site jars): multi-licensed including
+          #     LicenseRef-scancode-public-domain, which is not on the allowlist.
+          #   - junit-jupiter-api/engine/params (codegen-testing, compile
+          #     scope): EPL-2.0 licensed, but GitHub reports LicenseRef-
+          #     bad-non-standard (NOASSERTION) — a misdetection like lombok.
           # The purls are deliberately version-less: the matcher ignores the
           # version anyway, and it is the usage that makes the licenses
           # unproblematic, independent of the pinned revision.
           allow-dependencies-licenses: >-
             pkg:githubactions/SonarSource/sonarqube-scan-action,
             pkg:maven/org.sonarsource.scanner.maven/sonar-maven-plugin,
-            pkg:maven/org.projectlombok/lombok
+            pkg:maven/org.projectlombok/lombok,
+            pkg:maven/org.apache.maven.plugins/maven-javadoc-plugin,
+            pkg:maven/org.apache.maven.plugins/maven-site-plugin,
+            pkg:maven/org.junit.jupiter/junit-jupiter-api,
+            pkg:maven/org.junit.jupiter/junit-jupiter-engine,
+            pkg:maven/org.junit.jupiter/junit-jupiter-params
