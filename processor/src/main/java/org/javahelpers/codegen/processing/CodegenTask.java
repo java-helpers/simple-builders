@@ -24,6 +24,7 @@
 
 package org.javahelpers.codegen.processing;
 
+import java.util.Objects;
 import javax.lang.model.element.Element;
 
 /**
@@ -38,8 +39,8 @@ import javax.lang.model.element.Element;
  * @param configuration the resolved per-element configuration
  * @param reportingElement the element diagnostics are reported on — the declaring holder for
  *     externally declared types, otherwise the element itself
- * @param outputPackage the package generated code is written to, or {@code null} when the domain
- *     does not carry one — planning computes it so the driver can pass the task to {@link
+ * @param outputPackage the package generated code is written to — planning computes it so the
+ *     driver can pass the task to {@link
  *     org.javahelpers.simple.builders.processor.processing.AnnotationProcessingContext#setCurrentTask}
  *     before analysis
  */
@@ -63,9 +64,12 @@ public record CodegenTask<K extends CodegenConfiguration>(
     private Element reportingElement;
     private String outputPackage;
 
-    /** The element the task generates for. */
+    /** The element the task generates for; also the default {@link #reportingElement}. */
     public Builder<K> element(Element element) {
       this.element = element;
+      if (this.reportingElement == null) {
+        this.reportingElement = element;
+      }
       return this;
     }
 
@@ -81,7 +85,7 @@ public record CodegenTask<K extends CodegenConfiguration>(
       return this;
     }
 
-    /** The package generated code is written to, or {@code null}. */
+    /** The package generated code is written to. */
     public Builder<K> outputPackage(String outputPackage) {
       this.outputPackage = outputPackage;
       return this;
@@ -90,10 +94,10 @@ public record CodegenTask<K extends CodegenConfiguration>(
     /** Builds the task; the reporting element defaults to the task element. */
     public CodegenTask<K> build() {
       return new CodegenTask<>(
-          element,
-          configuration,
-          reportingElement != null ? reportingElement : element,
-          outputPackage);
+          Objects.requireNonNull(element, "element"),
+          Objects.requireNonNull(configuration, "configuration"),
+          Objects.requireNonNull(reportingElement, "reportingElement"),
+          Objects.requireNonNull(outputPackage, "outputPackage"));
     }
   }
 }
