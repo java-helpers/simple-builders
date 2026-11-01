@@ -484,9 +484,8 @@ public class BuilderProcessor
                             || f.getFieldType() instanceof TypeNameMap)
                 .count();
 
-    // Collect info for Jackson Module if enabled
+    // Collect info for Jackson Module if enabled (the generator logs each registration)
     jacksonModuleGenerator.addEntry(definition, generation.task().element());
-    ctx.debug("Jackson module entry added");
 
     // End class-level timing (started by the driver before analysis)
     ctx.getPerformanceTracker()

@@ -101,15 +101,17 @@ public class GeneratorRegistry {
     for (MethodGenerator generator : methodGenerators) {
       if (generator.appliesTo(field, dtoType, context)) {
         try {
-          context.debug(
-              "Applying: %s (priority: %d)",
-              generator.getClass().getSimpleName(), generator.getPriority());
-
           String genName = generator.getClass().getSimpleName();
           performanceTracker.startGenerator();
           List<BuilderMethodDto> generatedMethods =
               generator.generateMethods(field, builderType, context);
           performanceTracker.endGenerator(genName);
+
+          context.debug(
+              "Applied: %s (priority: %d): +%d methods",
+              genName,
+              generator.getPriority(),
+              generatedMethods == null ? 0 : generatedMethods.size());
 
           if (CollectionUtils.isNotEmpty(generatedMethods)) {
             allMethods.addAll(generatedMethods);
@@ -138,15 +140,18 @@ public class GeneratorRegistry {
     for (BuilderEnhancer enhancer : builderEnhancers) {
       if (enhancer.appliesTo(builderDto, dtoType, context)) {
         try {
-          context.debug(
-              "Applying: %s (priority: %d)",
-              enhancer.getClass().getSimpleName(), enhancer.getPriority());
-
+          int[] before = contentCounts(builderDto);
           String enhName = enhancer.getClass().getSimpleName();
           performanceTracker.startEnhancer();
           enhancer.enhanceBuilder(builderDto, context);
           performanceTracker.endEnhancer(enhName);
           appliedEnhancers++;
+
+          context.debug(
+              "Applied: %s (priority: %d)%s",
+              enhName,
+              enhancer.getPriority(),
+              describeContribution(contentCounts(builderDto), before));
         } catch (Exception e) {
           context.error(
               "Failed to apply enhancer %s to builder %s: %s",
@@ -162,6 +167,40 @@ public class GeneratorRegistry {
     } else {
       context.debugEndOperation();
     }
+  }
+
+  /** Counts the content slots of a builder definition an enhancer can contribute to. */
+  private static int[] contentCounts(BuilderDefinitionDto builderDto) {
+    return new int[] {
+      builderDto.getMethods().size(),
+      builderDto.getConstructors().size(),
+      builderDto.getNestedTypes().size(),
+      builderDto.getClassAnnotations().size(),
+      builderDto.getInterfaces().size(),
+      builderDto.getClassJavadoc() == null ? 0 : 1
+    };
+  }
+
+  /**
+   * Renders what an enhancer added, e.g. {@code ": +2 methods, +1 constructor"}, or an empty string
+   * when it changed nothing measurable.
+   */
+  private static String describeContribution(int[] after, int[] before) {
+    String[] labels = {"methods", "constructors", "nested types", "annotations", "interfaces"};
+    StringBuilder contribution = new StringBuilder();
+    for (int i = 0; i < labels.length; i++) {
+      if (after[i] > before[i]) {
+        contribution
+            .append(contribution.isEmpty() ? ": +" : ", +")
+            .append(after[i] - before[i])
+            .append(' ')
+            .append(labels[i]);
+      }
+    }
+    if (after[5] > before[5]) {
+      contribution.append(contribution.isEmpty() ? ": " : ", ").append("javadoc added");
+    }
+    return contribution.toString();
   }
 
   /**

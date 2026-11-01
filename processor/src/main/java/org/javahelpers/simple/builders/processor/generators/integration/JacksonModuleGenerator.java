@@ -94,6 +94,9 @@ public class JacksonModuleGenerator {
         targetPackage,
         new JacksonModuleEntryDto(
             builderDef.getBuildingTargetTypeName(), builderDef.getBuilderTypeName()));
+    logger.debug(
+        "Registered %s for Jackson module in package '%s'",
+        builderDef.getBuilderTypeName().getClassName(), targetPackage);
   }
 
   private String getTargetPackage(BuilderConfiguration config, BuilderDefinitionDto builderDef) {
