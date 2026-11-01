@@ -107,9 +107,8 @@ public class MinimalCodegenProcessorTest {
       return collected.all().stream()
           .map(
               element ->
-                  CodegenTask.<CodegenConfiguration>builder()
+                  CodegenTask.builder(CodegenConfiguration.class)
                       .element(element)
-                      .configuration(CodegenConfiguration.DEFAULT)
                       .outputPackage(ctx.getPackageName(element))
                       .build())
           .toList();

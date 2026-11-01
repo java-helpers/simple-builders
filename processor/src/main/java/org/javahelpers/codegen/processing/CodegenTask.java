@@ -48,24 +48,29 @@ public record CodegenTask<K extends CodegenConfiguration>(
     Element element, K configuration, Element reportingElement, String outputPackage) {
 
   /**
-   * A task builder — {@code reportingElement} defaults to the task's element when not set.
+   * A task builder — {@code reportingElement} defaults to the task's element and {@code
+   * configuration} to {@link CodegenConfiguration#DEFAULT} when that fits the given type.
    *
    * @param <K> the configuration type
+   * @param configurationType the domain's configuration type; {@code build()} applies the {@link
+   *     CodegenConfiguration#DEFAULT} only when it is assignable to it
    * @return a new builder
    */
-  public static <K extends CodegenConfiguration> Builder<K> builder() {
-    return new Builder<>();
+  public static <K extends CodegenConfiguration> Builder<K> builder(Class<K> configurationType) {
+    return new Builder<>(Objects.requireNonNull(configurationType, "configurationType"));
   }
 
   /** Fluent builder for {@link CodegenTask}. */
-  @SuppressWarnings("unchecked")
   public static final class Builder<K extends CodegenConfiguration> {
+    private final Class<K> configurationType;
     private Element element;
-    // Domains with a richer configuration type must set it explicitly — the default is the
-    // framework's plain CodegenConfiguration, which only fits K = CodegenConfiguration.
-    private K configuration = (K) CodegenConfiguration.DEFAULT;
+    private K configuration;
     private Element reportingElement;
     private String outputPackage;
+
+    private Builder(Class<K> configurationType) {
+      this.configurationType = configurationType;
+    }
 
     /** The element the task generates for; also the default {@link #reportingElement}. */
     public Builder<K> element(Element element) {
@@ -91,11 +96,20 @@ public record CodegenTask<K extends CodegenConfiguration>(
       return this;
     }
 
-    /** Builds the task; the reporting element defaults to the task element. */
+    /**
+     * Builds the task; the reporting element defaults to the task element and the configuration to
+     * {@link CodegenConfiguration#DEFAULT} — checked: the default is only applied when it is
+     * assignable to the domain's configuration type, otherwise {@code configuration()} is required.
+     */
     public CodegenTask<K> build() {
+      K resolvedConfiguration = configuration;
+      if (resolvedConfiguration == null
+          && configurationType.isInstance(CodegenConfiguration.DEFAULT)) {
+        resolvedConfiguration = configurationType.cast(CodegenConfiguration.DEFAULT);
+      }
       return new CodegenTask<>(
           Objects.requireNonNull(element, "element"),
-          Objects.requireNonNull(configuration, "configuration"),
+          Objects.requireNonNull(resolvedConfiguration, "configuration"),
           reportingElement != null ? reportingElement : element,
           Objects.requireNonNull(outputPackage, "outputPackage"));
     }
