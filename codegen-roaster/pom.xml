@@ -96,11 +96,6 @@
       <artifactId>codegen-core</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <dependency>
-      <groupId>io.github.java-helpers.codegen</groupId>
-      <artifactId>simple-processor</artifactId>
-      <version>${project.version}</version>
-    </dependency>
     <!-- Utility functions for java.lang classes -->
     <dependency>
       <groupId>org.apache.commons</groupId>

@@ -38,12 +38,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.annotation.processing.ProcessingEnvironment;
-import javax.tools.JavaFileObject;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.codegen.ClassCodeGenerator;
 import org.javahelpers.codegen.CodeGenerationException;
+import org.javahelpers.codegen.GeneratedSourceFile;
 import org.javahelpers.codegen.GenerationEnvironment;
 import org.javahelpers.codegen.GenerationIssueReporter;
 import org.javahelpers.codegen.SourceFormatter;
@@ -79,7 +78,7 @@ import org.jboss.forge.roaster.model.source.TypeVariableSource;
 /** Roaster-based code generator for builder source files. */
 public class RoasterCodeGenerator implements ClassCodeGenerator {
   /** Processing environment for accessing filer and element utilities. */
-  private final ProcessingEnvironment processingEnv;
+  private final GenerationEnvironment environment;
 
   /** Logger for debug output during code generation. */
   private final ProcessingLogger logger;
@@ -97,9 +96,7 @@ public class RoasterCodeGenerator implements ClassCodeGenerator {
    *     performance tracker and issue reporter
    */
   public RoasterCodeGenerator(GenerationEnvironment environment) {
-    this.processingEnv =
-        Objects.requireNonNull(
-            environment.getProcessingEnvironment(), "processingEnv must not be null");
+    this.environment = Objects.requireNonNull(environment, "environment must not be null");
     this.logger = Objects.requireNonNull(environment.getLogger(), "logger must not be null");
     this.performanceTracker =
         Objects.requireNonNull(
@@ -572,7 +569,7 @@ public class RoasterCodeGenerator implements ClassCodeGenerator {
     String qualifiedName = classDef.getTypeName().getFullQualifiedName();
     logger.debug("Creating JavaFileObject: %s", qualifiedName);
     try {
-      JavaFileObject file = processingEnv.getFiler().createSourceFile(qualifiedName);
+      GeneratedSourceFile file = environment.createSourceFile(qualifiedName);
       logger.debug("Writing class to file: %s", file.toUri().getPath());
       try (Writer writer = file.openWriter()) {
         writer.write(sourceCode);

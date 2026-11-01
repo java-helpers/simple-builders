@@ -47,8 +47,6 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.ElementFilter;
-import org.javahelpers.codegen.ClassCodeGenerator;
-import org.javahelpers.codegen.FormatterResolver;
 import org.javahelpers.codegen.analysis.JavaLangAnalyser;
 import org.javahelpers.codegen.analysis.JavaLangMapper;
 import org.javahelpers.codegen.logging.PerformanceTracker;
@@ -65,8 +63,6 @@ import org.javahelpers.codegen.processing.CompilerArgumentsReader;
 import org.javahelpers.codegen.processing.ElementCollector;
 import org.javahelpers.codegen.processing.ElementGroups;
 import org.javahelpers.codegen.processing.ProcessorOptionRegistry;
-import org.javahelpers.codegen.roaster.RoasterCodeGenerator;
-import org.javahelpers.codegen.roaster.SourceFormatterResolver;
 import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder.Template;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilderFor;
@@ -161,18 +157,6 @@ public class BuilderProcessor
       ctx.debugEndOperation();
     }
     return ctx;
-  }
-
-  @Override
-  protected ClassCodeGenerator createGenerator(
-      ProcessingEnvironment processingEnv, ProcessingLogger logger, BuilderProcessingContext ctx) {
-    return new RoasterCodeGenerator(generationEnvironment(processingEnv, logger, ctx));
-  }
-
-  @Override
-  protected FormatterResolver createFormatterResolver(
-      CompilerArgumentsReader reader, ProcessingLogger logger) {
-    return new SourceFormatterResolver(logger, optionRegistry().formatterProfile(reader));
   }
 
   @Override

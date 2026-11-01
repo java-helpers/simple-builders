@@ -42,10 +42,10 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
 import javax.tools.JavaFileObject;
 import org.javahelpers.codegen.enums.OptionState;
-import org.javahelpers.codegen.logging.ProcessingLogger;
 import org.javahelpers.codegen.model.type.TypeInstantiation;
 import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.codegen.processing.CodegenTask;
+import org.javahelpers.codegen.processing.logging.MessagerProcessingLogger;
 import org.javahelpers.simple.builders.processor.analysis.BuilderScopeResolver;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
@@ -1313,7 +1313,9 @@ class BuilderScopeResolverTest {
       TypeElement helper = processingEnv.getElementUtils().getTypeElement("lib.LibHelper");
       BuilderProcessingContext context =
           new BuilderProcessingContext(
-              ProcessingLogger.create(processingEnv), BuilderConfiguration.DEFAULT, processingEnv);
+              MessagerProcessingLogger.create(processingEnv),
+              BuilderConfiguration.DEFAULT,
+              processingEnv);
       context.setCurrentTask(
           new CodegenTask<>(helper, configuration("lib", "Builder"), helper, ""));
       BuilderScopeResolver resolver = context.getBuilderScopeResolver();
