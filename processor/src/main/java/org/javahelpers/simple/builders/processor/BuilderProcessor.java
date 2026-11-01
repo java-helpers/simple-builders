@@ -491,9 +491,8 @@ public class BuilderProcessor
     ctx.getPerformanceTracker()
         .endClass(definition.getAllFieldsForBuilder().size(), collectionCount);
 
-    // Add summary of what was generated (the driver closes the "Generating targets" operation
-    // after this step)
-    ctx.debug(
+    // Close the generation scope with the summary of what was generated
+    ctx.debugEndOperation(
         "Generated builder with %d fields and %d methods for %s",
         definition.getAllFieldsForBuilder().size(),
         renderingDto.getMethods().size(),
@@ -525,6 +524,9 @@ public class BuilderProcessor
         ctx.reportBasedOnStrictMode(
             "Error generating Jackson module for package %s: %s",
             moduleDefinition.getTypeName().getPackageName(), e.getMessage());
+      } finally {
+        // generateTarget leaves its generation-scope operation open — close it here
+        ctx.debugEndOperation();
       }
     }
     // Reset indentation after Jackson module generation as well

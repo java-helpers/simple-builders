@@ -216,6 +216,9 @@ public abstract class AbstractCodegenProcessor<
     // Second loop: generation — every specification exists before any file is written.
     int successfulGenerations = 0;
     for (PlannedGeneration<K, D> work : planned) {
+      // generateTarget leaves its generation-scope operation open so onTaskGenerated can close it
+      // with a summary line — restore the pre-task indentation whatever the domain did.
+      int preTaskIndentation = logger.getCurrentIndentationLevel();
       context.debugStartOperation(
           "Generating targets for: " + work.task().element().getSimpleName());
       try {
@@ -229,7 +232,9 @@ public abstract class AbstractCodegenProcessor<
         context.reportBasedOnStrictMode(
             work.task().reportingElement(), "Failed to generate target - %s", ex.getMessage());
       } finally {
-        context.debugEndOperation();
+        while (logger.getCurrentIndentationLevel() > preTaskIndentation) {
+          context.debugEndOperation();
+        }
       }
     }
 
@@ -278,6 +283,10 @@ public abstract class AbstractCodegenProcessor<
    * Generates one target class through the configured engine after checking the target does not
    * already exist. Also usable by the domain's {@link #onProcessingOver} implementation for
    * last-round outputs.
+   *
+   * <p>The engine leaves its generation-scope debug operation open so the caller can close it with
+   * a summary line (see {@link #onTaskGenerated}); callers outside the task driver must close it
+   * with {@code context.debugEndOperation()}.
    *
    * @param target the class definition to generate
    * @throws CodeGenerationException if the target exists or generation fails
@@ -604,6 +613,10 @@ public abstract class AbstractCodegenProcessor<
   /**
    * Event after a task's target generated successfully — the insert point for per-class metrics and
    * domain bookkeeping. Default: nothing.
+   *
+   * <p>Runs while the generation scope is still open — close it with {@code
+   * context.debugEndOperation(summary)} for a closing summary line; the driver closes whatever
+   * remains open.
    *
    * @param generation the planned generation — task, analysed definition and generated target
    * @param context the processing context

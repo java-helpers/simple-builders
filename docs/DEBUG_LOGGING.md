@@ -139,28 +139,29 @@ The following is a verbatim excerpt of a real run (`mvn -pl example clean compil
 [INFO] [DEBUG] simple-builders: │  │  ├─ Builder will be generated as: SponsorDtoBuilder
 [INFO] [DEBUG] simple-builders: │  │  └─ Builder definition extracted: SponsorDtoBuilder
 … (the same extraction steps repeat for each remaining element)
-[INFO] [DEBUG] simple-builders: Generating targets for: SponsorDto
-[INFO] [DEBUG] simple-builders: ├─ Code generation for class: SponsorDtoBuilder
-[INFO] [DEBUG] simple-builders: │  ├─ JavaClassSource created
-[INFO] [DEBUG] simple-builders: │  ├─ Class metadata added
-[INFO] [DEBUG] simple-builders: │  ├─ Generating 1 fields
-[INFO] [DEBUG] simple-builders: │  │  └─ Fields added: 1 fields
-[INFO] [DEBUG] simple-builders: │  ├─ Generating 2 constructors
-[INFO] [DEBUG] simple-builders: │  │  └─ Constructors added: 2
-[INFO] [DEBUG] simple-builders: │  ├─ Generating 11 method candidates
-[INFO] [DEBUG] simple-builders: │  │  ├─ Resolved to 11 methods after conflict resolution
-[INFO] [DEBUG] simple-builders: │  │  └─ Methods added: 11
-[INFO] [DEBUG] simple-builders: │  ├─ Generating 1 nested type(s)
-[INFO] [DEBUG] simple-builders: │  │  ├─ Generated nested type: With
-[INFO] [DEBUG] simple-builders: │  │  └─ Nested types added
-[INFO] [DEBUG] simple-builders: │  ├─ Class-level annotations added
-[INFO] [DEBUG] simple-builders: │  ├─ Creating JavaFileObject: org.javahelpers.simple.builders.example.SponsorDtoBuilder
-[INFO] [DEBUG] simple-builders: │  ├─ Writing class to file: …/example/generated-example-builder/org/javahelpers/simple/builders/example/SponsorDtoBuilder.java
-[INFO] [DEBUG] simple-builders: │  └─ Successfully generated class: SponsorDtoBuilder
-[INFO] [DEBUG] simple-builders: ├─ Generated builder with 1 fields and 11 methods for SponsorDtoBuilder
+[INFO] [DEBUG] simple-builders: ├─ Generating targets for: SponsorDto
+[INFO] [DEBUG] simple-builders: │  ├─ Code generation for class: SponsorDtoBuilder
+[INFO] [DEBUG] simple-builders: │  │  ├─ JavaClassSource created
+[INFO] [DEBUG] simple-builders: │  │  ├─ Class metadata added
+[INFO] [DEBUG] simple-builders: │  │  ├─ Generating 1 fields
+[INFO] [DEBUG] simple-builders: │  │  │  └─ Fields added: 1 fields
+[INFO] [DEBUG] simple-builders: │  │  ├─ Generating 2 constructors
+[INFO] [DEBUG] simple-builders: │  │  │  └─ Constructors added: 2
+[INFO] [DEBUG] simple-builders: │  │  ├─ Generating 11 method candidates
+[INFO] [DEBUG] simple-builders: │  │  │  ├─ Resolved to 11 methods after conflict resolution
+[INFO] [DEBUG] simple-builders: │  │  │  └─ Methods added: 11
+[INFO] [DEBUG] simple-builders: │  │  ├─ Generating 1 nested type(s)
+[INFO] [DEBUG] simple-builders: │  │  │  ├─ Generated nested type: With
+[INFO] [DEBUG] simple-builders: │  │  │  └─ Nested types added
+[INFO] [DEBUG] simple-builders: │  │  ├─ Class-level annotations added
+[INFO] [DEBUG] simple-builders: │  │  ├─ Creating JavaFileObject: org.javahelpers.simple.builders.example.SponsorDtoBuilder
+[INFO] [DEBUG] simple-builders: │  │  ├─ Writing class to file: …/example/generated-example-builder/org/javahelpers/simple/builders/example/SponsorDtoBuilder.java
+[INFO] [DEBUG] simple-builders: │  │  ├─ Successfully generated class: SponsorDtoBuilder
+[INFO] [DEBUG] simple-builders: │  │  └─ Generated builder with 1 fields and 11 methods for SponsorDtoBuilder
 … (the same code-generation steps repeat for each remaining element; elements whose
-    configuration enables the Jackson module additionally emit a registration line:)
-[INFO] [DEBUG] simple-builders: ├─ Registered JacksonIntegrationDtoBuilder for Jackson module in package 'org.javahelpers.simple.builders.example'
+    configuration enables the Jackson module additionally emit a registration line inside the
+    same generation scope:)
+[INFO] [DEBUG] simple-builders: │  │  ├─ Registered JacksonIntegrationDtoBuilder for Jackson module in package 'org.javahelpers.simple.builders.example'
 [INFO]         simple-builders: Successfully generated 12 target(s) in this processing round
 [INFO] simple-builders: PROCESSING ROUND START
 [INFO] [DEBUG] simple-builders: Processing round started.
@@ -176,17 +177,18 @@ The following is a verbatim excerpt of a real run (`mvn -pl example clean compil
 [INFO] [DEBUG] simple-builders: ├─ Generating 1 nested type(s)
 [INFO] [DEBUG] simple-builders: │  ├─ Generated nested type: JacksonIntegrationDtoMixin
 [INFO] [DEBUG] simple-builders: │  └─ Nested types added
-[WARNING] File for type 'org.javahelpers.simple.builders.example.SimpleBuildersJacksonModule' created in the last round will not be subject to annotation processing.
 [INFO] [DEBUG] simple-builders: ├─ Creating JavaFileObject: org.javahelpers.simple.builders.example.SimpleBuildersJacksonModule
+[WARNING] File for type 'org.javahelpers.simple.builders.example.SimpleBuildersJacksonModule' created in the last round will not be subject to annotation processing.
 [INFO] [DEBUG] simple-builders: ├─ Writing class to file: …/example/generated-example-builder/org/javahelpers/simple/builders/example/SimpleBuildersJacksonModule.java
-[INFO] [DEBUG] simple-builders: └─ Successfully generated class: SimpleBuildersJacksonModule
+[INFO] [DEBUG] simple-builders: ├─ Successfully generated class: SimpleBuildersJacksonModule
 ```
 
 Notes on individual lines:
 
 - `Applied: <generator/enhancer> (priority: N): +M <contribution>` — logged **after** each generator/enhancer ran, with what it actually contributed (methods, constructors, nested types, annotations, interfaces, or javadoc). An enhancer that adds nothing measurable prints just `Applied: <name> (priority: N)` with no suffix.
 - `Writing class to file:` — the real path of the generated source file, resolved via the filer's `JavaFileObject.toUri()`.
-- `Registered <Builder> for Jackson module in package '<pkg>'` — emitted by the Jackson module generator only when the builder actually registered for module generation (i.e. `generateJacksonModule` enabled on that element's configuration and Jackson on the classpath). It is not a generation step of its own.
+- `Registered <Builder> for Jackson module in package '<pkg>'` — emitted inside the class's generation scope by the Jackson module generator, only when the builder actually registered for module generation (i.e. `generateJacksonModule` enabled on that element's configuration and Jackson on the classpath). It is not a generation step of its own.
+- `Generated builder with N fields and M methods for <Builder>` — the domain's summary line; emitted as the closing line (`└─`) of the `Code generation for class` scope, which stays open until the post-generation step ran.
 - Code-generation phases with nothing to emit log nothing — a class without fields, methods or nested types (like `SimpleBuildersJacksonModule`, which only has a constructor and a mixin) produces no `Generating 0 …` / `added: 0` noise.
 
 **Note**: Debug messages are prefixed with `[DEBUG]` and use `Diagnostic.Kind.OTHER` which appears as `[INFO]` in Maven output.

@@ -147,8 +147,9 @@ public class RoasterCodeGenerator implements ClassCodeGenerator {
     writeClassToFile(sourceCode, classDef);
     performanceTracker.endPhase(PHASE_FILE_WRITING);
 
-    logger.debugEndOperation(
-        "Successfully generated class: %s", classDef.getTypeName().getClassName());
+    // The generation scope stays open — the caller's post-generation step (onTaskGenerated in the
+    // task driver) closes it with its summary line (see AbstractCodegenProcessor.generateTarget).
+    logger.debug("Successfully generated class: %s", classDef.getTypeName().getClassName());
   }
 
   private JavaClassSource buildClassSource(GenerationTargetClassDto classDef) {
