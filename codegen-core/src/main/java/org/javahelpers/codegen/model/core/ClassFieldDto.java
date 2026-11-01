@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package model.core;
+package org.javahelpers.codegen.model.core;
 
 import static org.javahelpers.codegen.enums.AccessModifier.PRIVATE;
 

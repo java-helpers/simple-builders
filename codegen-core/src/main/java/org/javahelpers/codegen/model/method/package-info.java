@@ -34,4 +34,4 @@
  * <p>The model includes method definitions, parameters, code placeholders, and different types of
  * method representations used throughout the generation process.
  */
-package model.method;
+package org.javahelpers.codegen.model.method;

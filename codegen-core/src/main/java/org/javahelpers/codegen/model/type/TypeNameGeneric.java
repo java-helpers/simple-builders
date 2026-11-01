@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package model.type;
+package org.javahelpers.codegen.model.type;
 
 import java.util.List;
 import java.util.Optional;

@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package model.annotation;
+package org.javahelpers.codegen.model.annotation;
 
 import static java.util.Objects.requireNonNull;
 

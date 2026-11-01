@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package model.method;
+package org.javahelpers.codegen.model.method;
 
 import org.javahelpers.codegen.model.type.TypeName;
 

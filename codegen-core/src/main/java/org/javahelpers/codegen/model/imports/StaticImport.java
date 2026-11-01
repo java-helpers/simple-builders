@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package model.imports;
+package org.javahelpers.codegen.model.imports;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;

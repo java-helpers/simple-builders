@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package model.method;
+package org.javahelpers.codegen.model.method;
 
 /** DTO for holding information of code implementation. */
 public class MethodCodeDto extends CodeTemplateDto {

@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package model.javadoc;
+package org.javahelpers.codegen.model.javadoc;
 
 /** Represents a single Javadoc tag with its name and value. */
 public record JavadocTagDto(String tagName, String tagValue) {

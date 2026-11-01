@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package model.core;
+package org.javahelpers.codegen.model.core;
 
 import java.util.LinkedHashSet;
 import java.util.LinkedList;

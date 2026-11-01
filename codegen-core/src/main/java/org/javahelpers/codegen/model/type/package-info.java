@@ -35,4 +35,4 @@
  * supporting the full range of Java type system features including generics, wildcards, and nested
  * types.
  */
-package model.type;
+package org.javahelpers.codegen.model.type;

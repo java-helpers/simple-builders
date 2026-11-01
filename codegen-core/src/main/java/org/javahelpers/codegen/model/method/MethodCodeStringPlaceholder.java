@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package model.method;
+package org.javahelpers.codegen.model.method;
 
 /**
  * Placeholder value for text contents.Implements {@code MethodCodePlaceholder} to support a generic

@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package model.integration;
+package org.javahelpers.codegen.model.integration;
 
 import org.javahelpers.codegen.model.type.TypeName;
 

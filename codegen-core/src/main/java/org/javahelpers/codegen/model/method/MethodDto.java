@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package model.method;
+package org.javahelpers.codegen.model.method;
 
 import java.util.ArrayList;
 import java.util.LinkedList;

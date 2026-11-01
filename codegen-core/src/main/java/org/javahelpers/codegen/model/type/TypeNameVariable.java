@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package model.type;
+package org.javahelpers.codegen.model.type;
 
 /** Represents a type variable usage like T, K, V in a generic signature. */
 public class TypeNameVariable extends TypeName {

@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package model.type;
+package org.javahelpers.codegen.model.type;
 
 import java.util.ArrayList;
 import java.util.LinkedList;

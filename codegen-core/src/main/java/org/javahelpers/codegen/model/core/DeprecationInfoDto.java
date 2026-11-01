@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package model.core;
+package org.javahelpers.codegen.model.core;
 
 import java.util.Optional;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -37,8 +37,8 @@ import org.javahelpers.codegen.model.annotation.AnnotationDto;
  * point where generated builder methods are annotated. It is an analysis-side DTO and is not
  * directly used for class generation — the actual rendering uses the existing {@link
  * org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto#getAnnotations()
- * annotations list} and {@link org.javahelpers.codegen.model.javadoc.JavadocDto
- * javadoc} on the rendering DTOs.
+ * annotations list} and {@link org.javahelpers.codegen.model.javadoc.JavadocDto javadoc} on the
+ * rendering DTOs.
  *
  * <p>The {@link #deprecatedAnnotation} preserves {@code @Deprecated(since = ..., forRemoval = ...)}
  * attributes. The {@link #deprecatedJavaDoc} carries the {@code @deprecated} Javadoc tag text.

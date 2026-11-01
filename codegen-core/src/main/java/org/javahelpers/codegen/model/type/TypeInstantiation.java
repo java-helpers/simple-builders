@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package model.type;
+package org.javahelpers.codegen.model.type;
 
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;

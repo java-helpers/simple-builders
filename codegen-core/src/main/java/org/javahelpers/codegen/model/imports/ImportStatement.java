@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package model.imports;
+package org.javahelpers.codegen.model.imports;
 
 /**
  * Represents an import statement in generated code.

@@ -34,4 +34,4 @@
  * <p>The model includes definitions for Jackson modules and their entries, enabling seamless
  * integration with popular Java frameworks.
  */
-package model.integration;
+package org.javahelpers.codegen.model.integration;

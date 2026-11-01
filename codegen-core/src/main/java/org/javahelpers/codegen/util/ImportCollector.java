@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package util;
+package org.javahelpers.codegen.util;
 
 import java.util.Comparator;
 import java.util.LinkedHashSet;

@@ -39,4 +39,4 @@
  * <p>These classes form the core data model that flows through the entire processor pipeline from
  * analysis to code generation.
  */
-package model.core;
+package org.javahelpers.codegen.model.core;
