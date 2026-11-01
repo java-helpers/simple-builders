@@ -32,8 +32,8 @@ import org.javahelpers.simple.builders.processor.generators.util.MethodGenerator
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
-import org.javahelpers.simple.builders.processor.model.javadoc.JavadocCodeBlockDto;
-import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
+import org.javahelpers.codegen.model.javadoc.JavadocCodeBlockDto;
+import org.javahelpers.codegen.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.codegen.model.type.GenericParameterDto;
 import org.javahelpers.codegen.model.type.TypeName;

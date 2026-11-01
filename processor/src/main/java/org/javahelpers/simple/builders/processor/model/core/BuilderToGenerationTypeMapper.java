@@ -28,7 +28,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
 import org.apache.commons.lang3.StringUtils;
-import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
+import org.javahelpers.codegen.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.codegen.model.method.ConstructorDto;
 import org.javahelpers.codegen.model.method.MethodCodePlaceholder;

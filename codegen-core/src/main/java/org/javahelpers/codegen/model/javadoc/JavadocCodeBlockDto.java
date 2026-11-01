@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.model.javadoc;
+package model.javadoc;
 
 import org.javahelpers.codegen.model.method.CodeTemplateDto;
 

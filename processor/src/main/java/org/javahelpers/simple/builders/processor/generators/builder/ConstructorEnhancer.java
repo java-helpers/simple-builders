@@ -27,7 +27,7 @@ package org.javahelpers.simple.builders.processor.generators.builder;
 import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
-import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
+import org.javahelpers.codegen.model.javadoc.JavadocDto;
 import org.javahelpers.codegen.model.method.ConstructorDto;
 import org.javahelpers.codegen.model.method.MethodCodeDto;
 import org.javahelpers.codegen.model.method.MethodParameterDto;

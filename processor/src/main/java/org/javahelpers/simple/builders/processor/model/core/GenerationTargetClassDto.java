@@ -35,7 +35,7 @@ import org.javahelpers.simple.builders.processor.model.annotation.InterfaceName;
 import org.javahelpers.simple.builders.processor.model.imports.ImportStatement;
 import org.javahelpers.simple.builders.processor.model.imports.RegularImport;
 import org.javahelpers.simple.builders.processor.model.imports.StaticImport;
-import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
+import org.javahelpers.codegen.model.javadoc.JavadocDto;
 import org.javahelpers.codegen.model.method.ConstructorDto;
 import org.javahelpers.codegen.model.method.MethodDto;
 import org.javahelpers.codegen.model.type.GenericParameterDto;

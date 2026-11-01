@@ -60,7 +60,7 @@ import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
 import org.javahelpers.simple.builders.processor.model.core.ClassFieldDto;
 import org.javahelpers.simple.builders.processor.model.core.DeprecationInfoDto;
 import org.javahelpers.simple.builders.processor.model.core.GetterInfoDto;
-import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
+import org.javahelpers.codegen.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.codegen.model.method.ConstructorDto;
 import org.javahelpers.codegen.model.method.MethodParameterDto;
