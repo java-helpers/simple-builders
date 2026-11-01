@@ -30,7 +30,7 @@ import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocCodeBlockDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 
 /**

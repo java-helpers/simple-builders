@@ -36,15 +36,15 @@ import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
-import org.javahelpers.simple.builders.processor.model.type.GenericParameterDto;
+import org.javahelpers.codegen.model.type.GenericParameterDto;
 import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
-import org.javahelpers.simple.builders.processor.model.type.TypeInstantiation;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameList;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameMap;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameSet;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameVariable;
+import org.javahelpers.codegen.model.type.TypeInstantiation;
+import org.javahelpers.codegen.model.type.TypeName;
+import org.javahelpers.codegen.model.type.TypeNameGeneric;
+import org.javahelpers.codegen.model.type.TypeNameList;
+import org.javahelpers.codegen.model.type.TypeNameMap;
+import org.javahelpers.codegen.model.type.TypeNameSet;
+import org.javahelpers.codegen.model.type.TypeNameVariable;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 
 /**

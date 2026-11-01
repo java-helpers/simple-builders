@@ -24,8 +24,8 @@
 package org.javahelpers.simple.builders.processor.analysis;
 
 import org.apache.commons.lang3.Strings;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
+import org.javahelpers.codegen.model.type.TypeName;
+import org.javahelpers.codegen.model.type.TypeNameGeneric;
 
 /** Helperclass to extract insights from TypeName. */
 public class TypeNameAnalyser {

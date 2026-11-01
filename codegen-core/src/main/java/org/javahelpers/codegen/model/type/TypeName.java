@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.model.type;
+package model.type;
 
 import static java.util.Objects.requireNonNull;
 

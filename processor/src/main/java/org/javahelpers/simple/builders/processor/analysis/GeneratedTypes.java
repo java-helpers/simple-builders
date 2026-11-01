@@ -26,7 +26,7 @@ package org.javahelpers.simple.builders.processor.analysis;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.codegen.model.type.TypeName;
 
 /**
  * Registry of the types generated in the current annotation-processing round.

@@ -29,7 +29,7 @@ import java.util.Optional;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.codegen.model.type.TypeName;
 
 /**
  * Everything {@link JavaLangMapper} needs for mapping elements and type mirrors to {@code TypeName}

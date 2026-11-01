@@ -21,55 +21,22 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+package model.type;
 
-package org.javahelpers.simple.builders.processor.model.type;
-
-import java.util.LinkedList;
-import java.util.List;
-
-/** Represents a generic type parameter (e.g., {@code T extends Number & Comparable<T>}). */
-public class GenericParameterDto {
-  /** The name of the generic parameter (e.g., "T"). */
-  private String name;
-
-  /** Optional upper bounds in declared order (empty if unbounded). */
-  private final List<TypeName> upperBounds = new LinkedList<>();
-
+/** Represents a type variable usage like T, K, V in a generic signature. */
+public class TypeNameVariable extends TypeName {
   /**
-   * Gets the name of the generic parameter.
+   * Creates a TypeName representing a type variable (no package). The variable name is stored as
+   * className for simplicity across the existing TypeName API.
    *
-   * @return the name (e.g., "T", "K", "V")
+   * @param variableName the name of the type variable (e.g., "T", "K", "V")
    */
-  public String getName() {
-    return name;
+  public TypeNameVariable(String variableName) {
+    super("", variableName);
   }
 
-  /**
-   * Sets the name of the generic parameter.
-   *
-   * @param name the name to set (e.g., "T", "K", "V")
-   */
-  public void setName(String name) {
-    this.name = name;
-  }
-
-  /**
-   * Add an upper bound.
-   *
-   * @param bound the upper bound type to add
-   */
-  public void addUpperBound(TypeName bound) {
-    if (bound != null) {
-      upperBounds.add(bound);
-    }
-  }
-
-  /**
-   * Returns all upper bounds (possibly empty).
-   *
-   * @return the list of upper bound types
-   */
-  public List<TypeName> getUpperBounds() {
-    return upperBounds;
+  @Override
+  public String getFullQualifiedName() {
+    return getClassName(); // Type variables don't have packages, just the name like "T", "K", "V"
   }
 }

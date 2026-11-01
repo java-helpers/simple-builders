@@ -35,9 +35,9 @@ import org.javahelpers.simple.builders.processor.model.imports.ImportStatement;
 import org.javahelpers.simple.builders.processor.model.imports.RegularImport;
 import org.javahelpers.simple.builders.processor.model.imports.StaticImport;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameArray;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
+import org.javahelpers.codegen.model.type.TypeName;
+import org.javahelpers.codegen.model.type.TypeNameArray;
+import org.javahelpers.codegen.model.type.TypeNameGeneric;
 
 /**
  * Represents a field declaration in the generated class.

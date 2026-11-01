@@ -32,7 +32,7 @@ import org.javahelpers.simple.builders.processor.analysis.BuilderScopeResolver;
 import org.javahelpers.simple.builders.processor.generators.registry.GeneratorRegistry;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 
 /**

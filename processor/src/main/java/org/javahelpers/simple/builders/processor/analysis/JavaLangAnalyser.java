@@ -49,7 +49,7 @@ import javax.lang.model.util.ElementFilter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.AnnotationProcessingContext;
 
 /** Helperclass for extrating specific information from existing classes. */

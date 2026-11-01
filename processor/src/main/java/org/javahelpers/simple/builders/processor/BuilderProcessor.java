@@ -65,10 +65,10 @@ import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.model.core.BuilderToGenerationTypeMapper;
 import org.javahelpers.simple.builders.processor.model.core.GenerationTargetClassDto;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameList;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameMap;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameSet;
+import org.javahelpers.codegen.model.type.TypeName;
+import org.javahelpers.codegen.model.type.TypeNameList;
+import org.javahelpers.codegen.model.type.TypeNameMap;
+import org.javahelpers.codegen.model.type.TypeNameSet;
 import org.javahelpers.simple.builders.processor.processing.BuilderConfigurationReader;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsEnum;

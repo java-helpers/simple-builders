@@ -64,8 +64,8 @@ import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.method.ConstructorDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
+import org.javahelpers.codegen.model.type.TypeName;
+import org.javahelpers.codegen.model.type.TypeNameGeneric;
 
 /** Class for creating a specific BuilderDefinitionDto for an annotated DTO class. */
 public class BuilderDefinitionCreator {

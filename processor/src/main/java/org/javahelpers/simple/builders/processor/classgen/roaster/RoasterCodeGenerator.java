@@ -60,9 +60,9 @@ import org.javahelpers.simple.builders.processor.model.method.ConstructorDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodCodeDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
-import org.javahelpers.simple.builders.processor.model.type.NestedTypeDto;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameArray;
+import org.javahelpers.codegen.model.type.NestedTypeDto;
+import org.javahelpers.codegen.model.type.TypeName;
+import org.javahelpers.codegen.model.type.TypeNameArray;
 import org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker;
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 import org.javahelpers.simple.builders.processor.util.ImportCollector;
@@ -401,11 +401,11 @@ public class RoasterCodeGenerator implements ClassCodeGenerator {
 
   private void addGenericDeclarations(
       JavaClassSource source,
-      List<org.javahelpers.simple.builders.processor.model.type.GenericParameterDto> generics) {
+      List<org.javahelpers.codegen.model.type.GenericParameterDto> generics) {
     if (CollectionUtils.isEmpty(generics)) {
       return;
     }
-    for (org.javahelpers.simple.builders.processor.model.type.GenericParameterDto generic :
+    for (org.javahelpers.codegen.model.type.GenericParameterDto generic :
         generics) {
       TypeVariableSource<JavaClassSource> typeVariable = source.addTypeVariable(generic.getName());
       if (CollectionUtils.isNotEmpty(generic.getUpperBounds())) {
@@ -417,11 +417,11 @@ public class RoasterCodeGenerator implements ClassCodeGenerator {
 
   private void addGenericDeclarations(
       MethodSource<?> source,
-      List<org.javahelpers.simple.builders.processor.model.type.GenericParameterDto> generics) {
+      List<org.javahelpers.codegen.model.type.GenericParameterDto> generics) {
     if (CollectionUtils.isEmpty(generics)) {
       return;
     }
-    for (org.javahelpers.simple.builders.processor.model.type.GenericParameterDto generic :
+    for (org.javahelpers.codegen.model.type.GenericParameterDto generic :
         generics) {
       TypeVariableSource<?> typeVariable = source.addTypeVariable(generic.getName());
       if (CollectionUtils.isNotEmpty(generic.getUpperBounds())) {

@@ -34,11 +34,11 @@ import org.javahelpers.simple.builders.processor.model.method.CodeTemplateDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodCodePlaceholder;
 import org.javahelpers.simple.builders.processor.model.method.MethodCodeStringPlaceholder;
 import org.javahelpers.simple.builders.processor.model.method.MethodCodeTypePlaceholder;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameArray;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
-import org.javahelpers.simple.builders.processor.model.type.TypeNamePrimitive;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameVariable;
+import org.javahelpers.codegen.model.type.TypeName;
+import org.javahelpers.codegen.model.type.TypeNameArray;
+import org.javahelpers.codegen.model.type.TypeNameGeneric;
+import org.javahelpers.codegen.model.type.TypeNamePrimitive;
+import org.javahelpers.codegen.model.type.TypeNameVariable;
 
 /** Helper functions to create Roaster-compatible source code strings from DTOs. */
 public final class RoasterMapper {

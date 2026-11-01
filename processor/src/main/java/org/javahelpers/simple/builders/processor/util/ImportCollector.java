@@ -40,12 +40,12 @@ import org.javahelpers.simple.builders.processor.model.method.MethodCodePlacehol
 import org.javahelpers.simple.builders.processor.model.method.MethodCodeTypePlaceholder;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
-import org.javahelpers.simple.builders.processor.model.type.GenericParameterDto;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameArray;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
-import org.javahelpers.simple.builders.processor.model.type.TypeNamePrimitive;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameVariable;
+import org.javahelpers.codegen.model.type.GenericParameterDto;
+import org.javahelpers.codegen.model.type.TypeName;
+import org.javahelpers.codegen.model.type.TypeNameArray;
+import org.javahelpers.codegen.model.type.TypeNameGeneric;
+import org.javahelpers.codegen.model.type.TypeNamePrimitive;
+import org.javahelpers.codegen.model.type.TypeNameVariable;
 
 /**
  * Utility class for collecting, deduplicating, and sorting imports for generated classes.

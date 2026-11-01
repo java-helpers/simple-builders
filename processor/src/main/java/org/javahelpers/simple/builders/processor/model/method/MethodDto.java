@@ -33,8 +33,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.codegen.enums.AccessModifier;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
-import org.javahelpers.simple.builders.processor.model.type.GenericParameterDto;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.codegen.model.type.GenericParameterDto;
+import org.javahelpers.codegen.model.type.TypeName;
 
 /**
  * Rendering-side DTO containing all information to generate a method in a generated class.

@@ -38,11 +38,11 @@ import org.javahelpers.simple.builders.processor.model.imports.StaticImport;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.ConstructorDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
-import org.javahelpers.simple.builders.processor.model.type.GenericParameterDto;
-import org.javahelpers.simple.builders.processor.model.type.NestedTypeDto;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameArray;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
+import org.javahelpers.codegen.model.type.GenericParameterDto;
+import org.javahelpers.codegen.model.type.NestedTypeDto;
+import org.javahelpers.codegen.model.type.TypeName;
+import org.javahelpers.codegen.model.type.TypeNameArray;
+import org.javahelpers.codegen.model.type.TypeNameGeneric;
 
 /**
  * Generic representation of a class to generate.

@@ -42,7 +42,7 @@ import javax.lang.model.util.Types;
 import org.javahelpers.codegen.processing.CodegenTask;
 import org.javahelpers.simple.builders.processor.analysis.GeneratedTypes;
 import org.javahelpers.simple.builders.processor.analysis.TypeMappingContext;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.logging.ActivePerformanceTracker;
 import org.javahelpers.simple.builders.processor.processing.logging.NoOpPerformanceTracker;
 import org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker;

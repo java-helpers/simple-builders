@@ -28,7 +28,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.codegen.model.type.TypeName;
 
 /**
  * DTO representing an annotation to be generated in the output class. Contains the annotation type

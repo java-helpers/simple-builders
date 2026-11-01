@@ -24,7 +24,7 @@
 
 package org.javahelpers.codegen.processing;
 
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.codegen.model.type.TypeName;
 
 /**
  * The common contract of a domain's analysed definition — the analysis result the domain maps to

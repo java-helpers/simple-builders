@@ -40,8 +40,8 @@ import org.javahelpers.simple.builders.processor.model.core.GenerationTargetClas
 import org.javahelpers.simple.builders.processor.model.integration.JacksonModuleEntryDto;
 import org.javahelpers.simple.builders.processor.model.method.ConstructorDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodCodeDto;
-import org.javahelpers.simple.builders.processor.model.type.NestedTypeDto;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.codegen.model.type.NestedTypeDto;
+import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 
 /**

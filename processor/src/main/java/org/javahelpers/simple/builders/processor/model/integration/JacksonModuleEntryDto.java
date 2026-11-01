@@ -24,7 +24,7 @@
 
 package org.javahelpers.simple.builders.processor.model.integration;
 
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.codegen.model.type.TypeName;
 
 /**
  * Represents an entry for a Jackson module registration. Maps a DTO type to its builder type.

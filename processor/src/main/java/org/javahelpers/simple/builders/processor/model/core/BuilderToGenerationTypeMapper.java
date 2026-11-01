@@ -36,7 +36,7 @@ import org.javahelpers.simple.builders.processor.model.method.MethodCodeStringPl
 import org.javahelpers.simple.builders.processor.model.method.MethodCodeTypePlaceholder;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 import org.javahelpers.simple.builders.processor.model.type.BuilderNestedTypeDto;
-import org.javahelpers.simple.builders.processor.model.type.NestedTypeDto;
+import org.javahelpers.codegen.model.type.NestedTypeDto;
 
 /**
  * Maps generation-side DTOs ({@link BuilderDefinitionDto}, {@link BuilderMethodDto}, {@link

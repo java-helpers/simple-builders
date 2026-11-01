@@ -42,8 +42,8 @@ import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.core.PackageScopes;
 import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
-import org.javahelpers.simple.builders.processor.model.type.TypeInstantiation;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.codegen.model.type.TypeInstantiation;
+import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 
 /**

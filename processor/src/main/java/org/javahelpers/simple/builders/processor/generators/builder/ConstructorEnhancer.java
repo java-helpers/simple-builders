@@ -31,8 +31,8 @@ import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.ConstructorDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodCodeDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.model.type.TypeNamePrimitive;
+import org.javahelpers.codegen.model.type.TypeName;
+import org.javahelpers.codegen.model.type.TypeNamePrimitive;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 
 /**

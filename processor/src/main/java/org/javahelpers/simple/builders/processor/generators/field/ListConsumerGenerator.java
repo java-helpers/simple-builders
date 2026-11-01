@@ -41,9 +41,9 @@ import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
-import org.javahelpers.simple.builders.processor.model.type.TypeNameList;
+import org.javahelpers.codegen.model.type.TypeName;
+import org.javahelpers.codegen.model.type.TypeNameGeneric;
+import org.javahelpers.codegen.model.type.TypeNameList;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 
 /**

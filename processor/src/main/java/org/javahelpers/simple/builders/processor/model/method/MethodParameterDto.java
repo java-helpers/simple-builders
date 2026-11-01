@@ -27,7 +27,7 @@ package org.javahelpers.simple.builders.processor.model.method;
 import java.util.ArrayList;
 import java.util.List;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.codegen.model.type.TypeName;
 
 /** MethodParameterDto contains all information for generating parameters in method headers. */
 public class MethodParameterDto {

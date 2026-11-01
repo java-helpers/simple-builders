@@ -42,7 +42,7 @@ import org.javahelpers.simple.builders.processor.model.method.MethodCodeDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodCodePlaceholder;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 import org.javahelpers.simple.builders.processor.processing.SourceFormatterResolver;
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;

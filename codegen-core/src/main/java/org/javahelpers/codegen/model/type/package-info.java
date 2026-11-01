@@ -21,22 +21,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.javahelpers.simple.builders.processor.model.type;
 
-/** Represents a type variable usage like T, K, V in a generic signature. */
-public class TypeNameVariable extends TypeName {
-  /**
-   * Creates a TypeName representing a type variable (no package). The variable name is stored as
-   * className for simplicity across the existing TypeName API.
-   *
-   * @param variableName the name of the type variable (e.g., "T", "K", "V")
-   */
-  public TypeNameVariable(String variableName) {
-    super("", variableName);
-  }
-
-  @Override
-  public String getFullQualifiedName() {
-    return getClassName(); // Type variables don't have packages, just the name like "T", "K", "V"
-  }
-}
+/**
+ * Package org.javahelpers.simple.builders.processor.model.type
+ *
+ * <p>Type model classes for the simple-builders processor.
+ *
+ * <p>This package contains classes that represent Java types and their properties, providing a
+ * comprehensive type system for the processor. It includes representations for primitive types,
+ * collections, generics, arrays, and complex type structures.
+ *
+ * <p>These classes enable accurate representation and manipulation of Java types found in DTOs,
+ * supporting the full range of Java type system features including generics, wildcards, and nested
+ * types.
+ */
+package model.type;

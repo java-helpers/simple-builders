@@ -34,8 +34,8 @@ import org.javahelpers.codegen.enums.AccessModifier;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocCodeBlockDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
-import org.javahelpers.simple.builders.processor.model.type.GenericParameterDto;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.codegen.model.type.GenericParameterDto;
+import org.javahelpers.codegen.model.type.TypeName;
 
 /**
  * BuilderMethodDto containing all information for generating a method in the builder class,

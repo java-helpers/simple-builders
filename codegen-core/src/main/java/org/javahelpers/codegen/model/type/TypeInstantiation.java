@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.model.type;
+package model.type;
 
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;

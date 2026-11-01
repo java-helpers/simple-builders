@@ -46,7 +46,7 @@ import org.javahelpers.simple.builders.processor.analysis.JavaLangMapper;
 import org.javahelpers.simple.builders.processor.model.core.ClassFieldDto;
 import org.javahelpers.simple.builders.processor.model.core.GenerationTargetClassDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodDto;
-import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.AnnotationProcessingContext;
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsReader;
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
