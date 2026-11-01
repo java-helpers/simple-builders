@@ -22,17 +22,25 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.codegen;
+package org.javahelpers.codegen.processing;
 
+import java.io.IOException;
+import java.io.Writer;
+import java.net.URI;
 import javax.annotation.processing.ProcessingEnvironment;
+import javax.tools.JavaFileObject;
+import org.javahelpers.codegen.GeneratedSourceFile;
+import org.javahelpers.codegen.GenerationEnvironment;
+import org.javahelpers.codegen.GenerationIssueReporter;
 import org.javahelpers.codegen.logging.PerformanceTracker;
 import org.javahelpers.codegen.logging.ProcessingLogger;
 
 /**
- * Environment handed to a {@link ClassCodeGenerator}: the annotation processing environment, the
- * logger, the performance tracker and the reporter for generation problems.
+ * {@link GenerationEnvironment} backed by a {@link ProcessingEnvironment}: the annotation
+ * processing environment, the logger, the performance tracker and the reporter for generation
+ * problems.
  */
-public class GenerationEnvironment {
+public class AnnotationProcessingEnvironment implements GenerationEnvironment {
 
   private final ProcessingEnvironment processingEnvironment;
   private final ProcessingLogger logger;
@@ -48,7 +56,7 @@ public class GenerationEnvironment {
    * @param issueReporter the reporter for problems found during generation; the reporter decides
    *     the severity
    */
-  public GenerationEnvironment(
+  public AnnotationProcessingEnvironment(
       ProcessingEnvironment processingEnvironment,
       ProcessingLogger logger,
       PerformanceTracker performanceTracker,
@@ -73,6 +81,7 @@ public class GenerationEnvironment {
    *
    * @return the logger
    */
+  @Override
   public ProcessingLogger getLogger() {
     return logger;
   }
@@ -82,6 +91,7 @@ public class GenerationEnvironment {
    *
    * @return the tracker
    */
+  @Override
   public PerformanceTracker getPerformanceTracker() {
     return performanceTracker;
   }
@@ -91,7 +101,24 @@ public class GenerationEnvironment {
    *
    * @return the issue reporter
    */
+  @Override
   public GenerationIssueReporter getIssueReporter() {
     return issueReporter;
+  }
+
+  @Override
+  public GeneratedSourceFile createSourceFile(CharSequence qualifiedName) throws IOException {
+    JavaFileObject file = processingEnvironment.getFiler().createSourceFile(qualifiedName);
+    return new GeneratedSourceFile() {
+      @Override
+      public URI toUri() {
+        return file.toUri();
+      }
+
+      @Override
+      public Writer openWriter() throws IOException {
+        return file.openWriter();
+      }
+    };
   }
 }

@@ -43,6 +43,9 @@ import org.javahelpers.codegen.logging.PerformanceTracker;
 import org.javahelpers.codegen.logging.ProcessingLogger;
 import org.javahelpers.codegen.model.core.GenerationTargetClassDto;
 import org.javahelpers.codegen.model.type.TypeName;
+import org.javahelpers.codegen.processing.logging.MessagerProcessingLogger;
+import org.javahelpers.codegen.roaster.RoasterCodeGenerator;
+import org.javahelpers.codegen.roaster.SourceFormatterResolver;
 
 /**
  * Driver of a generic annotation-processing pipeline: the framework owns the processing lifecycle,
@@ -354,14 +357,14 @@ public abstract class AbstractCodegenProcessor<
    * ProcessorOptionRegistry#isVerboseRequested} — and carrying the prefix from {@link
    * CodegenProcessorConfiguration#loggerPrefix()}, or the processor's simple class name when unset.
    */
-  private ProcessingLogger createLogger(
+  private MessagerProcessingLogger createLogger(
       ProcessingEnvironment processingEnv, CompilerArgumentsReader reader) {
     String configuredPrefix = processorConfiguration.loggerPrefix();
     String loggerPrefix = configuredPrefix != null ? configuredPrefix : getClass().getSimpleName();
-    ProcessingLogger processingLogger =
+    MessagerProcessingLogger processingLogger =
         optionRegistry().isVerboseRequested(reader)
-            ? ProcessingLogger.createVerbose(processingEnv, loggerPrefix)
-            : ProcessingLogger.create(processingEnv, loggerPrefix);
+            ? MessagerProcessingLogger.createVerbose(processingEnv, loggerPrefix)
+            : MessagerProcessingLogger.create(processingEnv, loggerPrefix);
     processingLogger.debug("Starting %s...", getClass().getSimpleName());
     return processingLogger;
   }
@@ -387,8 +390,10 @@ public abstract class AbstractCodegenProcessor<
    * @param context the processing context
    * @return the domain's code generation engine
    */
-  protected abstract ClassCodeGenerator createGenerator(
-      ProcessingEnvironment processingEnv, ProcessingLogger logger, C context);
+  protected ClassCodeGenerator createGenerator(
+      ProcessingEnvironment processingEnv, ProcessingLogger logger, C context) {
+    return new RoasterCodeGenerator(generationEnvironment(processingEnv, logger, context));
+  }
 
   /**
    * The {@link GenerationEnvironment} the engine runs against — processing environment, logger,
@@ -401,7 +406,7 @@ public abstract class AbstractCodegenProcessor<
    */
   protected GenerationEnvironment generationEnvironment(
       ProcessingEnvironment processingEnv, ProcessingLogger logger, C context) {
-    return new GenerationEnvironment(
+    return new AnnotationProcessingEnvironment(
         processingEnv, logger, context.getPerformanceTracker(), context::reportBasedOnStrictMode);
   }
 
@@ -413,8 +418,10 @@ public abstract class AbstractCodegenProcessor<
    * @param logger the processing logger
    * @return the formatter resolver
    */
-  protected abstract FormatterResolver createFormatterResolver(
-      CompilerArgumentsReader reader, ProcessingLogger logger);
+  protected FormatterResolver createFormatterResolver(
+      CompilerArgumentsReader reader, ProcessingLogger logger) {
+    return new SourceFormatterResolver(logger, optionRegistry().formatterProfile(reader));
+  }
 
   private ElementCollector elementCollector() {
     return processorConfiguration.elementCollector();

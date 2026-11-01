@@ -29,20 +29,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 import java.util.function.Predicate;
-import javax.annotation.processing.Filer;
-import javax.annotation.processing.Messager;
-import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.SourceVersion;
-import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.AnnotationValue;
-import javax.lang.model.element.Element;
-import javax.lang.model.util.Elements;
-import javax.lang.model.util.Types;
-import javax.tools.Diagnostic;
 import org.javahelpers.codegen.logging.ProcessingLogger;
+import org.javahelpers.codegen.logging.SinkProcessingLogger;
 
 /**
  * Test helper for creating a {@link ProcessingLogger} that captures all emitted messages into a
@@ -86,8 +75,8 @@ public final class CapturingProcessingLogger {
   public static CapturingProcessingLogger create(String loggingPrefix) {
     List<String> messages = new ArrayList<>();
     ProcessingLogger logger =
-        ProcessingLogger.create(
-            createCapturingEnvironment(messages, Collections.emptyMap()), loggingPrefix);
+        new SinkProcessingLogger(
+            (severity, message) -> messages.add(severity + ": " + message), false, loggingPrefix);
     return new CapturingProcessingLogger(messages, logger);
   }
 
@@ -99,8 +88,8 @@ public final class CapturingProcessingLogger {
   public static CapturingProcessingLogger createDebugEnabled() {
     List<String> messages = new ArrayList<>();
     ProcessingLogger logger =
-        ProcessingLogger.createVerbose(
-            createCapturingEnvironment(messages, Collections.emptyMap()));
+        new SinkProcessingLogger(
+            (severity, message) -> messages.add(severity + ": " + message), true, null);
     return new CapturingProcessingLogger(messages, logger);
   }
 
@@ -151,77 +140,5 @@ public final class CapturingProcessingLogger {
                 + expectation
                 + "\nActual messages: "
                 + messages);
-  }
-
-  /** Creates a ProcessingEnvironment whose Messager captures all messages into the list. */
-  private static ProcessingEnvironment createCapturingEnvironment(
-      List<String> messages, Map<String, String> options) {
-    return new ProcessingEnvironment() {
-      @Override
-      public Map<String, String> getOptions() {
-        return options;
-      }
-
-      @Override
-      public Messager getMessager() {
-        return new CapturingMessager(messages);
-      }
-
-      @Override
-      public Filer getFiler() {
-        return null;
-      }
-
-      @Override
-      public Elements getElementUtils() {
-        return null;
-      }
-
-      @Override
-      public Types getTypeUtils() {
-        return null;
-      }
-
-      @Override
-      public SourceVersion getSourceVersion() {
-        return SourceVersion.latest();
-      }
-
-      @Override
-      public Locale getLocale() {
-        return Locale.getDefault();
-      }
-    };
-  }
-
-  /** Messager that captures all messages into a list. */
-  private static final class CapturingMessager implements Messager {
-    private final List<String> messages;
-
-    CapturingMessager(List<String> messages) {
-      this.messages = messages;
-    }
-
-    @Override
-    public void printMessage(Diagnostic.Kind kind, CharSequence msg) {
-      messages.add(kind + ": " + msg);
-    }
-
-    @Override
-    public void printMessage(Diagnostic.Kind kind, CharSequence msg, Element e) {
-      messages.add(kind + ": " + msg);
-    }
-
-    @Override
-    public void printMessage(
-        Diagnostic.Kind kind, CharSequence msg, Element e, AnnotationMirror a) {
-      messages.add(kind + ": " + msg);
-    }
-
-    @Override
-    public void printMessage(
-        Diagnostic.Kind kind, CharSequence msg, Element e, AnnotationMirror a, AnnotationValue v) {
-      messages.add(kind + ": " + msg);
-    }
   }
 }
