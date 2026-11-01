@@ -154,6 +154,7 @@ The following is a verbatim excerpt of a real run (`mvn -pl example clean compil
 [INFO] [DEBUG] simple-builders: │  │  ├─ Generated nested type: With
 [INFO] [DEBUG] simple-builders: │  │  └─ Nested types added
 [INFO] [DEBUG] simple-builders: │  ├─ Class-level annotations added
+[INFO] [DEBUG] simple-builders: │  ├─ Creating JavaFileObject: org.javahelpers.simple.builders.example.SponsorDtoBuilder
 [INFO] [DEBUG] simple-builders: │  ├─ Writing class to file: …/example/generated-example-builder/org/javahelpers/simple/builders/example/SponsorDtoBuilder.java
 [INFO] [DEBUG] simple-builders: │  └─ Successfully generated class: SponsorDtoBuilder
 [INFO] [DEBUG] simple-builders: ├─ Generated builder with 1 fields and 11 methods for SponsorDtoBuilder
@@ -181,6 +182,7 @@ The following is a verbatim excerpt of a real run (`mvn -pl example clean compil
 [INFO] [DEBUG] simple-builders: │  ├─ Generated nested type: JacksonIntegrationDtoMixin
 [INFO] [DEBUG] simple-builders: │  └─ Nested types added
 [WARNING] File for type 'org.javahelpers.simple.builders.example.SimpleBuildersJacksonModule' created in the last round will not be subject to annotation processing.
+[INFO] [DEBUG] simple-builders: ├─ Creating JavaFileObject: org.javahelpers.simple.builders.example.SimpleBuildersJacksonModule
 [INFO] [DEBUG] simple-builders: ├─ Writing class to file: …/example/generated-example-builder/org/javahelpers/simple/builders/example/SimpleBuildersJacksonModule.java
 [INFO] [DEBUG] simple-builders: └─ Successfully generated class: SimpleBuildersJacksonModule
 ```

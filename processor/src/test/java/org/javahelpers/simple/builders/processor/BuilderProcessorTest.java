@@ -159,6 +159,7 @@ class BuilderProcessorTest {
         "[DEBUG] simple-builders: │  ├─ Class-level annotations added",
         "[DEBUG] simple-builders: │  ├─ Using JDT source formatting with Eclipse formatter"
             + " profile 'eclipse-java-format.xml'.",
+        "[DEBUG] simple-builders: │  ├─ Creating JavaFileObject: test.VerboseTestBuilder",
         "[DEBUG] simple-builders: │  ├─ Writing class to file: /SOURCE_OUTPUT/test/VerboseTestBuilder.java",
         "[DEBUG] simple-builders: │  └─ Successfully generated class: VerboseTestBuilder",
         "[DEBUG] simple-builders: ├─ Generated builder with 1 fields and 10 methods for VerboseTestBuilder",

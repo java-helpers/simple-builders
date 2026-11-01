@@ -563,6 +563,7 @@ public class RoasterCodeGenerator implements ClassCodeGenerator {
   private void writeClassToFile(String sourceCode, GenerationTargetClassDto classDef)
       throws CodeGenerationException {
     String qualifiedName = classDef.getTypeName().getFullQualifiedName();
+    logger.debug("Creating JavaFileObject: %s", qualifiedName);
     try {
       JavaFileObject file = processingEnv.getFiler().createSourceFile(qualifiedName);
       logger.debug("Writing class to file: %s", file.toUri().getPath());
