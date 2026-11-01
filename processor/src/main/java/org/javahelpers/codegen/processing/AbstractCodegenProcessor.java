@@ -63,6 +63,7 @@ import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLo
  *   ctx      = createContext(env, reader, logger)                       [implement — in init]
  *   onRoundStart(ctx)                                                 [default: no-op]
  *   elements = findElements(annotations, roundEnv)                 [default: configuration's elementCollector]
+ *   skipsRound(elements, ctx)                                  [framework; empty or finished gate]
  *   tasks    = planTasks(elements, ctx)                                 [implement]
  *   onTasksPlanned(tasks, ctx)                                          [default: no-op]
  *   registerPlannedTaskResults(tasks, ctx)                                  [framework; per-task names from predictTaskResultTypeNames() — default: empty]
@@ -173,11 +174,12 @@ public abstract class AbstractCodegenProcessor<
     tracker.endPhase("Element Collection");
     logger.debug("Processing round started.");
 
-    List<CodegenTask<K>> tasks = plan(collected, context);
-    onTasksPlanned(tasks, context);
-    if (tasks.isEmpty()) {
+    if (skipsRound(collected, context)) {
       return claimsAnnotations(getSupportedAnnotationTypes());
     }
+
+    List<CodegenTask<K>> tasks = plan(collected, context);
+    onTasksPlanned(tasks, context);
 
     // First loop: specification — analyse every task and map its render targets.
     List<PlannedGeneration<K, D>> planned = new ArrayList<>();
@@ -475,24 +477,28 @@ public abstract class AbstractCodegenProcessor<
     return elementCollector().collect(annotations, roundEnv, logger);
   }
 
-  /**
-   * The planning step — runs the domain's {@link #planTasks}, applies the finished gate and the
-   * one-shot marker, and registers the round's planned outputs. Framework bookkeeping lives here so
-   * the domain function below stays pure planning.
-   *
-   * @param collected the elements matched by {@link #findElements}
-   * @param context the processing context
-   * @return the round's tasks, or empty when the round is gated out
-   */
-  private List<CodegenTask<K>> plan(ElementGroups collected, C context) {
+  private boolean skipsRound(ElementGroups collected, C context) {
     if (collected.isEmpty()) {
       context.debug("No matching elements collected — skipping planning for this round.");
-      return List.of();
+      return true;
     }
     if (isFinished(context)) {
       context.debug("Processing is already finished — skipping planning for this round.");
-      return List.of();
+      return true;
     }
+    return false;
+  }
+
+  /**
+   * The planning step — runs the domain's {@link #planTasks}, applies the one-shot marker, and
+   * registers the round's planned outputs. Framework bookkeeping lives here so the domain function
+   * below stays pure planning.
+   *
+   * @param collected the elements matched by {@link #findElements}
+   * @param context the processing context
+   * @return the round's tasks, possibly empty when there is nothing to generate
+   */
+  private List<CodegenTask<K>> plan(ElementGroups collected, C context) {
     List<CodegenTask<K>> tasks = planTasks(collected, context);
     if (tasks.isEmpty()) {
       context.debug("Planning produced no tasks — nothing to generate this round.");
@@ -659,7 +665,7 @@ public abstract class AbstractCodegenProcessor<
   }
 
   /**
-   * Callback at the end of a generating round — domain finalization.
+   * Called at the end of every round that ran planning — also when the plan was empty.
    *
    * @param context the processing context
    */
