@@ -168,6 +168,21 @@ The following is a verbatim excerpt of a real run (`mvn -pl example clean compil
 [INFO]         simple-builders: Processing OVER. JacksonModuleEnabled: true, Packages: 1
 [INFO]         simple-builders: Generating Jackson module in package 'org.javahelpers.simple.builders.example'
 [INFO] [DEBUG] simple-builders: Code generation for class: SimpleBuildersJacksonModule
+[INFO] [DEBUG] simple-builders: ├─ JavaClassSource created
+[INFO] [DEBUG] simple-builders: ├─ Class metadata added
+[INFO] [DEBUG] simple-builders: ├─ Generating 0 fields
+[INFO] [DEBUG] simple-builders: │  └─ Fields added: 0 fields
+[INFO] [DEBUG] simple-builders: ├─ Generating 1 constructors
+[INFO] [DEBUG] simple-builders: │  └─ Constructors added: 1
+[INFO] [DEBUG] simple-builders: ├─ Generating 0 method candidates
+[INFO] [DEBUG] simple-builders: │  ├─ Resolved to 0 methods after conflict resolution
+[INFO] [DEBUG] simple-builders: │  └─ Methods added: 0
+[INFO] [DEBUG] simple-builders: ├─ Generating 1 nested type(s)
+[INFO] [DEBUG] simple-builders: │  ├─ Generated nested type: JacksonIntegrationDtoMixin
+[INFO] [DEBUG] simple-builders: │  └─ Nested types added
+[WARNING] File for type 'org.javahelpers.simple.builders.example.SimpleBuildersJacksonModule' created in the last round will not be subject to annotation processing.
+[INFO] [DEBUG] simple-builders: ├─ Writing class to file: …/example/generated-example-builder/org/javahelpers/simple/builders/example/SimpleBuildersJacksonModule.java
+[INFO] [DEBUG] simple-builders: └─ Successfully generated class: SimpleBuildersJacksonModule
 ```
 
 Notes on individual lines:
