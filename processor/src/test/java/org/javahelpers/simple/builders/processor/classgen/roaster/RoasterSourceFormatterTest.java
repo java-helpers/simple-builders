@@ -23,7 +23,7 @@
  */
 package org.javahelpers.simple.builders.processor.classgen.roaster;
 
-import static org.javahelpers.simple.builders.processor.testing.FormatterProfileTestUtils.createFormatterProfile;
+import static org.javahelpers.codegen.testing.FormatterProfileTestUtils.createFormatterProfile;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -34,7 +34,7 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.stream.Stream;
 import org.javahelpers.simple.builders.core.enums.FormattingMode;
-import org.javahelpers.simple.builders.processor.testing.CapturingProcessingLogger;
+import org.javahelpers.codegen.testing.CapturingProcessingLogger;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;

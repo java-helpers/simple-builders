@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.testing;
+package org.javahelpers.codegen.testing;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 

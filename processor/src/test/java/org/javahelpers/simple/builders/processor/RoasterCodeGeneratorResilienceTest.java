@@ -46,8 +46,8 @@ import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 import org.javahelpers.codegen.processing.SourceFormatterResolver;
 import org.javahelpers.codegen.logging.ProcessingLogger;
-import org.javahelpers.simple.builders.processor.testing.CapturingProcessingLogger;
-import org.javahelpers.simple.builders.processor.testing.ProcessingEnvironmentStub;
+import org.javahelpers.codegen.testing.CapturingProcessingLogger;
+import org.javahelpers.codegen.testing.ProcessingEnvironmentStub;
 import org.junit.jupiter.api.Test;
 
 /**

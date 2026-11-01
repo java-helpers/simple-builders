@@ -35,7 +35,7 @@ import java.util.HashSet;
 import java.util.Set;
 import org.javahelpers.codegen.GenerationPhases;
 import org.javahelpers.codegen.processing.PipelinePhases;
-import org.javahelpers.simple.builders.processor.testing.CapturingProcessingLogger;
+import org.javahelpers.codegen.testing.CapturingProcessingLogger;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 

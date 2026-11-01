@@ -39,7 +39,7 @@ import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.TypeMirror;
-import org.javahelpers.simple.builders.processor.testing.CapturingProcessingLogger;
+import org.javahelpers.codegen.testing.CapturingProcessingLogger;
 import org.junit.jupiter.api.Test;
 
 /** Unit tests for {@link ElementCollector}. */

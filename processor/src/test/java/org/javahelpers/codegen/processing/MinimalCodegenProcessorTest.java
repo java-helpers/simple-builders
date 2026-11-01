@@ -24,7 +24,7 @@
 package org.javahelpers.codegen.processing;
 
 import static com.google.testing.compile.CompilationSubject.assertThat;
-import static org.javahelpers.simple.builders.processor.testing.ProcessorAsserts.assertNormalizedEquals;
+import static org.javahelpers.codegen.testing.ProcessorAsserts.assertNormalizedEquals;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils.loadGeneratedSource;
 
 import com.google.testing.compile.Compilation;

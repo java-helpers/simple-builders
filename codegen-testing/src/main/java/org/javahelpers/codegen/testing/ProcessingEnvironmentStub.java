@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.testing;
+package org.javahelpers.codegen.testing;
 
 import java.util.Collections;
 import java.util.HashMap;
