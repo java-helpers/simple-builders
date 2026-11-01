@@ -87,7 +87,7 @@ This approach ensures clean production logs while maintaining full debugging cap
 
 ## Example Debug Output
 
-When debug logging is enabled, you'll see detailed output with visual separators:
+The following is a verbatim excerpt of a real run (`mvn -pl example clean compile -Dsimplebuilder.verbose=true` on the `example` module, slightly truncated where marked with `…`). It follows `SponsorDto`, the smallest annotated class (one field). Every annotated element produces the same step structure — extraction, enhancer pass, finalize, code generation:
 
 ```
 [INFO] [DEBUG] simple-builders: Starting BuilderProcessor...
@@ -97,85 +97,84 @@ When debug logging is enabled, you'll see detailed output with visual separators
 [INFO] [DEBUG] simple-builders: └─ Initialized GeneratorRegistry with 16 method generators and 10 builder enhancers
 [INFO] simple-builders: PROCESSING ROUND START
 [INFO] [DEBUG] simple-builders: Processing round started.
-[INFO] [DEBUG] simple-builders: Found 3 annotated elements.
-[INFO] [DEBUG] simple-builders: Found 0 type(s) for generation with @SimpleBuilderFor.
-[INFO] [DEBUG] simple-builders: Processing element: PersonDto
-[INFO] [DEBUG] simple-builders: ├─ Resolving configuration for element: PersonDto
+[INFO] [DEBUG] simple-builders: Found 12 annotated elements.
+[INFO] [DEBUG] simple-builders: Found 1 type(s) for generation with @SimpleBuilderFor.
+[INFO] [DEBUG] simple-builders: Processing element: SponsorDto
+[INFO] [DEBUG] simple-builders: ├─ Resolving configuration for element: SponsorDto
 [INFO] [DEBUG] simple-builders: │  ├─ Built-in template @SimpleBuilder found in DIRECT scope
-[INFO] [DEBUG] simple-builders: │  └─ Resulting configuration resolved: BuilderConfiguration[builderSuffix=Builder,...]
-[INFO] [DEBUG] simple-builders: Processing element: OrderDto
-[INFO] [DEBUG] simple-builders: ├─ Resolving configuration for element: OrderDto
-[INFO] [DEBUG] simple-builders: │  └─ Resulting configuration resolved: BuilderConfiguration[builderSuffix=Builder,...]
-[INFO] [DEBUG] simple-builders: Processing element: CustomerDto
-[INFO] [DEBUG] simple-builders: ├─ Resolving configuration for element: CustomerDto
-[INFO] [DEBUG] simple-builders: │  └─ Resulting configuration resolved: BuilderConfiguration[builderSuffix=Builder,...]
-[INFO] [DEBUG] simple-builders: 3 of 3 annotated element(s) are inside the builderGenerationPackages scope.
-[INFO] [DEBUG] simple-builders: Processing element: PersonDto
-[INFO] [DEBUG] simple-builders: ├─ Extracting builder definition from: org.example.PersonDto
-[INFO] [DEBUG] simple-builders: │  ├─ Builder will be generated as: org.example.PersonDtoBuilder
-[INFO] [DEBUG] simple-builders: │  ├─ Analysing setters for finding fields
-[INFO] [DEBUG] simple-builders: │  │  ├─ Analyzing method: setName(java.lang.String)
-[INFO] [DEBUG] simple-builders: │  │  │  ├─ Processing method generators
-[INFO] [DEBUG] simple-builders: │  │  │  │  ├─ Applying: BasicSetterGenerator (priority: 100)
-[INFO] [DEBUG] simple-builders: │  │  │  │  └─ Generated 1 methods
-[INFO] [DEBUG] simple-builders: │  │  │  └─ Adding field: name (type: java.lang.String)
-[INFO] [DEBUG] simple-builders: │  │  ├─ Analyzing method: setAge(int)
-[INFO] [DEBUG] simple-builders: │  │  │  └─ Adding field: age (type: int)
-[INFO] [DEBUG] simple-builders: │  │  └─ Processed 2 possible setters: added 2 fields, skipped 0
-[INFO] [DEBUG] simple-builders: │  ├─ Processing class based enhancer
-[INFO] [DEBUG] simple-builders: │  │  ├─ Applying: CoreMethodsEnhancer (priority: 100)
-[INFO] [DEBUG] simple-builders: │  │  ├─ Applying: ConstructorEnhancer (priority: 95)
-[INFO] [DEBUG] simple-builders: │  │  ├─ Applying: ClassJavaDocEnhancer (priority: 10)
-[INFO] [DEBUG] simple-builders: │  │  └─ Applied 3 builder enhancers
-[INFO] [DEBUG] simple-builders: │  ├─ Finalizing builder definition
-[INFO] [DEBUG] simple-builders: │  │  ├─ Resolving method conflicts
-[INFO] [DEBUG] simple-builders: │  │  │  └─ Resolved: 7 signatures, 0 conflicts, 0 methods removed
-[INFO] [DEBUG] simple-builders: │  │  └─ Finalized: 2 class fields, 5 builder-level methods, 2 constructors
-[INFO] [DEBUG] simple-builders: │  ├─ Builder will be generated as: PersonDtoBuilder
-[INFO] [DEBUG] simple-builders: │  └─ Builder definition extracted: PersonDtoBuilder
-[INFO] [DEBUG] simple-builders: Processing element: OrderDto
-[INFO] [DEBUG] simple-builders: ├─ Extracting builder definition from: org.example.OrderDto
-[INFO] [DEBUG] simple-builders: │  └─ Builder definition extracted: OrderDtoBuilder
-[INFO] [DEBUG] simple-builders: Processing element: CustomerDto
-[INFO] [DEBUG] simple-builders: ├─ Extracting builder definition from: org.example.CustomerDto
-[INFO] [DEBUG] simple-builders: │  └─ Builder definition extracted: CustomerDtoBuilder
-[WARNING]      simple-builders: │  │  └─ Builder field conflict: field 'name' (type Optional) renamed to 'nameOptional' to avoid conflict
-[INFO] [DEBUG] simple-builders: Generating targets for: PersonDto
-[INFO] [DEBUG] simple-builders: ├─ Code generation for class: PersonDtoBuilder
+[INFO] [DEBUG] simple-builders: │  └─ Resulting configuration resolved: BuilderConfiguration[generateFieldSupplier=ENABLED,…,builderSuffix=Builder,formattingMode=jdt,strict=DISABLED,verbose=ENABLED]
+… (the same configuration-resolution steps repeat for each of the 12 elements)
+[INFO] [DEBUG] simple-builders: 12 of 12 annotated element(s) are inside the builderGenerationPackages scope.
+[INFO] [DEBUG] simple-builders: ├─ Processing element: SponsorDto
+[INFO] [DEBUG] simple-builders: │  ├─ Extracting builder definition from: org.javahelpers.simple.builders.example.SponsorDto
+[INFO] [DEBUG] simple-builders: │  │  ├─ Builder will be generated as: org.javahelpers.simple.builders.example.SponsorDtoBuilder
+[INFO] [DEBUG] simple-builders: │  │  ├─ Analysing setters for finding fields
+[INFO] [DEBUG] simple-builders: │  │  │  ├─ Analyzing method: setName(java.lang.String)
+[INFO] [DEBUG] simple-builders: │  │  │  │  ├─ Processing method generators
+[INFO] [DEBUG] simple-builders: │  │  │  │  │  ├─ Applied: BasicSetterGenerator (priority: 100): +1 methods
+[INFO] [DEBUG] simple-builders: │  │  │  │  │  ├─ Applied: StringFormatHelperGenerator (priority: 80): +1 methods
+[INFO] [DEBUG] simple-builders: │  │  │  │  │  ├─ Applied: SupplierMethodGenerator (priority: 60): +1 methods
+[INFO] [DEBUG] simple-builders: │  │  │  │  │  ├─ Applied: StringValidationGenerator (priority: 60): +1 methods
+[INFO] [DEBUG] simple-builders: │  │  │  │  │  ├─ Applied: StringBuilderConsumerGenerator (priority: 45): +1 methods
+[INFO] [DEBUG] simple-builders: │  │  │  │  │  ├─ Applied: UpdateHelperGenerator (priority: 31): +1 methods
+[INFO] [DEBUG] simple-builders: │  │  │  │  │  └─ Generated 6 methods
+[INFO] [DEBUG] simple-builders: │  │  │  │  └─ Adding field: name (type: java.lang.String)
+[INFO] [DEBUG] simple-builders: │  │  │  └─ Processed 1 possible setters: added 1 fields, skipped 0
+[INFO] [DEBUG] simple-builders: │  │  ├─ Processing class based enhancer
+[INFO] [DEBUG] simple-builders: │  │  │  ├─ Applied: GeneratedAnnotationEnhancer (priority: 120): +1 annotations
+[INFO] [DEBUG] simple-builders: │  │  │  ├─ Added @BuilderImplementation annotation to builder SponsorDtoBuilder
+[INFO] [DEBUG] simple-builders: │  │  │  ├─ Applied: BuilderImplementationAnnotationEnhancer (priority: 115): +1 annotations
+[INFO] [DEBUG] simple-builders: │  │  │  ├─ Applied: CoreMethodsEnhancer (priority: 100): +3 methods
+[INFO] [DEBUG] simple-builders: │  │  │  ├─ Applied: ConstructorEnhancer (priority: 95): +2 constructors
+[INFO] [DEBUG] simple-builders: │  │  │  ├─ Applied: WithInterfaceEnhancer (priority: 95): +1 nested types
+[INFO] [DEBUG] simple-builders: │  │  │  ├─ Applied: InterfaceEnhancer (priority: 90): +1 interfaces
+[INFO] [DEBUG] simple-builders: │  │  │  ├─ Added conditional methods to builder SponsorDtoBuilder
+[INFO] [DEBUG] simple-builders: │  │  │  ├─ Applied: ConditionalEnhancer (priority: 80): +2 methods
+[INFO] [DEBUG] simple-builders: │  │  │  ├─ Applied: ClassJavaDocEnhancer (priority: 10): javadoc added
+[INFO] [DEBUG] simple-builders: │  │  │  └─ Applied 8 builder enhancers
+[INFO] [DEBUG] simple-builders: │  │  ├─ Finalizing builder definition
+[INFO] [DEBUG] simple-builders: │  │  │  ├─ Resolving method conflicts
+[INFO] [DEBUG] simple-builders: │  │  │  │  └─ Resolved: 11 signatures, 0 conflicts, 0 methods removed
+[INFO] [DEBUG] simple-builders: │  │  │  └─ Finalized: 1 class fields, 5 builder-level methods, 2 constructors
+[INFO] [DEBUG] simple-builders: │  │  ├─ Builder will be generated as: SponsorDtoBuilder
+[INFO] [DEBUG] simple-builders: │  │  └─ Builder definition extracted: SponsorDtoBuilder
+… (the same extraction steps repeat for each remaining element)
+[INFO] [DEBUG] simple-builders: Generating targets for: SponsorDto
+[INFO] [DEBUG] simple-builders: ├─ Code generation for class: SponsorDtoBuilder
 [INFO] [DEBUG] simple-builders: │  ├─ JavaClassSource created
 [INFO] [DEBUG] simple-builders: │  ├─ Class metadata added
-[INFO] [DEBUG] simple-builders: │  ├─ Generating 2 fields
-[INFO] [DEBUG] simple-builders: │  │  └─ Fields added: 2 fields
+[INFO] [DEBUG] simple-builders: │  ├─ Generating 1 fields
+[INFO] [DEBUG] simple-builders: │  │  └─ Fields added: 1 fields
 [INFO] [DEBUG] simple-builders: │  ├─ Generating 2 constructors
 [INFO] [DEBUG] simple-builders: │  │  └─ Constructors added: 2
-[INFO] [DEBUG] simple-builders: │  ├─ Generating 7 method candidates
-[INFO] [DEBUG] simple-builders: │  │  ├─ Resolved to 7 methods after conflict resolution
-[INFO] [DEBUG] simple-builders: │  │  └─ Methods added: 7
+[INFO] [DEBUG] simple-builders: │  ├─ Generating 11 method candidates
+[INFO] [DEBUG] simple-builders: │  │  ├─ Resolved to 11 methods after conflict resolution
+[INFO] [DEBUG] simple-builders: │  │  └─ Methods added: 11
 [INFO] [DEBUG] simple-builders: │  ├─ Generating 1 nested type(s)
 [INFO] [DEBUG] simple-builders: │  │  ├─ Generated nested type: With
 [INFO] [DEBUG] simple-builders: │  │  └─ Nested types added
 [INFO] [DEBUG] simple-builders: │  ├─ Class-level annotations added
-[INFO] [DEBUG] simple-builders: │  ├─ Using JDT source formatting with Eclipse formatter profile 'eclipse-java-format.xml'.
-[INFO] [DEBUG] simple-builders: │  ├─ Writing class to file: org.example.PersonDtoBuilder
-[INFO] [DEBUG] simple-builders: │  └─ Successfully generated class: PersonDtoBuilder
-[INFO] [DEBUG] simple-builders: ├─ Jackson module entry added
-[INFO] [DEBUG] simple-builders: └─ Generated builder with 2 fields and 7 methods for PersonDtoBuilder
-[INFO] [DEBUG] simple-builders: Generating targets for: OrderDto
-[INFO] [DEBUG] simple-builders: ├─ Code generation for class: OrderDtoBuilder
-[INFO] [DEBUG] simple-builders: │  └─ Successfully generated class: OrderDtoBuilder
-[INFO] [DEBUG] simple-builders: Generating targets for: CustomerDto
-[INFO] [DEBUG] simple-builders: ├─ Code generation for class: CustomerDtoBuilder
-[INFO] [DEBUG] simple-builders: │  └─ Successfully generated class: CustomerDtoBuilder
-[INFO]         simple-builders: Successfully generated 3 target(s) in this processing round
+[INFO] [DEBUG] simple-builders: │  ├─ Writing class to file: …/example/generated-example-builder/org/javahelpers/simple/builders/example/SponsorDtoBuilder.java
+[INFO] [DEBUG] simple-builders: │  └─ Successfully generated class: SponsorDtoBuilder
+[INFO] [DEBUG] simple-builders: └─ Generated builder with 1 fields and 11 methods for SponsorDtoBuilder
+… (the same code-generation steps repeat for each remaining element; elements whose
+    configuration enables the Jackson module additionally emit a registration line:)
+[INFO] [DEBUG] simple-builders: ├─ Registered JacksonIntegrationDtoBuilder for Jackson module in package 'org.javahelpers.simple.builders.example'
+[INFO]         simple-builders: Successfully generated 12 target(s) in this processing round
 [INFO] simple-builders: PROCESSING ROUND START
 [INFO] [DEBUG] simple-builders: Processing round started.
-[INFO] [DEBUG] simple-builders: Found 0 annotated elements.
-[INFO] [DEBUG] simple-builders: Found 0 type(s) for generation with @SimpleBuilderFor.
-[INFO] [DEBUG] simple-builders: 0 of 0 annotated element(s) are inside the builderGenerationPackages scope.
+[INFO] [DEBUG] simple-builders: No matching elements collected — skipping planning for this round.
+… (empty rounds repeat until processing finishes)
 [INFO]         simple-builders: Processing OVER. JacksonModuleEnabled: true, Packages: 1
-[INFO]         simple-builders: Generating Jackson module in package 'org.example'
+[INFO]         simple-builders: Generating Jackson module in package 'org.javahelpers.simple.builders.example'
 [INFO] [DEBUG] simple-builders: Code generation for class: SimpleBuildersJacksonModule
 ```
+
+Notes on individual lines:
+
+- `Applied: <generator/enhancer> (priority: N): +M <contribution>` — logged **after** each generator/enhancer ran, with what it actually contributed (methods, constructors, nested types, annotations, interfaces, or javadoc). An enhancer that adds nothing measurable prints just `Applied: <name> (priority: N)` with no suffix.
+- `Writing class to file:` — the real path of the generated source file, resolved via the filer's `JavaFileObject.toUri()`.
+- `Registered <Builder> for Jackson module in package '<pkg>'` — emitted by the Jackson module generator only when the builder actually registered for module generation (i.e. `generateJacksonModule` enabled on that element's configuration and Jackson on the classpath). It is not a generation step of its own.
 
 **Note**: Debug messages are prefixed with `[DEBUG]` and use `Diagnostic.Kind.OTHER` which appears as `[INFO]` in Maven output.
 

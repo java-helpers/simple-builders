@@ -251,9 +251,14 @@ For complete documentation, see [DEBUG_LOGGING.md](DEBUG_LOGGING.md).
 [DEBUG] simple-builders: │  ├─ Builder will be generated as: test.ProjectBuilder
 [DEBUG] simple-builders: │  ├─ Analysing setters for finding fields
 [DEBUG] simple-builders: │  │  ├─ Analyzing method: setName(java.lang.String)
+[DEBUG] simple-builders: │  │  │  ├─ Processing method generators
+[DEBUG] simple-builders: │  │  │  │  ├─ Applied: BasicSetterGenerator (priority: 100): +1 methods
+[DEBUG] simple-builders: │  │  │  │  └─ Generated 6 methods
 [DEBUG] simple-builders: │  │  │  └─ Adding field: name (type: java.lang.String)
 [DEBUG] simple-builders: │  │  └─ Processed 1 possible setters: added 1 fields, skipped 0
 [DEBUG] simple-builders: │  ├─ Processing class based enhancer
+[DEBUG] simple-builders: │  │  ├─ Applied: CoreMethodsEnhancer (priority: 100): +3 methods
+[DEBUG] simple-builders: │  │  ├─ Applied: ConstructorEnhancer (priority: 95): +2 constructors
 [DEBUG] simple-builders: │  │  └─ Applied 8 builder enhancers
 [DEBUG] simple-builders: │  ├─ Finalizing builder definition
 [DEBUG] simple-builders: │  │  └─ Finalized: 1 class fields, 4 builder-level methods, 2 constructors
@@ -265,9 +270,8 @@ For complete documentation, see [DEBUG_LOGGING.md](DEBUG_LOGGING.md).
 [DEBUG] simple-builders: │  ├─ Generating 4 method candidates
 [DEBUG] simple-builders: │  │  ├─ Resolved to 4 methods after conflict resolution
 [DEBUG] simple-builders: │  │  └─ Methods added: 4
-[DEBUG] simple-builders: │  ├─ Writing class to file: test.ProjectBuilder
+[DEBUG] simple-builders: │  ├─ Writing class to file: /SOURCE_OUTPUT/test/ProjectBuilder.java
 [DEBUG] simple-builders: │  └─ Successfully generated class: ProjectBuilder
-[DEBUG] simple-builders: ├─ Jackson module entry added
 [DEBUG] simple-builders: └─ Generated builder with 1 fields and 4 methods for ProjectBuilder
         simple-builders: Successfully generated 1 target(s) in this processing round
 =============================================
