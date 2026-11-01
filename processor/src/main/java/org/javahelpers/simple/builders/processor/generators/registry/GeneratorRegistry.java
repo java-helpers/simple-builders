@@ -162,11 +162,7 @@ public class GeneratorRegistry {
       }
     }
 
-    if (appliedEnhancers > 0) {
-      context.debugEndOperation("Applied %d builder enhancers", appliedEnhancers);
-    } else {
-      context.debugEndOperation();
-    }
+    context.debugEndOperation("Applied %d builder enhancers", appliedEnhancers);
   }
 
   /** Counts the content slots of a builder definition an enhancer can contribute to. */
