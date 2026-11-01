@@ -22,44 +22,43 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.model.imports;
+package model.imports;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.javahelpers.codegen.model.type.TypeName;
-import org.javahelpers.codegen.model.type.TypeNameArray;
-import org.javahelpers.codegen.model.type.TypeNameGeneric;
 
 /**
- * Represents a regular (non-static) import statement.
+ * Represents a static import statement.
  *
- * <p>Example: {@code import com.example.MyClass;}
+ * <p>Example: {@code import static com.example.MyClass.staticMethod;}
  */
-public class RegularImport implements ImportStatement {
+public class StaticImport implements ImportStatement {
 
   private final TypeName type;
+  private final String memberName;
 
   /**
-   * Creates a regular import from a TypeName.
+   * Creates a static import.
    *
-   * @param type the type to import
+   * @param type the type containing the static member
+   * @param memberName the name of the static member (method or field)
    */
-  public RegularImport(TypeName type) {
+  public StaticImport(TypeName type, String memberName) {
     if (type == null) {
       throw new IllegalArgumentException("type cannot be null");
-    } else if (type instanceof TypeNameArray array) {
-      this.type = array.getTypeOfArray();
-    } else if (type instanceof TypeNameGeneric generic) {
-      this.type = generic.getRawType();
-    } else {
-      this.type = type;
     }
+    if (memberName == null) {
+      throw new IllegalArgumentException("memberName cannot be null");
+    }
+    this.type = type;
+    this.memberName = memberName;
   }
 
   /**
-   * Returns the type being imported.
+   * Returns the type containing the static member.
    *
    * @return the type
    */
@@ -67,9 +66,18 @@ public class RegularImport implements ImportStatement {
     return type;
   }
 
+  /**
+   * Returns the name of the static member.
+   *
+   * @return the member name
+   */
+  public String getMemberName() {
+    return memberName;
+  }
+
   @Override
   public String getFullyQualifiedName() {
-    return type.getFullQualifiedName();
+    return type.getFullQualifiedName() + "." + memberName;
   }
 
   @Override
@@ -79,20 +87,23 @@ public class RegularImport implements ImportStatement {
 
   @Override
   public boolean isStatic() {
-    return false;
+    return true;
   }
 
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
-    RegularImport that = (RegularImport) o;
-    return new EqualsBuilder().append(type, that.type).isEquals();
+    StaticImport that = (StaticImport) o;
+    return new EqualsBuilder()
+        .append(type, that.type)
+        .append(memberName, that.memberName)
+        .isEquals();
   }
 
   @Override
   public int hashCode() {
-    return new HashCodeBuilder(17, 37).append(type).toHashCode();
+    return new HashCodeBuilder(17, 37).append(type).append(memberName).toHashCode();
   }
 
   @Override

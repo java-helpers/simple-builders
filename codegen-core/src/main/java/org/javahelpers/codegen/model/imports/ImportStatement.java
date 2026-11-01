@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.model.imports;
+package model.imports;
 
 /**
  * Represents an import statement in generated code.
