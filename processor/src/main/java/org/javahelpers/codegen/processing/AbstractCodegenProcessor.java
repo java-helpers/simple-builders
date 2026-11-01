@@ -193,6 +193,9 @@ public abstract class AbstractCodegenProcessor<
         } finally {
           tracker.endPhase("Analysis");
         }
+        if (definitions.isEmpty()) {
+          context.debug("Analysis produced no targets for " + task.element().getSimpleName());
+        }
         for (D definition : definitions) {
           tracker.startPhase();
           GenerationTargetClassDto target;
@@ -473,7 +476,9 @@ public abstract class AbstractCodegenProcessor<
       return List.of();
     }
     List<CodegenTask<K>> tasks = planTasks(collected, context);
-    if (!tasks.isEmpty()) {
+    if (tasks.isEmpty()) {
+      context.debug("Planning produced no tasks — nothing to generate this round.");
+    } else {
       // The default one-shot is consumed by the first round that planned work — an empty round
       // leaves it open for a later one carrying matching elements.
       processedOnce = true;

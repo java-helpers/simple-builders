@@ -189,6 +189,7 @@ Notes on individual lines:
 - `Writing class to file:` — the real path of the generated source file, resolved via the filer's `JavaFileObject.toUri()`.
 - `Registered <Builder> for Jackson module in package '<pkg>'` — emitted inside the class's generation scope by the Jackson module generator, only when the builder actually registered for module generation (i.e. `generateJacksonModule` enabled on that element's configuration and Jackson on the classpath). It is not a generation step of its own.
 - `Generated builder with N fields and M methods for <Builder>` — the domain's summary line, emitted as the last child (`├─`) inside the `Code generation for class` scope, which stays open until the post-generation step ran and then closes silently.
+- A round or element that generates nothing logs why, for error analysis: `No matching elements collected — skipping planning for this round.`, `Processing is already finished — skipping planning for this round.`, `Planning produced no tasks — nothing to generate this round.`, or per element `Analysis produced no targets for <Element>`.
 - Code-generation phases with nothing to emit log nothing — a class without fields, methods or nested types (like `SimpleBuildersJacksonModule`, which only has a constructor and a mixin) produces no `Generating 0 …` / `added: 0` noise.
 
 **Note**: Debug messages are prefixed with `[DEBUG]` and use `Diagnostic.Kind.OTHER` which appears as `[INFO]` in Maven output.
