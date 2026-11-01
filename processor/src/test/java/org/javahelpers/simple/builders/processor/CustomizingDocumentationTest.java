@@ -486,7 +486,7 @@ class CustomizingDocumentationTest {
             package com.example.test;
 
             import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
-            import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
+            import org.javahelpers.codegen.model.annotation.AnnotationDto;
             import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
             import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
             import org.javahelpers.codegen.model.type.TypeName;

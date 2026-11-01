@@ -33,7 +33,7 @@ import org.apache.commons.collections4.SetValuedMap;
 import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
 import org.javahelpers.codegen.enums.AccessModifier;
 import org.javahelpers.codegen.enums.FormattingMode;
-import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
+import org.javahelpers.codegen.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
 import org.javahelpers.codegen.model.core.GenerationTargetClassDto;

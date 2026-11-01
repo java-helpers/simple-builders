@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.model.annotation;
+package model.annotation;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

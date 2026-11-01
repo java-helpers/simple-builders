@@ -34,4 +34,4 @@
  * <p>The model includes data transfer objects for annotation information and representations of
  * interface names with type parameters.
  */
-package org.javahelpers.simple.builders.processor.model.annotation;
+package model.annotation;

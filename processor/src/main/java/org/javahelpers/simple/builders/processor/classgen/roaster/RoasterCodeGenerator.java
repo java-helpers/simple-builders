@@ -48,8 +48,8 @@ import org.javahelpers.simple.builders.processor.classgen.CodeGenerationExceptio
 import org.javahelpers.simple.builders.processor.classgen.GenerationEnvironment;
 import org.javahelpers.simple.builders.processor.classgen.GenerationIssueReporter;
 import org.javahelpers.simple.builders.processor.classgen.SourceFormatter;
-import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
-import org.javahelpers.simple.builders.processor.model.annotation.InterfaceName;
+import org.javahelpers.codegen.model.annotation.AnnotationDto;
+import org.javahelpers.codegen.model.annotation.InterfaceName;
 import org.javahelpers.codegen.model.core.ClassFieldDto;
 import org.javahelpers.codegen.model.core.GenerationTargetClassDto;
 import org.javahelpers.codegen.model.imports.ImportStatement;

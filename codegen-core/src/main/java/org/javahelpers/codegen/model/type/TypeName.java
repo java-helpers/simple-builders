@@ -30,7 +30,7 @@ import java.util.Optional;
 import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
+import org.javahelpers.codegen.model.annotation.AnnotationDto;
 
 /**
  * TypeName is the unambiguously definition of a type. Holding name of class and package. Could be

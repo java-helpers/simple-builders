@@ -37,7 +37,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
-import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
+import org.javahelpers.codegen.model.annotation.AnnotationDto;
 import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.codegen.model.type.TypeNamePrimitive;
 
