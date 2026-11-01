@@ -77,10 +77,25 @@ jobs:
           #   - lombok (performance-test 'lombok' profile, provided scope):
           #     MIT-licensed, but GitHub's licensee reports its LICENSE as
           #     LicenseRef-bad-non-standard (NOASSERTION) — a misdetection.
+          #   - maven-javadoc-plugin, maven-site-plugin (build plugins used to
+          #     publish javadoc/site jars): multi-licensed including
+          #     LicenseRef-scancode-public-domain, which is not on the allowlist.
+          #   - roaster-jdt (codegen-roaster): bundles Eclipse JDT, scancode
+          #     reports Apache-2.0 AND ECL-2.0 AND EPL-1.0 — ECL-2.0 is not on
+          #     the allowlist.
+          #   - junit-jupiter-api/engine/params (codegen-testing, compile
+          #     scope): EPL-2.0 licensed, but GitHub reports LicenseRef-
+          #     bad-non-standard (NOASSERTION) — a misdetection like lombok.
           # The purls are deliberately version-less: the matcher ignores the
           # version anyway, and it is the usage that makes the licenses
           # unproblematic, independent of the pinned revision.
           allow-dependencies-licenses: >-
             pkg:githubactions/SonarSource/sonarqube-scan-action,
             pkg:maven/org.sonarsource.scanner.maven/sonar-maven-plugin,
-            pkg:maven/org.projectlombok/lombok
+            pkg:maven/org.projectlombok/lombok,
+            pkg:maven/org.apache.maven.plugins/maven-javadoc-plugin,
+            pkg:maven/org.apache.maven.plugins/maven-site-plugin,
+            pkg:maven/org.jboss.forge.roaster/roaster-jdt,
+            pkg:maven/org.junit.jupiter/junit-jupiter-api,
+            pkg:maven/org.junit.jupiter/junit-jupiter-engine,
+            pkg:maven/org.junit.jupiter/junit-jupiter-params
