@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.Set;
 import org.javahelpers.simple.builders.processor.classgen.GenerationPhases;
 import org.javahelpers.simple.builders.processor.processing.PipelinePhases;
@@ -82,6 +83,25 @@ class ActivePerformanceTrackerTest {
               >= metrics.get(i).get("elapsedNanos").asLong(),
           "metrics not sorted by elapsedNanos descending at index " + i);
     }
+  }
+
+  /** Asserts the class-metric entries carry exactly the given class names. */
+  private static void assertClassNames(JsonNode classMetrics, Set<String> expected) {
+    Set<String> names = new HashSet<>();
+    for (JsonNode cm : classMetrics) {
+      names.add(cm.get("className").asText());
+    }
+    assertEquals(expected, names);
+  }
+
+  /** The class-metric entry for the given class name — fails the test when absent. */
+  private static JsonNode classMetricByName(JsonNode root, String className) {
+    for (JsonNode cm : root.get("classMetrics")) {
+      if (className.equals(cm.get("className").asText())) {
+        return cm;
+      }
+    }
+    return fail("No classMetric entry for " + className);
   }
 
   /**
@@ -321,14 +341,8 @@ class ActivePerformanceTrackerTest {
     JsonNode classMetrics = root.get("classMetrics");
     assertEquals(2, classMetrics.size());
     // Ordering is the contract (desc by elapsed); which class is first is timing-dependent.
-    assertEquals(
-        Set.of("TestClassA", "TestClassB"),
-        Set.of(
-            classMetrics.get(0).get("className").asText(),
-            classMetrics.get(1).get("className").asText()));
-    assertTrue(
-        classMetrics.get(0).get("elapsedNanos").asLong()
-            >= classMetrics.get(1).get("elapsedNanos").asLong());
+    assertClassNames(classMetrics, Set.of("TestClassA", "TestClassB"));
+    assertSortedByElapsedDesc(classMetrics);
   }
 
   @Test
@@ -336,13 +350,7 @@ class ActivePerformanceTrackerTest {
     Path jsonFile = tempDir.resolve("report.json");
     JsonNode root = generateReportAndParseJson(jsonFile.toString());
 
-    JsonNode classA = null;
-    for (JsonNode cm : root.get("classMetrics")) {
-      if ("TestClassA".equals(cm.get("className").asText())) {
-        classA = cm;
-      }
-    }
-    assertNotNull(classA);
+    JsonNode classA = classMetricByName(root, "TestClassA");
     assertEquals(5, classA.get("fieldCount").asInt());
     assertEquals(2, classA.get("collectionCount").asInt());
     assertTrue(classA.has("elapsedMs"));
