@@ -156,7 +156,7 @@ The following is a verbatim excerpt of a real run (`mvn -pl example clean compil
 [INFO] [DEBUG] simple-builders: │  ├─ Class-level annotations added
 [INFO] [DEBUG] simple-builders: │  ├─ Writing class to file: …/example/generated-example-builder/org/javahelpers/simple/builders/example/SponsorDtoBuilder.java
 [INFO] [DEBUG] simple-builders: │  └─ Successfully generated class: SponsorDtoBuilder
-[INFO] [DEBUG] simple-builders: └─ Generated builder with 1 fields and 11 methods for SponsorDtoBuilder
+[INFO] [DEBUG] simple-builders: ├─ Generated builder with 1 fields and 11 methods for SponsorDtoBuilder
 … (the same code-generation steps repeat for each remaining element; elements whose
     configuration enables the Jackson module additionally emit a registration line:)
 [INFO] [DEBUG] simple-builders: ├─ Registered JacksonIntegrationDtoBuilder for Jackson module in package 'org.javahelpers.simple.builders.example'

@@ -491,8 +491,9 @@ public class BuilderProcessor
     ctx.getPerformanceTracker()
         .endClass(definition.getAllFieldsForBuilder().size(), collectionCount);
 
-    // Add summary of what was generated
-    ctx.debugEndOperation(
+    // Add summary of what was generated (the driver closes the "Generating targets" operation
+    // after this step)
+    ctx.debug(
         "Generated builder with %d fields and %d methods for %s",
         definition.getAllFieldsForBuilder().size(),
         renderingDto.getMethods().size(),
