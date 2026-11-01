@@ -139,7 +139,6 @@ class BuilderProcessorTest {
         "[DEBUG] simple-builders: │  │  ├─ Resolving method conflicts",
         "[DEBUG] simple-builders: │  │  │  └─ Resolved: 10 signatures, 0 conflicts, 0 methods removed",
         "[DEBUG] simple-builders: │  │  └─ Finalized: 1 class fields, 5 builder-level methods, 2 constructors",
-        "[DEBUG] simple-builders: │  ├─ Builder will be generated as: VerboseTestBuilder",
         "[DEBUG] simple-builders: │  └─ Builder definition extracted: VerboseTestBuilder",
         // Round 1 — code generation
         "[DEBUG] simple-builders: Generating targets for: VerboseTest",

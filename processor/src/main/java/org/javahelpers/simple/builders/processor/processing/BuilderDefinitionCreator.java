@@ -144,8 +144,6 @@ public class BuilderDefinitionCreator {
     // Finalize the definition - convert to generic class representation
     finalizeDefinition(result, context);
 
-    context.debug("Builder will be generated as: %s", result.getBuilderTypeName().getClassName());
-
     context.debugEndOperation(
         "Builder definition extracted: %s", result.getBuilderTypeName().getClassName());
 

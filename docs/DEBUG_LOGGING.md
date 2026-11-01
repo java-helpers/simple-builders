@@ -136,7 +136,6 @@ The following is a verbatim excerpt of a real run (`mvn -pl example clean compil
 [INFO] [DEBUG] simple-builders: │  │  │  ├─ Resolving method conflicts
 [INFO] [DEBUG] simple-builders: │  │  │  │  └─ Resolved: 11 signatures, 0 conflicts, 0 methods removed
 [INFO] [DEBUG] simple-builders: │  │  │  └─ Finalized: 1 class fields, 5 builder-level methods, 2 constructors
-[INFO] [DEBUG] simple-builders: │  │  ├─ Builder will be generated as: SponsorDtoBuilder
 [INFO] [DEBUG] simple-builders: │  │  └─ Builder definition extracted: SponsorDtoBuilder
 … (the same extraction steps repeat for each remaining element)
 [INFO] [DEBUG] simple-builders: ├─ Generating targets for: SponsorDto
