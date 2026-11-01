@@ -58,9 +58,12 @@ public record CodegenTask<K extends CodegenConfiguration>(
   }
 
   /** Fluent builder for {@link CodegenTask}. */
+  @SuppressWarnings("unchecked")
   public static final class Builder<K extends CodegenConfiguration> {
     private Element element;
-    private K configuration;
+    // Domains with a richer configuration type must set it explicitly — the default is the
+    // framework's plain CodegenConfiguration, which only fits K = CodegenConfiguration.
+    private K configuration = (K) CodegenConfiguration.DEFAULT;
     private Element reportingElement;
     private String outputPackage;
 
