@@ -22,21 +22,9 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.model.method;
+package model.method;
 
-/**
- * Placeholder value for text contents.Implements {@code MethodCodePlaceholder} to support a generic
- * mapping of placeholders.
- */
-public class MethodCodeStringPlaceholder extends MethodCodePlaceholder<String> {
-
-  /**
-   * Constructor for placeholders.
-   *
-   * @param label name of placeholder
-   * @param value dynamic value for placeholder
-   */
-  public MethodCodeStringPlaceholder(String label, String value) {
-    super(label, value);
-  }
+/** DTO for holding information of code implementation. */
+public class MethodCodeDto extends CodeTemplateDto {
+  // All functionality inherited from CodeTemplateDto
 }

@@ -30,11 +30,11 @@ import java.util.stream.Stream;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
-import org.javahelpers.simple.builders.processor.model.method.ConstructorDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodCodePlaceholder;
-import org.javahelpers.simple.builders.processor.model.method.MethodCodeStringPlaceholder;
-import org.javahelpers.simple.builders.processor.model.method.MethodCodeTypePlaceholder;
-import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+import org.javahelpers.codegen.model.method.ConstructorDto;
+import org.javahelpers.codegen.model.method.MethodCodePlaceholder;
+import org.javahelpers.codegen.model.method.MethodCodeStringPlaceholder;
+import org.javahelpers.codegen.model.method.MethodCodeTypePlaceholder;
+import org.javahelpers.codegen.model.method.MethodDto;
 import org.javahelpers.simple.builders.processor.model.type.BuilderNestedTypeDto;
 import org.javahelpers.codegen.model.type.NestedTypeDto;
 

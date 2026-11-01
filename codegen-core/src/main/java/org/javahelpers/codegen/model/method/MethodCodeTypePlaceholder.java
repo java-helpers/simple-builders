@@ -22,16 +22,15 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.model.method;
+package model.method;
+
+import org.javahelpers.codegen.model.type.TypeName;
 
 /**
- * Interface for supported placeholder value types.
- *
- * @param <T> Generic type for the dynamic value
+ * Placeholder value for type contents.Implements {@code MethodCodePlaceholder} to support a generic
+ * mapping of placeholders.
  */
-public abstract class MethodCodePlaceholder<T> {
-  private final String label;
-  private final T value;
+public class MethodCodeTypePlaceholder extends MethodCodePlaceholder<TypeName> {
 
   /**
    * Constructor for placeholders.
@@ -39,26 +38,7 @@ public abstract class MethodCodePlaceholder<T> {
    * @param label name of placeholder
    * @param value dynamic value for placeholder
    */
-  protected MethodCodePlaceholder(String label, T value) {
-    this.label = label;
-    this.value = value;
-  }
-
-  /**
-   * Getter for name of placeholder.
-   *
-   * @return placeholder name
-   */
-  public String getLabel() {
-    return label;
-  }
-
-  /**
-   * Getter for dynamic value of placeholder.
-   *
-   * @return dynamic value
-   */
-  public T getValue() {
-    return value;
+  public MethodCodeTypePlaceholder(String label, TypeName value) {
+    super(label, value);
   }
 }

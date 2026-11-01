@@ -22,16 +22,43 @@
  * SOFTWARE.
  */
 
+package model.method;
+
 /**
- * Package org.javahelpers.simple.builders.processor.model.method
+ * Interface for supported placeholder value types.
  *
- * <p>Method model classes for the simple-builders processor.
- *
- * <p>This package contains classes that represent methods and their components, providing the model
- * layer for method generation. These classes enable the processor to represent and generate various
- * types of methods in the generated builders.
- *
- * <p>The model includes method definitions, parameters, code placeholders, and different types of
- * method representations used throughout the generation process.
+ * @param <T> Generic type for the dynamic value
  */
-package org.javahelpers.simple.builders.processor.model.method;
+public abstract class MethodCodePlaceholder<T> {
+  private final String label;
+  private final T value;
+
+  /**
+   * Constructor for placeholders.
+   *
+   * @param label name of placeholder
+   * @param value dynamic value for placeholder
+   */
+  protected MethodCodePlaceholder(String label, T value) {
+    this.label = label;
+    this.value = value;
+  }
+
+  /**
+   * Getter for name of placeholder.
+   *
+   * @return placeholder name
+   */
+  public String getLabel() {
+    return label;
+  }
+
+  /**
+   * Getter for dynamic value of placeholder.
+   *
+   * @return dynamic value
+   */
+  public T getValue() {
+    return value;
+  }
+}

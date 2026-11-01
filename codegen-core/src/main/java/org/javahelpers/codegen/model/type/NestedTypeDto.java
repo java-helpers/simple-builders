@@ -30,7 +30,7 @@ import java.util.List;
 import org.javahelpers.codegen.enums.AccessModifier;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
-import org.javahelpers.simple.builders.processor.model.method.MethodDto;
+import org.javahelpers.codegen.model.method.MethodDto;
 
 /**
  * Rendering-side DTO for a nested type (interface or class) to be generated inside a generated

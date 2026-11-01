@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.model.method;
+package model.method;
 
 import java.util.ArrayList;
 import java.util.List;

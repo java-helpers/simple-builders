@@ -24,7 +24,7 @@
 
 package org.javahelpers.simple.builders.processor.model.javadoc;
 
-import org.javahelpers.simple.builders.processor.model.method.CodeTemplateDto;
+import org.javahelpers.codegen.model.method.CodeTemplateDto;
 
 /**
  * DTO for holding code example blocks in Javadoc.

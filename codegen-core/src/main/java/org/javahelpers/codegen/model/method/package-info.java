@@ -22,23 +22,16 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.model.method;
-
-import org.javahelpers.codegen.model.type.TypeName;
-
 /**
- * Placeholder value for type contents.Implements {@code MethodCodePlaceholder} to support a generic
- * mapping of placeholders.
+ * Package org.javahelpers.simple.builders.processor.model.method
+ *
+ * <p>Method model classes for the simple-builders processor.
+ *
+ * <p>This package contains classes that represent methods and their components, providing the model
+ * layer for method generation. These classes enable the processor to represent and generate various
+ * types of methods in the generated builders.
+ *
+ * <p>The model includes method definitions, parameters, code placeholders, and different types of
+ * method representations used throughout the generation process.
  */
-public class MethodCodeTypePlaceholder extends MethodCodePlaceholder<TypeName> {
-
-  /**
-   * Constructor for placeholders.
-   *
-   * @param label name of placeholder
-   * @param value dynamic value for placeholder
-   */
-  public MethodCodeTypePlaceholder(String label, TypeName value) {
-    super(label, value);
-  }
-}
+package model.method;

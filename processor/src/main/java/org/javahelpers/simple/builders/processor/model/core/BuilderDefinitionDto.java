@@ -39,7 +39,7 @@ import org.javahelpers.simple.builders.processor.model.imports.RegularImport;
 import org.javahelpers.simple.builders.processor.model.imports.StaticImport;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
-import org.javahelpers.simple.builders.processor.model.method.ConstructorDto;
+import org.javahelpers.codegen.model.method.ConstructorDto;
 import org.javahelpers.simple.builders.processor.model.type.BuilderNestedTypeDto;
 import org.javahelpers.codegen.model.type.GenericParameterDto;
 import org.javahelpers.codegen.model.type.TypeName;
