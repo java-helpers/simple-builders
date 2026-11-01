@@ -54,6 +54,10 @@
   
   <modules>
     <module>core</module>
+    <module>codegen-core</module>
+    <module>simple-processor</module>
+    <module>codegen-roaster</module>
+    <module>codegen-testing</module>
     <module>processor</module>
     <module>example-custom-generator</module>
     <module>example</module>
