@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 import javax.annotation.processing.ProcessingEnvironment;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsEnum;
-import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsReader;
+import org.javahelpers.codegen.processing.CompilerArgumentsReader;
 
 /**
  * Utility class for filtering generators and enhancers based on deactivation patterns.

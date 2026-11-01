@@ -41,7 +41,7 @@ import javax.lang.model.element.Element;
  *     externally declared types, otherwise the element itself
  * @param outputPackage the package generated code is written to — planning computes it so the
  *     driver can pass the task to {@link
- *     org.javahelpers.simple.builders.processor.processing.AnnotationProcessingContext#setCurrentTask}
+ *     org.javahelpers.codegen.processing.AnnotationProcessingContext#setCurrentTask}
  *     before analysis
  */
 public record CodegenTask<K extends CodegenConfiguration>(

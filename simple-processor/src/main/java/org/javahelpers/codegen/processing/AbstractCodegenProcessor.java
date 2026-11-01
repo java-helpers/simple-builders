@@ -41,9 +41,9 @@ import org.javahelpers.codegen.GenerationEnvironment;
 import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterCodeGenerator;
 import org.javahelpers.codegen.model.core.GenerationTargetClassDto;
 import org.javahelpers.codegen.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.processing.AnnotationProcessingContext;
-import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsReader;
-import org.javahelpers.simple.builders.processor.processing.SourceFormatterResolver;
+import org.javahelpers.codegen.processing.AnnotationProcessingContext;
+import org.javahelpers.codegen.processing.CompilerArgumentsReader;
+import org.javahelpers.codegen.processing.SourceFormatterResolver;
 import org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker;
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 

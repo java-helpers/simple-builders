@@ -40,7 +40,7 @@ import org.javahelpers.simple.builders.processor.SimpleBuildersSpiIntegration;
 import org.javahelpers.simple.builders.processor.SimpleBuildersSpiIntegration.PublishedBuilder;
 import org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil;
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsEnum;
-import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsReader;
+import org.javahelpers.codegen.processing.CompilerArgumentsReader;
 import org.mapstruct.ap.spi.AccessorNamingStrategy;
 import org.mapstruct.ap.spi.DefaultAccessorNamingStrategy;
 import org.mapstruct.ap.spi.MapStructProcessingEnvironment;

@@ -25,7 +25,7 @@
 package org.javahelpers.simple.builders.processor;
 
 import static org.javahelpers.simple.builders.processor.processing.BuilderDefinitionCreator.extractFromElement;
-import static org.javahelpers.simple.builders.processor.processing.PipelinePhases.PHASE_CONFIGURATION_RESOLUTION;
+import static org.javahelpers.codegen.processing.PipelinePhases.PHASE_CONFIGURATION_RESOLUTION;
 
 import com.google.auto.service.AutoService;
 import java.util.ArrayList;
@@ -72,7 +72,7 @@ import org.javahelpers.codegen.model.type.TypeNameSet;
 import org.javahelpers.simple.builders.processor.processing.BuilderConfigurationReader;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsEnum;
-import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsReader;
+import org.javahelpers.codegen.processing.CompilerArgumentsReader;
 import org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker;
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 

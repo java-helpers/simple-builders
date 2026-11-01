@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.processing;
+package org.javahelpers.codegen.processing;
 
 import java.util.HashMap;
 import java.util.List;

@@ -27,7 +27,7 @@ package org.javahelpers.codegen.processing;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Set;
-import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsReader;
+import org.javahelpers.codegen.processing.CompilerArgumentsReader;
 import org.junit.jupiter.api.Test;
 
 /** Unit tests for {@link ProcessorOptionRegistry}. */

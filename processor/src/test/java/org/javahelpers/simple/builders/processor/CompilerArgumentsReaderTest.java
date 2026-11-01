@@ -35,7 +35,7 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.processing.BuilderConfigurationReader;
 import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsEnum;
-import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsReader;
+import org.javahelpers.codegen.processing.CompilerArgumentsReader;
 import org.javahelpers.simple.builders.processor.testing.CapturingProcessingLogger;
 import org.javahelpers.simple.builders.processor.testing.ProcessingEnvironmentStub;
 import org.junit.jupiter.api.Test;

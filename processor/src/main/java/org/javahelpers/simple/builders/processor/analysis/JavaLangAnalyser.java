@@ -50,7 +50,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.javahelpers.codegen.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.processing.AnnotationProcessingContext;
+import org.javahelpers.codegen.processing.AnnotationProcessingContext;
 
 /** Helperclass for extrating specific information from existing classes. */
 public final class JavaLangAnalyser {
