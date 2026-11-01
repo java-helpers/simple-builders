@@ -84,10 +84,10 @@
     <plugin.maven.install.version>3.2.0</plugin.maven.install.version>
     <plugin.maven.resources.version>3.5.0</plugin.maven.resources.version>
     <plugin.maven.site.version>3.22.0</plugin.maven.site.version>
-    <plugin.maven.surefire.version>3.6.0</plugin.maven.surefire.version>
+    <plugin.maven.surefire.version>3.6.1</plugin.maven.surefire.version>
     <plugin.code-format.version>2.29</plugin.code-format.version>
     <plugin.license.version>5.1.2</plugin.license.version>
-    <plugin.jacoco.version>0.8.15</plugin.jacoco.version>
+    <plugin.jacoco.version>0.8.16</plugin.jacoco.version>
   </properties>
 
   <dependencies>
