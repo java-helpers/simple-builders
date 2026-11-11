@@ -122,6 +122,14 @@
       <scope>test</scope>
     </dependency>
 
+    <!-- Jackson for parsing the tracker's JSON report in tests -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>${jackson-databind.version}</version>
+      <scope>test</scope>
+    </dependency>
+
 
   </dependencies>
     

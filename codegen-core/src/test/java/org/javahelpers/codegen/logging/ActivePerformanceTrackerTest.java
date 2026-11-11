@@ -24,6 +24,7 @@
 
 package org.javahelpers.codegen.logging;
 
+import static org.javahelpers.codegen.GenerationPhases.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -31,11 +32,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.javahelpers.codegen.GenerationPhases;
-import org.javahelpers.codegen.processing.PipelinePhases;
-import org.javahelpers.codegen.testing.CapturingProcessingLogger;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -44,18 +46,79 @@ import org.junit.jupiter.api.io.TempDir;
  *
  * <p>Tests cover phase tracking, generator/enhancer tracking, class metrics, JSON report output
  * structure and correctness, edge cases, and ThreadLocal cleanup.
+ *
+ * <p>codegen-core cannot depend on codegen-testing (dependency cycle), so the capturing logger and
+ * the phase vocabulary are defined locally instead of reusing {@code CapturingLogger} and {@code
+ * PipelinePhases}.
  */
 class ActivePerformanceTrackerTest {
 
   @TempDir Path tempDir;
 
+  private static final String PHASE_ELEMENT_COLLECTION = "Element Collection";
+  private static final String PHASE_CONFIGURATION_RESOLUTION = "Configuration Resolution";
+  private static final String PHASE_ANALYSIS = "Analysis";
+  private static final String PHASE_TARGET_MAPPING = "Target Mapping";
+  private static final String PHASE_CODE_GENERATION = "Code Generation";
+
+  /** Phase hierarchy rendered in the report, mirroring a typical processing pipeline. */
+  private static final PhaseHierarchy TEST_HIERARCHY =
+      new PhaseHierarchy(
+          List.of(
+              PHASE_ELEMENT_COLLECTION,
+              PHASE_CONFIGURATION_RESOLUTION,
+              PHASE_ANALYSIS,
+              PHASE_TARGET_MAPPING,
+              PHASE_CODE_GENERATION),
+          Map.of(
+              PHASE_CODE_GENERATION,
+              List.of(PHASE_SOURCE_CONSTRUCTION, PHASE_FILE_WRITING),
+              PHASE_SOURCE_CONSTRUCTION,
+              List.of(PHASE_ELEMENT_BUILDING, PHASE_STRING_GENERATION, PHASE_FORMATTING),
+              PHASE_ELEMENT_BUILDING,
+              List.of(
+                  PHASE_CLASS_CREATION,
+                  PHASE_CLASS_METADATA,
+                  PHASE_FIELDS,
+                  PHASE_CONSTRUCTORS,
+                  PHASE_METHODS,
+                  PHASE_NESTED_TYPES,
+                  PHASE_CLASS_ANNOTATIONS)));
+
+  /** Minimal capturing logger equivalent to codegen-testing's {@code CapturingLogger}. */
+  private static final class CapturingLogger {
+    private final List<String> messages = new ArrayList<>();
+    private final ProcessingLogger logger;
+
+    private CapturingLogger(String loggingPrefix) {
+      logger =
+          new SinkProcessingLogger(
+              (severity, message) -> messages.add(severity + ": " + message), false, loggingPrefix);
+    }
+
+    private static CapturingLogger create() {
+      return new CapturingLogger(null);
+    }
+
+    private static CapturingLogger create(String loggingPrefix) {
+      return new CapturingLogger(loggingPrefix);
+    }
+
+    private ProcessingLogger logger() {
+      return logger;
+    }
+
+    private List<String> messages() {
+      return messages;
+    }
+  }
+
   /** Helper to create a tracker, track some data, and generate report with JSON output. */
   private JsonNode generateReportAndParseJson(String outputFile) throws IOException {
-    ActivePerformanceTracker tracker =
-        new ActivePerformanceTracker(outputFile, PipelinePhases.PIPELINE_HIERARCHY);
+    ActivePerformanceTracker tracker = new ActivePerformanceTracker(outputFile, TEST_HIERARCHY);
     tracker.startClass("TestClassA");
     tracker.startPhase();
-    tracker.endPhase(PipelinePhases.PHASE_ANALYSIS);
+    tracker.endPhase(PHASE_ANALYSIS);
     tracker.startGenerator();
     tracker.endGenerator("FieldSupplierGenerator");
     tracker.startEnhancer();
@@ -64,10 +127,10 @@ class ActivePerformanceTrackerTest {
 
     tracker.startClass("TestClassB");
     tracker.startPhase();
-    tracker.endPhase(PipelinePhases.PHASE_TARGET_MAPPING);
+    tracker.endPhase(PHASE_TARGET_MAPPING);
     tracker.endClass(3, 1);
 
-    CapturingProcessingLogger capturing = CapturingProcessingLogger.create();
+    CapturingLogger capturing = CapturingLogger.create();
     ProcessingLogger logger = capturing.logger();
     tracker.generateReport(logger);
 
@@ -111,18 +174,17 @@ class ActivePerformanceTrackerTest {
    */
   @Test
   void generateReport_prefixedLogger_producesExpectedTaggedLayout() {
-    ActivePerformanceTracker tracker =
-        new ActivePerformanceTracker(null, PipelinePhases.PIPELINE_HIERARCHY);
+    ActivePerformanceTracker tracker = new ActivePerformanceTracker(null, TEST_HIERARCHY);
     tracker.startClass("MyClass");
     tracker.startPhase();
-    tracker.endPhase(PipelinePhases.PHASE_ANALYSIS);
+    tracker.endPhase(PHASE_ANALYSIS);
     tracker.startGenerator();
     tracker.endGenerator("MyGenerator");
     tracker.startEnhancer();
     tracker.endEnhancer("MyEnhancer");
     tracker.endClass(5, 2);
 
-    CapturingProcessingLogger capturing = CapturingProcessingLogger.create("simple-builders");
+    CapturingLogger capturing = CapturingLogger.create("simple-builders");
     tracker.generateReport(capturing.logger());
 
     // Remove the diagnostic kind marker and the exact measurements (durations, percentages,
@@ -179,9 +241,8 @@ class ActivePerformanceTrackerTest {
 
   @Test
   void generateReport_withNoData_logsBasicReport() {
-    ActivePerformanceTracker tracker =
-        new ActivePerformanceTracker(null, PipelinePhases.PIPELINE_HIERARCHY);
-    CapturingProcessingLogger capturing = CapturingProcessingLogger.create();
+    ActivePerformanceTracker tracker = new ActivePerformanceTracker(null, TEST_HIERARCHY);
+    CapturingLogger capturing = CapturingLogger.create();
     ProcessingLogger logger = capturing.logger();
 
     tracker.generateReport(logger);
@@ -193,12 +254,11 @@ class ActivePerformanceTrackerTest {
 
   @Test
   void generateReport_withClassData_logsClassCount() {
-    ActivePerformanceTracker tracker =
-        new ActivePerformanceTracker(null, PipelinePhases.PIPELINE_HIERARCHY);
+    ActivePerformanceTracker tracker = new ActivePerformanceTracker(null, TEST_HIERARCHY);
     tracker.startClass("MyClass");
     tracker.endClass(4, 1);
 
-    CapturingProcessingLogger capturing = CapturingProcessingLogger.create();
+    CapturingLogger capturing = CapturingLogger.create();
     ProcessingLogger logger = capturing.logger();
     tracker.generateReport(logger);
 
@@ -209,14 +269,13 @@ class ActivePerformanceTrackerTest {
 
   @Test
   void generateReport_withGeneratorData_logsGeneratorStats() {
-    ActivePerformanceTracker tracker =
-        new ActivePerformanceTracker(null, PipelinePhases.PIPELINE_HIERARCHY);
+    ActivePerformanceTracker tracker = new ActivePerformanceTracker(null, TEST_HIERARCHY);
     tracker.startClass("MyClass");
     tracker.startGenerator();
     tracker.endGenerator("MyGenerator");
     tracker.endClass(2, 0);
 
-    CapturingProcessingLogger capturing = CapturingProcessingLogger.create();
+    CapturingLogger capturing = CapturingLogger.create();
     ProcessingLogger logger = capturing.logger();
     tracker.generateReport(logger);
 
@@ -226,14 +285,13 @@ class ActivePerformanceTrackerTest {
 
   @Test
   void generateReport_withEnhancerData_logsEnhancerStats() {
-    ActivePerformanceTracker tracker =
-        new ActivePerformanceTracker(null, PipelinePhases.PIPELINE_HIERARCHY);
+    ActivePerformanceTracker tracker = new ActivePerformanceTracker(null, TEST_HIERARCHY);
     tracker.startClass("MyClass");
     tracker.startEnhancer();
     tracker.endEnhancer("MyEnhancer");
     tracker.endClass(2, 0);
 
-    CapturingProcessingLogger capturing = CapturingProcessingLogger.create();
+    CapturingLogger capturing = CapturingLogger.create();
     ProcessingLogger logger = capturing.logger();
     tracker.generateReport(logger);
 
@@ -243,61 +301,55 @@ class ActivePerformanceTrackerTest {
 
   @Test
   void generateReport_withPhaseData_logsPhaseBreakdown() {
-    ActivePerformanceTracker tracker =
-        new ActivePerformanceTracker(null, PipelinePhases.PIPELINE_HIERARCHY);
+    ActivePerformanceTracker tracker = new ActivePerformanceTracker(null, TEST_HIERARCHY);
     tracker.startPhase();
-    tracker.endPhase(PipelinePhases.PHASE_CONFIGURATION_RESOLUTION);
+    tracker.endPhase(PHASE_CONFIGURATION_RESOLUTION);
     tracker.startPhase();
-    tracker.endPhase(PipelinePhases.PHASE_CODE_GENERATION);
+    tracker.endPhase(PHASE_CODE_GENERATION);
 
-    CapturingProcessingLogger capturing = CapturingProcessingLogger.create();
+    CapturingLogger capturing = CapturingLogger.create();
     ProcessingLogger logger = capturing.logger();
     tracker.generateReport(logger);
 
     assertTrue(capturing.messages().stream().anyMatch(m -> m.contains("Phase breakdown")));
     assertTrue(
-        capturing.messages().stream()
-            .anyMatch(m -> m.contains(PipelinePhases.PHASE_CONFIGURATION_RESOLUTION)));
-    assertTrue(
-        capturing.messages().stream()
-            .anyMatch(m -> m.contains(PipelinePhases.PHASE_CODE_GENERATION)));
+        capturing.messages().stream().anyMatch(m -> m.contains(PHASE_CONFIGURATION_RESOLUTION)));
+    assertTrue(capturing.messages().stream().anyMatch(m -> m.contains(PHASE_CODE_GENERATION)));
   }
 
   @Test
   void generateReport_withElementCollectionPhase_logsPhaseInReport() {
-    ActivePerformanceTracker tracker =
-        new ActivePerformanceTracker(null, PipelinePhases.PIPELINE_HIERARCHY);
+    ActivePerformanceTracker tracker = new ActivePerformanceTracker(null, TEST_HIERARCHY);
     tracker.startPhase();
-    tracker.endPhase(PipelinePhases.PHASE_ELEMENT_COLLECTION);
+    tracker.endPhase(PHASE_ELEMENT_COLLECTION);
 
-    CapturingProcessingLogger capturing = CapturingProcessingLogger.create();
+    CapturingLogger capturing = CapturingLogger.create();
     ProcessingLogger logger = capturing.logger();
     tracker.generateReport(logger);
 
     assertTrue(
-        capturing.messages().stream()
-            .anyMatch(m -> m.contains(PipelinePhases.PHASE_ELEMENT_COLLECTION)),
-        "Text report should contain " + PipelinePhases.PHASE_ELEMENT_COLLECTION);
+        capturing.messages().stream().anyMatch(m -> m.contains(PHASE_ELEMENT_COLLECTION)),
+        "Text report should contain " + PHASE_ELEMENT_COLLECTION);
   }
 
   @Test
   void jsonReport_phaseBreakdown_containsElementCollectionPhase() throws IOException {
     Path jsonFile = tempDir.resolve("report-element-collection.json");
     ActivePerformanceTracker tracker =
-        new ActivePerformanceTracker(jsonFile.toString(), PipelinePhases.PIPELINE_HIERARCHY);
+        new ActivePerformanceTracker(jsonFile.toString(), TEST_HIERARCHY);
     tracker.startPhase();
-    tracker.endPhase(PipelinePhases.PHASE_ELEMENT_COLLECTION);
+    tracker.endPhase(PHASE_ELEMENT_COLLECTION);
 
-    CapturingProcessingLogger capturing = CapturingProcessingLogger.create();
+    CapturingLogger capturing = CapturingLogger.create();
     ProcessingLogger logger = capturing.logger();
     tracker.generateReport(logger);
 
     JsonNode root = new ObjectMapper().readTree(Files.readString(jsonFile));
     JsonNode phases = root.get("phaseBreakdown");
     assertTrue(
-        phases.has(PipelinePhases.PHASE_ELEMENT_COLLECTION),
-        "JSON phaseBreakdown should contain " + PipelinePhases.PHASE_ELEMENT_COLLECTION);
-    JsonNode elementCollection = phases.get(PipelinePhases.PHASE_ELEMENT_COLLECTION);
+        phases.has(PHASE_ELEMENT_COLLECTION),
+        "JSON phaseBreakdown should contain " + PHASE_ELEMENT_COLLECTION);
+    JsonNode elementCollection = phases.get(PHASE_ELEMENT_COLLECTION);
     assertTrue(elementCollection.has("elapsedNanos"));
     assertTrue(elementCollection.has("elapsedSeconds"));
     assertTrue(elementCollection.has("percentage"));
@@ -305,12 +357,11 @@ class ActivePerformanceTrackerTest {
 
   @Test
   void generateReport_withNullOutputFile_doesNotWriteFile() {
-    ActivePerformanceTracker tracker =
-        new ActivePerformanceTracker(null, PipelinePhases.PIPELINE_HIERARCHY);
+    ActivePerformanceTracker tracker = new ActivePerformanceTracker(null, TEST_HIERARCHY);
     tracker.startClass("MyClass");
     tracker.endClass(1, 0);
 
-    CapturingProcessingLogger capturing = CapturingProcessingLogger.create();
+    CapturingLogger capturing = CapturingLogger.create();
     ProcessingLogger logger = capturing.logger();
     tracker.generateReport(logger);
 
@@ -386,12 +437,12 @@ class ActivePerformanceTrackerTest {
     JsonNode root = generateReportAndParseJson(jsonFile.toString());
 
     JsonNode phases = root.get("phaseBreakdown");
-    assertTrue(phases.has(PipelinePhases.PHASE_CONFIGURATION_RESOLUTION));
-    assertTrue(phases.has(PipelinePhases.PHASE_ANALYSIS));
-    assertTrue(phases.has(PipelinePhases.PHASE_TARGET_MAPPING));
-    assertTrue(phases.has(PipelinePhases.PHASE_CODE_GENERATION));
+    assertTrue(phases.has(PHASE_CONFIGURATION_RESOLUTION));
+    assertTrue(phases.has(PHASE_ANALYSIS));
+    assertTrue(phases.has(PHASE_TARGET_MAPPING));
+    assertTrue(phases.has(PHASE_CODE_GENERATION));
 
-    JsonNode codeGen = phases.get(PipelinePhases.PHASE_CODE_GENERATION);
+    JsonNode codeGen = phases.get(PHASE_CODE_GENERATION);
     assertTrue(codeGen.has("elapsedNanos"));
     assertTrue(codeGen.has("elapsedSeconds"));
     assertTrue(codeGen.has("percentage"));
@@ -402,7 +453,7 @@ class ActivePerformanceTrackerTest {
     Path jsonFile = tempDir.resolve("report.json");
     JsonNode root = generateReportAndParseJson(jsonFile.toString());
 
-    JsonNode codeGen = root.get("phaseBreakdown").get(PipelinePhases.PHASE_CODE_GENERATION);
+    JsonNode codeGen = root.get("phaseBreakdown").get(PHASE_CODE_GENERATION);
     assertTrue(codeGen.has("children"));
     JsonNode children = codeGen.get("children");
     assertTrue(children.has(GenerationPhases.PHASE_SOURCE_CONSTRUCTION));
@@ -413,9 +464,9 @@ class ActivePerformanceTrackerTest {
   void jsonReport_withNoData_hasEmptyArrays() throws IOException {
     Path jsonFile = tempDir.resolve("report-empty.json");
     ActivePerformanceTracker tracker =
-        new ActivePerformanceTracker(jsonFile.toString(), PipelinePhases.PIPELINE_HIERARCHY);
+        new ActivePerformanceTracker(jsonFile.toString(), TEST_HIERARCHY);
 
-    CapturingProcessingLogger capturing = CapturingProcessingLogger.create();
+    CapturingLogger capturing = CapturingLogger.create();
     ProcessingLogger logger = capturing.logger();
     tracker.generateReport(logger);
 
@@ -440,14 +491,13 @@ class ActivePerformanceTrackerTest {
 
   @Test
   void endMethodsWithoutStart_doesNothing() {
-    ActivePerformanceTracker tracker =
-        new ActivePerformanceTracker(null, PipelinePhases.PIPELINE_HIERARCHY);
-    tracker.endPhase(PipelinePhases.PHASE_CONFIGURATION_RESOLUTION);
+    ActivePerformanceTracker tracker = new ActivePerformanceTracker(null, TEST_HIERARCHY);
+    tracker.endPhase(PHASE_CONFIGURATION_RESOLUTION);
     tracker.endGenerator("NonexistentGenerator");
     tracker.endEnhancer("NonexistentEnhancer");
     tracker.endClass(5, 2);
 
-    CapturingProcessingLogger capturing = CapturingProcessingLogger.create();
+    CapturingLogger capturing = CapturingLogger.create();
     ProcessingLogger logger = capturing.logger();
     tracker.generateReport(logger);
 
@@ -462,7 +512,7 @@ class ActivePerformanceTrackerTest {
   void multipleGenerators_accumulateTimeAndCalls() throws IOException {
     Path jsonFile = tempDir.resolve("report-multi-gen.json");
     ActivePerformanceTracker tracker =
-        new ActivePerformanceTracker(jsonFile.toString(), PipelinePhases.PIPELINE_HIERARCHY);
+        new ActivePerformanceTracker(jsonFile.toString(), TEST_HIERARCHY);
     tracker.startClass("MyClass");
     tracker.startGenerator();
     tracker.endGenerator("GenA");
@@ -472,7 +522,7 @@ class ActivePerformanceTrackerTest {
     tracker.endGenerator("GenB");
     tracker.endClass(2, 0);
 
-    CapturingProcessingLogger capturing = CapturingProcessingLogger.create();
+    CapturingLogger capturing = CapturingLogger.create();
     ProcessingLogger logger = capturing.logger();
     tracker.generateReport(logger);
 
@@ -488,7 +538,7 @@ class ActivePerformanceTrackerTest {
   void jsonReport_escapesSpecialCharactersInNames() throws IOException {
     Path jsonFile = tempDir.resolve("report-escaping.json");
     ActivePerformanceTracker tracker =
-        new ActivePerformanceTracker(jsonFile.toString(), PipelinePhases.PIPELINE_HIERARCHY);
+        new ActivePerformanceTracker(jsonFile.toString(), TEST_HIERARCHY);
     tracker.startClass("MyClass");
     tracker.startGenerator();
     tracker.endGenerator("Gen\"\\\n\t\r\b\fA\u0001");
@@ -497,7 +547,7 @@ class ActivePerformanceTrackerTest {
     tracker.endEnhancer("Enh\u0001x");
     tracker.endClass(2, 0);
 
-    tracker.generateReport(CapturingProcessingLogger.create().logger());
+    tracker.generateReport(CapturingLogger.create().logger());
 
     JsonNode root = new ObjectMapper().readTree(Files.readString(jsonFile));
     JsonNode genStats = root.get("generatorStats");
@@ -510,30 +560,29 @@ class ActivePerformanceTrackerTest {
   void multiplePhases_accumulateTime() throws IOException {
     Path jsonFile = tempDir.resolve("report-multi-phase.json");
     ActivePerformanceTracker tracker =
-        new ActivePerformanceTracker(jsonFile.toString(), PipelinePhases.PIPELINE_HIERARCHY);
+        new ActivePerformanceTracker(jsonFile.toString(), TEST_HIERARCHY);
     tracker.startPhase();
-    tracker.endPhase(PipelinePhases.PHASE_CONFIGURATION_RESOLUTION);
+    tracker.endPhase(PHASE_CONFIGURATION_RESOLUTION);
     tracker.startPhase();
-    tracker.endPhase(PipelinePhases.PHASE_CONFIGURATION_RESOLUTION);
+    tracker.endPhase(PHASE_CONFIGURATION_RESOLUTION);
 
-    CapturingProcessingLogger capturing = CapturingProcessingLogger.create();
+    CapturingLogger capturing = CapturingLogger.create();
     ProcessingLogger logger = capturing.logger();
     tracker.generateReport(logger);
 
     JsonNode root = new ObjectMapper().readTree(Files.readString(jsonFile));
-    JsonNode phase = root.get("phaseBreakdown").get(PipelinePhases.PHASE_CONFIGURATION_RESOLUTION);
+    JsonNode phase = root.get("phaseBreakdown").get(PHASE_CONFIGURATION_RESOLUTION);
     assertTrue(phase.get("elapsedNanos").asLong() > 0);
   }
 
   @Test
   void generateReport_logsWarningOnInvalidPath() {
     ActivePerformanceTracker tracker =
-        new ActivePerformanceTracker(
-            "/nonexistent\0invalid/path.json", PipelinePhases.PIPELINE_HIERARCHY);
+        new ActivePerformanceTracker("/nonexistent\0invalid/path.json", TEST_HIERARCHY);
     tracker.startClass("MyClass");
     tracker.endClass(1, 0);
 
-    CapturingProcessingLogger capturing = CapturingProcessingLogger.create();
+    CapturingLogger capturing = CapturingLogger.create();
     ProcessingLogger logger = capturing.logger();
     tracker.generateReport(logger);
 
@@ -545,7 +594,7 @@ class ActivePerformanceTrackerTest {
   @Test
   void noOpPerformanceTracker_allMethodsAreNoOps() {
     NoOpPerformanceTracker tracker = new NoOpPerformanceTracker();
-    CapturingProcessingLogger capturing = CapturingProcessingLogger.create();
+    CapturingLogger capturing = CapturingLogger.create();
     ProcessingLogger logger = capturing.logger();
 
     tracker.startPhase();
@@ -565,7 +614,7 @@ class ActivePerformanceTrackerTest {
   void jsonReport_generatorAndEnhancerStats_sortedByElapsedDesc() throws IOException {
     Path jsonFile = tempDir.resolve("report-sorted.json");
     ActivePerformanceTracker tracker =
-        new ActivePerformanceTracker(jsonFile.toString(), PipelinePhases.PIPELINE_HIERARCHY);
+        new ActivePerformanceTracker(jsonFile.toString(), TEST_HIERARCHY);
     tracker.startClass("MyClass");
     tracker.startGenerator();
     tracker.endGenerator("SlowGen");
@@ -577,7 +626,7 @@ class ActivePerformanceTrackerTest {
     tracker.endEnhancer("FastEnh");
     tracker.endClass(2, 0);
 
-    CapturingProcessingLogger capturing = CapturingProcessingLogger.create();
+    CapturingLogger capturing = CapturingLogger.create();
     ProcessingLogger logger = capturing.logger();
     tracker.generateReport(logger);
 

@@ -315,8 +315,8 @@ public class BuilderDefinitionCreator {
    * same signature key are resolved by keeping the highest-priority one; losers are removed from
    * their field/class method lists so they are never mapped to the rendering DTO.
    *
-   * <p>A generic safety net in {@link
-   * org.javahelpers.codegen.roaster.RoasterCodeGenerator#resolveMethodConflicts} handles any
+   * <p>A generic safety net in the code generator's method-conflict resolution (see {@code
+   * RoasterCodeGenerator#resolveMethodConflicts} in the codegen-roaster backend) handles any
    * remaining duplicates (e.g., from enhancer methods added after this step) by keeping the first
    * occurrence.
    *

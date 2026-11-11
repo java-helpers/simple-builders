@@ -24,8 +24,8 @@
 package org.javahelpers.codegen.processing;
 
 import static com.google.testing.compile.CompilationSubject.assertThat;
+import static org.javahelpers.codegen.testing.CodegenTestUtils.loadGeneratedSource;
 import static org.javahelpers.codegen.testing.ProcessorAsserts.assertNormalizedEquals;
-import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils.loadGeneratedSource;
 
 import com.google.testing.compile.Compilation;
 import java.lang.annotation.ElementType;
@@ -48,7 +48,7 @@ import org.javahelpers.codegen.model.core.ClassFieldDto;
 import org.javahelpers.codegen.model.core.GenerationTargetClassDto;
 import org.javahelpers.codegen.model.method.MethodDto;
 import org.javahelpers.codegen.model.type.TypeName;
-import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
+import org.javahelpers.codegen.testing.CodegenTestUtils;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -173,7 +173,7 @@ public class MinimalCodegenProcessorTest {
   void minimalProcessorGeneratesDelegatingBuilder() {
     // Given
     JavaFileObject source =
-        ProcessorTestUtils.forSource(
+        CodegenTestUtils.forSource(
             """
             package test;
             import org.javahelpers.codegen.processing.MinimalCodegenProcessorTest.GenerateBuilder;
@@ -186,7 +186,7 @@ public class MinimalCodegenProcessorTest {
 
     // When
     Compilation compilation =
-        ProcessorTestUtils.createCompiler(new MinimalProcessor()).compile(source);
+        CodegenTestUtils.createCompiler(new MinimalProcessor()).compile(source);
 
     // Then
     assertThat(compilation).succeeded();
