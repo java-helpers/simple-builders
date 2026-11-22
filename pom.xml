@@ -95,7 +95,7 @@
     <plugin.central.publishing.version>0.8.0</plugin.central.publishing.version>
     <plugin.code-format.version>2.29</plugin.code-format.version>
     <plugin.license.version>5.1.2</plugin.license.version>
-    <plugin.sonar.version>5.8.0.7211</plugin.sonar.version>
+    <plugin.sonar.version>5.9.0.7382</plugin.sonar.version>
   </properties>
 
   <build>
