@@ -31,6 +31,19 @@ import org.javahelpers.codegen.model.type.TypeName;
 
 /** MethodParameterDto contains all information for generating parameters in method headers. */
 public class MethodParameterDto {
+
+  /**
+   * Replaces annotations with a defensive copy; the DTO retains its own mutable collection.
+   *
+   * @param annotations the replacement collection (not null)
+   * @throws NullPointerException if annotations is null
+   */
+  public void setAnnotations(List<AnnotationDto> annotations) {
+    List<AnnotationDto> copy = new ArrayList<>(annotations);
+    this.annotations.clear();
+    this.annotations.addAll(copy);
+  }
+
   /** Name of parameter. */
   private String parameterName;
 

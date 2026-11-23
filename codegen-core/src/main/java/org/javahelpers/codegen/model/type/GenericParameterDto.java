@@ -24,11 +24,25 @@
 
 package org.javahelpers.codegen.model.type;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
 /** Represents a generic type parameter (e.g., {@code T extends Number & Comparable<T>}). */
 public class GenericParameterDto {
+
+  /**
+   * Replaces upperBounds with a defensive copy; the DTO retains its own mutable collection.
+   *
+   * @param upperBounds the replacement collection (not null)
+   * @throws NullPointerException if upperBounds is null
+   */
+  public void setUpperBounds(List<TypeName> upperBounds) {
+    List<TypeName> copy = new ArrayList<>(upperBounds);
+    this.upperBounds.clear();
+    this.upperBounds.addAll(copy);
+  }
+
   /** The name of the generic parameter (e.g., "T"). */
   private String name;
 

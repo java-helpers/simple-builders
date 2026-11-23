@@ -35,6 +35,19 @@ import org.javahelpers.codegen.model.type.TypeName;
  * and its members in a plain format suitable for code generation.
  */
 public class AnnotationDto {
+
+  /**
+   * Replaces members with a defensive copy; the DTO retains its own mutable collection.
+   *
+   * @param members the replacement collection (not null)
+   * @throws NullPointerException if members is null
+   */
+  public void setMembers(Map<String, String> members) {
+    Map<String, String> copy = new LinkedHashMap<>(members);
+    this.members.clear();
+    this.members.putAll(copy);
+  }
+
   /** The annotation type (fully qualified name). */
   private TypeName annotationType;
 

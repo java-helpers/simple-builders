@@ -43,6 +43,30 @@ import org.javahelpers.codegen.model.method.MethodDto;
  */
 public class NestedTypeDto {
 
+  /**
+   * Replaces methods with a defensive copy; the DTO retains its own mutable collection.
+   *
+   * @param methods the replacement collection (not null)
+   * @throws NullPointerException if methods is null
+   */
+  public void setMethods(List<MethodDto> methods) {
+    List<MethodDto> copy = new ArrayList<>(methods);
+    this.methods.clear();
+    this.methods.addAll(copy);
+  }
+
+  /**
+   * Replaces annotations with a defensive copy; the DTO retains its own mutable collection.
+   *
+   * @param annotations the replacement collection (not null)
+   * @throws NullPointerException if annotations is null
+   */
+  public void setAnnotations(List<AnnotationDto> annotations) {
+    List<AnnotationDto> copy = new ArrayList<>(annotations);
+    this.annotations.clear();
+    this.annotations.addAll(copy);
+  }
+
   /** The simple name of the nested type (e.g., "With"). */
   private String typeName;
 

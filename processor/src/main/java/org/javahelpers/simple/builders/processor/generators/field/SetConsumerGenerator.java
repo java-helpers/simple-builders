@@ -155,7 +155,8 @@ public class SetConsumerGenerator implements MethodGenerator {
               Map.of(),
               builderType,
               context);
-      addExampleToSetConsumerWithSimpleValue(method, elementType, context::resolveBuilderType);
+      addExampleToSetConsumerWithSimpleValue(
+          method, elementType, field.getOriginalFieldName(), context::resolveBuilderType);
       return List.of(method);
     }
 
@@ -180,12 +181,19 @@ public class SetConsumerGenerator implements MethodGenerator {
    *
    * @param method the method to add the example to
    * @param elementType the element type
+   * @param fieldName the original field name used for String example values
+   * @param builderResolver resolves a type's builder for builder-backed examples
    */
   private void addExampleToSetConsumerWithSimpleValue(
       BuilderMethodDto method,
       TypeName elementType,
+      String fieldName,
       Function<TypeName, Optional<ResolvedBuilder>> builderResolver) {
     addExampleChainFragmentTemplate(
-        method, "#{methodName}(t -> t.add(#{exampleValue}))", elementType, builderResolver);
+        method,
+        "#{methodName}(t -> t.add(#{exampleValue}))",
+        elementType,
+        fieldName,
+        builderResolver);
   }
 }

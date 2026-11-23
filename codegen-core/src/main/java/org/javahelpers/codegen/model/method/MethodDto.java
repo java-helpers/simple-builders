@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.codegen.enums.AccessModifier;
@@ -44,6 +45,43 @@ import org.javahelpers.codegen.model.type.TypeName;
  * information.
  */
 public class MethodDto {
+
+  /**
+   * Replaces parameters with a defensive copy; the DTO retains its own mutable collection.
+   *
+   * @param parameters the replacement collection (not null)
+   * @throws NullPointerException if parameters is null
+   */
+  public void setParameters(List<MethodParameterDto> parameters) {
+    List<MethodParameterDto> copy = new ArrayList<>(parameters);
+    this.parameters.clear();
+    this.parameters.addAll(copy);
+  }
+
+  /**
+   * Replaces genericParameters with a defensive copy; the DTO retains its own mutable collection.
+   *
+   * @param genericParameters the replacement collection (not null)
+   * @throws NullPointerException if genericParameters is null
+   */
+  public void setGenericParameters(List<GenericParameterDto> genericParameters) {
+    List<GenericParameterDto> copy = new ArrayList<>(genericParameters);
+    this.genericParameters.clear();
+    this.genericParameters.addAll(copy);
+  }
+
+  /**
+   * Replaces annotations with a defensive copy; the DTO retains its own mutable collection.
+   *
+   * @param annotations the replacement collection (not null)
+   * @throws NullPointerException if annotations is null
+   */
+  public void setAnnotations(List<AnnotationDto> annotations) {
+    List<AnnotationDto> copy = new ArrayList<>(annotations);
+    this.annotations.clear();
+    this.annotations.addAll(copy);
+  }
+
   /** Access modifier for method. */
   private Optional<AccessModifier> modifier = Optional.empty();
 
@@ -124,6 +162,19 @@ public class MethodDto {
    */
   public MethodCodeDto getMethodCodeDto() {
     return methodCodeDto;
+  }
+
+  /**
+   * Copies the structured method body into this DTO's own code template.
+   *
+   * @param code the structured method body (not null)
+   * @throws NullPointerException if code is null
+   */
+  public void setMethodCodeDto(MethodCodeDto code) {
+    Objects.requireNonNull(code, "code");
+    methodCodeDto.setCodeFormat(code.getCodeFormat());
+    methodCodeDto.setCodeArguments(code.getCodeArguments());
+    methodCodeDto.setCodeBlockImports(code.getCodeBlockImports());
   }
 
   /**

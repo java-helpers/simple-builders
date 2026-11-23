@@ -30,9 +30,9 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  * 
  * <pre>{@code
  * PersonDto result = PersonDtoBuilder.create()
- *     .name("example value")
+ *     .name("example name")
  *     .name("Hello %s", "World")
- *     .name(() -> "example value")
+ *     .name(() -> "example name")
  *     .name(sb -> sb.append("text"))
  *     .nameUpdate(String::trim)
  *     .birthdate(LocalDate.now())
@@ -41,15 +41,15 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  *     .mannschaft(new MannschaftDto())
  *     .mannschaft(MannschaftDto::new)
  *     .mannschaft(mannschaftDtoBuilder -> mannschaftDtoBuilder)
- *     .nickNames(List.of("example value"))
- *     .nickNames(() -> List.of("example value"))
- *     .nickNames(t -> t.add("example value"))
- *     .nickNames("example value", "example value")
+ *     .nickNames(List.of("example nickNames"))
+ *     .nickNames(() -> List.of("example nickNames"))
+ *     .nickNames(t -> t.add("example nickNames"))
+ *     .nickNames("example nickNames", "example nickNames")
  *     .nickNamesUpdate(list -> list.stream().sorted().toList())
- *     .add2NickNames("example value")
- *     .nickNames2(new String[]{"example value"})
- *     .nickNames2(() -> new String[]{"example value"})
- *     .nickNames2("example value")
+ *     .add2NickNames("example nickNames")
+ *     .nickNames2(new String[]{"example nickNames2"})
+ *     .nickNames2(() -> new String[]{"example nickNames2"})
+ *     .nickNames2("example nickNames2")
  *     .build();
  * }</pre>
  */
@@ -286,7 +286,7 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.name(() -> "example value");
+   * builder.name(() -> "example name");
    * }</pre>
    * 
    * @param nameSupplier supplier for name
@@ -326,7 +326,7 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.name("example value");
+   * builder.name("example name");
    * }</pre>
    * 
    * @param name name
@@ -348,7 +348,7 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.name("example value").nameUpdate(String::trim);
+   * builder.name("example name").nameUpdate(String::trim);
    * }</pre>
    * 
    * @param nameUpdater operator applied to the current value; its result becomes the new value
@@ -371,7 +371,7 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.add2NickNames("example value");
+   * builder.add2NickNames("example nickNames");
    * }</pre>
    * 
    * @param element the element to add
@@ -397,7 +397,7 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.nickNames("example value", "example value");
+   * builder.nickNames("example nickNames", "example nickNames");
    * }</pre>
    * 
    * @param nickNames nickNames
@@ -416,7 +416,7 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.nickNames(t -> t.add("example value"));
+   * builder.nickNames(t -> t.add("example nickNames"));
    * }</pre>
    * 
    * @param nickNamesBuilderConsumer consumer providing an instance of a builder for nickNames
@@ -439,7 +439,7 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.nickNames(() -> List.of("example value"));
+   * builder.nickNames(() -> List.of("example nickNames"));
    * }</pre>
    * 
    * @param nickNamesSupplier supplier for nickNames
@@ -458,7 +458,7 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.nickNames(List.of("example value"));
+   * builder.nickNames(List.of("example nickNames"));
    * }</pre>
    * 
    * @param nickNames nickNames
@@ -480,7 +480,7 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.nickNames(List.of("example value")).nickNamesUpdate(list -> list.stream().sorted().toList());
+   * builder.nickNames(List.of("example nickNames")).nickNamesUpdate(list -> list.stream().sorted().toList());
    * }</pre>
    * 
    * @param nickNamesUpdater operator applied to the current value; its result becomes the new value
@@ -503,7 +503,7 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.nickNames2("example value");
+   * builder.nickNames2("example nickNames2");
    * }</pre>
    * 
    * @param nickNames2 nickNames2
@@ -542,7 +542,7 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.nickNames2(() -> new String[]{"example value"});
+   * builder.nickNames2(() -> new String[]{"example nickNames2"});
    * }</pre>
    * 
    * @param nickNames2Supplier supplier for nickNames2
@@ -561,7 +561,7 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.nickNames2(new String[]{"example value"});
+   * builder.nickNames2(new String[]{"example nickNames2"});
    * }</pre>
    * 
    * @param nickNames2 nickNames2

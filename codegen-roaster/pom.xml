@@ -145,6 +145,12 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>${plugin.maven.surefire.version}</version>
+        <configuration>
+          <!-- Run the shared generator conformance suite packaged in codegen-testing -->
+          <dependenciesToScan>
+            <dependency>io.github.java-helpers.codegen:codegen-testing</dependency>
+          </dependenciesToScan>
+        </configuration>
       </plugin>
 
       <plugin>

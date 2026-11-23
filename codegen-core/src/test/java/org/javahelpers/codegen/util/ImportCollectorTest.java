@@ -33,11 +33,15 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.javahelpers.codegen.model.core.ClassFieldDto;
+import org.javahelpers.codegen.model.core.ClassFieldDtoBuilder;
 import org.javahelpers.codegen.model.core.GenerationTargetClassDto;
+import org.javahelpers.codegen.model.core.GenerationTargetClassDtoBuilder;
 import org.javahelpers.codegen.model.imports.ImportStatement;
 import org.javahelpers.codegen.model.method.CodeTemplateDto;
 import org.javahelpers.codegen.model.method.MethodDto;
+import org.javahelpers.codegen.model.method.MethodDtoBuilder;
 import org.javahelpers.codegen.model.method.MethodParameterDto;
+import org.javahelpers.codegen.model.method.MethodParameterDtoBuilder;
 import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.codegen.model.type.TypeNameGeneric;
 import org.javahelpers.codegen.model.type.TypeNameWildcard;
@@ -94,16 +98,11 @@ class ImportCollectorTest {
   }
 
   private static GenerationTargetClassDto classDef(String pkg, String name) {
-    GenerationTargetClassDto classDef = new GenerationTargetClassDto();
-    classDef.setTypeName(new TypeName(pkg, name));
-    return classDef;
+    return GenerationTargetClassDtoBuilder.create().typeName(new TypeName(pkg, name)).build();
   }
 
   private static ClassFieldDto field(String name, String pkg, String type) {
-    ClassFieldDto field = new ClassFieldDto();
-    field.setFieldName(name);
-    field.setFieldType(new TypeName(pkg, type));
-    return field;
+    return ClassFieldDtoBuilder.create().fieldName(name).fieldType(new TypeName(pkg, type)).build();
   }
 
   @Test
@@ -141,10 +140,16 @@ class ImportCollectorTest {
     GenerationTargetClassDto classDef = classDef("com.example", "Dto");
     classDef.addClassField(field("mapping", "com.example", "StringIntegerMap"));
 
-    MethodDto method = new MethodDto("values", new TypeName("java.util", "Collection"));
-    MethodParameterDto param = new MethodParameterDto();
-    param.setParameterName("key");
-    param.setParameterTypeName(new TypeName("com.other", "KeyDto"));
+    MethodDto method =
+        MethodDtoBuilder.create()
+            .methodName("values")
+            .returnType(new TypeName("java.util", "Collection"))
+            .build();
+    MethodParameterDto param =
+        MethodParameterDtoBuilder.create()
+            .parameterName("key")
+            .parameterTypeName(new TypeName("com.other", "KeyDto"))
+            .build();
     method.addParameter(param);
     classDef.addMethod(method);
 

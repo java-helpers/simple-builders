@@ -102,15 +102,15 @@ class BuilderJavadocExampleTest {
         *     .pages(42)
         *     .pages(() -> 42)
         *     .pagesUpdate(Math::abs)
-        *     .tags(List.of("example value"))
-        *     .tags(() -> List.of("example value"))
-        *     .tags(t -> t.add("example value"))
-        *     .tags("example value", "example value")
+        *     .tags(List.of("example tags"))
+        *     .tags(() -> List.of("example tags"))
+        *     .tags(t -> t.add("example tags"))
+        *     .tags("example tags", "example tags")
         *     .tagsUpdate(list -> list.stream().sorted().toList())
-        *     .add2Tags("example value")
-        *     .title("example value")
+        *     .add2Tags("example tags")
+        *     .title("example title")
         *     .title("Hello %s", "World")
-        *     .title(() -> "example value")
+        *     .title(() -> "example title")
         *     .title(sb -> sb.append("text"))
         *     .titleUpdate(String::trim)
         *     .build();
@@ -147,7 +147,7 @@ class BuilderJavadocExampleTest {
             * <h4>Example:</h4>
             *
             * <pre>{@code
-            * builder.teamname("example value");
+            * builder.teamname("example teamname");
             * }</pre>
             *
             * @param teamname teamname
@@ -189,7 +189,7 @@ class BuilderJavadocExampleTest {
             * <h4>Example:</h4>
             *
             * <pre>{@code
-            * builder.title(() -> "example value");
+            * builder.title(() -> "example title");
             * }</pre>
             """),
         Arguments.of(
@@ -207,7 +207,7 @@ class BuilderJavadocExampleTest {
             * <h4>Example:</h4>
             *
             * <pre>{@code
-            * builder.add2Tags("example value");
+            * builder.add2Tags("example tags");
             * }</pre>
             *
             * @param element the element to add
@@ -226,7 +226,7 @@ class BuilderJavadocExampleTest {
             * <h4>Example:</h4>
             *
             * <pre>{@code
-            * builder.tags(t -> t.add("example value"));
+            * builder.tags(t -> t.add("example tags"));
             * }</pre>
             """),
         Arguments.of(
@@ -268,7 +268,7 @@ class BuilderJavadocExampleTest {
             * <h4>Example:</h4>
             *
             * <pre>{@code
-            * builder.values(Map.of("example value", 42));
+            * builder.values(Map.of("example values", 42));
             * }</pre>
             """),
         Arguments.of(
@@ -282,7 +282,7 @@ class BuilderJavadocExampleTest {
             * <h4>Example:</h4>
             *
             * <pre>{@code
-            * builder.values(Map.of(42, "example value"));
+            * builder.values(Map.of(42, "example values"));
             * }</pre>
             """),
         Arguments.of(
@@ -296,7 +296,7 @@ class BuilderJavadocExampleTest {
             * <h4>Example:</h4>
             *
             * <pre>{@code
-            * builder.subtitle(Optional.of("example value"));
+            * builder.subtitle(Optional.of("example subtitle"));
             * }</pre>
             """));
   }
@@ -392,9 +392,9 @@ class BuilderJavadocExampleTest {
         """
         * <pre>{@code
         * MixedDto result = MixedDtoBuilder.create()
-        *     .title("example value")
+        *     .title("example title")
         *     .title("Hello %s", "World")
-        *     .title(() -> "example value")
+        *     .title(() -> "example title")
         *     .title(sb -> sb.append("text"))
         *     .titleUpdate(String::trim)
         *     .build();

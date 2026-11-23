@@ -148,7 +148,7 @@ public class ArrayConversionGenerator implements MethodGenerator {
             .addReturn(JavadocConstants.RETURN_BUILDER_INSTANCE));
 
     // Add example fragment for array conversion method
-    addExampleChainFragment(methodDto, elementType, context::resolveBuilderType);
+    addExampleChainFragment(methodDto, elementType, fieldName, context::resolveBuilderType);
 
     return methodDto;
   }

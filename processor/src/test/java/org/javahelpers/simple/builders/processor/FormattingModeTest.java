@@ -122,9 +122,9 @@ class FormattingModeTest {
          *
          * <h4>Example:</h4><pre>{@code
          * FormatTestDto result = FormatTestDtoBuilder.create()
-         *     .name("example value")
+         *     .name("example name")
          *     .name("Hello %s", "World")
-         *     .name(() -> "example value")
+         *     .name(() -> "example name")
          *     .name(sb -> sb.append("text"))
          *     .nameUpdate(String::trim)
          *     .count(42)
@@ -246,7 +246,7 @@ class FormattingModeTest {
            * <p>Generated from parameter in constructor {@link FormatTestDto#FormatTestDto(String, int) FormatTestDto(String name, int count)}
            *
            * <h4>Example:</h4><pre>{@code
-           * builder.name(() -> "example value");
+           * builder.name(() -> "example name");
            * }</pre>
            * @param nameSupplier supplier for name
            * @return current instance of builder
@@ -278,7 +278,7 @@ class FormattingModeTest {
            * <p>Generated from parameter in constructor {@link FormatTestDto#FormatTestDto(String, int) FormatTestDto(String name, int count)}
            *
            * <h4>Example:</h4><pre>{@code
-           * builder.name("example value");
+           * builder.name("example name");
            * }</pre>
            * @param name name
            * @return current instance of builder
@@ -295,7 +295,7 @@ class FormattingModeTest {
            * <p>Generated from parameter in constructor {@link FormatTestDto#FormatTestDto(String, int) FormatTestDto(String name, int count)}
            *
            * <h4>Example:</h4><pre>{@code
-           * builder.name("example value").nameUpdate(String::trim);
+           * builder.name("example name").nameUpdate(String::trim);
            * }</pre>
            * @param nameUpdater operator applied to the current value; its result becomes the new value
            * @return current instance of builder

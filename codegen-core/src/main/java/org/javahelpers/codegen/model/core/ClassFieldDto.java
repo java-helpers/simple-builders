@@ -46,6 +46,19 @@ import org.javahelpers.codegen.model.type.TypeNameWildcard;
  * <p>This DTO contains only rendering information for a field, consumed by the code generator.
  */
 public class ClassFieldDto {
+
+  /**
+   * Replaces fieldTypeImports with a defensive copy; the DTO retains its own mutable collection.
+   *
+   * @param fieldTypeImports the replacement collection (not null)
+   * @throws NullPointerException if fieldTypeImports is null
+   */
+  public void setFieldTypeImports(Set<ImportStatement> fieldTypeImports) {
+    Set<ImportStatement> copy = new LinkedHashSet<>(fieldTypeImports);
+    this.fieldTypeImports.clear();
+    this.fieldTypeImports.addAll(copy);
+  }
+
   /** Field name in generated class. */
   private String fieldName;
 

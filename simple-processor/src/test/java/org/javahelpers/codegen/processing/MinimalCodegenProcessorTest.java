@@ -54,8 +54,11 @@ import org.javahelpers.codegen.enums.AccessModifier;
 import org.javahelpers.codegen.enums.FormattingMode;
 import org.javahelpers.codegen.logging.ProcessingLogger;
 import org.javahelpers.codegen.model.core.ClassFieldDto;
+import org.javahelpers.codegen.model.core.ClassFieldDtoBuilder;
 import org.javahelpers.codegen.model.core.GenerationTargetClassDto;
+import org.javahelpers.codegen.model.core.GenerationTargetClassDtoBuilder;
 import org.javahelpers.codegen.model.method.MethodDto;
+import org.javahelpers.codegen.model.method.MethodDtoBuilder;
 import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.codegen.testing.CodegenTestUtils;
 import org.junit.jupiter.api.Test;
@@ -147,36 +150,48 @@ public class MinimalCodegenProcessorTest {
         MinimalTargetDefinition definition,
         CodegenConfiguration configuration,
         AnnotationProcessingContext ctx) {
-      GenerationTargetClassDto target = new GenerationTargetClassDto();
-      target.setTypeName(definition.builderTypeName());
-      target.setClassAccessModifier(AccessModifier.PUBLIC);
-      target.setFormattingMode(FormattingMode.NONE);
+      GenerationTargetClassDto target =
+          GenerationTargetClassDtoBuilder.create()
+              .typeName(definition.builderTypeName())
+              .classAccessModifier(AccessModifier.PUBLIC)
+              .formattingMode(FormattingMode.NONE)
+              .build();
 
-      ClassFieldDto field = new ClassFieldDto();
-      field.setFieldName("target");
-      field.setFieldType(definition.sourceTypeName());
-      field.setVisibility(AccessModifier.PRIVATE);
-      field.setLiteralInitializer("new " + definition.sourceTypeName().getClassName() + "()");
+      ClassFieldDto field =
+          ClassFieldDtoBuilder.create()
+              .fieldName("target")
+              .fieldType(definition.sourceTypeName())
+              .visibility(AccessModifier.PRIVATE)
+              .literalInitializer("new " + definition.sourceTypeName().getClassName() + "()")
+              .build();
       target.addClassField(field);
 
       for (ExecutableElement setter : definition.setters()) {
         String setterName = setter.getSimpleName().toString();
         String methodName = StringUtils.uncapitalize(Strings.CI.removeStart(setterName, "set"));
-        MethodDto method = new MethodDto(methodName, definition.builderTypeName());
-        method.setModifier(AccessModifier.PUBLIC);
+        MethodDto method =
+            MethodDtoBuilder.create()
+                .methodName(methodName)
+                .returnType(definition.builderTypeName())
+                .modifier(AccessModifier.PUBLIC)
+                .code(
+                    """
+                    target.$setterName:N($paramName:N);
+                    return this;""")
+                .build();
         String paramName = setter.getParameters().get(0).getSimpleName().toString();
         method.addParameter(JavaLangMapper.map2MethodParameter(setter.getParameters().get(0), ctx));
-        method.setCode(
-            """
-            target.$setterName:N($paramName:N);
-            return this;""");
         method.addArgument("setterName", setterName);
         method.addArgument("paramName", paramName);
         target.addMethod(method);
       }
-      MethodDto build = new MethodDto("build", definition.sourceTypeName());
-      build.setModifier(AccessModifier.PUBLIC);
-      build.setCode("return target;");
+      MethodDto build =
+          MethodDtoBuilder.create()
+              .methodName("build")
+              .returnType(definition.sourceTypeName())
+              .modifier(AccessModifier.PUBLIC)
+              .code("return target;")
+              .build();
       target.addMethod(build);
       return target;
     }

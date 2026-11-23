@@ -39,6 +39,31 @@ import org.javahelpers.codegen.model.javadoc.JavadocDto;
  * <p>This DTO contains all information needed to render a constructor in the generated class.
  */
 public class ConstructorDto {
+
+  /**
+   * Replaces parameters with a defensive copy; the DTO retains its own mutable collection.
+   *
+   * @param parameters the replacement collection (not null)
+   * @throws NullPointerException if parameters is null
+   */
+  public void setParameters(List<MethodParameterDto> parameters) {
+    List<MethodParameterDto> copy = new ArrayList<>(parameters);
+    this.parameters.clear();
+    this.parameters.addAll(copy);
+  }
+
+  /**
+   * Replaces annotations with a defensive copy; the DTO retains its own mutable collection.
+   *
+   * @param annotations the replacement collection (not null)
+   * @throws NullPointerException if annotations is null
+   */
+  public void setAnnotations(List<AnnotationDto> annotations) {
+    List<AnnotationDto> copy = new ArrayList<>(annotations);
+    this.annotations.clear();
+    this.annotations.addAll(copy);
+  }
+
   /** Constructor parameters. */
   private final LinkedList<MethodParameterDto> parameters = new LinkedList<>();
 

@@ -26,17 +26,17 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  * 
  * <pre>{@code
  * ProductWithDefaults result = ProductWithDefaultsBuilder.create()
- *     .name("example value")
+ *     .name("example name")
  *     .name("Hello %s", "World")
- *     .name(() -> "example value")
+ *     .name(() -> "example name")
  *     .name(sb -> sb.append("text"))
  *     .nameUpdate(String::trim)
  *     .price(3.14)
  *     .price(() -> 3.14)
  *     .priceUpdate(Math::abs)
- *     .category("example value")
+ *     .category("example category")
  *     .category("Hello %s", "World")
- *     .category(() -> "example value")
+ *     .category(() -> "example category")
  *     .category(sb -> sb.append("text"))
  *     .categoryUpdate(String::trim)
  *     .active(true)
@@ -202,7 +202,7 @@ public class ProductWithDefaultsBuilder implements IBuilderBase<ProductWithDefau
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.category(() -> "example value");
+   * builder.category(() -> "example category");
    * }</pre>
    * 
    * @param categorySupplier supplier for category
@@ -246,7 +246,7 @@ public class ProductWithDefaultsBuilder implements IBuilderBase<ProductWithDefau
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.category("example value");
+   * builder.category("example category");
    * }</pre>
    * 
    * @param category category
@@ -270,7 +270,7 @@ public class ProductWithDefaultsBuilder implements IBuilderBase<ProductWithDefau
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.category("example value").categoryUpdate(String::trim);
+   * builder.category("example category").categoryUpdate(String::trim);
    * }</pre>
    * 
    * @param categoryUpdater operator applied to the current value; its result becomes the new value
@@ -318,7 +318,7 @@ public class ProductWithDefaultsBuilder implements IBuilderBase<ProductWithDefau
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.name(() -> "example value");
+   * builder.name(() -> "example name");
    * }</pre>
    * 
    * @param nameSupplier supplier for name
@@ -362,7 +362,7 @@ public class ProductWithDefaultsBuilder implements IBuilderBase<ProductWithDefau
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.name("example value");
+   * builder.name("example name");
    * }</pre>
    * 
    * @param name name
@@ -386,7 +386,7 @@ public class ProductWithDefaultsBuilder implements IBuilderBase<ProductWithDefau
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.name("example value").nameUpdate(String::trim);
+   * builder.name("example name").nameUpdate(String::trim);
    * }</pre>
    * 
    * @param nameUpdater operator applied to the current value; its result becomes the new value

@@ -88,6 +88,10 @@ public class ImportCollector {
     type.getAnnotations().forEach(this::addAnnotationImports);
 
     // Adding the type
+    if (type instanceof TypeNameWildcard wildcard) {
+      wildcard.getBound().ifPresent(this::addTypeImports);
+      return this;
+    }
     addImport(type);
 
     return this;

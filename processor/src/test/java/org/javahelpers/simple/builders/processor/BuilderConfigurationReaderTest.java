@@ -487,8 +487,8 @@ class BuilderConfigurationReaderTest {
          *
          * <pre>{@code
         * PersonDto result = PersonDtoMinimalBuilder.create()
-        *     .withName("example value")
-        *     .withTags(List.of("example value"))
+        *     .withName("example name")
+        *     .withTags(List.of("example tags"))
         *     .build();
         * }</pre>
          */
@@ -542,7 +542,7 @@ class BuilderConfigurationReaderTest {
            * <h4>Example:</h4>
            *
            * <pre>{@code
-           * builder.withName("example value");
+           * builder.withName("example name");
            * }</pre>
            *
            * @param name name
@@ -561,7 +561,7 @@ class BuilderConfigurationReaderTest {
            * <h4>Example:</h4>
            *
            * <pre>{@code
-           * builder.withTags(List.of("example value"));
+           * builder.withTags(List.of("example tags"));
            * }</pre>
            *
            * @param tags tags

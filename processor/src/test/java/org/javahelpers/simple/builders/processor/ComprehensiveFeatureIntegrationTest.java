@@ -114,34 +114,34 @@ class ComprehensiveFeatureIntegrationTest {
          *
          * <pre>{@code
          * PersonDto result = PersonDtoBuilder.create()
-         *     .name("example value")
+         *     .name("example name")
          *     .name("Hello %s", "World")
-         *     .name(() -> "example value")
+         *     .name(() -> "example name")
          *     .name(sb -> sb.append("text"))
          *     .nameUpdate(String::trim)
          *     .age(42)
          *     .age(() -> 42)
          *     .ageUpdate(Math::abs)
-         *     .email(Optional.of("example value"))
+         *     .email(Optional.of("example email"))
          *     .email("Hello %s", "World")
-         *     .email("example value")
-         *     .email(() -> Optional.of("example value"))
+         *     .email("example email")
+         *     .email(() -> Optional.of("example email"))
          *     .email(sb -> sb.append("text"))
-         *     .nicknames(List.of("example value"))
-         *     .nicknames(() -> List.of("example value"))
-         *     .nicknames(t -> t.add("example value"))
-         *     .nicknames("example value", "example value")
+         *     .nicknames(List.of("example nicknames"))
+         *     .nicknames(() -> List.of("example nicknames"))
+         *     .nicknames(t -> t.add("example nicknames"))
+         *     .nicknames("example nicknames", "example nicknames")
          *     .nicknamesUpdate(list -> list.stream().sorted().toList())
-         *     .add2Nicknames("example value")
-         *     .tags(Set.of("example value"))
-         *     .tags(() -> Set.of("example value"))
-         *     .tags(t -> t.add("example value"))
-         *     .tags("example value", "example value")
+         *     .add2Nicknames("example nicknames")
+         *     .tags(Set.of("example tags"))
+         *     .tags(() -> Set.of("example tags"))
+         *     .tags(t -> t.add("example tags"))
+         *     .tags("example tags", "example tags")
          *     .tagsUpdate(TreeSet::new)
-         *     .add2Tags("example value")
-         *     .metadata(Map.of("example value", "example value"))
-         *     .metadata(() -> Map.of("example value", "example value"))
-         *     .metadata(Map.entry("key", "example value"))
+         *     .add2Tags("example tags")
+         *     .metadata(Map.of("example metadata", "example metadata"))
+         *     .metadata(() -> Map.of("example metadata", "example metadata"))
+         *     .metadata(Map.entry("key", "example metadata"))
          *     .metadataUpdate(Map::copyOf)
          *     .address(AddressDtoBuilder.create().build())
          *     .address(() -> AddressDtoBuilder.create().build())
@@ -152,12 +152,12 @@ class ComprehensiveFeatureIntegrationTest {
          *     .previousAddresses(AddressDtoBuilder.create().build(), AddressDtoBuilder.create().build())
          *     .previousAddressesUpdate(list -> list.stream().sorted().toList())
          *     .add2PreviousAddresses(AddressDtoBuilder.create().build())
-         *     .phoneNumbers(List.of("example value"))
-         *     .phoneNumbers(() -> List.of("example value"))
-         *     .phoneNumbers(t -> t.add("example value"))
-         *     .phoneNumbers("example value", "example value")
+         *     .phoneNumbers(List.of("example phoneNumbers"))
+         *     .phoneNumbers(() -> List.of("example phoneNumbers"))
+         *     .phoneNumbers(t -> t.add("example phoneNumbers"))
+         *     .phoneNumbers("example phoneNumbers", "example phoneNumbers")
          *     .phoneNumbersUpdate(list -> new LinkedList<>(list.stream().sorted().toList()))
-         *     .add2PhoneNumbers("example value")
+         *     .add2PhoneNumbers("example phoneNumbers")
          *     .build();
          * }</pre>
          */
@@ -418,7 +418,7 @@ class ComprehensiveFeatureIntegrationTest {
            * <h4>Example:</h4>
            *
            * <pre>{@code
-           * builder.email("example value");
+           * builder.email("example email");
            * }</pre>
            *
            * @param email email
@@ -464,7 +464,7 @@ class ComprehensiveFeatureIntegrationTest {
            * <h4>Example:</h4>
            *
            * <pre>{@code
-           * builder.email(() -> Optional.of("example value"));
+           * builder.email(() -> Optional.of("example email"));
            * }</pre>
            *
            * @param emailSupplier supplier for email
@@ -510,7 +510,7 @@ class ComprehensiveFeatureIntegrationTest {
            * <h4>Example:</h4>
            *
            * <pre>{@code
-           * builder.email(Optional.of("example value"));
+           * builder.email(Optional.of("example email"));
            * }</pre>
            *
            * @param email email
@@ -555,7 +555,7 @@ class ComprehensiveFeatureIntegrationTest {
            * <h4>Example:</h4>
            *
            * <pre>{@code
-           * builder.metadata(Map.entry("key", "example value"));
+           * builder.metadata(Map.entry("key", "example metadata"));
            * }</pre>
            *
            * @param metadata metadata
@@ -597,7 +597,7 @@ class ComprehensiveFeatureIntegrationTest {
            * <h4>Example:</h4>
            *
            * <pre>{@code
-           * builder.metadata(() -> Map.of("example value", "example value"));
+           * builder.metadata(() -> Map.of("example metadata", "example metadata"));
            * }</pre>
            *
            * @param metadataSupplier supplier for metadata
@@ -619,7 +619,7 @@ class ComprehensiveFeatureIntegrationTest {
            * <h4>Example:</h4>
            *
            * <pre>{@code
-           * builder.metadata(Map.of("example value", "example value"));
+           * builder.metadata(Map.of("example metadata", "example metadata"));
            * }</pre>
            *
            * @param metadata metadata
@@ -644,7 +644,7 @@ class ComprehensiveFeatureIntegrationTest {
            * <h4>Example:</h4>
            *
            * <pre>{@code
-           * builder.metadata(Map.of("example value", "example value")).metadataUpdate(Map::copyOf);
+           * builder.metadata(Map.of("example metadata", "example metadata")).metadataUpdate(Map::copyOf);
            * }</pre>
            *
            * @param metadataUpdater operator applied to the current value; its result becomes the new value
@@ -694,7 +694,7 @@ class ComprehensiveFeatureIntegrationTest {
            * <h4>Example:</h4>
            *
            * <pre>{@code
-           * builder.name(() -> "example value");
+           * builder.name(() -> "example name");
            * }</pre>
            *
            * @param nameSupplier supplier for name
@@ -740,7 +740,7 @@ class ComprehensiveFeatureIntegrationTest {
            * <h4>Example:</h4>
            *
            * <pre>{@code
-           * builder.name("example value");
+           * builder.name("example name");
            * }</pre>
            *
            * @param name name
@@ -765,7 +765,7 @@ class ComprehensiveFeatureIntegrationTest {
            * <h4>Example:</h4>
            *
            * <pre>{@code
-           * builder.name("example value").nameUpdate(String::trim);
+           * builder.name("example name").nameUpdate(String::trim);
            * }</pre>
            *
            * @param nameUpdater operator applied to the current value; its result becomes the new value
@@ -791,7 +791,7 @@ class ComprehensiveFeatureIntegrationTest {
            * <h4>Example:</h4>
            *
            * <pre>{@code
-           * builder.add2Nicknames("example value");
+           * builder.add2Nicknames("example nicknames");
            * }</pre>
            *
            * @param element the element to add
@@ -820,7 +820,7 @@ class ComprehensiveFeatureIntegrationTest {
            * <h4>Example:</h4>
            *
            * <pre>{@code
-           * builder.nicknames("example value", "example value");
+           * builder.nicknames("example nicknames", "example nicknames");
            * }</pre>
            *
            * @param nicknames nicknames
@@ -842,7 +842,7 @@ class ComprehensiveFeatureIntegrationTest {
            * <h4>Example:</h4>
            *
            * <pre>{@code
-           * builder.nicknames(t -> t.add("example value"));
+           * builder.nicknames(t -> t.add("example nicknames"));
            * }</pre>
            *
            * @param nicknamesBuilderConsumer consumer providing an instance of a builder for nicknames
@@ -868,7 +868,7 @@ class ComprehensiveFeatureIntegrationTest {
            * <h4>Example:</h4>
            *
            * <pre>{@code
-           * builder.nicknames(() -> List.of("example value"));
+           * builder.nicknames(() -> List.of("example nicknames"));
            * }</pre>
            *
            * @param nicknamesSupplier supplier for nicknames
@@ -890,7 +890,7 @@ class ComprehensiveFeatureIntegrationTest {
            * <h4>Example:</h4>
            *
            * <pre>{@code
-           * builder.nicknames(List.of("example value"));
+           * builder.nicknames(List.of("example nicknames"));
            * }</pre>
            *
            * @param nicknames nicknames
@@ -915,7 +915,7 @@ class ComprehensiveFeatureIntegrationTest {
            * <h4>Example:</h4>
            *
            * <pre>{@code
-           * builder.nicknames(List.of("example value")).nicknamesUpdate(list -> list.stream().sorted().toList());
+           * builder.nicknames(List.of("example nicknames")).nicknamesUpdate(list -> list.stream().sorted().toList());
            * }</pre>
            *
            * @param nicknamesUpdater operator applied to the current value; its result becomes the new value
@@ -941,7 +941,7 @@ class ComprehensiveFeatureIntegrationTest {
            * <h4>Example:</h4>
            *
            * <pre>{@code
-           * builder.add2PhoneNumbers("example value");
+           * builder.add2PhoneNumbers("example phoneNumbers");
            * }</pre>
            *
            * @param element the element to add
@@ -970,7 +970,7 @@ class ComprehensiveFeatureIntegrationTest {
            * <h4>Example:</h4>
            *
            * <pre>{@code
-           * builder.phoneNumbers("example value", "example value");
+           * builder.phoneNumbers("example phoneNumbers", "example phoneNumbers");
            * }</pre>
            *
            * @param phoneNumbers phoneNumbers
@@ -992,7 +992,7 @@ class ComprehensiveFeatureIntegrationTest {
            * <h4>Example:</h4>
            *
            * <pre>{@code
-           * builder.phoneNumbers(t -> t.add("example value"));
+           * builder.phoneNumbers(t -> t.add("example phoneNumbers"));
            * }</pre>
            *
            * @param phoneNumbersBuilderConsumer consumer providing an instance of a builder for phoneNumbers
@@ -1018,7 +1018,7 @@ class ComprehensiveFeatureIntegrationTest {
            * <h4>Example:</h4>
            *
            * <pre>{@code
-           * builder.phoneNumbers(() -> List.of("example value"));
+           * builder.phoneNumbers(() -> List.of("example phoneNumbers"));
            * }</pre>
            *
            * @param phoneNumbersSupplier supplier for phoneNumbers
@@ -1040,7 +1040,7 @@ class ComprehensiveFeatureIntegrationTest {
            * <h4>Example:</h4>
            *
            * <pre>{@code
-           * builder.phoneNumbers(List.of("example value"));
+           * builder.phoneNumbers(List.of("example phoneNumbers"));
            * }</pre>
            *
            * @param phoneNumbers phoneNumbers
@@ -1065,7 +1065,7 @@ class ComprehensiveFeatureIntegrationTest {
            * <h4>Example:</h4>
            *
            * <pre>{@code
-           * builder.phoneNumbers(List.of("example value"))
+           * builder.phoneNumbers(List.of("example phoneNumbers"))
            *     .phoneNumbersUpdate(list -> new LinkedList<>(list.stream().sorted().toList()));
            * }</pre>
            *
@@ -1246,7 +1246,7 @@ class ComprehensiveFeatureIntegrationTest {
            * <h4>Example:</h4>
            *
            * <pre>{@code
-           * builder.add2Tags("example value");
+           * builder.add2Tags("example tags");
            * }</pre>
            *
            * @param element the element to add
@@ -1275,7 +1275,7 @@ class ComprehensiveFeatureIntegrationTest {
            * <h4>Example:</h4>
            *
            * <pre>{@code
-           * builder.tags("example value", "example value");
+           * builder.tags("example tags", "example tags");
            * }</pre>
            *
            * @param tags tags
@@ -1297,7 +1297,7 @@ class ComprehensiveFeatureIntegrationTest {
            * <h4>Example:</h4>
            *
            * <pre>{@code
-           * builder.tags(t -> t.add("example value"));
+           * builder.tags(t -> t.add("example tags"));
            * }</pre>
            *
            * @param tagsBuilderConsumer consumer providing an instance of a builder for tags
@@ -1323,7 +1323,7 @@ class ComprehensiveFeatureIntegrationTest {
            * <h4>Example:</h4>
            *
            * <pre>{@code
-           * builder.tags(() -> Set.of("example value"));
+           * builder.tags(() -> Set.of("example tags"));
            * }</pre>
            *
            * @param tagsSupplier supplier for tags
@@ -1345,7 +1345,7 @@ class ComprehensiveFeatureIntegrationTest {
            * <h4>Example:</h4>
            *
            * <pre>{@code
-           * builder.tags(Set.of("example value"));
+           * builder.tags(Set.of("example tags"));
            * }</pre>
            *
            * @param tags tags
@@ -1370,7 +1370,7 @@ class ComprehensiveFeatureIntegrationTest {
            * <h4>Example:</h4>
            *
            * <pre>{@code
-           * builder.tags(Set.of("example value")).tagsUpdate(TreeSet::new);
+           * builder.tags(Set.of("example tags")).tagsUpdate(TreeSet::new);
            * }</pre>
            *
            * @param tagsUpdater operator applied to the current value; its result becomes the new value

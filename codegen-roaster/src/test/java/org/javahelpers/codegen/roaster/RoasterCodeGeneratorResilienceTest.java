@@ -33,11 +33,16 @@ import org.javahelpers.codegen.enums.AccessModifier;
 import org.javahelpers.codegen.enums.FormattingMode;
 import org.javahelpers.codegen.logging.ProcessingLogger;
 import org.javahelpers.codegen.model.core.GenerationTargetClassDto;
+import org.javahelpers.codegen.model.core.GenerationTargetClassDtoBuilder;
 import org.javahelpers.codegen.model.method.ConstructorDto;
+import org.javahelpers.codegen.model.method.ConstructorDtoBuilder;
 import org.javahelpers.codegen.model.method.MethodCodeDto;
+import org.javahelpers.codegen.model.method.MethodCodeDtoBuilder;
 import org.javahelpers.codegen.model.method.MethodCodePlaceholder;
 import org.javahelpers.codegen.model.method.MethodDto;
+import org.javahelpers.codegen.model.method.MethodDtoBuilder;
 import org.javahelpers.codegen.model.method.MethodParameterDto;
+import org.javahelpers.codegen.model.method.MethodParameterDtoBuilder;
 import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.codegen.roaster.exceptions.RoasterMapperException;
 import org.javahelpers.codegen.testing.CapturingProcessingLogger;
@@ -64,17 +69,20 @@ class RoasterCodeGeneratorResilienceTest {
 
   @Test
   void shouldWrapRenderingRuntimeExceptionInCodeGenerationException() {
-    GenerationTargetClassDto classDef = new GenerationTargetClassDto();
-    classDef.setTypeName(new TypeName("com.example", "FailingBuilder"));
-    classDef.setClassAccessModifier(AccessModifier.PUBLIC);
+    GenerationTargetClassDto classDef =
+        GenerationTargetClassDtoBuilder.create()
+            .typeName(new TypeName("com.example", "FailingBuilder"))
+            .classAccessModifier(AccessModifier.PUBLIC)
+            .build();
 
-    MethodCodeDto code = new MethodCodeDto();
-    code.setCodeFormat("return $value:X;");
+    MethodCodeDto code = MethodCodeDtoBuilder.create().codeFormat("return $value:X;").build();
     code.addCodeArgument(new UnsupportedPlaceholder("value", "irrelevant"));
 
-    ConstructorDto constructor = new ConstructorDto();
-    constructor.setVisibility(AccessModifier.PUBLIC);
-    constructor.setMethodCodeDto(code);
+    ConstructorDto constructor =
+        ConstructorDtoBuilder.create()
+            .visibility(AccessModifier.PUBLIC)
+            .methodCodeDto(code)
+            .build();
     classDef.addConstructor(constructor);
 
     ProcessingLogger logger = CapturingProcessingLogger.create().logger();
@@ -97,10 +105,12 @@ class RoasterCodeGeneratorResilienceTest {
    */
   @Test
   void shouldKeepFirstMethodAndWarnOnDuplicateSignature() {
-    GenerationTargetClassDto classDef = new GenerationTargetClassDto();
-    classDef.setTypeName(new TypeName("com.example", "DuplicateSignatureBuilder"));
-    classDef.setClassAccessModifier(AccessModifier.PUBLIC);
-    classDef.setFormattingMode(FormattingMode.NONE);
+    GenerationTargetClassDto classDef =
+        GenerationTargetClassDtoBuilder.create()
+            .typeName(new TypeName("com.example", "DuplicateSignatureBuilder"))
+            .classAccessModifier(AccessModifier.PUBLIC)
+            .formattingMode(FormattingMode.NONE)
+            .build();
     classDef.addMethod(duplicateSignatureMethod("first"));
     classDef.addMethod(duplicateSignatureMethod("second"));
 
@@ -118,13 +128,18 @@ class RoasterCodeGeneratorResilienceTest {
 
   private static MethodDto duplicateSignatureMethod(String marker) {
     MethodDto method =
-        new MethodDto("name", new TypeName("com.example", "DuplicateSignatureBuilder"));
-    method.setModifier(AccessModifier.PUBLIC);
-    MethodParameterDto parameter = new MethodParameterDto();
-    parameter.setParameterName("value");
-    parameter.setParameterTypeName(TypeName.of(String.class));
+        MethodDtoBuilder.create()
+            .methodName("name")
+            .returnType(new TypeName("com.example", "DuplicateSignatureBuilder"))
+            .modifier(AccessModifier.PUBLIC)
+            .code("return this; // " + marker)
+            .build();
+    MethodParameterDto parameter =
+        MethodParameterDtoBuilder.create()
+            .parameterName("value")
+            .parameterTypeName(TypeName.of(String.class))
+            .build();
     method.addParameter(parameter);
-    method.setCode("return this; // " + marker);
     return method;
   }
 }

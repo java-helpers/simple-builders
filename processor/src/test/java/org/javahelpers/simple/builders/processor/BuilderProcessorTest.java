@@ -27,6 +27,7 @@ import static com.google.testing.compile.CompilationSubject.assertThat;
 import static org.javahelpers.codegen.testing.ProcessorAsserts.contains;
 import static org.javahelpers.codegen.testing.ProcessorAsserts.notContains;
 import static org.javahelpers.simple.builders.processor.testing.BuilderAsserts.assertGenerationSucceeded;
+import static org.javahelpers.simple.builders.processor.testing.BuilderAsserts.assertNoBuilderGenerated;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils.loadGeneratedSource;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -238,6 +239,147 @@ class BuilderProcessorTest {
     assertThat(compilation).succeeded();
     assertThat(compilation)
         .hadWarningContaining("The target class for generating a builder should not be abstract");
+  }
+
+  @Test
+  void shouldWarnAndGenerateNoBuilderWhenOnlyConstructorIsPrivate() {
+    // Given: a DTO that is exclusively created through a hand-written builder, so its only
+    // constructor is private
+    JavaFileObject source =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+            @SimpleBuilder
+            public class PersonDto {
+              private String name;
+              private PersonDto(String name) { this.name = name; }
+              public String getName() { return name; }
+              public void setName(String name) { this.name = name; }
+            }
+            """);
+
+    // When
+    Compilation compilation = compile(source);
+
+    // Then: compilation succeeds, but no builder is generated
+    assertThat(compilation).succeeded();
+    assertThat(compilation).hadWarningContaining("No accessible constructor");
+    assertNoBuilderGenerated(
+        compilation, "PersonDto", "A type without accessible constructor must not get a builder");
+  }
+
+  @Test
+  void shouldWarnAndGenerateNoBuilderWhenNoArgConstructorIsPrivate() {
+    // Given: a singleton-style DTO whose only constructor is a private no-arg constructor
+    JavaFileObject source =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+            @SimpleBuilder
+            public class SingletonDto {
+              private String name;
+              private SingletonDto() {}
+              public static SingletonDto getInstance() { return new SingletonDto(); }
+              public String getName() { return name; }
+              public void setName(String name) { this.name = name; }
+            }
+            """);
+
+    // When
+    Compilation compilation = compile(source);
+
+    // Then: compilation succeeds, but no builder is generated
+    assertThat(compilation).succeeded();
+    assertThat(compilation).hadWarningContaining("No accessible constructor");
+    assertNoBuilderGenerated(
+        compilation,
+        "SingletonDto",
+        "A type without accessible constructor must not get a builder");
+  }
+
+  @Test
+  void shouldGenerateBuilderWhenAccessibleConstructorExistsNextToPrivateOne() {
+    // Given: a DTO with a private constructor and an accessible public constructor
+    JavaFileObject source =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+            @SimpleBuilder
+            public class PersonDto {
+              private String name;
+              private PersonDto(String name) { this.name = name; }
+              public PersonDto() {}
+              public String getName() { return name; }
+              public void setName(String name) { this.name = name; }
+            }
+            """);
+
+    // When
+    Compilation compilation = compile(source);
+
+    // Then: the builder is generated using the accessible constructor
+    String generatedCode = loadGeneratedSource(compilation, "PersonDtoBuilder");
+    assertGenerationSucceeded(compilation, "PersonDtoBuilder", generatedCode);
+  }
+
+  @Test
+  void
+      shouldWarnAndGenerateNoBuilderWhenPackagePrivateConstructorIsNotReachableFromGeneratedPackage() {
+    // Given: a DTO with a package-private constructor whose builder is generated into another
+    // package, so the constructor is not reachable from the generated code
+    JavaFileObject source =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+            @SimpleBuilder(options = @SimpleBuilder.Options(packageName = "com.example.generated"))
+            public class WidgetDto {
+              private String name;
+              WidgetDto() {}
+              public String getName() { return name; }
+              public void setName(String name) { this.name = name; }
+            }
+            """);
+
+    // When
+    Compilation compilation = compile(source);
+
+    // Then: compilation succeeds, but no builder is generated
+    assertThat(compilation).succeeded();
+    assertThat(compilation).hadWarningContaining("No accessible constructor");
+    assertNoBuilderGenerated(
+        compilation, "WidgetDto", "A type without accessible constructor must not get a builder");
+  }
+
+  @Test
+  void shouldFailInStrictModeWhenNoAccessibleConstructor() {
+    // Given: a DTO without an accessible constructor, compiled with strict mode enabled
+    JavaFileObject source =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+            @SimpleBuilder
+            public class PersonDto {
+              private String name;
+              private PersonDto(String name) { this.name = name; }
+              public String getName() { return name; }
+              public void setName(String name) { this.name = name; }
+            }
+            """);
+
+    // When
+    Compilation compilation =
+        ProcessorTestUtils.createCompiler()
+            .withOptions("-Asimplebuilder.strict=true")
+            .compile(source);
+
+    // Then: compilation fails with an error
+    assertThat(compilation).failed();
+    assertThat(compilation).hadErrorContaining("No accessible constructor");
   }
 
   @Test

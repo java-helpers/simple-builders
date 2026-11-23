@@ -101,7 +101,14 @@
       <artifactId>commons-collections4</artifactId>
       <version>${commons-collections.version}</version>
     </dependency>
-    
+    <!-- simple-builders runtime types used by the generated builders committed alongside the
+         model DTOs (TrackedValue, IBuilderBase, collection builders) -->
+    <dependency>
+      <groupId>io.github.java-helpers</groupId>
+      <artifactId>simple-builders-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
     <!-- Test Dependencies -->
     <dependency>
       <groupId>org.junit.jupiter</groupId>

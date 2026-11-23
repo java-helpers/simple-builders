@@ -608,7 +608,7 @@ class AnnotationCopyTest {
            * <h4>Example:</h4>
            *
            * <pre>{@code
-           * builder.name("example value");
+           * builder.name("example name");
            * }</pre>
            *
            * @param name name
@@ -630,7 +630,7 @@ class AnnotationCopyTest {
            * <h4>Example:</h4>
            *
            * <pre>{@code
-           * builder.name("example value").nameUpdate(String::trim);
+           * builder.name("example name").nameUpdate(String::trim);
            * }</pre>
            *
            * @param nameUpdater operator applied to the current value; its result becomes the new value

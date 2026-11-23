@@ -80,6 +80,12 @@ jobs:
     - name: Build with Maven
       run: mvn -B install -Pmetrics --file pom.xml
 
+    - name: Check committed codegen DTO builders
+      run: |
+        mvn -B -pl processor -Dtest=CodegenDtoBuilderRegenerationTest -Dcodegen.regenerate=true test
+        mvn -B -pl codegen-core fmt:format
+        git diff --exit-code -- 'codegen-core/src/main/java/**/*Builder.java'
+
     - name: License header check (incl. performance-test)
       run: mvn -B license:check -Pperformance-test --file pom.xml
 

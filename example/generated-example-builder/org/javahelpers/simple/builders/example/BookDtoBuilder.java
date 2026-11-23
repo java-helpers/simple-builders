@@ -25,23 +25,23 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  * 
  * <pre>{@code
  * BookDto result = BookDtoBuilder.create()
- *     .author("example value")
+ *     .author("example author")
  *     .available(true)
  *     .category('x')
  *     .discount(3.14f)
  *     .exactPrice(BigDecimal.valueOf(3.14))
- *     .genres(Set.of("example value"))
- *     .isbn("example value")
+ *     .genres(Set.of("example genres"))
+ *     .isbn("example isbn")
  *     .lastUpdated(LocalDateTime.now())
- *     .metadata(Map.of("example value", "example value"))
+ *     .metadata(Map.of("example metadata", "example metadata"))
  *     .pages(42)
  *     .price(3.14)
  *     .publishDate(LocalDate.now())
  *     .publisher(PersonDtoBuilder.create().build())
  *     .salesCount(42L)
- *     .subtitle(Optional.of("example value"))
- *     .tags(List.of("example value"))
- *     .title("example value")
+ *     .subtitle(Optional.of("example subtitle"))
+ *     .tags(List.of("example tags"))
+ *     .title("example title")
  *     .build();
  * }</pre>
  */
@@ -180,7 +180,7 @@ public class BookDtoBuilder {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.author("example value");
+   * builder.author("example author");
    * }</pre>
    * 
    * @param author the book author to set
@@ -288,7 +288,7 @@ public class BookDtoBuilder {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.genres(Set.of("example value"));
+   * builder.genres(Set.of("example genres"));
    * }</pre>
    * 
    * @param genres the set of genres to set
@@ -307,7 +307,7 @@ public class BookDtoBuilder {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.isbn("example value");
+   * builder.isbn("example isbn");
    * }</pre>
    * 
    * @param isbn the ISBN to set
@@ -345,7 +345,7 @@ public class BookDtoBuilder {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.metadata(Map.of("example value", "example value"));
+   * builder.metadata(Map.of("example metadata", "example metadata"));
    * }</pre>
    * 
    * @param metadata the metadata map to set
@@ -472,7 +472,7 @@ public class BookDtoBuilder {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.subtitle(Optional.of("example value"));
+   * builder.subtitle(Optional.of("example subtitle"));
    * }</pre>
    * 
    * @param subtitle an Optional containing the subtitle to set
@@ -491,7 +491,7 @@ public class BookDtoBuilder {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.tags(List.of("example value"));
+   * builder.tags(List.of("example tags"));
    * }</pre>
    * 
    * @param tags the list of tags to set
@@ -510,7 +510,7 @@ public class BookDtoBuilder {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.title("example value");
+   * builder.title("example title");
    * }</pre>
    * 
    * @param title the book title to set

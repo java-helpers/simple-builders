@@ -61,7 +61,7 @@ class UpdateHelperGeneratorTest {
 
     // Method-level Javadoc examples initialize the field, then update it
     ProcessorAsserts.assertContaining(
-        generated, "builder.name(\"example value\").nameUpdate(String::trim);");
+        generated, "builder.name(\"example name\").nameUpdate(String::trim);");
     ProcessorAsserts.assertContaining(generated, "builder.quantity(42).quantityUpdate(Math::abs);");
 
     // Class-level example chain contains the updater as a separate fragment line
@@ -267,9 +267,9 @@ class UpdateHelperGeneratorTest {
     ProcessorAsserts.assertContaining(generated, "builder.flag(true).flagUpdate(value -> !value);");
     ProcessorAsserts.assertContaining(
         generated,
-        "builder.tags(List.of(\"example value\")).tagsUpdate(list -> list.stream().sorted().toList());");
+        "builder.tags(List.of(\"example tags\")).tagsUpdate(list -> list.stream().sorted().toList());");
     ProcessorAsserts.assertContaining(
-        generated, "builder.title(\"example value\").titleUpdate(String::trim);");
+        generated, "builder.title(\"example title\").titleUpdate(String::trim);");
 
     // No artificial identity fallback anywhere
     ProcessorAsserts.assertNotContaining(generated, "UnaryOperator.identity()");

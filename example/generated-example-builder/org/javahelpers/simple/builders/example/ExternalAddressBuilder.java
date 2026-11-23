@@ -27,19 +27,19 @@ import org.javahelpers.simple.builders.example.external.ExternalAddress;
  * 
  * <pre>{@code
  * ExternalAddress result = ExternalAddressBuilder.create()
- *     .city("example value")
+ *     .city("example city")
  *     .city("Hello %s", "World")
- *     .city(() -> "example value")
+ *     .city(() -> "example city")
  *     .city(sb -> sb.append("text"))
  *     .cityUpdate(String::trim)
- *     .street("example value")
+ *     .street("example street")
  *     .street("Hello %s", "World")
- *     .street(() -> "example value")
+ *     .street(() -> "example street")
  *     .street(sb -> sb.append("text"))
  *     .streetUpdate(String::trim)
- *     .zipCode("example value")
+ *     .zipCode("example zipCode")
  *     .zipCode("Hello %s", "World")
- *     .zipCode(() -> "example value")
+ *     .zipCode(() -> "example zipCode")
  *     .zipCode(sb -> sb.append("text"))
  *     .zipCodeUpdate(String::trim)
  *     .build();
@@ -124,7 +124,7 @@ public class ExternalAddressBuilder implements IBuilderBase<ExternalAddress> {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.city(() -> "example value");
+   * builder.city(() -> "example city");
    * }</pre>
    * 
    * @param citySupplier supplier for city
@@ -164,7 +164,7 @@ public class ExternalAddressBuilder implements IBuilderBase<ExternalAddress> {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.city("example value");
+   * builder.city("example city");
    * }</pre>
    * 
    * @param city city
@@ -186,7 +186,7 @@ public class ExternalAddressBuilder implements IBuilderBase<ExternalAddress> {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.city("example value").cityUpdate(String::trim);
+   * builder.city("example city").cityUpdate(String::trim);
    * }</pre>
    * 
    * @param cityUpdater operator applied to the current value; its result becomes the new value
@@ -230,7 +230,7 @@ public class ExternalAddressBuilder implements IBuilderBase<ExternalAddress> {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.street(() -> "example value");
+   * builder.street(() -> "example street");
    * }</pre>
    * 
    * @param streetSupplier supplier for street
@@ -270,7 +270,7 @@ public class ExternalAddressBuilder implements IBuilderBase<ExternalAddress> {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.street("example value");
+   * builder.street("example street");
    * }</pre>
    * 
    * @param street street
@@ -292,7 +292,7 @@ public class ExternalAddressBuilder implements IBuilderBase<ExternalAddress> {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.street("example value").streetUpdate(String::trim);
+   * builder.street("example street").streetUpdate(String::trim);
    * }</pre>
    * 
    * @param streetUpdater operator applied to the current value; its result becomes the new value
@@ -336,7 +336,7 @@ public class ExternalAddressBuilder implements IBuilderBase<ExternalAddress> {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.zipCode(() -> "example value");
+   * builder.zipCode(() -> "example zipCode");
    * }</pre>
    * 
    * @param zipCodeSupplier supplier for zipCode
@@ -376,7 +376,7 @@ public class ExternalAddressBuilder implements IBuilderBase<ExternalAddress> {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.zipCode("example value");
+   * builder.zipCode("example zipCode");
    * }</pre>
    * 
    * @param zipCode zipCode
@@ -398,7 +398,7 @@ public class ExternalAddressBuilder implements IBuilderBase<ExternalAddress> {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.zipCode("example value").zipCodeUpdate(String::trim);
+   * builder.zipCode("example zipCode").zipCodeUpdate(String::trim);
    * }</pre>
    * 
    * @param zipCodeUpdater operator applied to the current value; its result becomes the new value

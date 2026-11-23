@@ -26,17 +26,17 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  * 
  * <pre>{@code
  * OrderWithDefaults result = OrderWithDefaultsBuilder.create()
- *     .id("example value")
+ *     .id("example id")
  *     .id("Hello %s", "World")
- *     .id(() -> "example value")
+ *     .id(() -> "example id")
  *     .id(sb -> sb.append("text"))
  *     .idUpdate(String::trim)
  *     .priority(42)
  *     .priority(() -> 42)
  *     .priorityUpdate(Math::abs)
- *     .status("example value")
+ *     .status("example status")
  *     .status("Hello %s", "World")
- *     .status(() -> "example value")
+ *     .status(() -> "example status")
  *     .status(sb -> sb.append("text"))
  *     .statusUpdate(String::trim)
  *     .build();
@@ -120,7 +120,7 @@ public class OrderWithDefaultsBuilder implements IBuilderBase<OrderWithDefaults>
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.id(() -> "example value");
+   * builder.id(() -> "example id");
    * }</pre>
    * 
    * @param idSupplier supplier for id
@@ -160,7 +160,7 @@ public class OrderWithDefaultsBuilder implements IBuilderBase<OrderWithDefaults>
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.id("example value");
+   * builder.id("example id");
    * }</pre>
    * 
    * @param id id
@@ -182,7 +182,7 @@ public class OrderWithDefaultsBuilder implements IBuilderBase<OrderWithDefaults>
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.id("example value").idUpdate(String::trim);
+   * builder.id("example id").idUpdate(String::trim);
    * }</pre>
    * 
    * @param idUpdater operator applied to the current value; its result becomes the new value
@@ -290,7 +290,7 @@ public class OrderWithDefaultsBuilder implements IBuilderBase<OrderWithDefaults>
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.status(() -> "example value");
+   * builder.status(() -> "example status");
    * }</pre>
    * 
    * @param statusSupplier supplier for status
@@ -330,7 +330,7 @@ public class OrderWithDefaultsBuilder implements IBuilderBase<OrderWithDefaults>
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.status("example value");
+   * builder.status("example status");
    * }</pre>
    * 
    * @param status status
@@ -352,7 +352,7 @@ public class OrderWithDefaultsBuilder implements IBuilderBase<OrderWithDefaults>
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.status("example value").statusUpdate(String::trim);
+   * builder.status("example status").statusUpdate(String::trim);
    * }</pre>
    * 
    * @param statusUpdater operator applied to the current value; its result becomes the new value

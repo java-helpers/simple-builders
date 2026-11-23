@@ -26,9 +26,9 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  * 
  * <pre>{@code
  * TrustedHelperDto result = TrustedHelperDtoBuilder.create()
- *     .name("example value")
+ *     .name("example name")
  *     .name("Hello %s", "World")
- *     .name(() -> "example value")
+ *     .name(() -> "example name")
  *     .name(sb -> sb.append("text"))
  *     .nameUpdate(String::trim)
  *     .build();
@@ -103,7 +103,7 @@ public class TrustedHelperDtoBuilder implements IBuilderBase<TrustedHelperDto> {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.name(() -> "example value");
+   * builder.name(() -> "example name");
    * }</pre>
    * 
    * @param nameSupplier supplier for name
@@ -143,7 +143,7 @@ public class TrustedHelperDtoBuilder implements IBuilderBase<TrustedHelperDto> {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.name("example value");
+   * builder.name("example name");
    * }</pre>
    * 
    * @param name name
@@ -165,7 +165,7 @@ public class TrustedHelperDtoBuilder implements IBuilderBase<TrustedHelperDto> {
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.name("example value").nameUpdate(String::trim);
+   * builder.name("example name").nameUpdate(String::trim);
    * }</pre>
    * 
    * @param nameUpdater operator applied to the current value; its result becomes the new value

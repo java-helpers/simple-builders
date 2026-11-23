@@ -91,7 +91,7 @@ public class BuilderMethodDto {
 
   /**
    * Fluent-chain fragment describing how this method is invoked in Javadoc examples (e.g., {@code
-   * .title("example value")}). When present, downstream enhancers use it to synthesise the
+   * .title("example title")}). When present, downstream enhancers use it to synthesise the
    * method-level example block (as {@code builder<fragment>;}) and to aggregate the class-level
    * kitchen-sink chain. A {@code null} value means the method should not appear in either example.
    */
@@ -218,7 +218,7 @@ public class BuilderMethodDto {
   }
 
   /**
-   * Returns the fluent-chain fragment for Javadoc examples (e.g. {@code .title("example value")})
+   * Returns the fluent-chain fragment for Javadoc examples (e.g. {@code .title("example title")})
    * or {@code null} if this method should not participate in example generation.
    *
    * @return the fragment or {@code null}
@@ -230,7 +230,7 @@ public class BuilderMethodDto {
   /**
    * Stores the fluent-chain fragment describing how this method is invoked in examples.
    *
-   * <p>The fragment contains just the method invocation, e.g. {@code title("example value")}.
+   * <p>The fragment contains just the method invocation, e.g. {@code title("example title")}.
    * Downstream enhancers synthesise the method-level example block (as {@code builder.<fragment>;})
    * and the class-level kitchen-sink chain from it.
    *
