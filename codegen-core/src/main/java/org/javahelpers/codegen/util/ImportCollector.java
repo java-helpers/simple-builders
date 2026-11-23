@@ -46,6 +46,7 @@ import org.javahelpers.codegen.model.type.GenericParameterDto;
 import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.codegen.model.type.TypeNameArray;
 import org.javahelpers.codegen.model.type.TypeNameGeneric;
+import org.javahelpers.codegen.model.type.TypeNameNested;
 import org.javahelpers.codegen.model.type.TypeNamePrimitive;
 import org.javahelpers.codegen.model.type.TypeNameVariable;
 import org.javahelpers.codegen.model.type.TypeNameWildcard;
@@ -327,8 +328,23 @@ public class ImportCollector {
       return;
     }
 
+    if (type instanceof TypeNameNested nestedType) {
+      addEnclosingTypeArgumentImports(nestedType.getEnclosingType());
+      addImport(new RegularImport(new TypeName(type.getPackageName(), type.getClassName())));
+      return;
+    }
+
     // Add the concrete type
     addImport(new RegularImport(type));
+  }
+
+  private void addEnclosingTypeArgumentImports(TypeName type) {
+    if (type instanceof TypeNameGeneric genericType) {
+      genericType.getInnerTypeArguments().forEach(this::addTypeImports);
+      addEnclosingTypeArgumentImports(genericType.getRawType());
+    } else if (type instanceof TypeNameNested nestedType) {
+      addEnclosingTypeArgumentImports(nestedType.getEnclosingType());
+    }
   }
 
   /**

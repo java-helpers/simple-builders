@@ -23,13 +23,12 @@
  */
 package org.javahelpers.codegen.analysis;
 
-import static javax.lang.model.type.TypeKind.*;
-
 import java.util.ArrayList;
 import java.util.List;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.element.VariableElement;
@@ -176,8 +175,10 @@ public final class JavaLangMapper {
    */
   private static void setEmptyConstructorInfo(
       TypeName typeName, TypeElement typeElement, TypeMappingContext context) {
+    // Non-static inner classes need an enclosing instance, so they are never directly instantiable.
     if (!typeName.hasEmptyConstructor()
         && isConcreteClass(typeElement)
+        && !(isMember(typeElement) && isNotStatic(typeElement))
         && !TypeNameAnalyser.isJavaClass(typeName)
         && JavaLangAnalyser.hasEmptyConstructor(typeElement, context)) {
       typeName.setHasEmptyConstructor(true);
@@ -232,6 +233,23 @@ public final class JavaLangMapper {
       return new TypeNameNested(toTypeName(enclosingType, packageName), simpleName);
     }
     return new TypeName(packageName, simpleName);
+  }
+
+  private static boolean isMember(TypeElement element) {
+    return element.getNestingKind() == NestingKind.MEMBER;
+  }
+
+  private static boolean isNotStatic(TypeElement element) {
+    return !element.getModifiers().contains(Modifier.STATIC);
+  }
+
+  private static TypeName toTypeName(DeclaredType type, TypeMappingContext context) {
+    TypeElement element = (TypeElement) type.asElement();
+    if (isMember(element) && isNotStatic(element)) {
+      return new TypeNameNested(
+          extractType(type.getEnclosingType(), context), element.getSimpleName().toString());
+    }
+    return toTypeName(element, context.getPackageName(element));
   }
 
   /**
@@ -534,31 +552,19 @@ public final class JavaLangMapper {
               @Override
               public TypeName visitDeclared(DeclaredType t, Void p) {
                 TypeElement elementOfParameter = (TypeElement) context.asElement(typeOfParameter);
-                String packageName = context.getPackageName(elementOfParameter);
-                TypeName rawType = toTypeName(elementOfParameter, packageName);
+                TypeName rawType = toTypeName(t, context);
                 if (elementOfParameter.getKind() == ElementKind.ENUM) {
                   rawType.setEnumType(true);
                 }
-                TypeMirror enclosingType = t.getEnclosingType();
-                TypeName enclosing =
-                    (enclosingType.getKind() != NONE)
-                            && !t.asElement().getModifiers().contains(Modifier.STATIC)
-                        ? enclosingType.accept(this, null)
-                        : null;
-                if (t.getTypeArguments().isEmpty() && !(enclosing instanceof TypeNameGeneric)) {
+                List<? extends TypeMirror> typeArguments = t.getTypeArguments();
+                if (typeArguments.isEmpty()) {
                   return wrapInCollectionTypeIfApplicable(
                       rawType, List.of(), typeOfParameter, context);
                 }
-
-                List<TypeMirror> typesExtracted = new ArrayList<>(t.getTypeArguments());
-                if (typesExtracted.isEmpty()) {
-                  return wrapInCollectionTypeIfApplicable(
-                      rawType, List.of(), typeOfParameter, context);
-                } else {
-                  List<TypeName> argTypes = extractTypeForList(typesExtracted, context);
-                  return wrapInCollectionTypeIfApplicable(
-                      rawType, argTypes, typeOfParameter, context);
-                }
+                List<TypeName> argTypes =
+                    extractTypeForList(new ArrayList<>(typeArguments), context);
+                return wrapInCollectionTypeIfApplicable(
+                    rawType, argTypes, typeOfParameter, context);
               }
 
               @Override

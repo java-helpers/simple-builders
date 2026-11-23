@@ -30,6 +30,7 @@ import static org.javahelpers.codegen.testing.ElementTestUtils.typeElement;
 import static org.javahelpers.codegen.testing.ProcessingTestUtils.context;
 import static org.javahelpers.codegen.testing.ProcessingTestUtils.probe;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -416,6 +417,42 @@ class JavaLangMapperTest {
             """);
     assertInstanceOf(TypeNameNested.class, result.get());
     assertEquals("Outer.Inner", result.get().getClassName());
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"Inner", "Inner2<Integer>", "Static<Integer>"})
+  void map2MethodParameter_preservesGenericOwnersAndChecksConstructibility(String member) {
+    AtomicReference<TypeName> result = new AtomicReference<>();
+    String type = member.startsWith("Static") ? "Outer." + member : "Outer<String>." + member;
+    probe(
+        (roundEnv, processingEnv) ->
+            result.set(
+                paramType(
+                    typeElement(processingEnv, "test.Dto"), "setValue", 0, context(processingEnv))),
+        """
+        package test;
+        public class Outer<T> {
+          public class Inner {}
+          public class Inner2<U> {}
+          public static class Static<U> {}
+        }
+        """,
+        """
+        package test;
+        public class Dto {
+          public void setValue(%s value) {}
+        }
+        """
+            .formatted(type));
+    if (member.startsWith("Static")) {
+      assertEquals("test.Outer.Static<java.lang.Integer>", result.get().getFullQualifiedName());
+      assertTrue(result.get().hasEmptyConstructor());
+    } else {
+      assertEquals(
+          "test.Outer<java.lang.String>." + member.replace("Integer", "java.lang.Integer"),
+          result.get().getFullQualifiedName());
+      assertFalse(result.get().hasEmptyConstructor());
+    }
   }
 
   /**

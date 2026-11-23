@@ -46,6 +46,7 @@ import org.javahelpers.codegen.model.type.NestedTypeDto;
 import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.codegen.model.type.TypeNameArray;
 import org.javahelpers.codegen.model.type.TypeNameGeneric;
+import org.javahelpers.codegen.model.type.TypeNameNested;
 import org.javahelpers.codegen.model.type.TypeNamePrimitive;
 import org.javahelpers.codegen.model.type.TypeNameVariable;
 import org.javahelpers.codegen.testing.CodegenTestUtils;
@@ -58,6 +59,46 @@ import org.junit.jupiter.api.Test;
  * ({@link TestingGenerationEnvironment}) and the emitted source is asserted as a whole text block.
  */
 class RoasterCodeGeneratorTest {
+
+  @Test
+  void preservesGenericOwnersAndEarlierAnnotationsWhenParsingParameters() throws Exception {
+    GenerationTargetClassDto classDef = new GenerationTargetClassDto();
+    classDef.setTypeName(new TypeName("test", "Target"));
+    classDef.setClassAccessModifier(AccessModifier.PUBLIC);
+    TypeName owner = new TypeNameGeneric(new TypeName("other", "Outer"), TypeName.of(String.class));
+    TypeName member =
+        new TypeNameGeneric(new TypeNameNested(owner, "Inner"), TypeName.of(Integer.class));
+    MethodDto method = new MethodDto("accept", null);
+    method.setModifier(AccessModifier.PUBLIC);
+    MethodParameterDto first = new MethodParameterDto();
+    first.setParameterName("first");
+    first.setParameterTypeName(TypeName.of(String.class));
+    AnnotationDto deprecated = new AnnotationDto();
+    deprecated.setAnnotationType(TypeName.of(Deprecated.class));
+    first.addAnnotation(deprecated);
+    method.addParameter(first);
+    MethodParameterDto second = new MethodParameterDto();
+    second.setParameterName("second");
+    second.setParameterTypeName(member);
+    method.addParameter(second);
+    MethodParameterDto rest = new MethodParameterDto();
+    rest.setParameterName("rest");
+    rest.setParameterTypeName(new TypeNameArray(member));
+    method.addParameter(rest);
+    classDef.addMethod(method);
+    assertGeneratedSource(
+        """
+        package test;
+        import other.Outer.Inner;
+        public class Target {
+          public void accept(@Deprecated String first,
+              other.Outer<java.lang.String>.Inner<Integer> second,
+              other.Outer<java.lang.String>.Inner<Integer>... rest) {
+          }
+        }
+        """,
+        classDef);
+  }
 
   @Test
   void preservesLeadingFieldTypeAnnotation() throws Exception {

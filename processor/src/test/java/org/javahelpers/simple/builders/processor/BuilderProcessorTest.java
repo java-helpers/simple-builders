@@ -46,6 +46,47 @@ import org.junit.jupiter.params.provider.ValueSource;
 /** Tests for the {@link BuilderProcessor} class. */
 class BuilderProcessorTest {
 
+  @ParameterizedTest
+  @ValueSource(strings = {"Inner", "Inner2<Integer>"})
+  void shouldPreserveGenericOwnerWithoutInstantiatingInnerClass(String member) {
+    String propertyType = "other.Outer<String>." + member;
+    Compilation compilation =
+        ProcessorTestUtils.createCompiler()
+            .withOptions("-Xlint:rawtypes", "-Xlint:unchecked", "-Asimplebuilder.strict=true")
+            .compile(
+                JavaFileObjects.forSourceString(
+                    "other.Outer",
+                    """
+                    package other;
+                    public class Outer<T> {
+                      public class Inner {}
+                      public class Inner2<U> {}
+                    }
+                    """),
+                ProcessorTestUtils.simpleBuilderClass(
+                    "test",
+                    "InnerDto",
+                    """
+                    private %s value;
+                    public %s getValue() { return value; }
+                    public void setValue(%s value) { this.value = value; }
+                    """
+                        .formatted(propertyType, propertyType, propertyType)));
+    assertThat(compilation).succeeded();
+    assertThat(compilation).hadErrorCount(0);
+    assertThat(compilation).hadWarningCount(0);
+    String generated = loadGeneratedSource(compilation, "InnerDtoBuilder");
+    String renderedType = "other.Outer<java.lang.String>." + member;
+    ProcessorAsserts.assertContaining(
+        generated,
+        "private TrackedValue<" + renderedType + "> value = unsetValue();",
+        "public InnerDtoBuilder value(" + renderedType + " value)",
+        "public InnerDtoBuilder value(Supplier<" + renderedType + "> valueSupplier)",
+        "public InnerDtoBuilder valueUpdate(UnaryOperator<" + renderedType + "> valueUpdater)");
+    ProcessorAsserts.assertNotContaining(
+        generated, "valueConsumer", "new Outer", "new other.Outer", "::new");
+  }
+
   @Test
   void shouldGenerateBasicBuilder() {
     // Given: A simple class with one field

@@ -189,7 +189,7 @@ public class TypeNameGeneric extends TypeName {
 
   @Override
   public String getFullQualifiedName() {
-    String baseName = super.getFullQualifiedName();
+    String baseName = outerType.getFullQualifiedName();
     if (innerTypeArguments.isEmpty()) {
       return baseName;
     }
@@ -205,7 +205,7 @@ public class TypeNameGeneric extends TypeName {
 
   @Override
   public String getSimpleNameWithGenerics() {
-    String baseName = getClassName();
+    String baseName = outerType.getSimpleNameWithGenerics();
     if (innerTypeArguments.isEmpty()) {
       return baseName;
     }

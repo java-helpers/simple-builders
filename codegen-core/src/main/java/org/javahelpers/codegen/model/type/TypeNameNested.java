@@ -36,13 +36,15 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
  *
  * <p>{@link #getClassName()} returns the dotted name inside the package (e.g. {@code
  * "Outer.Inner"}) and {@link #getFullQualifiedName()} the full qualified name (e.g. {@code
- * "com.example.Outer.Inner"}), so consumers treating it as a plain {@link TypeName} continue to
- * work.
+ * "com.example.Outer.Inner"}). Rendering retains enclosing type arguments, while {@code
+ * getClassName()} stays raw.
  */
 public class TypeNameNested extends TypeName {
 
   /** The enclosing type; may itself be a {@link TypeNameNested} for deeper nesting. */
   private final TypeName enclosingType;
+
+  private final String simpleName;
 
   /**
    * Constructor for TypeNameNested.
@@ -55,6 +57,7 @@ public class TypeNameNested extends TypeName {
         requireNonNull(enclosingType).getPackageName(),
         enclosingType.getClassName() + "." + requireNonNull(simpleName));
     this.enclosingType = enclosingType;
+    this.simpleName = simpleName;
   }
 
   /**
@@ -64,6 +67,16 @@ public class TypeNameNested extends TypeName {
    */
   public TypeName getEnclosingType() {
     return enclosingType;
+  }
+
+  @Override
+  public String getFullQualifiedName() {
+    return enclosingType.getFullQualifiedName() + "." + simpleName;
+  }
+
+  @Override
+  public String getSimpleNameWithGenerics() {
+    return enclosingType.getSimpleNameWithGenerics() + "." + simpleName;
   }
 
   @Override

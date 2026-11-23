@@ -40,11 +40,28 @@ import org.javahelpers.codegen.model.method.MethodDto;
 import org.javahelpers.codegen.model.method.MethodParameterDto;
 import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.codegen.model.type.TypeNameGeneric;
+import org.javahelpers.codegen.model.type.TypeNameNested;
 import org.javahelpers.codegen.model.type.TypeNameWildcard;
 import org.junit.jupiter.api.Test;
 
 /** Unit tests for {@link ImportCollector}: skip rules, generic args and sort order. */
 class ImportCollectorTest {
+
+  @Test
+  void nestedImportsEraseOwnersAndCollectTheirArguments() {
+    TypeName outer =
+        new TypeNameGeneric(new TypeName("other", "Outer"), TypeName.of(Instant.class));
+    TypeName inner =
+        new TypeNameGeneric(new TypeNameNested(outer, "Inner"), TypeName.of(File.class));
+    ImportCollector collector = new ImportCollector(new TypeName("test", "Target"));
+    collector.addTypeImports(new TypeNameNested(inner, "Deep"));
+    assertEquals(
+        """
+        java.io.File
+        java.time.Instant
+        other.Outer.Inner.Deep""",
+        fqnsText(collector.getSortedImports()));
+  }
 
   @Test
   void convenienceImportMethodsTraverseWildcardBounds() {

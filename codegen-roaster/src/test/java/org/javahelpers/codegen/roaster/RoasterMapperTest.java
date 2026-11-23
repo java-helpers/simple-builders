@@ -123,6 +123,15 @@ class RoasterMapperTest {
   }
 
   @Test
+  void mapType_rendersParameterizedOwnerAndMemberArguments() {
+    TypeName owner = new TypeNameGeneric(new TypeName("test", "Outer"), TypeName.of(String.class));
+    TypeName inner =
+        new TypeNameGeneric(new TypeNameNested(owner, "Inner"), TypeName.of(Integer.class));
+    assertEquals(
+        "test.Outer<java.lang.String>.Inner<Integer>", RoasterMapper.mapType(inner, Set.of()));
+  }
+
+  @Test
   void mapType_prependsTypeUseAnnotations() {
     TypeName annotated = TypeName.of(String.class);
     AnnotationDto nonNull = new AnnotationDto();

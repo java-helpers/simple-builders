@@ -120,6 +120,24 @@ class TypeNameTest {
   }
 
   @Test
+  void nestedType_preservesParameterizedOwnersInRendering() {
+    TypeName outer = new TypeNameGeneric(new TypeName("test", "Outer"), TypeName.of(String.class));
+    TypeNameNested inner = new TypeNameNested(outer, "Inner");
+    TypeName genericInner = new TypeNameGeneric(inner, TypeName.of(Integer.class));
+    assertEquals("Outer.Inner", inner.getClassName());
+    assertEquals("test.Outer<java.lang.String>.Inner", inner.getFullQualifiedName());
+    assertEquals("Outer<String>.Inner", inner.getSimpleNameWithGenerics());
+    assertEquals("Outer.Inner", genericInner.getClassName());
+    assertEquals(
+        "test.Outer<java.lang.String>.Inner<java.lang.Integer>",
+        genericInner.getFullQualifiedName());
+    assertEquals("Outer<String>.Inner<Integer>", genericInner.getSimpleNameWithGenerics());
+    assertEquals(
+        "test.Outer<java.lang.String>.Inner<java.lang.Integer>.Deep",
+        new TypeNameNested(genericInner, "Deep").getFullQualifiedName());
+  }
+
+  @Test
   void genericType_preservesNestedFlag() {
     TypeNameNested pair = new TypeNameNested(new TypeName("test", "Outer"), "Pair");
     TypeNameGeneric pairOfString =
