@@ -401,6 +401,7 @@ mvn license:format
 - **Keep it focused**: One feature or fix per PR
 - **Include tests**: Add tests for new functionality
 - **Update docs**: Update README.md or other docs if needed
+- **Add one category label**: `enhancement`, `bug`, `documentation`, `test`, `github-actions`, `dependencies`, `maintenance` or `refactor`, so the PR lands in the right release-notes section (see [Release Notes](../RELEASE.md#release-notes)); add `breaking-change` on top when the change breaks the public API, or `security`/`ignore-for-release` where they apply
 
 ### CI for pull requests from forks
 

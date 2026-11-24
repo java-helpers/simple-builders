@@ -8,24 +8,50 @@ changelog:
       - dependabot
       - dependabot[bot]
   
+  # A pull request lands in the FIRST category whose labels it matches, so the
+  # order encodes priority: breaking-change outranks any other category label,
+  # and the "*" catch-all must stay last.
   categories:
+    - title: ⚠️ Breaking Changes
+      labels:
+        - breaking-change
+
+    - title: 🔒 Security
+      labels:
+        - security
+
     - title: 🚀 Features
       labels:
         - enhancement
-        
+        - improvement
+
     - title: 🐛 Bug Fixes
       labels:
         - bug
-        
+
     - title: 📚 Documentation
       labels:
         - documentation
-        
+
+    - title: ⬆️ Dependencies
+      labels:
+        - dependencies
+        - java
+
+    - title: 🧪 Tests
+      labels:
+        - test
+
+    - title: ⚙️ CI
+      labels:
+        - github-actions
+        - ci
+
     - title: 🔧 Maintenance
       labels:
         - maintenance
         - refactor
-      
+
     - title: Other Changes
       labels:
         - "*"

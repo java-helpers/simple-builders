@@ -32,6 +32,40 @@ No version input is required. The workflow derives the release version from the 
 11. Opens a **pull request** against `main` containing both the release version commit and the next-snapshot bump
 12. Creates **draft** GitHub release (jars, sources, javadoc **and SBOMs** attached; requires manual publish)
 
+## Release Notes
+
+The workflow generates the notes via `releases/generate-notes`, which classifies merged pull requests by label using [`.github/release.yml`](.github/release.yml). Each PR lands in the **first** matching section, so section order encodes priority and the `*` catch-all stays last:
+
+| Section | Labels |
+|---|---|
+| ⚠️ Breaking Changes | `breaking-change` |
+| 🔒 Security | `security` |
+| 🚀 Features | `enhancement`, `improvement` |
+| 🐛 Bug Fixes | `bug` |
+| 📚 Documentation | `documentation` |
+| ⬆️ Dependencies | `dependencies`, `java` |
+| 🧪 Tests | `test` |
+| ⚙️ CI | `github-actions`, `ci` |
+| 🔧 Maintenance | `maintenance`, `refactor` |
+| Other Changes | every other PR |
+
+Excluded from the notes: `ignore-for-release`, `pipeline`, and PRs authored by dependabot.
+
+`breaking-change` is an annotation on top of the category label, not a category of its own: add it to any PR that changes the public API and it sorts into Breaking Changes regardless of the other label.
+
+### Notes skeleton
+
+1. One-line intro + highlights — hand-written in the draft, only for noteworthy releases
+2. Generated "What's Changed" with the sections above
+3. Maven Central coordinates block (from the `footer` in `release.yml`; `$RESOLVED_VERSION` is substituted by the workflow)
+4. Full Changelog compare link (generated)
+
+### Labelling convention
+
+- Give every non-trivial PR exactly one category label before merging.
+- Before publishing a draft release, review the notes: backfill labels on notable merged PRs and hand-move any mis-sorted lines — the label is a default, not a contract.
+- Use `ignore-for-release` for housekeeping-only PRs (version bumps, merge-only noise).
+
 ## After Release
 
 1. **Publish to Maven Central**: Go to the [Sonatype Central portal](https://central.sonatype.com/publishing/deployments), review the staged deployment, and **manually publish** it. Nothing is released to consumers until this step is performed.
