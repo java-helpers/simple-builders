@@ -179,7 +179,7 @@ public class JavadocDto {
    */
   public JavadocDto addParam(String paramName, String descriptionFormat, Object... args) {
     String paramDescription = String.format(descriptionFormat, args);
-    addTag(JavadocConstants.PARAM_TAG, paramName + " " + paramDescription);
+    addTag(JavadocTag.PARAM, paramName + " " + paramDescription);
     return this;
   }
 
@@ -201,7 +201,7 @@ public class JavadocDto {
    */
   public JavadocDto addReturn(String descriptionFormat, Object... args) {
     String returnDescription = String.format(descriptionFormat, args);
-    addTag(JavadocConstants.RETURN_TAG, returnDescription);
+    addTag(JavadocTag.RETURN, returnDescription);
     return this;
   }
 
@@ -224,7 +224,7 @@ public class JavadocDto {
    */
   public JavadocDto addThrows(String exceptionName, String descriptionFormat, Object... args) {
     String throwsDescription = String.format(descriptionFormat, args);
-    addTag(JavadocConstants.THROWS_TAG, exceptionName + " " + throwsDescription);
+    addTag(JavadocTag.THROWS, exceptionName + " " + throwsDescription);
     return this;
   }
 
@@ -246,7 +246,7 @@ public class JavadocDto {
    */
   public JavadocDto addDeprecated(String descriptionFormat, Object... args) {
     String deprecatedDescription = String.format(descriptionFormat, args);
-    addTag(JavadocConstants.DEPRECATED_TAG, deprecatedDescription);
+    addTag(JavadocTag.DEPRECATED, deprecatedDescription);
     return this;
   }
 

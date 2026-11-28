@@ -25,67 +25,67 @@
 package org.javahelpers.codegen.model.javadoc;
 
 /**
- * Constants for the common Javadoc block tags and frequently used tag values.
+ * Constants for the common Javadoc block tags.
  *
  * <p>The set of Javadoc tags is not closed — the javadoc tool supports custom tags — so these
  * constants cover only the well-known standard tags. Arbitrary tags can always be used via {@link
  * JavadocDto#addTag(String, String)}.
  */
-public final class JavadocConstants {
+public final class JavadocTag {
 
   /** The {@code @param} tag. */
-  public static final String PARAM_TAG = "param";
+  public static final String PARAM = "param";
 
   /** The {@code @return} tag. */
-  public static final String RETURN_TAG = "return";
+  public static final String RETURN = "return";
 
   /** The {@code @throws} tag. */
-  public static final String THROWS_TAG = "throws";
+  public static final String THROWS = "throws";
 
   /** The {@code @exception} tag, synonym of {@code @throws}. */
-  public static final String EXCEPTION_TAG = "exception";
+  public static final String EXCEPTION = "exception";
 
   /** The {@code @deprecated} tag. */
-  public static final String DEPRECATED_TAG = "deprecated";
+  public static final String DEPRECATED = "deprecated";
 
   /** The {@code @since} tag. */
-  public static final String SINCE_TAG = "since";
+  public static final String SINCE = "since";
 
   /** The {@code @see} tag. */
-  public static final String SEE_TAG = "see";
+  public static final String SEE = "see";
 
   /** The {@code @author} tag. */
-  public static final String AUTHOR_TAG = "author";
+  public static final String AUTHOR = "author";
 
   /** The {@code @version} tag. */
-  public static final String VERSION_TAG = "version";
+  public static final String VERSION = "version";
 
   /** The {@code @serial} tag. */
-  public static final String SERIAL_TAG = "serial";
+  public static final String SERIAL = "serial";
 
   /** The {@code @serialField} tag. */
-  public static final String SERIAL_FIELD_TAG = "serialField";
+  public static final String SERIAL_FIELD = "serialField";
 
   /** The {@code @serialData} tag. */
-  public static final String SERIAL_DATA_TAG = "serialData";
+  public static final String SERIAL_DATA = "serialData";
 
   /** The {@code @hidden} tag. */
-  public static final String HIDDEN_TAG = "hidden";
+  public static final String HIDDEN = "hidden";
 
   /** The {@code @uses} tag. */
-  public static final String USES_TAG = "uses";
+  public static final String USES = "uses";
 
   /** The {@code @provides} tag. */
-  public static final String PROVIDES_TAG = "provides";
+  public static final String PROVIDES = "provides";
 
   /** The {@code @value} tag. */
-  public static final String VALUE_TAG = "value";
+  public static final String VALUE = "value";
 
   /** Common return description for builder methods that return the builder instance. */
   public static final String RETURN_BUILDER_INSTANCE = "current instance of builder";
 
   /** Private constructor to prevent instantiation. */
-  private JavadocConstants() {
+  private JavadocTag() {
     throw new UnsupportedOperationException("Utility class");
   }
 }

@@ -32,7 +32,6 @@ import java.util.function.Function;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.codegen.analysis.JavaLangMapper;
 import org.javahelpers.codegen.enums.AccessModifier;
-import org.javahelpers.codegen.model.javadoc.JavadocConstants;
 import org.javahelpers.codegen.model.javadoc.JavadocDto;
 import org.javahelpers.codegen.model.method.MethodParameterDto;
 import org.javahelpers.codegen.model.type.GenericParameterDto;
@@ -214,7 +213,7 @@ public final class MethodGeneratorUtil {
     methodDto.setJavadoc(
         new JavadocDto("Sets the value for <code>%s</code>.", field.getOriginalFieldName())
             .addParam(parameter.getParameterName(), fieldJavadocDesc)
-            .addReturn(JavadocConstants.RETURN_BUILDER_INSTANCE));
+            .addReturn(BuilderJavadocConstants.RETURN_BUILDER_INSTANCE));
 
     return methodDto;
   }
@@ -285,7 +284,7 @@ public final class MethodGeneratorUtil {
                 parameter.getParameterName(),
                 "consumer providing an instance of a builder for %s",
                 fieldJavadocDesc)
-            .addReturn(JavadocConstants.RETURN_BUILDER_INSTANCE));
+            .addReturn(BuilderJavadocConstants.RETURN_BUILDER_INSTANCE));
 
     return methodDto;
   }
@@ -449,7 +448,7 @@ public final class MethodGeneratorUtil {
                 parameter.getParameterName(),
                 "consumer providing an instance of %s",
                 fieldJavadocDesc)
-            .addReturn(JavadocConstants.RETURN_BUILDER_INSTANCE));
+            .addReturn(BuilderJavadocConstants.RETURN_BUILDER_INSTANCE));
 
     return methodDto;
   }

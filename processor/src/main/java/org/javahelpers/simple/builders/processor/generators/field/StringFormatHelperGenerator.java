@@ -34,13 +34,13 @@ import java.util.List;
 import java.util.Optional;
 import org.apache.commons.collections4.CollectionUtils;
 import org.javahelpers.codegen.model.annotation.AnnotationDto;
-import org.javahelpers.codegen.model.javadoc.JavadocConstants;
 import org.javahelpers.codegen.model.javadoc.JavadocDto;
 import org.javahelpers.codegen.model.method.MethodParameterDto;
 import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.codegen.model.type.TypeNameArray;
 import org.javahelpers.codegen.model.type.TypeNameGeneric;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
+import org.javahelpers.simple.builders.processor.generators.util.BuilderJavadocConstants;
 import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
@@ -203,7 +203,7 @@ public class StringFormatHelperGenerator implements MethodGenerator {
             .addParam(
                 argsParam.getParameterName(),
                 "Arguments referenced by the format specifiers in the format string.")
-            .addReturn(JavadocConstants.RETURN_BUILDER_INSTANCE));
+            .addReturn(BuilderJavadocConstants.RETURN_BUILDER_INSTANCE));
 
     // Add example fragment for String format method
     addExampleChainFragmentTemplate(methodDto, "#{methodName}(\"Hello %s\", \"World\")");

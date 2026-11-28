@@ -31,13 +31,13 @@ import static org.javahelpers.simple.builders.processor.generators.util.MethodGe
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
-import org.javahelpers.codegen.model.javadoc.JavadocConstants;
 import org.javahelpers.codegen.model.javadoc.JavadocDto;
 import org.javahelpers.codegen.model.method.MethodParameterDto;
 import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.codegen.model.type.TypeNameList;
 import org.javahelpers.codegen.model.type.TypeNameSet;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
+import org.javahelpers.simple.builders.processor.generators.util.BuilderJavadocConstants;
 import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
@@ -194,7 +194,7 @@ public class AddToCollectionGenerator implements MethodGenerator {
     methodDto.setJavadoc(
         new JavadocDto("Adds a single element to <code>%s</code>.", originalFieldName)
             .addParam("element", "the element to add")
-            .addReturn(JavadocConstants.RETURN_BUILDER_INSTANCE));
+            .addReturn(BuilderJavadocConstants.RETURN_BUILDER_INSTANCE));
 
     // Store the fluent-chain fragment so the class-level enhancer can synthesise both the
     // method-level example block and the class-level kitchen-sink chain from one source of truth.
