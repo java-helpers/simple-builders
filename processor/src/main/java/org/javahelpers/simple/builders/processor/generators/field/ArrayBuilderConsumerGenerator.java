@@ -36,7 +36,7 @@ import org.javahelpers.codegen.model.type.TypeNameGeneric;
 import org.javahelpers.codegen.model.type.TypeNamePrimitive;
 import org.javahelpers.simple.builders.core.builders.ArrayListBuilder;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
-import org.javahelpers.simple.builders.processor.generators.util.JavadocConstants;
+import org.javahelpers.simple.builders.processor.generators.util.BuilderJavadocConstants;
 import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
@@ -174,7 +174,7 @@ public class ArrayBuilderConsumerGenerator implements MethodGenerator {
         new JavadocDto(
                 "Sets the value for <code>%s</code> using the fluent builder consumer.", fieldName)
             .addParam(parameter.getParameterName(), "consumer for %s", fieldName)
-            .addReturn(JavadocConstants.RETURN_BUILDER_INSTANCE));
+            .addReturn(BuilderJavadocConstants.RETURN_BUILDER_INSTANCE));
     return methodDto;
   }
 }

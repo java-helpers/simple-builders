@@ -38,7 +38,7 @@ import org.javahelpers.codegen.model.method.MethodParameterDto;
 import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.codegen.model.type.TypeNameGeneric;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
-import org.javahelpers.simple.builders.processor.generators.util.JavadocConstants;
+import org.javahelpers.simple.builders.processor.generators.util.BuilderJavadocConstants;
 import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
@@ -152,7 +152,7 @@ public class SupplierMethodGenerator implements MethodGenerator {
         new JavadocDto(
                 "Sets the value for <code>%s</code> by invoking the provided supplier.", fieldName)
             .addParam(parameterName, "supplier for %s", fieldJavaDoc)
-            .addReturn(JavadocConstants.RETURN_BUILDER_INSTANCE));
+            .addReturn(BuilderJavadocConstants.RETURN_BUILDER_INSTANCE));
 
     addExampleChainFragmentWithSupplier(
         methodDto, fieldType, fieldName, context::resolveBuilderType);

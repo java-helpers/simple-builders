@@ -35,7 +35,7 @@ import org.javahelpers.codegen.model.type.TypeNameArray;
 import org.javahelpers.codegen.model.type.TypeNameGeneric;
 import org.javahelpers.codegen.model.type.TypeNamePrimitive;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
-import org.javahelpers.simple.builders.processor.generators.util.JavadocConstants;
+import org.javahelpers.simple.builders.processor.generators.util.BuilderJavadocConstants;
 import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
@@ -145,7 +145,7 @@ public class ArrayConversionGenerator implements MethodGenerator {
     methodDto.setJavadoc(
         new JavadocDto("Sets the value for <code>%s</code>.", fieldName)
             .addParam(parameter.getParameterName(), fieldJavadocDesc)
-            .addReturn(JavadocConstants.RETURN_BUILDER_INSTANCE));
+            .addReturn(BuilderJavadocConstants.RETURN_BUILDER_INSTANCE));
 
     // Add example fragment for array conversion method
     addExampleChainFragment(methodDto, elementType, fieldName, context::resolveBuilderType);

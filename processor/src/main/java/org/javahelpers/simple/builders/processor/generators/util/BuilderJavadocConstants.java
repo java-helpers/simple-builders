@@ -25,18 +25,16 @@
 package org.javahelpers.simple.builders.processor.generators.util;
 
 /**
- * Constants for commonly used javadoc text in builder generation.
- *
- * <p>This class contains reusable javadoc descriptions and text snippets that are used across
- * multiple builder method generators.
+ * Constants for Javadoc content generated into builder methods. Builder-generation specific, in
+ * contrast to the generic tag names in {@link org.javahelpers.codegen.model.javadoc.JavadocTag}.
  */
-public final class JavadocConstants {
+public final class BuilderJavadocConstants {
 
   /** Common return description for builder methods that return the builder instance. */
   public static final String RETURN_BUILDER_INSTANCE = "current instance of builder";
 
   /** Private constructor to prevent instantiation. */
-  private JavadocConstants() {
+  private BuilderJavadocConstants() {
     throw new UnsupportedOperationException("Utility class");
   }
 }
