@@ -364,15 +364,6 @@ public class JavadocDtoBuilder implements IBuilderBase<JavadocDto> {
   }
 
   /**
-   * Builds the configured DTO instance.
-   *
-   * <h4>Example:</h4>
-   *
-   * <pre>{@code
-   * JavadocDto result = builder.build();
-   * }</pre>
-   */
-  /**
    * Adds a {@code @param} tag with formatted description (shortcut mirroring {@link
    * JavadocDto#addParam}).
    *
@@ -436,6 +427,15 @@ public class JavadocDtoBuilder implements IBuilderBase<JavadocDto> {
     return add2Tags(new JavadocTagDto(tagName, tagValue));
   }
 
+  /**
+   * Builds the configured DTO instance.
+   *
+   * <h4>Example:</h4>
+   *
+   * <pre>{@code
+   * JavadocDto result = builder.build();
+   * }</pre>
+   */
   @Override
   public JavadocDto build() {
     JavadocDto result = new JavadocDto();

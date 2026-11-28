@@ -689,15 +689,6 @@ public class ClassFieldDtoBuilder implements IBuilderBase<ClassFieldDto> {
   }
 
   /**
-   * Builds the configured DTO instance.
-   *
-   * <h4>Example:</h4>
-   *
-   * <pre>{@code
-   * ClassFieldDto result = builder.build();
-   * }</pre>
-   */
-  /**
    * Adds a static import for a method/field used in the field initializer (shortcut mirroring
    * {@link ClassFieldDto#addStaticImport(Class, String)}).
    *
@@ -721,6 +712,15 @@ public class ClassFieldDtoBuilder implements IBuilderBase<ClassFieldDto> {
     return add2FieldTypeImports(new StaticImport(type, memberName));
   }
 
+  /**
+   * Builds the configured DTO instance.
+   *
+   * <h4>Example:</h4>
+   *
+   * <pre>{@code
+   * ClassFieldDto result = builder.build();
+   * }</pre>
+   */
   @Override
   public ClassFieldDto build() {
     ClassFieldDto result = new ClassFieldDto();

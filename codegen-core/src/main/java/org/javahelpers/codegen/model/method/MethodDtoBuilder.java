@@ -1026,15 +1026,6 @@ public class MethodDtoBuilder implements IBuilderBase<MethodDto> {
   }
 
   /**
-   * Builds the configured DTO instance.
-   *
-   * <h4>Example:</h4>
-   *
-   * <pre>{@code
-   * MethodDto result = builder.build();
-   * }</pre>
-   */
-  /**
    * Adds a parameter with the given type and name.
    *
    * @param type the parameter type
@@ -1080,6 +1071,15 @@ public class MethodDtoBuilder implements IBuilderBase<MethodDto> {
         GenericParameterDtoBuilder.create().name(name).upperBounds(upperBounds).build());
   }
 
+  /**
+   * Builds the configured DTO instance.
+   *
+   * <h4>Example:</h4>
+   *
+   * <pre>{@code
+   * MethodDto result = builder.build();
+   * }</pre>
+   */
   @Override
   public MethodDto build() {
     if (this.isStatic.isSet() && this.isStatic.value() == null) {

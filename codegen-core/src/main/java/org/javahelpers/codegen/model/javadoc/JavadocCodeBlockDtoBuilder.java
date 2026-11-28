@@ -423,15 +423,6 @@ public class JavadocCodeBlockDtoBuilder implements IBuilderBase<JavadocCodeBlock
   }
 
   /**
-   * Builds the configured DTO instance.
-   *
-   * <h4>Example:</h4>
-   *
-   * <pre>{@code
-   * JavadocCodeBlockDto result = builder.build();
-   * }</pre>
-   */
-  /**
    * Adds a text placeholder argument for the code format (shortcut mirroring {@link
    * CodeTemplateDto#addArgument(String, String)}).
    *
@@ -468,6 +459,15 @@ public class JavadocCodeBlockDtoBuilder implements IBuilderBase<JavadocCodeBlock
     return add2CodeBlockImports(new StaticImport(TypeName.of(clazz), memberName));
   }
 
+  /**
+   * Builds the configured DTO instance.
+   *
+   * <h4>Example:</h4>
+   *
+   * <pre>{@code
+   * JavadocCodeBlockDto result = builder.build();
+   * }</pre>
+   */
   @Override
   public JavadocCodeBlockDto build() {
     JavadocCodeBlockDto result = new JavadocCodeBlockDto();

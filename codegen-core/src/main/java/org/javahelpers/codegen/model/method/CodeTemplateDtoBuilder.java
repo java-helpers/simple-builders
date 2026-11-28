@@ -419,15 +419,6 @@ public class CodeTemplateDtoBuilder implements IBuilderBase<CodeTemplateDto> {
   }
 
   /**
-   * Builds the configured DTO instance.
-   *
-   * <h4>Example:</h4>
-   *
-   * <pre>{@code
-   * CodeTemplateDto result = builder.build();
-   * }</pre>
-   */
-  /**
    * Adds a text placeholder argument for the code format (shortcut mirroring {@link
    * CodeTemplateDto#addArgument(String, String)}).
    *
@@ -464,6 +455,15 @@ public class CodeTemplateDtoBuilder implements IBuilderBase<CodeTemplateDto> {
     return add2CodeBlockImports(new StaticImport(TypeName.of(clazz), memberName));
   }
 
+  /**
+   * Builds the configured DTO instance.
+   *
+   * <h4>Example:</h4>
+   *
+   * <pre>{@code
+   * CodeTemplateDto result = builder.build();
+   * }</pre>
+   */
   @Override
   public CodeTemplateDto build() {
     CodeTemplateDto result = new CodeTemplateDto();

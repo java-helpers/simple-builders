@@ -418,15 +418,6 @@ public class MethodCodeDtoBuilder implements IBuilderBase<MethodCodeDto> {
   }
 
   /**
-   * Builds the configured DTO instance.
-   *
-   * <h4>Example:</h4>
-   *
-   * <pre>{@code
-   * MethodCodeDto result = builder.build();
-   * }</pre>
-   */
-  /**
    * Adds a text placeholder argument for the code format (shortcut mirroring {@link
    * CodeTemplateDto#addArgument(String, String)}).
    *
@@ -463,6 +454,15 @@ public class MethodCodeDtoBuilder implements IBuilderBase<MethodCodeDto> {
     return add2CodeBlockImports(new StaticImport(TypeName.of(clazz), memberName));
   }
 
+  /**
+   * Builds the configured DTO instance.
+   *
+   * <h4>Example:</h4>
+   *
+   * <pre>{@code
+   * MethodCodeDto result = builder.build();
+   * }</pre>
+   */
   @Override
   public MethodCodeDto build() {
     MethodCodeDto result = new MethodCodeDto();

@@ -531,15 +531,6 @@ public class ConstructorDtoBuilder implements IBuilderBase<ConstructorDto> {
   }
 
   /**
-   * Builds the configured DTO instance.
-   *
-   * <h4>Example:</h4>
-   *
-   * <pre>{@code
-   * ConstructorDto result = builder.build();
-   * }</pre>
-   */
-  /**
    * Adds a parameter with the given type and name.
    *
    * @param type the parameter type
@@ -585,6 +576,15 @@ public class ConstructorDtoBuilder implements IBuilderBase<ConstructorDto> {
     return code(String.format(format, args));
   }
 
+  /**
+   * Builds the configured DTO instance.
+   *
+   * <h4>Example:</h4>
+   *
+   * <pre>{@code
+   * ConstructorDto result = builder.build();
+   * }</pre>
+   */
   @Override
   public ConstructorDto build() {
     ConstructorDto result = new ConstructorDto();

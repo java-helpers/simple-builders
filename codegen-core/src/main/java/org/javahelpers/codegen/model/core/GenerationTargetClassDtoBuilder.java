@@ -1355,15 +1355,6 @@ public class GenerationTargetClassDtoBuilder implements IBuilderBase<GenerationT
   }
 
   /**
-   * Builds the configured DTO instance.
-   *
-   * <h4>Example:</h4>
-   *
-   * <pre>{@code
-   * GenerationTargetClassDto result = builder.build();
-   * }</pre>
-   */
-  /**
    * Adds a static import for a method/field used in the generated class (shortcut mirroring {@link
    * GenerationTargetClassDto#addStaticImport(Class, String)}).
    *
@@ -1430,6 +1421,15 @@ public class GenerationTargetClassDtoBuilder implements IBuilderBase<GenerationT
         GenericParameterDtoBuilder.create().name(name).upperBounds(upperBounds).build());
   }
 
+  /**
+   * Builds the configured DTO instance.
+   *
+   * <h4>Example:</h4>
+   *
+   * <pre>{@code
+   * GenerationTargetClassDto result = builder.build();
+   * }</pre>
+   */
   @Override
   public GenerationTargetClassDto build() {
     GenerationTargetClassDto result = new GenerationTargetClassDto();
