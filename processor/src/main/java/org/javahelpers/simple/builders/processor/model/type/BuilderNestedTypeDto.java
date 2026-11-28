@@ -27,6 +27,7 @@ package org.javahelpers.simple.builders.processor.model.type;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import org.javahelpers.codegen.enums.AccessModifier;
 import org.javahelpers.codegen.model.annotation.AnnotationDto;
 import org.javahelpers.codegen.model.javadoc.JavadocDto;
@@ -44,7 +45,7 @@ import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
  *
  * <p>For example, the "With" interface that allows DTOs to implement fluent modification methods.
  */
-public class BuilderNestedTypeDto {
+public class BuilderNestedTypeDto implements BuilderNestedTypeDtoBuilder.With {
 
   /** The simple name of the nested type (e.g., "With"). */
   private String typeName;
@@ -96,6 +97,20 @@ public class BuilderNestedTypeDto {
     this.methods.add(method);
   }
 
+  /**
+   * Sets the methods of the nested type, replacing the current list.
+   *
+   * @param methods the methods to set
+   * @throws NullPointerException if methods is null
+   */
+  public void setMethods(List<BuilderMethodDto> methods) {
+    Objects.requireNonNull(methods);
+    if (methods != this.methods) {
+      this.methods.clear();
+      this.methods.addAll(methods);
+    }
+  }
+
   public JavadocDto getJavadoc() {
     return javadoc;
   }
@@ -110,5 +125,19 @@ public class BuilderNestedTypeDto {
 
   public void addAnnotation(AnnotationDto annotation) {
     this.annotations.add(annotation);
+  }
+
+  /**
+   * Sets the annotations of the nested type, replacing the current list.
+   *
+   * @param annotations the annotations to set
+   * @throws NullPointerException if annotations is null
+   */
+  public void setAnnotations(List<AnnotationDto> annotations) {
+    Objects.requireNonNull(annotations);
+    if (annotations != this.annotations) {
+      this.annotations.clear();
+      this.annotations.addAll(annotations);
+    }
   }
 }

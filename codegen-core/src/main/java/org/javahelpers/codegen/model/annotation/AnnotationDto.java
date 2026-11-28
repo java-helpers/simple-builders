@@ -26,6 +26,7 @@ package org.javahelpers.codegen.model.annotation;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.javahelpers.codegen.model.type.*;
@@ -34,7 +35,8 @@ import org.javahelpers.codegen.model.type.*;
  * DTO representing an annotation to be generated in the output class. Contains the annotation type
  * and its members in a plain format suitable for code generation.
  */
-public class AnnotationDto {
+public class AnnotationDto implements AnnotationDtoBuilder.With {
+
   /** The annotation type (fully qualified name). */
   private TypeName annotationType;
 
@@ -89,6 +91,18 @@ public class AnnotationDto {
    */
   public void addMember(String name, String value) {
     this.members.put(name, value);
+  }
+
+  /**
+   * Replaces members with the given collection; the DTO retains its own mutable collection.
+   *
+   * @param members the replacement collection (not null)
+   * @throws NullPointerException if members is null
+   */
+  public void setMembers(Map<String, String> members) {
+    Map<String, String> copy = new LinkedHashMap<>(Objects.requireNonNull(members));
+    this.members.clear();
+    this.members.putAll(copy);
   }
 
   @Override

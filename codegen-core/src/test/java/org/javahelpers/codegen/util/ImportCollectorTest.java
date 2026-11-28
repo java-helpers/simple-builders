@@ -33,11 +33,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.javahelpers.codegen.model.core.ClassFieldDto;
+import org.javahelpers.codegen.model.core.ClassFieldDtoBuilder;
 import org.javahelpers.codegen.model.core.GenerationTargetClassDto;
+import org.javahelpers.codegen.model.core.GenerationTargetClassDtoBuilder;
 import org.javahelpers.codegen.model.imports.ImportStatement;
 import org.javahelpers.codegen.model.method.CodeTemplateDto;
-import org.javahelpers.codegen.model.method.MethodDto;
-import org.javahelpers.codegen.model.method.MethodParameterDto;
+import org.javahelpers.codegen.model.method.CodeTemplateDtoBuilder;
 import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.codegen.model.type.TypeNameGeneric;
 import org.javahelpers.codegen.model.type.TypeNameWildcard;
@@ -48,16 +49,14 @@ class ImportCollectorTest {
 
   @Test
   void convenienceImportMethodsTraverseWildcardBounds() {
-    TypeNameWildcard wildcard = TypeNameWildcard.extendsBound(TypeName.of(Instant.class));
-    GenerationTargetClassDto target = classDef("test", "Target");
-    ClassFieldDto field = new ClassFieldDto();
-    CodeTemplateDto code = new CodeTemplateDto();
-    target.addImport(new TypeNameWildcard());
-    target.addImport(wildcard);
-    field.addImport(new TypeNameWildcard());
-    field.addImport(wildcard);
-    code.addCodeBlockImport(new TypeNameWildcard());
-    code.addCodeBlockImport(wildcard);
+    GenerationTargetClassDto target =
+        GenerationTargetClassDtoBuilder.create()
+            .typeName("test", "Target")
+            .add2Imports(Instant.class)
+            .build();
+    ClassFieldDto field = ClassFieldDtoBuilder.create().add2FieldTypeImports(Instant.class).build();
+    CodeTemplateDto code =
+        CodeTemplateDtoBuilder.create().add2CodeBlockImports(Instant.class).build();
     String expected =
         """
         java.time.Instant""";
@@ -93,35 +92,30 @@ class ImportCollectorTest {
         .toList();
   }
 
-  private static GenerationTargetClassDto classDef(String pkg, String name) {
-    GenerationTargetClassDto classDef = new GenerationTargetClassDto();
-    classDef.setTypeName(new TypeName(pkg, name));
-    return classDef;
-  }
-
-  private static ClassFieldDto field(String name, String pkg, String type) {
-    ClassFieldDto field = new ClassFieldDto();
-    field.setFieldName(name);
-    field.setFieldType(new TypeName(pkg, type));
-    return field;
-  }
-
   @Test
   void skipsJavaLangAndSamePackageTypes() {
-    GenerationTargetClassDto classDef = classDef("com.example", "Dto");
-    classDef.addClassField(field("samePackage", "com.example", "Sibling"));
-    classDef.addClassField(field("langType", "java.lang", "String"));
-    classDef.addClassField(field("needed", "java.util", "Optional"));
+    GenerationTargetClassDto classDef =
+        GenerationTargetClassDtoBuilder.create()
+            .typeName("com.example", "Dto")
+            .add2ClassFields(
+                f -> f.fieldName("samePackage").fieldType("com.example", "Sibling"),
+                f -> f.fieldName("langType").fieldType("java.lang", "String"),
+                f -> f.fieldName("needed").fieldType("java.util", "Optional"))
+            .build();
 
     assertEquals(List.of("java.util.Optional"), fqns(classDef));
   }
 
   @Test
   void importsSortedAlphabetically() {
-    GenerationTargetClassDto classDef = classDef("com.example", "Dto");
-    classDef.addClassField(field("z", "java.util", "TreeSet"));
-    classDef.addClassField(field("a", "java.util", "ArrayDeque"));
-    classDef.addClassField(field("m", "java.time", "Instant"));
+    GenerationTargetClassDto classDef =
+        GenerationTargetClassDtoBuilder.create()
+            .typeName("com.example", "Dto")
+            .add2ClassFields(
+                f -> f.fieldName("z").fieldType("java.util", "TreeSet"),
+                f -> f.fieldName("a").fieldType("java.util", "ArrayDeque"),
+                f -> f.fieldName("m").fieldType("java.time", "Instant"))
+            .build();
 
     assertEquals(
         List.of("java.time.Instant", "java.util.ArrayDeque", "java.util.TreeSet"), fqns(classDef));
@@ -129,24 +123,30 @@ class ImportCollectorTest {
 
   @Test
   void toleratesNullImportStatements() {
-    GenerationTargetClassDto classDef = classDef("com.example", "Dto");
+    GenerationTargetClassDto classDef =
+        GenerationTargetClassDtoBuilder.create()
+            .typeName("com.example", "Dto")
+            .add2ClassFields(f -> f.fieldName("needed").fieldType("java.util", "Optional"))
+            .build();
     classDef.addImport((ImportStatement) null);
-    classDef.addClassField(field("needed", "java.util", "Optional"));
 
     assertEquals(List.of("java.util.Optional"), fqns(classDef));
   }
 
   @Test
   void genericTypeImportsRawTypeAndArguments() {
-    GenerationTargetClassDto classDef = classDef("com.example", "Dto");
-    classDef.addClassField(field("mapping", "com.example", "StringIntegerMap"));
-
-    MethodDto method = new MethodDto("values", new TypeName("java.util", "Collection"));
-    MethodParameterDto param = new MethodParameterDto();
-    param.setParameterName("key");
-    param.setParameterTypeName(new TypeName("com.other", "KeyDto"));
-    method.addParameter(param);
-    classDef.addMethod(method);
+    GenerationTargetClassDto classDef =
+        GenerationTargetClassDtoBuilder.create()
+            .typeName("com.example", "Dto")
+            .add2ClassFields(
+                f -> f.fieldName("mapping").fieldType("com.example", "StringIntegerMap"))
+            .add2Methods(
+                m ->
+                    m.methodName("values")
+                        .returnType("java.util", "Collection")
+                        .add2Parameters(
+                            p -> p.parameterName("key").parameterTypeName("com.other", "KeyDto")))
+            .build();
 
     assertTrue(fqns(classDef).contains("java.util.Collection"));
     assertTrue(fqns(classDef).contains("com.other.KeyDto"));

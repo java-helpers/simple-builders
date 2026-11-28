@@ -31,6 +31,7 @@ import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
+import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDtoBuilder;
 import org.junit.jupiter.api.Test;
 
 class CoreMethodsEnhancerTest {
@@ -100,10 +101,10 @@ class CoreMethodsEnhancerTest {
   }
 
   private static BuilderFieldDto field() {
-    BuilderFieldDto field = new BuilderFieldDto();
-    field.setOriginalFieldName("isStatic");
-    field.setFieldNameInBuilder("isStatic");
-    field.setFieldType(TypeName.of(Boolean.class));
-    return field;
+    return BuilderFieldDtoBuilder.create()
+        .originalFieldName("isStatic")
+        .fieldNameInBuilder("isStatic")
+        .fieldType(Boolean.class)
+        .build();
   }
 }

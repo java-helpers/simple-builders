@@ -26,13 +26,14 @@ package org.javahelpers.simple.builders.processor.generators.builder;
 import java.util.function.BooleanSupplier;
 import org.javahelpers.codegen.analysis.JavaLangMapper;
 import org.javahelpers.codegen.enums.AccessModifier;
-import org.javahelpers.codegen.model.javadoc.JavadocDto;
-import org.javahelpers.codegen.model.method.MethodParameterDto;
+import org.javahelpers.codegen.model.javadoc.JavadocDtoBuilder;
+import org.javahelpers.codegen.model.method.MethodParameterDtoBuilder;
 import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
 import org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
+import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDtoBuilder;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 
 /**
@@ -116,10 +117,14 @@ public class ConditionalEnhancer implements BuilderEnhancer {
 
   /** Creates the conditional(BooleanSupplier, Consumer, Consumer) method. */
   private BuilderMethodDto createConditionalMethod(BuilderDefinitionDto builderDto) {
-    BuilderMethodDto method = new BuilderMethodDto("conditional", builderDto.getBuilderTypeName());
-    method.setOrdering(ORDERING_CONDITIONAL);
-    method.setPriority(BuilderMethodDto.PRIORITY_HIGHEST);
-    method.setModifier(AccessModifier.PUBLIC);
+    BuilderMethodDto method =
+        BuilderMethodDtoBuilder.create()
+            .methodName("conditional")
+            .returnType(builderDto.getBuilderTypeName())
+            .ordering(ORDERING_CONDITIONAL)
+            .priority(BuilderMethodDto.PRIORITY_HIGHEST)
+            .modifier(AccessModifier.PUBLIC)
+            .build();
 
     // Add parameters
     addConditionalPositiveNegativeParameters(method, builderDto.getBuilderTypeName());
@@ -136,22 +141,28 @@ public class ConditionalEnhancer implements BuilderEnhancer {
         """);
 
     method.setJavadoc(
-        new JavadocDto(
+        JavadocDtoBuilder.create()
+            .description(
                 "Conditionally applies builder modifications based on a condition evaluation.")
-            .addParam("condition", "the condition to evaluate")
-            .addParam("trueCase", "the consumer to apply if condition is true")
-            .addParam("falseCase", "the consumer to apply if condition is false (can be null)")
-            .addReturn("this builder instance"));
+            .param("condition", "the condition to evaluate")
+            .param("trueCase", "the consumer to apply if condition is true")
+            .param("falseCase", "the consumer to apply if condition is false (can be null)")
+            .returns("this builder instance")
+            .build());
 
     return method;
   }
 
   /** Creates the conditional(BooleanSupplier, Consumer) method. */
   private BuilderMethodDto createConditionalPositiveOnlyMethod(BuilderDefinitionDto builderDto) {
-    BuilderMethodDto method = new BuilderMethodDto("conditional", builderDto.getBuilderTypeName());
-    method.setOrdering(ORDERING_CONDITIONAL_POSITIVE_ONLY);
-    method.setPriority(BuilderMethodDto.PRIORITY_HIGHEST);
-    method.setModifier(AccessModifier.PUBLIC);
+    BuilderMethodDto method =
+        BuilderMethodDtoBuilder.create()
+            .methodName("conditional")
+            .returnType(builderDto.getBuilderTypeName())
+            .ordering(ORDERING_CONDITIONAL_POSITIVE_ONLY)
+            .priority(BuilderMethodDto.PRIORITY_HIGHEST)
+            .modifier(AccessModifier.PUBLIC)
+            .build();
 
     // Add parameters
     addConditionalPositiveOnlyParameters(method, builderDto.getBuilderTypeName());
@@ -160,10 +171,12 @@ public class ConditionalEnhancer implements BuilderEnhancer {
     method.setCode("return conditional(condition, yesCondition, null);");
 
     method.setJavadoc(
-        new JavadocDto("Conditionally applies builder modifications if the condition is true.")
-            .addParam("condition", "the condition to evaluate")
-            .addParam("yesCondition", "the consumer to apply if condition is true")
-            .addReturn("this builder instance"));
+        JavadocDtoBuilder.create()
+            .description("Conditionally applies builder modifications if the condition is true.")
+            .param("condition", "the condition to evaluate")
+            .param("yesCondition", "the consumer to apply if condition is true")
+            .returns("this builder instance")
+            .build());
 
     return method;
   }
@@ -189,9 +202,7 @@ public class ConditionalEnhancer implements BuilderEnhancer {
 
   /** Adds a parameter to the method. */
   private void addParameter(BuilderMethodDto method, String name, TypeName type) {
-    MethodParameterDto parameter = new MethodParameterDto();
-    parameter.setParameterName(name);
-    parameter.setParameterTypeName(type);
-    method.addParameter(parameter);
+    method.addParameter(
+        MethodParameterDtoBuilder.create().parameterName(name).parameterTypeName(type).build());
   }
 }

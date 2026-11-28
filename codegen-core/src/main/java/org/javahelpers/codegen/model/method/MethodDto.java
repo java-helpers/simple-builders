@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.codegen.enums.AccessModifier;
@@ -43,7 +44,8 @@ import org.javahelpers.codegen.model.type.TypeName;
  * holds only rendering-relevant data — no field-origin metadata or other generation-phase-only
  * information.
  */
-public class MethodDto {
+public class MethodDto implements MethodDtoBuilder.With {
+
   /** Access modifier for method. */
   private Optional<AccessModifier> modifier = Optional.empty();
 
@@ -127,6 +129,19 @@ public class MethodDto {
   }
 
   /**
+   * Copies the structured method body into this DTO's own code template.
+   *
+   * @param code the structured method body (not null)
+   * @throws NullPointerException if code is null
+   */
+  public void setMethodCodeDto(MethodCodeDto code) {
+    Objects.requireNonNull(code, "code");
+    methodCodeDto.setCodeFormat(code.getCodeFormat());
+    methodCodeDto.setCodeArguments(code.getCodeArguments());
+    methodCodeDto.setCodeBlockImports(code.getCodeBlockImports());
+  }
+
+  /**
    * Checks if the method has a code block.
    *
    * @return true if the method has a code block, false otherwise
@@ -163,6 +178,20 @@ public class MethodDto {
   }
 
   /**
+   * Replaces parameters with the given collection; the DTO retains its own mutable collection.
+   *
+   * @param parameters the replacement collection (not null)
+   * @throws NullPointerException if parameters is null
+   */
+  public void setParameters(List<MethodParameterDto> parameters) {
+    Objects.requireNonNull(parameters);
+    if (parameters != this.parameters) {
+      this.parameters.clear();
+      this.parameters.addAll(parameters);
+    }
+  }
+
+  /**
    * Getting a list of parameters of method.
    *
    * @return List of parameters
@@ -178,6 +207,21 @@ public class MethodDto {
    */
   public void addGenericParameter(GenericParameterDto genericParameter) {
     this.genericParameters.add(genericParameter);
+  }
+
+  /**
+   * Replaces genericParameters with the given collection; the DTO retains its own mutable
+   * collection.
+   *
+   * @param genericParameters the replacement collection (not null)
+   * @throws NullPointerException if genericParameters is null
+   */
+  public void setGenericParameters(List<GenericParameterDto> genericParameters) {
+    Objects.requireNonNull(genericParameters);
+    if (genericParameters != this.genericParameters) {
+      this.genericParameters.clear();
+      this.genericParameters.addAll(genericParameters);
+    }
   }
 
   /**
@@ -295,6 +339,20 @@ public class MethodDto {
    */
   public void addAnnotation(AnnotationDto annotation) {
     this.annotations.add(annotation);
+  }
+
+  /**
+   * Replaces annotations with the given collection; the DTO retains its own mutable collection.
+   *
+   * @param annotations the replacement collection (not null)
+   * @throws NullPointerException if annotations is null
+   */
+  public void setAnnotations(List<AnnotationDto> annotations) {
+    Objects.requireNonNull(annotations);
+    if (annotations != this.annotations) {
+      this.annotations.clear();
+      this.annotations.addAll(annotations);
+    }
   }
 
   /**

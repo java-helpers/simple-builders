@@ -29,10 +29,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.List;
-import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.codegen.testing.CodegenTestUtils;
 import org.javahelpers.codegen.testing.ProbeProcessor;
 import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
+import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDtoBuilder;
 import org.junit.jupiter.api.Test;
 
 class BuilderDefinitionCreatorTest {
@@ -133,9 +133,9 @@ class BuilderDefinitionCreatorTest {
   }
 
   private static BuilderFieldDto field() {
-    BuilderFieldDto field = new BuilderFieldDto();
-    field.setOriginalFieldName("isStatic");
-    field.setFieldType(TypeName.of(Boolean.class));
-    return field;
+    return BuilderFieldDtoBuilder.create()
+        .originalFieldName("isStatic")
+        .fieldType(Boolean.class)
+        .build();
   }
 }

@@ -28,8 +28,9 @@ import static org.javahelpers.codegen.analysis.JavaLangMapper.map2TypeName;
 import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.*;
 
 import java.util.List;
-import org.javahelpers.codegen.model.javadoc.JavadocDto;
+import org.javahelpers.codegen.model.javadoc.JavadocDtoBuilder;
 import org.javahelpers.codegen.model.method.MethodParameterDto;
+import org.javahelpers.codegen.model.method.MethodParameterDtoBuilder;
 import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.codegen.model.type.TypeNameArray;
 import org.javahelpers.codegen.model.type.TypeNameGeneric;
@@ -127,9 +128,11 @@ public class ArrayBuilderConsumerGenerator implements MethodGenerator {
     TypeNameGeneric builderTypeGeneric = new TypeNameGeneric(collectionBuilderType, elementType);
     TypeNameGeneric consumerType = createConsumerType(builderTypeGeneric);
 
-    MethodParameterDto parameter = new MethodParameterDto();
-    parameter.setParameterName(fieldName + BUILDER_SUFFIX + SUFFIX_CONSUMER);
-    parameter.setParameterTypeName(consumerType);
+    MethodParameterDto parameter =
+        MethodParameterDtoBuilder.create()
+            .parameterName(fieldName + BUILDER_SUFFIX + SUFFIX_CONSUMER)
+            .parameterTypeName(consumerType)
+            .build();
 
     BuilderMethodDto methodDto = createBuilderMethod(fieldName, returnBuilderType, context);
     methodDto.addParameter(parameter);
@@ -171,10 +174,12 @@ public class ArrayBuilderConsumerGenerator implements MethodGenerator {
     methodDto.addArgument("elementType", elementType);
     methodDto.setPriority(BuilderMethodDto.PRIORITY_MEDIUM);
     methodDto.setJavadoc(
-        new JavadocDto(
+        JavadocDtoBuilder.create()
+            .description(
                 "Sets the value for <code>%s</code> using the fluent builder consumer.", fieldName)
-            .addParam(parameter.getParameterName(), "consumer for %s", fieldName)
-            .addReturn(BuilderJavadocConstants.RETURN_BUILDER_INSTANCE));
+            .param(parameter.getParameterName(), "consumer for %s", fieldName)
+            .returns(BuilderJavadocConstants.RETURN_BUILDER_INSTANCE)
+            .build());
     return methodDto;
   }
 }

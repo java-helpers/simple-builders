@@ -26,9 +26,11 @@ package org.javahelpers.codegen.model.type;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 
 /** Represents a generic type parameter (e.g., {@code T extends Number & Comparable<T>}). */
-public class GenericParameterDto {
+public class GenericParameterDto implements GenericParameterDtoBuilder.With {
+
   /** The name of the generic parameter (e.g., "T"). */
   private String name;
 
@@ -61,6 +63,20 @@ public class GenericParameterDto {
   public void addUpperBound(TypeName bound) {
     if (bound != null) {
       upperBounds.add(bound);
+    }
+  }
+
+  /**
+   * Replaces upperBounds with the given collection; the DTO retains its own mutable collection.
+   *
+   * @param upperBounds the replacement collection (not null)
+   * @throws NullPointerException if upperBounds is null
+   */
+  public void setUpperBounds(List<TypeName> upperBounds) {
+    Objects.requireNonNull(upperBounds);
+    if (upperBounds != this.upperBounds) {
+      this.upperBounds.clear();
+      this.upperBounds.addAll(upperBounds);
     }
   }
 

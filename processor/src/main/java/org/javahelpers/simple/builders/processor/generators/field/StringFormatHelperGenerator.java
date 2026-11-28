@@ -34,8 +34,9 @@ import java.util.List;
 import java.util.Optional;
 import org.apache.commons.collections4.CollectionUtils;
 import org.javahelpers.codegen.model.annotation.AnnotationDto;
-import org.javahelpers.codegen.model.javadoc.JavadocDto;
+import org.javahelpers.codegen.model.javadoc.JavadocDtoBuilder;
 import org.javahelpers.codegen.model.method.MethodParameterDto;
+import org.javahelpers.codegen.model.method.MethodParameterDtoBuilder;
 import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.codegen.model.type.TypeNameArray;
 import org.javahelpers.codegen.model.type.TypeNameGeneric;
@@ -172,16 +173,18 @@ public class StringFormatHelperGenerator implements MethodGenerator {
       BuilderProcessingContext context) {
     TypeName stringType = map2TypeName(String.class);
 
-    MethodParameterDto formatParam = new MethodParameterDto();
-    formatParam.setParameterName("format");
-    formatParam.setParameterTypeName(stringType);
-    if (annotations != null) {
-      annotations.forEach(formatParam::addAnnotation);
-    }
+    MethodParameterDto formatParam =
+        MethodParameterDtoBuilder.create()
+            .parameterName("format")
+            .parameterTypeName(stringType)
+            .annotations(annotations != null ? annotations : List.of())
+            .build();
 
-    MethodParameterDto argsParam = new MethodParameterDto();
-    argsParam.setParameterName("args");
-    argsParam.setParameterTypeName(TypeNameArray.of(Object.class));
+    MethodParameterDto argsParam =
+        MethodParameterDtoBuilder.create()
+            .parameterName("args")
+            .parameterTypeName(TypeNameArray.of(Object.class))
+            .build();
 
     BuilderMethodDto methodDto = createBuilderMethod(fieldName, builderType, context);
     methodDto.addParameter(formatParam);
@@ -196,14 +199,16 @@ public class StringFormatHelperGenerator implements MethodGenerator {
     methodDto.addArgument("builderFieldWrapper", TRACKED_VALUE_TYPE);
     methodDto.setPriority(BuilderMethodDto.PRIORITY_HIGH);
     methodDto.setJavadoc(
-        new JavadocDto(
+        JavadocDtoBuilder.create()
+            .description(
                 "Sets the String value for <code>%s</code> by using String.format(format, args).\nSee {@link String#format(String, Object...)} for details.",
                 fieldName)
-            .addParam(formatParam.getParameterName(), "A format string")
-            .addParam(
+            .param(formatParam.getParameterName(), "A format string")
+            .param(
                 argsParam.getParameterName(),
                 "Arguments referenced by the format specifiers in the format string.")
-            .addReturn(BuilderJavadocConstants.RETURN_BUILDER_INSTANCE));
+            .returns(BuilderJavadocConstants.RETURN_BUILDER_INSTANCE)
+            .build());
 
     // Add example fragment for String format method
     addExampleChainFragmentTemplate(methodDto, "#{methodName}(\"Hello %s\", \"World\")");

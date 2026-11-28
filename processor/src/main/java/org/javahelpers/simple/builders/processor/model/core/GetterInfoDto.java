@@ -44,7 +44,8 @@ import org.apache.commons.lang3.builder.ToStringStyle;
  * @param getterName the simple name of the getter method; must not be {@code null}
  * @param deprecated whether the getter method is annotated {@code @Deprecated}
  */
-public record GetterInfoDto(String getterName, boolean deprecated) {
+public record GetterInfoDto(String getterName, boolean deprecated)
+    implements GetterInfoDtoBuilder.With {
 
   /**
    * Compact constructor enforcing that {@code getterName} is non-null — a {@code GetterInfoDto}

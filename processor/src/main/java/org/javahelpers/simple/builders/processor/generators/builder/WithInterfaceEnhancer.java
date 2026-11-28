@@ -23,10 +23,11 @@
  */
 package org.javahelpers.simple.builders.processor.generators.builder;
 
+import java.util.List;
 import org.javahelpers.codegen.analysis.JavaLangMapper;
 import org.javahelpers.codegen.enums.AccessModifier;
-import org.javahelpers.codegen.model.javadoc.JavadocDto;
-import org.javahelpers.codegen.model.method.MethodParameterDto;
+import org.javahelpers.codegen.model.javadoc.JavadocDtoBuilder;
+import org.javahelpers.codegen.model.javadoc.JavadocTagDto;
 import org.javahelpers.codegen.model.type.NestedTypeDto;
 import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.codegen.model.type.TypeNameGeneric;
@@ -34,7 +35,9 @@ import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
 import org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
+import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDtoBuilder;
 import org.javahelpers.simple.builders.processor.model.type.BuilderNestedTypeDto;
+import org.javahelpers.simple.builders.processor.model.type.BuilderNestedTypeDtoBuilder;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 
 /**
@@ -112,23 +115,18 @@ public class WithInterfaceEnhancer implements BuilderEnhancer {
    * @return the nested type DTO for the With interface
    */
   private BuilderNestedTypeDto createWithInterface(BuilderDefinitionDto builderDto) {
-    BuilderNestedTypeDto withInterface = new BuilderNestedTypeDto();
-    withInterface.setTypeName("With");
-    withInterface.setKind(NestedTypeDto.NestedTypeKind.INTERFACE);
-    withInterface.setVisibility(AccessModifier.PUBLIC);
-    withInterface.setJavadoc(
-        new JavadocDto(
-            "Interface that can be implemented by the DTO to provide fluent modification methods."));
-
-    // Create the first method: DtoType with(Consumer<BuilderType> b)
-    BuilderMethodDto withConsumerMethod = createWithConsumerMethod(builderDto);
-    withInterface.addMethod(withConsumerMethod);
-
-    // Create the second method: BuilderType with()
-    BuilderMethodDto withBuilderMethod = createWithBuilderMethod(builderDto);
-    withInterface.addMethod(withBuilderMethod);
-
-    return withInterface;
+    return BuilderNestedTypeDtoBuilder.create()
+        .typeName("With")
+        .kind(NestedTypeDto.NestedTypeKind.INTERFACE)
+        .visibility(AccessModifier.PUBLIC)
+        .javadoc(
+            j ->
+                j.description(
+                    "Interface that can be implemented by the DTO to provide fluent modification methods."))
+        // First method: DtoType with(Consumer<BuilderType> b)
+        // Second method: BuilderType with()
+        .methods(List.of(createWithConsumerMethod(builderDto), createWithBuilderMethod(builderDto)))
+        .build();
   }
 
   /**
@@ -140,16 +138,16 @@ public class WithInterfaceEnhancer implements BuilderEnhancer {
   private BuilderMethodDto createWithConsumerMethod(BuilderDefinitionDto builderDef) {
     // Return type is the DTO type
     TypeName dtoType = builderDef.getBuildingTargetTypeName();
-    BuilderMethodDto method = new BuilderMethodDto("with", dtoType);
-
-    // Parameter: Consumer<BuilderType> b
-    MethodParameterDto parameter = new MethodParameterDto();
-    parameter.setParameterName("b");
     // For interface methods, we store the full type as a string
     TypeNameGeneric consumerType =
         MethodGeneratorUtil.createConsumerType(builderDef.getBuilderTypeName());
-    parameter.setParameterTypeName(consumerType);
-    method.addParameter(parameter);
+    BuilderMethodDto method =
+        BuilderMethodDtoBuilder.create()
+            .methodName("with")
+            .returnType(dtoType)
+            // Parameter: Consumer<BuilderType> b
+            .add2Parameters(el -> el.parameterName("b").parameterTypeName(consumerType))
+            .build();
 
     // Add implementation with validation to catch wrong implementations
     method.setCode(
@@ -170,10 +168,12 @@ public class WithInterfaceEnhancer implements BuilderEnhancer {
         "illegalargumentexception", JavaLangMapper.map2TypeName(IllegalArgumentException.class));
 
     method.setJavadoc(
-        new JavadocDto(
+        JavadocDtoBuilder.create()
+            .description(
                 "Initializes a builder from an instance of this class, using methods of this builder to change values and returns the new built object.")
-            .addParam("b", "the consumer to apply modifications")
-            .addReturn("the modified instance"));
+            .add2Tags(new JavadocTagDto("param", "b the consumer to apply modifications"))
+            .add2Tags(new JavadocTagDto("return", "the modified instance"))
+            .build());
 
     return method;
   }
@@ -186,7 +186,11 @@ public class WithInterfaceEnhancer implements BuilderEnhancer {
    */
   private BuilderMethodDto createWithBuilderMethod(BuilderDefinitionDto builderDef) {
     // Return type is the Builder type
-    BuilderMethodDto method = new BuilderMethodDto("with", builderDef.getBuilderTypeName());
+    BuilderMethodDto method =
+        BuilderMethodDtoBuilder.create()
+            .methodName("with")
+            .returnType(builderDef.getBuilderTypeName())
+            .build();
 
     // Add implementation with validation to catch wrong implementations
     method.setCode(
@@ -204,8 +208,11 @@ public class WithInterfaceEnhancer implements BuilderEnhancer {
         "illegalargumentexception", JavaLangMapper.map2TypeName(IllegalArgumentException.class));
 
     method.setJavadoc(
-        new JavadocDto("Creates a builder initialized from this instance.")
-            .addReturn("a builder initialized with this instance's values"));
+        JavadocDtoBuilder.create()
+            .description("Creates a builder initialized from this instance.")
+            .add2Tags(
+                new JavadocTagDto("return", "a builder initialized with this instance's values"))
+            .build());
 
     return method;
   }

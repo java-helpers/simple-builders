@@ -27,6 +27,7 @@ package org.javahelpers.codegen.model.type;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import org.javahelpers.codegen.enums.AccessModifier;
 import org.javahelpers.codegen.model.annotation.AnnotationDto;
 import org.javahelpers.codegen.model.javadoc.JavadocDto;
@@ -41,7 +42,7 @@ import org.javahelpers.codegen.model.method.MethodDto;
  *
  * <p>For example, the "With" interface that allows DTOs to implement fluent modification methods.
  */
-public class NestedTypeDto {
+public class NestedTypeDto implements NestedTypeDtoBuilder.With {
 
   /** The simple name of the nested type (e.g., "With"). */
   private String typeName;
@@ -98,6 +99,20 @@ public class NestedTypeDto {
     this.methods.add(method);
   }
 
+  /**
+   * Replaces methods with the given collection; the DTO retains its own mutable collection.
+   *
+   * @param methods the replacement collection (not null)
+   * @throws NullPointerException if methods is null
+   */
+  public void setMethods(List<MethodDto> methods) {
+    Objects.requireNonNull(methods);
+    if (methods != this.methods) {
+      this.methods.clear();
+      this.methods.addAll(methods);
+    }
+  }
+
   public JavadocDto getJavadoc() {
     return javadoc;
   }
@@ -112,5 +127,19 @@ public class NestedTypeDto {
 
   public void addAnnotation(AnnotationDto annotation) {
     this.annotations.add(annotation);
+  }
+
+  /**
+   * Replaces annotations with the given collection; the DTO retains its own mutable collection.
+   *
+   * @param annotations the replacement collection (not null)
+   * @throws NullPointerException if annotations is null
+   */
+  public void setAnnotations(List<AnnotationDto> annotations) {
+    Objects.requireNonNull(annotations);
+    if (annotations != this.annotations) {
+      this.annotations.clear();
+      this.annotations.addAll(annotations);
+    }
   }
 }

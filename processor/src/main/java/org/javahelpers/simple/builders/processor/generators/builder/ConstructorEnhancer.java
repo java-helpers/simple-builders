@@ -24,10 +24,11 @@
 
 package org.javahelpers.simple.builders.processor.generators.builder;
 
-import org.javahelpers.codegen.model.javadoc.JavadocDto;
+import org.javahelpers.codegen.model.javadoc.JavadocDtoBuilder;
+import org.javahelpers.codegen.model.javadoc.JavadocTagDto;
 import org.javahelpers.codegen.model.method.ConstructorDto;
+import org.javahelpers.codegen.model.method.ConstructorDtoBuilder;
 import org.javahelpers.codegen.model.method.MethodCodeDto;
-import org.javahelpers.codegen.model.method.MethodParameterDto;
 import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.codegen.model.type.TypeNamePrimitive;
 import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
@@ -71,26 +72,23 @@ public class ConstructorEnhancer implements BuilderEnhancer {
 
   /** Creates the empty constructor. */
   protected ConstructorDto createEmptyConstructor(BuilderDefinitionDto builderDto) {
-    ConstructorDto constructor = new ConstructorDto();
-    constructor.setVisibility(builderDto.getConfiguration().getBuilderConstructorAccess());
-
     String targetFullName = builderDto.getBuildingTargetTypeName().getFullQualifiedName();
-    constructor.setJavadoc(
-        new JavadocDto("Empty constructor of builder for {@code %s}.", targetFullName));
-
-    return constructor;
+    return ConstructorDtoBuilder.create()
+        .visibility(builderDto.getConfiguration().getBuilderConstructorAccess())
+        .javadoc(j -> j.description("Empty constructor of builder for {@code %s}.", targetFullName))
+        .build();
   }
 
   /** Creates the from-instance constructor. */
   protected ConstructorDto createFromInstanceConstructor(BuilderDefinitionDto builderDto) {
-    ConstructorDto constructor = new ConstructorDto();
-    constructor.setVisibility(builderDto.getConfiguration().getBuilderConstructorAccess());
-
-    // Add parameter for the DTO instance
-    MethodParameterDto instanceParam = new MethodParameterDto();
-    instanceParam.setParameterName("instance");
-    instanceParam.setParameterTypeName(builderDto.getBuildingTargetTypeName());
-    constructor.addParameter(instanceParam);
+    ConstructorDto constructor =
+        ConstructorDtoBuilder.create()
+            .visibility(builderDto.getConfiguration().getBuilderConstructorAccess())
+            .add2Parameters(
+                el ->
+                    el.parameterName("instance")
+                        .parameterTypeName(builderDto.getBuildingTargetTypeName()))
+            .build();
 
     // Build constructor code body
     MethodCodeDto codeDto = new MethodCodeDto();
@@ -130,8 +128,10 @@ public class ConstructorEnhancer implements BuilderEnhancer {
 
     String targetFullName = builderDto.getBuildingTargetTypeName().getFullQualifiedName();
     constructor.setJavadoc(
-        new JavadocDto("Initialisation of builder for {@code %s} by a instance.", targetFullName)
-            .addParam("instance", "object instance for initialisiation"));
+        JavadocDtoBuilder.create()
+            .description("Initialisation of builder for {@code %s} by a instance.", targetFullName)
+            .add2Tags(new JavadocTagDto("param", "instance object instance for initialisiation"))
+            .build());
 
     return constructor;
   }

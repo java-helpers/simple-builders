@@ -27,6 +27,7 @@ package org.javahelpers.codegen.model.method;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.javahelpers.codegen.enums.AccessModifier;
@@ -38,7 +39,8 @@ import org.javahelpers.codegen.model.javadoc.JavadocDto;
  *
  * <p>This DTO contains all information needed to render a constructor in the generated class.
  */
-public class ConstructorDto {
+public class ConstructorDto implements ConstructorDtoBuilder.With {
+
   /** Constructor parameters. */
   private final LinkedList<MethodParameterDto> parameters = new LinkedList<>();
 
@@ -60,6 +62,20 @@ public class ConstructorDto {
 
   public void addParameter(MethodParameterDto parameter) {
     this.parameters.add(parameter);
+  }
+
+  /**
+   * Replaces parameters with the given collection; the DTO retains its own mutable collection.
+   *
+   * @param parameters the replacement collection (not null)
+   * @throws NullPointerException if parameters is null
+   */
+  public void setParameters(List<MethodParameterDto> parameters) {
+    Objects.requireNonNull(parameters);
+    if (parameters != this.parameters) {
+      this.parameters.clear();
+      this.parameters.addAll(parameters);
+    }
   }
 
   /**
@@ -111,6 +127,20 @@ public class ConstructorDto {
 
   public void addAnnotation(AnnotationDto annotation) {
     this.annotations.add(annotation);
+  }
+
+  /**
+   * Replaces annotations with the given collection; the DTO retains its own mutable collection.
+   *
+   * @param annotations the replacement collection (not null)
+   * @throws NullPointerException if annotations is null
+   */
+  public void setAnnotations(List<AnnotationDto> annotations) {
+    Objects.requireNonNull(annotations);
+    if (annotations != this.annotations) {
+      this.annotations.clear();
+      this.annotations.addAll(annotations);
+    }
   }
 
   /**

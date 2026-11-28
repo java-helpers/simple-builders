@@ -30,6 +30,12 @@ package org.javahelpers.simple.builders.processor.generators.util;
  */
 public final class BuilderJavadocConstants {
 
+  /** Javadoc parameter tag name. */
+  public static final String PARAM_TAG = "param";
+
+  /** Javadoc return tag name. */
+  public static final String RETURN_TAG = "return";
+
   /** Common return description for builder methods that return the builder instance. */
   public static final String RETURN_BUILDER_INSTANCE = "current instance of builder";
 

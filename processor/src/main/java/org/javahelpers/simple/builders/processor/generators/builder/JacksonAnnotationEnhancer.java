@@ -24,6 +24,7 @@
 package org.javahelpers.simple.builders.processor.generators.builder;
 
 import org.javahelpers.codegen.model.annotation.AnnotationDto;
+import org.javahelpers.codegen.model.annotation.AnnotationDtoBuilder;
 import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
@@ -113,18 +114,13 @@ public class JacksonAnnotationEnhancer implements BuilderEnhancer {
    * @return the annotation DTO for @JsonPOJOBuilder
    */
   private AnnotationDto createJsonPOJOBuilderAnnotation(BuilderDefinitionDto builderDto) {
-    AnnotationDto annotation = new AnnotationDto();
-    annotation.setAnnotationType(
-        new TypeName("com.fasterxml.jackson.databind.annotation", "JsonPOJOBuilder"));
-
     // Add withPrefix member with the setter prefix from configuration
     String setterPrefix = builderDto.getConfiguration().getSetterPrefix();
-    if (setterPrefix != null) {
-      annotation.addMember("withPrefix", "\"" + setterPrefix + "\"");
-    } else {
-      annotation.addMember("withPrefix", "\"\"");
-    }
-
-    return annotation;
+    return AnnotationDtoBuilder.create()
+        .annotationType(
+            new TypeName("com.fasterxml.jackson.databind.annotation", "JsonPOJOBuilder"))
+        .members(
+            m -> m.put("withPrefix", setterPrefix != null ? "\"" + setterPrefix + "\"" : "\"\""))
+        .build();
   }
 }

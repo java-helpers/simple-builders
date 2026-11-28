@@ -25,6 +25,6 @@
 package org.javahelpers.codegen.model.method;
 
 /** DTO for holding information of code implementation. */
-public class MethodCodeDto extends CodeTemplateDto {
+public class MethodCodeDto extends CodeTemplateDto implements MethodCodeDtoBuilder.With {
   // All functionality inherited from CodeTemplateDto
 }

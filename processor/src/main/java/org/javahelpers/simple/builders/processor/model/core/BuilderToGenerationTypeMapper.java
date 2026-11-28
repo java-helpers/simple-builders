@@ -30,13 +30,17 @@ import java.util.stream.Stream;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.codegen.model.core.ClassFieldDto;
 import org.javahelpers.codegen.model.core.GenerationTargetClassDto;
+import org.javahelpers.codegen.model.core.GenerationTargetClassDtoBuilder;
 import org.javahelpers.codegen.model.javadoc.JavadocDto;
+import org.javahelpers.codegen.model.javadoc.JavadocDtoBuilder;
 import org.javahelpers.codegen.model.method.ConstructorDto;
 import org.javahelpers.codegen.model.method.MethodCodePlaceholder;
 import org.javahelpers.codegen.model.method.MethodCodeStringPlaceholder;
 import org.javahelpers.codegen.model.method.MethodCodeTypePlaceholder;
 import org.javahelpers.codegen.model.method.MethodDto;
+import org.javahelpers.codegen.model.method.MethodDtoBuilder;
 import org.javahelpers.codegen.model.type.NestedTypeDto;
+import org.javahelpers.codegen.model.type.NestedTypeDtoBuilder;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.type.BuilderNestedTypeDto;
 
@@ -87,33 +91,6 @@ public class BuilderToGenerationTypeMapper {
    * @return the rendering DTO for code generation
    */
   public GenerationTargetClassDto toRenderingDto(BuilderDefinitionDto builderDto) {
-    GenerationTargetClassDto renderingDto = new GenerationTargetClassDto();
-    renderingDto.setTypeName(builderDto.getTypeName());
-    renderingDto.setClassAccessModifier(builderDto.getClassAccessModifier());
-    renderingDto.setSuperType(builderDto.getSuperType());
-    renderingDto.setClassJavadoc(
-        configuration.shouldGenerateJavaDoc() ? builderDto.getClassJavadoc() : null);
-    renderingDto.setFormattingMode(configuration.formattingModeEnum());
-
-    builderDto.getClassFields().stream()
-        .map(this::toRenderingClassField)
-        .forEach(renderingDto::addClassField);
-
-    builderDto.getConstructors().stream()
-        .map(this::toRenderingConstructor)
-        .forEach(renderingDto::addConstructor);
-
-    builderDto.getGenerics().forEach(renderingDto::addGeneric);
-
-    // Copy imports
-    builderDto.getImports().forEach(renderingDto::addImport);
-
-    // Copy class annotations
-    builderDto.getClassAnnotations().forEach(renderingDto::addClassAnnotation);
-
-    // Copy interfaces
-    builderDto.getInterfaces().forEach(renderingDto::addInterface);
-
     // Map and copy methods in emission order (see METHOD_EMISSION_ORDER): field-originated
     // methods stay grouped per field, builder-level methods come after grouped ones.
     Stream<FieldMethod> fieldMethods =
@@ -126,15 +103,26 @@ public class BuilderToGenerationTypeMapper {
                     field ->
                         field.getMethods().stream().map(method -> new FieldMethod(field, method))),
             builderDto.getMethods().stream().map(method -> new FieldMethod(null, method)));
-    fieldMethods
-        .sorted(METHOD_EMISSION_ORDER)
-        .forEach(pair -> renderingDto.addMethod(toMethodDto(pair.method())));
-
-    builderDto
-        .getNestedTypes()
-        .forEach(nestedType -> renderingDto.addNestedType(toNestedTypeDto(nestedType)));
-
-    return renderingDto;
+    return GenerationTargetClassDtoBuilder.create()
+        .typeName(builderDto.getTypeName())
+        .classAccessModifier(builderDto.getClassAccessModifier())
+        .superType(builderDto.getSuperType())
+        .classJavadoc(configuration.shouldGenerateJavaDoc() ? builderDto.getClassJavadoc() : null)
+        .formattingMode(configuration.formattingModeEnum())
+        .classFields(builderDto.getClassFields().stream().map(this::toRenderingClassField).toList())
+        .constructors(
+            builderDto.getConstructors().stream().map(this::toRenderingConstructor).toList())
+        .generics(builderDto.getGenerics())
+        .imports(builderDto.getImports())
+        .classAnnotations(builderDto.getClassAnnotations())
+        .interfaces(builderDto.getInterfaces())
+        .methods(
+            fieldMethods
+                .sorted(METHOD_EMISSION_ORDER)
+                .map(pair -> toMethodDto(pair.method()))
+                .toList())
+        .nestedTypes(builderDto.getNestedTypes().stream().map(this::toNestedTypeDto).toList())
+        .build();
   }
 
   /**
@@ -148,16 +136,17 @@ public class BuilderToGenerationTypeMapper {
    * @return a new {@link MethodDto} with all rendering fields copied
    */
   private MethodDto toMethodDto(BuilderMethodDto classMethod) {
-    MethodDto method = new MethodDto(classMethod.getMethodName(), classMethod.getReturnType());
-    method.setModifier(classMethod.getModifier().orElse(null));
-    method.setStatic(classMethod.isStatic());
-
-    if (configuration.shouldGenerateJavaDoc()) {
-      method.setJavadoc(buildMethodJavadoc(classMethod));
-    }
-    classMethod.getAnnotations().forEach(method::addAnnotation);
-    classMethod.getParameters().forEach(method::addParameter);
-    classMethod.getGenericParameters().forEach(method::addGenericParameter);
+    MethodDto method =
+        MethodDtoBuilder.create()
+            .methodName(classMethod.getMethodName())
+            .returnType(classMethod.getReturnType())
+            .modifier(classMethod.getModifier().orElse(null))
+            .isStatic(classMethod.isStatic())
+            .javadoc(configuration.shouldGenerateJavaDoc() ? buildMethodJavadoc(classMethod) : null)
+            .annotations(classMethod.getAnnotations())
+            .parameters(classMethod.getParameters())
+            .genericParameters(classMethod.getGenericParameters())
+            .build();
 
     // Copy method code: set code format, copy all arguments, and preserve explicit code-block
     // imports
@@ -307,7 +296,7 @@ public class BuilderToGenerationTypeMapper {
     JavadocDto javadoc = classMethod.getJavadoc();
     if (StringUtils.isNotBlank(classMethod.getSourceFieldName())) {
       if (javadoc == null) {
-        javadoc = new JavadocDto();
+        javadoc = JavadocDtoBuilder.create().build();
       }
       String sourceDescription = classMethod.getSourceDescription();
       if (sourceDescription != null) {
@@ -328,15 +317,13 @@ public class BuilderToGenerationTypeMapper {
    * @return a new {@link NestedTypeDto} with all rendering fields copied
    */
   public NestedTypeDto toNestedTypeDto(BuilderNestedTypeDto builderNestedType) {
-    NestedTypeDto nestedType = new NestedTypeDto();
-    nestedType.setTypeName(builderNestedType.getTypeName());
-    nestedType.setKind(builderNestedType.getKind());
-    nestedType.setVisibility(builderNestedType.getVisibility());
-    if (configuration.shouldGenerateJavaDoc()) {
-      nestedType.setJavadoc(builderNestedType.getJavadoc());
-    }
-    builderNestedType.getAnnotations().forEach(nestedType::addAnnotation);
-    builderNestedType.getMethods().forEach(method -> nestedType.addMethod(toMethodDto(method)));
-    return nestedType;
+    return NestedTypeDtoBuilder.create()
+        .typeName(builderNestedType.getTypeName())
+        .kind(builderNestedType.getKind())
+        .visibility(builderNestedType.getVisibility())
+        .javadoc(configuration.shouldGenerateJavaDoc() ? builderNestedType.getJavadoc() : null)
+        .annotations(builderNestedType.getAnnotations())
+        .methods(builderNestedType.getMethods().stream().map(this::toMethodDto).toList())
+        .build();
   }
 }

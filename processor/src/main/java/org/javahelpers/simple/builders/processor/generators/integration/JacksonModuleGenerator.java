@@ -34,12 +34,14 @@ import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
 import org.javahelpers.codegen.enums.AccessModifier;
 import org.javahelpers.codegen.enums.FormattingMode;
 import org.javahelpers.codegen.logging.ProcessingLogger;
-import org.javahelpers.codegen.model.annotation.AnnotationDto;
 import org.javahelpers.codegen.model.core.GenerationTargetClassDto;
+import org.javahelpers.codegen.model.core.GenerationTargetClassDtoBuilder;
 import org.javahelpers.codegen.model.integration.JacksonModuleEntryDto;
 import org.javahelpers.codegen.model.method.ConstructorDto;
+import org.javahelpers.codegen.model.method.ConstructorDtoBuilder;
 import org.javahelpers.codegen.model.method.MethodCodeDto;
 import org.javahelpers.codegen.model.type.NestedTypeDto;
+import org.javahelpers.codegen.model.type.NestedTypeDtoBuilder;
 import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
@@ -168,11 +170,13 @@ public class JacksonModuleGenerator {
    */
   private GenerationTargetClassDto buildTargetClass(
       String packageName, Set<JacksonModuleEntryDto> entries, FormattingMode formattingMode) {
-    GenerationTargetClassDto classDef = new GenerationTargetClassDto();
-    classDef.setTypeName(new TypeName(packageName, MODULE_CLASS_NAME));
-    classDef.setClassAccessModifier(AccessModifier.PUBLIC);
-    classDef.setSuperType(SIMPLE_MODULE_TYPE);
-    classDef.setFormattingMode(formattingMode);
+    GenerationTargetClassDto classDef =
+        GenerationTargetClassDtoBuilder.create()
+            .typeName(new TypeName(packageName, MODULE_CLASS_NAME))
+            .classAccessModifier(AccessModifier.PUBLIC)
+            .superType(SIMPLE_MODULE_TYPE)
+            .formattingMode(formattingMode)
+            .build();
 
     // Each entry becomes a private nested mixin interface annotated with @JsonDeserialize.
     for (JacksonModuleEntryDto entry : entries) {
@@ -188,22 +192,21 @@ public class JacksonModuleGenerator {
   }
 
   private static NestedTypeDto createMixinInterface(JacksonModuleEntryDto entry) {
-    NestedTypeDto mixin = new NestedTypeDto();
-    mixin.setTypeName(entry.dtoType().getClassName() + "Mixin");
-    mixin.setKind(NestedTypeDto.NestedTypeKind.INTERFACE);
-    mixin.setVisibility(AccessModifier.PRIVATE);
-
-    AnnotationDto jsonDeserialize = new AnnotationDto();
-    jsonDeserialize.setAnnotationType(JSON_DESERIALIZE_TYPE);
-    jsonDeserialize.addMember("builder", entry.generatedType().getClassName() + ".class");
-    mixin.addAnnotation(jsonDeserialize);
-
-    return mixin;
+    return NestedTypeDtoBuilder.create()
+        .typeName(entry.dtoType().getClassName() + "Mixin")
+        .kind(NestedTypeDto.NestedTypeKind.INTERFACE)
+        .visibility(AccessModifier.PRIVATE)
+        .add2Annotations(
+            el ->
+                el.annotationType(JSON_DESERIALIZE_TYPE)
+                    .members(
+                        m -> m.put("builder", entry.generatedType().getClassName() + ".class")))
+        .build();
   }
 
   private static ConstructorDto createConstructor(Set<JacksonModuleEntryDto> entries) {
-    ConstructorDto constructor = new ConstructorDto();
-    constructor.setVisibility(AccessModifier.PUBLIC);
+    ConstructorDto constructor =
+        ConstructorDtoBuilder.create().visibility(AccessModifier.PUBLIC).build();
 
     MethodCodeDto code = new MethodCodeDto();
     int index = 0;

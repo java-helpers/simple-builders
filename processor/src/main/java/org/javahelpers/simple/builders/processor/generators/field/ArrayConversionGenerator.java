@@ -28,8 +28,9 @@ import static org.javahelpers.codegen.analysis.JavaLangMapper.map2TypeName;
 import static org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil.*;
 
 import java.util.List;
-import org.javahelpers.codegen.model.javadoc.JavadocDto;
+import org.javahelpers.codegen.model.javadoc.JavadocDtoBuilder;
 import org.javahelpers.codegen.model.method.MethodParameterDto;
+import org.javahelpers.codegen.model.method.MethodParameterDtoBuilder;
 import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.codegen.model.type.TypeNameArray;
 import org.javahelpers.codegen.model.type.TypeNameGeneric;
@@ -115,9 +116,11 @@ public class ArrayConversionGenerator implements MethodGenerator {
       BuilderProcessingContext context) {
     String fieldName = field.getOriginalFieldName();
     String fieldNameInBuilder = field.getFieldNameInBuilder();
-    MethodParameterDto parameter = new MethodParameterDto();
-    parameter.setParameterName(fieldName);
-    parameter.setParameterTypeName(listType);
+    MethodParameterDto parameter =
+        MethodParameterDtoBuilder.create()
+            .parameterName(fieldName)
+            .parameterTypeName(listType)
+            .build();
 
     BuilderMethodDto methodDto = createBuilderMethod(fieldName, builderType, context);
     methodDto.addParameter(parameter);
@@ -143,9 +146,11 @@ public class ArrayConversionGenerator implements MethodGenerator {
     methodDto.setPriority(BuilderMethodDto.PRIORITY_HIGH);
     String fieldJavadocDesc = field.getJavaDocDescriptionOrFieldName();
     methodDto.setJavadoc(
-        new JavadocDto("Sets the value for <code>%s</code>.", fieldName)
-            .addParam(parameter.getParameterName(), fieldJavadocDesc)
-            .addReturn(BuilderJavadocConstants.RETURN_BUILDER_INSTANCE));
+        JavadocDtoBuilder.create()
+            .description("Sets the value for <code>%s</code>.", fieldName)
+            .param(parameter.getParameterName(), fieldJavadocDesc)
+            .returns(BuilderJavadocConstants.RETURN_BUILDER_INSTANCE)
+            .build());
 
     // Add example fragment for array conversion method
     addExampleChainFragment(methodDto, elementType, fieldName, context::resolveBuilderType);

@@ -45,9 +45,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.UnaryOperator;
-import org.javahelpers.codegen.model.javadoc.JavadocCodeBlockDto;
-import org.javahelpers.codegen.model.javadoc.JavadocDto;
-import org.javahelpers.codegen.model.method.MethodParameterDto;
+import org.javahelpers.codegen.model.javadoc.JavadocCodeBlockDtoBuilder;
+import org.javahelpers.codegen.model.javadoc.JavadocDtoBuilder;
 import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.codegen.model.type.TypeNameGeneric;
 import org.javahelpers.codegen.model.type.TypeNamePrimitive;
@@ -57,6 +56,7 @@ import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.generators.util.BuilderJavadocConstants;
 import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
+import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDtoBuilder;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 
 /**
@@ -157,15 +157,13 @@ public class UpdateHelperGenerator implements MethodGenerator {
     TypeNameGeneric updaterType =
         new TypeNameGeneric(map2TypeName(UnaryOperator.class), field.getFieldType());
 
-    MethodParameterDto parameter = new MethodParameterDto();
-    parameter.setParameterName(parameterName);
-    parameter.setParameterTypeName(updaterType);
-
     BuilderMethodDto methodDto =
-        new BuilderMethodDto(
-            generateBuilderMethodName(originalFieldName, context) + "Update", builderType);
-    methodDto.setModifier(getMethodAccessModifier(context));
-    methodDto.addParameter(parameter);
+        BuilderMethodDtoBuilder.create()
+            .methodName(generateBuilderMethodName(originalFieldName, context) + "Update")
+            .returnType(builderType)
+            .add2Parameters(el -> el.parameterName(parameterName).parameterTypeName(updaterType))
+            .modifier(getMethodAccessModifier(context))
+            .build();
     methodDto.setCode(
         """
         if (!this.$fieldName:N.isSet()) {
@@ -191,14 +189,16 @@ public class UpdateHelperGenerator implements MethodGenerator {
             .formatted(originalFieldName);
     description += builderConsumerGuidance(field, context);
     methodDto.setJavadoc(
-        new JavadocDto(description)
-            .addParam(
+        JavadocDtoBuilder.create()
+            .description(description)
+            .param(
                 parameterName,
                 "operator applied to the current value; its result becomes the new value")
-            .addReturn(BuilderJavadocConstants.RETURN_BUILDER_INSTANCE)
-            .addThrows(
+            .returns(BuilderJavadocConstants.RETURN_BUILDER_INSTANCE)
+            .throwsTag(
                 "IllegalStateException",
-                "if <code>%s</code> has not been set yet".formatted(originalFieldName)));
+                "if <code>%s</code> has not been set yet".formatted(originalFieldName))
+            .build());
 
     addUpdateExample(methodDto, field, context);
     return Collections.singletonList(methodDto);
@@ -246,15 +246,18 @@ public class UpdateHelperGenerator implements MethodGenerator {
     if (initialValue.isEmpty()) {
       return;
     }
-    JavadocCodeBlockDto methodExample = new JavadocCodeBlockDto();
-    methodExample.setCodeFormat(
-        "builder.%s(%s).%s(%s);"
-            .formatted(
-                generateBuilderMethodName(field.getOriginalFieldName(), context),
-                initialValue.get(),
-                methodDto.getMethodName(),
-                updateExpression.get()));
-    methodDto.getJavadoc().setExampleUsageCodeBlock(methodExample);
+    methodDto
+        .getJavadoc()
+        .setExampleUsageCodeBlock(
+            JavadocCodeBlockDtoBuilder.create()
+                .codeFormat(
+                    "builder.%s(%s).%s(%s);"
+                        .formatted(
+                            generateBuilderMethodName(field.getOriginalFieldName(), context),
+                            initialValue.get(),
+                            methodDto.getMethodName(),
+                            updateExpression.get()))
+                .build());
   }
 
   /**

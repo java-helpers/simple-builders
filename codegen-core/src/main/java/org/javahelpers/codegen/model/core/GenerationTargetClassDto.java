@@ -27,6 +27,7 @@ package org.javahelpers.codegen.model.core;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import org.javahelpers.codegen.enums.AccessModifier;
 import org.javahelpers.codegen.enums.FormattingMode;
@@ -51,7 +52,8 @@ import org.javahelpers.codegen.model.type.TypeNameWildcard;
  * <p>This base class contains all information needed by the code generator to render a class,
  * independent of whether it's a builder, Jackson module, or other generated class type.
  */
-public class GenerationTargetClassDto {
+public class GenerationTargetClassDto implements GenerationTargetClassDtoBuilder.With {
+
   /** Generated class FQN. */
   private TypeName typeName;
 
@@ -131,6 +133,20 @@ public class GenerationTargetClassDto {
     this.classFields.add(classField);
   }
 
+  /**
+   * Replaces classFields with the given collection; the DTO retains its own mutable collection.
+   *
+   * @param classFields the replacement collection (not null)
+   * @throws NullPointerException if classFields is null
+   */
+  public void setClassFields(List<ClassFieldDto> classFields) {
+    Objects.requireNonNull(classFields);
+    if (classFields != this.classFields) {
+      this.classFields.clear();
+      this.classFields.addAll(classFields);
+    }
+  }
+
   public List<ConstructorDto> getConstructors() {
     return constructors;
   }
@@ -139,12 +155,40 @@ public class GenerationTargetClassDto {
     this.constructors.add(constructor);
   }
 
+  /**
+   * Replaces constructors with the given collection; the DTO retains its own mutable collection.
+   *
+   * @param constructors the replacement collection (not null)
+   * @throws NullPointerException if constructors is null
+   */
+  public void setConstructors(List<ConstructorDto> constructors) {
+    Objects.requireNonNull(constructors);
+    if (constructors != this.constructors) {
+      this.constructors.clear();
+      this.constructors.addAll(constructors);
+    }
+  }
+
   public List<MethodDto> getMethods() {
     return methods;
   }
 
   public void addMethod(MethodDto method) {
     this.methods.add(method);
+  }
+
+  /**
+   * Replaces methods with the given collection; the DTO retains its own mutable collection.
+   *
+   * @param methods the replacement collection (not null)
+   * @throws NullPointerException if methods is null
+   */
+  public void setMethods(List<MethodDto> methods) {
+    Objects.requireNonNull(methods);
+    if (methods != this.methods) {
+      this.methods.clear();
+      this.methods.addAll(methods);
+    }
   }
 
   public Set<ImportStatement> getImports() {
@@ -206,12 +250,40 @@ public class GenerationTargetClassDto {
   }
 
   /**
+   * Replaces imports with the given collection; the DTO retains its own mutable collection.
+   *
+   * @param imports the replacement collection (not null)
+   * @throws NullPointerException if imports is null
+   */
+  public void setImports(Set<ImportStatement> imports) {
+    Objects.requireNonNull(imports);
+    if (imports != this.imports) {
+      this.imports.clear();
+      this.imports.addAll(imports);
+    }
+  }
+
+  /**
    * Adds a generic parameter definition.
    *
    * @param generic the generic parameter to add
    */
   public void addGeneric(GenericParameterDto generic) {
     generics.add(generic);
+  }
+
+  /**
+   * Replaces generics with the given collection; the DTO retains its own mutable collection.
+   *
+   * @param generics the replacement collection (not null)
+   * @throws NullPointerException if generics is null
+   */
+  public void setGenerics(List<GenericParameterDto> generics) {
+    Objects.requireNonNull(generics);
+    if (generics != this.generics) {
+      this.generics.clear();
+      this.generics.addAll(generics);
+    }
   }
 
   /**
@@ -243,6 +315,20 @@ public class GenerationTargetClassDto {
   }
 
   /**
+   * Replaces nestedTypes with the given collection; the DTO retains its own mutable collection.
+   *
+   * @param nestedTypes the replacement collection (not null)
+   * @throws NullPointerException if nestedTypes is null
+   */
+  public void setNestedTypes(List<NestedTypeDto> nestedTypes) {
+    Objects.requireNonNull(nestedTypes);
+    if (nestedTypes != this.nestedTypes) {
+      this.nestedTypes.clear();
+      this.nestedTypes.addAll(nestedTypes);
+    }
+  }
+
+  /**
    * Returns the set of class-level annotations.
    *
    * @return the set of class annotations (unique, no duplicates)
@@ -261,6 +347,21 @@ public class GenerationTargetClassDto {
   }
 
   /**
+   * Replaces classAnnotations with the given collection; the DTO retains its own mutable
+   * collection.
+   *
+   * @param classAnnotations the replacement collection (not null)
+   * @throws NullPointerException if classAnnotations is null
+   */
+  public void setClassAnnotations(Set<AnnotationDto> classAnnotations) {
+    Objects.requireNonNull(classAnnotations);
+    if (classAnnotations != this.classAnnotations) {
+      this.classAnnotations.clear();
+      this.classAnnotations.addAll(classAnnotations);
+    }
+  }
+
+  /**
    * Returns the set of interfaces to be implemented by the generated class.
    *
    * @return the set of interfaces (unique, no duplicates)
@@ -276,6 +377,20 @@ public class GenerationTargetClassDto {
    */
   public void addInterface(InterfaceName interfaceType) {
     this.interfaces.add(interfaceType);
+  }
+
+  /**
+   * Replaces interfaces with the given collection; the DTO retains its own mutable collection.
+   *
+   * @param interfaces the replacement collection (not null)
+   * @throws NullPointerException if interfaces is null
+   */
+  public void setInterfaces(Set<InterfaceName> interfaces) {
+    Objects.requireNonNull(interfaces);
+    if (interfaces != this.interfaces) {
+      this.interfaces.clear();
+      this.interfaces.addAll(interfaces);
+    }
   }
 
   /**

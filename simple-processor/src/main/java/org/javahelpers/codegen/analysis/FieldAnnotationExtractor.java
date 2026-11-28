@@ -25,6 +25,7 @@
 package org.javahelpers.codegen.analysis;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -38,6 +39,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
 import org.javahelpers.codegen.model.annotation.AnnotationDto;
+import org.javahelpers.codegen.model.annotation.AnnotationDtoBuilder;
 import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.codegen.model.type.TypeNamePrimitive;
 
@@ -134,23 +136,26 @@ public final class FieldAnnotationExtractor {
       return Optional.empty();
     }
 
-    // Create AnnotationDto
-    AnnotationDto annotationDto = new AnnotationDto();
-
     // Extract package and class name
     String packageName = context.getPackageName(annotationType);
     String simpleName = annotationType.getSimpleName().toString();
-    annotationDto.setAnnotationType(new TypeName(packageName, simpleName));
 
     // Extract annotation members (parameters)
     Map<? extends ExecutableElement, ? extends javax.lang.model.element.AnnotationValue>
         elementValues = mirror.getElementValues();
+    Map<String, String> members = new LinkedHashMap<>();
     for (Map.Entry<? extends ExecutableElement, ? extends javax.lang.model.element.AnnotationValue>
         entry : elementValues.entrySet()) {
       String memberName = entry.getKey().getSimpleName().toString();
       String memberValue = formatAnnotationValue(entry.getValue());
-      annotationDto.addMember(memberName, memberValue);
+      members.put(memberName, memberValue);
     }
+
+    AnnotationDto annotationDto =
+        AnnotationDtoBuilder.create()
+            .annotationType(new TypeName(packageName, simpleName))
+            .members(members)
+            .build();
 
     context.debug("    -> Added annotation: %s", annotationType.getQualifiedName());
     return Optional.of(annotationDto);

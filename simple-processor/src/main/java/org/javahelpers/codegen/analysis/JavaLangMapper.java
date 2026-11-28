@@ -43,7 +43,9 @@ import javax.lang.model.util.SimpleTypeVisitor14;
 import org.apache.commons.lang3.Strings;
 import org.javahelpers.codegen.model.annotation.AnnotationDto;
 import org.javahelpers.codegen.model.method.MethodParameterDto;
+import org.javahelpers.codegen.model.method.MethodParameterDtoBuilder;
 import org.javahelpers.codegen.model.type.GenericParameterDto;
+import org.javahelpers.codegen.model.type.GenericParameterDtoBuilder;
 import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.codegen.model.type.TypeNameArray;
 import org.javahelpers.codegen.model.type.TypeNameGeneric;
@@ -95,13 +97,15 @@ public final class JavaLangMapper {
    */
   public static GenericParameterDto map2GenericParameterDto(
       TypeParameterElement tp, TypeMappingContext context) {
-    GenericParameterDto g = new GenericParameterDto();
-    g.setName(tp.getSimpleName().toString());
-    tp.getBounds().stream()
-        .filter(b -> !"java.lang.Object".equals(b.toString()))
-        .map(b -> extractType(b, context))
-        .forEach(g::addUpperBound);
-    return g;
+    List<TypeName> upperBounds =
+        tp.getBounds().stream()
+            .filter(b -> !"java.lang.Object".equals(b.toString()))
+            .map(b -> extractType(b, context))
+            .toList();
+    return GenericParameterDtoBuilder.create()
+        .name(tp.getSimpleName().toString())
+        .upperBounds(upperBounds)
+        .build();
   }
 
   /**
@@ -113,8 +117,6 @@ public final class JavaLangMapper {
    */
   public static MethodParameterDto map2MethodParameter(
       VariableElement param, TypeMappingContext context) {
-    MethodParameterDto result = new MethodParameterDto();
-    result.setParameterName(param.getSimpleName().toString());
     TypeMirror typeMirror = param.asType();
     TypeName typeName = extractType(typeMirror, context);
     if (typeName == null) {
@@ -123,8 +125,10 @@ public final class JavaLangMapper {
 
     setEmptyConstructorInfo(typeName, param, context);
 
-    result.setParameterTypeName(typeName);
-    return result;
+    return MethodParameterDtoBuilder.create()
+        .parameterName(param.getSimpleName().toString())
+        .parameterTypeName(typeName)
+        .build();
   }
 
   /**

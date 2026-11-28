@@ -32,8 +32,9 @@ import java.util.function.Function;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.codegen.analysis.JavaLangMapper;
 import org.javahelpers.codegen.enums.AccessModifier;
-import org.javahelpers.codegen.model.javadoc.JavadocDto;
+import org.javahelpers.codegen.model.javadoc.JavadocDtoBuilder;
 import org.javahelpers.codegen.model.method.MethodParameterDto;
+import org.javahelpers.codegen.model.method.MethodParameterDtoBuilder;
 import org.javahelpers.codegen.model.type.GenericParameterDto;
 import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.codegen.model.type.TypeNameGeneric;
@@ -44,6 +45,7 @@ import org.javahelpers.codegen.model.type.TypeNameVariable;
 import org.javahelpers.codegen.util.JavadocExampleValues;
 import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
+import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDtoBuilder;
 import org.javahelpers.simple.builders.processor.model.type.PrefillCall;
 import org.javahelpers.simple.builders.processor.model.type.ResolvedBuilder;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
@@ -128,10 +130,11 @@ public final class MethodGeneratorUtil {
    */
   public static BuilderMethodDto createBuilderMethod(
       String fieldName, TypeName returnType, BuilderProcessingContext context) {
-    BuilderMethodDto method =
-        new BuilderMethodDto(generateBuilderMethodName(fieldName, context), returnType);
-    method.setModifier(getMethodAccessModifier(context));
-    return method;
+    return BuilderMethodDtoBuilder.create()
+        .methodName(generateBuilderMethodName(fieldName, context))
+        .returnType(returnType)
+        .modifier(getMethodAccessModifier(context))
+        .build();
   }
 
   /**
@@ -178,13 +181,15 @@ public final class MethodGeneratorUtil {
       TypeName builderType,
       BuilderProcessingContext context) {
 
-    MethodParameterDto parameter = new MethodParameterDto();
-    parameter.setParameterName(field.getOriginalFieldName());
-    parameter.setParameterTypeName(parameterType);
-
-    if (field.getParameterAnnotations() != null) {
-      field.getParameterAnnotations().forEach(parameter::addAnnotation);
-    }
+    MethodParameterDto parameter =
+        MethodParameterDtoBuilder.create()
+            .parameterName(field.getOriginalFieldName())
+            .parameterTypeName(parameterType)
+            .annotations(
+                field.getParameterAnnotations() != null
+                    ? field.getParameterAnnotations()
+                    : List.of())
+            .build();
 
     BuilderMethodDto methodDto =
         createBuilderMethod(field.getOriginalFieldName(), builderType, context);
@@ -211,9 +216,11 @@ public final class MethodGeneratorUtil {
 
     String fieldJavadocDesc = field.getJavaDocDescriptionOrFieldName();
     methodDto.setJavadoc(
-        new JavadocDto("Sets the value for <code>%s</code>.", field.getOriginalFieldName())
-            .addParam(parameter.getParameterName(), fieldJavadocDesc)
-            .addReturn(BuilderJavadocConstants.RETURN_BUILDER_INSTANCE));
+        JavadocDtoBuilder.create()
+            .description("Sets the value for <code>%s</code>.", field.getOriginalFieldName())
+            .param(parameter.getParameterName(), fieldJavadocDesc)
+            .returns(BuilderJavadocConstants.RETURN_BUILDER_INSTANCE)
+            .build());
 
     return methodDto;
   }
@@ -241,9 +248,11 @@ public final class MethodGeneratorUtil {
       BuilderProcessingContext context) {
     TypeName fieldBuilderType = fieldBuilder.typeName();
     TypeNameGeneric consumerType = createConsumerType(fieldBuilderType);
-    MethodParameterDto parameter = new MethodParameterDto();
-    parameter.setParameterName(field.getFieldNameInBuilder() + BUILDER_SUFFIX + SUFFIX_CONSUMER);
-    parameter.setParameterTypeName(consumerType);
+    MethodParameterDto parameter =
+        MethodParameterDtoBuilder.create()
+            .parameterName(field.getFieldNameInBuilder() + BUILDER_SUFFIX + SUFFIX_CONSUMER)
+            .parameterTypeName(consumerType)
+            .build();
     BuilderMethodDto methodDto =
         createBuilderMethod(field.getOriginalFieldName(), parentBuilderType, context);
     methodDto.addParameter(parameter);
@@ -277,14 +286,16 @@ public final class MethodGeneratorUtil {
     methodDto.setPriority(BuilderMethodDto.PRIORITY_MEDIUM);
     String fieldJavadocDesc = field.getJavaDocDescriptionOrFieldName();
     methodDto.setJavadoc(
-        new JavadocDto(
+        JavadocDtoBuilder.create()
+            .description(
                 "Sets the value for <code>%s</code> using a builder consumer that produces the value.",
                 field.getFieldNameInBuilder())
-            .addParam(
+            .param(
                 parameter.getParameterName(),
                 "consumer providing an instance of a builder for %s",
                 fieldJavadocDesc)
-            .addReturn(BuilderJavadocConstants.RETURN_BUILDER_INSTANCE));
+            .returns(BuilderJavadocConstants.RETURN_BUILDER_INSTANCE)
+            .build());
 
     return methodDto;
   }
@@ -297,16 +308,16 @@ public final class MethodGeneratorUtil {
    * @return the method DTO for the prefilling method
    */
   public static BuilderMethodDto createFieldPrefillMethod(PrefillCall prefillCall) {
-    MethodParameterDto parameter = new MethodParameterDto();
-    parameter.setParameterName("value");
-    parameter.setParameterTypeName(prefillCall.sourceType());
-    BuilderMethodDto methodDto = new BuilderMethodDto();
-    methodDto.setModifier(AccessModifier.PRIVATE);
-    methodDto.setStatic(true);
-    methodDto.setOrdering(2100); // last: private helpers go below toString
-    methodDto.setMethodName(prefillCall.methodName());
-    methodDto.setReturnType(prefillCall.generatedType());
-    methodDto.addParameter(parameter);
+    BuilderMethodDto methodDto =
+        BuilderMethodDtoBuilder.create()
+            .methodName(prefillCall.methodName())
+            .returnType(prefillCall.generatedType())
+            .modifier(AccessModifier.PRIVATE)
+            .isStatic(true)
+            .ordering(2100) // last: private helpers go below toString
+            .add2Parameters(
+                el -> el.parameterName("value").parameterTypeName(prefillCall.sourceType()))
+            .build();
     StringBuilder code = new StringBuilder();
     code.append("$builderType:T builder = ")
         .append(prefillCall.funcForEmptyInstance().instantiationCode("$builderType:T", ""))
@@ -416,9 +427,11 @@ public final class MethodGeneratorUtil {
       TypeName builderType,
       BuilderProcessingContext context) {
     TypeNameGeneric consumerType = createConsumerType(fieldType);
-    MethodParameterDto parameter = new MethodParameterDto();
-    parameter.setParameterName(field.getOriginalFieldName() + SUFFIX_CONSUMER);
-    parameter.setParameterTypeName(consumerType);
+    MethodParameterDto parameter =
+        MethodParameterDtoBuilder.create()
+            .parameterName(field.getOriginalFieldName() + SUFFIX_CONSUMER)
+            .parameterTypeName(consumerType)
+            .build();
 
     BuilderMethodDto methodDto =
         createBuilderMethod(field.getOriginalFieldName(), builderType, context);
@@ -441,14 +454,16 @@ public final class MethodGeneratorUtil {
 
     String fieldJavadocDesc = field.getJavaDocDescriptionOrFieldName();
     methodDto.setJavadoc(
-        new JavadocDto(
+        JavadocDtoBuilder.create()
+            .description(
                 "Sets the value for <code>%s</code> by executing the provided consumer.",
                 field.getOriginalFieldName())
-            .addParam(
+            .param(
                 parameter.getParameterName(),
                 "consumer providing an instance of %s",
                 fieldJavadocDesc)
-            .addReturn(BuilderJavadocConstants.RETURN_BUILDER_INSTANCE));
+            .returns(BuilderJavadocConstants.RETURN_BUILDER_INSTANCE)
+            .build());
 
     return methodDto;
   }

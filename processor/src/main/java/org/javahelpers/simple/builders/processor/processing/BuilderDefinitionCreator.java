@@ -51,9 +51,12 @@ import org.javahelpers.codegen.analysis.JavaLangAnalyser;
 import org.javahelpers.codegen.analysis.JavaLangMapper;
 import org.javahelpers.codegen.enums.AccessModifier;
 import org.javahelpers.codegen.model.annotation.AnnotationDto;
+import org.javahelpers.codegen.model.annotation.AnnotationDtoBuilder;
 import org.javahelpers.codegen.model.core.ClassFieldDto;
+import org.javahelpers.codegen.model.core.ClassFieldDtoBuilder;
 import org.javahelpers.codegen.model.core.DeprecationInfoDto;
 import org.javahelpers.codegen.model.javadoc.JavadocDto;
+import org.javahelpers.codegen.model.javadoc.JavadocDtoBuilder;
 import org.javahelpers.codegen.model.method.ConstructorDto;
 import org.javahelpers.codegen.model.method.MethodParameterDto;
 import org.javahelpers.codegen.model.type.TypeName;
@@ -65,7 +68,8 @@ import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 import org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
-import org.javahelpers.simple.builders.processor.model.core.GetterInfoDto;
+import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDtoBuilder;
+import org.javahelpers.simple.builders.processor.model.core.GetterInfoDtoBuilder;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 
 /** Class for creating a specific BuilderDefinitionDto for an annotated DTO class. */
@@ -469,15 +473,13 @@ public class BuilderDefinitionCreator {
    * @return the class field DTO
    */
   private static ClassFieldDto convertToClassField(BuilderFieldDto field) {
-    ClassFieldDto classField = new ClassFieldDto();
-    classField.setFieldName(field.getFieldNameInBuilder());
-
-    // Build the field type: TrackedValue<FieldType>
-    TypeName trackedValueType =
-        new TypeName("org.javahelpers.simple.builders.core.util", "TrackedValue");
-    TypeName wrappedFieldType =
-        new TypeNameGeneric(trackedValueType, List.of(field.getFieldType()));
-    classField.setFieldType(wrappedFieldType);
+    ClassFieldDto classField =
+        ClassFieldDtoBuilder.create()
+            .fieldName(field.getFieldNameInBuilder())
+            .fieldTypeGeneric(
+                new TypeName("org.javahelpers.simple.builders.core.util", "TrackedValue"),
+                field.getFieldType())
+            .build();
 
     classField.setVisibility(AccessModifier.PRIVATE);
     classField.setLiteralInitializer("unsetValue()");
@@ -949,36 +951,8 @@ public class BuilderDefinitionCreator {
     TypeName fieldType = paramDto.getParameterType();
     TypeMirror fieldTypeMirror = param.asType();
 
-    BuilderFieldDto field = new BuilderFieldDto();
-    field.setFieldNameInBuilder(
-        fieldNameInBuilder); // Use renamed field name for builder field storage
-    field.setOriginalFieldName(fieldName);
     // Framework annotations configure generation and are not copied onto generated code.
     fieldType.getAnnotations().removeIf(BuilderDefinitionCreator::isSkippedCopiedAnnotation);
-    field.setFieldType(fieldType);
-
-    // Store original javadoc description for reuse in builder method javadocs
-    field.setOriginalJavaDocDescription(StringUtils.trimToNull(javaDocDescription));
-
-    // Create javadoc for the tracked value field in the builder
-    String javaDocDescriptionOrFieldname = field.getJavaDocDescriptionOrFieldName();
-    JavadocDto trackedValueJavadoc =
-        new JavadocDto(
-            "Tracked value for <code>%s</code>: %s.",
-            fieldNameInBuilder, javaDocDescriptionOrFieldname);
-    field.setJavaDoc(trackedValueJavadoc);
-
-    // Find matching getter on the DTO type using the builder field name
-    TypeElement dtoTypeElement = context.getTypeElement(dtoType);
-
-    Optional<ExecutableElement> getter =
-        JavaLangAnalyser.findGetterForField(
-            dtoTypeElement, fieldNameInBuilder, fieldTypeMirror, context);
-    getter.ifPresent(
-        g ->
-            field.setGetterInfo(
-                new GetterInfoDto(
-                    g.getSimpleName().toString(), g.getAnnotation(Deprecated.class) != null)));
 
     // Extract annotations from the field parameter and exclude the framework's own
     // annotations — they configure generation and are not copied onto generated code.
@@ -989,8 +963,37 @@ public class BuilderDefinitionCreator {
     // To avoid duplication in generated code, we need to remove the duplications here.
     annotations.removeAll(fieldType.getAnnotations());
 
-    // Store parameter annotations in field for generators to access
-    field.setParameterAnnotations(annotations);
+    BuilderFieldDto field =
+        BuilderFieldDtoBuilder.create()
+            .fieldNameInBuilder(fieldNameInBuilder)
+            .originalFieldName(fieldName)
+            .fieldType(fieldType)
+            .originalJavaDocDescription(StringUtils.trimToNull(javaDocDescription))
+            .parameterAnnotations(annotations)
+            .build();
+
+    // Create javadoc for the tracked value field in the builder (description derives from the
+    // just-built field, so it is applied after build)
+    field.setJavaDoc(
+        JavadocDtoBuilder.create()
+            .description(
+                "Tracked value for <code>%s</code>: %s.",
+                fieldNameInBuilder, field.getJavaDocDescriptionOrFieldName())
+            .build());
+
+    // Find matching getter on the DTO type using the builder field name
+    TypeElement dtoTypeElement = context.getTypeElement(dtoType);
+
+    Optional<ExecutableElement> getter =
+        JavaLangAnalyser.findGetterForField(
+            dtoTypeElement, fieldNameInBuilder, fieldTypeMirror, context);
+    getter.ifPresent(
+        g ->
+            field.setGetterInfo(
+                GetterInfoDtoBuilder.create()
+                    .getterName(g.getSimpleName().toString())
+                    .deprecated(g.getAnnotation(Deprecated.class) != null)
+                    .build()));
 
     // Check if field has non-null constraint (annotation or primitive type)
     if (FieldAnnotationExtractor.hasNonNullConstraint(param)
@@ -1402,10 +1405,10 @@ public class BuilderDefinitionCreator {
    * @return the annotation DTO
    */
   private static AnnotationDto createSuppressWarningsAnnotation() {
-    AnnotationDto annotation = new AnnotationDto();
-    annotation.setAnnotationType(new TypeName("java.lang", "SuppressWarnings"));
-    annotation.addMember("value", "{\"deprecation\", \"removal\"}");
-    return annotation;
+    return AnnotationDtoBuilder.create()
+        .annotationType("java.lang", "SuppressWarnings")
+        .members(m -> m.put("value", "{\"deprecation\", \"removal\"}"))
+        .build();
   }
 
   /**

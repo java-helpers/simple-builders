@@ -206,6 +206,7 @@ class CustomizingDocumentationTest {
             import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
             import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
             import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
+            import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDtoBuilder;
             import org.javahelpers.codegen.model.method.MethodParameterDto;
             import org.javahelpers.codegen.model.type.TypeName;
             import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
@@ -222,12 +223,14 @@ class CustomizingDocumentationTest {
                     String fieldName = field.getFieldNameInBuilder();
                     String methodName = "custom" + capitalize(fieldName);
 
-                    BuilderMethodDto method = new BuilderMethodDto(methodName, builderType);
-
-                    MethodParameterDto parameter = new MethodParameterDto();
-                    parameter.setParameterName("value");
-                    parameter.setParameterTypeName(new TypeName("java.lang", "String"));
-                    method.addParameter(parameter);
+                    BuilderMethodDto method =
+                        BuilderMethodDtoBuilder.create()
+                            .methodName(methodName)
+                            .returnType(builderType)
+                            .add2Parameters(
+                                el -> el.parameterName("value")
+                                        .parameterTypeName(new TypeName("java.lang", "String")))
+                            .build();
 
                     method.setCode("return this." + fieldName + "(value.toUpperCase());");
 
@@ -413,6 +416,7 @@ class CustomizingDocumentationTest {
             import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
             import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
             import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
+            import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDtoBuilder;
             import org.javahelpers.codegen.model.method.MethodParameterDto;
             import org.javahelpers.codegen.model.type.TypeName;
             import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
@@ -435,13 +439,15 @@ class CustomizingDocumentationTest {
                     String fieldName = field.getFieldNameInBuilder();
                     String methodName = "validated" + capitalize(fieldName);
 
-                    BuilderMethodDto method = new BuilderMethodDto(methodName, builderType);
-
                     String parameterName = fieldName;
-                    MethodParameterDto parameter = new MethodParameterDto();
-                    parameter.setParameterName(parameterName);
-                    parameter.setParameterTypeName(new TypeName("java.lang", "String"));
-                    method.addParameter(parameter);
+                    BuilderMethodDto method =
+                        BuilderMethodDtoBuilder.create()
+                            .methodName(methodName)
+                            .returnType(builderType)
+                            .add2Parameters(
+                                el -> el.parameterName(parameterName)
+                                        .parameterTypeName(new TypeName("java.lang", "String")))
+                            .build();
 
                     method.setCode(String.format(
                         "if (%s != null && %s.contains(\\"@\\")) { " +
@@ -487,8 +493,10 @@ class CustomizingDocumentationTest {
 
             import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
             import org.javahelpers.codegen.model.annotation.AnnotationDto;
+            import org.javahelpers.codegen.model.annotation.AnnotationDtoBuilder;
             import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
             import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
+            import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDtoBuilder;
             import org.javahelpers.codegen.model.type.TypeName;
             import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
 
@@ -514,8 +522,10 @@ class CustomizingDocumentationTest {
 
                     // Add @Valid annotation if available
                     if (isValidationAvailable(context)) {
-                        AnnotationDto validAnnotation = new AnnotationDto();
-                        validAnnotation.setAnnotationType(new TypeName("javax.validation", "Valid"));
+                        AnnotationDto validAnnotation =
+                            AnnotationDtoBuilder.create()
+                                .annotationType(new TypeName("javax.validation", "Valid"))
+                                .build();
                         builderDto.addClassAnnotation(validAnnotation);
                     }
 
@@ -530,8 +540,12 @@ class CustomizingDocumentationTest {
 
                 private BuilderMethodDto createValidateMethod() {
                     TypeName returnType = new TypeName("java.lang", "Void");
-                    BuilderMethodDto method = new BuilderMethodDto("validate", returnType);
-                    method.setCode("// Validation logic here");
+                    BuilderMethodDto method =
+                        BuilderMethodDtoBuilder.create()
+                            .methodName("validate")
+                            .returnType(returnType)
+                            .code("// Validation logic here")
+                            .build();
                     return method;
                 }
 
@@ -598,6 +612,7 @@ class CustomizingDocumentationTest {
             import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
             import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
             import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
+            import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDtoBuilder;
             import org.javahelpers.codegen.model.method.MethodParameterDto;
             import org.javahelpers.codegen.model.type.TypeName;
             import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
@@ -616,13 +631,15 @@ class CustomizingDocumentationTest {
                     String fieldName = field.getFieldNameInBuilder();
                     String methodName = fieldName + "FromString";
 
-                    BuilderMethodDto method = new BuilderMethodDto(methodName, builderType);
-
                     String parameterName = fieldName + "String";
-                    MethodParameterDto parameter = new MethodParameterDto();
-                    parameter.setParameterName(parameterName);
-                    parameter.setParameterTypeName(new TypeName("java.lang", "String"));
-                    method.addParameter(parameter);
+                    BuilderMethodDto method =
+                        BuilderMethodDtoBuilder.create()
+                            .methodName(methodName)
+                            .returnType(builderType)
+                            .add2Parameters(
+                                el -> el.parameterName(parameterName)
+                                        .parameterTypeName(new TypeName("java.lang", "String")))
+                            .build();
 
                     method.setCode(String.format(
                         "try { return this.%s(java.time.LocalDate.parse(%s)); } " +
@@ -662,6 +679,7 @@ class CustomizingDocumentationTest {
             import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
             import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
             import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
+            import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDtoBuilder;
             import org.javahelpers.codegen.model.method.MethodParameterDto;
             import org.javahelpers.codegen.model.type.TypeName;
             import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
@@ -678,13 +696,15 @@ class CustomizingDocumentationTest {
                     TypeName builderType = builderDto.getBuilderTypeName();
 
                     // Add static factory method (conceptual - actual API may differ)
-                    BuilderMethodDto factoryMethod = new BuilderMethodDto("from", builderType);
-                    factoryMethod.setStatic(true);
-
-                    MethodParameterDto parameter = new MethodParameterDto();
-                    parameter.setParameterName("template");
-                    parameter.setParameterTypeName(builderType);
-                    factoryMethod.addParameter(parameter);
+                    BuilderMethodDto factoryMethod =
+                        BuilderMethodDtoBuilder.create()
+                            .methodName("from")
+                            .returnType(builderType)
+                            .isStatic(true)
+                            .add2Parameters(
+                                el -> el.parameterName("template")
+                                        .parameterTypeName(builderType))
+                            .build();
 
                     factoryMethod.setCode(String.format("return new %s();", builderType.getClassName()));
 

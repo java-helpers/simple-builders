@@ -25,6 +25,7 @@ package org.javahelpers.simple.builders.processor.generators.builder;
 
 import org.javahelpers.codegen.analysis.JavaLangMapper;
 import org.javahelpers.codegen.model.annotation.AnnotationDto;
+import org.javahelpers.codegen.model.annotation.AnnotationDtoBuilder;
 import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.simple.builders.core.annotations.BuilderImplementation;
 import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
@@ -96,13 +97,11 @@ public class BuilderImplementationAnnotationEnhancer implements BuilderEnhancer 
    * @return the annotation DTO for @BuilderImplementation
    */
   private AnnotationDto createBuilderImplementationAnnotation(BuilderDefinitionDto builderDto) {
-    AnnotationDto annotation = new AnnotationDto();
-    annotation.setAnnotationType(JavaLangMapper.map2TypeName(BuilderImplementation.class));
-
-    // Add forClass member with the target DTO class
-    annotation.addMember(
-        "forClass", builderDto.getBuildingTargetTypeName().getClassName() + ".class");
-
-    return annotation;
+    return AnnotationDtoBuilder.create()
+        .annotationType(JavaLangMapper.map2TypeName(BuilderImplementation.class))
+        .members(
+            m ->
+                m.put("forClass", builderDto.getBuildingTargetTypeName().getClassName() + ".class"))
+        .build();
   }
 }

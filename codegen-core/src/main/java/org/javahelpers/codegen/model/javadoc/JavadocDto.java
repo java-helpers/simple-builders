@@ -45,7 +45,7 @@ import org.apache.commons.lang3.StringUtils;
  *     .addReturn("a new PersonDto instance");
  * }</pre>
  */
-public class JavadocDto {
+public class JavadocDto implements JavadocDtoBuilder.With {
 
   /** The main description text (everything before the first tag). */
   private String description;
@@ -111,6 +111,15 @@ public class JavadocDto {
   }
 
   /**
+   * Sets the main description text without formatting.
+   *
+   * @param description the main description text
+   */
+  public void setDescription(String description) {
+    this.description = description;
+  }
+
+  /**
    * Gets the list of Javadoc tags.
    *
    * @return the list of tags
@@ -157,6 +166,20 @@ public class JavadocDto {
   public void addTag(String tagName) {
     if (tagName != null) {
       tags.add(JavadocTagDto.withoutValue(tagName));
+    }
+  }
+
+  /**
+   * Replaces tags with the given collection; the DTO retains its own mutable collection.
+   *
+   * @param tags the replacement collection (not null)
+   * @throws NullPointerException if tags is null
+   */
+  public void setTags(List<JavadocTagDto> tags) {
+    Objects.requireNonNull(tags);
+    if (tags != this.tags) {
+      this.tags.clear();
+      this.tags.addAll(tags);
     }
   }
 

@@ -30,21 +30,18 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import com.google.testing.compile.Compilation;
 import com.google.testing.compile.JavaFileObjects;
 import java.util.List;
+import java.util.Map;
 import org.javahelpers.codegen.enums.AccessModifier;
 import org.javahelpers.codegen.enums.FormattingMode;
-import org.javahelpers.codegen.model.annotation.AnnotationDto;
+import org.javahelpers.codegen.model.annotation.AnnotationDtoBuilder;
 import org.javahelpers.codegen.model.annotation.InterfaceName;
-import org.javahelpers.codegen.model.core.ClassFieldDto;
 import org.javahelpers.codegen.model.core.GenerationTargetClassDto;
-import org.javahelpers.codegen.model.javadoc.JavadocCodeBlockDto;
-import org.javahelpers.codegen.model.javadoc.JavadocDto;
-import org.javahelpers.codegen.model.method.ConstructorDto;
-import org.javahelpers.codegen.model.method.MethodDto;
-import org.javahelpers.codegen.model.method.MethodParameterDto;
-import org.javahelpers.codegen.model.type.GenericParameterDto;
+import org.javahelpers.codegen.model.core.GenerationTargetClassDtoBuilder;
+import org.javahelpers.codegen.model.javadoc.JavadocCodeBlockDtoBuilder;
+import org.javahelpers.codegen.model.javadoc.JavadocDtoBuilder;
+import org.javahelpers.codegen.model.javadoc.JavadocTagDto;
 import org.javahelpers.codegen.model.type.NestedTypeDto;
 import org.javahelpers.codegen.model.type.TypeName;
-import org.javahelpers.codegen.model.type.TypeNameArray;
 import org.javahelpers.codegen.model.type.TypeNameGeneric;
 import org.javahelpers.codegen.model.type.TypeNamePrimitive;
 import org.javahelpers.codegen.model.type.TypeNameVariable;
@@ -61,12 +58,14 @@ class RoasterCodeGeneratorTest {
 
   @Test
   void preservesLeadingFieldTypeAnnotation() throws Exception {
-    GenerationTargetClassDto classDef = annotatedClassDefinition();
-    ClassFieldDto field = new ClassFieldDto();
-    field.setFieldName("value");
-    field.setFieldType(stringTypeNullableAnnotated());
-    field.setVisibility(AccessModifier.PRIVATE);
-    classDef.addClassField(field);
+    GenerationTargetClassDto classDef =
+        annotatedClassDefinition()
+            .add2ClassFields(
+                f ->
+                    f.fieldName("value")
+                        .fieldType(stringTypeNullableAnnotated())
+                        .visibility(AccessModifier.PRIVATE))
+            .build();
 
     assertAnnotatedSource(
         """
@@ -82,14 +81,16 @@ class RoasterCodeGeneratorTest {
 
   @Test
   void preservesLeadingReturnTypeAnnotation() throws Exception {
-    GenerationTargetClassDto classDef = annotatedClassDefinition();
-    MethodDto method = new MethodDto("value", stringTypeNullableAnnotated());
-    method.setModifier(AccessModifier.PUBLIC);
-    method.setCode("return null;");
-    AnnotationDto deprecated = new AnnotationDto();
-    deprecated.setAnnotationType(TypeName.of(Deprecated.class));
-    method.addAnnotation(deprecated);
-    classDef.addMethod(method);
+    GenerationTargetClassDto classDef =
+        annotatedClassDefinition()
+            .add2Methods(
+                m ->
+                    m.methodName("value")
+                        .returnType(stringTypeNullableAnnotated())
+                        .modifier(AccessModifier.PUBLIC)
+                        .code("return null;")
+                        .add2Annotations(a -> a.annotationType(Deprecated.class)))
+            .build();
 
     assertAnnotatedSource(
         """
@@ -108,24 +109,29 @@ class RoasterCodeGeneratorTest {
 
   @Test
   void preservesAnnotatedGenericReturnType() throws Exception {
-    GenerationTargetClassDto classDef = annotatedClassDefinition();
     TypeName listOfStringsAnnotated =
         new TypeNameGeneric(TypeName.of(List.class), stringTypeNullableAnnotated());
-    MethodDto method = new MethodDto("values", listOfStringsAnnotated);
-    method.setModifier(AccessModifier.PUBLIC);
-    method.setCode("return null;");
-    classDef.addMethod(method);
-
-    NestedTypeDto nested = new NestedTypeDto();
-    nested.setTypeName("Nested");
-    nested.setKind(NestedTypeDto.NestedTypeKind.INTERFACE);
-    nested.setVisibility(AccessModifier.PUBLIC);
     TypeName listOfListsAnnotated =
         new TypeNameGeneric(TypeName.of(List.class), listOfStringsAnnotated);
-    MethodDto nestedMethod = new MethodDto("values", listOfListsAnnotated);
-    nestedMethod.setCode("return null;");
-    nested.addMethod(nestedMethod);
-    classDef.addNestedType(nested);
+    GenerationTargetClassDto classDef =
+        annotatedClassDefinition()
+            .add2Methods(
+                m ->
+                    m.methodName("values")
+                        .returnType(listOfStringsAnnotated)
+                        .modifier(AccessModifier.PUBLIC)
+                        .code("return null;"))
+            .add2NestedTypes(
+                n ->
+                    n.typeName("Nested")
+                        .kind(NestedTypeDto.NestedTypeKind.INTERFACE)
+                        .visibility(AccessModifier.PUBLIC)
+                        .add2Methods(
+                            m ->
+                                m.methodName("values")
+                                    .returnType(listOfListsAnnotated)
+                                    .code("return null;")))
+            .build();
 
     assertAnnotatedSource(
         """
@@ -169,30 +175,27 @@ class RoasterCodeGeneratorTest {
 
   @Test
   void writesFileUnderQualifiedName() throws Exception {
-    GenerationTargetClassDto empty = new GenerationTargetClassDto();
-    empty.setTypeName(new TypeName("com.example", "EmptyBuilder"));
-    empty.setClassAccessModifier(AccessModifier.PUBLIC);
-    empty.setFormattingMode(FormattingMode.NONE);
+    GenerationTargetClassDto empty =
+        GenerationTargetClassDtoBuilder.create()
+            .typeName("com.example", "EmptyBuilder")
+            .classAccessModifier(AccessModifier.PUBLIC)
+            .formattingMode(FormattingMode.NONE)
+            .build();
 
     assertEquals("mem:///com/example/EmptyBuilder.java", generate(empty).writtenUri().toString());
   }
 
   @Test
   void qualifiesCollidingDateTypeNames() throws Exception {
-    GenerationTargetClassDto classDef = new GenerationTargetClassDto();
-    classDef.setTypeName(new TypeName("test", "DateBuilder"));
-    classDef.setClassAccessModifier(AccessModifier.PUBLIC);
-    classDef.setFormattingMode(FormattingMode.NONE);
-
-    ClassFieldDto utilDate = new ClassFieldDto();
-    utilDate.setFieldName("utilDate");
-    utilDate.setFieldType(new TypeName("java.util", "Date"));
-    classDef.addClassField(utilDate);
-
-    ClassFieldDto sqlDate = new ClassFieldDto();
-    sqlDate.setFieldName("sqlDate");
-    sqlDate.setFieldType(new TypeName("java.sql", "Date"));
-    classDef.addClassField(sqlDate);
+    GenerationTargetClassDto classDef =
+        GenerationTargetClassDtoBuilder.create()
+            .typeName("test", "DateBuilder")
+            .classAccessModifier(AccessModifier.PUBLIC)
+            .formattingMode(FormattingMode.NONE)
+            .add2ClassFields(
+                f -> f.fieldName("utilDate").fieldType("java.util", "Date"),
+                f -> f.fieldName("sqlDate").fieldType("java.sql", "Date"))
+            .build();
 
     assertGeneratedSource(
         """
@@ -207,20 +210,17 @@ class RoasterCodeGeneratorTest {
 
   @Test
   void qualifiesCollidingGenericListTypeNames() throws Exception {
-    GenerationTargetClassDto classDef = new GenerationTargetClassDto();
-    classDef.setTypeName(new TypeName("test", "ListBuilder"));
-    classDef.setClassAccessModifier(AccessModifier.PUBLIC);
-    classDef.setFormattingMode(FormattingMode.NONE);
-
-    ClassFieldDto utilList = new ClassFieldDto();
-    utilList.setFieldName("utilList");
-    utilList.setFieldType(new TypeNameGeneric(java.util.List.class, String.class));
-    classDef.addClassField(utilList);
-
-    ClassFieldDto awtList = new ClassFieldDto();
-    awtList.setFieldName("awtList");
-    awtList.setFieldType(new TypeName("java.awt", "List"));
-    classDef.addClassField(awtList);
+    GenerationTargetClassDto classDef =
+        GenerationTargetClassDtoBuilder.create()
+            .typeName("test", "ListBuilder")
+            .classAccessModifier(AccessModifier.PUBLIC)
+            .formattingMode(FormattingMode.NONE)
+            .add2ClassFields(
+                f ->
+                    f.fieldName("utilList")
+                        .fieldType(new TypeNameGeneric(java.util.List.class, String.class)),
+                f -> f.fieldName("awtList").fieldType("java.awt", "List"))
+            .build();
 
     assertGeneratedSource(
         """
@@ -235,35 +235,30 @@ class RoasterCodeGeneratorTest {
 
   @Test
   void qualifiesCollidingAnnotationAndInterfaceSimpleNames() throws Exception {
-    GenerationTargetClassDto classDef = new GenerationTargetClassDto();
-    classDef.setTypeName(new TypeName("test", "AmbiguousBuilder"));
-    classDef.setClassAccessModifier(AccessModifier.PUBLIC);
-    classDef.setFormattingMode(FormattingMode.NONE);
-
-    // Two distinct NonNull annotations on different declaration sites: the one that wins the
-    // import renders simple, the other stays qualified.
-    AnnotationDto classAnnotation = new AnnotationDto();
-    classAnnotation.setAnnotationType(new TypeName("org.a", "NonNull"));
-    classDef.addClassAnnotation(classAnnotation);
-
-    MethodDto method = new MethodDto("x", TypeName.of(String.class));
-    method.setModifier(AccessModifier.PUBLIC);
-    method.setCode("return null;");
-    AnnotationDto methodAnnotation = new AnnotationDto();
-    methodAnnotation.setAnnotationType(new TypeName("org.b", "NonNull"));
-    method.addAnnotation(methodAnnotation);
-    MethodParameterDto param = new MethodParameterDto();
-    param.setParameterName("in");
-    param.setParameterTypeName(TypeName.of(String.class));
-    AnnotationDto paramAnnotation = new AnnotationDto();
-    paramAnnotation.setAnnotationType(new TypeName("org.a", "NonNull"));
-    param.addAnnotation(paramAnnotation);
-    method.addParameter(param);
-    classDef.addMethod(method);
-
-    // Two distinct interfaces sharing a simple name.
-    classDef.addInterface(new InterfaceName("org.a", "Cloneable"));
-    classDef.addInterface(new InterfaceName("org.b", "Cloneable"));
+    GenerationTargetClassDto classDef =
+        GenerationTargetClassDtoBuilder.create()
+            .typeName("test", "AmbiguousBuilder")
+            .classAccessModifier(AccessModifier.PUBLIC)
+            .formattingMode(FormattingMode.NONE)
+            // Two distinct NonNull annotations on different declaration sites: the one that wins
+            // the import renders simple, the other stays qualified.
+            .add2ClassAnnotations(a -> a.annotationType("org.a", "NonNull"))
+            .add2Methods(
+                m ->
+                    m.methodName("x")
+                        .returnType(String.class)
+                        .modifier(AccessModifier.PUBLIC)
+                        .code("return null;")
+                        .add2Annotations(a -> a.annotationType("org.b", "NonNull"))
+                        .add2Parameters(
+                            p ->
+                                p.parameterName("in")
+                                    .parameterTypeName(String.class)
+                                    .add2Annotations(a -> a.annotationType("org.a", "NonNull"))))
+            // Two distinct interfaces sharing a simple name.
+            .interfaces(
+                new InterfaceName("org.a", "Cloneable"), new InterfaceName("org.b", "Cloneable"))
+            .build();
 
     assertGeneratedSource(
         """
@@ -282,29 +277,25 @@ class RoasterCodeGeneratorTest {
 
   @Test
   void qualifiesCollidingTypeUseAnnotationSimpleNames() throws Exception {
-    GenerationTargetClassDto classDef = new GenerationTargetClassDto();
-    classDef.setTypeName(new TypeName("test", "AmbiguousBuilder"));
-    classDef.setClassAccessModifier(AccessModifier.PUBLIC);
-    classDef.setFormattingMode(FormattingMode.NONE);
-
     // A field type carrying a type-use annotation whose simple name collides with a method
     // annotation type: both usages must render qualified.
-    AnnotationDto methodAnnotation = new AnnotationDto();
-    methodAnnotation.setAnnotationType(new TypeName("org.a", "Nullable"));
-    MethodDto method = new MethodDto("x", TypeName.of(String.class));
-    method.setModifier(AccessModifier.PUBLIC);
-    method.setCode("return null;");
-    method.addAnnotation(methodAnnotation);
-    classDef.addMethod(method);
-
-    AnnotationDto typeUseAnnotation = new AnnotationDto();
-    typeUseAnnotation.setAnnotationType(new TypeName("org.b", "Nullable"));
     TypeName fieldType = TypeName.of(String.class);
-    fieldType.addAnnotation(typeUseAnnotation);
-    ClassFieldDto field = new ClassFieldDto();
-    field.setFieldName("value");
-    field.setFieldType(fieldType);
-    classDef.addClassField(field);
+    fieldType.addAnnotation(
+        AnnotationDtoBuilder.create().annotationType("org.b", "Nullable").build());
+    GenerationTargetClassDto classDef =
+        GenerationTargetClassDtoBuilder.create()
+            .typeName("test", "AmbiguousBuilder")
+            .classAccessModifier(AccessModifier.PUBLIC)
+            .formattingMode(FormattingMode.NONE)
+            .add2Methods(
+                m ->
+                    m.methodName("x")
+                        .returnType(String.class)
+                        .modifier(AccessModifier.PUBLIC)
+                        .code("return null;")
+                        .add2Annotations(a -> a.annotationType("org.a", "Nullable")))
+            .add2ClassFields(f -> f.fieldName("value").fieldType(fieldType))
+            .build();
 
     assertGeneratedSource(
         """
@@ -323,18 +314,20 @@ class RoasterCodeGeneratorTest {
 
   @Test
   void generatesClassMetadataJavadocAndAnnotations() throws Exception {
-    GenerationTargetClassDto classDef = new GenerationTargetClassDto();
-    classDef.setTypeName(new TypeName("test", "AnnotatedBuilder"));
-    classDef.setClassAccessModifier(AccessModifier.PUBLIC);
-    classDef.setFormattingMode(FormattingMode.NONE);
-    classDef.setClassJavadoc(new JavadocDto("Builder for {@link Person}."));
-    AnnotationDto generated = new AnnotationDto();
-    generated.setAnnotationType(new TypeName("javax.annotation", "Generated"));
-    generated.addMember("value", "\"simple-builders\"");
-    classDef.addClassAnnotation(generated);
-    classDef.setSuperType(new TypeName("test", "AbstractBuilder"));
-    InterfaceName iface = new InterfaceName("java.io", "Serializable");
-    classDef.addInterface(iface);
+    GenerationTargetClassDto classDef =
+        GenerationTargetClassDtoBuilder.create()
+            .typeName("test", "AnnotatedBuilder")
+            .classAccessModifier(AccessModifier.PUBLIC)
+            .formattingMode(FormattingMode.NONE)
+            .classJavadoc(
+                JavadocDtoBuilder.create().description("Builder for {@link Person}.").build())
+            .superType(new TypeName("test", "AbstractBuilder"))
+            .add2ClassAnnotations(
+                a ->
+                    a.annotationType("javax.annotation", "Generated")
+                        .members(Map.of("value", "\"simple-builders\"")))
+            .add2Interfaces("java.io", "Serializable")
+            .build();
 
     assertGeneratedSource(
         """
@@ -352,28 +345,25 @@ class RoasterCodeGeneratorTest {
 
   @Test
   void generatesGenericClassAndMethods() throws Exception {
-    GenerationTargetClassDto classDef = new GenerationTargetClassDto();
-    classDef.setTypeName(new TypeName("test", "GenericBuilder"));
-    classDef.setClassAccessModifier(AccessModifier.PUBLIC);
-    classDef.setFormattingMode(FormattingMode.NONE);
-    GenericParameterDto generic = new GenericParameterDto();
-    generic.setName("T");
-    generic.addUpperBound(TypeName.of(Number.class));
-    classDef.addGeneric(generic);
-
-    MethodDto genericMethod = new MethodDto("of", new TypeNameVariable("T"));
-    genericMethod.setModifier(AccessModifier.PUBLIC);
-    genericMethod.setStatic(true);
-    GenericParameterDto methodGeneric = new GenericParameterDto();
-    methodGeneric.setName("R");
-    methodGeneric.addUpperBound(TypeName.of(Number.class));
-    genericMethod.addGenericParameter(methodGeneric);
-    MethodParameterDto param = new MethodParameterDto();
-    param.setParameterName("input");
-    param.setParameterTypeName(new TypeNameVariable("R"));
-    genericMethod.addParameter(param);
-    genericMethod.setCode("return null;");
-    classDef.addMethod(genericMethod);
+    GenerationTargetClassDto classDef =
+        GenerationTargetClassDtoBuilder.create()
+            .typeName("test", "GenericBuilder")
+            .classAccessModifier(AccessModifier.PUBLIC)
+            .formattingMode(FormattingMode.NONE)
+            .add2Generics(g -> g.name("T").add2UpperBounds(Number.class))
+            .add2Methods(
+                m ->
+                    m.methodName("of")
+                        .returnType(new TypeNameVariable("T"))
+                        .modifier(AccessModifier.PUBLIC)
+                        .isStatic(true)
+                        .code("return null;")
+                        .add2GenericParameters(g -> g.name("R").add2UpperBounds(Number.class))
+                        .add2Parameters(
+                            p ->
+                                p.parameterName("input")
+                                    .parameterTypeName(new TypeNameVariable("R"))))
+            .build();
 
     assertGeneratedSource(
         """
@@ -388,22 +378,22 @@ class RoasterCodeGeneratorTest {
 
   @Test
   void generatesVoidVarargsAndPackagePrivateMembers() throws Exception {
-    GenerationTargetClassDto classDef = new GenerationTargetClassDto();
-    classDef.setTypeName(new TypeName("test", "MiscBuilder"));
-    classDef.setClassAccessModifier(AccessModifier.PUBLIC);
-    classDef.setFormattingMode(FormattingMode.NONE);
-
-    MethodDto voidMethod = new MethodDto("close", null);
-    voidMethod.setModifier(AccessModifier.PACKAGE_PRIVATE);
-    MethodParameterDto varArgs = new MethodParameterDto();
-    varArgs.setParameterName("items");
-    varArgs.setParameterTypeName(new TypeNameArray(TypeName.of(String.class)));
-    voidMethod.addParameter(varArgs);
-    AnnotationDto suppressWarnings = new AnnotationDto();
-    suppressWarnings.setAnnotationType(TypeName.of(SuppressWarnings.class));
-    suppressWarnings.addMember("value", "\"unchecked\"");
-    voidMethod.addAnnotation(suppressWarnings);
-    classDef.addMethod(voidMethod);
+    GenerationTargetClassDto classDef =
+        GenerationTargetClassDtoBuilder.create()
+            .typeName("test", "MiscBuilder")
+            .classAccessModifier(AccessModifier.PUBLIC)
+            .formattingMode(FormattingMode.NONE)
+            .add2Methods(
+                m ->
+                    m.methodName("close")
+                        .modifier(AccessModifier.PACKAGE_PRIVATE)
+                        .add2Parameters(
+                            p -> p.parameterName("items").parameterTypeNameArray(String.class))
+                        .add2Annotations(
+                            a ->
+                                a.annotationType(SuppressWarnings.class)
+                                    .members(Map.of("value", "\"unchecked\""))))
+            .build();
 
     assertGeneratedSource(
         """
@@ -418,20 +408,26 @@ class RoasterCodeGeneratorTest {
 
   @Test
   void generatesJavadocCodeBlockAndValuelessTag() throws Exception {
-    GenerationTargetClassDto classDef = new GenerationTargetClassDto();
-    classDef.setTypeName(new TypeName("test", "DocBuilder"));
-    classDef.setClassAccessModifier(AccessModifier.PUBLIC);
-    classDef.setFormattingMode(FormattingMode.NONE);
-
-    MethodDto method = new MethodDto("apply", TypeNamePrimitive.VOID);
-    method.setModifier(AccessModifier.PUBLIC);
-    JavadocDto javadoc = new JavadocDto("Applies the values.");
-    javadoc.addTag("since");
-    JavadocCodeBlockDto codeBlock = new JavadocCodeBlockDto();
-    codeBlock.setCodeFormat("builder.apply();");
-    javadoc.setExampleUsageCodeBlock(codeBlock);
-    method.setJavadoc(javadoc);
-    classDef.addMethod(method);
+    GenerationTargetClassDto classDef =
+        GenerationTargetClassDtoBuilder.create()
+            .typeName("test", "DocBuilder")
+            .classAccessModifier(AccessModifier.PUBLIC)
+            .formattingMode(FormattingMode.NONE)
+            .add2Methods(
+                m ->
+                    m.methodName("apply")
+                        .returnType(TypeNamePrimitive.VOID)
+                        .modifier(AccessModifier.PUBLIC)
+                        .javadoc(
+                            javadoc ->
+                                javadoc
+                                    .description("Applies the values.")
+                                    .add2Tags(JavadocTagDto.withoutValue("since"))
+                                    .exampleUsageCodeBlock(
+                                        JavadocCodeBlockDtoBuilder.create()
+                                            .codeFormat("builder.apply();")
+                                            .build())))
+            .build();
 
     assertGeneratedSource(
         """
@@ -452,17 +448,18 @@ class RoasterCodeGeneratorTest {
 
   @Test
   void generatesNestedInterfaceWithAbstractMethod() throws Exception {
-    GenerationTargetClassDto classDef = new GenerationTargetClassDto();
-    classDef.setTypeName(new TypeName("test", "NestedBuilder"));
-    classDef.setClassAccessModifier(AccessModifier.PUBLIC);
-    classDef.setFormattingMode(FormattingMode.NONE);
-
-    NestedTypeDto nested = new NestedTypeDto();
-    nested.setTypeName("Callback");
-    nested.setKind(NestedTypeDto.NestedTypeKind.INTERFACE);
-    MethodDto abstractMethod = new MethodDto("onDone", TypeNamePrimitive.VOID);
-    nested.addMethod(abstractMethod);
-    classDef.addNestedType(nested);
+    GenerationTargetClassDto classDef =
+        GenerationTargetClassDtoBuilder.create()
+            .typeName("test", "NestedBuilder")
+            .classAccessModifier(AccessModifier.PUBLIC)
+            .formattingMode(FormattingMode.NONE)
+            .add2NestedTypes(
+                n ->
+                    n.typeName("Callback")
+                        .kind(NestedTypeDto.NestedTypeKind.INTERFACE)
+                        .add2Methods(
+                            m -> m.methodName("onDone").returnType(TypeNamePrimitive.VOID)))
+            .build();
 
     assertGeneratedSource(
         """
@@ -478,28 +475,27 @@ class RoasterCodeGeneratorTest {
 
   @Test
   void generatesConstructorAndFieldVariants() throws Exception {
-    GenerationTargetClassDto classDef = new GenerationTargetClassDto();
-    classDef.setTypeName(new TypeName("test", "CtorBuilder"));
-    classDef.setClassAccessModifier(AccessModifier.PUBLIC);
-    classDef.setFormattingMode(FormattingMode.NONE);
-
-    ClassFieldDto constant = new ClassFieldDto();
-    constant.setFieldName("DEFAULT_SIZE");
-    constant.setFieldType(TypeNamePrimitive.INT);
-    constant.setVisibility(AccessModifier.PRIVATE);
-    constant.setLiteralInitializer("42");
-    classDef.addClassField(constant);
-
-    ConstructorDto ctor = new ConstructorDto();
-    ctor.setVisibility(AccessModifier.PROTECTED);
-    MethodParameterDto param = new MethodParameterDto();
-    param.setParameterName("capacity");
-    param.setParameterTypeName(TypeNamePrimitive.INT);
-    AnnotationDto paramAnnotation = new AnnotationDto();
-    paramAnnotation.setAnnotationType(new TypeName("test.anno", "NonNull"));
-    param.addAnnotation(paramAnnotation);
-    ctor.addParameter(param);
-    classDef.addConstructor(ctor);
+    GenerationTargetClassDto classDef =
+        GenerationTargetClassDtoBuilder.create()
+            .typeName("test", "CtorBuilder")
+            .classAccessModifier(AccessModifier.PUBLIC)
+            .formattingMode(FormattingMode.NONE)
+            .add2ClassFields(
+                f ->
+                    f.fieldName("DEFAULT_SIZE")
+                        .fieldType(TypeNamePrimitive.INT)
+                        .visibility(AccessModifier.PRIVATE)
+                        .literalInitializer("42"))
+            .add2Constructors(
+                c ->
+                    c.visibility(AccessModifier.PROTECTED)
+                        .add2Parameters(
+                            p ->
+                                p.parameterName("capacity")
+                                    .parameterTypeName(TypeNamePrimitive.INT)
+                                    .add2Annotations(
+                                        a -> a.annotationType("test.anno", "NonNull"))))
+            .build();
 
     assertGeneratedSource(
         """
@@ -515,21 +511,24 @@ class RoasterCodeGeneratorTest {
 
   @Test
   void generatesNestedTypesWithMembers() throws Exception {
-    GenerationTargetClassDto classDef = new GenerationTargetClassDto();
-    classDef.setTypeName(new TypeName("test", "OuterBuilder"));
-    classDef.setClassAccessModifier(AccessModifier.PUBLIC);
-    classDef.setFormattingMode(FormattingMode.NONE);
-
-    NestedTypeDto nested = new NestedTypeDto();
-    nested.setTypeName("Helper");
-    nested.setKind(NestedTypeDto.NestedTypeKind.CLASS);
-    nested.setVisibility(AccessModifier.PUBLIC);
-    nested.setJavadoc(new JavadocDto("Nested helper."));
-    MethodDto nestedMethod = new MethodDto("assist", TypeNamePrimitive.VOID);
-    nestedMethod.setModifier(AccessModifier.PRIVATE);
-    nestedMethod.setCode("// nothing");
-    nested.addMethod(nestedMethod);
-    classDef.addNestedType(nested);
+    GenerationTargetClassDto classDef =
+        GenerationTargetClassDtoBuilder.create()
+            .typeName("test", "OuterBuilder")
+            .classAccessModifier(AccessModifier.PUBLIC)
+            .formattingMode(FormattingMode.NONE)
+            .add2NestedTypes(
+                n ->
+                    n.typeName("Helper")
+                        .kind(NestedTypeDto.NestedTypeKind.CLASS)
+                        .visibility(AccessModifier.PUBLIC)
+                        .javadoc(javadoc -> javadoc.description("Nested helper."))
+                        .add2Methods(
+                            m ->
+                                m.methodName("assist")
+                                    .returnType(TypeNamePrimitive.VOID)
+                                    .modifier(AccessModifier.PRIVATE)
+                                    .code("// nothing")))
+            .build();
 
     assertGeneratedSource(
         """
@@ -548,26 +547,29 @@ class RoasterCodeGeneratorTest {
 
   @Test
   void generatesMethodWithJavadocAnnotationsAndTypedParameters() throws Exception {
-    GenerationTargetClassDto classDef = new GenerationTargetClassDto();
-    classDef.setTypeName(new TypeName("test", "RichBuilder"));
-    classDef.setClassAccessModifier(AccessModifier.PUBLIC);
-    classDef.setFormattingMode(FormattingMode.NONE);
-
-    MethodDto method = new MethodDto("items", new TypeNameGeneric(List.class, String.class));
-    method.setModifier(AccessModifier.PUBLIC);
-    JavadocDto javadoc = new JavadocDto("Adds items.");
-    javadoc.addParam("values", "items to add");
-    javadoc.addReturn("this builder");
-    method.setJavadoc(javadoc);
-    AnnotationDto override_ = new AnnotationDto();
-    override_.setAnnotationType(TypeName.of(Override.class));
-    method.addAnnotation(override_);
-    MethodParameterDto param = new MethodParameterDto();
-    param.setParameterName("values");
-    param.setParameterTypeName(new TypeNameGeneric(List.class, String.class));
-    method.addParameter(param);
-    method.setCode("return null;");
-    classDef.addMethod(method);
+    GenerationTargetClassDto classDef =
+        GenerationTargetClassDtoBuilder.create()
+            .typeName("test", "RichBuilder")
+            .classAccessModifier(AccessModifier.PUBLIC)
+            .formattingMode(FormattingMode.NONE)
+            .add2Methods(
+                m ->
+                    m.methodName("items")
+                        .returnTypeGeneric(List.class, String.class)
+                        .modifier(AccessModifier.PUBLIC)
+                        .javadoc(
+                            javadoc ->
+                                javadoc
+                                    .description("Adds items.")
+                                    .add2Tags(new JavadocTagDto("param", "values items to add"))
+                                    .add2Tags(new JavadocTagDto("return", "this builder")))
+                        .code("return null;")
+                        .add2Annotations(a -> a.annotationType(Override.class))
+                        .add2Parameters(
+                            p ->
+                                p.parameterName("values")
+                                    .parameterTypeNameGeneric(List.class, String.class)))
+            .build();
 
     assertGeneratedSource(
         """
@@ -599,7 +601,7 @@ class RoasterCodeGeneratorTest {
   }
 
   /** Generates {@code classDef} and compares the emitted source against {@code expected}. */
-  private static void assertGeneratedSource(String expected, GenerationTargetClassDto classDef)
+  static void assertGeneratedSource(String expected, GenerationTargetClassDto classDef)
       throws Exception {
     assertNormalizedEquals(
         expected,
@@ -612,50 +614,45 @@ class RoasterCodeGeneratorTest {
     TypeName builderType = new TypeName("test", "PersonBuilder");
     TypeName personType = new TypeName("test", "Person");
 
-    GenerationTargetClassDto target = new GenerationTargetClassDto();
-    target.setTypeName(builderType);
-    target.setClassAccessModifier(AccessModifier.PUBLIC);
-    target.setFormattingMode(FormattingMode.NONE);
-
-    ClassFieldDto field = new ClassFieldDto();
-    field.setFieldName("target");
-    field.setFieldType(personType);
-    field.setVisibility(AccessModifier.PRIVATE);
-    field.setLiteralInitializer("new Person()");
-    target.addClassField(field);
-
-    MethodDto name = new MethodDto("name", builderType);
-    name.setModifier(AccessModifier.PUBLIC);
-    MethodParameterDto param = new MethodParameterDto();
-    param.setParameterName("name");
-    param.setParameterTypeName(TypeName.of(String.class));
-    name.addParameter(param);
-    name.setCode(
-        """
-        target.setName(name);
-        return this;""");
-    target.addMethod(name);
-
-    MethodDto build = new MethodDto("build", personType);
-    build.setModifier(AccessModifier.PUBLIC);
-    build.setCode("return target;");
-    target.addMethod(build);
-    return target;
+    return GenerationTargetClassDtoBuilder.create()
+        .typeName(builderType)
+        .classAccessModifier(AccessModifier.PUBLIC)
+        .formattingMode(FormattingMode.NONE)
+        .add2ClassFields(
+            f ->
+                f.fieldName("target")
+                    .fieldType(personType)
+                    .visibility(AccessModifier.PRIVATE)
+                    .literalInitializer("new Person()"))
+        .add2Methods(
+            m ->
+                m.methodName("name")
+                    .returnType(builderType)
+                    .modifier(AccessModifier.PUBLIC)
+                    .code(
+                        """
+                        target.setName(name);
+                        return this;""")
+                    .add2Parameters(p -> p.parameterName("name").parameterTypeName(String.class)),
+            m ->
+                m.methodName("build")
+                    .returnType(personType)
+                    .modifier(AccessModifier.PUBLIC)
+                    .code("return target;"))
+        .build();
   }
 
-  private static GenerationTargetClassDto annotatedClassDefinition() {
-    GenerationTargetClassDto classDef = new GenerationTargetClassDto();
-    classDef.setTypeName(new TypeName("test", "AnnotatedTypes"));
-    classDef.setClassAccessModifier(AccessModifier.PUBLIC);
-    classDef.setFormattingMode(FormattingMode.NONE);
-    return classDef;
+  private static GenerationTargetClassDtoBuilder annotatedClassDefinition() {
+    return GenerationTargetClassDtoBuilder.create()
+        .typeName("test", "AnnotatedTypes")
+        .classAccessModifier(AccessModifier.PUBLIC)
+        .formattingMode(FormattingMode.NONE);
   }
 
   private static TypeName stringTypeNullableAnnotated() {
-    AnnotationDto nullable = new AnnotationDto();
-    nullable.setAnnotationType(new TypeName("test.anno", "Nullable"));
     TypeName type = TypeName.of(String.class);
-    type.addAnnotation(nullable);
+    type.addAnnotation(
+        AnnotationDtoBuilder.create().annotationType("test.anno", "Nullable").build());
     return type;
   }
 

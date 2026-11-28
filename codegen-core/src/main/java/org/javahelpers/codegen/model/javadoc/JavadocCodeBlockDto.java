@@ -33,6 +33,7 @@ import org.javahelpers.codegen.model.method.CodeTemplateDto;
  * examples that appear in Javadoc comments. This allows generators to create code examples with
  * placeholders that are resolved during code generation.
  */
-public class JavadocCodeBlockDto extends CodeTemplateDto {
+public class JavadocCodeBlockDto extends CodeTemplateDto
+    implements JavadocCodeBlockDtoBuilder.With {
   // All functionality inherited from CodeTemplateDto
 }
