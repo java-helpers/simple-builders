@@ -33,7 +33,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.codegen.analysis.JavaLangMapper;
 import org.javahelpers.codegen.enums.AccessModifier;
 import org.javahelpers.codegen.model.javadoc.JavadocDtoBuilder;
-import org.javahelpers.codegen.model.javadoc.JavadocTagDto;
 import org.javahelpers.codegen.model.method.MethodParameterDto;
 import org.javahelpers.codegen.model.method.MethodParameterDtoBuilder;
 import org.javahelpers.codegen.model.type.GenericParameterDto;
@@ -219,13 +218,8 @@ public final class MethodGeneratorUtil {
     methodDto.setJavadoc(
         JavadocDtoBuilder.create()
             .description("Sets the value for <code>%s</code>.", field.getOriginalFieldName())
-            .add2Tags(
-                new JavadocTagDto(
-                    JavadocConstants.PARAM_TAG,
-                    parameter.getParameterName() + " " + fieldJavadocDesc))
-            .add2Tags(
-                new JavadocTagDto(
-                    JavadocConstants.RETURN_TAG, JavadocConstants.RETURN_BUILDER_INSTANCE))
+            .param(parameter.getParameterName(), fieldJavadocDesc)
+            .returns(BuilderJavadocConstants.RETURN_BUILDER_INSTANCE)
             .build());
 
     return methodDto;
@@ -296,16 +290,11 @@ public final class MethodGeneratorUtil {
             .description(
                 "Sets the value for <code>%s</code> using a builder consumer that produces the value.",
                 field.getFieldNameInBuilder())
-            .add2Tags(
-                new JavadocTagDto(
-                    JavadocConstants.PARAM_TAG,
-                    parameter.getParameterName()
-                        + " "
-                        + "consumer providing an instance of a builder for %s"
-                            .formatted(fieldJavadocDesc)))
-            .add2Tags(
-                new JavadocTagDto(
-                    JavadocConstants.RETURN_TAG, JavadocConstants.RETURN_BUILDER_INSTANCE))
+            .param(
+                parameter.getParameterName(),
+                "consumer providing an instance of a builder for %s",
+                fieldJavadocDesc)
+            .returns(BuilderJavadocConstants.RETURN_BUILDER_INSTANCE)
             .build());
 
     return methodDto;
@@ -469,15 +458,11 @@ public final class MethodGeneratorUtil {
             .description(
                 "Sets the value for <code>%s</code> by executing the provided consumer.",
                 field.getOriginalFieldName())
-            .add2Tags(
-                new JavadocTagDto(
-                    JavadocConstants.PARAM_TAG,
-                    parameter.getParameterName()
-                        + " "
-                        + "consumer providing an instance of %s".formatted(fieldJavadocDesc)))
-            .add2Tags(
-                new JavadocTagDto(
-                    JavadocConstants.RETURN_TAG, JavadocConstants.RETURN_BUILDER_INSTANCE))
+            .param(
+                parameter.getParameterName(),
+                "consumer providing an instance of %s",
+                fieldJavadocDesc)
+            .returns(BuilderJavadocConstants.RETURN_BUILDER_INSTANCE)
             .build());
 
     return methodDto;

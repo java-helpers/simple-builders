@@ -34,13 +34,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 import org.javahelpers.codegen.model.javadoc.JavadocDtoBuilder;
-import org.javahelpers.codegen.model.javadoc.JavadocTagDto;
 import org.javahelpers.codegen.model.method.MethodParameterDto;
 import org.javahelpers.codegen.model.method.MethodParameterDtoBuilder;
 import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.codegen.model.type.TypeNameGeneric;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
-import org.javahelpers.simple.builders.processor.generators.util.JavadocConstants;
+import org.javahelpers.simple.builders.processor.generators.util.BuilderJavadocConstants;
 import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
@@ -156,10 +155,8 @@ public class SupplierMethodGenerator implements MethodGenerator {
         JavadocDtoBuilder.create()
             .description(
                 "Sets the value for <code>%s</code> by invoking the provided supplier.", fieldName)
-            .add2Tags(
-                new JavadocTagDto(
-                    "param", parameterName + " " + "supplier for %s".formatted(fieldJavaDoc)))
-            .add2Tags(new JavadocTagDto("return", JavadocConstants.RETURN_BUILDER_INSTANCE))
+            .param(parameterName, "supplier for %s", fieldJavaDoc)
+            .returns(BuilderJavadocConstants.RETURN_BUILDER_INSTANCE)
             .build());
 
     addExampleChainFragmentWithSupplier(

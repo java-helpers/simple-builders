@@ -29,7 +29,6 @@ import static org.javahelpers.simple.builders.processor.generators.util.MethodGe
 
 import java.util.List;
 import org.javahelpers.codegen.model.javadoc.JavadocDtoBuilder;
-import org.javahelpers.codegen.model.javadoc.JavadocTagDto;
 import org.javahelpers.codegen.model.method.MethodParameterDto;
 import org.javahelpers.codegen.model.method.MethodParameterDtoBuilder;
 import org.javahelpers.codegen.model.type.TypeName;
@@ -37,7 +36,7 @@ import org.javahelpers.codegen.model.type.TypeNameArray;
 import org.javahelpers.codegen.model.type.TypeNameGeneric;
 import org.javahelpers.codegen.model.type.TypeNamePrimitive;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
-import org.javahelpers.simple.builders.processor.generators.util.JavadocConstants;
+import org.javahelpers.simple.builders.processor.generators.util.BuilderJavadocConstants;
 import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
@@ -149,9 +148,8 @@ public class ArrayConversionGenerator implements MethodGenerator {
     methodDto.setJavadoc(
         JavadocDtoBuilder.create()
             .description("Sets the value for <code>%s</code>.", fieldName)
-            .add2Tags(
-                new JavadocTagDto("param", parameter.getParameterName() + " " + fieldJavadocDesc))
-            .add2Tags(new JavadocTagDto("return", JavadocConstants.RETURN_BUILDER_INSTANCE))
+            .param(parameter.getParameterName(), fieldJavadocDesc)
+            .returns(BuilderJavadocConstants.RETURN_BUILDER_INSTANCE)
             .build());
 
     // Add example fragment for array conversion method

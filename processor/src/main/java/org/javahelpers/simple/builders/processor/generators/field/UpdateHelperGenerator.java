@@ -47,14 +47,13 @@ import java.util.TreeSet;
 import java.util.function.UnaryOperator;
 import org.javahelpers.codegen.model.javadoc.JavadocCodeBlockDtoBuilder;
 import org.javahelpers.codegen.model.javadoc.JavadocDtoBuilder;
-import org.javahelpers.codegen.model.javadoc.JavadocTagDto;
 import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.codegen.model.type.TypeNameGeneric;
 import org.javahelpers.codegen.model.type.TypeNamePrimitive;
 import org.javahelpers.codegen.model.type.TypeNamePrimitive.PrimitiveTypeEnum;
 import org.javahelpers.codegen.util.JavadocExampleValues;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
-import org.javahelpers.simple.builders.processor.generators.util.JavadocConstants;
+import org.javahelpers.simple.builders.processor.generators.util.BuilderJavadocConstants;
 import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDtoBuilder;
@@ -192,17 +191,13 @@ public class UpdateHelperGenerator implements MethodGenerator {
     methodDto.setJavadoc(
         JavadocDtoBuilder.create()
             .description(description)
-            .add2Tags(
-                new JavadocTagDto(
-                    "param",
-                    parameterName
-                        + " operator applied to the current value; its result becomes the new value"))
-            .add2Tags(new JavadocTagDto("return", JavadocConstants.RETURN_BUILDER_INSTANCE))
-            .add2Tags(
-                new JavadocTagDto(
-                    "throws",
-                    "IllegalStateException if <code>%s</code> has not been set yet"
-                        .formatted(originalFieldName)))
+            .param(
+                parameterName,
+                "operator applied to the current value; its result becomes the new value")
+            .returns(BuilderJavadocConstants.RETURN_BUILDER_INSTANCE)
+            .throwsTag(
+                "IllegalStateException",
+                "if <code>%s</code> has not been set yet".formatted(originalFieldName))
             .build());
 
     addUpdateExample(methodDto, field, context);

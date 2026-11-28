@@ -35,14 +35,13 @@ import java.util.Optional;
 import org.apache.commons.collections4.CollectionUtils;
 import org.javahelpers.codegen.model.annotation.AnnotationDto;
 import org.javahelpers.codegen.model.javadoc.JavadocDtoBuilder;
-import org.javahelpers.codegen.model.javadoc.JavadocTagDto;
 import org.javahelpers.codegen.model.method.MethodParameterDto;
 import org.javahelpers.codegen.model.method.MethodParameterDtoBuilder;
 import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.codegen.model.type.TypeNameArray;
 import org.javahelpers.codegen.model.type.TypeNameGeneric;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
-import org.javahelpers.simple.builders.processor.generators.util.JavadocConstants;
+import org.javahelpers.simple.builders.processor.generators.util.BuilderJavadocConstants;
 import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.processing.BuilderProcessingContext;
@@ -204,12 +203,11 @@ public class StringFormatHelperGenerator implements MethodGenerator {
             .description(
                 "Sets the String value for <code>%s</code> by using String.format(format, args).\nSee {@link String#format(String, Object...)} for details.",
                 fieldName)
-            .add2Tags(new JavadocTagDto("param", "format A format string"))
-            .add2Tags(
-                new JavadocTagDto(
-                    "param",
-                    "args Arguments referenced by the format specifiers in the format string."))
-            .add2Tags(new JavadocTagDto("return", JavadocConstants.RETURN_BUILDER_INSTANCE))
+            .param(formatParam.getParameterName(), "A format string")
+            .param(
+                argsParam.getParameterName(),
+                "Arguments referenced by the format specifiers in the format string.")
+            .returns(BuilderJavadocConstants.RETURN_BUILDER_INSTANCE)
             .build());
 
     // Add example fragment for String format method

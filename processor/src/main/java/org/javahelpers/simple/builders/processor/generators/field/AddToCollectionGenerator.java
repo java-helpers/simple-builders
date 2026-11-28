@@ -32,12 +32,11 @@ import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.codegen.model.javadoc.JavadocDtoBuilder;
-import org.javahelpers.codegen.model.javadoc.JavadocTagDto;
 import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.codegen.model.type.TypeNameList;
 import org.javahelpers.codegen.model.type.TypeNameSet;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
-import org.javahelpers.simple.builders.processor.generators.util.JavadocConstants;
+import org.javahelpers.simple.builders.processor.generators.util.BuilderJavadocConstants;
 import org.javahelpers.simple.builders.processor.model.core.BuilderFieldDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDtoBuilder;
@@ -194,8 +193,8 @@ public class AddToCollectionGenerator implements MethodGenerator {
     methodDto.setJavadoc(
         JavadocDtoBuilder.create()
             .description("Adds a single element to <code>%s</code>.", originalFieldName)
-            .add2Tags(new JavadocTagDto("param", "element the element to add"))
-            .add2Tags(new JavadocTagDto("return", JavadocConstants.RETURN_BUILDER_INSTANCE))
+            .param("element", "the element to add")
+            .returns(BuilderJavadocConstants.RETURN_BUILDER_INSTANCE)
             .build());
 
     // Store the fluent-chain fragment so the class-level enhancer can synthesise both the
