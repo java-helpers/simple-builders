@@ -27,11 +27,9 @@ import java.util.function.BooleanSupplier;
 import org.javahelpers.codegen.analysis.JavaLangMapper;
 import org.javahelpers.codegen.enums.AccessModifier;
 import org.javahelpers.codegen.model.javadoc.JavadocDtoBuilder;
-import org.javahelpers.codegen.model.javadoc.JavadocTagDto;
 import org.javahelpers.codegen.model.method.MethodParameterDtoBuilder;
 import org.javahelpers.codegen.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.generators.BuilderEnhancer;
-import org.javahelpers.simple.builders.processor.generators.util.JavadocConstants;
 import org.javahelpers.simple.builders.processor.generators.util.MethodGeneratorUtil;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
@@ -146,18 +144,10 @@ public class ConditionalEnhancer implements BuilderEnhancer {
         JavadocDtoBuilder.create()
             .description(
                 "Conditionally applies builder modifications based on a condition evaluation.")
-            .add2Tags(
-                new JavadocTagDto(
-                    JavadocConstants.PARAM_TAG, "condition the condition to evaluate"))
-            .add2Tags(
-                new JavadocTagDto(
-                    JavadocConstants.PARAM_TAG,
-                    "trueCase the consumer to apply if condition is true"))
-            .add2Tags(
-                new JavadocTagDto(
-                    JavadocConstants.PARAM_TAG,
-                    "falseCase the consumer to apply if condition is false (can be null)"))
-            .add2Tags(new JavadocTagDto(JavadocConstants.RETURN_TAG, "this builder instance"))
+            .param("condition", "the condition to evaluate")
+            .param("trueCase", "the consumer to apply if condition is true")
+            .param("falseCase", "the consumer to apply if condition is false (can be null)")
+            .returns("this builder instance")
             .build());
 
     return method;
@@ -183,14 +173,9 @@ public class ConditionalEnhancer implements BuilderEnhancer {
     method.setJavadoc(
         JavadocDtoBuilder.create()
             .description("Conditionally applies builder modifications if the condition is true.")
-            .add2Tags(
-                new JavadocTagDto(
-                    JavadocConstants.PARAM_TAG, "condition the condition to evaluate"))
-            .add2Tags(
-                new JavadocTagDto(
-                    JavadocConstants.PARAM_TAG,
-                    "yesCondition the consumer to apply if condition is true"))
-            .add2Tags(new JavadocTagDto(JavadocConstants.RETURN_TAG, "this builder instance"))
+            .param("condition", "the condition to evaluate")
+            .param("yesCondition", "the consumer to apply if condition is true")
+            .returns("this builder instance")
             .build());
 
     return method;

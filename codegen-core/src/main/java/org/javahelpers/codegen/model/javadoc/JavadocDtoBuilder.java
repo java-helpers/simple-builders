@@ -374,7 +374,8 @@ public class JavadocDtoBuilder implements IBuilderBase<JavadocDto> {
    */
   public JavadocDtoBuilder param(String paramName, String descriptionFormat, Object... args) {
     return add2Tags(
-        new JavadocTagDto("param", paramName + " " + String.format(descriptionFormat, args)));
+        new JavadocTagDto(
+            JavadocTag.PARAM, paramName + " " + String.format(descriptionFormat, args)));
   }
 
   /**
@@ -386,7 +387,7 @@ public class JavadocDtoBuilder implements IBuilderBase<JavadocDto> {
    * @return current instance of builder
    */
   public JavadocDtoBuilder returns(String descriptionFormat, Object... args) {
-    return add2Tags(new JavadocTagDto("return", String.format(descriptionFormat, args)));
+    return add2Tags(new JavadocTagDto(JavadocTag.RETURN, String.format(descriptionFormat, args)));
   }
 
   /**
@@ -401,7 +402,8 @@ public class JavadocDtoBuilder implements IBuilderBase<JavadocDto> {
   public JavadocDtoBuilder throwsTag(
       String exceptionName, String descriptionFormat, Object... args) {
     return add2Tags(
-        new JavadocTagDto("throws", exceptionName + " " + String.format(descriptionFormat, args)));
+        new JavadocTagDto(
+            JavadocTag.THROWS, exceptionName + " " + String.format(descriptionFormat, args)));
   }
 
   /**
@@ -413,7 +415,8 @@ public class JavadocDtoBuilder implements IBuilderBase<JavadocDto> {
    * @return current instance of builder
    */
   public JavadocDtoBuilder deprecated(String descriptionFormat, Object... args) {
-    return add2Tags(new JavadocTagDto("deprecated", String.format(descriptionFormat, args)));
+    return add2Tags(
+        new JavadocTagDto(JavadocTag.DEPRECATED, String.format(descriptionFormat, args)));
   }
 
   /**
